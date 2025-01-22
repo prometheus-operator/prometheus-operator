@@ -1982,9 +1982,8 @@ spec:
                                 default: true
                                 description: |-
                                   Specify whether the Secret or its key must be defined
-                                  Note:
-                                    This item is retained for compatibility with lower versions of CRD.
-                                    Option needs to be true by default.
+                                  Note: This item is retained for compatibility with lower versions of CRD.
+                                  Option needs to be true by default.
                                 type: boolean
                             required:
                             - key

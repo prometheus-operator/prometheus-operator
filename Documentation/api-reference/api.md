@@ -15645,7 +15645,8 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Specify whether the Secret or its key must be defined
-Notice: This item is retained for compatibility with lower versions of CRD.</p>
+Note: This item is retained for compatibility with lower versions of CRD.
+Option needs to be true by default.</p>
 </td>
 </tr>
 </tbody>

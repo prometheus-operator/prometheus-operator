@@ -1016,9 +1016,8 @@ type SecretKeySelector struct {
 	Key string `json:"key"`
 
 	// Specify whether the Secret or its key must be defined
-	// Note:
-	//   This item is retained for compatibility with lower versions of CRD.
-	//   Option needs to be true by default.
+	// Note: This item is retained for compatibility with lower versions of CRD.
+	// Option needs to be true by default.
 	//
 	// +kubebuilder:default:=true
 	// +optional
