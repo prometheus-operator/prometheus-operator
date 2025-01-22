@@ -7,9 +7,7 @@ ifeq ($(GOARCH),arm)
 else
 	ARCH=$(GOARCH)
 endif
-# TODO remove GODEBUG=gotypesalias=0
-# fixed: https://tip.golang.org/doc/go1.23#gotypespkggotypes
-GODEBUG := gotypesalias=0
+GODEBUG :=
 
 CONTAINER_CLI ?= docker
 
