@@ -1730,7 +1730,7 @@
                               },
                               optional: {
                                 default: true,
-                                description: 'Specify whether the Secret or its key must be defined\nNotice: This item is retained for compatibility with lower versions of CRD.',
+                                description: 'Specify whether the Secret or its key must be defined\nNote:\n  This item is retained for compatibility with lower versions of CRD.\n  Option needs to be true by default.',
                                 type: 'boolean',
                               },
                             },
