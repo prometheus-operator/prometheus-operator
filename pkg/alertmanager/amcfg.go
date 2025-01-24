@@ -2012,6 +2012,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.MSTeamsV2Configs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2250,6 +2256,23 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		msg := "'summary' supported in Alertmanager >= 0.27.0 only - dropping field `summary` from msteams config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		tc.Summary = ""
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	msTeamsV2Allowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !msTeamsV2Allowed {
+		return fmt.Errorf(`invalid syntax in receivers config; msteams v2 integration is available in Alertmanager >= 0.28.0`)
+	}
+
+	if tc.WebhookURL == "" && len(tc.WebhookURLFile) == 0 {
+		return errors.New("no webhook_url or webhook_url_file provided")
+	}
+
+	if tc.WebhookURL != "" && len(tc.WebhookURLFile) != 0 {
+		return errors.New("both webhook_url and webhook_url_file cannot be set at the same time")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)

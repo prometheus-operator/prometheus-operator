@@ -111,6 +111,7 @@ type receiver struct {
 	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
 	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
 	MSTeamsConfigs   []*msTeamsConfig   `yaml:"msteams_configs,omitempty"`
+	MSTeamsV2Configs []*msTeamsV2Config `yaml:"msteamsv2_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -419,6 +420,15 @@ type msTeamsConfig struct {
 	Summary      string            `yaml:"summary,omitempty"`
 	Text         string            `yaml:"text,omitempty"`
 	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
+}
+
+type msTeamsV2Config struct {
+	SendResolved   *bool             `yaml:"send_resolved,omitempty"`
+	WebhookURL     string            `yaml:"webhook_url"`
+	WebhookURLFile string            `yaml:"webhook_url_file"`
+	Title          string            `yaml:"title,omitempty"`
+	Text           string            `yaml:"text,omitempty"`
+	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
 }
 
 type timeInterval config.TimeInterval
