@@ -657,34 +657,47 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+type AuthenticationMethodType string
+
+const (
+	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+)
+
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
 // +k8s:openapi-gen=true
 type AzureSDConfig struct {
 	// The Azure environment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Environment *string `json:"environment,omitempty"`
 	// # The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
 	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
 	// SDK authentication method uses environment variables by default.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
 	// +optional
-	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
+	AuthenticationMethod *AuthenticationMethodType `json:"authenticationMethod,omitempty"`
 	// The subscription ID. Always required.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	SubscriptionID string `json:"subscriptionID"`
 	// Optional tenant ID. Only required with the OAuth authentication method.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TenantID *string `json:"tenantID,omitempty"`
 	// Optional client ID. Only required with the OAuth authentication method.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 	// Optional client secret. Only required with the OAuth authentication method.
 	// +optional
 	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
 	// Optional resource group name. Limits discovery to this resource group.
+	// Requires  Prometheus v2.35.0 and above
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ResourceGroup *string `json:"resourceGroup,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
@@ -692,8 +705,35 @@ type AzureSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
+	// BasicAuth information to authenticate against the target HTTP endpoint.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oAuth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `oAuth2`, or `basicAuth`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // GCESDConfig configures scrape targets from GCP GCE instances.
