@@ -137,7 +137,7 @@ func (in *AzureSDConfig) DeepCopyInto(out *AzureSDConfig) {
 	}
 	if in.AuthenticationMethod != nil {
 		in, out := &in.AuthenticationMethod, &out.AuthenticationMethod
-		*out = new(string)
+		*out = new(AuthenticationMethodType)
 		**out = **in
 	}
 	if in.TenantID != nil {
@@ -167,8 +167,39 @@ func (in *AzureSDConfig) DeepCopyInto(out *AzureSDConfig) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
+	}
+	if in.BasicAuth != nil {
+		in, out := &in.BasicAuth, &out.BasicAuth
+		*out = new(monitoringv1.BasicAuth)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Authorization != nil {
+		in, out := &in.Authorization, &out.Authorization
+		*out = new(monitoringv1.SafeAuthorization)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(monitoringv1.OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	if in.FollowRedirects != nil {
+		in, out := &in.FollowRedirects, &out.FollowRedirects
+		*out = new(bool)
+		**out = **in
+	}
+	if in.EnableHTTP2 != nil {
+		in, out := &in.EnableHTTP2, &out.EnableHTTP2
+		*out = new(bool)
+		**out = **in
+	}
+	if in.TLSConfig != nil {
+		in, out := &in.TLSConfig, &out.TLSConfig
+		*out = new(monitoringv1.SafeTLSConfig)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
