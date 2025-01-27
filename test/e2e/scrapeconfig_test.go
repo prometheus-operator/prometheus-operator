@@ -2213,7 +2213,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "Valid AzureSD With ManagedIdentity Authentication",
