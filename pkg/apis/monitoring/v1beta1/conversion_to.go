@@ -464,6 +464,17 @@ func convertMSTeamsConfigTo(in MSTeamsConfig) v1alpha1.MSTeamsConfig {
 	}
 }
 
+func convertMSTeamsV2ConfigTo(in MSTeamsV2Config) v1alpha1.MSTeamsV2Config {
+	return v1alpha1.MSTeamsV2Config{
+		SendResolved:   in.SendResolved,
+		WebhookURL:     in.WebhookURL,
+		WebhookURLFile: in.WebhookURLFile,
+		Title:          in.Title,
+		Text:           in.Text,
+		HTTPConfig:     convertHTTPConfigTo(in.HTTPConfig),
+	}
+}
+
 // ConvertTo converts from this version (v1beta1) to the Hub version (v1alpha1).
 func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha1.AlertmanagerConfig)
@@ -563,6 +574,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.MSTeamsConfigs = append(
 				out.MSTeamsConfigs,
 				convertMSTeamsConfigTo(in),
+			)
+		}
+
+		for _, in := range in.MSTeamsV2Configs {
+			out.MSTeamsV2Configs = append(
+				out.MSTeamsV2Configs,
+				convertMSTeamsV2ConfigTo(in),
 			)
 		}
 
