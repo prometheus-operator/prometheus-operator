@@ -26,20 +26,21 @@ import (
 // ScalewaySDConfigApplyConfiguration represents a declarative configuration of the ScalewaySDConfig type for use
 // with apply.
 type ScalewaySDConfigApplyConfiguration struct {
-	AccessKey                                                    *string                          `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector            `json:"secretKey,omitempty"`
-	ProjectID                                                    *string                          `json:"projectID,omitempty"`
-	Role                                                         *monitoringv1alpha1.ScalewayRole `json:"role,omitempty"`
-	Port                                                         *int32                           `json:"port,omitempty"`
-	ApiURL                                                       *string                          `json:"apiURL,omitempty"`
-	Zone                                                         *string                          `json:"zone,omitempty"`
-	NameFilter                                                   *string                          `json:"nameFilter,omitempty"`
-	TagsFilter                                                   []string                         `json:"tagsFilter,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration           `json:"refreshInterval,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	AccessKey                                                         *string                          `json:"accessKey,omitempty"`
+	SecretKey                                                         *v1.SecretKeySelector            `json:"secretKey,omitempty"`
+	ProjectID                                                         *string                          `json:"projectID,omitempty"`
+	Role                                                              *monitoringv1alpha1.ScalewayRole `json:"role,omitempty"`
+	Port                                                              *int32                           `json:"port,omitempty"`
+	ApiURL                                                            *string                          `json:"apiURL,omitempty"`
+	Zone                                                              *string                          `json:"zone,omitempty"`
+	NameFilter                                                        *string                          `json:"nameFilter,omitempty"`
+	TagsFilter                                                        []string                         `json:"tagsFilter,omitempty"`
+	RefreshInterval                                                   *monitoringv1.Duration           `json:"refreshInterval,omitempty"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
+	EnableHTTP2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`
+	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // ScalewaySDConfigApplyConfiguration constructs a declarative configuration of the ScalewaySDConfig type for use with
@@ -164,6 +165,19 @@ func (b *ScalewaySDConfigApplyConfiguration) WithProxyConnectHeader(entries map[
 	}
 	for k, v := range entries {
 		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *ScalewaySDConfigApplyConfiguration) WithHTTPHeaders(values ...*applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration) *ScalewaySDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

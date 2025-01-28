@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -113,6 +114,24 @@ func (s *StoreBuilder) AddProxyConfig(ctx context.Context, namespace string, pc 
 	return nil
 }
 
+// AddInlineHTTPConfig processes the given *InlineHTTPConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddInlineHTTPConfig(ctx context.Context, ns string, pc monitoringv1.InlineHTTPConfig) error {
+	if err := pc.Validate(); err != nil {
+		return err
+	}
+
+	for _, header := range pc.HTTPHeaders {
+		for i, ref := range header.SecretRefs {
+			_, err := s.GetSecretKey(ctx, ns, ref)
+			if err != nil {
+				return fmt.Errorf("HTTP header [%q][%d]: %w", http.CanonicalHeaderKey(header.Name), i, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
 func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
@@ -141,6 +160,11 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	err = s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
+	}
+
+	err = s.AddInlineHTTPConfig(ctx, ns, oauth2.InlineHTTPConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get oauth2 HTTP configuration: %w", err)
 	}
 
 	return nil

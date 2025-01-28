@@ -1416,6 +1416,48 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "valid inline http config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.InlineHTTPConfig = monitoringv1.InlineHTTPConfig{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "header",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "valid inline http config with reserved header",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.InlineHTTPConfig = monitoringv1.InlineHTTPConfig{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "Authorization", // reserved header
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ProxyConfig = monitoringv1.ProxyConfig{
@@ -1725,6 +1767,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    false,
 		},
 		{
+			scenario: "HTTP SD inline http config with invalid secret key",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "invalid-key",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "2.55.0",
+		},
+		{
 			scenario: "Kubernetes SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
@@ -1835,6 +1903,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											Name: "secret",
 										},
 										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
 									},
 								},
 							},
@@ -2156,6 +2249,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											Name: "foo",
 										},
 										Key: "invalid-key",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Consul SD inline http config with invalid secret key",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "foo",
+											},
+											Key: "invalid-key",
+										},
 									},
 								},
 							},
@@ -2552,6 +2670,58 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    true,
 		},
 		{
+			scenario: "EC2 SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			promVersion: "2.55.0",
+			selected:    true,
+		},
+		{
+			scenario: "EC2 SD config with valid inline http config settings with unsupport prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			promVersion: "2.54.0",
+			selected:    false,
+		},
+		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
@@ -2890,6 +3060,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Kuma SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+					{
+						Server: "http://example.com",
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Kuma SD config with invalid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
@@ -2978,6 +3174,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											Name: "secret",
 										},
 										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Eureka SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
 									},
 								},
 							},
@@ -3311,6 +3532,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Hetzner SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role: "hcloud",
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Hetzner SD config with invalid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
@@ -3415,6 +3662,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Nomad SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Nomad SD config with invalid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
@@ -3502,6 +3774,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											Name: "secret",
 										},
 										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Dockerswarm SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
 									},
 								},
 							},
@@ -3612,6 +3909,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "PuppetDB SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.PuppetDBSDConfigs = []monitoringv1alpha1.PuppetDBSDConfig{
+					{
+						URL: "https://example.com",
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "PuppetDB SD config with invalid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.PuppetDBSDConfigs = []monitoringv1alpha1.PuppetDBSDConfig{
@@ -3711,6 +4034,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											Name: "secret",
 										},
 										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "LightSail SD config with valid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
 									},
 								},
 							},
@@ -3937,6 +4285,40 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Scaleway SD config with invalid inline http config settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "AccessKey",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						ProjectID: "1",
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Scaleway SD config with invalid TLS config with invalid CA data",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
@@ -4026,6 +4408,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											Name: "secret",
 										},
 										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Ionos SD config with valid inline http config setting",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{
+					{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
 									},
 								},
 							},

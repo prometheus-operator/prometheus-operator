@@ -76,6 +76,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
+	v1.InlineHTTPConfigApplyConfiguration      `json:",inline"`
 	ScrapeClassName                            *string `json:"scrapeClass,omitempty"`
 }
 
@@ -660,6 +661,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[
 	}
 	for k, v := range entries {
 		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithHTTPHeaders(values ...*v1.HTTPHeaderApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

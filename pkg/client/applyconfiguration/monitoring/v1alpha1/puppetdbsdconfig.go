@@ -25,18 +25,19 @@ import (
 // PuppetDBSDConfigApplyConfiguration represents a declarative configuration of the PuppetDBSDConfig type for use
 // with apply.
 type PuppetDBSDConfigApplyConfiguration struct {
-	URL                                        *string                                           `json:"url,omitempty"`
-	Query                                      *string                                           `json:"query,omitempty"`
-	IncludeParameters                          *bool                                             `json:"includeParameters,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	URL                                             *string                                           `json:"url,omitempty"`
+	Query                                           *string                                           `json:"query,omitempty"`
+	IncludeParameters                               *bool                                             `json:"includeParameters,omitempty"`
+	RefreshInterval                                 *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	Port                                            *int32                                            `json:"port,omitempty"`
+	BasicAuth                                       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                          *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	monitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                                 *bool                                         `json:"followRedirects,omitempty"`
+	EnableHTTP2                                     *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
 // PuppetDBSDConfigApplyConfiguration constructs a declarative configuration of the PuppetDBSDConfig type for use with
@@ -143,6 +144,19 @@ func (b *PuppetDBSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[
 	}
 	for k, v := range entries {
 		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *PuppetDBSDConfigApplyConfiguration) WithHTTPHeaders(values ...*monitoringv1.HTTPHeaderApplyConfiguration) *PuppetDBSDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }
