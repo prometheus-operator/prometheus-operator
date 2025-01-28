@@ -2362,6 +2362,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
 	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
 
+	versionMSteamsV2Allowed := semver.Version{Major: 0, Minor: 28}
+	versionMSteamsV2NotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
@@ -2636,6 +2639,69 @@ func TestSanitizeConfig(t *testing.T) {
 						WebexConfigs: []*webexConfig{
 							{
 								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config for supported versions",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteamsv2_config_for_supported_versions.golden",
+		},
+		{
+			name:           "msteamsv2_config returns error for unsupported versions",
+			againstVersion: versionMSteamsV2NotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config no webhook url or webhook url file set",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config both webhook url and webhook url file set",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
 							},
 						},
 					},
