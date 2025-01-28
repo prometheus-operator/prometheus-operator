@@ -613,6 +613,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("LightSailSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, LightSailSDTestCases)
 	})
+	t.Run("GCESD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, GCESDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -2113,6 +2116,148 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
 					Port: ptr.To(int32(65536)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var GCESDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid GCESDConfig required options",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "devops-dev",
+					Zone:    "us-west-1",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid GCESDConfig with empty Project",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid GCESDConfig with empty Zone",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Zone: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid GCESDConfig with empty required fields",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid GCESDConfig with refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project:         "devops-dev",
+					Zone:            "us-west-1",
+					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid GCESDConfig with wrong refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid GCESDConfig with Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "devops-dev",
+					Zone:    "us-west-1",
+					Port:    ptr.To(int32(65534)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid GCESDConfig with wrong Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid GCESDConfig with Filter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "devops-dev",
+					Zone:    "us-west-1",
+					Filter:  ptr.To("filter-expression"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid GCESDConfig with wrong Filter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Filter: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid GCESDConfig with TagSeparator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project:      "devops-dev",
+					Zone:         "us-west-1",
+					TagSeparator: ptr.To("tag-value"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid GCESDConfig with TagSeparator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					TagSeparator: ptr.To(""),
 				},
 			},
 		},
