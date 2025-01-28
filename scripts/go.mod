@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.3
 
 require (
-	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20230629042818-f2b666635240
+	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20241111191808-71fefeed8910
 	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/bwplotka/mdox v0.9.1-0.20220713080221-769034ad8cfe
 	github.com/golangci/golangci-lint v1.63.4
@@ -266,9 +266,7 @@ require (
 	k8s.io/api v0.32.0 // indirect
 	k8s.io/apiextensions-apiserver v0.32.0 // indirect
 	k8s.io/apimachinery v0.32.0 // indirect
-	k8s.io/gengo v0.0.0-20230829151522-9cce18d56c01 // indirect
-	k8s.io/gengo/v2 v2.0.0-20240911193312-2b36238f13e9 // indirect
-	k8s.io/klog v1.0.0 // indirect
+	k8s.io/gengo/v2 v2.0.0-20250106234829-0359904fc2a6 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
