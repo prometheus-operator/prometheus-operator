@@ -1195,7 +1195,7 @@ func checkPagerDutyConfigs(
 
 		if config.URL != "" {
 			if _, err := validation.ValidateURL(strings.TrimSpace(config.URL)); err != nil {
-				return fmt.Errorf("pagerduty 'url' %s invalid: %w", config.URL, err)
+				return fmt.Errorf("failed to validate URL: %w ", err)
 			}
 
 		}
@@ -1276,7 +1276,7 @@ func checkDiscordConfigs(
 			return fmt.Errorf("failed to retrieve API URL: %w", err)
 		}
 		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
-			return fmt.Errorf("discord webhook 'url' secret failed validation: %w", err)
+			return fmt.Errorf("failed to validate API URL: %w", err)
 		}
 	}
 
@@ -1301,7 +1301,7 @@ func checkSlackConfigs(
 				return err
 			}
 			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("slack api 'url' secret failed validation: %w", err)
+				return fmt.Errorf("failed to validate API URL: %w", err)
 			}
 		}
 
@@ -1331,7 +1331,7 @@ func checkWebhookConfigs(
 				return err
 			}
 			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("webhook 'url' secret failed validation: %w", err)
+				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}
 
