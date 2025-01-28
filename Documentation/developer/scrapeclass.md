@@ -21,13 +21,13 @@ description: null
 Before you begin, ensure that you have:
 
 * `Prometheus-Operator > v0.73.0`
-* A running `Prometheus` instance.
+* A running `Prometheus` or `PrometheusAgent` instance.
 
 ## Introduction
 
-`ScrapeClass` is a feature that allows you to define common configuration settings to be applied to all scrape resources( **PodMonitor**, **ServiceMonitor**, **ScrapeConfig** and **Probe** ) of that particular class. This feature is similar to [storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/) in Kubernetes. This feature is very useful when it comes to standardizing configurations such as common relabeling rules, certificates, and other configurations.
+`ScrapeClass` is a feature that allows you to define common configuration settings to be applied across all scrape resources( **PodMonitor**, **ServiceMonitor**, **ScrapeConfig** and **Probe** ). This feature is similar to [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) in Kubernetes. This feature is very useful when it comes to standardising configurations such as common relabelling rules, certificates, and other configurations.
 
-Traditionally, the scrape configurations were defined in the `Prometheus` config file itself. This process was time consuming when user wanted to apply the same configuration to many scrape targets. One such problem was when a user needed to configure secure scraping with TLS certificates when running `Prometheus` to scrape all the pods in an Istio mesh with strict `mTLS`, described [here](https://istio.io/latest/docs/ops/integrations/prometheus/#tls-settings). Defining the TLS certificate paths in each `PodMonitor` and `ServiceMonitor` that scrapes these pods would be repetitive and error-prone. This problem is now solved by `ScrapeClass` feature.
+Traditionally, the scrape configurations were defined in the scrape custom resources like ServiceMonitor itself. This process was time consuming when a user wanted to apply the same configuration to many scrape targets. One use-case is when a user needed to configure secure scraping with TLS certificates when running `Prometheus` to scrape all the pods in an Istio mesh with strict `mTLS` described [here](https://istio.io/latest/docs/ops/integrations/prometheus/#tls-settings). Defining the TLS certificate paths in each `PodMonitor` and `ServiceMonitor` that scrapes these pods would be repetitive and error-prone. This problem is now solved by `ScrapeClass` feature.
 
 ## Defining a ScrapeClass in Prometheus Resource
 
@@ -89,6 +89,8 @@ spec:
 ```
 
 If a monitor resource includes a `tlsConfig` field, the Operator will apply a merge strategy to combine the `tlsConfig` fields from the monitor resource with those defined in the scrape class. The `tlsConfig` settings in the monitor resource will take precedence.
+
+> Note: The configuration in scrapeClass will only be applied if the scrape resources haven't set fields defined in scrapeClass.
 
 ## What's Next
 
