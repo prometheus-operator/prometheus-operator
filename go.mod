@@ -12,7 +12,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/distribution/reference v0.6.0
-	github.com/evanphx/json-patch/v5 v5.9.10
+	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/go-kit/log v0.2.1
 	github.com/go-test/deep v1.1.1
 	github.com/gogo/protobuf v1.3.2
