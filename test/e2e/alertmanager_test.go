@@ -411,7 +411,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						},
 						Key: "key.pem",
 					},
-					ClientAuthType: "VerifyClientCertIfGiven",
+					ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
 				},
 				ClientTLS: &monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
