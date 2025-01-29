@@ -43,12 +43,12 @@ const (
 // volumes and volume mounts for referencing the secret and the
 // necessary TLS credentials.
 type ClusterTLSConfig struct {
-	serverTLSConfig      *monitoringv1.WebTLSConfig
-	clientTLSConfig      *monitoringv1.SafeTLSConfig
-	serverTLSCredentials *webconfig.TLSCredentials
-	clientTLSCredentials *webconfig.TLSCredentials
-	mountingDir          string
-	secretName           string
+	serverTLSConfig     *monitoringv1.WebTLSConfig
+	clientTLSConfig     *monitoringv1.SafeTLSConfig
+	serverTLSReferences *webconfig.TLSReferences
+	clientTLSReferences *webconfig.TLSReferences
+	mountingDir         string
+	secretName          string
 }
 
 // New creates a new ClusterTLSConfig.
@@ -67,23 +67,23 @@ func New(mountingDir string, secretName string, clusterTLSConfig monitoringv1.Cl
 		return nil, err
 	}
 
-	var serverTLSCreds *webconfig.TLSCredentials
-	var clientTLSCreds *webconfig.TLSCredentials
+	var serverTLSCreds *webconfig.TLSReferences
+	var clientTLSCreds *webconfig.TLSReferences
 
 	if serverTLSConfig != nil {
-		serverTLSCreds = webconfig.NewTLSCredentials(path.Join(mountingDir, serverTLSCredDir), serverTLSConfig.KeySecret, serverTLSConfig.KeyFile, serverTLSConfig.Cert, serverTLSConfig.CertFile, serverTLSConfig.ClientCA, serverTLSConfig.ClientCAFile)
+		serverTLSCreds = webconfig.NewTLSReferences(path.Join(mountingDir, serverTLSCredDir), serverTLSConfig.KeySecret, serverTLSConfig.Cert, serverTLSConfig.ClientCA)
 	}
 	if clientTLSConfig != nil {
-		clientTLSCreds = webconfig.NewTLSCredentials(path.Join(mountingDir, clientTLSCredDir), *clientTLSConfig.KeySecret, "", clientTLSConfig.Cert, "", clientTLSConfig.CA, "")
+		clientTLSCreds = webconfig.NewTLSReferences(path.Join(mountingDir, clientTLSCredDir), *clientTLSConfig.KeySecret, clientTLSConfig.Cert, clientTLSConfig.CA)
 	}
 
 	return &ClusterTLSConfig{
-		serverTLSConfig:      serverTLSConfig,
-		clientTLSConfig:      clientTLSConfig,
-		serverTLSCredentials: serverTLSCreds,
-		clientTLSCredentials: clientTLSCreds,
-		mountingDir:          mountingDir,
-		secretName:           secretName,
+		serverTLSConfig:     serverTLSConfig,
+		clientTLSConfig:     clientTLSConfig,
+		serverTLSReferences: serverTLSCreds,
+		clientTLSReferences: clientTLSCreds,
+		mountingDir:         mountingDir,
+		secretName:          secretName,
 	}, nil
 }
 
@@ -108,8 +108,8 @@ func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volu
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
 
-	if c.serverTLSCredentials != nil {
-		servertlsVolumes, servertlsMounts, err := c.serverTLSCredentials.GetMountParameters(serverVolumePrefix)
+	if c.serverTLSReferences != nil {
+		servertlsVolumes, servertlsMounts, err := c.serverTLSReferences.GetMountParameters(serverVolumePrefix)
 		if err != nil {
 			return monitoringv1.Argument{}, nil, nil, err
 		}
@@ -117,8 +117,8 @@ func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volu
 		mounts = append(mounts, servertlsMounts...)
 	}
 
-	if c.clientTLSCredentials != nil {
-		clienttlsVolumes, clienttlsMounts, err := c.clientTLSCredentials.GetMountParameters(clientVolumePrefix)
+	if c.clientTLSReferences != nil {
+		clienttlsVolumes, clienttlsMounts, err := c.clientTLSReferences.GetMountParameters(clientVolumePrefix)
 		if err != nil {
 			return monitoringv1.Argument{}, nil, nil, err
 		}

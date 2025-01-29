@@ -216,9 +216,9 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 						},
 						Key: "tls.keySecret",
 					},
-					ClientAuthType:           "RequireAnyClientCert",
-					MinVersion:               "TLS11",
-					MaxVersion:               "TLS13",
+					ClientAuthType:           ptr.To("RequireAnyClientCert"),
+					MinVersion:               ptr.To("TLS11"),
+					MaxVersion:               ptr.To("TLS13"),
 					CipherSuites:             []string{"cipher-1", "cipher-2"},
 					PreferServerCipherSuites: ptr.To(false),
 					CurvePreferences:         []string{"curve-1", "curve-2"},
@@ -255,9 +255,9 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 			name: "cluster tls config with server client CA, cert and key files",
 			clusterTLSConfig: monitoringv1.ClusterTLSConfigFields{
 				ServerTLS: &monitoringv1.WebTLSConfig{
-					ClientCAFile: "/etc/ssl/certs/tls.client_ca",
-					CertFile:     "/etc/ssl/certs/tls.crt",
-					KeyFile:      "/etc/ssl/secrets/tls.key",
+					ClientCAFile: ptr.To("/etc/ssl/certs/tls.client_ca"),
+					CertFile:     ptr.To("/etc/ssl/certs/tls.crt"),
+					KeyFile:      ptr.To("/etc/ssl/secrets/tls.key"),
 				},
 				ClientTLS: &monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),

@@ -16,79 +16,81 @@ package clustertlsconfig
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
+	"k8s.io/utils/ptr"
 )
 
 func addServerTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSlice {
-	serverTLSConfig := c.serverTLSConfig
-	if serverTLSConfig == nil {
+	tls := c.serverTLSConfig
+	if tls == nil {
 		return nil
 	}
 
 	mtlsServerConfig := yaml.MapSlice{}
-	serverTLSCredentials := c.serverTLSCredentials
+	tlsRefs := c.serverTLSReferences
 
 	switch {
-	case serverTLSCredentials.GetKeyFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyFile()})
-	case serverTLSCredentials.GetKeyMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", serverTLSCredentials.GetKeyMountPath(), serverTLSCredentials.GetKeyFilename())})
+	case ptr.Deref(tls.KeyFile, "") != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: *tls.KeyFile})
+	case tlsRefs.GetKeyMountPath() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: filepath.Join(tlsRefs.GetKeyMountPath(), tlsRefs.GetKeyFilename())})
 	}
 
 	switch {
-	case serverTLSCredentials.GetCertFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertFile()})
-	case serverTLSCredentials.GetCertMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", serverTLSCredentials.GetCertMountPath(), serverTLSCredentials.GetCertFilename())})
+	case ptr.Deref(tls.CertFile, "") != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: *tls.CertFile})
+	case tlsRefs.GetCertMountPath() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: filepath.Join(tlsRefs.GetCertMountPath(), tlsRefs.GetCertFilename())})
 	}
 
-	if serverTLSConfig.ClientAuthType != "" {
+	if ptr.Deref(tls.ClientAuthType, "") != "" {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "client_auth_type",
-			Value: serverTLSConfig.ClientAuthType,
+			Value: *tls.ClientAuthType,
 		})
 	}
 
 	switch {
-	case serverTLSCredentials.GetCAFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: serverTLSCredentials.GetCAFile()})
-	case serverTLSCredentials.GetCAMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", serverTLSCredentials.GetCAMountPath(), serverTLSCredentials.GetCAFilename())})
+	case ptr.Deref(tls.ClientCAFile, "") != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: *tls.ClientCAFile})
+	case tlsRefs.GetCAMountPath() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: filepath.Join(tlsRefs.GetCAMountPath(), tlsRefs.GetCAFilename())})
 	}
 
-	if serverTLSConfig.MinVersion != "" {
+	if ptr.Deref(tls.MinVersion, "") != "" {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "min_version",
-			Value: serverTLSConfig.MinVersion,
+			Value: *tls.MinVersion,
 		})
 	}
 
-	if serverTLSConfig.MaxVersion != "" {
+	if ptr.Deref(tls.MaxVersion, "") != "" {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "max_version",
-			Value: serverTLSConfig.MaxVersion,
+			Value: *tls.MaxVersion,
 		})
 	}
 
-	if len(serverTLSConfig.CipherSuites) != 0 {
+	if len(tls.CipherSuites) != 0 {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "cipher_suites",
-			Value: serverTLSConfig.CipherSuites,
+			Value: tls.CipherSuites,
 		})
 	}
 
-	if serverTLSConfig.PreferServerCipherSuites != nil {
+	if tls.PreferServerCipherSuites != nil {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "prefer_server_cipher_suites",
-			Value: serverTLSConfig.PreferServerCipherSuites,
+			Value: tls.PreferServerCipherSuites,
 		})
 	}
 
-	if len(serverTLSConfig.CurvePreferences) != 0 {
+	if len(tls.CurvePreferences) != 0 {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "curve_preferences",
-			Value: serverTLSConfig.CurvePreferences,
+			Value: tls.CurvePreferences,
 		})
 	}
 
@@ -96,34 +98,34 @@ func addServerTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSli
 }
 
 func addClientTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSlice {
-	clientTLSConfig := c.clientTLSConfig
-	if clientTLSConfig == nil {
+	tls := c.clientTLSConfig
+	if tls == nil {
 		return nil
 	}
 
-	clientTLSCredentials := c.clientTLSCredentials
 	mtlsClientConfig := yaml.MapSlice{}
+	tlsRefs := c.clientTLSReferences
 
-	if keyPath := clientTLSCredentials.GetKeyMountPath(); keyPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, clientTLSCredentials.GetKeyFilename())})
+	if keyPath := tlsRefs.GetKeyMountPath(); keyPath != "" {
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, tlsRefs.GetKeyFilename())})
 	}
 
-	if certPath := clientTLSCredentials.GetCertMountPath(); certPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, clientTLSCredentials.GetCertFilename())})
+	if certPath := tlsRefs.GetCertMountPath(); certPath != "" {
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, tlsRefs.GetCertFilename())})
 	}
 
-	if caPath := clientTLSCredentials.GetCAMountPath(); caPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "ca_file", Value: fmt.Sprintf("%s/%s", caPath, clientTLSCredentials.GetCAFilename())})
+	if caPath := tlsRefs.GetCAMountPath(); caPath != "" {
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "ca_file", Value: fmt.Sprintf("%s/%s", caPath, tlsRefs.GetCAFilename())})
 	}
 
-	if serverName := clientTLSConfig.ServerName; serverName != nil {
+	if serverName := tls.ServerName; serverName != nil {
 		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "server_name", Value: serverName})
 	}
 
-	if clientTLSConfig.InsecureSkipVerify != nil {
+	if tls.InsecureSkipVerify != nil {
 		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{
 			Key:   "insecure_skip_verify",
-			Value: clientTLSConfig.InsecureSkipVerify,
+			Value: tls.InsecureSkipVerify,
 		})
 	}
 
