@@ -2721,7 +2721,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   "hypervisor",
 					Region: "default",
-					Port:   ptr.To(8080),
+					Port:   ptr.To(int32(8080)),
 				},
 			},
 		},
@@ -2734,7 +2734,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   "hypervisor",
 					Region: "default",
-					Port:   ptr.To(-1),
+					Port:   ptr.To(int32(-1)),
 				},
 			},
 		},
@@ -2747,7 +2747,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   "hypervisor",
 					Region: "default",
-					Port:   ptr.To(65537),
+					Port:   ptr.To(int32(65537)),
 				},
 			},
 		},
