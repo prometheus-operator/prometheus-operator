@@ -851,7 +851,7 @@ type OpenStackSDConfig struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 	// Availability of the endpoint to connect to.
 	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
