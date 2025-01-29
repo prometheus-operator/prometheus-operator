@@ -9835,6 +9835,7 @@
                         },
                         "applicationCredentialName": {
                           "description": "The ApplicationCredentialID or ApplicationCredentialName fields are\nrequired if using an application credential to authenticate. Some providers\nallow you to create an application credential to authenticate rather than a\npassword.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "applicationCredentialSecret": {
@@ -9874,10 +9875,12 @@
                         },
                         "domainID": {
                           "description": "DomainID",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "domainName": {
                           "description": "At most one of domainId and domainName must be provided if using username\nwith Identity V3. Otherwise, either are optional.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "identityEndpoint": {
@@ -9910,16 +9913,19 @@
                         },
                         "port": {
                           "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
+                          "format": "int32",
                           "maximum": 65535,
                           "minimum": 0,
                           "type": "integer"
                         },
                         "projectID": {
                           "description": " ProjectID",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "projectName": {
                           "description": "The ProjectId and ProjectName fields are optional for the Identity V2 API.\nSome providers allow you to specify a ProjectName instead of the ProjectId.\nSome require both. Your provider's authentication policies will determine\nhow these fields influence authentication.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -10105,10 +10111,12 @@
                         },
                         "userid": {
                           "description": "UserID",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "username": {
                           "description": "Username is required if using Identity V2 API. Consult with your provider's\ncontrol panel to discover your account's username.\nIn Identity V3, either userid or a combination of username\nand domainId or domainName are needed",
+                          "minLength": 1,
                           "type": "string"
                         }
                       },

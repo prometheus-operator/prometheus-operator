@@ -55587,6 +55587,7 @@ spec:
                         required if using an application credential to authenticate. Some providers
                         allow you to create an application credential to authenticate rather than a
                         password.
+                      minLength: 1
                       type: string
                     applicationCredentialSecret:
                       description: |-
@@ -55626,11 +55627,13 @@ spec:
                       type: string
                     domainID:
                       description: DomainID
+                      minLength: 1
                       type: string
                     domainName:
                       description: |-
                         At most one of domainId and domainName must be provided if using username
                         with Identity V3. Otherwise, either are optional.
+                      minLength: 1
                       type: string
                     identityEndpoint:
                       description: |-
@@ -55668,11 +55671,13 @@ spec:
                       description: |-
                         The port to scrape metrics from. If using the public IP address, this must
                         instead be specified in the relabeling rule.
+                      format: int32
                       maximum: 65535
                       minimum: 0
                       type: integer
                     projectID:
                       description: ' ProjectID'
+                      minLength: 1
                       type: string
                     projectName:
                       description: |-
@@ -55680,6 +55685,7 @@ spec:
                         Some providers allow you to specify a ProjectName instead of the ProjectId.
                         Some require both. Your provider's authentication policies will determine
                         how these fields influence authentication.
+                      minLength: 1
                       type: string
                     refreshInterval:
                       description: Refresh interval to re-read the instance list.
@@ -55861,6 +55867,7 @@ spec:
                       type: object
                     userid:
                       description: UserID
+                      minLength: 1
                       type: string
                     username:
                       description: |-
@@ -55868,6 +55875,7 @@ spec:
                         control panel to discover your account's username.
                         In Identity V3, either userid or a combination of username
                         and domainId or domainName are needed
+                      minLength: 1
                       type: string
                   required:
                   - region
