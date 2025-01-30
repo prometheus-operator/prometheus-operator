@@ -20526,7 +20526,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -29877,7 +29878,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
