@@ -5373,17 +5373,17 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 
 	testCases := []struct {
 		name                 string
-		whenScaledDown       monitoringv1.WhenScaledRetentionType
+		whenScaledDown       *monitoringv1.WhenScaledRetentionType
 		expectedRemainingSts int
 	}{
 		{
 			name:                 "delete",
-			whenScaledDown:       monitoringv1.WhenScaledRetentionTypeDelete,
+			whenScaledDown:       ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
 			expectedRemainingSts: 1,
 		},
 		{
 			name:                 "retain",
-			whenScaledDown:       monitoringv1.WhenScaledRetentionTypeRetain,
+			whenScaledDown:       ptr.To(monitoringv1.RetainWhenScaledRetentionType),
 			expectedRemainingSts: 2,
 		},
 	}

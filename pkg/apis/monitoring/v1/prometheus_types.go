@@ -1143,18 +1143,19 @@ type PrometheusSpec struct {
 type WhenScaledRetentionType string
 
 var (
-	WhenScaledRetentionTypeRetain WhenScaledRetentionType = "Retain"
-	WhenScaledRetentionTypeDelete WhenScaledRetentionType = "Delete"
+	RetainWhenScaledRetentionType WhenScaledRetentionType = "Retain"
+	DeleteWhenScaledRetentionType WhenScaledRetentionType = "Delete"
 )
 
 type ShardRetentionPolicy struct {
 	// WhenScaled defines the retention policy when the Prometheus shards are scaled down.
-	// When set to `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+	// * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+	// * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
 	//
-	// Default: "Delete"
+	// If not defined, the operator assumes the `Delete` value.
 	// +kubebuilder:validation:Enum=Retain;Delete
-	// +required
-	WhenScaled WhenScaledRetentionType `json:"whenScaledDown"`
+	// +optional
+	WhenScaled *WhenScaledRetentionType `json:"whenScaled,omitempty"`
 }
 
 type PrometheusTracingConfig struct {

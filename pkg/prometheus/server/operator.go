@@ -970,7 +970,8 @@ func (c *Operator) shouldDelete(p *monitoringv1.Prometheus) (bool, error) {
 		return true, nil
 	}
 
-	if p.Spec.ShardRetentionPolicy.WhenScaled == monitoringv1.WhenScaledRetentionTypeDelete {
+	if p.Spec.ShardRetentionPolicy.WhenScaled != nil &&
+		*p.Spec.ShardRetentionPolicy.WhenScaled == monitoringv1.DeleteWhenScaledRetentionType {
 		return true, nil
 	}
 
