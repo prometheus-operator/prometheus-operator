@@ -55639,7 +55639,7 @@ spec:
                       description: |-
                         IdentityEndpoint specifies the HTTP endpoint that is required to work with
                         the Identity API of the appropriate version.
-                      pattern: ^http(s)?://.+$
+                      pattern: ^http(s)?:\/\/.+$
                       type: string
                     password:
                       description: |-
