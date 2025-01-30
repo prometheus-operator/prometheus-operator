@@ -21205,7 +21205,7 @@ bool
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-map[string][]k8s.io/api/core/v1.SecretKeySelector
+map[string][]Kubernetes core/v1.SecretKeySelector
 </a>
 </em>
 </td>
