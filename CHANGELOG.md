@@ -1,3 +1,13 @@
+# 0.80.0 / 2025-02-03
+
+* [CHANGE] Add more API validations to the ScrapeConfig CRD. #7231 #7220 #7215 #7238
+* [FEATURE] Add `serviceName` field to the Prometheus and PrometheusAgent CRDs. #6687
+* [FEATURE] Add `keepIdentifyingResourceAttributes` field in OTLPConfig for `Prometheus` and `PrometheusAgent` CRDs. #7240
+* [FEATURE] Add `fallbackScrapeProtocol` field to ScrapeClass for `Prometheus` and `PrometheusAgent` CRDs. #7288
+* [FEATURE] Support `MSTeamsV2Config` receiver in Alertmanager configuration Secret. #7296
+* [FEATURE] Add `scrapeFailureLogFile` field to the Prometheus and PrometheusAgent CRDs. #7038 #7311
+* [BUGFIX] Validate respective api URL field in PagerDutyConfigs, DiscordConfigs, SlackConfigs and WebhookConfigs in AlertManagerConfig CRD. #6585
+
 # 0.79.2 / 2024-12-18
 
 * [BUGFIX] Fix pod and service monitor selector validation. #7214
