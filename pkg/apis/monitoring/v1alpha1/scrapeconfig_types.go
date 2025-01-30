@@ -794,7 +794,7 @@ type OpenStackSDConfig struct {
 	Region string `json:"region"`
 	// IdentityEndpoint specifies the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:Pattern:=^http(s)?:\/\/.+$
 	// +optional
 	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
 	// Username is required if using Identity V2 API. Consult with your provider's
