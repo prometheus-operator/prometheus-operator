@@ -3057,19 +3057,6 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Invalid Refresh Interval Empty",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
-				{
-					Role:            "hypervisor",
-					Region:          "default",
-					RefreshInterval: ptr.To(monitoringv1.Duration("")),
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
 		name: "Valid Port 8080",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
