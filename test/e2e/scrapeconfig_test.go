@@ -2685,6 +2685,28 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Missing Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Region: "default",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role: "hypervisor",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid Role Hypervisor",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
