@@ -619,6 +619,12 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("OVHCloudSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OVHCloudSDTestCases)
 	})
+	t.Run("GCESD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, GCESDTestCases)
+	})
+	t.Run("OpenStackSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
