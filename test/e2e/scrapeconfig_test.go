@@ -616,6 +616,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("GCESD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, GCESDTestCases)
 	})
+	t.Run("AzureSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, AzureSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -2258,6 +2261,218 @@ var GCESDTestCases = []scrapeCRDTestCase{
 			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
 				{
 					TagSeparator: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var AzureSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid AzureSD With SubscriptionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD With Missing SubscriptionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid AzureSD With Empty SubscriptionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid AzureSD With No SubscriptionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AzureSD With Environment",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:    ptr.To("AzurePublicCloud"),
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD With Empty Environment",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:    ptr.To(""),
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AzureSD With ResourceGroup",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					ResourceGroup:  ptr.To("my-resource-group"),
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD With Empty ResourceGroup",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					ResourceGroup:  ptr.To(""),
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AzureSD With ManagedIdentity Authentication",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid AzureSD With SDK Authentication",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid AzureSD With OAuth Authentication And All Required Fields",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
+					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
+					ClientID:             ptr.To("33333333-3333-3333-3333-333333333333"),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+					ClientSecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "azure-client-secret",
+						},
+						Key: "clientSecret",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD With OAuth Authentication and Empty TenantID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
+					TenantID:             ptr.To(""),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid AzureSD With OAuth Authentication and Empty ClientID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
+					ClientID:             ptr.To(""),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AzureSD With RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID:  "11111111-1111-1111-1111-111111111111",
+					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD with Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID:  "11111111-1111-1111-1111-111111111111",
+					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AzureSD With Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+					Port:           ptr.To(int32(65534)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD With Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+					Port:           ptr.To(int32(-1)),
 				},
 			},
 		},

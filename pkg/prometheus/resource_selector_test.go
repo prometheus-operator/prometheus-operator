@@ -2574,7 +2574,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
 					{
-						AuthenticationMethod: ptr.To("OAuth"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
 					},
@@ -2587,7 +2587,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
 					{
-						AuthenticationMethod: ptr.To("OAuth"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
 						ClientSecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -2605,7 +2605,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
 					{
-						AuthenticationMethod: ptr.To("OAuth"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientSecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -2623,7 +2623,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
 					{
-						AuthenticationMethod: ptr.To("ManagedIdentity"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
 					},
 				}
 			},
@@ -2634,7 +2634,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
 					{
-						AuthenticationMethod: ptr.To("SDK"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 					},
 				}
 			},
@@ -2646,12 +2646,101 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
 					{
-						AuthenticationMethod: ptr.To("SDK"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 					},
 				}
 			},
 			promVersion: "2.51.0",
 			selected:    false,
+		},
+		{
+			scenario: "Azure SD config with ResourceGroup and prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+						ResourceGroup:        ptr.To("my-resource-group"),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Azure SD config with ResourceGroup but unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+						ResourceGroup:        ptr.To("my-resource-group"),
+					},
+				}
+			},
+			promVersion: "2.34.0",
+			selected:    false,
+		},
+		{
+			scenario: "Azure SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11111111-1111-1111-1111-111111111111",
+						TenantID:       ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientID:       ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+						ClientSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Azure SD config with invalid TLS config with invalid CA data",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
 		},
 		{
 			scenario: "OpenStack SD config with valid secret ref",
