@@ -25,9 +25,9 @@ Before you begin, ensure that you have:
 
 ## Introduction
 
-`ScrapeClass` is a feature that allows you to define common configuration settings to be applied across all scrape resources( **PodMonitor**, **ServiceMonitor**, **ScrapeConfig** and **Probe** ). This feature is similar to [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) in Kubernetes. This feature is very useful when it comes to standardising configurations such as common relabelling rules, certificates, and other configurations.
+`ScrapeClass` is a feature that allows you to define common configuration settings to be applied across all scrape resources( **PodMonitor**, **ServiceMonitor**, **ScrapeConfig** and **Probe** ). This feature is similar to [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) in Kubernetes and is very useful when it comes to standardising configurations such as common relabelling rules, TLS certificates and authentication.
 
-Traditionally, the scrape configurations were defined in the scrape custom resources like ServiceMonitor itself. This process was time consuming when a user wanted to apply the same configuration to many scrape targets. One use-case is when a user needed to configure secure scraping with TLS certificates when running `Prometheus` to scrape all the pods in an Istio mesh with strict `mTLS` described [here](https://istio.io/latest/docs/ops/integrations/prometheus/#tls-settings). Defining the TLS certificate paths in each `PodMonitor` and `ServiceMonitor` that scrapes these pods would be repetitive and error-prone. This problem is now solved by `ScrapeClass` feature.
+One use-case is to configure authentication with TLS certificates when running `Prometheus` to scrape all the pods in an Istio mesh with [strict mTLS](https://istio.io/latest/docs/ops/integrations/prometheus/#tls-settings). Defining the TLS certificate paths in each `PodMonitor` and `ServiceMonitor` that scrapes these pods would be repetitive and error-prone. This problem is now solved by the `ScrapeClass` feature.
 
 ## Defining a ScrapeClass in Prometheus Resource
 
@@ -60,7 +60,7 @@ An administrator can set the `default:true` so that the scrape applies to all sc
 
 ## Using the ScrapeClass in Monitor Resources
 
-Once the `ScrapeClass` is defined in the `Prometheus` resource, the `ScrapeClassName` field can be used in monitor resource to reference the particular `ScrapeClass`.
+Once the `ScrapeClass` is defined in the `Prometheus` resource, the `ScrapeClassName` field can be used in the scrape resource to reference the particular `ScrapeClass`.
 
 ```yaml mdox-exec="cat example/user-guides/scrapeclass/scrapeclass-example-servicemonitor.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -74,7 +74,7 @@ spec:
       path: /metrics
 ```
 
-If the monitor resource specifies a scrape class name that isn't defined in the `Prometheus/PrometheusAgent` object, then the scrape resource is rejected by the operator.
+If the monitor resource specifies a scrape class name that isn't defined in the `Prometheus/PrometheusAgent` object, then the scrape resource is ignored by the operator.
 
 Similarly, we can select the scrape class for `PodMonitor` resource.
 
