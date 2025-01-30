@@ -270,7 +270,7 @@ func TestShouldDelete(t *testing.T) {
 	for _, tc := range []struct {
 		name               string
 		featureGateEnabled bool
-		retentionPolicy    monitoringv1.WhenScaledRetentionType
+		retentionPolicy    *monitoringv1.WhenScaledRetentionType
 		shouldDelete       bool
 	}{
 		{
@@ -281,13 +281,13 @@ func TestShouldDelete(t *testing.T) {
 		{
 			name:               "delete policy",
 			featureGateEnabled: true,
-			retentionPolicy:    monitoringv1.WhenScaledRetentionTypeDelete,
+			retentionPolicy:    ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
 			shouldDelete:       true,
 		},
 		{
 			name:               "retain policy",
 			featureGateEnabled: true,
-			retentionPolicy:    monitoringv1.WhenScaledRetentionTypeRetain,
+			retentionPolicy:    ptr.To(monitoringv1.RetainWhenScaledRetentionType),
 			shouldDelete:       false,
 		},
 	} {
