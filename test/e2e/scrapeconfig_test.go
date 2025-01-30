@@ -2721,6 +2721,355 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Invalid Role Empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "",
+					Region: "default",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Region Empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Endpoint HTTP",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:             "hypervisor",
+					Region:           "default",
+					IdentityEndpoint: ptr.To("http://example.com"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Endpoint HTTPS",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:             "hypervisor",
+					Region:           "default",
+					IdentityEndpoint: ptr.To("https://example.com"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:             "hypervisor",
+					Region:           "default",
+					IdentityEndpoint: ptr.To("ftp://example.com"),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Endpoint Empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:             "hypervisor",
+					Region:           "default",
+					IdentityEndpoint: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Username",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:     "hypervisor",
+					Region:   "default",
+					Username: ptr.To("admin"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Username",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:     "hypervisor",
+					Region:   "default",
+					Username: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid User ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "default",
+					UserID: ptr.To("ac3377633149401296f6c0d92d79dc16"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid User ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "default",
+					UserID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Domain ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:     "hypervisor",
+					Region:   "default",
+					DomainID: ptr.To("e0353a670a9e496da891347c589539e9"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Domain ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:     "hypervisor",
+					Region:   "default",
+					DomainID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Domain Name",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:       "hypervisor",
+					Region:     "default",
+					DomainName: ptr.To("default"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Domain Name",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:       "hypervisor",
+					Region:     "default",
+					DomainName: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Project Name",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:        "hypervisor",
+					Region:      "default",
+					ProjectName: ptr.To("default"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Project Name",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:        "hypervisor",
+					Region:      "default",
+					ProjectName: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:      "hypervisor",
+					Region:    "default",
+					ProjectID: ptr.To("343d245e850143a096806dfaefa9afdc"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:      "hypervisor",
+					Region:    "default",
+					ProjectID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Application Credential Name",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:                      "hypervisor",
+					Region:                    "default",
+					ApplicationCredentialName: ptr.To("monitoring"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Application Credential Name",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:                      "hypervisor",
+					Region:                    "default",
+					ApplicationCredentialName: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Application Credential ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:                    "hypervisor",
+					Region:                  "default",
+					ApplicationCredentialID: ptr.To("aa809205ed614a0e854bac92c0768bb9"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Application Credential ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:                    "hypervisor",
+					Region:                  "default",
+					ApplicationCredentialID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "All Tenants True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:       "hypervisor",
+					Region:     "default",
+					AllTenants: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "All Tenants False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:       "hypervisor",
+					Region:     "default",
+					AllTenants: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:            "hypervisor",
+					Region:          "default",
+					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:            "hypervisor",
+					Region:          "default",
+					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Refresh Interval Empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:            "hypervisor",
+					Region:          "default",
+					RefreshInterval: ptr.To(monitoringv1.Duration("")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid Port 8080",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
@@ -2806,6 +3155,19 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 					Role:         "hypervisor",
 					Region:       "default",
 					Availability: ptr.To("private"),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Availability Empty Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:         "hypervisor",
+					Region:       "default",
+					Availability: ptr.To(""),
 				},
 			},
 		},
