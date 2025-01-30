@@ -25,7 +25,7 @@ Before you begin, ensure that you have:
 
 ## Introduction
 
-`ScrapeClass` is a feature that allows you to define common configuration settings to be applied across all scrape resources( **PodMonitor**, **ServiceMonitor**, **ScrapeConfig** and **Probe** ). This feature is similar to [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) in Kubernetes. It is very useful when it comes to standardising configurations such as common relabelling rules, TLS certificates and authentication.
+`ScrapeClass` is a feature that allows you to define common configuration settings to be applied across all scrape resources( **PodMonitor**, **ServiceMonitor**, **ScrapeConfig** and **Probe** ). This feature is similar to [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) in Kubernetes and is very useful when it comes to standardising configurations such as common relabelling rules, TLS certificates and authentication.
 
 One use-case is to configure authentication with TLS certificates when running `Prometheus` to scrape all the pods in an Istio mesh with [strict mTLS](https://istio.io/latest/docs/ops/integrations/prometheus/#tls-settings). Defining the TLS certificate paths in each `PodMonitor` and `ServiceMonitor` that scrapes these pods would be repetitive and error-prone. This problem is now solved by the `ScrapeClass` feature.
 
