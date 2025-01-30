@@ -16149,7 +16149,7 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <tbody>
 <tr>
 <td>
-<code>whenScaledDown</code><br/>
+<code>whenScaled</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.WhenScaledRetentionType">
 WhenScaledRetentionType
@@ -16157,9 +16157,11 @@ WhenScaledRetentionType
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>WhenScaled defines the retention policy when the Prometheus shards are scaled down.
-When set to <code>Retain</code>, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.</p>
-<p>Default: &ldquo;Delete&rdquo;</p>
+* <code>Delete</code>, the operator will delete the pods from the scaled-down shard(s).
+* <code>Retain</code>, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.</p>
+<p>If not defined, the operator assumes the <code>Delete</code> value.</p>
 </td>
 </tr>
 </tbody>

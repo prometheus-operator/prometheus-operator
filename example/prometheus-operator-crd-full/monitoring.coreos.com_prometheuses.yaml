@@ -9041,18 +9041,17 @@ spec:
                   * Target redistribution doesn't happen on scale up/down.
                   * Retention duration is not settable, for now shards are retained forever.
                 properties:
-                  whenScaledDown:
+                  whenScaled:
                     description: |-
                       WhenScaled defines the retention policy when the Prometheus shards are scaled down.
-                      When set to `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+                      * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+                      * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
 
-                      Default: "Delete"
+                      If not defined, the operator assumes the `Delete` value.
                     enum:
                     - Retain
                     - Delete
                     type: string
-                required:
-                - whenScaledDown
                 type: object
               shards:
                 description: |-

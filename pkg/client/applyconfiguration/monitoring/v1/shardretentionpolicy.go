@@ -23,7 +23,7 @@ import (
 // ShardRetentionPolicyApplyConfiguration represents a declarative configuration of the ShardRetentionPolicy type for use
 // with apply.
 type ShardRetentionPolicyApplyConfiguration struct {
-	WhenScaled *v1.WhenScaledRetentionType `json:"whenScaledDown,omitempty"`
+	WhenScaled *v1.WhenScaledRetentionType `json:"whenScaled,omitempty"`
 }
 
 // ShardRetentionPolicyApplyConfiguration constructs a declarative configuration of the ShardRetentionPolicy type for use with
