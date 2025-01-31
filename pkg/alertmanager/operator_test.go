@@ -205,7 +205,8 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				Namespace: "ns1",
 			},
 			Data: map[string][]byte{
-				"key1": []byte("https://val1.com"),
+				"key1":        []byte("https://val1.com"),
+				"invalid-url": []byte("://foo"),
 			},
 		},
 	)
@@ -984,6 +985,28 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-invalid-url-in-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								APIURL: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "invalid-url",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "subroute-with-invalid-matcher",
 					Namespace: "ns1",
 				},
@@ -1071,6 +1094,28 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-with-invalid-url-in-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "invalid-url",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
