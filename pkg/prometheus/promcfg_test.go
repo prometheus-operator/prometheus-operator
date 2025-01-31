@@ -11246,7 +11246,7 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 							},
 							Key: "ck",
 						},
-						Service:         monitoringv1alpha1.DedicatedServer,
+						Service:         monitoringv1alpha1.OVHServiceDedicatedServer,
 						Endpoint:        ptr.To("127.0.0.1"),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
