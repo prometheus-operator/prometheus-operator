@@ -3665,6 +3665,22 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_webhook_timeout_is_dropped_in_webhook_config_for_unsupported_versions.golden",
 		},
+		{
+			name:           "Test timeout is added in webhook config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								Timeout: "30s",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_timeout_is_added_in_webhook_config_for_supported_versions.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
