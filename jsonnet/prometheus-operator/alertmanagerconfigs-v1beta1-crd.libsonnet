@@ -134,6 +134,13 @@
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
                           },
+                          avatarURL: {
+                            type: 'string',
+                          },
+                          content: {
+                            description: "The template of the content's body.",
+                            type: 'string',
+                          },
                           httpConfig: {
                             description: 'HTTP client configuration.',
                             properties: {
@@ -778,6 +785,9 @@
                           },
                           title: {
                             description: "The template of the message's title.",
+                            type: 'string',
+                          },
+                          username: {
                             type: 'string',
                           },
                         },
