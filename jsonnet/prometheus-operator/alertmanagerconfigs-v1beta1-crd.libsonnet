@@ -776,6 +776,11 @@
                             description: 'Whether or not to notify about resolved alerts.',
                             type: 'boolean',
                           },
+                          timeout: {
+                            description: 'The maximum time to wait for a webhook request to complete, before failing the\nrequest and allowing it to be retried.',
+                            pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
+                            type: 'string',
+                          },
                           title: {
                             description: "The template of the message's title.",
                             type: 'string',
