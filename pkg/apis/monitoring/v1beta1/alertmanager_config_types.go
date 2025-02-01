@@ -295,11 +295,6 @@ type DiscordConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
-
-	// The maximum time to wait for a webhook request to complete, before failing the
-	// request and allowing it to be retried.
-	// +optional
-	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.
@@ -494,6 +489,11 @@ type WebhookConfig struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	MaxAlerts int32 `json:"maxAlerts,omitempty"`
+	// The maximum time to wait for a webhook request to complete, before failing the
+	// request and allowing it to be retried.
+	// It requires Alertmanager >= v0.28.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // OpsGenieConfig configures notifications via OpsGenie.
