@@ -295,6 +295,11 @@ type DiscordConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+
+	// The maximum time to wait for a webhook request to complete, before failing the
+	// request and allowing it to be retried.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.
