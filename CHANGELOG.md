@@ -5,6 +5,7 @@
 * [FEATURE] Add `keepIdentifyingResourceAttributes` field in OTLPConfig for `Prometheus` and `PrometheusAgent` CRDs. #7240
 * [FEATURE] Add `fallbackScrapeProtocol` field to ScrapeClass for `Prometheus` and `PrometheusAgent` CRDs. #7288
 * [FEATURE] Support `MSTeamsV2Config` receiver in Alertmanager configuration Secret. #7296
+* [FEATURE] Add `Timeout` field in Webhook receiver in Alertmanager configuration Secret. #7312
 * [FEATURE] Add `scrapeFailureLogFile` field to the Prometheus and PrometheusAgent CRDs. #7038 #7311
 * [BUGFIX] Validate respective api URL field in PagerDutyConfigs, DiscordConfigs, SlackConfigs and WebhookConfigs in AlertManagerConfig CRD. #6585
 

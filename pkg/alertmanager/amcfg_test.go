@@ -3649,6 +3649,38 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_url_takes_precedence_in_webhook_config.golden",
 		},
+		{
+			name:           "Test timeout is dropped in webhook config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								Timeout: ptr.To(model.Duration(time.Minute)),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_timeout_is_dropped_in_webhook_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test timeout is added in webhook config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								Timeout: ptr.To(model.Duration(time.Minute)),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_timeout_is_added_in_webhook_config_for_supported_versions.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)

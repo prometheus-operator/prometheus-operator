@@ -2240,6 +2240,12 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.URLFile = ""
 	}
 
+	if whc.Timeout != nil && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'timeout' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		whc.Timeout = nil
+	}
+
 	return nil
 }
 
