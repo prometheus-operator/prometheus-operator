@@ -2329,13 +2329,33 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (tc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	discordAllowed := amVersion.GTE(semver.MustParse("0.25.0"))
+	lessThanV0_28 := amVersion.LT(semver.MustParse("0.28.0"))
+
 	if !discordAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; discord integration is available in Alertmanager >= 0.25.0`)
 	}
 
-	return tc.HTTPConfig.sanitize(amVersion, logger)
+	if dc.Content != "" && lessThanV0_28 {
+		msg := "'content' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.Content = ""
+	}
+
+	if dc.Username != "" && lessThanV0_28 {
+		msg := "'username' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.Username = ""
+	}
+
+	if dc.AvatarURL != "" && lessThanV0_28 {
+		msg := "'avatar_url' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.AvatarURL = ""
+	}
+
+	return dc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
