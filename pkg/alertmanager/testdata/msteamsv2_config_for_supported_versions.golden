@@ -2,5 +2,4 @@ receivers:
 - name: ""
   msteamsv2_configs:
   - webhook_url: http://example.com
-    webhook_url_file: ""
 templates: []
