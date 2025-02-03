@@ -2842,10 +2842,11 @@ func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile 
 }
 
 func (cg *ConfigGenerator) appendScrapeFailureLogFile(slice yaml.MapSlice, scrapeFailureLogFile *string) yaml.MapSlice {
-	if scrapeFailureLogFile != nil {
-		slice = cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
+	if scrapeFailureLogFile == nil {
+		return slice
 	}
-	return slice
+
+	return cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
 }
 
 func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
