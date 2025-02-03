@@ -687,7 +687,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 	var msTeamsV2Configs []*msTeamsV2Config
 	if l := len(in.MSTeamsV2Configs); l > 0 {
 		msTeamsV2Configs = make([]*msTeamsV2Config, l)
-		for i := range in.MSTeamsConfigs {
+		for i := range in.MSTeamsV2Configs {
 			receiver, err := cb.convertMSTeamsV2Config(ctx, in.MSTeamsV2Configs[i], crKey)
 			if err != nil {
 				return nil, fmt.Errorf("MSTeamsConfig[%d]: %w", i, err)
@@ -1382,12 +1382,18 @@ func (cb *configBuilder) convertMSTeamsV2Config(
 		out.Text = *in.Text
 	}
 
-	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
-	if err != nil {
-		return nil, err
+	if in.WebhookURL != nil {
+		webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+		if err != nil {
+			return nil, err
+		}
+
+		out.WebhookURL = webHookURL
 	}
 
-	out.WebhookURL = webHookURL
+	if in.WebhookURLFile != nil {
+		out.WebhookURLFile = *in.WebhookURLFile
+	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {

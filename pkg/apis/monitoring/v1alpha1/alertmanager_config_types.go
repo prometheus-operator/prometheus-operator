@@ -989,7 +989,7 @@ type MSTeamsV2Config struct {
 	// MSTeams incoming webhook URL. It is mutually exclusive with `webhookUrlFile`.
 	// Either `webhookUrl` or `webhookUrlFile` are required.
 	// +optional
-	WebhookURL v1.SecretKeySelector `json:"webhookUrl,omitempty"`
+	WebhookURL *v1.SecretKeySelector `json:"webhookUrl,omitempty"`
 	// File to read the MSTeams webhook URL from.
 	// +optional
 	WebhookURLFile *string `json:"webhookUrlFile,omitempty"`
