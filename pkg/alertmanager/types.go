@@ -120,6 +120,7 @@ type webhookConfig struct {
 	URLFile       string            `yaml:"url_file,omitempty" json:"url_file,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
+	Timeout       *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 type pagerdutyConfig struct {
