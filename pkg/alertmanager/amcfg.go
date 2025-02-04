@@ -1734,6 +1734,12 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		}
 	}
 
+	if gc.SMTPTLSConfig != nil && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'smtp_tls_config' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SMTPTLSConfig = nil
+	}
+
 	// We need to sanitize the config for slack globally
 	// As of v0.22.0 Alertmanager config supports passing URL via file name
 	if gc.SlackAPIURLFile != "" {
