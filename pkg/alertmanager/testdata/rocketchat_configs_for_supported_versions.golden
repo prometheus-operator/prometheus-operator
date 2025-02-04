@@ -1,0 +1,7 @@
+receivers:
+- name: ""
+  rocketchat_configs:
+  - api_url: http://example.com
+    short_fields: false
+    link_names: false
+templates: []
