@@ -8114,7 +8114,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 						},
 						DomainName:      ptr.To("devops-project-1"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},

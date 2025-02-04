@@ -794,15 +794,18 @@ type OpenStackSDConfig struct {
 	Region string `json:"region"`
 	// IdentityEndpoint specifies the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
+	// +kubebuilder:validation:Pattern:=`^http(s)?:\/\/.+$`
 	// +optional
 	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
 	// Username is required if using Identity V2 API. Consult with your provider's
 	// control panel to discover your account's username.
 	// In Identity V3, either userid or a combination of username
 	// and domainId or domainName are needed
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	Username *string `json:"username,omitempty"`
 	// UserID
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	UserID *string `json:"userid,omitempty"`
 	// Password for the Identity V2 and V3 APIs. Consult with your provider's
@@ -811,24 +814,29 @@ type OpenStackSDConfig struct {
 	Password *corev1.SecretKeySelector `json:"password,omitempty"`
 	// At most one of domainId and domainName must be provided if using username
 	// with Identity V3. Otherwise, either are optional.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	DomainName *string `json:"domainName,omitempty"`
 	// DomainID
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	DomainID *string `json:"domainID,omitempty"`
 	// The ProjectId and ProjectName fields are optional for the Identity V2 API.
 	// Some providers allow you to specify a ProjectName instead of the ProjectId.
 	// Some require both. Your provider's authentication policies will determine
 	// how these fields influence authentication.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ProjectName *string `json:"projectName,omitempty"`
 	//  ProjectID
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ProjectID *string `json:"projectID,omitempty"`
 	// The ApplicationCredentialID or ApplicationCredentialName fields are
 	// required if using an application credential to authenticate. Some providers
 	// allow you to create an application credential to authenticate rather than a
 	// password.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// ApplicationCredentialID
@@ -847,8 +855,10 @@ type OpenStackSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 	// Availability of the endpoint to connect to.
 	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
