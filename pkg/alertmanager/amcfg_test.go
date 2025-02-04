@@ -2380,6 +2380,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
+	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -2387,6 +2390,32 @@ func TestSanitizeConfig(t *testing.T) {
 		expectErr      bool
 		golden         string
 	}{
+		{
+			name:           "Test smtp_tls_config is dropped for unsupported versions",
+			againstVersion: versionSMTPTLSConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPTLSConfig: &tlsConfig{
+						CAFile: "/var/kubernetes/secrets/tls/ca.txt",
+					},
+				},
+			},
+			golden: "test_smtp_tls_config_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test smtp_tls_config is added for supported versions",
+			againstVersion: versionSMTPTLSConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPTLSConfig: &tlsConfig{
+						CAFile:     "/var/kubernetes/secrets/tls/ca.txt",
+						MinVersion: "TLS12",
+						MaxVersion: "TLS13",
+					},
+				},
+			},
+			golden: "test_smtp_tls_config_is_added_for_supported_versions.golden",
+		},
 		{
 			name:           "Test slack_api_url takes precedence in global config",
 			againstVersion: versionFileURLAllowed,
