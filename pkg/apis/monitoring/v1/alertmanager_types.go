@@ -277,7 +277,7 @@ type AlertmanagerSpec struct {
 	//
 	// It requires Alertmanager >= 0.24.0.
 	//+optional
-	ClusterTLSConfig *ClusterTLSConfigFields `json:"clusterTLSConfig,omitempty"`
+	ClusterTLS *ClusterTLSConfig `json:"clusterTLS,omitempty"`
 	// alertmanagerConfiguration specifies the configuration of Alertmanager.
 	//
 	// If defined, it takes precedence over the `configSecret` field.
@@ -518,9 +518,9 @@ func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
-// AlertmanagerTLSConfigFields defines the mTLS command line flag when starting Alertmanager.
+// ClusterTLSConfig defines the mutual TLS configuration for the Alertmanager cluster TLS protocol.
 // +k8s:openapi-gen=true
-type ClusterTLSConfigFields struct {
+type ClusterTLSConfig struct {
 	// Server-side configuration for mutual TLS.
 	ServerTLS *WebTLSConfig `json:"server"`
 	// Client-side configuration for mutual TLS.
