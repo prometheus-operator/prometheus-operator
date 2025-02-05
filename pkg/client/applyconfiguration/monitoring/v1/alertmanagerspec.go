@@ -76,7 +76,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
-	ClusterTLSConfig                     *ClusterTLSConfigFieldsApplyConfiguration               `json:"clusterTLSConfig,omitempty"`
+	ClusterTLS                           *ClusterTLSConfigApplyConfiguration                     `json:"clusterTLS,omitempty"`
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
@@ -519,11 +519,11 @@ func (b *AlertmanagerSpecApplyConfiguration) WithWeb(value *AlertmanagerWebSpecA
 	return b
 }
 
-// WithClusterTLSConfig sets the ClusterTLSConfig field in the declarative configuration to the given value
+// WithClusterTLS sets the ClusterTLS field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ClusterTLSConfig field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithClusterTLSConfig(value *ClusterTLSConfigFieldsApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
-	b.ClusterTLSConfig = value
+// If called multiple times, the ClusterTLS field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithClusterTLS(value *ClusterTLSConfigApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.ClusterTLS = value
 	return b
 }
 

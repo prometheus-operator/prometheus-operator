@@ -16,23 +16,23 @@
 
 package v1
 
-// ClusterTLSConfigFieldsApplyConfiguration represents a declarative configuration of the ClusterTLSConfigFields type for use
+// ClusterTLSConfigApplyConfiguration represents a declarative configuration of the ClusterTLSConfig type for use
 // with apply.
-type ClusterTLSConfigFieldsApplyConfiguration struct {
+type ClusterTLSConfigApplyConfiguration struct {
 	ServerTLS *WebTLSConfigApplyConfiguration  `json:"server,omitempty"`
 	ClientTLS *SafeTLSConfigApplyConfiguration `json:"client,omitempty"`
 }
 
-// ClusterTLSConfigFieldsApplyConfiguration constructs a declarative configuration of the ClusterTLSConfigFields type for use with
+// ClusterTLSConfigApplyConfiguration constructs a declarative configuration of the ClusterTLSConfig type for use with
 // apply.
-func ClusterTLSConfigFields() *ClusterTLSConfigFieldsApplyConfiguration {
-	return &ClusterTLSConfigFieldsApplyConfiguration{}
+func ClusterTLSConfig() *ClusterTLSConfigApplyConfiguration {
+	return &ClusterTLSConfigApplyConfiguration{}
 }
 
 // WithServerTLS sets the ServerTLS field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServerTLS field is set to the value of the last call.
-func (b *ClusterTLSConfigFieldsApplyConfiguration) WithServerTLS(value *WebTLSConfigApplyConfiguration) *ClusterTLSConfigFieldsApplyConfiguration {
+func (b *ClusterTLSConfigApplyConfiguration) WithServerTLS(value *WebTLSConfigApplyConfiguration) *ClusterTLSConfigApplyConfiguration {
 	b.ServerTLS = value
 	return b
 }
@@ -40,7 +40,7 @@ func (b *ClusterTLSConfigFieldsApplyConfiguration) WithServerTLS(value *WebTLSCo
 // WithClientTLS sets the ClientTLS field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClientTLS field is set to the value of the last call.
-func (b *ClusterTLSConfigFieldsApplyConfiguration) WithClientTLS(value *SafeTLSConfigApplyConfiguration) *ClusterTLSConfigFieldsApplyConfiguration {
+func (b *ClusterTLSConfigApplyConfiguration) WithClientTLS(value *SafeTLSConfigApplyConfiguration) *ClusterTLSConfigApplyConfiguration {
 	b.ClientTLS = value
 	return b
 }
