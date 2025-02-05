@@ -135,10 +135,12 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                           avatarURL: {
+                            minLength: 1,
                             type: 'string',
                           },
                           content: {
                             description: "The template of the content's body.",
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -788,6 +790,7 @@
                             type: 'string',
                           },
                           username: {
+                            minLength: 1,
                             type: 'string',
                           },
                         },
