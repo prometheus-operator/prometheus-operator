@@ -750,8 +750,8 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
-	if a.Spec.ClusterTLSConfig != nil {
-		serverCert = a.Spec.ClusterTLSConfig.ServerTLS.Cert.String()
+	if a.Spec.ClusterTLS != nil {
+		serverCert = a.Spec.ClusterTLS.ServerTLS.Cert.String()
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
@@ -1705,9 +1705,9 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	var fields monitoringv1.ClusterTLSConfigFields
-	if a.Spec.ClusterTLSConfig != nil {
-		fields = *a.Spec.ClusterTLSConfig
+	var fields monitoringv1.ClusterTLSConfig
+	if a.Spec.ClusterTLS != nil {
+		fields = *a.Spec.ClusterTLS
 	}
 
 	clusterTLSConfig, err := clustertlsconfig.New(
@@ -1719,7 +1719,19 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 		return fmt.Errorf("failed to initialize cluster tls config: %w", err)
 	}
 
-	s := &v1.Secret{}
+	data, err := clusterTLSConfig.ClusterTLSConfiguration()
+	if err != nil {
+		return fmt.Errorf("failed to generate cluster TLS configuration yaml: %w", err)
+	}
+
+	s := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterTLSConfig.GetSecretName(),
+		},
+		Data: map[string][]byte{
+			clustertlsconfig.ConfigFileKey: data,
+		},
+	}
 	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),
@@ -1727,7 +1739,7 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 		operator.WithManagingOwner(a),
 	)
 
-	if err := clusterTLSConfig.CreateOrUpdateClusterTLSConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
+	if err = k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile cluster tls config secret: %w", err)
 	}
 
