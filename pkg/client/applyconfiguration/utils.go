@@ -70,8 +70,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureSDKApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfigFields"):
-		return &monitoringv1.ClusterTLSConfigFieldsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfig"):
+		return &monitoringv1.ClusterTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Condition"):

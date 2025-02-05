@@ -2083,7 +2083,7 @@ spec:
                 description: Interval between pushpull attempts.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
-              clusterTLSConfig:
+              clusterTLS:
                 description: |-
                   Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 

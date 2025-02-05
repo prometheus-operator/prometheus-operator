@@ -29,11 +29,10 @@ const (
 	volumePrefix = "web-config-tls-"
 )
 
-// tlsCredentials are the credentials used for web TLS.
+// tlsReferences represent TLS material referenced from secrets/configmaps.
 type TLSReferences struct {
 	// mountPath is the directory where TLS credentials are intended to be mounted.
 	mountPath string
-
 	// keySecret is the Kubernetes Secret containing the TLS private key.
 	keySecret corev1.SecretKeySelector
 	// cert is the Kubernetes Secret or ConfigMap containing the TLS certificate.
@@ -184,7 +183,7 @@ func (tr *TLSReferences) GetKeyMountPath() string {
 	return tr.tlsPathForSelector(secret, "key")
 }
 
-// getKeyFilename returns the filename (key) of the key.
+// getKeyFilename returns the filename of the private key.
 func (tr *TLSReferences) GetKeyFilename() string {
 	return tr.keySecret.Key
 }
@@ -218,7 +217,7 @@ func (tr *TLSReferences) GetCAMountPath() string {
 	return ""
 }
 
-// getCAFilename is the mount path of the client CA certificate inside a prometheus container.
+// getCAFilename retruns the filename (key) of the client CA certificate.
 func (tr *TLSReferences) GetCAFilename() string {
 	if tr.clientCA.Secret != nil {
 		return tr.clientCA.Secret.Key
