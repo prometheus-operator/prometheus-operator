@@ -1705,15 +1705,10 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	var fields monitoringv1.ClusterTLSConfig
-	if a.Spec.ClusterTLS != nil {
-		fields = *a.Spec.ClusterTLS
-	}
-
 	clusterTLSConfig, err := clustertlsconfig.New(
 		clusterTLSConfigDir,
 		clusterTLSConfigSecretName(a.Name),
-		fields,
+		a.Spec.ClusterTLS,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to initialize cluster tls config: %w", err)

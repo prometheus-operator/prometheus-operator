@@ -628,13 +628,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if !version.LT(semver.MustParse("0.24.0")) {
-		var fields monitoringv1.ClusterTLSConfig
-
-		if a.Spec.ClusterTLS != nil {
-			fields = *a.Spec.ClusterTLS
-		}
-
-		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), fields)
+		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), a.Spec.ClusterTLS)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create cluster TLS configuration: %w", err)
 		}
@@ -644,14 +638,11 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			return nil, fmt.Errorf("failed to get mount parameters for cluster TLS configuration: %w", err)
 		}
 
-		volumes = append(volumes, configVol...)
-		amVolumeMounts = append(amVolumeMounts, configMount...)
-
-		// TODO: We need to validate ClusterTLSConfig or we run the risk of ClusterTLSConfig != nil but ServerTLS == nil
-		if a.Spec.ClusterTLS != nil && a.Spec.ClusterTLS.ServerTLS != nil {
-			// Only append the container argument if ClusterTLSConfig is defined.
+		if confArg != nil {
 			amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
 		}
+		volumes = append(volumes, configVol...)
+		amVolumeMounts = append(amVolumeMounts, configMount...)
 	}
 
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)

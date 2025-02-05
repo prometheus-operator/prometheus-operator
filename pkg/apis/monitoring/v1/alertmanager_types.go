@@ -522,7 +522,7 @@ func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type ClusterTLSConfig struct {
 	// Server-side configuration for mutual TLS.
-	ServerTLS *WebTLSConfig `json:"server"`
+	ServerTLS WebTLSConfig `json:"server"`
 	// Client-side configuration for mutual TLS.
-	ClientTLS *SafeTLSConfig `json:"client"`
+	ClientTLS SafeTLSConfig `json:"client"`
 }
