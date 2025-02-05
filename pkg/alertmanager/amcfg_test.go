@@ -4121,6 +4121,143 @@ func TestSanitizeJiraConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeDiscordConfig(t *testing.T) {
+	logger := newNopLogger(t)
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+	}{
+		{
+			name:           "Test Username field is dropped in discord config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 27},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								Username:   "content",
+								WebhookURL: "http://example.com",
+								Message:    "test message",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_username_dropped_in_unsupported_versions_config.golden",
+		},
+		{
+			name:           "Test Username field add in discord config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								Username:   "content",
+								WebhookURL: "http://example.com",
+								Message:    "test message",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_username_add_in_supported_versions_config.golden",
+		},
+		{
+			name:           "Test AvatarURL field is dropped in discord config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 27},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								AvatarURL:  "content",
+								WebhookURL: "http://example.com",
+								Message:    "test message",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_avatarURL_dropped_in_unsupported_versions_config.golden",
+		},
+		{
+			name:           "Test AvatarURL field add in discord config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								AvatarURL:  "content",
+								WebhookURL: "http://example.com",
+								Message:    "test message",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_avatarURL_add_in_supported_versions_config.golden",
+		},
+		{
+			name:           "Test Content field is dropped in discord config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 27},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								Content:    "content",
+								WebhookURL: "http://example.com",
+								Message:    "test message",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_content_dropped_in_unsupported_versions_config.golden",
+		},
+		{
+			name:           "Test Content field add in discord config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								Content:    "test content",
+								WebhookURL: "http://example.com",
+								Message:    "test message",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_content_add_in_supported_versions_config.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+
+}
+
 func TestSanitizeRocketChatConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionRocketChatAllowed := semver.Version{Major: 0, Minor: 28}
