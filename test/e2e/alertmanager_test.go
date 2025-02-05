@@ -388,7 +388,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 			name:        "alertmanager cluster with mTLS configured",
 			clusterSize: 3,
 			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					ClientCA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -413,7 +413,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 					},
 					ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{

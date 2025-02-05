@@ -30,18 +30,18 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 
 	tc := []struct {
 		name             string
-		clusterTLSConfig monitoringv1.ClusterTLSConfig
+		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 		golden           string
 	}{
 		{
 			name:             "cluster tls config not defined",
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{},
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{},
 			golden:           "clusterTLS_config_not_defined.golden",
 		},
 		{
 			name: "minimal cluster TLS config with server certificate from secret",
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -57,7 +57,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 						Key: "tls.key",
 					},
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
@@ -87,8 +87,8 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 		},
 		{
 			name: "minimal cluster TLS config with server and client certificates from configmap",
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					Cert: monitoringv1.SecretOrConfigMap{
 						ConfigMap: &v1.ConfigMapKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -104,7 +104,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 						Key: "tls.key",
 					},
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
@@ -134,8 +134,8 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 		},
 		{
 			name: "minimal cluster TLS config with server TLS cert and clientCA from configmap",
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					Cert: monitoringv1.SecretOrConfigMap{
 						ConfigMap: &v1.ConfigMapKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -159,7 +159,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 						},
 					},
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
@@ -189,8 +189,8 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 		},
 		{
 			name: "cluster tls config with all parameters from secrets",
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					ClientCA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -220,7 +220,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 					PreferServerCipherSuites: ptr.To(false),
 					CurvePreferences:         []string{"curve-1", "curve-2"},
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
@@ -250,13 +250,13 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 		},
 		{
 			name: "cluster tls config with server client CA, cert and key files",
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					ClientCAFile: ptr.To("/etc/ssl/certs/tls.client_ca"),
 					CertFile:     ptr.To("/etc/ssl/certs/tls.crt"),
 					KeyFile:      ptr.To("/etc/ssl/secrets/tls.key"),
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
@@ -303,12 +303,12 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 
 func TestGetMountParameters(t *testing.T) {
 	ts := []struct {
-		clusterTLSConfig monitoringv1.ClusterTLSConfig
+		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 		expectedVolumes  []v1.Volume
 		expectedMounts   []v1.VolumeMount
 	}{
 		{
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{},
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{},
 			expectedVolumes: []v1.Volume{
 				{
 					Name: "cluster-tls-config",
@@ -331,8 +331,8 @@ func TestGetMountParameters(t *testing.T) {
 			},
 		},
 		{
-			clusterTLSConfig: monitoringv1.ClusterTLSConfig{
-				ServerTLS: &monitoringv1.WebTLSConfig{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
 					KeySecret: v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "some-secret",
@@ -356,7 +356,7 @@ func TestGetMountParameters(t *testing.T) {
 						},
 					},
 				},
-				ClientTLS: &monitoringv1.SafeTLSConfig{
+				ClientTLS: monitoringv1.SafeTLSConfig{
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "some-secret",
