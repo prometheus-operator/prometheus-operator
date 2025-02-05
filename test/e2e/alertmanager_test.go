@@ -378,7 +378,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 	testcase := []struct {
 		name             string
 		clusterSize      int
-		clusterTLSConfig *monitoringv1.ClusterTLSConfigFields
+		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 	}{
 		{
 			name:        "alertmanager cluster without mTLS configured",
@@ -387,7 +387,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 		{
 			name:        "alertmanager cluster with mTLS configured",
 			clusterSize: 3,
-			clusterTLSConfig: &monitoringv1.ClusterTLSConfigFields{
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
 				ServerTLS: &monitoringv1.WebTLSConfig{
 					ClientCA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
@@ -454,7 +454,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 			createMutualTLSSecret(t, secretName, ns)
 
 			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(tc.clusterSize))
-			alertmanager.Spec.ClusterTLSConfig = tc.clusterTLSConfig
+			alertmanager.Spec.ClusterTLS = tc.clusterTLSConfig
 
 			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 			require.NoError(t, err)
