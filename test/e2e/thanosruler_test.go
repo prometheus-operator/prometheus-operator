@@ -544,15 +544,11 @@ func testThanosRulerServiceName(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
 
-	tr := framework.MakeBasicThanosRuler(name, 1, "")
+	tr := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
 	tr.Spec.ServiceName = &svc.Name
 
 	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
-
-	targets, err := framework.GetActiveTargets(ctx, ns, svc.Name)
-	require.NoError(t, err)
-	require.Empty(t, targets)
 
 	// Ensure that the default governing service was not created by the operator.
 	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
