@@ -514,9 +514,10 @@ func testTRCheckStorageClass(t *testing.T) {
 
 func testThanosRulerServiceName(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
 	name := "test-servicename"
 
 	svc := &v1.Service{
@@ -541,23 +542,23 @@ func testThanosRulerServiceName(t *testing.T) {
 		},
 	}
 
-	_, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{})
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
 
-	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceName = &svc.Name
+	tr := framework.MakeBasicThanosRuler(name, 1, "")
+	tr.Spec.ServiceName = &svc.Name
 
-	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
-	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
+	targets, err := framework.GetActiveTargets(ctx, ns, svc.Name)
 	require.NoError(t, err)
 	require.Empty(t, targets)
 
 	// Ensure that the default governing service was not created by the operator.
-	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(context.Background(), metav1.ListOptions{})
+	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
 	require.NoError(t, err)
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
