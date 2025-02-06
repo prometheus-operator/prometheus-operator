@@ -534,10 +534,7 @@ func testThanosRulerServiceName(t *testing.T) {
 				},
 			},
 			Selector: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"app.kubernetes.io/name": name,
 			},
 		},
 	}

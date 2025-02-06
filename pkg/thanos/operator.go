@@ -804,8 +804,6 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name":       "thanos-ruler",
-		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   name,
+		"app.kubernetes.io/name": name,
 	}
 }
