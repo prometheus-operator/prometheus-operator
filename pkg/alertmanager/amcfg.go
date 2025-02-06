@@ -2463,22 +2463,6 @@ func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
-	jiraConfigAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
-	if !jiraConfigAllowed {
-		return fmt.Errorf(`invalid syntax in receivers config; jira integration is available in Alertmanager >= 0.28.0`)
-	}
-
-	if jc.Project == "" {
-		return fmt.Errorf("missing project in jira_config")
-	}
-	if jc.IssueType == "" {
-		return errors.New("missing issue_type in jira_config")
-	}
-
-	return jc.HTTPConfig.sanitize(amVersion, logger)
-}
-
 func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	rocketChatAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
 	if !rocketChatAllowed {

@@ -2420,9 +2420,8 @@ func TestSanitizeConfig(t *testing.T) {
 	versioJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
 
-  versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
+	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
-
 
 	for _, tc := range []struct {
 		name           string
@@ -4168,7 +4167,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL: "http://example.com",
+								APIURL: ptr.To("http://example.com"),
 							},
 						},
 					},
@@ -4184,9 +4183,9 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:    "http://issues.example.com",
+								APIURL:    ptr.To("http://issues.example.com"),
 								Project:   "Monitoring",
-								IssueType: "Bug",
+								IssueType: ptr.To("Bug"),
 							},
 						},
 					},
@@ -4202,7 +4201,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL: "http://example.com",
+								APIURL: ptr.To("http://example.com"),
 							},
 						},
 					},
