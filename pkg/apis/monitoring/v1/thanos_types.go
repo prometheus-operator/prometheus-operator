@@ -140,6 +140,14 @@ type ThanosRulerSpec struct {
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 
+	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.
+	// When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	// +optional
+	ServiceName *string `json:"serviceName,omitempty"`
+
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Thanos Ruler Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
