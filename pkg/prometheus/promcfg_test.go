@@ -129,6 +129,7 @@ func TestGlobalSettings(t *testing.T) {
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
 		QueryLogFile                string
+		ScrapeFailureLogFile        *string
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
 		SampleLimit                 *uint64
@@ -195,6 +196,30 @@ func TestGlobalSettings(t *testing.T) {
 			EvaluationInterval: "30s",
 			QueryLogFile:       "test.log",
 			Golden:             "query_log_file.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			Golden:               "scrape_failure_log_file.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_empty_path",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_empty_path.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_unsupported_version",
+			Version:              "v2.54.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_unsupported_version.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -304,6 +329,7 @@ func TestGlobalSettings(t *testing.T) {
 					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
+					ScrapeFailureLogFile:        tc.ScrapeFailureLogFile,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				RuleQueryOffset:    tc.RuleQueryOffset,
@@ -5559,6 +5585,63 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 	}
 }
 
+func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
+	for _, tc := range []struct {
+		name                 string
+		p                    *monitoringv1.Prometheus
+		version              string
+		scrapeFailureLogFile *string
+		golden               string
+	}{
+		{
+			name:   "PrometheusAgent no setting scrape failure log file",
+			golden: "PrometheusAgent_no_scrapeFailureLogFile.golden",
+		},
+		{
+			name:                 "PrometheusAgent verison < v2.55.0",
+			version:              "v2.54.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_greater_than_or_equal_to_v2.55.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0 and scrapeFailureLogFile with empty path",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_empty_path_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.scrapeFailureLogFile != nil {
+				p.Spec.ScrapeFailureLogFile = tc.scrapeFailureLogFile
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateAgentConfiguration(
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 	p := defaultPrometheus()
 	cg := mustNewConfigGenerator(t, p)
@@ -7615,15 +7698,6 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
-	sec := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "azure-client-secret",
-			Namespace: "default",
-		},
-		Data: map[string][]byte{
-			"clientSecret": []byte("my-secret"),
-		},
-	}
 	for _, tc := range []struct {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
@@ -7636,23 +7710,63 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To("OAuth"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
 						ClientSecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "azure-client-secret",
+								Name: "secret",
 							},
 							Key: "clientSecret",
 						},
 						ResourceGroup:   ptr.To("my-resource-group"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid.golden",
+		},
+		{
+			name: "azure_sd_config_valid_sdk_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						ResourceGroup:        ptr.To("my-resource-group"),
+						RefreshInterval:      ptr.To(monitoringv1.Duration("30s")),
+						Port:                 ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_SDKAuth.golden",
+		},
+		{
+			name: "azure_sd_config_valid_managedidendity_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_ManagedIdentityAuth.golden",
+		},
+		{
+			name: "azure_sd_config_with_subscription_id",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValidWithSubscriptionID.golden",
 		},
 		{
 			name: "azure_sd_config_invalid",
@@ -7671,6 +7785,124 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			expectedErr: true,
 		},
 		{
+			name: "azure_sd_config_with_http_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_http_config.golden",
+		},
+		{
+			name: "azure_sd_config_with_http_config_basic_auth_and_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "key",
+							},
+						},
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "password",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_basic_auth_and_TLS.golden",
+		},
+		{
+			name: "azure_sd_config_with_http_config_with_oauth2",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_with_oauth2.golden",
+		},
+		{
 			name: "azure_sd_config_empty",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{},
@@ -7679,6 +7911,49 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+						"clientSecret": []byte("my-secret"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"username": []byte("value"),
+						"password": []byte("value"),
+					},
+				},
+			)
+
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -7697,7 +7972,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewTestStoreBuilder(sec),
+				store,
 				nil,
 				nil,
 				nil,
@@ -7728,11 +8003,39 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 						Project:         "devops-dev",
 						Zone:            "us-west-1",
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_GCESDConfigValid.golden",
+		},
+		{
+			name: "gce_sd_config_valid_all_options",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project:         "devops-dev",
+						Zone:            "us-west-1",
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+						Filter:          ptr.To("filter-expression"),
+						TagSeparator:    ptr.To("tag-value"),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValid_all_options.golden",
+		},
+		{
+			name: "gce_sd_config_valid_required_fields",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project: "devops-dev",
+						Zone:    "us-west-1",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValidRequiredFields.golden",
 		},
 		{
 			name: "gce_sd_config_empty",
@@ -7811,7 +8114,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 						},
 						DomainName:      ptr.To("devops-project-1"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
@@ -11026,7 +11329,7 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 							},
 							Key: "ck",
 						},
-						Service:         monitoringv1alpha1.DedicatedServer,
+						Service:         monitoringv1alpha1.OVHServiceDedicatedServer,
 						Endpoint:        ptr.To("127.0.0.1"),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},

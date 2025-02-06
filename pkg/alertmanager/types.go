@@ -53,6 +53,7 @@ type globalConfig struct {
 	SMTPAuthSecret       string          `yaml:"smtp_auth_secret,omitempty" json:"smtp_auth_secret,omitempty"`
 	SMTPAuthIdentity     string          `yaml:"smtp_auth_identity,omitempty" json:"smtp_auth_identity,omitempty"`
 	SMTPRequireTLS       *bool           `yaml:"smtp_require_tls,omitempty" json:"smtp_require_tls,omitempty"`
+	SMTPTLSConfig        *tlsConfig      `yaml:"smtp_tls_config,omitempty" json:"smtp_tls_config,omitempty"`
 	SlackAPIURL          *config.URL     `yaml:"slack_api_url,omitempty" json:"slack_api_url,omitempty"`
 	SlackAPIURLFile      string          `yaml:"slack_api_url_file,omitempty" json:"slack_api_url_file,omitempty"`
 	PagerdutyURL         *config.URL     `yaml:"pagerduty_url,omitempty" json:"pagerduty_url,omitempty"`
@@ -98,21 +99,23 @@ type inhibitRule struct {
 }
 
 type receiver struct {
-	Name             string             `yaml:"name" json:"name"`
-	OpsgenieConfigs  []*opsgenieConfig  `yaml:"opsgenie_configs,omitempty" json:"opsgenie_configs,omitempty"`
-	PagerdutyConfigs []*pagerdutyConfig `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
-	SlackConfigs     []*slackConfig     `yaml:"slack_configs,omitempty" json:"slack_configs,omitempty"`
-	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
-	WeChatConfigs    []*weChatConfig    `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
-	EmailConfigs     []*emailConfig     `yaml:"email_configs,omitempty" json:"email_configs,omitempty"`
-	PushoverConfigs  []*pushoverConfig  `yaml:"pushover_configs,omitempty" json:"pushover_configs,omitempty"`
-	VictorOpsConfigs []*victorOpsConfig `yaml:"victorops_configs,omitempty" json:"victorops_configs,omitempty"`
-	SNSConfigs       []*snsConfig       `yaml:"sns_configs,omitempty" json:"sns_configs,omitempty"`
-	TelegramConfigs  []*telegramConfig  `yaml:"telegram_configs,omitempty" json:"telegram_configs,omitempty"`
-	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
-	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
-	MSTeamsConfigs   []*msTeamsConfig   `yaml:"msteams_configs,omitempty"`
-	JiraConfigs      []*jiraConfig      `yaml:"jira_configs,omitempty" json:"jira_configs,omitempty"`
+	Name              string              `yaml:"name" json:"name"`
+	OpsgenieConfigs   []*opsgenieConfig   `yaml:"opsgenie_configs,omitempty" json:"opsgenie_configs,omitempty"`
+	PagerdutyConfigs  []*pagerdutyConfig  `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
+	SlackConfigs      []*slackConfig      `yaml:"slack_configs,omitempty" json:"slack_configs,omitempty"`
+	WebhookConfigs    []*webhookConfig    `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
+	WeChatConfigs     []*weChatConfig     `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
+	EmailConfigs      []*emailConfig      `yaml:"email_configs,omitempty" json:"email_configs,omitempty"`
+	PushoverConfigs   []*pushoverConfig   `yaml:"pushover_configs,omitempty" json:"pushover_configs,omitempty"`
+	VictorOpsConfigs  []*victorOpsConfig  `yaml:"victorops_configs,omitempty" json:"victorops_configs,omitempty"`
+	SNSConfigs        []*snsConfig        `yaml:"sns_configs,omitempty" json:"sns_configs,omitempty"`
+	TelegramConfigs   []*telegramConfig   `yaml:"telegram_configs,omitempty" json:"telegram_configs,omitempty"`
+	DiscordConfigs    []*discordConfig    `yaml:"discord_configs,omitempty"`
+	WebexConfigs      []*webexConfig      `yaml:"webex_configs,omitempty"`
+	MSTeamsConfigs    []*msTeamsConfig    `yaml:"msteams_configs,omitempty"`
+	MSTeamsV2Configs  []*msTeamsV2Config  `yaml:"msteamsv2_configs,omitempty"`
+	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
+	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -121,6 +124,7 @@ type webhookConfig struct {
 	URLFile       string            `yaml:"url_file,omitempty" json:"url_file,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
+	Timeout       *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 type pagerdutyConfig struct {
@@ -368,6 +372,9 @@ type discordConfig struct {
 	WebhookURL    string            `yaml:"webhook_url,omitempty"`
 	Title         string            `yaml:"title,omitempty"`
 	Message       string            `yaml:"message,omitempty"`
+	Content       string            `yaml:"content,omitempty"`
+	Username      string            `yaml:"username,omitempty"`
+	AvatarURL     string            `yaml:"avatar_url,omitempty"`
 }
 
 type webexConfig struct {
@@ -438,6 +445,56 @@ type jiraConfig struct {
 	WontFixResolution *string                `yaml:"wont_fix_resolution,omitempty" json:"wont_fix_resolution,omitempty"`
 	ReopenDuration    *model.Duration        `yaml:"reopen_duration,omitempty" json:"reopen_duration,omitempty"`
 	Fields            map[string]interface{} `yaml:"fields,omitempty" json:"fields,omitempty"`
+}
+
+type msTeamsV2Config struct {
+	SendResolved   *bool             `yaml:"send_resolved,omitempty"`
+	WebhookURL     string            `yaml:"webhook_url"`
+	WebhookURLFile string            `yaml:"webhook_url_file"`
+	Title          string            `yaml:"title,omitempty"`
+	Text           string            `yaml:"text,omitempty"`
+	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
+}
+
+type rocketchatAttachmentField struct {
+	Short *bool  `yaml:"short"`
+	Title string `yaml:"title,omitempty"`
+	Value string `yaml:"value,omitempty"`
+}
+
+type rocketchatAttachmentAction struct {
+	Type               string `yaml:"type,omitempty"`
+	Text               string `yaml:"text,omitempty"`
+	URL                string `yaml:"url,omitempty"`
+	ImageURL           string `yaml:"image_url,omitempty"`
+	IsWebView          bool   `yaml:"is_webview"`
+	WebviewHeightRatio string `yaml:"webview_height_ratio,omitempty"`
+	Msg                string `yaml:"msg,omitempty"`
+	MsgInChatWindow    bool   `yaml:"msg_in_chat_window"`
+	MsgProcessingType  string `yaml:"msg_processing_type,omitempty"`
+}
+
+type rocketChatConfig struct {
+	HTTPConfig  *httpClientConfig `yaml:"http_config,omitempty"`
+	APIURL      string            `yaml:"api_url,omitempty"`
+	TokenID     *string           `yaml:"token_id,omitempty"`
+	TokenIDFile string            `yaml:"token_id_file,omitempty"`
+	Token       *string           `yaml:"token,omitempty"`
+	TokenFile   string            `yaml:"token_file,omitempty"`
+	// RocketChat channel override, (like #other-channel or @username).
+	Channel     string                        `yaml:"channel,omitempty"`
+	Color       string                        `yaml:"color,omitempty"`
+	Title       string                        `yaml:"title,omitempty"`
+	TitleLink   string                        `yaml:"title_link,omitempty"`
+	Text        string                        `yaml:"text,omitempty"`
+	Fields      []*rocketchatAttachmentField  `yaml:"fields,omitempty"`
+	ShortFields bool                          `yaml:"short_fields"`
+	Emoji       string                        `yaml:"emoji,omitempty"`
+	IconURL     string                        `yaml:"icon_url,omitempty"`
+	ImageURL    string                        `yaml:"image_url,omitempty"`
+	ThumbURL    string                        `yaml:"thumb_url,omitempty"`
+	LinkNames   bool                          `yaml:"link_names"`
+	Actions     []*rocketchatAttachmentAction `yaml:"actions,omitempty"`
 }
 
 type timeInterval config.TimeInterval

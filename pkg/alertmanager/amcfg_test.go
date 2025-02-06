@@ -2399,6 +2399,12 @@ func TestSanitizeConfig(t *testing.T) {
 	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
 	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
 
+	versionDiscordMessageFieldsAllowed := semver.Version{Major: 0, Minor: 28}
+	versionDiscordMessageFieldsNotAllowed := semver.Version{Major: 0, Minor: 27}
+
+	versionMSteamsV2Allowed := semver.Version{Major: 0, Minor: 28}
+	versionMSteamsV2NotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
@@ -2414,6 +2420,10 @@ func TestSanitizeConfig(t *testing.T) {
 	versioJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
 
+  versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
+	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
+
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -2421,6 +2431,32 @@ func TestSanitizeConfig(t *testing.T) {
 		expectErr      bool
 		golden         string
 	}{
+		{
+			name:           "Test smtp_tls_config is dropped for unsupported versions",
+			againstVersion: versionSMTPTLSConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPTLSConfig: &tlsConfig{
+						CAFile: "/var/kubernetes/secrets/tls/ca.txt",
+					},
+				},
+			},
+			golden: "test_smtp_tls_config_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test smtp_tls_config is added for supported versions",
+			againstVersion: versionSMTPTLSConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPTLSConfig: &tlsConfig{
+						CAFile:     "/var/kubernetes/secrets/tls/ca.txt",
+						MinVersion: "TLS12",
+						MaxVersion: "TLS13",
+					},
+				},
+			},
+			golden: "test_smtp_tls_config_is_added_for_supported_versions.golden",
+		},
 		{
 			name:           "Test slack_api_url takes precedence in global config",
 			againstVersion: versionFileURLAllowed,
@@ -2651,6 +2687,108 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:           "Test content is dropped in discord config for unsupported versions",
+			againstVersion: versionDiscordMessageFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								Content:    "content added for unsupported version",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_content_field_dropped_in_discord_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test content is added in discord config for supported versions",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								Content:    "content added for supported version",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_content_field_added_in_discord_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test username is dropped in discord config for unsupported versions",
+			againstVersion: versionDiscordMessageFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								Username:   "discord_admin",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_username_field_dropped_in_discord_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test username is added in discord config for supported versions",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								Username:   "discord_admin",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_username_field_added_in_discord_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test avatar_url is dropped in discord config for unsupported versions",
+			againstVersion: versionDiscordMessageFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								AvatarURL:  "http://example.com/discord_avatar",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_avatar_url_field_dropped_in_discord_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test avatar_url is added in discord config for supported versions",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								AvatarURL:  "http://example.com/discord_avatar",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
+		},
+		{
 			name:           "webex_config for supported versions",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
@@ -2676,6 +2814,69 @@ func TestSanitizeConfig(t *testing.T) {
 						WebexConfigs: []*webexConfig{
 							{
 								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config for supported versions",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteamsv2_config_for_supported_versions.golden",
+		},
+		{
+			name:           "msteamsv2_config returns error for unsupported versions",
+			againstVersion: versionMSteamsV2NotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config no webhook url or webhook url file set",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config both webhook url and webhook url file set",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
 							},
 						},
 					},
@@ -3689,6 +3890,38 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_url_takes_precedence_in_webhook_config.golden",
 		},
+		{
+			name:           "Test timeout is dropped in webhook config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								Timeout: ptr.To(model.Duration(time.Minute)),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_timeout_is_dropped_in_webhook_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test timeout is added in webhook config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								Timeout: ptr.To(model.Duration(time.Minute)),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_timeout_is_added_in_webhook_config_for_supported_versions.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -3912,6 +4145,182 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			golden.Assert(t, string(amPagerDutyCfg), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeJiraConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
+	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "jira_configs returns error for unsupported versions",
+			againstVersion: versionJiraNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_configs allows for supported versions",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_configs_for_supported_versions.golden",
+		},
+		{
+			name:           "jira_configs returns error for missing mandatory fields",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeRocketChatConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionRocketChatAllowed := semver.Version{Major: 0, Minor: 28}
+	versionRocketChatNotAllowed := semver.Version{Major: 0, Minor: 27}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "rocketchat_configs returns error for unsupported versions",
+			againstVersion: versionRocketChatNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs allows for supported versions",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "rocketchat_configs_for_supported_versions.golden",
+		},
+		{
+			name:           "rocketchat_configs both token or token_file set",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:    "http://example.com",
+								Token:     ptr.To("aaaa-bbbb-cccc-dddd"),
+								TokenFile: "/var/kubernetes/secrets/token",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs both token_id or token_id_file set",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:      "http://example.com",
+								TokenID:     ptr.To("t123456"),
+								TokenIDFile: "/var/kubernetes/secrets/token-id",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }

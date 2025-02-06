@@ -1202,6 +1202,13 @@ func checkPagerDutyConfigs(
 			}
 		}
 
+		if config.URL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(config.URL)); err != nil {
+				return fmt.Errorf("failed to validate URL: %w ", err)
+			}
+
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
@@ -1273,8 +1280,12 @@ func checkDiscordConfigs(
 			return err
 		}
 
-		if _, err := store.GetSecretKey(ctx, namespace, config.APIURL); err != nil {
+		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
+		if err != nil {
 			return fmt.Errorf("failed to retrieve API URL: %w", err)
+		}
+		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			return fmt.Errorf("failed to validate API URL: %w", err)
 		}
 	}
 
@@ -1294,8 +1305,12 @@ func checkSlackConfigs(
 		}
 
 		if config.APIURL != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APIURL); err != nil {
+			url, err := store.GetSecretKey(ctx, namespace, *config.APIURL)
+			if err != nil {
 				return err
+			}
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("failed to validate API URL: %w", err)
 			}
 		}
 
@@ -1324,8 +1339,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("webhook 'url' %s invalid: %w", url, err)
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}
 

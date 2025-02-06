@@ -1792,6 +1792,12 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		}
 	}
 
+	if gc.SMTPTLSConfig != nil && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'smtp_tls_config' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SMTPTLSConfig = nil
+	}
+
 	// We need to sanitize the config for slack globally
 	// As of v0.22.0 Alertmanager config supports passing URL via file name
 	if gc.SlackAPIURLFile != "" {
@@ -2070,12 +2076,23 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.MSTeamsV2Configs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	for _, conf := range r.JiraConfigs {
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
 		}
 	}
 
+	for _, conf := range r.RocketChatConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -2298,6 +2315,12 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.URLFile = ""
 	}
 
+	if whc.Timeout != nil && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'timeout' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		whc.Timeout = nil
+	}
+
 	return nil
 }
 
@@ -2314,6 +2337,23 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		msg := "'summary' supported in Alertmanager >= 0.27.0 only - dropping field `summary` from msteams config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		tc.Summary = ""
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	msTeamsV2Allowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !msTeamsV2Allowed {
+		return fmt.Errorf(`invalid syntax in receivers config; msteams v2 integration is available in Alertmanager >= 0.28.0`)
+	}
+
+	if tc.WebhookURL == "" && len(tc.WebhookURLFile) == 0 {
+		return errors.New("no webhook_url or webhook_url_file provided")
+	}
+
+	if tc.WebhookURL != "" && len(tc.WebhookURLFile) != 0 {
+		return errors.New("both webhook_url and webhook_url_file cannot be set at the same time")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
@@ -2364,13 +2404,33 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (tc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	discordAllowed := amVersion.GTE(semver.MustParse("0.25.0"))
+	lessThanV0_28 := amVersion.LT(semver.MustParse("0.28.0"))
+
 	if !discordAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; discord integration is available in Alertmanager >= 0.25.0`)
 	}
 
-	return tc.HTTPConfig.sanitize(amVersion, logger)
+	if dc.Content != "" && lessThanV0_28 {
+		msg := "'content' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.Content = ""
+	}
+
+	if dc.Username != "" && lessThanV0_28 {
+		msg := "'username' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.Username = ""
+	}
+
+	if dc.AvatarURL != "" && lessThanV0_28 {
+		msg := "'avatar_url' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.AvatarURL = ""
+	}
+
+	return dc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
@@ -2401,6 +2461,38 @@ func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	jiraConfigAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !jiraConfigAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; jira integration is available in Alertmanager >= 0.28.0`)
+	}
+
+	if jc.Project == "" {
+		return fmt.Errorf("missing project in jira_config")
+	}
+	if jc.IssueType == "" {
+		return errors.New("missing issue_type in jira_config")
+	}
+
+	return jc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	rocketChatAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !rocketChatAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; rocketchat integration is available in Alertmanager >= 0.28.0`)
+	}
+
+	if rc.Token != nil && len(rc.TokenFile) > 0 {
+		return fmt.Errorf("at most one of token & token_file must be configured")
+	}
+	if rc.TokenID != nil && len(rc.TokenIDFile) > 0 {
+		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
+	}
+
+	return rc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {

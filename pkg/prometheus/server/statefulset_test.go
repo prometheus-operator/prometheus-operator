@@ -2039,7 +2039,7 @@ func TestQueryLogFileVolumeMountPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == "query-log-file" {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2050,7 +2050,7 @@ func TestQueryLogFileVolumeMountPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == "query-log-file" {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2072,7 +2072,7 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == "query-log-file" {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2083,7 +2083,7 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == "query-log-file" {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2091,6 +2091,74 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 	}
 
 	require.False(t, found, "Query log file mounted, when it shouldn't be.")
+}
+
+func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultLogFileVolume {
+			found = true
+		}
+	}
+
+	require.True(t, found, "Volume for scrape failure log file not found.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultLogFileVolume {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.True(t, found, "Scrape failure log file not mounted.")
+}
+
+func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
+	// An emptyDir is only mounted by the Operator if the given
+	// path is only a base filename.
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultLogFileVolume {
+			found = true
+		}
+	}
+
+	require.False(t, found, "Volume for scrape failure file found, when it shouldn't be.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultLogFileVolume {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.False(t, found, "Scrape failure log file mounted, when it shouldn't be.")
 }
 
 func TestRemoteWriteReceiver(t *testing.T) {

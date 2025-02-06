@@ -33,7 +33,6 @@ import (
 
 const (
 	defaultRetention                     = "24h"
-	defaultQueryLogVolume                = "query-log-file"
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
@@ -464,7 +463,8 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 
 // appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
 func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volumeMounts []v1.VolumeMount, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
-	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok {
+	// not mount 2 emptyDir volumes at the same mountpath
+	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
 		volumes = append(volumes, volume)
 	}
 
@@ -488,7 +488,8 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 		})
 	}
 
-	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok {
+	// not mount 2 emptyDir volumes at the same mountpath
+	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
 		volumeMounts = append(volumeMounts, vmount)
 	}
 
@@ -681,24 +682,24 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 }
 
 func queryLogFileVolumeMount(queryLogFile string) (v1.VolumeMount, bool) {
-	if !prompkg.UsesDefaultQueryLogVolume(queryLogFile) {
+	if !prompkg.UsesDefaultFileVolume(queryLogFile) {
 		return v1.VolumeMount{}, false
 	}
 
 	return v1.VolumeMount{
-		Name:      defaultQueryLogVolume,
+		Name:      prompkg.DefaultLogFileVolume,
 		ReadOnly:  false,
-		MountPath: prompkg.DefaultQueryLogDirectory,
+		MountPath: prompkg.DefaultLogDirectory,
 	}, true
 }
 
 func queryLogFileVolume(queryLogFile string) (v1.Volume, bool) {
-	if !prompkg.UsesDefaultQueryLogVolume(queryLogFile) {
+	if !prompkg.UsesDefaultFileVolume(queryLogFile) {
 		return v1.Volume{}, false
 	}
 
 	return v1.Volume{
-		Name: defaultQueryLogVolume,
+		Name: prompkg.DefaultLogFileVolume,
 		VolumeSource: v1.VolumeSource{
 			EmptyDir: &v1.EmptyDirVolumeSource{},
 		},

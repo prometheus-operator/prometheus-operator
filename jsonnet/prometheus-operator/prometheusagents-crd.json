@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.17.1",
-      "operator.prometheus.io/version": "0.79.2"
+      "operator.prometheus.io/version": "0.80.0"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -5877,6 +5877,11 @@
                     },
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
+                  },
+                  "scrapeFailureLogFile": {
+                    "description": "File to which scrape failures are logged.\nReloading the configuration will reopen the file.\n\nIf the filename has an empty path, e.g. 'file.log', The Prometheus Pods\nwill mount the file into an emptyDir volume at `/var/log/prometheus`.\nIf a full path is provided, e.g. '/var/log/prometheus/file.log', you\nmust mount a volume in the specified directory and it must be writable.\nIt requires Prometheus >= v2.55.0.",
+                    "minLength": 1,
+                    "type": "string"
                   },
                   "scrapeInterval": {
                     "default": "30s",
