@@ -1040,6 +1040,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(TSDBSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ScrapeFailureLogFile != nil {
+		in, out := &in.ScrapeFailureLogFile, &out.ScrapeFailureLogFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.ServiceName != nil {
 		in, out := &in.ServiceName, &out.ServiceName
 		*out = new(string)
@@ -1790,13 +1795,9 @@ func (in *PodMonitorList) DeepCopyInto(out *PodMonitorList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*PodMonitor, len(*in))
+		*out = make([]PodMonitor, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(PodMonitor)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -1926,13 +1927,9 @@ func (in *ProbeList) DeepCopyInto(out *ProbeList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*Probe, len(*in))
+		*out = make([]Probe, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(Probe)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -2177,13 +2174,9 @@ func (in *PrometheusList) DeepCopyInto(out *PrometheusList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*Prometheus, len(*in))
+		*out = make([]Prometheus, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(Prometheus)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -2238,13 +2231,9 @@ func (in *PrometheusRuleList) DeepCopyInto(out *PrometheusRuleList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*PrometheusRule, len(*in))
+		*out = make([]PrometheusRule, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(PrometheusRule)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -2983,6 +2972,11 @@ func (in *ScrapeClass) DeepCopyInto(out *ScrapeClass) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.FallbackScrapeProtocol != nil {
+		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
+		*out = new(ScrapeProtocol)
+		**out = **in
+	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(TLSConfig)
@@ -3074,13 +3068,9 @@ func (in *ServiceMonitorList) DeepCopyInto(out *ServiceMonitorList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*ServiceMonitor, len(*in))
+		*out = make([]ServiceMonitor, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(ServiceMonitor)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -3368,13 +3358,9 @@ func (in *ThanosRulerList) DeepCopyInto(out *ThanosRulerList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*ThanosRuler, len(*in))
+		*out = make([]ThanosRuler, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(ThanosRuler)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }

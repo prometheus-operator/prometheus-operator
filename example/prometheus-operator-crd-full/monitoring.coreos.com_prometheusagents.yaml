@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -6370,6 +6370,19 @@ spec:
 
                         Only one scrape class can be set as the default.
                       type: boolean
+                    fallbackScrapeProtocol:
+                      description: |-
+                        The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+                        It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+
+                        It requires Prometheus >= v3.0.0.
+                      enum:
+                      - PrometheusProto
+                      - OpenMetricsText0.0.1
+                      - OpenMetricsText1.0.0
+                      - PrometheusText0.0.4
+                      - PrometheusText1.0.0
+                      type: string
                     metricRelabelings:
                       description: |-
                         MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
@@ -6859,6 +6872,18 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              scrapeFailureLogFile:
+                description: |-
+                  File to which scrape failures are logged.
+                  Reloading the configuration will reopen the file.
+
+                  If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
+                  will mount the file into an emptyDir volume at `/var/log/prometheus`.
+                  If a full path is provided, e.g. '/var/log/prometheus/file.log', you
+                  must mount a volume in the specified directory and it must be writable.
+                  It requires Prometheus >= v2.55.0.
+                minLength: 1
+                type: string
               scrapeInterval:
                 default: 30s
                 description: |-

@@ -17,19 +17,19 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ConditionApplyConfiguration represents a declarative configuration of the Condition type for use
 // with apply.
 type ConditionApplyConfiguration struct {
-	Type               *v1.ConditionType   `json:"type,omitempty"`
-	Status             *v1.ConditionStatus `json:"status,omitempty"`
-	LastTransitionTime *metav1.Time        `json:"lastTransitionTime,omitempty"`
-	Reason             *string             `json:"reason,omitempty"`
-	Message            *string             `json:"message,omitempty"`
-	ObservedGeneration *int64              `json:"observedGeneration,omitempty"`
+	Type               *monitoringv1.ConditionType   `json:"type,omitempty"`
+	Status             *monitoringv1.ConditionStatus `json:"status,omitempty"`
+	LastTransitionTime *metav1.Time                  `json:"lastTransitionTime,omitempty"`
+	Reason             *string                       `json:"reason,omitempty"`
+	Message            *string                       `json:"message,omitempty"`
+	ObservedGeneration *int64                        `json:"observedGeneration,omitempty"`
 }
 
 // ConditionApplyConfiguration constructs a declarative configuration of the Condition type for use with
@@ -41,7 +41,7 @@ func Condition() *ConditionApplyConfiguration {
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *ConditionApplyConfiguration) WithType(value v1.ConditionType) *ConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithType(value monitoringv1.ConditionType) *ConditionApplyConfiguration {
 	b.Type = &value
 	return b
 }
@@ -49,7 +49,7 @@ func (b *ConditionApplyConfiguration) WithType(value v1.ConditionType) *Conditio
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *ConditionApplyConfiguration) WithStatus(value v1.ConditionStatus) *ConditionApplyConfiguration {
+func (b *ConditionApplyConfiguration) WithStatus(value monitoringv1.ConditionStatus) *ConditionApplyConfiguration {
 	b.Status = &value
 	return b
 }

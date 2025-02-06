@@ -81,7 +81,7 @@ type PrometheusAgentList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheus agents
-	Items []*PrometheusAgent `json:"items"`
+	Items []PrometheusAgent `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

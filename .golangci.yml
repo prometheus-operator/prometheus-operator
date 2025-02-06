@@ -1,5 +1,5 @@
 run:
-  deadline: 10m
+  timeout: 10m
 
 linters:
   enable:

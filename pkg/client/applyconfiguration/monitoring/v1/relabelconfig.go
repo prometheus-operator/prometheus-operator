@@ -17,19 +17,19 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // RelabelConfigApplyConfiguration represents a declarative configuration of the RelabelConfig type for use
 // with apply.
 type RelabelConfigApplyConfiguration struct {
-	SourceLabels []v1.LabelName `json:"sourceLabels,omitempty"`
-	Separator    *string        `json:"separator,omitempty"`
-	TargetLabel  *string        `json:"targetLabel,omitempty"`
-	Regex        *string        `json:"regex,omitempty"`
-	Modulus      *uint64        `json:"modulus,omitempty"`
-	Replacement  *string        `json:"replacement,omitempty"`
-	Action       *string        `json:"action,omitempty"`
+	SourceLabels []monitoringv1.LabelName `json:"sourceLabels,omitempty"`
+	Separator    *string                  `json:"separator,omitempty"`
+	TargetLabel  *string                  `json:"targetLabel,omitempty"`
+	Regex        *string                  `json:"regex,omitempty"`
+	Modulus      *uint64                  `json:"modulus,omitempty"`
+	Replacement  *string                  `json:"replacement,omitempty"`
+	Action       *string                  `json:"action,omitempty"`
 }
 
 // RelabelConfigApplyConfiguration constructs a declarative configuration of the RelabelConfig type for use with
@@ -41,7 +41,7 @@ func RelabelConfig() *RelabelConfigApplyConfiguration {
 // WithSourceLabels adds the given value to the SourceLabels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the SourceLabels field.
-func (b *RelabelConfigApplyConfiguration) WithSourceLabels(values ...v1.LabelName) *RelabelConfigApplyConfiguration {
+func (b *RelabelConfigApplyConfiguration) WithSourceLabels(values ...monitoringv1.LabelName) *RelabelConfigApplyConfiguration {
 	for i := range values {
 		b.SourceLabels = append(b.SourceLabels, values[i])
 	}
