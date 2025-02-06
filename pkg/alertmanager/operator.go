@@ -27,6 +27,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -1461,6 +1462,14 @@ func checkPushoverConfigs(
 			return err
 		}
 		if err := checkSecret(config.Token, "token"); err != nil {
+			return err
+		}
+
+		if _, err := model.ParseDuration(config.Expire); err != nil {
+			return err
+		}
+
+		if _, err := model.ParseDuration(config.Retry); err != nil {
 			return err
 		}
 
