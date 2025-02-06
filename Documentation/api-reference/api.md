@@ -3071,6 +3071,24 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
@@ -8250,6 +8268,24 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
@@ -13147,6 +13183,24 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
@@ -16094,6 +16148,122 @@ int32
 </td>
 <td>
 <p>Total number of unavailable pods targeted by this shard.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>mode</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyMode">
+ShardingStrategyMode
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines how the scraped targets are distributed across the Promehteus shards.</p>
+<p>When <code>mode</code> is set to &ldquo;TargetAddress&rdquo;, the sharding is used to determine the correct topology of a target.</p>
+<p>When <code>mode</code> is set to &ldquo;Topology&rdquo;, a Prometheus shard scrapes the targets which are located in the same topology domain&hellip;</p>
+<p>More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a></p>
+<p>Defaults to <code>TargetAddress</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topology</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyTopology">
+ShardingStrategyTopology
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the sharding configuration when &ldquo;mode&rdquo; is set to &ldquo;Topology&rdquo;..</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyMode">ShardingStrategyMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig</a>)
+</p>
+<div>
+<p>ShardingStrategyMode represents the Prometheus sharding mode.
+Supported values are:
+* <code>TargetAddress</code>
+* <code>Topology</code></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;TargetAddress&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Topology&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyTopology">ShardingStrategyTopology
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>externalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Prometheus external label used to communicate the topology zone.
+If not defined, it defaults to &ldquo;zone&rdquo;.
+If defined to an empty string, no external label is added to the Prometheus configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>All topology values to be used by the cluster, i.e. a list of all zones in use.</p>
 </td>
 </tr>
 </tbody>
@@ -19972,6 +20142,24 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 <td>
 <p>List of scrape classes to expose to scraping objects such as
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
@@ -28147,6 +28335,24 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 <td>
 <p>List of scrape classes to expose to scraping objects such as
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
