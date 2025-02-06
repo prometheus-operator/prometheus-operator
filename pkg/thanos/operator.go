@@ -477,10 +477,17 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to synchronize web config secret: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
-	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if tr.Spec.ServiceName != nil {
+		selectorLabels := makeSelectorLabels(tr.Name)
+		if err := k8sutil.EnsureCustomGoverningService(ctx, tr.Namespace, *tr.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Create governing service if it doesn't exist.
+		if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	// Ensure we have a StatefulSet running Thanos deployed.
@@ -793,4 +800,12 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 	)
 
 	return s
+}
+
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":       "thanos-ruler",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   name,
+	}
 }
