@@ -78,6 +78,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
+	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -532,5 +533,13 @@ func (b *AlertmanagerSpecApplyConfiguration) WithEnableFeatures(values ...string
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithServiceName(value string) *AlertmanagerSpecApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }
