@@ -1032,8 +1032,6 @@ type RocketChatConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty" yaml:"http_config,omitempty"`
 }
 
-
-
 // RocketChatFieldConfig defines a field for RocketChat messages.
 type RocketChatFieldConfig struct {
 	// The field title.

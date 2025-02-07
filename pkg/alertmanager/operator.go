@@ -1321,7 +1321,6 @@ func checkRocketChatConfigs(
 	return nil
 }
 
-
 func checkSlackConfigs(
 	ctx context.Context,
 	configs []monitoringv1alpha1.SlackConfig,

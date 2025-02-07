@@ -267,59 +267,59 @@ func convertDiscordConfigTo(in DiscordConfig) v1alpha1.DiscordConfig {
 }
 
 func convertRocketChatFieldConfigsTo(in []RocketChatFieldConfig) []v1alpha1.RocketChatFieldConfig {
-    if in == nil {
-        return nil
-    }
-    out := make([]v1alpha1.RocketChatFieldConfig, len(in))
-    for i, field := range in {
-        out[i] = v1alpha1.RocketChatFieldConfig{
-            Title: field.Title,
-            Value: field.Value,
-            Short: field.Short,
-        }
-    }
-    return out
+	if in == nil {
+		return nil
+	}
+	out := make([]v1alpha1.RocketChatFieldConfig, len(in))
+	for i, field := range in {
+		out[i] = v1alpha1.RocketChatFieldConfig{
+			Title: field.Title,
+			Value: field.Value,
+			Short: field.Short,
+		}
+	}
+	return out
 }
 
 func convertRocketChatActionConfigsTo(in []RocketChatActionConfig) []v1alpha1.RocketChatActionConfig {
-    if in == nil {
-        return nil
-    }
-    out := make([]v1alpha1.RocketChatActionConfig, len(in))
-    for i, action := range in {
-        out[i] = v1alpha1.RocketChatActionConfig{
-            Type: action.Type,
-            Text: action.Text,
-            URL:  action.URL,
-            Msg:  action.Msg,
-        }
-    }
-    return out
+	if in == nil {
+		return nil
+	}
+	out := make([]v1alpha1.RocketChatActionConfig, len(in))
+	for i, action := range in {
+		out[i] = v1alpha1.RocketChatActionConfig{
+			Type: action.Type,
+			Text: action.Text,
+			URL:  action.URL,
+			Msg:  action.Msg,
+		}
+	}
+	return out
 }
 
 func convertRocketchatConfigTo(in RocketChatConfig) v1alpha1.RocketChatConfig {
-    return v1alpha1.RocketChatConfig{
-        SendResolved: in.SendResolved,
-        APIURL:       in.APIURL,
-        Channel:      in.Channel,
-        Token:        in.Token,
-        TokenFile:    in.TokenFile,
-        TokenID:      in.TokenID,
-        TokenIDFile:  in.TokenIDFile,
-        Color:        in.Color,
-        Emoji:        in.Emoji,
-        IconURL:      in.IconURL,
-        Text:         in.Text,
-        Title:        in.Title,
-        TitleLink:    in.TitleLink,
-        Fields:       convertRocketChatFieldConfigsTo(in.Fields),
-        ShortFields:  in.ShortFields,
-        ImageURL:     in.ImageURL,
-        ThumbURL:     in.ThumbURL,
-        LinkNames:    in.LinkNames,
-        Actions:      convertRocketChatActionConfigsTo(in.Actions),
-        HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
-    }
+	return v1alpha1.RocketChatConfig{
+		SendResolved: in.SendResolved,
+		APIURL:       in.APIURL,
+		Channel:      in.Channel,
+		Token:        in.Token,
+		TokenFile:    in.TokenFile,
+		TokenID:      in.TokenID,
+		TokenIDFile:  in.TokenIDFile,
+		Color:        in.Color,
+		Emoji:        in.Emoji,
+		IconURL:      in.IconURL,
+		Text:         in.Text,
+		Title:        in.Title,
+		TitleLink:    in.TitleLink,
+		Fields:       convertRocketChatFieldConfigsTo(in.Fields),
+		ShortFields:  in.ShortFields,
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
+		LinkNames:    in.LinkNames,
+		Actions:      convertRocketChatActionConfigsTo(in.Actions),
+		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+	}
 }
 
 func convertSlackFieldsTo(in []SlackField) []v1alpha1.SlackField {
