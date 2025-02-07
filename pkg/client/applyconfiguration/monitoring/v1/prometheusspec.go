@@ -823,7 +823,7 @@ func (b *PrometheusSpecApplyConfiguration) WithScrapeClasses(values ...*ScrapeCl
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ShardingStrategy field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithShardingStrategy(value *ShardingStrategyConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
-	b.ShardingStrategy = value
+	b.CommonPrometheusFieldsApplyConfiguration.ShardingStrategy = value
 	return b
 }
 

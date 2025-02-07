@@ -17,13 +17,13 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // ShardingStrategyConfigApplyConfiguration represents a declarative configuration of the ShardingStrategyConfig type for use
 // with apply.
 type ShardingStrategyConfigApplyConfiguration struct {
-	Mode     *v1.ShardingStrategyMode                    `json:"mode,omitempty"`
+	Mode     *monitoringv1.ShardingStrategyMode          `json:"mode,omitempty"`
 	Topology *ShardingStrategyTopologyApplyConfiguration `json:"topology,omitempty"`
 }
 
@@ -36,7 +36,7 @@ func ShardingStrategyConfig() *ShardingStrategyConfigApplyConfiguration {
 // WithMode sets the Mode field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Mode field is set to the value of the last call.
-func (b *ShardingStrategyConfigApplyConfiguration) WithMode(value v1.ShardingStrategyMode) *ShardingStrategyConfigApplyConfiguration {
+func (b *ShardingStrategyConfigApplyConfiguration) WithMode(value monitoringv1.ShardingStrategyMode) *ShardingStrategyConfigApplyConfiguration {
 	b.Mode = &value
 	return b
 }

@@ -843,12 +843,18 @@ type CommonPrometheusFields struct {
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
 	// Defines the sharding configuration for scraped targets.
+	//
 	// It requires enabling the `PrometheusTopologySharding` feature gate.
 	//
 	// WARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.
 	//
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
+	//
+	// Implemented features:
+	// [ ] Node selector update when `mode: Topology`.
+	// [ ] External label name when `mode: Topology`.
+	// [ ] Target sharding when `mode: Topology`.
 	//
 	// +optional
 	ShardingStrategy *ShardingStrategyConfig `json:"shardingStrategy,omitempty"`
@@ -2258,14 +2264,12 @@ const (
 	TopologyShardingStrategyMode      ShardingStrategyMode = "Topology"
 )
 
+// More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration
 type ShardingStrategyConfig struct {
 	// Defines how the scraped targets are distributed across the Promehteus shards.
 	//
-	// When `mode` is set to "TargetAddress", the sharding is used to determine the correct topology of a target.
-	//
-	// When `mode` is set to "Topology", a Prometheus shard scrapes the targets which are located in the same topology domain...
-	//
-	// More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration
+	// When `mode` is set to "TargetAddress", the Prometheus shards select the targets to be scraped by hashing the value of the `__tmp_hash` label which is initialized by default to the target's address. See `.spec.shards` for the details.
+	// When `mode` is set to "Topology", a Prometheus shard scrapes the targets which are located in the same topology domain.
 	//
 	// Defaults to `TargetAddress`.
 	// +optional

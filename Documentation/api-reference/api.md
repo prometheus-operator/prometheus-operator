@@ -3080,11 +3080,15 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the sharding configuration for scraped targets.
-It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>Defines the sharding configuration for scraped targets.</p>
+<p>It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
 <p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+<p>Implemented features:
+[ ] Node selector update when <code>mode: Topology</code>.
+[ ] External label name when <code>mode: Topology</code>.
+[ ] Target sharding when <code>mode: Topology</code>.</p>
 </td>
 </tr>
 <tr>
@@ -8277,11 +8281,15 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the sharding configuration for scraped targets.
-It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>Defines the sharding configuration for scraped targets.</p>
+<p>It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
 <p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+<p>Implemented features:
+[ ] Node selector update when <code>mode: Topology</code>.
+[ ] External label name when <code>mode: Topology</code>.
+[ ] Target sharding when <code>mode: Topology</code>.</p>
 </td>
 </tr>
 <tr>
@@ -13192,11 +13200,15 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the sharding configuration for scraped targets.
-It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>Defines the sharding configuration for scraped targets.</p>
+<p>It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
 <p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+<p>Implemented features:
+[ ] Node selector update when <code>mode: Topology</code>.
+[ ] External label name when <code>mode: Topology</code>.
+[ ] Target sharding when <code>mode: Topology</code>.</p>
 </td>
 </tr>
 <tr>
@@ -16158,6 +16170,7 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
+<p>More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a></p>
 </div>
 <table>
 <thead>
@@ -16179,9 +16192,8 @@ ShardingStrategyMode
 <td>
 <em>(Optional)</em>
 <p>Defines how the scraped targets are distributed across the Promehteus shards.</p>
-<p>When <code>mode</code> is set to &ldquo;TargetAddress&rdquo;, the sharding is used to determine the correct topology of a target.</p>
-<p>When <code>mode</code> is set to &ldquo;Topology&rdquo;, a Prometheus shard scrapes the targets which are located in the same topology domain&hellip;</p>
-<p>More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a></p>
+<p>When <code>mode</code> is set to &ldquo;TargetAddress&rdquo;, the Prometheus shards select the targets to be scraped by hashing the value of the <code>__tmp_hash</code> label which is initialized by default to the target&rsquo;s address. See <code>.spec.shards</code> for the details.
+When <code>mode</code> is set to &ldquo;Topology&rdquo;, a Prometheus shard scrapes the targets which are located in the same topology domain.</p>
 <p>Defaults to <code>TargetAddress</code>.</p>
 </td>
 </tr>
@@ -20157,11 +20169,15 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the sharding configuration for scraped targets.
-It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>Defines the sharding configuration for scraped targets.</p>
+<p>It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
 <p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+<p>Implemented features:
+[ ] Node selector update when <code>mode: Topology</code>.
+[ ] External label name when <code>mode: Topology</code>.
+[ ] Target sharding when <code>mode: Topology</code>.</p>
 </td>
 </tr>
 <tr>
@@ -28350,11 +28366,15 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the sharding configuration for scraped targets.
-It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>Defines the sharding configuration for scraped targets.</p>
+<p>It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
 <p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+<p>Implemented features:
+[ ] Node selector update when <code>mode: Topology</code>.
+[ ] External label name when <code>mode: Topology</code>.
+[ ] Target sharding when <code>mode: Topology</code>.</p>
 </td>
 </tr>
 <tr>

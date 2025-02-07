@@ -7685,10 +7685,10 @@
                     "type": "string"
                   },
                   "shardingStrategy": {
-                    "description": "Defines the sharding configuration for scraped targets.\nIt requires enabling the `PrometheusTopologySharding` feature gate.\n\nWARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                    "description": "Defines the sharding configuration for scraped targets.\n\nIt requires enabling the `PrometheusTopologySharding` feature gate.\n\nWARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nImplemented features:\n[ ] Node selector update when `mode: Topology`.\n[ ] External label name when `mode: Topology`.\n[ ] Target sharding when `mode: Topology`.",
                     "properties": {
                       "mode": {
-                        "description": "Defines how the scraped targets are distributed across the Promehteus shards.\n\nWhen `mode` is set to \"TargetAddress\", the sharding is used to determine the correct topology of a target.\n\nWhen `mode` is set to \"Topology\", a Prometheus shard scrapes the targets which are located in the same topology domain...\n\nMore info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration\n\nDefaults to `TargetAddress`.",
+                        "description": "Defines how the scraped targets are distributed across the Promehteus shards.\n\nWhen `mode` is set to \"TargetAddress\", the Prometheus shards select the targets to be scraped by hashing the value of the `__tmp_hash` label which is initialized by default to the target's address. See `.spec.shards` for the details.\nWhen `mode` is set to \"Topology\", a Prometheus shard scrapes the targets which are located in the same topology domain.\n\nDefaults to `TargetAddress`.",
                         "enum": [
                           "TargetAddress",
                           "Topology"
