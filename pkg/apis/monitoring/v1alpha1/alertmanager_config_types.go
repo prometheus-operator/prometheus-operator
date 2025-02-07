@@ -975,7 +975,7 @@ type RocketChatConfig struct {
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The API URL for RocketChat.
 	// +optional
-	APIURL v1.SecretKeySelector `json:"apiURL,omitempty"`
+	APIURL string `json:"apiURL,omitempty"`
 	// The secret containing the RocketChat token.
 	// +optional
 	Token v1.SecretKeySelector `json:"token,omitempty"`

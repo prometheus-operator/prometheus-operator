@@ -270,6 +270,13 @@ func convertDiscordConfigFrom(in v1alpha1.DiscordConfig) DiscordConfig {
 	}
 }
 
+func convertRocketchatConfigFrom(in v1alpha1.RocketChatConfig) RocketChatConfig {
+	return RocketChatConfig {
+		APIURL: in.APIURL,
+		
+	}
+}
+
 func convertSlackFieldsFrom(in []v1alpha1.SlackField) []SlackField {
 	out := make([]SlackField, len(in))
 

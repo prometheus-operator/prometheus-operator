@@ -1308,12 +1308,12 @@ func checkRocketChatConfigs(
 			return err
 		}
 
-		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
+		token, err := store.GetSecretKey(ctx, namespace, config.Token)
 
 		if err != nil {
-			return fmt.Errorf("failed to retrieve RocketChat API URL: %w", err)
+			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
 		}
-		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+		if err := validation.ValidateSecretURL(strings.TrimSpace(token)); err != nil {
 			return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
 		}
 	}
