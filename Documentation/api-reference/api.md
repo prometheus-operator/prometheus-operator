@@ -14947,6 +14947,21 @@ bool
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>roundRobinDNS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<h1>When enabled, remote-write will resolve the URL host name via DNS, choose one of the IP addresses at random, and connect to it.</h1>
+<p>When disabled, remote-write relies on Go&rsquo;s standard behavior, which is to try to connect to each address in turn.
+The connection timeout applies to the whole operation, i.e. in the latter case it is spread over all attempt.</p>
+<p>It requires Prometheus &gt;= v3.1.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Rule">Rule

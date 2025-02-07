@@ -6340,6 +6340,10 @@
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
+                        "roundRobinDNS": {
+                          "description": "# When enabled, remote-write will resolve the URL host name via DNS, choose one of the IP addresses at random, and connect to it.\nWhen disabled, remote-write relies on Go's standard behavior, which is to try to connect to each address in turn.\nThe connection timeout applies to the whole operation, i.e. in the latter case it is spread over all attempt.\n\nIt requires Prometheus >= v3.1.0.",
+                          "type": "boolean"
+                        },
                         "sendExemplars": {
                           "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0.",
                           "type": "boolean"

@@ -4315,6 +4315,15 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.54.0_MessageVersion2.golden",
 		},
+		{
+			version: "v3.1.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				RoundRobinDNS:  ptr.To(true),
+			},
+			golden: "RemoteWriteConfig_v3.1.0.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()

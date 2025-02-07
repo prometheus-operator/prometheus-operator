@@ -1562,6 +1562,15 @@ type RemoteWriteSpec struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+
+	// # When enabled, remote-write will resolve the URL host name via DNS, choose one of the IP addresses at random, and connect to it.
+	// When disabled, remote-write relies on Go's standard behavior, which is to try to connect to each address in turn.
+	// The connection timeout applies to the whole operation, i.e. in the latter case it is spread over all attempt.
+	//
+	// It requires Prometheus >= v3.1.0.
+	//
+	// +optional
+	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=V1.0;V2.0
