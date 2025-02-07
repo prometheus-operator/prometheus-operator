@@ -741,11 +741,11 @@ func (cb *configBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		out.Text = *in.Text
 	}
 
-	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
+	token, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.Token)
 	if err != nil {
 		return nil, err
 	}
-	out.APIURL = url
+	out.Token = &token
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
