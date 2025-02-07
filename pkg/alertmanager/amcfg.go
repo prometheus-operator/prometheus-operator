@@ -733,56 +733,19 @@ func (cb *configBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		VSendResolved: in.SendResolved,
 	}
 
-	if in.APIURL != "" {
-		apiURL, err := validation.ValidateURL(in.APIURL)
-		if err != nil {
-			return nil, err
-		}
-		out.APIURL = apiURL.String()
-	}
-
-	if in.Token != nil {
-		token, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.Token)
-		if err != nil {
-			return nil, err
-		}
-		out.Token = &token
-	}
-
-	if in.Channel != "" {
-		out.Channel = in.Channel
-	}
-
-	if in.Title != nil {
+	if in.Title != nil && *in.Title != "" {
 		out.Title = *in.Title
 	}
 
-	if in.Text != nil {
+	if in.Text != nil && *in.Text != "" {
 		out.Text = *in.Text
 	}
 
-	if len(in.Fields) > 0 {
-		out.Fields = make([]*rocketchatAttachmentField, len(in.Fields))
-		for i, field := range in.Fields {
-			out.Fields[i] = &rocketchatAttachmentField{
-				Title: field.Title,
-				Value: field.Value,
-				Short: field.Short,
-			}
-		}
+	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
+	if err != nil {
+		return nil, err
 	}
-
-	if len(in.Actions) > 0 {
-		out.Actions = make([]*rocketchatAttachmentAction, len(in.Actions))
-		for i, action := range in.Actions {
-			out.Actions[i] = &rocketchatAttachmentAction{
-				Type:  action.Type,
-				Text:  action.Text,
-				URL:   action.URL,
-				Msg:   action.Msg,
-			}
-		}
-	}
+	out.APIURL = url
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
@@ -792,6 +755,7 @@ func (cb *configBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 
 	return out, nil
 }
+
 
 
 func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoringv1alpha1.WebhookConfig, crKey types.NamespacedName) (*webhookConfig, error) {

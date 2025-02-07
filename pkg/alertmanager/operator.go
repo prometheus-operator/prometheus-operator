@@ -1168,6 +1168,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkRocketChatConfigs(ctx, receiver.RocketChatConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1286,6 +1291,36 @@ func checkDiscordConfigs(
 
 	return nil
 }
+
+func checkRocketChatConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.RocketChatConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+	}
+
+	for _, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
+
+		if err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat API URL: %w", err)
+		}
+		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
+		}
+	}
+
+	return nil
+}
+
 
 func checkSlackConfigs(
 	ctx context.Context,

@@ -106,6 +106,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsConfig' - receiver %s: %w", receiver.Name, err)
 		}
+
+		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - reciever %s: %w", receiver.Name, err)
+		}
 	}
 
 	return receiverNames, nil
@@ -148,6 +152,15 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 }
 
 func validateDiscordConfigs(configs []monitoringv1alpha1.DiscordConfig) error {
+	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) error {
 	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
