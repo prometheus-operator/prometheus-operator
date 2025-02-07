@@ -970,39 +970,78 @@ type MSTeamsConfig struct {
 // RocketChatConfig configures notifications via RocketChat.
 // See https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config
 type RocketChatConfig struct {
-	// Whether or not to notify about resolved alerts.
+	// Whether to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty" yaml:"send_resolved,omitempty"`
 	// The API URL for RocketChat.
+	// Defaults to global.rocketchat_api_url if not specified.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
-	// The secret containing the RocketChat token.
-	// +optional
-	Token v1.SecretKeySelector `json:"token,omitempty"`
-	// The secret containing the RocketChat token ID.
-	// +optional
-	TokenID     *string           `yaml:"token_id,omitempty"`
+	APIURL *string `json:"apiURL,omitempty" yaml:"api_url,omitempty"`
 	// The channel to send alerts to.
+	// Defaults to global.rocketchat_channel if not specified.
 	// +optional
-	Channel string `json:"channel,omitempty"`
+	Channel *string `json:"channel,omitempty" yaml:"channel,omitempty"`
+	// The sender token (mutually exclusive with TokenFile).
+	// +optional
+	Token v1.SecretKeySelector `json:"token,omitempty" yaml:"token,omitempty"`
+	// The file containing the sender token (mutually exclusive with Token).
+	// +optional
+	TokenFile *string `json:"tokenFile,omitempty" yaml:"token_file,omitempty"`
+	// The sender token ID (mutually exclusive with TokenIDFile).
+	// +optional
+	TokenID v1.SecretKeySelector `json:"tokenID,omitempty" yaml:"token_id,omitempty"`
+	// The file containing the sender token ID (mutually exclusive with TokenID).
+	// +optional
+	TokenIDFile *string `json:"tokenIDFile,omitempty" yaml:"token_id_file,omitempty"`
+	// The message color.
+	// Defaults to '{{ if eq .Status "firing" }}red{{ else }}green{{ end }}'.
+	// +optional
+	Color *string `json:"color,omitempty" yaml:"color,omitempty"`
+	// Emoji to use for the message.
+	// Defaults to '{{ template "rocketchat.default.emoji" . }}'.
+	// +optional
+	Emoji *string `json:"emoji,omitempty" yaml:"emoji,omitempty"`
+	// Icon URL for the message.
+	// Defaults to '{{ template "rocketchat.default.iconurl" . }}'.
+	// +optional
+	IconURL *string `json:"iconURL,omitempty" yaml:"icon_url,omitempty"`
 	// The main message text.
+	// Defaults to '{{ template "rocketchat.default.text" . }}'.
 	// +optional
-	Text *string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty" yaml:"text,omitempty"`
 	// The message title.
+	// Defaults to '{{ template "rocketchat.default.title" . }}'.
 	// +optional
-	Title *string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty" yaml:"title,omitempty"`
+	// The title link for the message.
+	// Defaults to '{{ template "rocketchat.default.titlelink" . }}'.
+	// +optional
+	TitleLink *string `json:"titleLink,omitempty" yaml:"title_link,omitempty"`
 	// Additional fields for the message.
 	// +optional
-	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
+	Fields []RocketChatFieldConfig `json:"fields,omitempty" yaml:"fields,omitempty"`
+	// Whether to use short fields.
+	// Defaults to false.
+	// +optional
+	ShortFields *bool `json:"shortFields,omitempty" yaml:"short_fields,omitempty"`
+	// Image URL for the message.
+	// +optional
+	ImageURL *string `json:"imageURL,omitempty" yaml:"image_url,omitempty"`
+	// Thumbnail URL for the message.
+	// +optional
+	ThumbURL *string `json:"thumbURL,omitempty" yaml:"thumb_url,omitempty"`
+	// Whether to enable link names.
+	// +optional
+	LinkNames *bool `json:"linkNames,omitempty" yaml:"link_names,omitempty"`
 	// Actions to include in the message.
 	// +optional
-	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	Actions []RocketChatActionConfig `json:"actions,omitempty" yaml:"actions,omitempty"`
 	// HTTP client configuration.
 	// +optional
-	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty" yaml:"http_config,omitempty"`
 }
 
-// RocketChatFieldConfig defines a field for RocketChat messages.
+// RocketChatFieldConfig defines additional fields for RocketChat messages.
 type RocketChatFieldConfig struct {
 	// The field title.
 	// +optional
@@ -1010,8 +1049,7 @@ type RocketChatFieldConfig struct {
 	// The field value.
 	// +optional
 	Value string `json:"value,omitempty"`
-	// Whether the field is displayed in a compact form.
-	// Defaults to the value of `rocketchat_config.short_fields`.
+	// Whether the field should be displayed in a compact format.
 	// +optional
 	Short *bool `json:"short,omitempty"`
 }
@@ -1019,7 +1057,6 @@ type RocketChatFieldConfig struct {
 // RocketChatActionConfig defines actions for RocketChat messages.
 type RocketChatActionConfig struct {
 	// The type of action (only "button" is supported).
-	// This field is ignored in Alertmanager.
 	// +optional
 	Type string `json:"type,omitempty"`
 	// The button text.
