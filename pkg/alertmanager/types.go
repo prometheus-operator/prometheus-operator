@@ -473,6 +473,7 @@ type rocketchatAttachmentAction struct {
 }
 
 type rocketChatConfig struct {
+	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
 	HTTPConfig  *httpClientConfig `yaml:"http_config,omitempty"`
 	APIURL      string            `yaml:"api_url,omitempty"`
 	TokenID     *string           `yaml:"token_id,omitempty"`

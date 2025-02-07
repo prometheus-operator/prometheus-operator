@@ -186,6 +186,9 @@ type Receiver struct {
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
+	// List of RocketChat configurations.
+	// It requires Alertmanager >= 0.28.0.
+	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -953,6 +956,98 @@ type MSTeamsConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// RocketChatConfig configures notifications via RocketChat.
+// See https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config
+type RocketChatConfig struct {
+	// Whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty" yaml:"send_resolved,omitempty"`
+	// The API URL for RocketChat.
+	// +optional
+	APIURL string `json:"apiURL,omitempty" yaml:"api_url,omitempty"`
+	// The secret containing the RocketChat token.
+	// +optional
+	Token *v1.SecretKeySelector `json:"token,omitempty" yaml:"token,omitempty"`
+	// The secret containing the RocketChat token ID.
+	// +optional
+	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty" yaml:"token_id,omitempty"`
+	// The channel to send alerts to.
+	// +optional
+	Channel string `json:"channel,omitempty" yaml:"channel,omitempty"`
+	// The main message text.
+	// +optional
+	Text *string `json:"text,omitempty" yaml:"text,omitempty"`
+	// The message title.
+	// +optional
+	Title *string `json:"title,omitempty" yaml:"title,omitempty"`
+	// The title link for the message.
+	// +optional
+	TitleLink *string `json:"titleLink,omitempty" yaml:"title_link,omitempty"`
+	// The message color.
+	// +optional
+	Color *string `json:"color,omitempty" yaml:"color,omitempty"`
+	// Additional fields for the message.
+	// +optional
+	Fields []RocketChatFieldConfig `json:"fields,omitempty" yaml:"fields,omitempty"`
+	// Whether short fields should be used.
+	// Defaults to the value of `rocketchat_config.short_fields`.
+	// +optional
+	ShortFields bool `json:"shortFields,omitempty" yaml:"short_fields"`
+	// Emoji to use for the message.
+	// +optional
+	Emoji *string `json:"emoji,omitempty" yaml:"emoji,omitempty"`
+	// Icon URL for the message.
+	// +optional
+	IconURL *string `json:"iconURL,omitempty" yaml:"icon_url,omitempty"`
+	// Image URL for the message.
+	// +optional
+	ImageURL *string `json:"imageURL,omitempty" yaml:"image_url,omitempty"`
+	// Thumbnail URL for the message.
+	// +optional
+	ThumbURL *string `json:"thumbURL,omitempty" yaml:"thumb_url,omitempty"`
+	// Whether to enable link names.
+	// +optional
+	LinkNames bool `json:"linkNames,omitempty" yaml:"link_names"`
+	// Actions to include in the message.
+	// +optional
+	Actions []RocketChatActionConfig `json:"actions,omitempty" yaml:"actions,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty" yaml:"http_config,omitempty"`
+}
+
+
+// RocketChatFieldConfig defines a field for RocketChat messages.
+type RocketChatFieldConfig struct {
+	// The field title.
+	// +optional
+	Title string `json:"title,omitempty"`
+	// The field value.
+	// +optional
+	Value string `json:"value,omitempty"`
+	// Whether the field is displayed in a compact form.
+	// Defaults to the value of `rocketchat_config.short_fields`.
+	// +optional
+	Short *bool `json:"short,omitempty"`
+}
+
+// RocketChatActionConfig defines actions for RocketChat messages.
+type RocketChatActionConfig struct {
+	// The type of action (only "button" is supported).
+	// This field is ignored in Alertmanager.
+	// +optional
+	Type string `json:"type,omitempty"`
+	// The button text.
+	// +optional
+	Text string `json:"text,omitempty"`
+	// The URL the button links to.
+	// +optional
+	URL string `json:"url,omitempty"`
+	// The message to send when the button is clicked.
+	// +optional
+	Msg string `json:"msg,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
