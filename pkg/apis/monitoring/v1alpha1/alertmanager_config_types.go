@@ -978,19 +978,19 @@ type RocketChatConfig struct {
 	// +optional
 	APIURL *string `json:"apiURL,omitempty" yaml:"api_url,omitempty"`
 	// The channel to send alerts to.
-	// Defaults to global.rocketchat_channel if not specified.
+	// Defaults to https://open.rocket.chat/ if not specified.
 	// +optional
 	Channel *string `json:"channel,omitempty" yaml:"channel,omitempty"`
-	// The sender token (mutually exclusive with TokenFile).
+	// The sender token. Either Token or TokenFile is required.
 	// +optional
 	Token v1.SecretKeySelector `json:"token,omitempty" yaml:"token,omitempty"`
-	// The file containing the sender token (mutually exclusive with Token).
+	// The file containing the sender token. Either Token or TokenFile is required.
 	// +optional
 	TokenFile *string `json:"tokenFile,omitempty" yaml:"token_file,omitempty"`
-	// The sender token ID (mutually exclusive with TokenIDFile).
+	// The sender token ID. Either TokenID or TokenIDFile is required.
 	// +optional
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty" yaml:"token_id,omitempty"`
-	// The file containing the sender token ID (mutually exclusive with TokenID).
+	// The file containing the sender token ID. Either TokenID or TokenIDFile is required.
 	// +optional
 	TokenIDFile *string `json:"tokenIDFile,omitempty" yaml:"token_id_file,omitempty"`
 	// The message color.
