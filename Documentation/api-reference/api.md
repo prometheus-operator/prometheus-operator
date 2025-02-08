@@ -3089,6 +3089,7 @@ in a breaking way.</p>
 [ ] Node selector update when <code>mode: Topology</code>.
 [ ] External label name when <code>mode: Topology</code>.
 [ ] Target sharding when <code>mode: Topology</code>.</p>
+<p>See <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -8290,6 +8291,7 @@ in a breaking way.</p>
 [ ] Node selector update when <code>mode: Topology</code>.
 [ ] External label name when <code>mode: Topology</code>.
 [ ] Target sharding when <code>mode: Topology</code>.</p>
+<p>See <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -13209,6 +13211,7 @@ in a breaking way.</p>
 [ ] Node selector update when <code>mode: Topology</code>.
 [ ] External label name when <code>mode: Topology</code>.
 [ ] Target sharding when <code>mode: Topology</code>.</p>
+<p>See <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -16170,7 +16173,6 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a></p>
 </div>
 <table>
 <thead>
@@ -16193,7 +16195,7 @@ ShardingStrategyMode
 <em>(Optional)</em>
 <p>Defines how the scraped targets are distributed across the Promehteus shards.</p>
 <p>When <code>mode</code> is set to &ldquo;TargetAddress&rdquo;, the Prometheus shards select the targets to be scraped by hashing the value of the <code>__tmp_hash</code> label which is initialized by default to the target&rsquo;s address. See <code>.spec.shards</code> for the details.
-When <code>mode</code> is set to &ldquo;Topology&rdquo;, a Prometheus shard scrapes the targets which are located in the same topology domain.</p>
+When <code>mode</code> is set to &ldquo;Topology&rdquo;, a Prometheus shard scrapes the targets which are located in the same topology domain (identified by the <code>topology.kubernetes.io/zone</code> node label).</p>
 <p>Defaults to <code>TargetAddress</code>.</p>
 </td>
 </tr>
@@ -16208,7 +16210,7 @@ ShardingStrategyTopology
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the sharding configuration when &ldquo;mode&rdquo; is set to &ldquo;Topology&rdquo;..</p>
+<p>Defines the sharding configuration when &ldquo;mode&rdquo; is set to &ldquo;Topology&rdquo;.</p>
 </td>
 </tr>
 </tbody>
@@ -16261,7 +16263,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Prometheus external label used to communicate the topology zone.
+<p>Prometheus external label used to communicate the topology zone of the shard.
 If not defined, it defaults to &ldquo;zone&rdquo;.
 If defined to an empty string, no external label is added to the Prometheus configuration.</p>
 </td>
@@ -20178,6 +20180,7 @@ in a breaking way.</p>
 [ ] Node selector update when <code>mode: Topology</code>.
 [ ] External label name when <code>mode: Topology</code>.
 [ ] Target sharding when <code>mode: Topology</code>.</p>
+<p>See <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -28375,6 +28378,7 @@ in a breaking way.</p>
 [ ] Node selector update when <code>mode: Topology</code>.
 [ ] External label name when <code>mode: Topology</code>.
 [ ] Target sharding when <code>mode: Topology</code>.</p>
+<p>See <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a> for more details.</p>
 </td>
 </tr>
 <tr>

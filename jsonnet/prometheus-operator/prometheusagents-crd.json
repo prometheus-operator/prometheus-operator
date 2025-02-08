@@ -6173,10 +6173,10 @@
                     "type": "string"
                   },
                   "shardingStrategy": {
-                    "description": "Defines the sharding configuration for scraped targets.\n\nIt requires enabling the `PrometheusTopologySharding` feature gate.\n\nWARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nImplemented features:\n[ ] Node selector update when `mode: Topology`.\n[ ] External label name when `mode: Topology`.\n[ ] Target sharding when `mode: Topology`.",
+                    "description": "Defines the sharding configuration for scraped targets.\n\nIt requires enabling the `PrometheusTopologySharding` feature gate.\n\nWARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nImplemented features:\n[ ] Node selector update when `mode: Topology`.\n[ ] External label name when `mode: Topology`.\n[ ] Target sharding when `mode: Topology`.\n\nSee https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration for more details.",
                     "properties": {
                       "mode": {
-                        "description": "Defines how the scraped targets are distributed across the Promehteus shards.\n\nWhen `mode` is set to \"TargetAddress\", the Prometheus shards select the targets to be scraped by hashing the value of the `__tmp_hash` label which is initialized by default to the target's address. See `.spec.shards` for the details.\nWhen `mode` is set to \"Topology\", a Prometheus shard scrapes the targets which are located in the same topology domain.\n\nDefaults to `TargetAddress`.",
+                        "description": "Defines how the scraped targets are distributed across the Promehteus shards.\n\nWhen `mode` is set to \"TargetAddress\", the Prometheus shards select the targets to be scraped by hashing the value of the `__tmp_hash` label which is initialized by default to the target's address. See `.spec.shards` for the details.\nWhen `mode` is set to \"Topology\", a Prometheus shard scrapes the targets which are located in the same topology domain (identified by the `topology.kubernetes.io/zone` node label).\n\nDefaults to `TargetAddress`.",
                         "enum": [
                           "TargetAddress",
                           "Topology"
@@ -6184,10 +6184,10 @@
                         "type": "string"
                       },
                       "topology": {
-                        "description": "Defines the sharding configuration when \"mode\" is set to \"Topology\"..",
+                        "description": "Defines the sharding configuration when \"mode\" is set to \"Topology\".",
                         "properties": {
                           "externalLabelName": {
-                            "description": "Prometheus external label used to communicate the topology zone.\nIf not defined, it defaults to \"zone\".\nIf defined to an empty string, no external label is added to the Prometheus configuration.",
+                            "description": "Prometheus external label used to communicate the topology zone of the shard.\nIf not defined, it defaults to \"zone\".\nIf defined to an empty string, no external label is added to the Prometheus configuration.",
                             "type": "string"
                           },
                           "values": {
