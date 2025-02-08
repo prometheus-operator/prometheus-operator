@@ -972,73 +972,73 @@ type MSTeamsConfig struct {
 type RocketChatConfig struct {
 	// Whether to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty" yaml:"send_resolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The API URL for RocketChat.
 	// Defaults to global.rocketchat_api_url if not specified.
 	// +optional
-	APIURL *string `json:"apiURL,omitempty" yaml:"api_url,omitempty"`
+	APIURL *string `json:"apiURL,omitempty"`
 	// The channel to send alerts to.
 	// Defaults to https://open.rocket.chat/ if not specified.
 	// +optional
-	Channel *string `json:"channel,omitempty" yaml:"channel,omitempty"`
+	Channel *string `json:"channel,omitempty"`
 	// The sender token. Either Token or TokenFile is required.
 	// +optional
-	Token v1.SecretKeySelector `json:"token,omitempty" yaml:"token,omitempty"`
+	Token v1.SecretKeySelector `json:"token,omitempty"`
 	// The file containing the sender token. Either Token or TokenFile is required.
 	// +optional
-	TokenFile *string `json:"tokenFile,omitempty" yaml:"token_file,omitempty"`
+	TokenFile *string `json:"tokenFile,omitempty"`
 	// The sender token ID. Either TokenID or TokenIDFile is required.
 	// +optional
-	TokenID v1.SecretKeySelector `json:"tokenID,omitempty" yaml:"token_id,omitempty"`
+	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// The file containing the sender token ID. Either TokenID or TokenIDFile is required.
 	// +optional
-	TokenIDFile *string `json:"tokenIDFile,omitempty" yaml:"token_id_file,omitempty"`
+	TokenIDFile *string `json:"tokenIDFile,omitempty"`
 	// The message color.
 	// Defaults to '{{ if eq .Status "firing" }}red{{ else }}green{{ end }}'.
 	// +optional
-	Color *string `json:"color,omitempty" yaml:"color,omitempty"`
+	Color *string `json:"color,omitempty"`
 	// Emoji to use for the message.
 	// Defaults to '{{ template "rocketchat.default.emoji" . }}'.
 	// +optional
-	Emoji *string `json:"emoji,omitempty" yaml:"emoji,omitempty"`
+	Emoji *string `json:"emoji,omitempty"`
 	// Icon URL for the message.
 	// Defaults to '{{ template "rocketchat.default.iconurl" . }}'.
 	// +optional
-	IconURL *string `json:"iconURL,omitempty" yaml:"icon_url,omitempty"`
+	IconURL *string `json:"iconURL,omitempty"`
 	// The main message text.
 	// Defaults to '{{ template "rocketchat.default.text" . }}'.
 	// +optional
-	Text *string `json:"text,omitempty" yaml:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// The message title.
 	// Defaults to '{{ template "rocketchat.default.title" . }}'.
 	// +optional
-	Title *string `json:"title,omitempty" yaml:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// The title link for the message.
 	// Defaults to '{{ template "rocketchat.default.titlelink" . }}'.
 	// +optional
-	TitleLink *string `json:"titleLink,omitempty" yaml:"title_link,omitempty"`
+	TitleLink *string `json:"titleLink,omitempty"`
 	// Additional fields for the message.
 	// +optional
-	Fields []RocketChatFieldConfig `json:"fields,omitempty" yaml:"fields,omitempty"`
+	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// Whether to use short fields.
 	// Defaults to false.
 	// +optional
-	ShortFields *bool `json:"shortFields,omitempty" yaml:"short_fields,omitempty"`
+	ShortFields *bool `json:"shortFields,omitempty"`
 	// Image URL for the message.
 	// +optional
-	ImageURL *string `json:"imageURL,omitempty" yaml:"image_url,omitempty"`
+	ImageURL *string `json:"imageURL,omitempty"`
 	// Thumbnail URL for the message.
 	// +optional
-	ThumbURL *string `json:"thumbURL,omitempty" yaml:"thumb_url,omitempty"`
+	ThumbURL *string `json:"thumbURL,omitempty"`
 	// Whether to enable link names.
 	// +optional
-	LinkNames *bool `json:"linkNames,omitempty" yaml:"link_names,omitempty"`
+	LinkNames *bool `json:"linkNames,omitempty"`
 	// Actions to include in the message.
 	// +optional
-	Actions []RocketChatActionConfig `json:"actions,omitempty" yaml:"actions,omitempty"`
+	Actions []RocketChatActionConfig `json:"actions,omitempty"`
 	// HTTP client configuration.
 	// +optional
-	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty" yaml:"http_config,omitempty"`
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
 // RocketChatFieldConfig defines additional fields for RocketChat messages.
