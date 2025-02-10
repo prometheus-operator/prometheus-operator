@@ -5820,6 +5820,21 @@ spec:
                       description: Timeout for requests to the remote write endpoint.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    roundRobinDNS:
+                      description: |-
+                        When enabled:
+                            - The remote-write mechanism will resolve the hostname via DNS.
+                            - It will randomly select one of the resolved IP addresses and connect to it.
+
+                        When disabled (default behavior):
+                            - The Go standard library will handle hostname resolution.
+                            - It will attempt connections to each resolved IP address sequentially.
+
+                        Note: The connection timeout applies to the entire resolution and connection process.
+                              If disabled, the timeout is distributed across all connection attempts.
+
+                        It requires Prometheus >= v3.1.0.
+                      type: boolean
                     sendExemplars:
                       description: |-
                         Enables sending of exemplars over remote write. Note that

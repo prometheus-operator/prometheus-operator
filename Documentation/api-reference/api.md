@@ -14947,6 +14947,26 @@ bool
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>roundRobinDNS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When enabled:
+- The remote-write mechanism will resolve the hostname via DNS.
+- It will randomly select one of the resolved IP addresses and connect to it.</p>
+<p>When disabled (default behavior):
+- The Go standard library will handle hostname resolution.
+- It will attempt connections to each resolved IP address sequentially.</p>
+<p>Note: The connection timeout applies to the entire resolution and connection process.
+If disabled, the timeout is distributed across all connection attempts.</p>
+<p>It requires Prometheus &gt;= v3.1.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Rule">Rule
