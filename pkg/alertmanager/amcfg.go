@@ -1361,7 +1361,7 @@ func (cb *configBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 	}
 
 	if len(in.Fields) > 0 {
-		outFields := make(map[string]interface{})
+		outFields := make(map[string]interface{}, len(in.Fields))
 		for _, field := range in.Fields {
 			outFields[field.Key] = string(field.Value.Raw)
 		}
