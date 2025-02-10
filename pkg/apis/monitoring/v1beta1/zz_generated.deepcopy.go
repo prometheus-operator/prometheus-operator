@@ -326,11 +326,6 @@ func (in *JiraConfig) DeepCopyInto(out *JiraConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.IssueType != nil {
-		in, out := &in.IssueType, &out.IssueType
-		*out = new(string)
-		**out = **in
-	}
 	if in.ResolveTransition != nil {
 		in, out := &in.ResolveTransition, &out.ResolveTransition
 		*out = new(string)

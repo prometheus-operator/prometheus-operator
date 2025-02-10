@@ -166,7 +166,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 									Description:       ptr.To("description"),
 									Priority:          ptr.To("priority"),
 									Labels:            []string{"aa", "bb"},
-									IssueType:         ptr.To("bug"),
+									IssueType:         "bug",
 									ResolveTransition: ptr.To("ResolveTransition"),
 									ReopenTransition:  ptr.To("ReopenTransition"),
 									WontFixResolution: ptr.To("WontFixResolution"),
@@ -3075,8 +3075,9 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:  ptr.To("http://example.com"),
-								Project: "foo",
+								APIURL:    ptr.To("http://example.com"),
+								Project:   "foo",
+								IssueType: "bug",
 							},
 						},
 					},
@@ -4185,7 +4186,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 							{
 								APIURL:    ptr.To("http://issues.example.com"),
 								Project:   "Monitoring",
-								IssueType: ptr.To("Bug"),
+								IssueType: "Bug",
 							},
 						},
 					},

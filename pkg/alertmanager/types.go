@@ -439,7 +439,7 @@ type jiraConfig struct {
 	Description       *string                `yaml:"description,omitempty" json:"description,omitempty"`
 	Labels            []string               `yaml:"labels,omitempty" json:"labels,omitempty"`
 	Priority          *string                `yaml:"priority,omitempty" json:"priority,omitempty"`
-	IssueType         *string                `yaml:"issue_type,omitempty" json:"issue_type,omitempty"`
+	IssueType         string                 `yaml:"issue_type" json:"issue_type"`
 	ResolveTransition *string                `yaml:"resolve_transition,omitempty" json:"resolve_transition,omitempty"`
 	ReopenTransition  *string                `yaml:"reopen_transition,omitempty" json:"reopen_transition,omitempty"`
 	WontFixResolution *string                `yaml:"wont_fix_resolution,omitempty" json:"wont_fix_resolution,omitempty"`

@@ -783,6 +783,7 @@
                           },
                           issueType: {
                             description: 'Type of the issue (e.g. Bug).',
+                            minLength: 1,
                             type: 'string',
                           },
                           labels: {
@@ -831,6 +832,7 @@
                           },
                         },
                         required: [
+                          'issueType',
                           'project',
                         ],
                         type: 'object',

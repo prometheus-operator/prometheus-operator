@@ -24223,7 +24223,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Type of the issue (e.g. Bug).</p>
 </td>
 </tr>
@@ -32753,7 +32752,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Type of the issue (e.g. Bug).</p>
 </td>
 </tr>

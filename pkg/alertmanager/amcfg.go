@@ -2456,6 +2456,10 @@ func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 		return fmt.Errorf("mandatory field %q is empty", "project")
 	}
 
+	if tc.IssueType == "" {
+		return fmt.Errorf("mandatory field %q is empty", "issue_type")
+	}
+
 	if tc.APIURL == nil {
 		return fmt.Errorf("mandatory field %q and %q is all empty", "api_url", "Jira_api_url")
 	}

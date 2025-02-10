@@ -1042,8 +1042,9 @@ type JiraConfig struct {
 
 	// Type of the issue (e.g. Bug).
 	//
-	// +optional
-	IssueType *string `json:"issueType,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	IssueType string `json:"issueType"`
 
 	// Name of the workflow transition to resolve an issue.
 	// The target status must have the category "done".

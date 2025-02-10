@@ -964,6 +964,7 @@ spec:
                             type: object
                           issueType:
                             description: Type of the issue (e.g. Bug).
+                            minLength: 1
                             type: string
                           labels:
                             description: Labels to be added to the issue.
@@ -1009,6 +1010,7 @@ spec:
                               with that resolution.
                             type: string
                         required:
+                        - issueType
                         - project
                         type: object
                       type: array
@@ -11671,6 +11673,7 @@ spec:
                             type: object
                           issueType:
                             description: Type of the issue (e.g. Bug).
+                            minLength: 1
                             type: string
                           labels:
                             description: Labels to be added to the issue.
@@ -11716,6 +11719,7 @@ spec:
                               with that resolution.
                             type: string
                         required:
+                        - issueType
                         - project
                         type: object
                       type: array
