@@ -1062,8 +1062,8 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("field `config.PathPrefix` is only supported for Prometheus version >= 2.45.0")
 		}
 
-		if config.Namespace != nil && rs.version.LT(semver.MustParse("2.28.0")) {
-			return fmt.Errorf("field `config.Namespace` is only supported for Prometheus version >= 2.28.0")
+		if config.Namespace != nil && rs.version.LT(semver.MustParse("2.50.0")) {
+			return fmt.Errorf("field `config.Namespace` is only supported for Prometheus version >= 2.50.0")
 		}
 
 		if config.Filter != nil && rs.version.Major < 3 {

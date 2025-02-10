@@ -910,8 +910,11 @@ type KumaSDConfig struct {
 	// Address of the Kuma Control Plane's MADS xDS server.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	Server string `json:"server"`
 	// Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
+	// It requires Prometheus >= v2.50.0
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 	// The time to wait between polling update requests.
