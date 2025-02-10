@@ -3,4 +3,5 @@ receivers:
   jira_configs:
   - api_url: http://example.com
     project: foo
+    issue_type: bug
 templates: []
