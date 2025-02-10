@@ -4962,7 +4962,7 @@
                           "type": "string"
                         },
                         "roundRobinDNS": {
-                          "description": "When enabled, remote-write will resolve the URL host name via DNS, choose one of the IP addresses at random, and connect to it.\nWhen disabled, remote-write relies on Go's standard behavior, which is to try to connect to each address in turn.\nThe connection timeout applies to the whole operation, i.e. in the latter case it is spread over all attempts.\n\nIt requires Prometheus >= v3.1.0.",
+                          "description": "When enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0.",
                           "type": "boolean"
                         },
                         "sendExemplars": {

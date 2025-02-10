@@ -14956,9 +14956,14 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When enabled, remote-write will resolve the URL host name via DNS, choose one of the IP addresses at random, and connect to it.
-When disabled, remote-write relies on Go&rsquo;s standard behavior, which is to try to connect to each address in turn.
-The connection timeout applies to the whole operation, i.e. in the latter case it is spread over all attempts.</p>
+<p>When enabled:
+- The remote-write mechanism will resolve the hostname via DNS.
+- It will randomly select one of the resolved IP addresses and connect to it.</p>
+<p>When disabled (default behavior):
+- The Go standard library will handle hostname resolution.
+- It will attempt connections to each resolved IP address sequentially.</p>
+<p>Note: The connection timeout applies to the entire resolution and connection process.
+If disabled, the timeout is distributed across all connection attempts.</p>
 <p>It requires Prometheus &gt;= v3.1.0.</p>
 </td>
 </tr>
