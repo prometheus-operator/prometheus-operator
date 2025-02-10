@@ -4947,6 +4947,7 @@ spec:
                   If empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.
                   When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
                   See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
                 type: string
               storage:
                 description: Storage spec to specify how storage shall be used.

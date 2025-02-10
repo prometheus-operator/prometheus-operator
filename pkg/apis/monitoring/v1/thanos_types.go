@@ -146,6 +146,7 @@ type ThanosRulerSpec struct {
 	// When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ServiceName *string `json:"serviceName,omitempty"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run the

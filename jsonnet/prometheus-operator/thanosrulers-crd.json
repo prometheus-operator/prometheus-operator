@@ -4289,6 +4289,7 @@
                   },
                   "serviceName": {
                     "description": "The name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.\nWhen deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
+                    "minLength": 1,
                     "type": "string"
                   },
                   "storage": {

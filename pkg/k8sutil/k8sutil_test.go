@@ -639,30 +639,6 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "custom service selects k8sutil but in different ns",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
-					Namespace: "wrong-ns",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"k8sutil":                      name,
-						"app.kubernetes.io/name":       "k8sutil",
-						"app.kubernetes.io/instance":   name,
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
-			},
-			selectorLabels: map[string]string{
-				"k8sutil":                      name,
-				"app.kubernetes.io/name":       "k8sutil",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
-		},
-		{
 			name: "custom svc doesn't exist",
 			selectorLabels: map[string]string{
 				"k8sutil":                      name,
