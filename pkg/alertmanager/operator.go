@@ -1465,12 +1465,16 @@ func checkPushoverConfigs(
 			return err
 		}
 
-		if _, err := model.ParseDuration(config.Expire); err != nil {
-			return err
+		if config.Expire != "" {
+			if _, err := model.ParseDuration(config.Expire); err != nil {
+				return err
+			}
 		}
 
-		if _, err := model.ParseDuration(config.Retry); err != nil {
-			return err
+		if config.Retry != "" {
+			if _, err := model.ParseDuration(config.Retry); err != nil {
+				return err
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
