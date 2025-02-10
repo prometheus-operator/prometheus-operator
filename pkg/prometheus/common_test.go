@@ -282,18 +282,3 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 		})
 	}
 }
-
-func makeBarebonesPrometheus(name, ns string) *monitoringv1.Prometheus {
-	return &monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   ns,
-			Annotations: map[string]string{},
-		},
-		Spec: monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(int32(1)),
-			},
-		},
-	}
-}
