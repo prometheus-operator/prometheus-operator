@@ -4079,19 +4079,19 @@
                             type: 'array',
                           },
                           apiURL: {
-                            description: 'The API URL for RocketChat.\nDefaults to global.rocketchat_api_url if not specified.',
+                            description: 'The API URL for RocketChat.\nDefaults to https://open.rocket.chat/ if not specified.',
                             type: 'string',
                           },
                           channel: {
-                            description: 'The channel to send alerts to.\nDefaults to global.rocketchat_channel if not specified.',
+                            description: 'The channel to send alerts to.',
                             type: 'string',
                           },
                           color: {
-                            description: "The message color.\nDefaults to '{{ if eq .Status \"firing\" }}red{{ else }}green{{ end }}'.",
+                            description: 'The message color.',
                             type: 'string',
                           },
                           emoji: {
-                            description: "Emoji to use for the message.\nDefaults to '{{ template \"rocketchat.default.emoji\" . }}'.",
+                            description: 'If provided, the avatar will be displayed as an emoji.',
                             type: 'string',
                           },
                           fields: {
@@ -4100,7 +4100,7 @@
                               description: 'RocketChatFieldConfig defines a field for RocketChat messages.',
                               properties: {
                                 short: {
-                                  description: 'Whether the field is displayed in a compact form.\nDefaults to the value of `rocketchat_config.short_fields`.',
+                                  description: 'Whether the field is displayed in a compact form.',
                                   type: 'boolean',
                                 },
                                 title: {
@@ -4751,7 +4751,7 @@
                             type: 'object',
                           },
                           iconURL: {
-                            description: "Icon URL for the message.\nDefaults to '{{ template \"rocketchat.default.iconurl\" . }}'.",
+                            description: 'Icon URL for the message.',
                             type: 'string',
                           },
                           imageURL: {
@@ -4767,11 +4767,11 @@
                             type: 'boolean',
                           },
                           shortFields: {
-                            description: 'Whether to use short fields.\nDefaults to false.',
+                            description: 'Whether to use short fields.',
                             type: 'boolean',
                           },
                           text: {
-                            description: "The main message text.\nDefaults to '{{ template \"rocketchat.default.text\" . }}'.",
+                            description: 'The main message text.',
                             type: 'string',
                           },
                           thumbURL: {
@@ -4779,15 +4779,15 @@
                             type: 'string',
                           },
                           title: {
-                            description: "The message title.\nDefaults to '{{ template \"rocketchat.default.title\" . }}'.",
+                            description: 'The message title.',
                             type: 'string',
                           },
                           titleLink: {
-                            description: "The title link for the message.\nDefaults to '{{ template \"rocketchat.default.titlelink\" . }}'.",
+                            description: 'The title link for the message.',
                             type: 'string',
                           },
                           token: {
-                            description: 'The sender token (mutually exclusive with TokenFile).',
+                            description: 'The sender token. Either Token or TokenFile is required.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -4810,11 +4810,11 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                           tokenFile: {
-                            description: 'The file containing the sender token (mutually exclusive with Token).',
+                            description: 'The file containing the sender token. Mutually exclusive with TokenFile\nEither Token or TokenFile is required.',
                             type: 'string',
                           },
                           tokenID: {
-                            description: 'The sender token ID (mutually exclusive with TokenIDFile).',
+                            description: 'The sender token ID. Mutually exclusive with TokenIDFile.\nEither TokenID or TokenIDFile is required.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -4837,7 +4837,7 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                           tokenIDFile: {
-                            description: 'The file containing the sender token ID (mutually exclusive with TokenID).',
+                            description: 'The file containing the sender token ID. Either TokenID or TokenIDFile is required.',
                             type: 'string',
                           },
                         },

@@ -988,7 +988,7 @@ type RocketChatConfig struct {
 	// +optional
 	TokenFile *string `json:"tokenFile,omitempty"`
 	// The sender token ID. Mutually exclusive with TokenIDFile.
-	// Either TokenID or TokenIDFile is required. 
+	// Either TokenID or TokenIDFile is required.
 	// +optional
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// The file containing the sender token ID. Either TokenID or TokenIDFile is required.

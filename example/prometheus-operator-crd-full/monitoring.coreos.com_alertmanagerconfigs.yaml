@@ -4518,22 +4518,17 @@ spec:
                           apiURL:
                             description: |-
                               The API URL for RocketChat.
-                              Defaults to global.rocketchat_api_url if not specified.
+                              Defaults to https://open.rocket.chat/ if not specified.
                             type: string
                           channel:
-                            description: |-
-                              The channel to send alerts to.
-                              Defaults to global.rocketchat_channel if not specified.
+                            description: The channel to send alerts to.
                             type: string
                           color:
-                            description: |-
-                              The message color.
-                              Defaults to '{{ if eq .Status "firing" }}red{{ else }}green{{ end }}'.
+                            description: The message color.
                             type: string
                           emoji:
-                            description: |-
-                              Emoji to use for the message.
-                              Defaults to '{{ template "rocketchat.default.emoji" . }}'.
+                            description: If provided, the avatar will be displayed
+                              as an emoji.
                             type: string
                           fields:
                             description: Additional fields for the message.
@@ -5251,9 +5246,7 @@ spec:
                                 type: object
                             type: object
                           iconURL:
-                            description: |-
-                              Icon URL for the message.
-                              Defaults to '{{ template "rocketchat.default.iconurl" . }}'.
+                            description: Icon URL for the message.
                             type: string
                           imageURL:
                             description: Image URL for the message.
@@ -5265,31 +5258,23 @@ spec:
                             description: Whether to notify about resolved alerts.
                             type: boolean
                           shortFields:
-                            description: |-
-                              Whether to use short fields.
-                              Defaults to false.
+                            description: Whether to use short fields.
                             type: boolean
                           text:
-                            description: |-
-                              The main message text.
-                              Defaults to '{{ template "rocketchat.default.text" . }}'.
+                            description: The main message text.
                             type: string
                           thumbURL:
                             description: Thumbnail URL for the message.
                             type: string
                           title:
-                            description: |-
-                              The message title.
-                              Defaults to '{{ template "rocketchat.default.title" . }}'.
+                            description: The message title.
                             type: string
                           titleLink:
-                            description: |-
-                              The title link for the message.
-                              Defaults to '{{ template "rocketchat.default.titlelink" . }}'.
+                            description: The title link for the message.
                             type: string
                           token:
-                            description: The sender token (mutually exclusive with
-                              TokenFile).
+                            description: The sender token. Either Token or TokenFile
+                              is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -5313,12 +5298,14 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           tokenFile:
-                            description: The file containing the sender token (mutually
-                              exclusive with Token).
+                            description: |-
+                              The file containing the sender token. Mutually exclusive with TokenFile
+                              Either Token or TokenFile is required.
                             type: string
                           tokenID:
-                            description: The sender token ID (mutually exclusive with
-                              TokenIDFile).
+                            description: |-
+                              The sender token ID. Mutually exclusive with TokenIDFile.
+                              Either TokenID or TokenIDFile is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -5342,8 +5329,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           tokenIDFile:
-                            description: The file containing the sender token ID (mutually
-                              exclusive with TokenID).
+                            description: The file containing the sender token ID.
+                              Either TokenID or TokenIDFile is required.
                             type: string
                         type: object
                       type: array
@@ -15224,22 +15211,17 @@ spec:
                           apiURL:
                             description: |-
                               The API URL for RocketChat.
-                              Defaults to global.rocketchat_api_url if not specified.
+                              Defaults to https://open.rocket.chat/ if not specified.
                             type: string
                           channel:
-                            description: |-
-                              The channel to send alerts to.
-                              Defaults to global.rocketchat_channel if not specified.
+                            description: The channel to send alerts to.
                             type: string
                           color:
-                            description: |-
-                              The message color.
-                              Defaults to '{{ if eq .Status "firing" }}red{{ else }}green{{ end }}'.
+                            description: The message color.
                             type: string
                           emoji:
-                            description: |-
-                              Emoji to use for the message.
-                              Defaults to '{{ template "rocketchat.default.emoji" . }}'.
+                            description: If provided, the avatar will be displayed
+                              as an emoji.
                             type: string
                           fields:
                             description: Additional fields for the message.
@@ -15248,9 +15230,8 @@ spec:
                                 RocketChat messages.
                               properties:
                                 short:
-                                  description: |-
-                                    Whether the field is displayed in a compact form.
-                                    Defaults to the value of `rocketchat_config.short_fields`.
+                                  description: Whether the field is displayed in a
+                                    compact form.
                                   type: boolean
                                 title:
                                   description: The field title.
@@ -15951,9 +15932,7 @@ spec:
                                 type: object
                             type: object
                           iconURL:
-                            description: |-
-                              Icon URL for the message.
-                              Defaults to '{{ template "rocketchat.default.iconurl" . }}'.
+                            description: Icon URL for the message.
                             type: string
                           imageURL:
                             description: Image URL for the message.
@@ -15965,31 +15944,23 @@ spec:
                             description: Whether to notify about resolved alerts.
                             type: boolean
                           shortFields:
-                            description: |-
-                              Whether to use short fields.
-                              Defaults to false.
+                            description: Whether to use short fields.
                             type: boolean
                           text:
-                            description: |-
-                              The main message text.
-                              Defaults to '{{ template "rocketchat.default.text" . }}'.
+                            description: The main message text.
                             type: string
                           thumbURL:
                             description: Thumbnail URL for the message.
                             type: string
                           title:
-                            description: |-
-                              The message title.
-                              Defaults to '{{ template "rocketchat.default.title" . }}'.
+                            description: The message title.
                             type: string
                           titleLink:
-                            description: |-
-                              The title link for the message.
-                              Defaults to '{{ template "rocketchat.default.titlelink" . }}'.
+                            description: The title link for the message.
                             type: string
                           token:
-                            description: The sender token (mutually exclusive with
-                              TokenFile).
+                            description: The sender token. Either Token or TokenFile
+                              is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -16013,12 +15984,14 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           tokenFile:
-                            description: The file containing the sender token (mutually
-                              exclusive with Token).
+                            description: |-
+                              The file containing the sender token. Mutually exclusive with TokenFile
+                              Either Token or TokenFile is required.
                             type: string
                           tokenID:
-                            description: The sender token ID (mutually exclusive with
-                              TokenIDFile).
+                            description: |-
+                              The sender token ID. Mutually exclusive with TokenIDFile.
+                              Either TokenID or TokenIDFile is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -16042,8 +16015,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           tokenIDFile:
-                            description: The file containing the sender token ID (mutually
-                              exclusive with TokenID).
+                            description: The file containing the sender token ID.
+                              Either TokenID or TokenIDFile is required.
                             type: string
                         type: object
                       type: array
