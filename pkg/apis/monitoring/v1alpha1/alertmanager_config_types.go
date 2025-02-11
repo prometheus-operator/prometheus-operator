@@ -974,54 +974,48 @@ type RocketChatConfig struct {
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The API URL for RocketChat.
-	// Defaults to global.rocketchat_api_url if not specified.
+	// Defaults to https://open.rocket.chat/ if not specified.
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
 	// The channel to send alerts to.
-	// Defaults to https://open.rocket.chat/ if not specified.
 	// +optional
 	Channel *string `json:"channel,omitempty"`
 	// The sender token. Either Token or TokenFile is required.
 	// +optional
 	Token v1.SecretKeySelector `json:"token,omitempty"`
-	// The file containing the sender token. Either Token or TokenFile is required.
+	// The file containing the sender token. Mutually exclusive with TokenFile
+	// Either Token or TokenFile is required.
 	// +optional
 	TokenFile *string `json:"tokenFile,omitempty"`
-	// The sender token ID. Either TokenID or TokenIDFile is required.
+	// The sender token ID. Mutually exclusive with TokenIDFile.
+	// Either TokenID or TokenIDFile is required. 
 	// +optional
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// The file containing the sender token ID. Either TokenID or TokenIDFile is required.
 	// +optional
 	TokenIDFile *string `json:"tokenIDFile,omitempty"`
 	// The message color.
-	// Defaults to '{{ if eq .Status "firing" }}red{{ else }}green{{ end }}'.
 	// +optional
 	Color *string `json:"color,omitempty"`
-	// Emoji to use for the message.
-	// Defaults to '{{ template "rocketchat.default.emoji" . }}'.
+	// If provided, the avatar will be displayed as an emoji.
 	// +optional
 	Emoji *string `json:"emoji,omitempty"`
 	// Icon URL for the message.
-	// Defaults to '{{ template "rocketchat.default.iconurl" . }}'.
 	// +optional
 	IconURL *string `json:"iconURL,omitempty"`
 	// The main message text.
-	// Defaults to '{{ template "rocketchat.default.text" . }}'.
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// The message title.
-	// Defaults to '{{ template "rocketchat.default.title" . }}'.
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// The title link for the message.
-	// Defaults to '{{ template "rocketchat.default.titlelink" . }}'.
 	// +optional
 	TitleLink *string `json:"titleLink,omitempty"`
 	// Additional fields for the message.
 	// +optional
 	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// Whether to use short fields.
-	// Defaults to false.
 	// +optional
 	ShortFields *bool `json:"shortFields,omitempty"`
 	// Image URL for the message.
@@ -1045,10 +1039,10 @@ type RocketChatConfig struct {
 type RocketChatFieldConfig struct {
 	// The field title.
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// The field value.
 	// +optional
-	Value string `json:"value,omitempty"`
+	Value *string `json:"value,omitempty"`
 	// Whether the field should be displayed in a compact format.
 	// +optional
 	Short *bool `json:"short,omitempty"`
@@ -1058,16 +1052,16 @@ type RocketChatFieldConfig struct {
 type RocketChatActionConfig struct {
 	// The type of action (only "button" is supported).
 	// +optional
-	Type string `json:"type,omitempty"`
+	Type *string `json:"type,omitempty"`
 	// The button text.
 	// +optional
-	Text string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// The URL the button links to.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// The message to send when the button is clicked.
 	// +optional
-	Msg string `json:"msg,omitempty"`
+	Msg *string `json:"msg,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
