@@ -4502,7 +4502,7 @@ func TestLoadConfig(t *testing.T) {
 						Name: "rocketchat",
 						RocketChatConfigs: []*rocketChatConfig{
 							{
-								APIURL:  "http://example.com",
+								APIURL:    "http://example.com",
 								TokenFile: "/var/kubernetes/secrets/token",
 							},
 						},
@@ -4544,7 +4544,7 @@ func TestLoadConfig(t *testing.T) {
 						Name: "rocketchat",
 						RocketChatConfigs: []*rocketChatConfig{
 							{
-								APIURL:  "http://example.com",
+								APIURL:      "http://example.com",
 								TokenIDFile: "/var/kubernetes/secrets/token-id",
 							},
 						},
