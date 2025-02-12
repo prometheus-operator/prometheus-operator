@@ -1919,17 +1919,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -7098,17 +7098,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -11995,17 +11995,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -18846,17 +18846,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -27021,17 +27021,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
