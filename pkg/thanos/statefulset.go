@@ -447,11 +447,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
 	}
 
-	var serviceName string
+	serviceName := governingServiceName
 	if tr.Spec.ServiceName != nil {
 		serviceName = *tr.Spec.ServiceName
-	} else {
-		serviceName = governingServiceName
 	}
 
 	spec := appsv1.StatefulSetSpec{
