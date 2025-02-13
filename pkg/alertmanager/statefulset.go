@@ -372,13 +372,18 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	var operatorInitContainers []v1.Container
 
+	if a.Spec.ServiceName == nil {
+		serviceName := governingServiceName
+		a.Spec.ServiceName = &serviceName
+	}
+
 	var clusterPeerDomain string
 	if config.ClusterDomain != "" {
-		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", governingServiceName, a.Namespace, config.ClusterDomain)
-	} else {
-		// The default DNS search path is .svc.<cluster domain>
-		clusterPeerDomain = governingServiceName
+		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", *a.Spec.ServiceName, a.Namespace, config.ClusterDomain)
+	} else if a.Spec.ServiceName != nil {
+		clusterPeerDomain = *a.Spec.ServiceName
 	}
+
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s:9094", prefixedName(a.Name), i, clusterPeerDomain))
 	}
@@ -717,7 +722,6 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	spec := appsv1.StatefulSetSpec{
-		ServiceName:     governingServiceName,
 		Replicas:        a.Spec.Replicas,
 		MinReadySeconds: minReadySeconds,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

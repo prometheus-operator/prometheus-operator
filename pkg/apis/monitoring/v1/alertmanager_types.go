@@ -272,7 +272,7 @@ type AlertmanagerSpec struct {
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	//
-	//+optional
+	// +optional
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
 	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
 	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.
@@ -286,6 +286,17 @@ type AlertmanagerSpec struct {
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service must be created before the Alertmanager resource in the same namespace
+	// and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `alertmanager-operated`
+	// for Alertmanager resources.
+	// When deploying multiple Alertmanager resources in the same namespace,
+	// it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ServiceName *string `json:"serviceName,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
