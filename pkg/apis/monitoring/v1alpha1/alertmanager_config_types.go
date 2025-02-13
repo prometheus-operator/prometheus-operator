@@ -190,6 +190,9 @@ type Receiver struct {
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
+	// List of RocketChat configurations.
+	// It requires Alertmanager >= 0.28.0.
+	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -962,6 +965,101 @@ type MSTeamsConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// RocketChatConfig configures notifications via RocketChat.
+// See https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config
+type RocketChatConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The API URL for RocketChat.
+	// Defaults to https://open.rocket.chat/ if not specified.
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
+	// The channel to send alerts to.
+	// +optional
+	Channel *string `json:"channel,omitempty"`
+	// The sender token. Either Token or TokenFile is required.
+	// +optional
+	Token v1.SecretKeySelector `json:"token,omitempty"`
+	// The file containing the sender token. Either Token or TokenFile is required.
+	// +optional
+	TokenFile *string `json:"tokenFile,omitempty"`
+	// The sender token ID. Either TokenID or TokenIDFile is required.
+	// +optional
+	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
+	// The file containing the sender token ID. Either TokenID or TokenIDFile is required.
+	// +optional
+	TokenIDFile *string `json:"tokenIDFile,omitempty"`
+	// The message color.
+	// +optional
+	Color *string `json:"color,omitempty"`
+	// If provided, the avatar will be displayed as an emoji.
+	// +optional
+	Emoji *string `json:"emoji,omitempty"`
+	// Icon URL for the message.
+	// +optional
+	IconURL *string `json:"iconURL,omitempty"`
+	// The main message text.
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// The message title.
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// The title link for the message.
+	// +optional
+	TitleLink *string `json:"titleLink,omitempty"`
+	// Additional fields for the message.
+	// +optional
+	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
+	// Whether to use short fields.
+	// +optional
+	ShortFields *bool `json:"shortFields,omitempty"`
+	// Image URL for the message.
+	// +optional
+	ImageURL *string `json:"imageURL,omitempty"`
+	// Thumbnail URL for the message.
+	// +optional
+	ThumbURL *string `json:"thumbURL,omitempty"`
+	// Whether to enable link names.
+	// +optional
+	LinkNames *bool `json:"linkNames,omitempty"`
+	// Actions to include in the message.
+	// +optional
+	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// RocketChatFieldConfig defines additional fields for RocketChat messages.
+type RocketChatFieldConfig struct {
+	// The field title.
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// The field value.
+	// +optional
+	Value *string `json:"value,omitempty"`
+	// Whether the field should be displayed in a compact format.
+	// +optional
+	Short *bool `json:"short,omitempty"`
+}
+
+// RocketChatActionConfig defines actions for RocketChat messages.
+type RocketChatActionConfig struct {
+	// The type of action (only "button" is supported).
+	// +optional
+	Type *string `json:"type,omitempty"`
+	// The button text.
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// The URL the button links to.
+	// +optional
+	URL *string `json:"url,omitempty"`
+	// The message to send when the button is clicked.
+	// +optional
+	Msg *string `json:"msg,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
