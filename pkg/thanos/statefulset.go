@@ -447,8 +447,13 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
 	}
 
+	serviceName := governingServiceName
+	if tr.Spec.ServiceName != nil {
+		serviceName = *tr.Spec.ServiceName
+	}
+
 	spec := appsv1.StatefulSetSpec{
-		ServiceName:     governingServiceName,
+		ServiceName:     serviceName,
 		Replicas:        tr.Spec.Replicas,
 		MinReadySeconds: minReadySeconds,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

@@ -41,6 +41,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	DNSPolicy                          *monitoringv1.DNSPolicy                         `json:"dnsPolicy,omitempty"`
 	DNSConfig                          *PodDNSConfigApplyConfiguration                 `json:"dnsConfig,omitempty"`
 	PriorityClassName                  *string                                         `json:"priorityClassName,omitempty"`
+	ServiceName                        *string                                         `json:"serviceName,omitempty"`
 	ServiceAccountName                 *string                                         `json:"serviceAccountName,omitempty"`
 	Storage                            *StorageSpecApplyConfiguration                  `json:"storage,omitempty"`
 	Volumes                            []corev1.Volume                                 `json:"volumes,omitempty"`
@@ -223,6 +224,14 @@ func (b *ThanosRulerSpecApplyConfiguration) WithDNSConfig(value *PodDNSConfigApp
 // If called multiple times, the PriorityClassName field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithPriorityClassName(value string) *ThanosRulerSpecApplyConfiguration {
 	b.PriorityClassName = &value
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithServiceName(value string) *ThanosRulerSpecApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }
 
