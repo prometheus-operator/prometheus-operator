@@ -842,6 +842,24 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
+	// Defines the sharding configuration for scraped targets.
+	//
+	// It requires enabling the `PrometheusTopologySharding` feature gate.
+	//
+	// WARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
+	// Implemented features:
+	// [ ] Node selector update when `mode: Topology`.
+	// [ ] External label name when `mode: Topology`.
+	// [ ] Target sharding when `mode: Topology`.
+	//
+	// See https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration for more details.
+	// +optional
+	ShardingStrategy *ShardingStrategyConfig `json:"shardingStrategy,omitempty"`
+
 	// Defines the service discovery role used to discover targets from
 	// `ServiceMonitor` objects and Alertmanager endpoints.
 	//
@@ -2249,4 +2267,46 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.1.0.
 	// +optional
 	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
+}
+
+// ShardingStrategyMode represents the Prometheus sharding mode.
+// Supported values are:
+// * `TargetAddress`
+// * `Topology`
+// +kubebuilder:validation:Enum=TargetAddress;Topology
+type ShardingStrategyMode string
+
+const (
+	TargetAddressShardingStrategyMode ShardingStrategyMode = "TargetAddress"
+	TopologyShardingStrategyMode      ShardingStrategyMode = "Topology"
+)
+
+type ShardingStrategyConfig struct {
+	// Defines how the scraped targets are distributed across the Promehteus shards.
+	//
+	// When `mode` is set to "TargetAddress", the Prometheus shards select the targets to be scraped by hashing the value of the `__tmp_hash` label which is initialized by default to the target's address. See `.spec.shards` for the details.
+	// When `mode` is set to "Topology", a Prometheus shard scrapes the targets which are located in the same topology domain (identified by the `topology.kubernetes.io/zone` node label).
+	//
+	// Defaults to `TargetAddress`.
+	// +optional
+	Mode *ShardingStrategyMode `json:"mode,omitempty"`
+
+	// Defines the sharding configuration when "mode" is set to "Topology".
+	// +optional
+	Topology *ShardingStrategyTopology `json:"topology,omitempty"`
+}
+
+type ShardingStrategyTopology struct {
+	// Prometheus external label used to communicate the topology zone of the shard.
+	// If not defined, it defaults to "zone".
+	// If defined to an empty string, no external label is added to the Prometheus configuration.
+	// +optional
+	ExternalLabelName *string `json:"externalLabelName,omitempty"`
+
+	// All topology values to be used by the cluster, i.e. a list of all zones in use.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Values []string `json:"values,omitempty"`
 }
