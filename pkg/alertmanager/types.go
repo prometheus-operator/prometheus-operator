@@ -15,8 +15,6 @@
 package alertmanager
 
 import (
-	"time"
-
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/common/model"
 )
@@ -334,8 +332,8 @@ type pushoverConfig struct {
 	Device        string            `yaml:"device,omitempty" json:"device,omitempty"`
 	Sound         string            `yaml:"sound,omitempty" json:"sound,omitempty"`
 	Priority      string            `yaml:"priority,omitempty" json:"priority,omitempty"`
-	Retry         duration          `yaml:"retry,omitempty" json:"retry,omitempty"`
-	Expire        duration          `yaml:"expire,omitempty" json:"expire,omitempty"`
+	Retry         *model.Duration   `yaml:"retry,omitempty" json:"retry,omitempty"`
+	Expire        *model.Duration   `yaml:"expire,omitempty" json:"expire,omitempty"`
 	HTML          bool              `yaml:"html,omitempty" json:"html,omitempty"`
 }
 
@@ -390,20 +388,6 @@ type sigV4Config struct {
 	SecretKey string `yaml:"secret_key,omitempty" json:"secret_key,omitempty"`
 	Profile   string `yaml:"profile,omitempty" json:"profile,omitempty"`
 	RoleARN   string `yaml:"role_arn,omitempty" json:"role_arn,omitempty"`
-}
-
-type duration time.Duration
-
-func (d *duration) UnmarshalText(text []byte) error {
-	parsed, err := time.ParseDuration(string(text))
-	if err == nil {
-		*d = duration(parsed)
-	}
-	return err
-}
-
-func (d *duration) MarshalText() ([]byte, error) {
-	return []byte(time.Duration(*d).String()), nil
 }
 
 type victorOpsConfig struct {
