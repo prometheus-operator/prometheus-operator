@@ -968,6 +968,7 @@ type MSTeamsConfig struct {
 }
 
 // RocketChatConfig configures notifications via RocketChat.
+// It requires Alertmanager >= 0.28.0.
 // See https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config
 type RocketChatConfig struct {
 	// Whether to notify about resolved alerts.
@@ -1001,7 +1002,7 @@ type RocketChatConfig struct {
 	// Icon URL for the message.
 	// +optional
 	IconURL *string `json:"iconURL,omitempty"`
-	// The main message text.
+	// The message text to send, it is optional because of attachments.
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// The message title.
@@ -1035,13 +1036,13 @@ type RocketChatConfig struct {
 
 // RocketChatFieldConfig defines additional fields for RocketChat messages.
 type RocketChatFieldConfig struct {
-	// The field title.
+	// The title of this field.
 	// +optional
 	Title *string `json:"title,omitempty"`
-	// The field value.
+	// The value of this field, displayed underneath the title value.
 	// +optional
 	Value *string `json:"value,omitempty"`
-	// Whether the field should be displayed in a compact format.
+	// Whether this field should be a short field.
 	// +optional
 	Short *bool `json:"short,omitempty"`
 }
