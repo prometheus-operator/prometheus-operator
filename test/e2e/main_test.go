@@ -240,6 +240,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMWeb":                                   testAMWeb,
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 		"AMStatusScale":                           testAlertmanagerStatusScale,
+		"AMServiceName":                           testAlertmanagerServiceName,
 	}
 
 	for name, f := range testFuncs {
