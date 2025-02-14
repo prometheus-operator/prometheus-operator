@@ -4211,7 +4211,7 @@
                         "rocketchatConfigs": {
                           "description": "List of RocketChat configurations.\nIt requires Alertmanager >= 0.28.0.",
                           "items": {
-                            "description": "RocketChatConfig configures notifications via RocketChat.\nSee https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config",
+                            "description": "RocketChatConfig configures notifications via RocketChat.\nIt requires Alertmanager >= 0.28.0.\nSee https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config",
                             "properties": {
                               "actions": {
                                 "description": "Actions to include in the message.",
@@ -4261,15 +4261,15 @@
                                   "description": "RocketChatFieldConfig defines additional fields for RocketChat messages.",
                                   "properties": {
                                     "short": {
-                                      "description": "Whether the field should be displayed in a compact format.",
+                                      "description": "Whether this field should be a short field.",
                                       "type": "boolean"
                                     },
                                     "title": {
-                                      "description": "The field title.",
+                                      "description": "The title of this field.",
                                       "type": "string"
                                     },
                                     "value": {
-                                      "description": "The field value.",
+                                      "description": "The value of this field, displayed underneath the title value.",
                                       "type": "string"
                                     }
                                   },
@@ -4935,7 +4935,7 @@
                                 "type": "boolean"
                               },
                               "text": {
-                                "description": "The main message text.",
+                                "description": "The message text to send, it is optional because of attachments.",
                                 "type": "string"
                               },
                               "thumbURL": {
@@ -4974,11 +4974,11 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "tokenFile": {
-                                "description": "The file containing the sender token. Mutually exclusive with TokenFile\nEither Token or TokenFile is required.",
+                                "description": "The file containing the sender token. Either Token or TokenFile is required.",
                                 "type": "string"
                               },
                               "tokenID": {
-                                "description": "The sender token ID. Mutually exclusive with TokenIDFile.\nEither TokenID or TokenIDFile is required.",
+                                "description": "The sender token ID. Either TokenID or TokenIDFile is required.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",

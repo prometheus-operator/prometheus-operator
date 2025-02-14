@@ -29068,6 +29068,7 @@ string
 </p>
 <div>
 <p>RocketChatConfig configures notifications via RocketChat.
+It requires Alertmanager &gt;= 0.28.0.
 See <a href="https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config">https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config</a></p>
 </div>
 <table>
@@ -29138,8 +29139,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The file containing the sender token. Mutually exclusive with TokenFile
-Either Token or TokenFile is required.</p>
+<p>The file containing the sender token. Either Token or TokenFile is required.</p>
 </td>
 </tr>
 <tr>
@@ -29153,8 +29153,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>The sender token ID. Mutually exclusive with TokenIDFile.
-Either TokenID or TokenIDFile is required.</p>
+<p>The sender token ID. Either TokenID or TokenIDFile is required.</p>
 </td>
 </tr>
 <tr>
@@ -29214,7 +29213,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The main message text.</p>
+<p>The message text to send, it is optional because of attachments.</p>
 </td>
 </tr>
 <tr>
@@ -29358,7 +29357,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The field title.</p>
+<p>The title of this field.</p>
 </td>
 </tr>
 <tr>
@@ -29370,7 +29369,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The field value.</p>
+<p>The value of this field, displayed underneath the title value.</p>
 </td>
 </tr>
 <tr>
@@ -29382,7 +29381,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether the field should be displayed in a compact format.</p>
+<p>Whether this field should be a short field.</p>
 </td>
 </tr>
 </tbody>
