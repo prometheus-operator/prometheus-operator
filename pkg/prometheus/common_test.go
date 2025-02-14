@@ -15,14 +15,11 @@
 package prometheus
 
 import (
-	"context"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -283,155 +280,5 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 			require.Equal(t, tc.expectedOTLPReceiverFlag, argsEnabled)
 			require.Equal(t, tc.expectedOTLPFeatureEnabled, featureEnabled)
 		})
-	}
-}
-
-func TestEnsureCustomGoverningService(t *testing.T) {
-	name := "test-prometheus"
-	serviceName := "test-svc"
-	ns := "test-ns"
-	testcases := []struct {
-		name           string
-		service        v1.Service
-		selectorLabels map[string]string
-		expectedErr    bool
-	}{
-		{
-			name: "custom service selects prometheus",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      serviceName,
-					Namespace: ns,
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"prometheus":                   name,
-						"app.kubernetes.io/name":       "prometheus",
-						"app.kubernetes.io/instance":   name,
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
-			},
-			selectorLabels: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: false,
-		},
-		{
-			name: "custom service does not select prometheus",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
-					Namespace: ns,
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"prometheus":                   "different-name",
-						"app.kubernetes.io/name":       "prometheus",
-						"app.kubernetes.io/instance":   "different-name",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
-			},
-			selectorLabels: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
-		},
-		{
-			name: "custom service selects prometheus but in different ns",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
-					Namespace: "wrong-ns",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"prometheus":                   name,
-						"app.kubernetes.io/name":       "prometheus",
-						"app.kubernetes.io/instance":   name,
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
-			},
-			selectorLabels: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
-		},
-		{
-			name: "custom service selects prometheus but in different ns",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
-					Namespace: "wrong-ns",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"prometheus":                   name,
-						"app.kubernetes.io/name":       "prometheus",
-						"app.kubernetes.io/instance":   name,
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
-			},
-			selectorLabels: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
-		},
-		{
-			name: "custom svc doesn't exist",
-			selectorLabels: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
-		},
-	}
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			p := makeBarebonesPrometheus(name, ns)
-			p.Spec.ServiceName = &serviceName
-
-			clientSet := fake.NewSimpleClientset(&tc.service)
-			svcClient := clientSet.CoreV1().Services(ns)
-
-			err := EnsureCustomGoverningService(context.Background(), p.Namespace, *p.Spec.ServiceName, svcClient, tc.selectorLabels)
-			if tc.expectedErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-func makeBarebonesPrometheus(name, ns string) *monitoringv1.Prometheus {
-	return &monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   ns,
-			Annotations: map[string]string{},
-		},
-		Spec: monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(int32(1)),
-			},
-		},
 	}
 }
