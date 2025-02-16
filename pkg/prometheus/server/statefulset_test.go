@@ -61,7 +61,8 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		nil,
 		"",
 		0,
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 }
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -427,7 +428,8 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		[]string{"rules-configmap-one"},
 		"",
 		0,
-		shardedSecret)
+		shardedSecret,
+	)
 	require.NoError(t, err)
 
 	require.Equalf(t, expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes, "expected volumes to match \n%s", pretty.Compare(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes))
@@ -822,7 +824,8 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		nil,
 		"",
 		0,
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[0].Image
@@ -864,7 +867,8 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		nil,
 		"",
 		0,
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[2].Image
@@ -1389,7 +1393,8 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		nil,
 		"",
 		1,
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, int32(2), *sset.Spec.Replicas, "Unexpected replicas configuration.")
@@ -1430,7 +1435,8 @@ func TestSidecarResources(t *testing.T) {
 			nil,
 			"",
 			0,
-			&operator.ShardedSecret{})
+			&operator.ShardedSecret{},
+		)
 		require.NoError(t, err)
 		return sset
 	})
@@ -1854,7 +1860,8 @@ func TestConfigReloader(t *testing.T) {
 		nil,
 		"",
 		int32(expectedShardNum),
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -1912,7 +1919,8 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		nil,
 		"",
 		int32(expectedShardNum),
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
