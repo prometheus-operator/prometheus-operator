@@ -76,12 +76,6 @@ func skipPromVersionUpgradeTests(t *testing.T) {
 	}
 }
 
-func skipAllNSTests(t *testing.T) {
-	if os.Getenv("EXCLUDE_ALL_NS_TESTS") != "" {
-		t.Skip("Skipping AllNS upgrade tests")
-	}
-}
-
 func skipFeatureGatedTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_FEATURE_GATED_TESTS") != "" {
 		t.Skip("Skipping Feature Gated tests")
@@ -171,21 +165,27 @@ func TestMain(m *testing.M) {
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
-	skipAllNSTests(t)
+	ctx := context.Background()
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
 
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(ctx, ns, nil, nil, nil, nil, true, true, true)
 	require.NoError(t, err)
 
 	for _, f := range finalizers {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
+	t.Run("TestServerTLS", func(t *testing.T) {
+		testServerTLS(t, ns)
+	})
+	t.Run("TestPrometheusOperatorMetrics", func(t *testing.T) {
+		t.Helper()
+		testPrometheusOperatorMetrics(t, ns)
+	})
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -203,10 +203,10 @@ func TestAllNS(t *testing.T) {
 		"app.kubernetes.io/name": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, opts)
 	require.NoError(t, err)
 	require.Len(t, pl.Items, 1, "expected %v Prometheus Operator pods, but got %v", 1, len(pl.Items))
-	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
+	restarts, err := framework.GetPodRestartCount(ctx, ns, pl.Items[0].GetName())
 	require.NoError(t, err)
 	require.Len(t, restarts, 1)
 	for _, restart := range restarts {
@@ -441,20 +441,9 @@ func TestPrometheusVersionUpgrade(t *testing.T) {
 	t.Run("PromVersionMigration", testPromVersionMigration)
 }
 
-func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
-	return func(t *testing.T) {
-		skipPrometheusTests(t)
-		err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName)
-		require.NoError(t, err)
-
-		operatorService := framework.KubeClient.CoreV1().Services(namespace)
-		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", make(map[string]string))
-		_, err = request.DoRaw(ctx)
-		require.NoError(t, err)
-	}
-}
-
-// TestIsManagedByController test prometheus operator managing object with correct ControlerID.
+// testMultipleOperators checks that multiple Prometheus operator instances can
+// run concurrently without stepping on each other toes when properly
+// configured with ControllerID.
 func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T) {
 	return func(t *testing.T) {
 		skipPrometheusTests(t)
