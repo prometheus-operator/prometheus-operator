@@ -2844,6 +2844,22 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:           "msteamsv2_config with webhook url file set",
+			againstVersion: versionMSteamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteamsv2_config_with_webhook_config_file_set.golden",
+		},
+		{
 			name:           "webex_config returns error for missing mandatory field",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
