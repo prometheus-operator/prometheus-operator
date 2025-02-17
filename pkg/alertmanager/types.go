@@ -432,7 +432,7 @@ type msTeamsConfig struct {
 type msTeamsV2Config struct {
 	SendResolved   *bool             `yaml:"send_resolved,omitempty"`
 	WebhookURL     string            `yaml:"webhook_url,omitempty"`
-	WebhookURLFile string            `yaml:"webhook_url_file"`
+	WebhookURLFile string            `yaml:"webhook_url_file,omitempty"`
 	Title          string            `yaml:"title,omitempty"`
 	Text           string            `yaml:"text,omitempty"`
 	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
