@@ -56,7 +56,7 @@ spec:
     name: istio-certs
 ```
 
-An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation. The given log will be generated:
+An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation. The following log will be generated:
 
 ```bash
 failed: failed to parse scrape classes: multiple default scrape classes defined
