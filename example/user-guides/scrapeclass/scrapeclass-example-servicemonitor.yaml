@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   name: servicemonitor-example
 spec:
-  scrapeClassName: istio-mtls
+  scrapeClass: istio-mtls
   endpoints:
     - port: http
       path: /metrics
