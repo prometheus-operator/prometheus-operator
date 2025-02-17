@@ -44,4 +44,4 @@ linters-settings:
       forbid-pkg-errors:
         deny:
         - pkg: "github.com/pkg/errors"
-          dsc: Should be replaced with standard lib errors or fmt.Errorf
+          desc: Should be replaced with standard lib errors or fmt.Errorf
