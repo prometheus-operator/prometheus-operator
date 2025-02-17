@@ -56,7 +56,7 @@ spec:
     name: istio-certs
 ```
 
-An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation. You will see a log like this:
+An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation. The given log will be generated:
 
 ```bash
 failed: failed to parse scrape classes: multiple default scrape classes defined
@@ -64,7 +64,7 @@ failed: failed to parse scrape classes: multiple default scrape classes defined
 
 ## Using the ScrapeClass in Monitor Resources
 
-Once the `ScrapeClass` is defined in the `Prometheus` resource, the `ScrapeClassName` field can be used in the scrape resource to reference the particular `ScrapeClass`.
+Once the `ScrapeClasses` is defined in the `Prometheus` resource, the `ScrapeClass` field can be used in the scrape resource to reference the particular `ScrapeClass`.
 
 ```yaml mdox-exec="cat example/user-guides/scrapeclass/scrapeclass-example-servicemonitor.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -72,7 +72,7 @@ kind: ServiceMonitor
 metadata:
   name: servicemonitor-example
 spec:
-  scrapeClassName: istio-mtls
+  scrapeClass: istio-mtls
   endpoints:
     - port: http
       path: /metrics
@@ -86,7 +86,7 @@ Similarly, we can select the scrape class for `PodMonitor` resource.
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 spec:
-  scrapeClassName: istio-mtls
+  scrapeClass: istio-mtls
   podMetricsEndpoints:
   - port: http
     path: /metrics
