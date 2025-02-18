@@ -802,8 +802,15 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 	return s
 }
 
+// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+// We should try to avoid removing such immutable fields whenever possible since doing
+// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+// The requirement to make a change here should be carefully evaluated.
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name": name,
+		"app.kubernetes.io/name":       "thanos-ruler",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   name,
+		"thanos-ruler":                 name,
 	}
 }

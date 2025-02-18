@@ -378,10 +378,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
-	podLabels["app.kubernetes.io/name"] = thanosRulerLabel
-	podLabels["app.kubernetes.io/managed-by"] = "prometheus-operator"
-	podLabels["app.kubernetes.io/instance"] = tr.Name
-	podLabels[thanosRulerLabel] = tr.Name
+	podLabels = makeSelectorLabels(tr.Name)
 	finalLabels := config.Labels.Merge(podLabels)
 
 	podAnnotations["kubectl.kubernetes.io/default-container"] = "thanos-ruler"
@@ -447,13 +444,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
 	}
 
-	serviceName := governingServiceName
-	if tr.Spec.ServiceName != nil {
-		serviceName = *tr.Spec.ServiceName
-	}
-
 	spec := appsv1.StatefulSetSpec{
-		ServiceName:     serviceName,
+		ServiceName:     ptr.Deref(tr.Spec.ServiceName, governingServiceName),
 		Replicas:        tr.Spec.Replicas,
 		MinReadySeconds: minReadySeconds,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

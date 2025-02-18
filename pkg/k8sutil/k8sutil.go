@@ -575,7 +575,7 @@ func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
 //
 // If the ServiceName is specified and a service with the same name exists in the same namespace as the
 // resource, ensure that the custom governing service's selector matches the
-// statefulsets.
+// labels.
 // If it is not selected, fail the reconciliation
 // Warning: the function will panic if the resource's ServiceName is nil..
 func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {

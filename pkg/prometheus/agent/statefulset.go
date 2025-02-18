@@ -295,15 +295,10 @@ func makeStatefulSetSpec(
 	k8sutil.UpdateDNSPolicy(&spec, cpf.DNSPolicy)
 	k8sutil.UpdateDNSConfig(&spec, cpf.DNSConfig)
 
-	serviceName := governingServiceName
-	if cpf.ServiceName != nil {
-		serviceName = *cpf.ServiceName
-	}
-
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
-		ServiceName:         serviceName,
+		ServiceName:         ptr.Deref(cpf.ServiceName, governingServiceName),
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
