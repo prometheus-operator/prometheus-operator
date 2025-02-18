@@ -531,6 +531,8 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 
 // testScrapeConfigDNSSDConfig tests whether DNS SD based monitoring works as expected.
 func testScrapeConfigDNSSDConfig(t *testing.T) {
+	t.Skip("DNS service discovery tests are disabled until we find a replacement for node.demo.do.prometheus.io")
+
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
