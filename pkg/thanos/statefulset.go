@@ -17,6 +17,7 @@ package thanos
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net/url"
 	"path"
 	"path/filepath"
@@ -378,8 +379,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
-	podLabels = makeSelectorLabels(tr.Name)
+	selectorLabels := makeSelectorLabels(tr.Name)
+
 	finalLabels := config.Labels.Merge(podLabels)
+	maps.Copy(finalLabels, selectorLabels)
 
 	podAnnotations["kubectl.kubernetes.io/default-container"] = "thanos-ruler"
 
