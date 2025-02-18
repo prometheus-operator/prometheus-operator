@@ -756,15 +756,30 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	}
 
 	if safetls.CA.Secret != nil || safetls.CA.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
+		b, err := store.GetSecretOrConfigMapKey(safetls.CA)
+		if err != nil {
+			cg.logger.Error("invalid CA reference", "err", err)
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca", Value: b})
+		}
 	}
 
 	if safetls.Cert.Secret != nil || safetls.Cert.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
+		b, err := store.GetSecretOrConfigMapKey(safetls.Cert)
+		if err != nil {
+			cg.logger.Error("invalid cert reference", "err", err)
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert", Value: b})
+		}
 	}
 
 	if safetls.KeySecret != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
+		b, err := store.GetSecretKey(*safetls.KeySecret)
+		if err != nil {
+			cg.logger.Error("invalid key reference", "err", err)
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key", Value: string(b)})
+		}
 	}
 
 	if ptr.Deref(safetls.ServerName, "") != "" {

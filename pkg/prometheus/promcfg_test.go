@@ -946,7 +946,19 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			},
-			store:  assets.NewTestStoreBuilder(),
+			store: assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
+			),
 			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTLSConfig.golden",
 		},
@@ -2646,6 +2658,15 @@ func TestEndpointOAuth2(t *testing.T) {
 			Data: map[string][]byte{
 				"proxy-header": []byte("value"),
 				"token":        []byte("value"),
+			},
+		},
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "tls",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"ca2": []byte("ca2"),
 			},
 		},
 	)
@@ -6583,6 +6604,17 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			cfg, err := cg.GenerateServerConfiguration(
@@ -6777,6 +6809,17 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -7084,6 +7127,17 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -7388,6 +7442,17 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						"token": []byte("secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -7690,7 +7755,20 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewTestStoreBuilder(sec),
+				assets.NewTestStoreBuilder(
+					sec,
+					&v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "tls",
+							Namespace: "default",
+						},
+						Data: map[string][]byte{
+							"ca":          []byte("ca"),
+							"cert":        []byte("cert"),
+							"private-key": []byte("private-key"),
+						},
+					},
+				),
 				nil,
 				nil,
 				nil,
@@ -7959,6 +8037,17 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 					Data: map[string][]byte{
 						"username": []byte("value"),
 						"password": []byte("value"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -8340,6 +8429,17 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -8715,6 +8815,17 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -8907,6 +9018,17 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -9116,6 +9238,17 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -9597,6 +9730,17 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":   []byte("ca"),
+						"cert": []byte("cert"),
+						"key":  []byte("key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -9922,7 +10066,19 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.StoreBuilder{},
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
+			),
 			nil,
 			nil,
 			nil,
@@ -9997,6 +10153,7 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret-cert",
 						},
+						Key: "cert",
 					},
 				},
 				KeySecret: &v1.SecretKeySelector{
@@ -10029,7 +10186,37 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 			nil,
 			nil,
-			&assets.StoreBuilder{},
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret-cert",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"cert": []byte("cert"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"key": []byte("key"),
+					},
+				},
+			),
 			nil,
 			nil,
 			nil,
@@ -10352,6 +10539,17 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -10533,6 +10731,17 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":   []byte("ca"),
+						"cert": []byte("cert"),
+						"key":  []byte("key"),
 					},
 				},
 			)
@@ -10770,6 +10979,17 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -10997,6 +11217,17 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -11281,6 +11512,17 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 						"secretKey": []byte("secret-key"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -11512,6 +11754,17 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -11661,6 +11914,17 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -12668,6 +12932,17 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 							"token":        []byte("value"),
 						},
 					},
+					&v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "tls",
+							Namespace: "default",
+						},
+						Data: map[string][]byte{
+							"ca":          []byte("ca"),
+							"cert":        []byte("cert"),
+							"private-key": []byte("private-key"),
+						},
+					},
 				),
 				nil,
 				nil,
@@ -12874,7 +13149,19 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			assets.NewTestStoreBuilder(),
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
+					},
+				},
+			),
 			nil,
 			nil,
 			nil,
