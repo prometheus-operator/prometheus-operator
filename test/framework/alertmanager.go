@@ -404,22 +404,20 @@ func (f *Framework) WaitForAlertmanagerPodInitialized(ctx context.Context, ns, n
 	return nil
 }
 
-func (f *Framework) GetAlertmanagerPodStatus(ctx context.Context, ns, n string, https bool) (models.AlertmanagerStatus, error) {
+func (f *Framework) GetAlertmanagerPodStatus(ctx context.Context, ns, pod string, https bool) (models.AlertmanagerStatus, error) {
 	var amStatus models.AlertmanagerStatus
 
-	proxyName := n
+	var scheme string
 	if https {
-		proxyName = fmt.Sprintf("https:%v:", n)
+		scheme = "https"
 	}
 
-	request := f.ProxyGetPod(ns, proxyName, "/api/v2/status")
-	resp, err := request.DoRaw(ctx)
-
+	b, err := f.ProxyGetPod(ctx, scheme, ns, pod, "/api/v2/status")
 	if err != nil {
 		return amStatus, err
 	}
 
-	if err := json.Unmarshal(resp, &amStatus); err != nil {
+	if err := json.Unmarshal(b, &amStatus); err != nil {
 		return amStatus, err
 	}
 	return amStatus, nil
@@ -469,16 +467,15 @@ func (f *Framework) SendAlertToAlertmanager(ctx context.Context, ns, n string) e
 	return nil
 }
 
-func (f *Framework) GetSilences(ctx context.Context, ns, n string) (models.GettableSilences, error) {
+func (f *Framework) GetSilences(ctx context.Context, ns, pod string) (models.GettableSilences, error) {
 	var getSilencesResponse models.GettableSilences
 
-	request := f.ProxyGetPod(ns, n, "/api/v2/silences")
-	resp, err := request.DoRaw(ctx)
+	b, err := f.ProxyGetPod(ctx, "", ns, pod, "/api/v2/silences")
 	if err != nil {
 		return getSilencesResponse, err
 	}
 
-	if err := json.Unmarshal(resp, &getSilencesResponse); err != nil {
+	if err := json.Unmarshal(b, &getSilencesResponse); err != nil {
 		return getSilencesResponse, err
 	}
 
@@ -568,7 +565,7 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ctx context.Context
 func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ctx context.Context, ns, amName string, previousReloadTimestamp time.Time) error {
 	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
 	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
-		timestampSec, err := f.GetMetricVal(ctx, "https", ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
+		timestampSec, err := f.GetMetricValueFromPod(ctx, "https", ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
 		if err != nil {
 			return false, err
 		}
