@@ -56,12 +56,13 @@ Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's e
 * v3.0.0
 * v3.0.1
 * v3.1.0
+* v3.2.0
 ```
 
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
-* v3.1.0
+* v3.2.0
 ```
 
 ## Alertmanager
