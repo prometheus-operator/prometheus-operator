@@ -2738,6 +2738,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.
 			cfg = cg.WithMinimumVersion("2.23.0").AppendMapItem(cfg, "metadata_config", metadataConfig)
 		}
 
+		if spec.RoundRobinDNS != nil {
+			cfg = cg.WithMinimumVersion("3.1.0").AppendMapItem(cfg, "round_robin_dns", spec.RoundRobinDNS)
+		}
+
 		cfgs = append(cfgs, cfg)
 	}
 
