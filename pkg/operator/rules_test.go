@@ -134,26 +134,48 @@ func shouldAcceptRulesWithEmptyDurations(t *testing.T) {
 }
 
 func shouldRejectRuleWithInvalidLabels(t *testing.T) {
-	rules := &monitoringv1.PrometheusRule{
-		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
-			{
-				Name: "group",
-				Rules: []monitoringv1.Rule{
-					{
-						Alert: "alert",
-						Expr:  intstr.FromString("vector(1)"),
-						Labels: map[string]string{
-							"invalid/label": "value",
+	for _, test := range []struct {
+		labelName string
+		valid     bool
+	}{
+		{"", false},
+		{"invalid/label", true},
+		{"invalid//label", true},
+		{"label", true},
+		{"label${1}", true},
+		{"${1}label", true},
+		{"${1}", true},
+		{"${1}label", true},
+		{"$1", true},
+		{"asd$2asd", true},
+		{"_${1}_", true},
+		{"foo${bar}foo", true},
+	} {
+		rules := &monitoringv1.PrometheusRule{
+			Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+				{
+					Name: "group",
+					Rules: []monitoringv1.Rule{
+						{
+							Alert: "alert",
+							Expr:  intstr.FromString("vector(1)"),
+							Labels: map[string]string{
+								test.labelName: "value",
+							},
 						},
 					},
 				},
-			},
-		}},
+			}},
+		}
+		promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
+		pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+		_, err := pr.generateRulesConfiguration(rules)
+		if !test.valid {
+			require.Error(t, err, test.labelName)
+		} else {
+			require.NoError(t, err, test.labelName)
+		}
 	}
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
-	require.Error(t, err)
 }
 
 func shouldRejectRuleWithInvalidExpression(t *testing.T) {
