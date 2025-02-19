@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
