@@ -1860,6 +1860,352 @@
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
+                  "clusterTLS": {
+                    "description": "Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.\n\nIt requires Alertmanager >= 0.24.0.",
+                    "properties": {
+                      "client": {
+                        "description": "Client-side configuration for mutual TLS.",
+                        "properties": {
+                          "ca": {
+                            "description": "Certificate authority used when verifying server certificates.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "cert": {
+                            "description": "Client certificate to present when doing client-authentication.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "insecureSkipVerify": {
+                            "description": "Disable target certificate validation.",
+                            "type": "boolean"
+                          },
+                          "keySecret": {
+                            "description": "Secret containing the client key file for the targets.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "maxVersion": {
+                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.",
+                            "enum": [
+                              "TLS10",
+                              "TLS11",
+                              "TLS12",
+                              "TLS13"
+                            ],
+                            "type": "string"
+                          },
+                          "minVersion": {
+                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.",
+                            "enum": [
+                              "TLS10",
+                              "TLS11",
+                              "TLS12",
+                              "TLS13"
+                            ],
+                            "type": "string"
+                          },
+                          "serverName": {
+                            "description": "Used to verify the hostname for the targets.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "server": {
+                        "description": "Server-side configuration for mutual TLS.",
+                        "properties": {
+                          "cert": {
+                            "description": "Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "certFile": {
+                            "description": "Path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
+                            "type": "string"
+                          },
+                          "cipherSuites": {
+                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "clientAuthType": {
+                            "description": "The server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "type": "string"
+                          },
+                          "clientCAFile": {
+                            "description": "Path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
+                            "type": "string"
+                          },
+                          "client_ca": {
+                            "description": "Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "curvePreferences": {
+                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "keyFile": {
+                            "description": "Path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
+                            "type": "string"
+                          },
+                          "keySecret": {
+                            "description": "Secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "maxVersion": {
+                            "description": "Maximum TLS version that is acceptable.",
+                            "type": "string"
+                          },
+                          "minVersion": {
+                            "description": "Minimum TLS version that is acceptable.",
+                            "type": "string"
+                          },
+                          "preferServerCipherSuites": {
+                            "description": "Controls whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "type": "boolean"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "client",
+                      "server"
+                    ],
+                    "type": "object"
+                  },
                   "configMaps": {
                     "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.\nThe ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.",
                     "items": {
