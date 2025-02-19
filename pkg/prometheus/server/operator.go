@@ -942,12 +942,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		shouldDelete, err := c.shouldDelete(p)
+		shouldRetain, err := c.shouldRetain(p)
 		if err != nil {
-			c.logger.Error("failed to determine if StatefulSet should be deleted", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			c.logger.Error("failed to determine if StatefulSet should be retained", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 			return
 		}
-		if !shouldDelete {
+		if shouldRetain {
 			return
 		}
 
@@ -962,16 +962,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// As the ShardRetentionPolicy feature evolves, should delete will evolve accordingly.
-// For now, shouldDelete just returns the appropriate boolean based on the retention type.
-func (c *Operator) shouldDelete(p *monitoringv1.Prometheus) (bool, error) {
+// As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
+// For now, shouldRetain just returns the appropriate boolean based on the retention type.
+func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 	if !c.retentionPoliciesEnabled {
 		// Feature-gate is disabled, default behavior is always to delete.
-		return true, nil
+		return false, nil
 	}
-
-	if p.Spec.ShardRetentionPolicy.WhenScaled != nil &&
-		*p.Spec.ShardRetentionPolicy.WhenScaled == monitoringv1.DeleteWhenScaledRetentionType {
+	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled,
+		monitoringv1.DeleteWhenScaledRetentionType) == monitoringv1.RetainWhenScaledRetentionType {
 		return true, nil
 	}
 
