@@ -134,6 +134,7 @@ func shouldAcceptRulesWithEmptyDurations(t *testing.T) {
 }
 
 func shouldRejectRuleWithInvalidLabels(t *testing.T) {
+	// TODO: https://github.com/prometheus/prometheus/pull/15851
 	for _, test := range []struct {
 		labelName string
 		valid     bool
