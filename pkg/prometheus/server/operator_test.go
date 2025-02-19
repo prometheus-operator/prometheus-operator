@@ -264,4 +264,3 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 		})
 	}
 }
-
