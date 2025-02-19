@@ -299,6 +299,16 @@ type DiscordConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// The template of the content's body.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	Content *string `json:"content,omitempty"`
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	Username *string `json:"username,omitempty"`
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	AvatarURL *string `json:"avatarURL,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.
