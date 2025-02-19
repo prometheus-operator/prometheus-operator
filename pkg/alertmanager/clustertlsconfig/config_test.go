@@ -35,7 +35,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 	}{
 		{
 			name:             "cluster tls config not defined",
-			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{},
+			clusterTLSConfig: nil,
 			golden:           "clusterTLS_config_not_defined.golden",
 		},
 		{
@@ -303,12 +303,14 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 
 func TestGetMountParameters(t *testing.T) {
 	ts := []struct {
+		name             string
 		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 		expectedVolumes  []v1.Volume
 		expectedMounts   []v1.VolumeMount
 	}{
 		{
-			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{},
+			name:             "cluster tls config not defined",
+			clusterTLSConfig: nil,
 			expectedVolumes: []v1.Volume{
 				{
 					Name: "cluster-tls-config",
@@ -331,6 +333,7 @@ func TestGetMountParameters(t *testing.T) {
 			},
 		},
 		{
+			name: "cluster tls config completely defined",
 			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
 				ServerTLS: monitoringv1.WebTLSConfig{
 					KeySecret: v1.SecretKeySelector{
@@ -495,7 +498,7 @@ func TestGetMountParameters(t *testing.T) {
 	}
 
 	for _, tt := range ts {
-		t.Run("", func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			tlsAssets, err := clustertlsconfig.New("/etc/prometheus/cluster_tls_config", "cluster-tls-config", tt.clusterTLSConfig)
 			require.NoError(t, err)
 
