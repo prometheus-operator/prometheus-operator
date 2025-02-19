@@ -717,7 +717,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	spec := appsv1.StatefulSetSpec{
-		ServiceName:     governingServiceName,
+		ServiceName:     ptr.Deref(a.Spec.ServiceName, governingServiceName),
 		Replicas:        a.Spec.Replicas,
 		MinReadySeconds: minReadySeconds,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164

@@ -555,3 +555,129 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 		require.Equal(t, opt.Value, spec.DNSConfig.Options[i].Value, "expected option values to match")
 	}
 }
+
+func TestEnsureCustomGoverningService(t *testing.T) {
+	name := "test-k8sutil"
+	serviceName := "test-svc"
+	ns := "test-ns"
+	testcases := []struct {
+		name           string
+		service        v1.Service
+		selectorLabels map[string]string
+		expectedErr    bool
+	}{
+		{
+			name: "custom service selects k8sutil",
+			service: v1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      serviceName,
+					Namespace: ns,
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"k8sutil":                      name,
+						"app.kubernetes.io/name":       "k8sutil",
+						"app.kubernetes.io/instance":   name,
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+					},
+				},
+			},
+			selectorLabels: map[string]string{
+				"k8sutil":                      name,
+				"app.kubernetes.io/name":       "k8sutil",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+			expectedErr: false,
+		},
+		{
+			name: "custom service does not select k8sutil",
+			service: v1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-svc",
+					Namespace: ns,
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"k8sutil":                      "different-name",
+						"app.kubernetes.io/name":       "k8sutil",
+						"app.kubernetes.io/instance":   "different-name",
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+					},
+				},
+			},
+			selectorLabels: map[string]string{
+				"k8sutil":                      name,
+				"app.kubernetes.io/name":       "k8sutil",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+			expectedErr: true,
+		},
+		{
+			name: "custom service selects k8sutil but in different ns",
+			service: v1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-svc",
+					Namespace: "wrong-ns",
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"k8sutil":                      name,
+						"app.kubernetes.io/name":       "k8sutil",
+						"app.kubernetes.io/instance":   name,
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+					},
+				},
+			},
+			selectorLabels: map[string]string{
+				"k8sutil":                      name,
+				"app.kubernetes.io/name":       "k8sutil",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+			expectedErr: true,
+		},
+		{
+			name: "custom svc doesn't exist",
+			selectorLabels: map[string]string{
+				"k8sutil":                      name,
+				"app.kubernetes.io/name":       "k8sutil",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+			expectedErr: true,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := makeBarebonesPrometheus(name, ns)
+			p.Spec.ServiceName = &serviceName
+
+			clientSet := fake.NewSimpleClientset(&tc.service)
+			svcClient := clientSet.CoreV1().Services(ns)
+
+			err := EnsureCustomGoverningService(context.Background(), p.Namespace, *p.Spec.ServiceName, svcClient, tc.selectorLabels)
+			if tc.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func makeBarebonesPrometheus(name, ns string) *monitoringv1.Prometheus {
+	return &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   ns,
+			Annotations: map[string]string{},
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Replicas: ptr.To(int32(1)),
+			},
+		},
+	}
+}
