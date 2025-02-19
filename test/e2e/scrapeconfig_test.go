@@ -2769,7 +2769,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Invalid Region Loadbalancer",
+		name: "Role Loadbalancer",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
