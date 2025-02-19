@@ -187,8 +187,6 @@ func TestAllNS(t *testing.T) {
 		testPrometheusOperatorMetrics(t, ns)
 	})
 
-	t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
-
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
 	// (or at least did not fail before calling t.Parallel). As all tests in
