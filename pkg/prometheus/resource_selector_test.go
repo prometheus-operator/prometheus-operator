@@ -2811,6 +2811,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "OpenStack SD config loadbalancer role in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "loadbalancer",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "3.1.0",
+		},
+		{
+			scenario: "OpenStack SD config loadbalancer role in supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "Loadbalancer",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    true,
+			promVersion: "3.2.0",
+		},
+		{
 			scenario: "DigitalOcean SD config with valid TLS Config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
@@ -4191,32 +4217,6 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected:    true,
 			scrapeClass: ptr.To("existent"),
-		},
-		{
-			scenario: "OpenStackSDConfig loadbalancer role in unsupported Prometheus version",
-			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
-					{
-						Role:   "loadbalancer",
-						Region: "RegionTwo",
-					},
-				}
-			},
-			selected:    false,
-			promVersion: "3.1.0",
-		},
-		{
-			scenario: "OpenStackSDConfig loadbalancer role in supported Prometheus version",
-			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
-					{
-						Role:   "Loadbalancer",
-						Region: "RegionTwo",
-					},
-				}
-			},
-			selected:    true,
-			promVersion: "3.2.0",
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
