@@ -2622,3 +2622,54 @@ templates: []
 	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName)
 	require.NoError(t, err)
 }
+
+func testAlertmanagerServiceName(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	name := "test-servicename"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 9090,
+				},
+			},
+			Selector: map[string]string{
+				"alertmanager":                 name,
+				"app.kubernetes.io/name":       "alertmanager",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+		},
+	}
+
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicAlertmanager(ns, name, 1)
+	p.Spec.ServiceName = &svc.Name
+
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), p)
+	require.NoError(t, err)
+
+	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
+	require.NoError(t, err)
+	require.Empty(t, targets)
+
+	// Ensure that the default governing service was not created by the operator.
+	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(context.Background(), metav1.ListOptions{})
+	require.NoError(t, err)
+	require.Len(t, svcList.Items, 1)
+	require.Equal(t, svcList.Items[0].Name, svc.Name)
+}
