@@ -3240,10 +3240,8 @@ ShardRetentionPolicy
 <p>ShardRetentionPolicy defines the retention policy for the Prometheus shards.
 (Alpha) Using this field requires the &lsquo;PrometheusShardRetentionPolicy&rsquo; feature gate to be enabled.</p>
 <p>The final goals for this feature can be seen at <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers</a>,
-however, the feature is not yet fully implemented and has known limitations:
-* Scale up after scale down will not re-use the previously marked-for-deletion shards.
-* Target redistribution doesn&rsquo;t happen on scale up/down.
-* Retention duration is not settable, for now shards are retained forever.</p>
+however, the feature is not yet fully implemented in this PR. The limitation being:
+* Retention duration is not settable, for now, shards are retained forever.</p>
 </td>
 </tr>
 <tr>
@@ -13368,10 +13366,8 @@ ShardRetentionPolicy
 <p>ShardRetentionPolicy defines the retention policy for the Prometheus shards.
 (Alpha) Using this field requires the &lsquo;PrometheusShardRetentionPolicy&rsquo; feature gate to be enabled.</p>
 <p>The final goals for this feature can be seen at <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers</a>,
-however, the feature is not yet fully implemented and has known limitations:
-* Scale up after scale down will not re-use the previously marked-for-deletion shards.
-* Target redistribution doesn&rsquo;t happen on scale up/down.
-* Retention duration is not settable, for now shards are retained forever.</p>
+however, the feature is not yet fully implemented in this PR. The limitation being:
+* Retention duration is not settable, for now, shards are retained forever.</p>
 </td>
 </tr>
 <tr>
