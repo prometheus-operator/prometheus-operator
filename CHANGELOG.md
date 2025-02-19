@@ -1,4 +1,8 @@
-# 0.80.0 / 2025-02-03
+# 0.80.1 / 2025-02-19
+
+* [BUGFIX] Fix msteamsv2_configs to work with either `webhook_url` or `webhook_url_file`. #7352
+
+# 0.80.0 / 2025-02-04
 
 * [CHANGE] Add more API validations to the ScrapeConfig CRD. #7231 #7220 #7215 #7238 #7244 #7255
 * [FEATURE] Add `serviceName` field to the Prometheus and PrometheusAgent CRDs. #6687
