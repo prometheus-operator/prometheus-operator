@@ -785,7 +785,10 @@ type GCESDConfig struct {
 // +k8s:openapi-gen=true
 type OpenStackSDConfig struct {
 	// The OpenStack role of entities that should be discovered.
-	// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor
+	//
+	// Note: The `loadbalancer` or `Loadbalancer` role requires Prometheus >= v3.2.0.
+	//
+	// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor;Loadbalancer;loadbalancer
 	// +required
 	Role string `json:"role"`
 	// The OpenStack Region.
