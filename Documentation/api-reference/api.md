@@ -25826,6 +25826,7 @@ string
 </td>
 <td>
 <p>The OpenStack role of entities that should be discovered.</p>
+<p>Note: The <code>loadbalancer</code> or <code>Loadbalancer</code> role requires Prometheus &gt;= v3.2.0.</p>
 </td>
 </tr>
 <tr>

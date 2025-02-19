@@ -1227,6 +1227,9 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 
 func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.OpenStackSDConfigs {
+		if strings.ToLower(config.Role) == "loadbalancer" && rs.version.LT(semver.MustParse("3.2.0")) {
+			return fmt.Errorf("[%d]: The `loadbalancer` role is only supported from Prometheus version 3.2.0", i)
+		}
 		if config.Password != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.Password); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
