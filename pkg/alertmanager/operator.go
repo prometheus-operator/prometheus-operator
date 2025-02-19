@@ -750,7 +750,12 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
+	// Currently, we only trigger a restart of the pods if the ServerCert has changed.
+	// Ideally, might want to trigger a restart for any change in ClusterTLS config.
 	if a.Spec.ClusterTLS != nil {
+		// TODO: This is just the key selector, not the data of the server cert.
+		// We would need to ensure that the AM pods restart whenever there is a change
+		// in the content the TLS assets.
 		serverCert = a.Spec.ClusterTLS.ServerTLS.Cert.String()
 	}
 
