@@ -13,9 +13,9 @@ scrape_configs:
     region: us-east-1
     endpoint: https://lightsail.us-east-1.amazonaws.com/
     tls_config:
-      ca_file: /etc/prometheus/certs/0_default_tls_ca
-      cert_file: /etc/prometheus/certs/0_default_tls_cert
-      key_file: /etc/prometheus/certs/0_default_tls_private-key
+      ca: ca
+      cert: cert
+      key: private-key
   relabel_configs:
   - source_labels:
     - job

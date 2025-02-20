@@ -12,9 +12,9 @@ scrape_configs:
       credentials: value
     server: ""
     tls_config:
-      ca_file: /etc/prometheus/certs/0_default_tls_ca
-      cert_file: /etc/prometheus/certs/0_default_tls_cert
-      key_file: /etc/prometheus/certs/0_default_tls_key
+      ca: ca
+      cert: cert
+      key: key
   relabel_configs:
   - source_labels:
     - job

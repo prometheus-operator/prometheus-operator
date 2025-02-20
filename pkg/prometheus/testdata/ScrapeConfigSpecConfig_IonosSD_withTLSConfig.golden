@@ -11,9 +11,9 @@ scrape_configs:
       type: Bearer
       credentials: value
     tls_config:
-      ca_file: /etc/prometheus/certs/0_default_tls_ca
-      cert_file: /etc/prometheus/certs/0_default_tls_cert
-      key_file: /etc/prometheus/certs/0_default_tls_private-key
+      ca: ca
+      cert: cert
+      key: private-key
     datacenter_id: 11111111-1111-1111-1111-111111111111
   relabel_configs:
   - source_labels:

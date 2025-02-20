@@ -13,9 +13,9 @@ alerting:
   - path_prefix: /
     scheme: http
     tls_config:
-      ca_file: /etc/prometheus/certs/0_default_tls_ca
-      cert_file: /etc/prometheus/certs/0_default_tls_cert
-      key_file: /etc/prometheus/certs/0_default_tls_private-key
+      ca: ca
+      cert: cert
+      key: private-key
       min_version: TLS10
     kubernetes_sd_configs:
     - role: endpoints

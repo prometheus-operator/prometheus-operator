@@ -59,4 +59,4 @@ scrape_configs:
       - value
     tls_config:
       insecure_skip_verify: true
-      ca_file: /etc/prometheus/certs/0_default_tls_ca2
+      ca: ca2
