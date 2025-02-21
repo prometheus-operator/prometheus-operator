@@ -5548,6 +5548,15 @@ spec:
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Prometheus Pods.
                 type: string
+              serviceName:
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+                  If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+                  When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
+                type: string
               sha:
                 description: |-
                   SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.

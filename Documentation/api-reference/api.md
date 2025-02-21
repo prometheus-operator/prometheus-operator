@@ -515,6 +515,22 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -4234,6 +4250,22 @@ string
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>thanos-ruler-operated</code> for ThanosRuler resources.
+When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -5925,6 +5957,22 @@ PodDNSConfig
 <td>
 <em>(Optional)</em>
 <p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -16719,6 +16767,22 @@ string
 </td>
 <td>
 <p>Priority class assigned to the Pods</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>thanos-ruler-operated</code> for ThanosRuler resources.
+When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>

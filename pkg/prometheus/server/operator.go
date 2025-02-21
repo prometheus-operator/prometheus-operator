@@ -801,7 +801,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		svcClient := c.kclient.CoreV1().Services(p.Namespace)
 		selectorLabels := makeSelectorLabels(p.Name)
 
-		if err := prompkg.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+		if err := k8sutil.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
 			return err
 		}
 	} else {
