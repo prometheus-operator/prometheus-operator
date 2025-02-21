@@ -353,6 +353,7 @@ func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 		URLSecret:    convertSecretKeySelectorFrom(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
+		Timeout:      in.Timeout,
 	}
 }
 
