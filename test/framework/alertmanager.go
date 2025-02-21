@@ -565,7 +565,7 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ctx context.Context
 func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ctx context.Context, ns, amName string, previousReloadTimestamp time.Time) error {
 	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
 	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
-		timestampSec, err := f.GetMetricValueFromPod(ctx, "https", ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
+		timestampSec, err := f.GetMetricValueFromPod(ctx, "", ns, "alertmanager-"+amName+"-0", "", configReloadMetricName)
 		if err != nil {
 			return false, err
 		}
