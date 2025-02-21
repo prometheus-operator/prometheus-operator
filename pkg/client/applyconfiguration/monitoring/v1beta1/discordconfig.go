@@ -28,6 +28,9 @@ type DiscordConfigApplyConfiguration struct {
 	Title        *string                       `json:"title,omitempty"`
 	Message      *string                       `json:"message,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	Content      *string                       `json:"content,omitempty"`
+	Username     *string                       `json:"username,omitempty"`
+	AvatarURL    *string                       `json:"avatarURL,omitempty"`
 }
 
 // DiscordConfigApplyConfiguration constructs a declarative configuration of the DiscordConfig type for use with
@@ -73,5 +76,29 @@ func (b *DiscordConfigApplyConfiguration) WithMessage(value string) *DiscordConf
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *DiscordConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *DiscordConfigApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithContent sets the Content field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Content field is set to the value of the last call.
+func (b *DiscordConfigApplyConfiguration) WithContent(value string) *DiscordConfigApplyConfiguration {
+	b.Content = &value
+	return b
+}
+
+// WithUsername sets the Username field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Username field is set to the value of the last call.
+func (b *DiscordConfigApplyConfiguration) WithUsername(value string) *DiscordConfigApplyConfiguration {
+	b.Username = &value
+	return b
+}
+
+// WithAvatarURL sets the AvatarURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AvatarURL field is set to the value of the last call.
+func (b *DiscordConfigApplyConfiguration) WithAvatarURL(value string) *DiscordConfigApplyConfiguration {
+	b.AvatarURL = &value
 	return b
 }
