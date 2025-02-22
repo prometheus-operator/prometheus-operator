@@ -5,6 +5,6 @@ kubernetes_sd_configs:
     - test
   api_server: example.com
   tls_config:
-    ca: ca
-    cert: cert
-    key: private-key
+    ca_file: /etc/prometheus/certs/0_default_tls_ca
+    cert_file: /etc/prometheus/certs/0_default_tls_cert
+    key_file: /etc/prometheus/certs/0_default_tls_private-key
