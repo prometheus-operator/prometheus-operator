@@ -946,19 +946,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			},
-			store: assets.NewTestStoreBuilder(
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
-			),
+			store:  assets.NewTestStoreBuilder(),
 			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTLSConfig.golden",
 		},
@@ -2658,15 +2646,6 @@ func TestEndpointOAuth2(t *testing.T) {
 			Data: map[string][]byte{
 				"proxy-header": []byte("value"),
 				"token":        []byte("value"),
-			},
-		},
-		&v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "tls",
-				Namespace: "default",
-			},
-			Data: map[string][]byte{
-				"ca2": []byte("ca2"),
 			},
 		},
 	)
@@ -5877,12 +5856,11 @@ func TestProbeSpecConfig(t *testing.T) {
 func TestScrapeConfigSpecConfig(t *testing.T) {
 	refreshInterval := monitoringv1.Duration("5m")
 	for _, tc := range []struct {
-		name            string
-		version         string
-		patchProm       func(*monitoringv1.Prometheus)
-		scSpec          monitoringv1alpha1.ScrapeConfigSpec
-		inlineTLSConfig bool
-		golden          string
+		name      string
+		version   string
+		patchProm func(*monitoringv1.Prometheus)
+		scSpec    monitoringv1alpha1.ScrapeConfigSpec
+		golden    string
 	}{
 		{
 			name:   "empty_scrape_config",
@@ -6127,53 +6105,6 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_Authorization.golden",
-		},
-		{
-			name: "inline_tlsconfig",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				TLSConfig: &monitoringv1.SafeTLSConfig{
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "tls",
-							},
-							Key: "ca",
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "tls",
-							},
-							Key: "cert",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "tls",
-						},
-						Key: "private-key",
-					},
-				},
-				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
-					{
-						URL: "http://localhost:9100/sd.json",
-						TLSConfig: &monitoringv1.SafeTLSConfig{
-							InsecureSkipVerify: ptr.To(true),
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "ca2",
-								},
-							},
-						},
-					},
-				},
-			},
-			inlineTLSConfig: true,
-			golden:          "ScrapeConfigSpecConfig_Inline_TLSConfig.golden",
 		},
 		{
 			name: "tlsconfig",
@@ -6598,7 +6529,6 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			cg := mustNewConfigGenerator(t, p)
-			cg.inlineTLSConfig = tc.inlineTLSConfig
 
 			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -6651,18 +6581,6 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"ca2":         []byte("ca2"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -6859,17 +6777,6 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -7177,17 +7084,6 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -7492,17 +7388,6 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						"token": []byte("secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -7805,20 +7690,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewTestStoreBuilder(
-					sec,
-					&v1.Secret{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "tls",
-							Namespace: "default",
-						},
-						Data: map[string][]byte{
-							"ca":          []byte("ca"),
-							"cert":        []byte("cert"),
-							"private-key": []byte("private-key"),
-						},
-					},
-				),
+				assets.NewTestStoreBuilder(sec),
 				nil,
 				nil,
 				nil,
@@ -8087,17 +7959,6 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 					Data: map[string][]byte{
 						"username": []byte("value"),
 						"password": []byte("value"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -8479,17 +8340,6 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -8865,17 +8715,6 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -9068,17 +8907,6 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -9288,17 +9116,6 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -9780,17 +9597,6 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":   []byte("ca"),
-						"cert": []byte("cert"),
-						"key":  []byte("key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -10116,19 +9922,7 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			assets.NewTestStoreBuilder(
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
-			),
+			&assets.StoreBuilder{},
 			nil,
 			nil,
 			nil,
@@ -10203,7 +9997,6 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret-cert",
 						},
-						Key: "cert",
 					},
 				},
 				KeySecret: &v1.SecretKeySelector{
@@ -10236,37 +10029,7 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 			nil,
 			nil,
-			assets.NewTestStoreBuilder(
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "secret-cert",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"cert": []byte("cert"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "secret",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"key": []byte("key"),
-					},
-				},
-			),
+			&assets.StoreBuilder{},
 			nil,
 			nil,
 			nil,
@@ -10589,17 +10352,6 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -10781,17 +10533,6 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":   []byte("ca"),
-						"cert": []byte("cert"),
-						"key":  []byte("key"),
 					},
 				},
 			)
@@ -11029,17 +10770,6 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -11267,17 +10997,6 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -11562,17 +11281,6 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 						"secretKey": []byte("secret-key"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -11804,17 +11512,6 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
 			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -11964,17 +11661,6 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
-					},
-				},
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -12982,17 +12668,6 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 							"token":        []byte("value"),
 						},
 					},
-					&v1.Secret{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "tls",
-							Namespace: "default",
-						},
-						Data: map[string][]byte{
-							"ca":          []byte("ca"),
-							"cert":        []byte("cert"),
-							"private-key": []byte("private-key"),
-						},
-					},
 				),
 				nil,
 				nil,
@@ -13199,19 +12874,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			assets.NewTestStoreBuilder(
-				&v1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "tls",
-						Namespace: "default",
-					},
-					Data: map[string][]byte{
-						"ca":          []byte("ca"),
-						"cert":        []byte("cert"),
-						"private-key": []byte("private-key"),
-					},
-				},
-			),
+			assets.NewTestStoreBuilder(),
 			nil,
 			nil,
 			nil,
