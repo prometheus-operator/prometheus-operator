@@ -1529,17 +1529,17 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 		{
 			name:   "unsharded prometheus",
 			result: getCfg(nil),
-			golden: "AdditionalScrapeConfigs_unsharded_prometheus.golden",
+			golden: "AdditionalScrapeConfigs_unsharded_prometheus.input",
 		},
 		{
 			name:   "one prometheus shard",
 			result: getCfg(ptr.To(int32(1))),
-			golden: "AdditionalScrapeConfigs_one_prometheus_shard.golden",
+			golden: "AdditionalScrapeConfigs_one_prometheus_shard.input",
 		},
 		{
 			name:   "sharded prometheus",
 			result: getCfg(ptr.To(int32(3))),
-			golden: "AdditionalScrapeConfigs_sharded prometheus.golden",
+			golden: "AdditionalScrapeConfigs_sharded prometheus.input",
 		},
 	}
 
@@ -1571,7 +1571,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		&assets.StoreBuilder{},
 		nil,
-		golden.Get(t, "AdditionalAlertRelabelConfigs.golden"),
+		golden.Get(t, "AdditionalAlertRelabelConfigs.input"),
 		nil,
 		nil,
 	)

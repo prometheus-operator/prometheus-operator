@@ -41,7 +41,7 @@ func TestMutateRule(t *testing.T) {
 	ts := server(api().servePrometheusRulesMutate)
 	defer ts.Close()
 
-	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithAnnotations.golden"))
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithAnnotations.input"))
 
 	if len(resp.Response.Patch) == 0 {
 		t.Errorf("Expected a patch to be applied but found none")
@@ -52,7 +52,7 @@ func TestMutateRuleNoAnnotations(t *testing.T) {
 	ts := server(api().servePrometheusRulesMutate)
 	defer ts.Close()
 
-	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesNoAnnotations.golden"))
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesNoAnnotations.input"))
 
 	if len(resp.Response.Patch) == 0 {
 		t.Errorf("Expected a patch to be applied but found none")
@@ -63,7 +63,7 @@ func TestAdmitGoodRule(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithAnnotations.golden"))
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithAnnotations.input"))
 
 	if !resp.Response.Allowed {
 		t.Errorf("Expected admission to be allowed but it was not")
@@ -74,7 +74,7 @@ func TestAdmitGoodRuleExternalLabels(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithExternalLabelsInAnnotations.golden"))
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithExternalLabelsInAnnotations.input"))
 
 	if !resp.Response.Allowed {
 		t.Errorf("Expected admission to be allowed but it was not")
@@ -85,7 +85,7 @@ func TestAdmitBadRule(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesNoAnnotations.golden"))
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesNoAnnotations.input"))
 
 	if resp.Response.Allowed {
 		t.Errorf("Expected admission to not be allowed but it was")
@@ -116,7 +116,7 @@ func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesWithBooleanInAnnotations.golden"))
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesWithBooleanInAnnotations.input"))
 
 	if resp.Response.Allowed {
 		t.Errorf("Expected admission to not be allowed but it was")
@@ -130,7 +130,7 @@ func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
 }
 
 func TestMutateNonStringsToStrings(t *testing.T) {
-	request := golden.Get(t, "nonStringsInLabelsAnnotations.golden")
+	request := golden.Get(t, "nonStringsInLabelsAnnotations.input")
 	ts := server(api().servePrometheusRulesMutate)
 	resp := sendAdmissionReview(t, ts, request)
 	if len(resp.Response.Patch) == 0 {
@@ -142,7 +142,7 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 	require.NoError(t, err)
 
 	rev := v1.AdmissionReview{}
-	deserializer.Decode(golden.Get(t, "nonStringsInLabelsAnnotations.golden"), nil, &rev)
+	deserializer.Decode(golden.Get(t, "nonStringsInLabelsAnnotations.input"), nil, &rev)
 	rev.Request.Object.Raw, err = patchObj.Apply(rev.Request.Object.Raw)
 	require.NoErrorf(t, err, string(resp.Response.Patch))
 	request, _ = json.Marshal(rev)
