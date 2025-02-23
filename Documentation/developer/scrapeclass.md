@@ -11,11 +11,6 @@ draft: false
 description: null
 ---
 
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.73.0, Scrape Class feature is added to Prometheus-Operator.
-</div>
-
 ## Prerequisites
 
 Before you begin, ensure that you have:
@@ -56,7 +51,7 @@ spec:
     name: istio-certs
 ```
 
-An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation. The following log will be generated:
+An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation and the failure will be reported in the status conditions.
 
 ```bash
 failed: failed to parse scrape classes: multiple default scrape classes defined
