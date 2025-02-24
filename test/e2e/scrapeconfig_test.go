@@ -2702,7 +2702,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role: "hypervisor",
+					Role: monitoringv1alpha1.OpenStackRole("hypervisor"),
 				},
 			},
 		},
@@ -2713,7 +2713,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "default",
 				},
 			},
@@ -2725,7 +2725,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "instance",
+					Role:   monitoringv1alpha1.OpenStackRole("instance"),
 					Region: "default",
 				},
 			},
@@ -2737,7 +2737,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "default",
+					Role:   monitoringv1alpha1.OpenStackRole("default"),
 					Region: "default",
 				},
 			},
@@ -2749,7 +2749,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "",
+					Role:   monitoringv1alpha1.OpenStackRole(""),
 					Region: "default",
 				},
 			},
@@ -2761,7 +2761,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "",
 				},
 			},
@@ -2773,7 +2773,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "loadbalancer",
+					Role:   monitoringv1alpha1.OpenStackRole("LoadBalancer"),
 					Region: "default",
 				},
 			},
@@ -2785,7 +2785,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:           "default",
 					IdentityEndpoint: ptr.To("http://example.com"),
 				},
@@ -2798,7 +2798,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:           "default",
 					IdentityEndpoint: ptr.To("https://example.com"),
 				},
@@ -2811,7 +2811,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:           "default",
 					IdentityEndpoint: ptr.To("ftp://example.com"),
 				},
@@ -2824,7 +2824,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:           "default",
 					IdentityEndpoint: ptr.To(""),
 				},
@@ -2837,7 +2837,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:   "default",
 					Username: ptr.To("admin"),
 				},
@@ -2850,7 +2850,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:   "default",
 					Username: ptr.To(""),
 				},
@@ -2863,7 +2863,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "default",
 					UserID: ptr.To("ac3377633149401296f6c0d92d79dc16"),
 				},
@@ -2876,7 +2876,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "default",
 					UserID: ptr.To(""),
 				},
@@ -2889,7 +2889,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:   "default",
 					DomainID: ptr.To("e0353a670a9e496da891347c589539e9"),
 				},
@@ -2902,7 +2902,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:   "default",
 					DomainID: ptr.To(""),
 				},
@@ -2915,7 +2915,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:     "default",
 					DomainName: ptr.To("default"),
 				},
@@ -2928,7 +2928,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:     "default",
 					DomainName: ptr.To(""),
 				},
@@ -2941,7 +2941,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:        "hypervisor",
+					Role:        monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:      "default",
 					ProjectName: ptr.To("default"),
 				},
@@ -2954,7 +2954,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:        "hypervisor",
+					Role:        monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:      "default",
 					ProjectName: ptr.To(""),
 				},
@@ -2967,7 +2967,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:      "hypervisor",
+					Role:      monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:    "default",
 					ProjectID: ptr.To("343d245e850143a096806dfaefa9afdc"),
 				},
@@ -2980,7 +2980,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:      "hypervisor",
+					Role:      monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:    "default",
 					ProjectID: ptr.To(""),
 				},
@@ -2993,7 +2993,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                      "hypervisor",
+					Role:                      monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:                    "default",
 					ApplicationCredentialName: ptr.To("monitoring"),
 				},
@@ -3006,7 +3006,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                      "hypervisor",
+					Role:                      monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:                    "default",
 					ApplicationCredentialName: ptr.To(""),
 				},
@@ -3019,7 +3019,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                    "hypervisor",
+					Role:                    monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:                  "default",
 					ApplicationCredentialID: ptr.To("aa809205ed614a0e854bac92c0768bb9"),
 				},
@@ -3032,7 +3032,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                    "hypervisor",
+					Role:                    monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:                  "default",
 					ApplicationCredentialID: ptr.To(""),
 				},
@@ -3045,7 +3045,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:     "default",
 					AllTenants: ptr.To(true),
 				},
@@ -3058,7 +3058,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:     "default",
 					AllTenants: ptr.To(false),
 				},
@@ -3071,7 +3071,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:            "hypervisor",
+					Role:            monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:          "default",
 					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
 				},
@@ -3084,7 +3084,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:            "hypervisor",
+					Role:            monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:          "default",
 					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
 				},
@@ -3097,7 +3097,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "default",
 					Port:   ptr.To(int32(8080)),
 				},
@@ -3110,7 +3110,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "default",
 					Port:   ptr.To(int32(-1)),
 				},
@@ -3123,7 +3123,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region: "default",
 					Port:   ptr.To(int32(65537)),
 				},
@@ -3136,7 +3136,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:       "default",
 					Availability: ptr.To("public"),
 				},
@@ -3149,7 +3149,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:       "default",
 					Availability: ptr.To("admin"),
 				},
@@ -3162,7 +3162,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:       "default",
 					Availability: ptr.To("internal"),
 				},
@@ -3175,7 +3175,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:       "default",
 					Availability: ptr.To("private"),
 				},
@@ -3188,7 +3188,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRole("hypervisor"),
 					Region:       "default",
 					Availability: ptr.To(""),
 				},

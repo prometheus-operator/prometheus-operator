@@ -25800,6 +25800,28 @@ Duration
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.OpenStackRole">OpenStackRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Hypervisor&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Instance&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;LoadBalancer&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig
 </h3>
 <p>
@@ -25821,12 +25843,14 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.OpenStackRole">
+OpenStackRole
+</a>
 </em>
 </td>
 <td>
 <p>The OpenStack role of entities that should be discovered.</p>
-<p>Note: The <code>loadbalancer</code> or <code>Loadbalancer</code> role requires Prometheus &gt;= v3.2.0.</p>
+<p>Note: The <code>LoadBalancer</code> role requires Prometheus &gt;= v3.2.0.</p>
 </td>
 </tr>
 <tr>

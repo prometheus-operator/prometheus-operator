@@ -3724,7 +3724,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
-					Value: strings.ToLower(config.Role),
+					Value: string(config.Role),
 				},
 			}
 
