@@ -10043,8 +10043,11 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
     operator.prometheus.io/version: 0.80.1
+  name: alertmanagers.monitoring.coreos.com
+spec:
   group: monitoring.coreos.com
   names:
+    categories:
     - prometheus-operator
     kind: Alertmanager
     listKind: AlertmanagerList
