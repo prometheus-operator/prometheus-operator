@@ -32,6 +32,7 @@ type PrometheusSpecApplyConfiguration struct {
 	SHA                                      *string                                         `json:"sha,omitempty"`
 	Retention                                *monitoringv1.Duration                          `json:"retention,omitempty"`
 	RetentionSize                            *monitoringv1.ByteSize                          `json:"retentionSize,omitempty"`
+	ShardRetentionPolicy                     *ShardRetentionPolicyApplyConfiguration         `json:"shardRetentionPolicy,omitempty"`
 	DisableCompaction                        *bool                                           `json:"disableCompaction,omitempty"`
 	Rules                                    *RulesApplyConfiguration                        `json:"rules,omitempty"`
 	PrometheusRulesExcludedFromEnforce       []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
@@ -896,6 +897,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRetention(value monitoringv1.Dura
 // If called multiple times, the RetentionSize field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithRetentionSize(value monitoringv1.ByteSize) *PrometheusSpecApplyConfiguration {
 	b.RetentionSize = &value
+	return b
+}
+
+// WithShardRetentionPolicy sets the ShardRetentionPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ShardRetentionPolicy field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithShardRetentionPolicy(value *ShardRetentionPolicyApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.ShardRetentionPolicy = value
 	return b
 }
 
