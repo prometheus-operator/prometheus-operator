@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"path/filepath"
+	"slices"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
@@ -264,6 +266,13 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 	if len(configReloader.configFile) > 0 {
 		args = append(args, fmt.Sprintf("--config-file=%s", configReloader.configFile))
+		// The underlying fsnotify library used by the reloader does not recommend watching individual files.
+		// For example, atomic file updates will make the file watcher obsolete. Watch the dir instead.
+		// See https://github.com/fsnotify/fsnotify/blob/a9bc2e01792f868516acf80817f7d7d7b3315409/README.md?plain=1#L128
+		confDir := filepath.Dir(configReloader.configFile)
+		if !slices.Contains(configReloader.watchedDirectories, confDir) {
+			configReloader.watchedDirectories = append(configReloader.watchedDirectories, confDir)
+		}
 	}
 
 	if len(configReloader.configEnvsubstFile) > 0 {
