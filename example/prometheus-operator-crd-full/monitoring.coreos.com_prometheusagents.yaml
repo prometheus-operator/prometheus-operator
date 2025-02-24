@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.2
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -5820,6 +5820,21 @@ spec:
                       description: Timeout for requests to the remote write endpoint.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    roundRobinDNS:
+                      description: |-
+                        When enabled:
+                            - The remote-write mechanism will resolve the hostname via DNS.
+                            - It will randomly select one of the resolved IP addresses and connect to it.
+
+                        When disabled (default behavior):
+                            - The Go standard library will handle hostname resolution.
+                            - It will attempt connections to each resolved IP address sequentially.
+
+                        Note: The connection timeout applies to the entire resolution and connection process.
+                              If disabled, the timeout is distributed across all connection attempts.
+
+                        It requires Prometheus >= v3.1.0.
+                      type: boolean
                     sendExemplars:
                       description: |-
                         Enables sending of exemplars over remote write. Note that
@@ -6370,6 +6385,19 @@ spec:
 
                         Only one scrape class can be set as the default.
                       type: boolean
+                    fallbackScrapeProtocol:
+                      description: |-
+                        The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+                        It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+
+                        It requires Prometheus >= v3.0.0.
+                      enum:
+                      - PrometheusProto
+                      - OpenMetricsText0.0.1
+                      - OpenMetricsText1.0.0
+                      - PrometheusText0.0.4
+                      - PrometheusText1.0.0
+                      type: string
                     metricRelabelings:
                       description: |-
                         MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
@@ -6859,6 +6887,18 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              scrapeFailureLogFile:
+                description: |-
+                  File to which scrape failures are logged.
+                  Reloading the configuration will reopen the file.
+
+                  If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
+                  will mount the file into an emptyDir volume at `/var/log/prometheus`.
+                  If a full path is provided, e.g. '/var/log/prometheus/file.log', you
+                  must mount a volume in the specified directory and it must be writable.
+                  It requires Prometheus >= v2.55.0.
+                minLength: 1
+                type: string
               scrapeInterval:
                 default: 30s
                 description: |-
@@ -7279,7 +7319,7 @@ spec:
                 type: string
               shards:
                 description: |-
-                  Number of shards to distribute scraped targets onto.
+                  Number of shards to distribute the scraped targets onto.
 
                   `spec.replicas` multiplied by `spec.shards` is the total number of Pods
                   being created.
@@ -7289,11 +7329,11 @@ spec:
                   Note that scaling down shards will not reshard data onto the remaining
                   instances, it must be manually moved. Increasing shards will not reshard
                   data either but it will continue to be available from the same
-                  instances. To query globally, use Thanos sidecar and Thanos querier or
-                  remote write data to a central location.
-                  Alerting and recording rules
+                  instances. To query globally, use either
+                  * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+                  * Remote-write to send metrics to a central location.
 
-                  By default, the sharding is performed on:
+                  By default, the sharding of targets is performed on:
                   * The `__address__` target's metadata label for PodMonitor,
                   ServiceMonitor and ScrapeConfig resources.
                   * The `__param_target__` label for Probe resources.

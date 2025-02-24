@@ -17,15 +17,15 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // StorageSpecApplyConfiguration represents a declarative configuration of the StorageSpec type for use
 // with apply.
 type StorageSpecApplyConfiguration struct {
 	DisableMountSubPath *bool                                            `json:"disableMountSubPath,omitempty"`
-	EmptyDir            *v1.EmptyDirVolumeSource                         `json:"emptyDir,omitempty"`
-	Ephemeral           *v1.EphemeralVolumeSource                        `json:"ephemeral,omitempty"`
+	EmptyDir            *corev1.EmptyDirVolumeSource                     `json:"emptyDir,omitempty"`
+	Ephemeral           *corev1.EphemeralVolumeSource                    `json:"ephemeral,omitempty"`
 	VolumeClaimTemplate *EmbeddedPersistentVolumeClaimApplyConfiguration `json:"volumeClaimTemplate,omitempty"`
 }
 
@@ -46,7 +46,7 @@ func (b *StorageSpecApplyConfiguration) WithDisableMountSubPath(value bool) *Sto
 // WithEmptyDir sets the EmptyDir field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EmptyDir field is set to the value of the last call.
-func (b *StorageSpecApplyConfiguration) WithEmptyDir(value v1.EmptyDirVolumeSource) *StorageSpecApplyConfiguration {
+func (b *StorageSpecApplyConfiguration) WithEmptyDir(value corev1.EmptyDirVolumeSource) *StorageSpecApplyConfiguration {
 	b.EmptyDir = &value
 	return b
 }
@@ -54,7 +54,7 @@ func (b *StorageSpecApplyConfiguration) WithEmptyDir(value v1.EmptyDirVolumeSour
 // WithEphemeral sets the Ephemeral field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Ephemeral field is set to the value of the last call.
-func (b *StorageSpecApplyConfiguration) WithEphemeral(value v1.EphemeralVolumeSource) *StorageSpecApplyConfiguration {
+func (b *StorageSpecApplyConfiguration) WithEphemeral(value corev1.EphemeralVolumeSource) *StorageSpecApplyConfiguration {
 	b.Ephemeral = &value
 	return b
 }

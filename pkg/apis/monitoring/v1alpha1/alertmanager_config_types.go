@@ -61,7 +61,7 @@ type AlertmanagerConfigList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of AlertmanagerConfig
-	Items []*AlertmanagerConfig `json:"items"`
+	Items []AlertmanagerConfig `json:"items"`
 }
 
 // AlertmanagerConfigSpec is a specification of the desired behavior of the

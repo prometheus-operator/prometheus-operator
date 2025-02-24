@@ -242,7 +242,7 @@ type CommonPrometheusFields struct {
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// Number of shards to distribute scraped targets onto.
+	// Number of shards to distribute the scraped targets onto.
 	//
 	// `spec.replicas` multiplied by `spec.shards` is the total number of Pods
 	// being created.
@@ -252,11 +252,11 @@ type CommonPrometheusFields struct {
 	// Note that scaling down shards will not reshard data onto the remaining
 	// instances, it must be manually moved. Increasing shards will not reshard
 	// data either but it will continue to be available from the same
-	// instances. To query globally, use Thanos sidecar and Thanos querier or
-	// remote write data to a central location.
-	// Alerting and recording rules
+	// instances. To query globally, use either
+	// * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+	// * Remote-write to send metrics to a central location.
 	//
-	// By default, the sharding is performed on:
+	// By default, the sharding of targets is performed on:
 	// * The `__address__` target's metadata label for PodMonitor,
 	// ServiceMonitor and ScrapeConfig resources.
 	// * The `__param_target__` label for Probe resources.
@@ -857,6 +857,19 @@ type CommonPrometheusFields struct {
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
 
+	// File to which scrape failures are logged.
+	// Reloading the configuration will reopen the file.
+	//
+	// If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
+	// will mount the file into an emptyDir volume at `/var/log/prometheus`.
+	// If a full path is provided, e.g. '/var/log/prometheus/file.log', you
+	// must mount a volume in the specified directory and it must be writable.
+	// It requires Prometheus >= v2.55.0.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
+
 	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
 	// If empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,
@@ -968,7 +981,7 @@ type PrometheusList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses
-	Items []*Prometheus `json:"items"`
+	Items []Prometheus `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -1549,6 +1562,22 @@ type RemoteWriteSpec struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+
+	// When enabled:
+	//     - The remote-write mechanism will resolve the hostname via DNS.
+	//     - It will randomly select one of the resolved IP addresses and connect to it.
+	//
+	// When disabled (default behavior):
+	//     - The Go standard library will handle hostname resolution.
+	//     - It will attempt connections to each resolved IP address sequentially.
+	//
+	// Note: The connection timeout applies to the entire resolution and connection process.
+	//       If disabled, the timeout is distributed across all connection attempts.
+	//
+	// It requires Prometheus >= v3.1.0.
+	//
+	// +optional
+	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=V1.0;V2.0
@@ -2131,6 +2160,13 @@ type ScrapeClass struct {
 	//
 	// +optional
 	Default *bool `json:"default,omitempty"`
+
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 
 	// TLSConfig defines the TLS settings to use for the scrape. When the
 	// scrape objects define their own CA, certificate and/or key, they take

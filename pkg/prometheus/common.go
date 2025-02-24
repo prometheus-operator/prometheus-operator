@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/url"
 	"path"
@@ -24,9 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -44,13 +41,14 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	RulesDir                 = "/etc/prometheus/rules"
-	secretsDir               = "/etc/prometheus/secrets/"
-	configmapsDir            = "/etc/prometheus/configmaps/"
-	ConfigFilename           = "prometheus.yaml.gz"
-	ConfigEnvsubstFilename   = "prometheus.env.yaml"
-	DefaultPortName          = "web"
-	DefaultQueryLogDirectory = "/var/log/prometheus"
+	RulesDir               = "/etc/prometheus/rules"
+	secretsDir             = "/etc/prometheus/secrets/"
+	configmapsDir          = "/etc/prometheus/configmaps/"
+	ConfigFilename         = "prometheus.yaml.gz"
+	ConfigEnvsubstFilename = "prometheus.env.yaml"
+	DefaultPortName        = "web"
+	DefaultLogFileVolume   = "log-file"
+	DefaultLogDirectory    = "/var/log/prometheus"
 )
 
 var (
@@ -171,7 +169,6 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 	}
 }
 
-// TODO: Storage methods should be moved to server package.
 // It is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -182,18 +179,16 @@ func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-// TODO: QueryLogFile methods should be moved to server package.
-// They are still here because promcfg is using them.
-func UsesDefaultQueryLogVolume(queryLogFile string) bool {
-	return queryLogFile != "" && filepath.Dir(queryLogFile) == "."
+func UsesDefaultFileVolume(file string) bool {
+	return file != "" && filepath.Dir(file) == "."
 }
 
-func queryLogFilePath(queryLogFile string) string {
-	if !UsesDefaultQueryLogVolume(queryLogFile) {
-		return queryLogFile
+func logFilePath(logFile string) string {
+	if !UsesDefaultFileVolume(logFile) {
+		return logFile
 	}
 
-	return filepath.Join(DefaultQueryLogDirectory, queryLogFile)
+	return filepath.Join(DefaultLogDirectory, logFile)
 }
 
 // BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
@@ -289,6 +284,21 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 			Name:      name,
 			ReadOnly:  true,
 			MountPath: configmapsDir + c,
+		})
+	}
+
+	// scrape failure log file
+	if cpf.ScrapeFailureLogFile != nil && UsesDefaultFileVolume(*cpf.ScrapeFailureLogFile) {
+		volumes = append(volumes, v1.Volume{
+			Name: DefaultLogFileVolume,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      DefaultLogFileVolume,
+			ReadOnly:  false,
+			MountPath: DefaultLogDirectory,
 		})
 	}
 
@@ -476,33 +486,4 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	)
 
 	return svc
-}
-
-// This function is responsible for the following:
-//
-// Verify that the service exists in the Prometheus/PrometheusAgent resource's namespace
-// If it does not exist, fail the reconciliation.
-//
-// If the ServiceName is specified and a service with the same name exists in the same namespace as the
-// Prometheus/PrometheusAgent resource, ensure that the custom governing service's selector matches the
-// Prometheus/PrometheusAgent statefulsets.
-// If it is not selected, fail the reconciliation
-// Warning: the function will panic if the resource's ServiceName is nil..
-func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
-	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
-	svc, err := svcClient.Get(ctx, serviceName, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get custom governing service %s/%s: %w", namespace, serviceName, err)
-	}
-
-	svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
-	if err != nil {
-		return fmt.Errorf("failed to parse the selector labels for custom governing service %s/%s: %w", namespace, serviceName, err)
-	}
-
-	if !svcSelector.Matches(labels.Set(selectorLabels)) {
-		return fmt.Errorf("custom governing service %s/%s with selector %q does not select Prometheus/PrometheusAgent pods with labels %q",
-			namespace, serviceName, svcSelector.String(), labels.Set(selectorLabels).String())
-	}
-	return nil
 }

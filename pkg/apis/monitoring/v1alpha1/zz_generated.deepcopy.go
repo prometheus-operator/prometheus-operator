@@ -49,13 +49,9 @@ func (in *AlertmanagerConfigList) DeepCopyInto(out *AlertmanagerConfigList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*AlertmanagerConfig, len(*in))
+		*out = make([]AlertmanagerConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(AlertmanagerConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -141,7 +137,7 @@ func (in *AzureSDConfig) DeepCopyInto(out *AzureSDConfig) {
 	}
 	if in.AuthenticationMethod != nil {
 		in, out := &in.AuthenticationMethod, &out.AuthenticationMethod
-		*out = new(string)
+		*out = new(AuthenticationMethodType)
 		**out = **in
 	}
 	if in.TenantID != nil {
@@ -171,8 +167,39 @@ func (in *AzureSDConfig) DeepCopyInto(out *AzureSDConfig) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
+	}
+	if in.BasicAuth != nil {
+		in, out := &in.BasicAuth, &out.BasicAuth
+		*out = new(monitoringv1.BasicAuth)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Authorization != nil {
+		in, out := &in.Authorization, &out.Authorization
+		*out = new(monitoringv1.SafeAuthorization)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(monitoringv1.OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	if in.FollowRedirects != nil {
+		in, out := &in.FollowRedirects, &out.FollowRedirects
+		*out = new(bool)
+		**out = **in
+	}
+	if in.EnableHTTP2 != nil {
+		in, out := &in.EnableHTTP2, &out.EnableHTTP2
+		*out = new(bool)
+		**out = **in
+	}
+	if in.TLSConfig != nil {
+		in, out := &in.TLSConfig, &out.TLSConfig
+		*out = new(monitoringv1.SafeTLSConfig)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
@@ -827,7 +854,7 @@ func (in *GCESDConfig) DeepCopyInto(out *GCESDConfig) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.TagSeparator != nil {
@@ -1064,6 +1091,11 @@ func (in *IonosSDConfig) DeepCopyInto(out *IonosSDConfig) {
 		in, out := &in.EnableHTTP2, &out.EnableHTTP2
 		*out = new(bool)
 		**out = **in
+	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(monitoringv1.OAuth2)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
@@ -1659,7 +1691,7 @@ func (in *OpenStackSDConfig) DeepCopyInto(out *OpenStackSDConfig) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.Availability != nil {
@@ -1855,13 +1887,9 @@ func (in *PrometheusAgentList) DeepCopyInto(out *PrometheusAgentList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*PrometheusAgent, len(*in))
+		*out = make([]PrometheusAgent, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(PrometheusAgent)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -2285,13 +2313,9 @@ func (in *ScrapeConfigList) DeepCopyInto(out *ScrapeConfigList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*ScrapeConfig, len(*in))
+		*out = make([]ScrapeConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(ScrapeConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
