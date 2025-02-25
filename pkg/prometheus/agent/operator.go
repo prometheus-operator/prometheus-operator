@@ -756,7 +756,8 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			cg,
 			newSSetInputHash,
 			int32(shard),
-			tlsAssets)
+			tlsAssets,
+		)
 		if err != nil {
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
