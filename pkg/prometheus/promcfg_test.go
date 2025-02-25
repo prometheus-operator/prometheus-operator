@@ -5856,11 +5856,12 @@ func TestProbeSpecConfig(t *testing.T) {
 func TestScrapeConfigSpecConfig(t *testing.T) {
 	refreshInterval := monitoringv1.Duration("5m")
 	for _, tc := range []struct {
-		name      string
-		version   string
-		patchProm func(*monitoringv1.Prometheus)
-		scSpec    monitoringv1alpha1.ScrapeConfigSpec
-		golden    string
+		name            string
+		version         string
+		patchProm       func(*monitoringv1.Prometheus)
+		scSpec          monitoringv1alpha1.ScrapeConfigSpec
+		inlineTLSConfig bool
+		golden          string
 	}{
 		{
 			name:   "empty_scrape_config",
@@ -6105,6 +6106,53 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_Authorization.golden",
+		},
+		{
+			name: "inline_tlsconfig",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TLSConfig: &monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "ca",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "cert",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "tls",
+						},
+						Key: "private-key",
+					},
+				},
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca2",
+								},
+							},
+						},
+					},
+				},
+			},
+			inlineTLSConfig: true,
+			golden:          "ScrapeConfigSpecConfig_Inline_TLSConfig.golden",
 		},
 		{
 			name: "tlsconfig",
@@ -6529,6 +6577,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			cg := mustNewConfigGenerator(t, p)
+			cg.inlineTLSConfig = tc.inlineTLSConfig
 
 			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -6581,6 +6630,18 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 					Data: map[string][]byte{
 						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"ca2":         []byte("ca2"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
