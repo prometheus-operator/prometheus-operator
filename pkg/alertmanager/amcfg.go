@@ -747,6 +747,12 @@ func (cb *configBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 	}
 	out.Token = &token
 
+	tokenID, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.TokenID)
+	if err != nil {
+		return nil, err
+	}
+	out.TokenID = &tokenID
+
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
 		return nil, err
