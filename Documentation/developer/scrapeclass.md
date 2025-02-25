@@ -51,10 +51,23 @@ spec:
     name: istio-certs
 ```
 
-An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation and the failure will be reported in the status conditions.
+An administrator can set the `default:true` so that the scrape applies to all scrape objects that don't configure an explicit scrape class. Only one scrape class can be set as default. If there are multiple default scrape classes, the operator will fail the reconciliation and the failure will be reported in the status conditions of the resource.
 
-```bash
-failed: failed to parse scrape classes: multiple default scrape classes defined
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+spec:
+  scrapeClasses:
+    - name: "first-class"
+      default: true
+    - name: "second-class"
+      default: true
+status:
+  conditions:
+  - message: "Failed to parse scrape classes: multiple default scrape classes defined"
+    reason: "MultipleDefaultScrapeClasses"
+    status: "False"
+    type: Reconciled
 ```
 
 ## Using the ScrapeClass in Monitor Resources
@@ -87,7 +100,7 @@ spec:
     path: /metrics
 ```
 
-If a monitor resource includes a `tlsConfig` field, the Operator will apply a merge strategy to combine the `tlsConfig` fields from the monitor resource with those defined in the scrape class. The `tlsConfig` settings in the monitor resource will take precedence.
+If a monitor resource includes a `tlsConfig` field, the Operator applies a **field-by-field** merge with the `tlsConfig` from the scrape class. Any fields set in the monitor resource take precedence, while unset fields inherit values from the scrape class.
 
 > Note: The configuration in scrapeClass will only be applied if the scrape resources haven't set fields defined in scrapeClass.
 
