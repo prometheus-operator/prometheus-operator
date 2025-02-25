@@ -6138,7 +6138,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL: "http://localhost:9100/sd.json",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
-							InsecureSkipVerify: ptr.To(true),
+							InsecureSkipVerify: ptr.To(false),
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{

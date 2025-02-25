@@ -12,7 +12,7 @@ scrape_configs:
     key: private-key
   http_sd_configs:
   - tls_config:
-      insecure_skip_verify: true
+      insecure_skip_verify: false
       ca: ca2
     url: http://localhost:9100/sd.json
   relabel_configs:
