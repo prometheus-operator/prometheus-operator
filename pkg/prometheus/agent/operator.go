@@ -632,6 +632,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
+	name := fmt.Sprintf("prom-agent-%s", p.Name)
+	sts, _ := c.kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, name, metav1.GetOptions{})
+	if sts != nil {
+		return fmt.Errorf("a similar StatefulSet Prometheus Agent has already exists")
+	}
+
 	logger := c.logger.With("key", key)
 
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
@@ -690,6 +696,12 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 }
 
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
+	name := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, _ := c.kclient.AppsV1().DaemonSets(p.Namespace).Get(ctx, name, metav1.GetOptions{})
+	if dms != nil {
+		return fmt.Errorf("a similar DaemonSet Prometheus Agent has already exists")
+	}
+
 	logger := c.logger.With("key", key)
 
 	if p.Spec.ServiceName != nil {
