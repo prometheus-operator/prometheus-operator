@@ -119,7 +119,7 @@ spec:
 
 As `ServiceMonitor` references a scrapeClass that does not exist in Prometheus, the following event is emitted:
 
-```yaml
+```
 0s Warning InvalidConfiguration servicemonitor/example-service-monitor 
 ServiceMonitor example-service-monitor was rejected due to invalid configuration: 
 scrapeClass "istio" not found in Prometheus scrapeClasses
