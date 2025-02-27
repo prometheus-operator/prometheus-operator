@@ -58,9 +58,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 spec:
   scrapeClasses:
-    - name: "first-class"
+    - name: first-class
       default: true
-    - name: "second-class"
+    - name: second-class
       default: true
 status:
   conditions:
@@ -86,7 +86,44 @@ spec:
       path: /metrics
 ```
 
-If the monitor resource specifies a scrape class name that isn't defined in the `Prometheus/PrometheusAgent` object, then the scrape resource is ignored by the operator.
+If the monitor resource specifies a scrape class name that isn't defined in the `Prometheus/PrometheusAgent` object, then the operator will emit a Kubernetes event. Consider the following example where a `Prometheus` instance defines a scrapeClass, but a `ServiceMonitor` references a different one.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: my-prometheus
+spec:
+  replicas: 1
+  scrapeClasses:
+    - name: istio-mtls
+      default: true
+```
+
+The `ServiceMonitor` references a scrapeClass named **istio**, which is not defined in the Prometheus object.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: example-service-monitor
+spec:
+  selector:
+    matchLabels:
+      app: example
+  scrapeClass: istio
+  endpoints:
+    - port: http
+      path: /metrics
+```
+
+As `ServiceMonitor` references a scrapeClass that does not exist in Prometheus, the following event is emitted:
+
+```yaml
+0s Warning InvalidConfiguration servicemonitor/example-service-monitor 
+ServiceMonitor example-service-monitor was rejected due to invalid configuration: 
+scrapeClass "istio" not found in Prometheus scrapeClasses
+```
 
 Similarly, we can select the scrape class for `PodMonitor` resource.
 
