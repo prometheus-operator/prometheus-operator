@@ -10252,9 +10252,7 @@
                           "description": "The OpenStack role of entities that should be discovered.\n\nNote: The `LoadBalancer` role requires Prometheus >= v3.2.0.",
                           "enum": [
                             "Instance",
-                            "instance",
                             "Hypervisor",
-                            "hypervisor",
                             "LoadBalancer"
                           ],
                           "type": "string"

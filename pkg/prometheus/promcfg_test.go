@@ -8172,7 +8172,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:             monitoringv1alpha1.OpenStackRole("Instance"),
+						Role:             monitoringv1alpha1.OpenStackRoleInstance,
 						Region:           "region-1",
 						IdentityEndpoint: ptr.To("http://identity.example.com:5000/v2.0"),
 						Username:         ptr.To("nova-user-1"),
@@ -8195,7 +8195,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("Instance"),
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
 						Region: "region-1",
 						ApplicationCredentialSecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
