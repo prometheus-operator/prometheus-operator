@@ -16154,7 +16154,7 @@ WhenScaledRetentionType
 </td>
 <td>
 <em>(Optional)</em>
-<p>WhenScaled defines the retention policy when the Prometheus shards are scaled down.
+<p>Defines the retention policy when the Prometheus shards are scaled down.
 * <code>Delete</code>, the operator will delete the pods from the scaled-down shard(s).
 * <code>Retain</code>, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.</p>
 <p>If not defined, the operator assumes the <code>Delete</code> value.</p>

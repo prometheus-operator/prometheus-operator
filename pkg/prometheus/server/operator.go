@@ -952,7 +952,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
-			c.logger.Error("deleting StatefulSet failed", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
 	if err != nil {

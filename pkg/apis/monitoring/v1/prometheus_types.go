@@ -1146,7 +1146,7 @@ var (
 )
 
 type ShardRetentionPolicy struct {
-	// WhenScaled defines the retention policy when the Prometheus shards are scaled down.
+	// Defines the retention policy when the Prometheus shards are scaled down.
 	// * `Delete`, the operator will delete the pods from the scaled-down shard(s).
 	// * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
 	//
