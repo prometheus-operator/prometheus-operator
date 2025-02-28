@@ -91,6 +91,7 @@ type Operator struct {
 	scrapeConfigSupported         bool
 	canReadStorageClass           bool
 	disableUnmanagedConfiguration bool
+	retentionPoliciesEnabled      bool
 
 	eventRecorder record.EventRecorder
 }
@@ -167,8 +168,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID:  c.ControllerID,
-		eventRecorder: c.EventRecorderFactory(client, controllerName),
+		controllerID:             c.ControllerID,
+		eventRecorder:            c.EventRecorderFactory(client, controllerName),
+		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -940,6 +942,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
+		shouldRetain, err := c.shouldRetain(p)
+		if err != nil {
+			c.logger.Error("failed to determine if StatefulSet should be retained", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			return
+		}
+		if shouldRetain {
+			return
+		}
+
 		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
 			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
@@ -949,6 +960,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+// As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
+// For now, shouldRetain just returns the appropriate boolean based on the retention type.
+func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
+	if !c.retentionPoliciesEnabled {
+		// Feature-gate is disabled, default behavior is always to delete.
+		return false, nil
+	}
+	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled,
+		monitoringv1.DeleteWhenScaledRetentionType) == monitoringv1.RetainWhenScaledRetentionType {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given

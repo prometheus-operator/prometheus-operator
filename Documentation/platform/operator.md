@@ -57,6 +57,7 @@ Usage of ./operator:
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
+    	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.

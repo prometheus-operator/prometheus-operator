@@ -5351,6 +5351,65 @@ func testPrometheusServiceName(t *testing.T) {
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
 }
 
+// testPrometheusRetentionPolicies tests the shard retention policies for Prometheus.
+// ShardRetentionPolicy requires the ShardRetention feature gate to be enabled,
+// therefore, it runs in the feature-gated test suite.
+func testPrometheusRetentionPolicies(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusShardRetentionPolicy"},
+		},
+	)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name                 string
+		whenScaledDown       *monitoringv1.WhenScaledRetentionType
+		expectedRemainingSts int
+	}{
+		{
+			name:                 "delete",
+			whenScaledDown:       ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
+			expectedRemainingSts: 1,
+		},
+		{
+			name:                 "retain",
+			whenScaledDown:       ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+			expectedRemainingSts: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := framework.MakeBasicPrometheus(ns, tc.name, tc.name, 1)
+			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+				WhenScaled: tc.whenScaledDown,
+			}
+			p.Spec.Shards = ptr.To(int32(2))
+			_, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+			require.NoError(t, err, "failed to create Prometheus")
+
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, tc.name, ns, 1)
+			require.NoError(t, err, "failed to scale down Prometheus")
+			require.Equal(t, int32(1), p.Status.Shards, "expected scale of 1 shard")
+
+			podList, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{LabelSelector: p.Status.Selector})
+			require.NoError(t, err, "failed to list statefulsets")
+
+			require.Len(t, podList.Items, tc.expectedRemainingSts)
+		})
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))

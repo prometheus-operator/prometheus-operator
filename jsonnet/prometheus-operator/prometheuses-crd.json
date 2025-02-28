@@ -7688,6 +7688,20 @@
                     "description": "Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.",
                     "type": "string"
                   },
+                  "shardRetentionPolicy": {
+                    "description": "ShardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.\n\nThe final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,\nhowever, the feature is not yet fully implemented in this PR. The limitation being:\n* Retention duration is not settable, for now, shards are retained forever.",
+                    "properties": {
+                      "whenScaled": {
+                        "description": "Defines the retention policy when the Prometheus shards are scaled down.\n* `Delete`, the operator will delete the pods from the scaled-down shard(s).\n* `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.\n\nIf not defined, the operator assumes the `Delete` value.",
+                        "enum": [
+                          "Retain",
+                          "Delete"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "shards": {
                     "description": "Number of shards to distribute the scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use either\n* Thanos sidecar + querier for query federation and Thanos Ruler for rules.\n* Remote-write to send metrics to a central location.\n\nBy default, the sharding of targets is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).",
                     "format": "int32",
