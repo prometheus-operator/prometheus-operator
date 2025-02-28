@@ -63,8 +63,10 @@ func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.C
 		}, nil
 	}
 
-	var clientTLSCreds *webconfig.TLSReferences
-	var serverTLSCreds *webconfig.TLSReferences
+	var (
+		clientTLSCreds *webconfig.TLSReferences
+		serverTLSCreds *webconfig.TLSReferences
+	)
 
 	serverTLSConfig := clusterTLSConfig.ServerTLS
 	if err := serverTLSConfig.Validate(); err != nil {

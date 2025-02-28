@@ -564,7 +564,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize cluster tls config secret: %w", err)
 	}
 
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
@@ -749,14 +749,6 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 	var serverCert string
 	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
-	}
-	// Currently, we only trigger a restart of the pods if the ServerCert has changed.
-	// Ideally, might want to trigger a restart for any change in ClusterTLS config.
-	if a.Spec.ClusterTLS != nil {
-		// TODO: This is just the key selector, not the data of the server cert.
-		// We would need to ensure that the AM pods restart whenever there is a change
-		// in the content the TLS assets.
-		serverCert = a.Spec.ClusterTLS.ServerTLS.Cert.String()
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
@@ -1716,12 +1708,12 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 		a.Spec.ClusterTLS,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to initialize cluster tls config: %w", err)
+		return fmt.Errorf("failed to initialize the configuration: %w", err)
 	}
 
 	data, err := clusterTLSConfig.ClusterTLSConfiguration()
 	if err != nil {
-		return fmt.Errorf("failed to generate cluster TLS configuration yaml: %w", err)
+		return fmt.Errorf("failed to generate the configuration: %w", err)
 	}
 
 	s := &v1.Secret{
@@ -1740,7 +1732,7 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 	)
 
 	if err = k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
-		return fmt.Errorf("failed to reconcile cluster tls config secret: %w", err)
+		return fmt.Errorf("failed to reconcile secret: %w", err)
 	}
 
 	return nil

@@ -627,7 +627,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 	}
 
-	if !version.LT(semver.MustParse("0.24.0")) {
+	if version.GTE(semver.MustParse("0.24.0")) {
 		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), a.Spec.ClusterTLS)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create cluster TLS configuration: %w", err)
