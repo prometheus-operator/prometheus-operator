@@ -2747,7 +2747,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("Instance"),
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
 						Region: "RegionOne",
 						Password: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -2803,7 +2803,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
+						Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 						Region: "RegionTwo",
 					},
 				}
@@ -2815,7 +2815,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("LoadBalancer"),
+						Role:   monitoringv1alpha1.OpenStackRoleLoadBalancer,
 						Region: "RegionTwo",
 					},
 				}
@@ -2828,7 +2828,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("LoadBalancer"),
+						Role:   monitoringv1alpha1.OpenStackRoleLoadBalancer,
 						Region: "RegionTwo",
 					},
 				}
@@ -4197,7 +4197,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
+						Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 						Region: "RegionTwo",
 					},
 				}
@@ -4210,7 +4210,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   monitoringv1alpha1.OpenStackRole("hypervisor"),
+						Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 						Region: "RegionTwo",
 					},
 				}

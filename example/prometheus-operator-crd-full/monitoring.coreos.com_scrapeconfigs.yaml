@@ -10840,9 +10840,7 @@ spec:
                         Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
                       enum:
                       - Instance
-                      - instance
                       - Hypervisor
-                      - hypervisor
                       - LoadBalancer
                       type: string
                     tlsConfig:

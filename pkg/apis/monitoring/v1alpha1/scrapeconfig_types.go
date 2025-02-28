@@ -780,6 +780,7 @@ type GCESDConfig struct {
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=Instance;Hypervisor;LoadBalancer
 type OpenStackRole string
 
 const (
@@ -796,7 +797,6 @@ type OpenStackSDConfig struct {
 	//
 	// Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
 	//
-	// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor;LoadBalancer
 	// +required
 	Role OpenStackRole `json:"role"`
 	// The OpenStack Region.
