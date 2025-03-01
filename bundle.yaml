@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -10041,8 +10041,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -15586,6 +15586,15 @@ spec:
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Prometheus Pods.
                 type: string
+              serviceName:
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+                  If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+                  When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
+                type: string
               sha:
                 description: |-
                   SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.
@@ -18779,8 +18788,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -19987,8 +19996,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -21162,8 +21171,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -26980,6 +26989,21 @@ spec:
                       description: Timeout for requests to the remote write endpoint.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    roundRobinDNS:
+                      description: |-
+                        When enabled:
+                            - The remote-write mechanism will resolve the hostname via DNS.
+                            - It will randomly select one of the resolved IP addresses and connect to it.
+
+                        When disabled (default behavior):
+                            - The Go standard library will handle hostname resolution.
+                            - It will attempt connections to each resolved IP address sequentially.
+
+                        Note: The connection timeout applies to the entire resolution and connection process.
+                              If disabled, the timeout is distributed across all connection attempts.
+
+                        It requires Prometheus >= v3.1.0.
+                      type: boolean
                     sendExemplars:
                       description: |-
                         Enables sending of exemplars over remote write. Note that
@@ -28464,7 +28488,7 @@ spec:
                 type: string
               shards:
                 description: |-
-                  Number of shards to distribute scraped targets onto.
+                  Number of shards to distribute the scraped targets onto.
 
                   `spec.replicas` multiplied by `spec.shards` is the total number of Pods
                   being created.
@@ -28474,11 +28498,11 @@ spec:
                   Note that scaling down shards will not reshard data onto the remaining
                   instances, it must be manually moved. Increasing shards will not reshard
                   data either but it will continue to be available from the same
-                  instances. To query globally, use Thanos sidecar and Thanos querier or
-                  remote write data to a central location.
-                  Alerting and recording rules
+                  instances. To query globally, use either
+                  * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+                  * Remote-write to send metrics to a central location.
 
-                  By default, the sharding is performed on:
+                  By default, the sharding of targets is performed on:
                   * The `__address__` target's metadata label for PodMonitor,
                   ServiceMonitor and ScrapeConfig resources.
                   * The `__param_target__` label for Probe resources.
@@ -31981,8 +32005,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -39365,6 +39389,21 @@ spec:
                       description: Timeout for requests to the remote write endpoint.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    roundRobinDNS:
+                      description: |-
+                        When enabled:
+                            - The remote-write mechanism will resolve the hostname via DNS.
+                            - It will randomly select one of the resolved IP addresses and connect to it.
+
+                        When disabled (default behavior):
+                            - The Go standard library will handle hostname resolution.
+                            - It will attempt connections to each resolved IP address sequentially.
+
+                        Note: The connection timeout applies to the entire resolution and connection process.
+                              If disabled, the timeout is distributed across all connection attempts.
+
+                        It requires Prometheus >= v3.1.0.
+                      type: boolean
                     sendExemplars:
                       description: |-
                         Enables sending of exemplars over remote write. Note that
@@ -40994,9 +41033,30 @@ spec:
                 description: 'Deprecated: use ''spec.image'' instead. The image''s
                   digest can be specified as part of the image name.'
                 type: string
+              shardRetentionPolicy:
+                description: |-
+                  ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+                  (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+
+                  The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+                  however, the feature is not yet fully implemented in this PR. The limitation being:
+                  * Retention duration is not settable, for now, shards are retained forever.
+                properties:
+                  whenScaled:
+                    description: |-
+                      Defines the retention policy when the Prometheus shards are scaled down.
+                      * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+                      * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+
+                      If not defined, the operator assumes the `Delete` value.
+                    enum:
+                    - Retain
+                    - Delete
+                    type: string
+                type: object
               shards:
                 description: |-
-                  Number of shards to distribute scraped targets onto.
+                  Number of shards to distribute the scraped targets onto.
 
                   `spec.replicas` multiplied by `spec.shards` is the total number of Pods
                   being created.
@@ -41006,11 +41066,11 @@ spec:
                   Note that scaling down shards will not reshard data onto the remaining
                   instances, it must be manually moved. Increasing shards will not reshard
                   data either but it will continue to be available from the same
-                  instances. To query globally, use Thanos sidecar and Thanos querier or
-                  remote write data to a central location.
-                  Alerting and recording rules
+                  instances. To query globally, use either
+                  * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+                  * Remote-write to send metrics to a central location.
 
-                  By default, the sharding is performed on:
+                  By default, the sharding of targets is performed on:
                   * The `__address__` target's metadata label for PodMonitor,
                   ServiceMonitor and ScrapeConfig resources.
                   * The `__param_target__` label for Probe resources.
@@ -45030,8 +45090,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -45190,8 +45250,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -56022,12 +56082,14 @@ spec:
                       minLength: 1
                       type: string
                     role:
-                      description: The OpenStack role of entities that should be discovered.
+                      description: |-
+                        The OpenStack role of entities that should be discovered.
+
+                        Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
                       enum:
                       - Instance
-                      - instance
                       - Hypervisor
-                      - hypervisor
+                      - LoadBalancer
                       type: string
                     tlsConfig:
                       description: TLS configuration applying to the target HTTP endpoint.
@@ -57703,8 +57765,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -58933,8 +58995,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
-    operator.prometheus.io/version: 0.80.0
+    controller-gen.kubebuilder.io/version: v0.17.2
+    operator.prometheus.io/version: 0.80.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -63871,6 +63933,15 @@ spec:
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Thanos Ruler Pods.
                 type: string
+              serviceName:
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+                  If empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.
+                  When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
+                type: string
               storage:
                 description: Storage spec to specify how storage shall be used.
                 properties:
@@ -67075,7 +67146,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -67092,7 +67163,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -67200,7 +67271,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -67216,19 +67287,19 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.80.0
+        app.kubernetes.io/version: 0.80.1
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.80.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.80.1
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.80.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.80.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -67262,7 +67333,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
   namespace: default
 ---
@@ -67272,7 +67343,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
   namespace: default
 spec:

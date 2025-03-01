@@ -515,6 +515,22 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -1919,17 +1935,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -3212,6 +3228,24 @@ ByteSize
 </tr>
 <tr>
 <td>
+<code>shardRetentionPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardRetentionPolicy">
+ShardRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+(Alpha) Using this field requires the &lsquo;PrometheusShardRetentionPolicy&rsquo; feature gate to be enabled.</p>
+<p>The final goals for this feature can be seen at <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers</a>,
+however, the feature is not yet fully implemented in this PR. The limitation being:
+* Retention duration is not settable, for now, shards are retained forever.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>disableCompaction</code><br/>
 <em>
 bool
@@ -4230,6 +4264,22 @@ string
 </td>
 <td>
 <p>Priority class assigned to the Pods</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>thanos-ruler-operated</code> for ThanosRuler resources.
+When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -5929,6 +5979,22 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -7098,17 +7164,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -11995,17 +12061,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -13284,6 +13350,24 @@ ByteSize
 </td>
 <td>
 <p>Maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardRetentionPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardRetentionPolicy">
+ShardRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+(Alpha) Using this field requires the &lsquo;PrometheusShardRetentionPolicy&rsquo; feature gate to be enabled.</p>
+<p>The final goals for this feature can be seen at <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers</a>,
+however, the feature is not yet fully implemented in this PR. The limitation being:
+* Retention duration is not settable, for now, shards are retained forever.</p>
 </td>
 </tr>
 <tr>
@@ -14947,6 +15031,26 @@ bool
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>roundRobinDNS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When enabled:
+- The remote-write mechanism will resolve the hostname via DNS.
+- It will randomly select one of the resolved IP addresses and connect to it.</p>
+<p>When disabled (default behavior):
+- The Go standard library will handle hostname resolution.
+- It will attempt connections to each resolved IP address sequentially.</p>
+<p>Note: The connection timeout applies to the entire resolution and connection process.
+If disabled, the timeout is distributed across all connection attempts.</p>
+<p>It requires Prometheus &gt;= v3.1.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Rule">Rule
@@ -16024,6 +16128,40 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ShardRetentionPolicy">ShardRetentionPolicy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>whenScaled</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WhenScaledRetentionType">
+WhenScaledRetentionType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the retention policy when the Prometheus shards are scaled down.
+* <code>Delete</code>, the operator will delete the pods from the scaled-down shard(s).
+* <code>Retain</code>, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.</p>
+<p>If not defined, the operator assumes the <code>Delete</code> value.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ShardStatus">ShardStatus
 </h3>
 <p>
@@ -16699,6 +16837,22 @@ string
 </td>
 <td>
 <p>Priority class assigned to the Pods</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>thanos-ruler-operated</code> for ThanosRuler resources.
+When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -18347,6 +18501,13 @@ order.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.WhenScaledRetentionType">WhenScaledRetentionType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardRetentionPolicy">ShardRetentionPolicy</a>)
+</p>
+<div>
+</div>
 <hr/>
 <h2 id="monitoring.coreos.com/v1alpha1">monitoring.coreos.com/v1alpha1</h2>
 Resource Types:
@@ -18826,17 +18987,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
@@ -25780,6 +25941,28 @@ Duration
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.OpenStackRole">OpenStackRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Hypervisor&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Instance&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;LoadBalancer&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig
 </h3>
 <p>
@@ -25801,11 +25984,14 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.OpenStackRole">
+OpenStackRole
+</a>
 </em>
 </td>
 <td>
 <p>The OpenStack role of entities that should be discovered.</p>
+<p>Note: The <code>LoadBalancer</code> role requires Prometheus &gt;= v3.2.0.</p>
 </td>
 </tr>
 <tr>
@@ -27001,17 +27187,17 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute scraped targets onto.</p>
+<p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
 <p>When not defined, the operator assumes only one shard.</p>
 <p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
-instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.
-Alerting and recording rules</p>
-<p>By default, the sharding is performed on:
+instances. To query globally, use either
+* Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+* Remote-write to send metrics to a central location.</p>
+<p>By default, the sharding of targets is performed on:
 * The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
 ServiceMonitor and ScrapeConfig resources.
 * The <code>__param_target__</code> label for Probe resources.</p>
