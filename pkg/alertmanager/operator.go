@@ -564,10 +564,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("failed to synchronize cluster tls config secret: %w", err)
-	}
-
-	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
 		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
 	}
 
@@ -746,7 +742,6 @@ func makeSelectorLabels(name string) map[string]string {
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
-	var serverCert string
 	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
 	}
@@ -770,7 +765,6 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations: a.Annotations,
 		AlertmanagerGeneration:  a.Generation,
 		AlertmanagerWebHTTP2:    http2,
-		ALertmanagerClusterTLS:  serverCert,
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,

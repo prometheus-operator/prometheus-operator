@@ -381,12 +381,10 @@ func testAMClusterGossipSilences(t *testing.T) {
 		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 	}{
 		{
-			name:        "alertmanager cluster without mTLS configured",
-			clusterSize: 3,
+			name: "alertmanager cluster without mTLS configured",
 		},
 		{
-			name:        "alertmanager cluster with mTLS configured",
-			clusterSize: 3,
+			name: "alertmanager cluster with mTLS configured",
 			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
 				ServerTLS: monitoringv1.WebTLSConfig{
 					ClientCA: monitoringv1.SecretOrConfigMap{
@@ -446,6 +444,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Don't run Alertmanager tests in parallel. See
 			// https://github.com/prometheus/alertmanager/issues/1835 for details.
+			clusterSize := 3
 			testCtx := framework.NewTestCtx(t)
 			defer testCtx.Cleanup(t)
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -453,7 +452,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 
 			createMutualTLSSecret(t, secretName, ns)
 
-			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(tc.clusterSize))
+			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(clusterSize))
 			alertmanager.Spec.ClusterTLS = tc.clusterTLSConfig
 
 			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
