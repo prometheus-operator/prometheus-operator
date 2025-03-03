@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"slices"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -325,6 +326,12 @@ func BuildConfigReloader(
 ) v1.Container {
 	cpf := p.GetCommonPrometheusFields()
 
+	// The underlying fsnotify library used by the reloader does not recommend watching individual files.
+	// For example, atomic file updates will make the file watcher obsolete. Watch the dir instead.
+	// See https://github.com/fsnotify/fsnotify/blob/a9bc2e01792f868516acf80817f7d7d7b3315409/README.md?plain=1#L128
+	if !slices.Contains(watchedDirectories, ConfDir) {
+		watchedDirectories = append(watchedDirectories, ConfDir)
+	}
 	reloaderOptions := []operator.ReloaderOption{
 		operator.ReloaderConfig(c.ReloaderConfig),
 		operator.LogFormat(cpf.LogFormat),
