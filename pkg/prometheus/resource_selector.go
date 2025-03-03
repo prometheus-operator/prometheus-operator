@@ -1159,7 +1159,7 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 	return nil
 }
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	
+
 	if rs.version.LT(semver.MustParse("2.50.0")) {
 		return fmt.Errorf("KumaSD configuration is only supported for Prometheus version >= 2.50.0")
 	}
