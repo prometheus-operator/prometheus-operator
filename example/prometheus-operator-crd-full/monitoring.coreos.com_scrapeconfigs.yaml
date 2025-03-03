@@ -7663,6 +7663,7 @@ spec:
                     clientID:
                       description: Client id is used by Kuma Control Plane to compute
                         Monitoring Assignment for specific Prometheus backend.
+                      minLength: 1
                       type: string
                     enableHTTP2:
                       description: Whether to enable HTTP2.
@@ -8061,8 +8062,11 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     server:
-                      description: Address of the Kuma Control Plane's MADS xDS server.
+                      description: |-
+                        It requires Prometheus >= v2.50.0
+                        Address of the Kuma Control Plane's MADS xDS server.
                       minLength: 1
+                      pattern: ^http(s)?://.+$
                       type: string
                     tlsConfig:
                       description: TLS configuration to use on every scrape request
