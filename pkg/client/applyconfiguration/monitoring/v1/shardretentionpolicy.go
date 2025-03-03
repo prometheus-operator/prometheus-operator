@@ -24,6 +24,7 @@ import (
 // with apply.
 type ShardRetentionPolicyApplyConfiguration struct {
 	WhenScaled *monitoringv1.WhenScaledRetentionType `json:"whenScaled,omitempty"`
+	Retain     *RetainConfigApplyConfiguration       `json:"retain,omitempty"`
 }
 
 // ShardRetentionPolicyApplyConfiguration constructs a declarative configuration of the ShardRetentionPolicy type for use with
@@ -37,5 +38,13 @@ func ShardRetentionPolicy() *ShardRetentionPolicyApplyConfiguration {
 // If called multiple times, the WhenScaled field is set to the value of the last call.
 func (b *ShardRetentionPolicyApplyConfiguration) WithWhenScaled(value monitoringv1.WhenScaledRetentionType) *ShardRetentionPolicyApplyConfiguration {
 	b.WhenScaled = &value
+	return b
+}
+
+// WithRetain sets the Retain field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Retain field is set to the value of the last call.
+func (b *ShardRetentionPolicyApplyConfiguration) WithRetain(value *RetainConfigApplyConfiguration) *ShardRetentionPolicyApplyConfiguration {
+	b.Retain = value
 	return b
 }
