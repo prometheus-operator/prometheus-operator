@@ -31,6 +31,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/config"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
@@ -78,7 +79,7 @@ func main() {
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
-		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
+		fmt.Sprintf("parse this environment variable to createHttpHeader %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
 		Default(operator.PodNameEnvVar).String()
 
 	listenAddress := app.Flag(
@@ -104,6 +105,9 @@ func main() {
 
 	reloadURL := app.Flag("reload-url", "URL to trigger the configuration").
 		Default("http://127.0.0.1:9090/-/reload").URL()
+
+	reloadBasicUsername := app.Flag("reload-basic-username", "basic username passed as Authorization Header with Basic auth schema").Default("").String()
+	reloadBasicPassword := app.Flag("reload-basic-password", "basic password passed as Authorization Header with Basic auth schema").Default("").String()
 
 	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
 		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
@@ -173,7 +177,7 @@ func main() {
 			opts.ProcessName = *processName
 		default:
 			opts.ReloadURL = *reloadURL
-			opts.HTTPClient = createHTTPClient(reloadTimeout)
+			opts.HTTPClient = createHTTPClient(*reloadTimeout, reloadBasicUsername, reloadBasicPassword)
 		}
 
 		rel := reloader.New(
@@ -227,12 +231,12 @@ func main() {
 	}
 }
 
-func createHTTPClient(timeout *time.Duration) http.Client {
-	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
+func createHTTPClient(timeout time.Duration, username *string, password *string) http.Client {
+	var transport = (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
-		Timeout:   *timeout, // How long should we wait to connect to Prometheus
-		KeepAlive: -1,       // Keep alive probe is unnecessary
+		Timeout:   timeout, // How long should we wait to connect to Prometheus
+		KeepAlive: -1,      // Keep alive probe is unnecessary
 	}).DialContext
 
 	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
@@ -242,9 +246,18 @@ func createHTTPClient(timeout *time.Duration) http.Client {
 		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
 
+	var rt http.RoundTripper
+	if username != nil && password != nil {
+		secretUsername := config.NewInlineSecret(*username)
+		secretPassword := config.NewInlineSecret(*password)
+		rt = config.NewBasicAuthRoundTripper(secretUsername, secretPassword, transport)
+	} else {
+		rt = transport
+	}
+
 	return http.Client{
-		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
-		Transport: transport,
+		Timeout:   timeout, // This timeout includes DNS + connect + sending request + reading response
+		Transport: rt,
 	}
 }
 
