@@ -918,11 +918,14 @@ type DigitalOceanSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config
 // +k8s:openapi-gen=true
 type KumaSDConfig struct {
+	// It requires Prometheus >= v2.50.0
 	// Address of the Kuma Control Plane's MADS xDS server.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
 	Server string `json:"server"`
 	// Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 	// The time to wait between polling update requests.
