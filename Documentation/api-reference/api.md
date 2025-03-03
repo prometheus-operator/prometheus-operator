@@ -26774,7 +26774,8 @@ string
 </em>
 </td>
 <td>
-<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.</p>
+<p>It requires Prometheus &gt;= v2.50.0
+Address of the Kuma Control Plane&rsquo;s MADS xDS server.</p>
 </td>
 </tr>
 <tr>
