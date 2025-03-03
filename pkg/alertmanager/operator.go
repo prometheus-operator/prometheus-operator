@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -562,6 +563,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
+	}
+
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
 	if am.Spec.ServiceName != nil {
 		selectorLabels := makeSelectorLabels(am.Name)
@@ -751,6 +756,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations map[string]string
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
+		ALertmanagerClusterTLS  string
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
@@ -1684,6 +1690,43 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	clusterTLSConfig, err := clustertlsconfig.New(
+		clusterTLSConfigDir,
+		clusterTLSConfigSecretName(a.Name),
+		a.Spec.ClusterTLS,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize the configuration: %w", err)
+	}
+
+	data, err := clusterTLSConfig.ClusterTLSConfiguration()
+	if err != nil {
+		return fmt.Errorf("failed to generate the configuration: %w", err)
+	}
+
+	s := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterTLSConfig.GetSecretName(),
+		},
+		Data: map[string][]byte{
+			clustertlsconfig.ConfigFileKey: data,
+		},
+	}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(a),
+	)
+
+	if err = k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
+		return fmt.Errorf("failed to reconcile secret: %w", err)
 	}
 
 	return nil
