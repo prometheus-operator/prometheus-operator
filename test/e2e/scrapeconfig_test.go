@@ -627,6 +627,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
 	})
+	t.Run("KumaSDConfig", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, KumaSDTestCases)
+	})
 	t.Run("ScalewaySD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
 	})
@@ -3200,7 +3203,164 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 }
-
+var KumaSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid KumaSDConfig - Required Fields",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://kuma-control-plane.example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Server field unspecified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server field too short",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server with valid HTTPS URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "https://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Server with valid HTTP URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Server with invalid schema",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "ftp://example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server with invalid format",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ClientID unspecified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ClientID specified and valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To("valid-client-id"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ClientID empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid RefreshInterval Format",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://kuma-control-plane.example.com",
+					ClientID:        ptr.To("default"),
+					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "RefreshInterval unspecified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
 var ScalewaySDTestCases = []scrapeCRDTestCase{
 	{
 		name: "Valid Project ID",
