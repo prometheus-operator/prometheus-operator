@@ -3209,6 +3209,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 }
+
 var KumaSDTestCases = []scrapeCRDTestCase{
 	{
 		name: "Valid KumaSDConfig - Required Fields",
@@ -3315,17 +3316,6 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 				{
 					Server:   "http://example.com",
 					ClientID: ptr.To(""),
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Invalid URL",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "http://example.com",
 				},
 			},
 		},
