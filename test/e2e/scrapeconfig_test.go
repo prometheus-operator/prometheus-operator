@@ -3330,11 +3330,11 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 				{
 					Server:          "http://kuma-control-plane.example.com",
 					ClientID:        ptr.To("default"),
-					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+					RefreshInterval: ptr.To(monitoringv1.Duration("30d")),
 				},
 			},
 		},
-		expectedError: true,
+		expectedError: false,
 	},
 	{
 		name: "RefreshInterval unspecified",
