@@ -930,7 +930,6 @@ type DigitalOceanSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config
 // +k8s:openapi-gen=true
 type KumaSDConfig struct {
-	// It requires Prometheus >= v2.50.0
 	// Address of the Kuma Control Plane's MADS xDS server.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
