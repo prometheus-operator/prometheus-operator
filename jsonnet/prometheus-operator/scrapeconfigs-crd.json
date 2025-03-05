@@ -7624,7 +7624,7 @@
                           "type": "string"
                         },
                         "server": {
-                          "description": "It requires Prometheus >= v2.50.0\nAddress of the Kuma Control Plane's MADS xDS server.",
+                          "description": "Address of the Kuma Control Plane's MADS xDS server.",
                           "minLength": 1,
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
