@@ -498,6 +498,14 @@ func (b *PrometheusSpecApplyConfiguration) WithListenLocal(value bool) *Promethe
 	return b
 }
 
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithEnableServiceLinks(value bool) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.EnableServiceLinks = &value
+	return b
+}
+
 // WithContainers adds the given value to the Containers field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Containers field.

@@ -287,6 +287,7 @@ func makeStatefulSetSpec(
 		TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 		HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 		HostNetwork:                   cpf.HostNetwork,
+		EnableServiceLinks:            cpf.EnableServiceLinks,
 	}
 
 	if cpf.HostNetwork {

@@ -515,6 +515,18 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceName</code><br/>
 <em>
 string
@@ -2440,6 +2452,18 @@ instead of the Pod IP&rsquo;s address.</p>
 </tr>
 <tr>
 <td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -4257,6 +4281,18 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>priorityClassName</code><br/>
 <em>
 string
@@ -5979,6 +6015,18 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceName</code><br/>
 <em>
 string
@@ -7665,6 +7713,18 @@ bool
 <td>
 <p>When true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
 </td>
 </tr>
 <tr>
@@ -12566,6 +12626,18 @@ instead of the Pod IP&rsquo;s address.</p>
 </tr>
 <tr>
 <td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -16830,6 +16902,18 @@ PodDNSConfig
 </tr>
 <tr>
 <td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>priorityClassName</code><br/>
 <em>
 string
@@ -19488,6 +19572,18 @@ bool
 <td>
 <p>When true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
 </td>
 </tr>
 <tr>
@@ -27688,6 +27784,18 @@ bool
 <td>
 <p>When true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableServiceLinks</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
 </td>
 </tr>
 <tr>

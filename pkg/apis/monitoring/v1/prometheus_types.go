@@ -464,6 +464,10 @@ type CommonPrometheusFields struct {
 	// instead of the Pod IP's address.
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+
 	// Containers allows injecting additional containers or modifying operator
 	// generated containers. This can be used to allow adding an authentication
 	// proxy to the Pods or to change the behavior of an operator generated

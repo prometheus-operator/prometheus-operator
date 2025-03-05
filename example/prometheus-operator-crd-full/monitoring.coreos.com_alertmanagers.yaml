@@ -3602,6 +3602,10 @@ spec:
                 items:
                   type: string
                 type: array
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               externalUrl:
                 description: |-
                   The external URL the Alertmanager instances will be available under. This is
