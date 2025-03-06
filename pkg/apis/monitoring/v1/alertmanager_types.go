@@ -302,6 +302,12 @@ type AlertmanagerSpec struct {
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
+	// The value must be greater than 0 and less than or equal to 1.
+	//
+	// It requires Alertmanager >= 0.28.0.
+	// +optional
+	MemlimitRatio string `json:"memlimitRatio,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {

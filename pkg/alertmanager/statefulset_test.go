@@ -1283,6 +1283,62 @@ func TestEnableFeatures(t *testing.T) {
 	}
 }
 
+func TestValidateMemlimitRatio(t *testing.T) {
+	tt := []struct {
+		name          string
+		version       string
+		memlimitRatio string
+		expectedArgs  []string
+	}{
+		{
+			name:          "MemlimitRatioZero",
+			version:       "v0.28.0",
+			memlimitRatio: "0.0",
+			expectedArgs:  []string{},
+		},
+		{
+			name:          "VersionBelowMemlimitRatioIgnored",
+			version:       "v0.27.0",
+			memlimitRatio: "0.7",
+			expectedArgs:  []string{},
+		},
+		{
+			name:          "VersionAboveMemlimitRatioSet",
+			version:       "v0.28.0",
+			memlimitRatio: "0.7",
+			expectedArgs:  []string{"--auto-gomemlimit.ratio=0.7"},
+		},
+		{
+			name:          "VersionAboveMemlimitRatioInvalid",
+			version:       "v0.28.0",
+			memlimitRatio: "invalid",
+			expectedArgs:  []string{"--auto-gomemlimit.ratio=0.9"},
+		},
+	}
+
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version:       test.version,
+					Replicas:      toPtr(int32(1)),
+					MemlimitRatio: test.memlimitRatio,
+				},
+			}, defaultTestConfig, &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			var actualArgs []string
+			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
+				if strings.HasPrefix(flag, "--auto-gomemlimit.ratio=") {
+					actualArgs = append(actualArgs, flag)
+				}
+			}
+
+			require.ElementsMatch(t, test.expectedArgs, actualArgs)
+		})
+	}
+}
+
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},

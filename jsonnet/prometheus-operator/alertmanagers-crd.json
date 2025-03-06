@@ -4909,6 +4909,10 @@
                     ],
                     "type": "string"
                   },
+                  "memlimitRatio": {
+                    "description": "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.\nThe value must be greater than 0 and less than or equal to 1.\n\nIt requires Alertmanager >= 0.28.0.",
+                    "type": "string"
+                  },
                   "minReadySeconds": {
                     "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\nDefaults to 0 (pod will be considered available as soon as it is ready)\nThis is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
                     "format": "int32",
