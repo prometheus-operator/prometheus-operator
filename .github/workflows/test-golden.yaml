@@ -1,0 +1,28 @@
+name: Promtool Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  promtool:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '${{ env.golang-version }}'
+          check-latest: true
+      - name: Install Promtool
+        run: |
+          wget https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-amd64.tar.gz
+          tar -xvf prometheus-3.2.1.linux-amd64.tar.gz
+          sudo mv prometheus-3.2.1.linux-amd64/promtool /usr/local/bin/
+          promtool --version
+          rm -rf prometheus-3.2.1.linux*
+      - name: Run Promtool Tests
+        run: go test -v -tags=promtool ./scripts/promtool_test.go
