@@ -19,6 +19,7 @@ import (
 	"log/slog"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -66,6 +67,24 @@ var (
 	minReplicas         int32 = 1
 	probeTimeoutSeconds int32 = 3
 )
+
+func validateMemlimitRatio(ratio string) float64 {
+	floatRatio, err := strconv.ParseFloat(ratio, 64)
+	if err != nil {
+		return 0.9
+	}
+	if floatRatio == 0.0 {
+		return 0.0
+	}
+
+	if floatRatio >= 1.0 {
+		return 1.0
+	} else if floatRatio <= 0.0 {
+		return 0.0
+	}
+
+	return floatRatio
+}
 
 func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
@@ -254,6 +273,13 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	if version.GTE(semver.MustParse("0.27.0")) && len(a.Spec.EnableFeatures) > 0 {
 		amArgs = append(amArgs, fmt.Sprintf("--enable-feature=%v", strings.Join(a.Spec.EnableFeatures[:], ",")))
+	}
+
+	if version.GTE(semver.MustParse("0.28.0")) {
+		mlRatio := validateMemlimitRatio(a.Spec.MemlimitRatio)
+		if mlRatio > 0.0 {
+			amArgs = append(amArgs, fmt.Sprintf("--auto-gomemlimit.ratio=%v", mlRatio))
+		}
 	}
 
 	webRoutePrefix := "/"
