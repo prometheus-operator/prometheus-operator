@@ -655,7 +655,7 @@ func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
 		p.Name,
 		ns,
 		monitoringv1alpha1.PrometheusAgentSpec{
-			Mode: ptr.To("DaemonSet"),
+			Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 		},
 	)
 	require.Error(t, err)
