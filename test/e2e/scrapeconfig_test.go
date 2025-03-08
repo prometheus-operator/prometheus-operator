@@ -3284,7 +3284,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+					RefreshInterval: ptr.To(monitoringv1.Duration("60m")),
 				},
 			},
 		},
