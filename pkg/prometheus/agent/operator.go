@@ -154,6 +154,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			ReloaderConfig:             c.ReloaderConfig,
 			PrometheusDefaultBaseImage: c.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     c.ThanosDefaultBaseImage,
+			EnableThanosHTTPPort:       c.EnableThanosHTTPPort,
 			Annotations:                c.Annotations,
 			Labels:                     c.Labels,
 		},

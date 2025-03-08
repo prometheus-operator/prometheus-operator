@@ -821,6 +821,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				Port:       10901,
 				TargetPort: intstr.FromString("grpc"),
 			})
+			if c.config.EnableThanosHTTPPort {
+				svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+					Name:       "metrics",
+					Port:       10902,
+					TargetPort: intstr.FromString("metrics"),
+				})
+			}
 		}
 
 		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {

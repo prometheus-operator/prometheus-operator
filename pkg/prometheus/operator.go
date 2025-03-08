@@ -42,6 +42,7 @@ type Config struct {
 	ReloaderConfig             operator.ContainerConfig
 	PrometheusDefaultBaseImage string
 	ThanosDefaultBaseImage     string
+	EnableThanosHTTPPort       bool
 	Annotations                operator.Map
 	Labels                     operator.Map
 }
