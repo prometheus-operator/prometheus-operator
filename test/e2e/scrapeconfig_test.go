@@ -3217,49 +3217,17 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Server field unspecified",
+		name: "Valid Server URL (HTTP/HTTPS)",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Server field too short",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "",
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Server with valid HTTPS URL",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "https://example.com",
-				},
+				{Server: "https://example.com"},
+				{Server: "http://example.com"},
 			},
 		},
 		expectedError: false,
 	},
 	{
-		name: "Server with valid HTTP URL",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "http://example.com",
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Server with invalid schema",
+		name: "Invalid Server schema",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
@@ -3270,7 +3238,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Server with invalid format",
+		name: "Invalid empty Server",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
@@ -3281,18 +3249,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "ClientID unspecified",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "http://example.com",
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "ClientID specified and valid",
+		name: "Valid ClientID specified",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
@@ -3304,7 +3261,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "ClientID empty",
+		name: "Invalid empty ClientID",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
@@ -3316,15 +3273,16 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Invalid empty URL",
+		name: "Valid RefreshInterval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server: "",
+					Server:          "http://example.com",
+					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
 				},
 			},
 		},
-		expectedError: true,
+		expectedError: false,
 	},
 	{
 		name: "Invalid RefreshInterval Format",
@@ -3337,18 +3295,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: false,
-	},
-	{
-		name: "RefreshInterval unspecified",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "http://example.com",
-				},
-			},
-		},
-		expectedError: false,
+		expectedError: true,
 	},
 }
 var ScalewaySDTestCases = []scrapeCRDTestCase{
