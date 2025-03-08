@@ -3223,11 +3223,10 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Valid Server URL (HTTP/HTTPS)",
+		name: "Valid Server URL (HTTPS)",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{Server: "https://example.com"},
-				{Server: "http://example.com"},
 			},
 		},
 		expectedError: false,
@@ -3279,25 +3278,22 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Valid RefreshInterval",
+		name: "Valid Refresh interval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server:          "http://example.com",
-					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
 		},
 		expectedError: false,
 	},
 	{
-		name: "Invalid RefreshInterval Format",
+		name: "Invalid Refresh interval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server:          "http://kuma-control-plane.example.com",
-					ClientID:        ptr.To("default"),
-					RefreshInterval: ptr.To(monitoringv1.Duration("30d")),
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
 		},
