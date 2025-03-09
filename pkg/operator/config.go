@@ -68,6 +68,9 @@ type Config struct {
 	// Event recorder factory.
 	EventRecorderFactory EventRecorderFactory
 
+	// Whether to Enable Thanos HTTP Port
+	EnableThanosHTTPPort bool
+
 	// Feature gates.
 	Gates *FeatureGates
 }
