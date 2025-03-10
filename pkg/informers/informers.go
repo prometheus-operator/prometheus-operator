@@ -170,7 +170,7 @@ func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selec
 }
 
 // Get invokes all wrapped informers and returns the first found runtime object.
-// It returns the first ocured error.
+// It returns the first occurred error.
 func (w *ForResource) Get(name string) (runtime.Object, error) {
 	var err error
 
