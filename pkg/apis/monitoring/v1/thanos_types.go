@@ -137,6 +137,10 @@ type ThanosRulerSpec struct {
 	// +optional
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 

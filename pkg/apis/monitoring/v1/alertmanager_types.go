@@ -193,6 +193,9 @@ type AlertmanagerSpec struct {
 	//
 	// +optional
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
 	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.

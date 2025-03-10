@@ -2256,6 +2256,10 @@
                     ],
                     "type": "string"
                   },
+                  "enableServiceLinks": {
+                    "description": "Indicates whether information about services should be injected into pod's environment variables",
+                    "type": "boolean"
+                  },
                   "enforcedNamespaceLabel": {
                     "description": "EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert\nand metric that is user created. The label value will always be the namespace of the object that is\nbeing created.",
                     "type": "string"

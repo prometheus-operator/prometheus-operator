@@ -2935,6 +2935,10 @@ spec:
 
                   It requires Prometheus >= v2.33.0.
                 type: boolean
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               enforcedBodySizeLimit:
                 description: |-
                   When defined, enforcedBodySizeLimit specifies a global limit on the size

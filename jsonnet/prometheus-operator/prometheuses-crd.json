@@ -3178,6 +3178,10 @@
                     "description": "Enable Prometheus to be used as a receiver for the Prometheus remote\nwrite protocol.\n\nWARNING: This is not considered an efficient way of ingesting samples.\nUse it with caution for specific low-volume use cases.\nIt is not suitable for replacing the ingestion via scraping and turning\nPrometheus into a push-based metrics collection system.\nFor more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver\n\nIt requires Prometheus >= v2.33.0.",
                     "type": "boolean"
                   },
+                  "enableServiceLinks": {
+                    "description": "Indicates whether information about services should be injected into pod's environment variables",
+                    "type": "boolean"
+                  },
                   "enforcedBodySizeLimit": {
                     "description": "When defined, enforcedBodySizeLimit specifies a global limit on the size\nof uncompressed response body that will be accepted by Prometheus.\nTargets responding with a body larger than this many bytes will cause\nthe scrape to fail.\n\nIt requires Prometheus >= v2.28.0.\n\nWhen both `enforcedBodySizeLimit` and `bodySizeLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus >= 2.45.0) or the enforcedBodySizeLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedBodySizeLimit` is greater than the `bodySizeLimit`, the `bodySizeLimit` will be set to `enforcedBodySizeLimit`.\n* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.\n* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",

@@ -748,6 +748,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				Affinity:                      a.Spec.Affinity,
 				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
+				EnableServiceLinks:            a.Spec.EnableServiceLinks,
 			},
 		},
 	}

@@ -13641,6 +13641,10 @@ spec:
                 items:
                   type: string
                 type: array
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               externalUrl:
                 description: |-
                   The external URL the Alertmanager instances will be available under. This is
@@ -24103,6 +24107,10 @@ spec:
                   For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
 
                   It requires Prometheus >= v2.33.0.
+                type: boolean
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
                 type: boolean
               enforcedBodySizeLimit:
                 description: |-
@@ -35693,6 +35701,10 @@ spec:
                   For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
 
                   It requires Prometheus >= v2.33.0.
+                type: boolean
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
                 type: boolean
               enforcedBodySizeLimit:
                 description: |-
@@ -61600,6 +61612,10 @@ spec:
                 - Default
                 - None
                 type: string
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               enforcedNamespaceLabel:
                 description: |-
                   EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
