@@ -833,6 +833,20 @@ that this behaviour may break at any time without notice.</p>
 <p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>memlimitRatio</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
+The value must be greater than 0 and less than or equal to 1.</p>
+<p>It requires Alertmanager &gt;= 0.28.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -6295,6 +6309,20 @@ Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
 <p>It requires Alertmanager &gt;= 0.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>memlimitRatio</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
+The value must be greater than 0 and less than or equal to 1.</p>
+<p>It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
 </tbody>
