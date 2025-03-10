@@ -1283,36 +1283,36 @@ func TestEnableFeatures(t *testing.T) {
 	}
 }
 
-func TestValidateMemlimitRatio(t *testing.T) {
+func TestValidateAdditionalArgs(t *testing.T) {
 	tt := []struct {
-		name          string
-		version       string
-		memlimitRatio string
-		expectedArgs  []string
+		name           string
+		version        string
+		additionalArgs string
+		expectedArgs   []string
 	}{
 		{
-			name:          "MemlimitRatioZero",
-			version:       "v0.28.0",
-			memlimitRatio: "0.0",
-			expectedArgs:  []string{},
+			name:           "additionalArgsZero",
+			version:        "v0.28.0",
+			additionalArgs: "0.0",
+			expectedArgs:   []string{},
 		},
 		{
-			name:          "VersionBelowMemlimitRatioIgnored",
-			version:       "v0.27.0",
-			memlimitRatio: "0.7",
-			expectedArgs:  []string{},
+			name:           "VersionBelowadditionalArgsIgnored",
+			version:        "v0.27.0",
+			additionalArgs: "0.7",
+			expectedArgs:   []string{},
 		},
 		{
-			name:          "VersionAboveMemlimitRatioSet",
-			version:       "v0.28.0",
-			memlimitRatio: "0.7",
-			expectedArgs:  []string{"--auto-gomemlimit.ratio=0.7"},
+			name:           "VersionAboveadditionalArgsSet",
+			version:        "v0.28.0",
+			additionalArgs: "0.7",
+			expectedArgs:   []string{"--auto-gomemlimit.ratio=0.7"},
 		},
 		{
-			name:          "VersionAboveMemlimitRatioInvalid",
-			version:       "v0.28.0",
-			memlimitRatio: "invalid",
-			expectedArgs:  []string{"--auto-gomemlimit.ratio=0.9"},
+			name:           "VersionAboveadditionalArgsInvalid",
+			version:        "v0.28.0",
+			additionalArgs: "invalid",
+			expectedArgs:   []string{"--auto-gomemlimit.ratio=0.9"},
 		},
 	}
 
@@ -1320,9 +1320,9 @@ func TestValidateMemlimitRatio(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
-					Version:       test.version,
-					Replicas:      toPtr(int32(1)),
-					MemlimitRatio: test.memlimitRatio,
+					Version:        test.version,
+					Replicas:       toPtr(int32(1)),
+					AdditionalArgs: test.additionalArgs,
 				},
 			}, defaultTestConfig, &operator.ShardedSecret{})
 			require.NoError(t, err)
