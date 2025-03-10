@@ -81,7 +81,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
-	MemlimitRatio                        *string                                                 `json:"memlimitRatio,omitempty"`
+	AdditionalArgs                       *string                                                 `json:"additionalArgs,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -563,10 +563,10 @@ func (b *AlertmanagerSpecApplyConfiguration) WithEnableFeatures(values ...string
 	return b
 }
 
-// WithMemlimitRatio sets the MemlimitRatio field in the declarative configuration to the given value
+// WithAdditionalArgs sets the AdditionalArgs field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the MemlimitRatio field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithMemlimitRatio(value string) *AlertmanagerSpecApplyConfiguration {
-	b.MemlimitRatio = &value
+// If called multiple times, the AdditionalArgs field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithAdditionalArgs(value string) *AlertmanagerSpecApplyConfiguration {
+	b.AdditionalArgs = &value
 	return b
 }

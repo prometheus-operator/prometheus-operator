@@ -276,7 +276,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if version.GTE(semver.MustParse("0.28.0")) {
-		mlRatio := validateMemlimitRatio(a.Spec.MemlimitRatio)
+		mlRatio := validateMemlimitRatio(a.Spec.AdditionalArgs)
 		if mlRatio > 0.0 {
 			amArgs = append(amArgs, fmt.Sprintf("--auto-gomemlimit.ratio=%v", mlRatio))
 		}

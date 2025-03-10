@@ -862,14 +862,16 @@ that this behaviour may break at any time without notice.</p>
 </tr>
 <tr>
 <td>
-<code>memlimitRatio</code><br/>
+<code>additionalArgs</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
+<p>AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures
+For instance &ndash;auto-gomemlimit.ratio
+The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
 The value must be greater than 0 and less than or equal to 1.</p>
 <p>It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
@@ -6391,14 +6393,16 @@ that this behaviour may break at any time without notice.</p>
 </tr>
 <tr>
 <td>
-<code>memlimitRatio</code><br/>
+<code>additionalArgs</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
+<p>AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures
+For instance &ndash;auto-gomemlimit.ratio
+The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
 The value must be greater than 0 and less than or equal to 1.</p>
 <p>It requires Alertmanager &gt;= 0.28.0.</p>
 </td>

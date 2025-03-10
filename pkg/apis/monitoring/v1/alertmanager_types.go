@@ -302,12 +302,14 @@ type AlertmanagerSpec struct {
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures
+	// For instance --auto-gomemlimit.ratio
 	// The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
 	// The value must be greater than 0 and less than or equal to 1.
 	//
 	// It requires Alertmanager >= 0.28.0.
 	// +optional
-	MemlimitRatio string `json:"memlimitRatio,omitempty"`
+	AdditionalArgs string `json:"additionalArgs,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {

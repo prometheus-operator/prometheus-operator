@@ -86,6 +86,10 @@
               "spec": {
                 "description": "Specification of the desired behavior of the Alertmanager cluster. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
+                  "additionalArgs": {
+                    "description": "AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures\nFor instance --auto-gomemlimit.ratio\nThe ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.\nThe value must be greater than 0 and less than or equal to 1.\n\nIt requires Alertmanager >= 0.28.0.",
+                    "type": "string"
+                  },
                   "additionalPeers": {
                     "description": "AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.",
                     "items": {
@@ -4907,10 +4911,6 @@
                       "warn",
                       "error"
                     ],
-                    "type": "string"
-                  },
-                  "memlimitRatio": {
-                    "description": "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.\nThe value must be greater than 0 and less than or equal to 1.\n\nIt requires Alertmanager >= 0.28.0.",
                     "type": "string"
                   },
                   "minReadySeconds": {
