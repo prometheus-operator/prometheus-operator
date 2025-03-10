@@ -37,6 +37,10 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
+var (
+	certsDir = "../../test/e2e/tls_certs/"
+)
+
 func newLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn}))
 }
@@ -778,13 +782,13 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 }
 
 func TestSelectServiceMonitors(t *testing.T) {
-	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	ca, err := os.ReadFile(certsDir + "ca.crt")
 	require.NoError(t, err)
 
-	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	cert, err := os.ReadFile(certsDir + "client.crt")
 	require.NoError(t, err)
 
-	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	key, err := os.ReadFile(certsDir + "client.key")
 	require.NoError(t, err)
 
 	for _, tc := range []struct {
@@ -1327,13 +1331,13 @@ func TestSelectPodMonitors(t *testing.T) {
 }
 
 func TestSelectScrapeConfigs(t *testing.T) {
-	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	ca, err := os.ReadFile(certsDir + "ca.crt")
 	require.NoError(t, err)
 
-	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	cert, err := os.ReadFile(certsDir + "client.crt")
 	require.NoError(t, err)
 
-	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	key, err := os.ReadFile(certsDir + "client.key")
 	require.NoError(t, err)
 	for _, tc := range []struct {
 		scenario    string
