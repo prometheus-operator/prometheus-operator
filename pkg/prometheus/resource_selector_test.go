@@ -1579,6 +1579,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			// TODO: https://github.com/prometheus/prometheus/pull/15851
 			scenario: "staticConfig with invalid Labels",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
@@ -1587,7 +1588,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			selected: true,
 		},
 		{
 			scenario: "HTTP SD config with valid proxy settings",
