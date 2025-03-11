@@ -56,6 +56,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
+	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
@@ -345,6 +346,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithDNSPolicy(value monitoringv1.DN
 // If called multiple times, the DNSConfig field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithDNSConfig(value *PodDNSConfigApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
 	b.DNSConfig = value
+	return b
+}
+
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithEnableServiceLinks(value bool) *AlertmanagerSpecApplyConfiguration {
+	b.EnableServiceLinks = &value
 	return b
 }
 

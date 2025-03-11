@@ -76,6 +76,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
 	AdditionalScrapeConfigs              *corev1.SecretKeySelector                               `json:"additionalScrapeConfigs,omitempty"`
@@ -563,6 +564,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithDNSConfig(value *PodDNSCo
 // If called multiple times, the ListenLocal field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithListenLocal(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.ListenLocal = &value
+	return b
+}
+
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableServiceLinks(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.EnableServiceLinks = &value
 	return b
 }
 

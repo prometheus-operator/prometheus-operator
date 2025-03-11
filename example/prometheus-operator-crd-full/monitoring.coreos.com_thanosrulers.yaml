@@ -2607,6 +2607,10 @@ spec:
                 - Default
                 - None
                 type: string
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               enforcedNamespaceLabel:
                 description: |-
                   EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert

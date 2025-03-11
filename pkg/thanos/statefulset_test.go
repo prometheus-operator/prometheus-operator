@@ -1015,3 +1015,32 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		},
 	}, sset.Spec.Template.Spec.DNSConfig, "expected DNS configuration to match")
 }
+
+func TestStatefulSetenableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks         *bool
+		expectedEnableServiceLinks *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec: monitoringv1.ThanosRulerSpec{
+				QueryEndpoints:     emptyQueryEndpoints,
+				EnableServiceLinks: test.enableServiceLinks,
+			},
+		}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+		require.NoError(t, err)
+
+		if test.expectedEnableServiceLinks != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be non-nil")
+			require.Equal(t, *test.expectedEnableServiceLinks, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be nil")
+		}
+	}
+}

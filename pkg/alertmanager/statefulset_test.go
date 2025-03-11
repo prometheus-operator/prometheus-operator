@@ -1336,3 +1336,29 @@ func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenScaled to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled)
 	}
 }
+
+func TestStatefulSetEnableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks    *bool
+		expectedEnableService *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableService: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableService: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableService: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec:       monitoringv1.AlertmanagerSpec{EnableServiceLinks: test.expectedEnableService},
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		require.NoError(t, err)
+
+		if test.expectedEnableService != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks not nil")
+			require.Equal(t, *test.expectedEnableService, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks is nil")
+		}
+	}
+}
