@@ -779,6 +779,7 @@
                           },
                           message: {
                             description: "The template of the message's body.",
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -787,6 +788,7 @@
                           },
                           title: {
                             description: "The template of the message's title.",
+                            minLength: 1,
                             type: 'string',
                           },
                           username: {
