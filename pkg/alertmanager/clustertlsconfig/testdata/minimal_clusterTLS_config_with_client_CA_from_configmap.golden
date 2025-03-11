@@ -1,0 +1,9 @@
+tls_server_config:
+  key_file: /cluster_tls_certs_path_prefix/server_tls/secret/test-secret-key/tls.key
+  cert_file: /cluster_tls_certs_path_prefix/server_tls/configmap/test-configmap-cert/tls.crt
+  client_ca_file: /cluster_tls_certs_path_prefix/server_tls/configmap/test-configmap-ca/tls.client_ca
+tls_client_config:
+  key_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-key/tls.key
+  cert_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-cert/tls.crt
+  ca_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-ca/tls.ca
+  insecure_skip_verify: true

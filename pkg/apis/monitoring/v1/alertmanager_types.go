@@ -193,6 +193,17 @@ type AlertmanagerSpec struct {
 	//
 	// +optional
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+	// When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ServiceName *string `json:"serviceName,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
@@ -265,6 +276,11 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
+	// Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+	//
+	// It requires Alertmanager >= 0.24.0.
+	//+optional
+	ClusterTLS *ClusterTLSConfig `json:"clusterTLS,omitempty"`
 	// alertmanagerConfiguration specifies the configuration of Alertmanager.
 	//
 	// If defined, it takes precedence over the `configSecret` field.
@@ -503,4 +519,15 @@ type AlertmanagerList struct {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ClusterTLSConfig defines the mutual TLS configuration for the Alertmanager cluster TLS protocol.
+// +k8s:openapi-gen=true
+type ClusterTLSConfig struct {
+	// Server-side configuration for mutual TLS.
+	// +required
+	ServerTLS WebTLSConfig `json:"server"`
+	// Client-side configuration for mutual TLS.
+	// +required
+	ClientTLS SafeTLSConfig `json:"client"`
 }

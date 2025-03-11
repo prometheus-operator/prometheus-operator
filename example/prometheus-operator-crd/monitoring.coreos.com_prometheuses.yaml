@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -3691,6 +3691,10 @@ spec:
                   For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
 
                   It requires Prometheus >= v2.33.0.
+                type: boolean
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
                 type: boolean
               enforcedBodySizeLimit:
                 description: |-
@@ -9031,6 +9035,27 @@ spec:
                 description: 'Deprecated: use ''spec.image'' instead. The image''s
                   digest can be specified as part of the image name.'
                 type: string
+              shardRetentionPolicy:
+                description: |-
+                  ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+                  (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+
+                  The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+                  however, the feature is not yet fully implemented in this PR. The limitation being:
+                  * Retention duration is not settable, for now, shards are retained forever.
+                properties:
+                  whenScaled:
+                    description: |-
+                      Defines the retention policy when the Prometheus shards are scaled down.
+                      * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+                      * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+
+                      If not defined, the operator assumes the `Delete` value.
+                    enum:
+                    - Retain
+                    - Delete
+                    type: string
+                type: object
               shards:
                 description: |-
                   Number of shards to distribute the scraped targets onto.

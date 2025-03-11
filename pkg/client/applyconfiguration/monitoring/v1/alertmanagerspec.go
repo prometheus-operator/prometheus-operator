@@ -56,6 +56,8 @@ type AlertmanagerSpecApplyConfiguration struct {
 	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
+	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
+	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
@@ -75,6 +77,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
+	ClusterTLS                           *ClusterTLSConfigApplyConfiguration                     `json:"clusterTLS,omitempty"`
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
@@ -346,6 +349,22 @@ func (b *AlertmanagerSpecApplyConfiguration) WithDNSConfig(value *PodDNSConfigAp
 	return b
 }
 
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithEnableServiceLinks(value bool) *AlertmanagerSpecApplyConfiguration {
+	b.EnableServiceLinks = &value
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithServiceName(value string) *AlertmanagerSpecApplyConfiguration {
+	b.ServiceName = &value
+	return b
+}
+
 // WithServiceAccountName sets the ServiceAccountName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceAccountName field is set to the value of the last call.
@@ -506,6 +525,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithHostAliases(values ...*HostAlia
 // If called multiple times, the Web field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithWeb(value *AlertmanagerWebSpecApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
 	b.Web = value
+	return b
+}
+
+// WithClusterTLS sets the ClusterTLS field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ClusterTLS field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithClusterTLS(value *ClusterTLSConfigApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.ClusterTLS = value
 	return b
 }
 

@@ -37,6 +37,10 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
+var (
+	certsDir = "../../test/e2e/tls_certs/"
+)
+
 func newLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn}))
 }
@@ -778,13 +782,13 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 }
 
 func TestSelectServiceMonitors(t *testing.T) {
-	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	ca, err := os.ReadFile(certsDir + "ca.crt")
 	require.NoError(t, err)
 
-	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	cert, err := os.ReadFile(certsDir + "client.crt")
 	require.NoError(t, err)
 
-	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	key, err := os.ReadFile(certsDir + "client.key")
 	require.NoError(t, err)
 
 	for _, tc := range []struct {
@@ -1327,13 +1331,13 @@ func TestSelectPodMonitors(t *testing.T) {
 }
 
 func TestSelectScrapeConfigs(t *testing.T) {
-	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	ca, err := os.ReadFile(certsDir + "ca.crt")
 	require.NoError(t, err)
 
-	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	cert, err := os.ReadFile(certsDir + "client.crt")
 	require.NoError(t, err)
 
-	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	key, err := os.ReadFile(certsDir + "client.key")
 	require.NoError(t, err)
 	for _, tc := range []struct {
 		scenario    string
@@ -2747,7 +2751,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   "Instance",
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
 						Region: "RegionOne",
 						Password: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -2803,12 +2807,38 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   "hypervisor",
+						Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 						Region: "RegionTwo",
 					},
 				}
 			},
 			selected: true,
+		},
+		{
+			scenario: "OpenStack SD config loadbalancer role in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   monitoringv1alpha1.OpenStackRoleLoadBalancer,
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "3.1.0",
+		},
+		{
+			scenario: "OpenStack SD config loadbalancer role in supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   monitoringv1alpha1.OpenStackRoleLoadBalancer,
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    true,
+			promVersion: "3.2.0",
 		},
 		{
 			scenario: "DigitalOcean SD config with valid TLS Config",
@@ -4171,7 +4201,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   "hypervisor",
+						Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 						Region: "RegionTwo",
 					},
 				}
@@ -4184,7 +4214,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   "hypervisor",
+						Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 						Region: "RegionTwo",
 					},
 				}

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -10042,7 +10042,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -12121,6 +12121,388 @@ spec:
                 description: Interval between pushpull attempts.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
+              clusterTLS:
+                description: |-
+                  Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+
+                  It requires Alertmanager >= 0.24.0.
+                properties:
+                  client:
+                    description: Client-side configuration for mutual TLS.
+                    properties:
+                      ca:
+                        description: Certificate authority used when verifying server
+                          certificates.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      cert:
+                        description: Client certificate to present when doing client-authentication.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      insecureSkipVerify:
+                        description: Disable target certificate validation.
+                        type: boolean
+                      keySecret:
+                        description: Secret containing the client key file for the
+                          targets.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      maxVersion:
+                        description: |-
+                          Maximum acceptable TLS version.
+
+                          It requires Prometheus >= v2.41.0.
+                        enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                        type: string
+                      minVersion:
+                        description: |-
+                          Minimum acceptable TLS version.
+
+                          It requires Prometheus >= v2.35.0.
+                        enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                        type: string
+                      serverName:
+                        description: Used to verify the hostname for the targets.
+                        type: string
+                    type: object
+                  server:
+                    description: Server-side configuration for mutual TLS.
+                    properties:
+                      cert:
+                        description: |-
+                          Secret or ConfigMap containing the TLS certificate for the web server.
+
+                          Either `keySecret` or `keyFile` must be defined.
+
+                          It is mutually exclusive with `certFile`.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      certFile:
+                        description: |-
+                          Path to the TLS certificate file in the container for the web server.
+
+                          Either `keySecret` or `keyFile` must be defined.
+
+                          It is mutually exclusive with `cert`.
+                        type: string
+                      cipherSuites:
+                        description: |-
+                          List of supported cipher suites for TLS versions up to TLS 1.2.
+
+                          If not defined, the Go default cipher suites are used.
+                          Available cipher suites are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#pkg-constants
+                        items:
+                          type: string
+                        type: array
+                      client_ca:
+                        description: |-
+                          Secret or ConfigMap containing the CA certificate for client certificate
+                          authentication to the server.
+
+                          It is mutually exclusive with `clientCAFile`.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      clientAuthType:
+                        description: |-
+                          The server policy for client TLS authentication.
+
+                          For more detail on clientAuth options:
+                          https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        type: string
+                      clientCAFile:
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to
+                          the server.
+
+                          It is mutually exclusive with `client_ca`.
+                        type: string
+                      curvePreferences:
+                        description: |-
+                          Elliptic curves that will be used in an ECDHE handshake, in preference
+                          order.
+
+                          Available curves are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#CurveID
+                        items:
+                          type: string
+                        type: array
+                      keyFile:
+                        description: |-
+                          Path to the TLS private key file in the container for the web server.
+
+                          If defined, either `cert` or `certFile` must be defined.
+
+                          It is mutually exclusive with `keySecret`.
+                        type: string
+                      keySecret:
+                        description: |-
+                          Secret containing the TLS private key for the web server.
+
+                          Either `cert` or `certFile` must be defined.
+
+                          It is mutually exclusive with `keyFile`.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      maxVersion:
+                        description: Maximum TLS version that is acceptable.
+                        type: string
+                      minVersion:
+                        description: Minimum TLS version that is acceptable.
+                        type: string
+                      preferServerCipherSuites:
+                        description: |-
+                          Controls whether the server selects the client's most preferred cipher
+                          suite, or the server's most preferred cipher suite.
+
+                          If true then the server's preference, as expressed in
+                          the order of elements in cipherSuites, is used.
+                        type: boolean
+                    type: object
+                required:
+                - client
+                - server
+                type: object
               configMaps:
                 description: |-
                   ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
@@ -13641,6 +14023,10 @@ spec:
                 items:
                   type: string
                 type: array
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               externalUrl:
                 description: |-
                   The external URL the Alertmanager instances will be available under. This is
@@ -15585,6 +15971,15 @@ spec:
                 description: |-
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Prometheus Pods.
+                type: string
+              serviceName:
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+                  If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+                  When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
                 type: string
               sha:
                 description: |-
@@ -18780,7 +19175,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -19988,7 +20383,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -21163,7 +21558,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -24094,6 +24489,10 @@ spec:
                   For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
 
                   It requires Prometheus >= v2.33.0.
+                type: boolean
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
                 type: boolean
               enforcedBodySizeLimit:
                 description: |-
@@ -31997,7 +32396,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -35684,6 +36083,10 @@ spec:
                   For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
 
                   It requires Prometheus >= v2.33.0.
+                type: boolean
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
                 type: boolean
               enforcedBodySizeLimit:
                 description: |-
@@ -41024,6 +41427,27 @@ spec:
                 description: 'Deprecated: use ''spec.image'' instead. The image''s
                   digest can be specified as part of the image name.'
                 type: string
+              shardRetentionPolicy:
+                description: |-
+                  ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+                  (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+
+                  The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+                  however, the feature is not yet fully implemented in this PR. The limitation being:
+                  * Retention duration is not settable, for now, shards are retained forever.
+                properties:
+                  whenScaled:
+                    description: |-
+                      Defines the retention policy when the Prometheus shards are scaled down.
+                      * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+                      * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+
+                      If not defined, the operator assumes the `Delete` value.
+                    enum:
+                    - Retain
+                    - Delete
+                    type: string
+                type: object
               shards:
                 description: |-
                   Number of shards to distribute the scraped targets onto.
@@ -45061,7 +45485,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -45221,7 +45645,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -56052,12 +56476,14 @@ spec:
                       minLength: 1
                       type: string
                     role:
-                      description: The OpenStack role of entities that should be discovered.
+                      description: |-
+                        The OpenStack role of entities that should be discovered.
+
+                        Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
                       enum:
                       - Instance
-                      - instance
                       - Hypervisor
-                      - hypervisor
+                      - LoadBalancer
                       type: string
                     tlsConfig:
                       description: TLS configuration applying to the target HTTP endpoint.
@@ -57734,7 +58160,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -58964,7 +59390,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.0
+    operator.prometheus.io/version: 0.80.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -61568,6 +61994,10 @@ spec:
                 - Default
                 - None
                 type: string
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               enforcedNamespaceLabel:
                 description: |-
                   EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
@@ -63900,6 +64330,15 @@ spec:
                 description: |-
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Thanos Ruler Pods.
+                type: string
+              serviceName:
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
+                  If empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.
+                  When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
                 type: string
               storage:
                 description: Storage spec to specify how storage shall be used.
@@ -67105,7 +67544,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -67122,7 +67561,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -67230,7 +67669,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -67246,19 +67685,19 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.80.0
+        app.kubernetes.io/version: 0.80.1
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.80.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.80.1
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.80.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.80.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -67292,7 +67731,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
   namespace: default
 ---
@@ -67302,7 +67741,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.0
+    app.kubernetes.io/version: 0.80.1
   name: prometheus-operator
   namespace: default
 spec:

@@ -98,6 +98,10 @@ func DefaultConfig(cpu, memory string) Config {
 				description: "Enables the zone aware sharding for Prometheus",
 				enabled:     false,
 			},
+			PrometheusShardRetentionPolicyFeature: FeatureGate{
+				description: "Enables shard retention policy for Prometheus",
+				enabled:     false,
+			},
 		},
 	}
 }

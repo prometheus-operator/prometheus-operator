@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.17.2",
-      "operator.prometheus.io/version": "0.80.0"
+      "operator.prometheus.io/version": "0.80.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -10249,12 +10249,11 @@
                           "type": "string"
                         },
                         "role": {
-                          "description": "The OpenStack role of entities that should be discovered.",
+                          "description": "The OpenStack role of entities that should be discovered.\n\nNote: The `LoadBalancer` role requires Prometheus >= v3.2.0.",
                           "enum": [
                             "Instance",
-                            "instance",
                             "Hypervisor",
-                            "hypervisor"
+                            "LoadBalancer"
                           ],
                           "type": "string"
                         },

@@ -78,10 +78,11 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
+	tls := c.tlsConfig
 
 	if c.tlsConfig != nil {
-		tlsRefs := newTLSReferences(c.mountingDir, *c.tlsConfig)
-		tlsVolumes, tlsMounts, err := tlsRefs.getMountParameters()
+		tlsRefs := NewTLSReferences(c.mountingDir, tls.KeySecret, tls.Cert, tls.ClientCA)
+		tlsVolumes, tlsMounts, err := tlsRefs.GetMountParameters(volumePrefix)
 		if err != nil {
 			return monitoringv1.Argument{}, nil, nil, err
 		}
@@ -130,20 +131,20 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	tlsServerConfig := yaml.MapSlice{}
-	tlsRefs := newTLSReferences(c.mountingDir, *c.tlsConfig)
+	tlsRefs := NewTLSReferences(c.mountingDir, tls.KeySecret, tls.Cert, tls.ClientCA)
 
 	switch {
 	case ptr.Deref(tls.CertFile, "") != "":
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: *tls.CertFile})
-	case tlsRefs.getCertMountPath() != "":
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: filepath.Join(tlsRefs.getCertMountPath(), tlsRefs.getCertFilename())})
+	case tlsRefs.GetCertMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: filepath.Join(tlsRefs.GetCertMountPath(), tlsRefs.GetCertFilename())})
 	}
 
 	switch {
 	case ptr.Deref(tls.KeyFile, "") != "":
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: *tls.KeyFile})
-	case tlsRefs.getKeyMountPath() != "":
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: filepath.Join(tlsRefs.getKeyMountPath(), tlsRefs.getKeyFilename())})
+	case tlsRefs.GetKeyMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: filepath.Join(tlsRefs.GetKeyMountPath(), tlsRefs.GetKeyFilename())})
 	}
 
 	if ptr.Deref(tls.ClientAuthType, "") != "" {
@@ -156,8 +157,8 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	switch {
 	case ptr.Deref(tls.ClientCAFile, "") != "":
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: *tls.ClientCAFile})
-	case tlsRefs.getCAMountPath() != "":
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: filepath.Join(tlsRefs.getCAMountPath(), tlsRefs.getCAFilename())})
+	case tlsRefs.GetCAMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: filepath.Join(tlsRefs.GetCAMountPath(), tlsRefs.GetCAFilename())})
 	}
 
 	if ptr.Deref(tls.MinVersion, "") != "" {

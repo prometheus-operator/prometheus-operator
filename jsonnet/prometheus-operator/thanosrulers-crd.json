@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.17.2",
-      "operator.prometheus.io/version": "0.80.0"
+      "operator.prometheus.io/version": "0.80.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -2256,6 +2256,10 @@
                     ],
                     "type": "string"
                   },
+                  "enableServiceLinks": {
+                    "description": "Indicates whether information about services should be injected into pod's environment variables",
+                    "type": "boolean"
+                  },
                   "enforcedNamespaceLabel": {
                     "description": "EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert\nand metric that is user created. The label value will always be the namespace of the object that is\nbeing created.",
                     "type": "string"
@@ -4285,6 +4289,11 @@
                   },
                   "serviceAccountName": {
                     "description": "ServiceAccountName is the name of the ServiceAccount to use to run the\nThanos Ruler Pods.",
+                    "type": "string"
+                  },
+                  "serviceName": {
+                    "description": "The name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.\nWhen deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
+                    "minLength": 1,
                     "type": "string"
                   },
                   "storage": {

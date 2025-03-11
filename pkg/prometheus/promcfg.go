@@ -74,6 +74,7 @@ type ConfigGenerator struct {
 	defaultScrapeClassName     string
 	daemonSet                  bool
 	prometheusTopologySharding bool
+	inlineTLSConfig            bool
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -94,6 +95,12 @@ func WithDaemonSet() ConfigGeneratorOption {
 func WithPrometheusTopologySharding() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.prometheusTopologySharding = true
+	}
+}
+
+func WithInlineTLSConfig() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.inlineTLSConfig = true
 	}
 }
 
@@ -216,6 +223,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
 		daemonSet:              cg.daemonSet,
+		inlineTLSConfig:        cg.inlineTLSConfig,
 	}
 }
 
@@ -236,6 +244,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 			daemonSet:              cg.daemonSet,
+			inlineTLSConfig:        cg.inlineTLSConfig,
 		}
 	}
 
@@ -259,6 +268,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 			daemonSet:              cg.daemonSet,
+			inlineTLSConfig:        cg.inlineTLSConfig,
 		}
 	}
 
@@ -756,15 +766,42 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	}
 
 	if safetls.CA.Secret != nil || safetls.CA.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
+		if cg.inlineTLSConfig {
+			b, err := store.GetSecretOrConfigMapKey(safetls.CA)
+			if err != nil {
+				cg.logger.Error("invalid CA reference", "err", err)
+			} else {
+				safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca", Value: b})
+			}
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
+		}
 	}
 
 	if safetls.Cert.Secret != nil || safetls.Cert.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
+		if cg.inlineTLSConfig {
+			b, err := store.GetSecretOrConfigMapKey(safetls.Cert)
+			if err != nil {
+				cg.logger.Error("invalid cert reference", "err", err)
+			} else {
+				safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert", Value: b})
+			}
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
+		}
 	}
 
 	if safetls.KeySecret != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
+		if cg.inlineTLSConfig {
+			b, err := store.GetSecretKey(*safetls.KeySecret)
+			if err != nil {
+				cg.logger.Error("invalid key reference", "err", err)
+			} else {
+				safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key", Value: string(b)})
+			}
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
+		}
 	}
 
 	if ptr.Deref(safetls.ServerName, "") != "" {
@@ -3724,7 +3761,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
-					Value: strings.ToLower(config.Role),
+					Value: string(config.Role),
 				},
 			}
 

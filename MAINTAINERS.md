@@ -13,6 +13,7 @@
 | Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                       | Sony Interactive Entertainment |
 | Jayapriya Pai     | slashpai9@gmail.com       | `@jp`                | [@slashpai](https://github.com/slashpai)             | Red Hat                        |
 | Nicolas Takashi   | nicolas.tcs@hotmail.com   | `@ntakashi`          | [@nicolastakashi](https://github.com/nicolastakashi) | Coralogix                      |
+| M Viswanath Sai   | viswanathsai021@gmail.com | `@mviswanathsai`     | [@mviswanathsai](https://github.com/mviswanathsai)   | Student, IIT(BHU)              |
 
 Please reach any of the maintainers on slack (#prometheus-operator on https://kubernetes.slack.com) or email if you want to help.
 
@@ -26,6 +27,7 @@ Full list of triage people is displayed below:
 |-----------------|--------------------|--------------------------------------------------------|-----------------|
 | Noah Kantrowitz | `@coderanger`      | [@coderanger](https://github.com/coderanger)           | Geomagical/IKEA |
 | João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
+| Hélia Barroso   | `@Hélia Barroso`   | [@heliapb](https://github.com/heliapb)                 | Five9           |
 
 ## Emeritus maintainers
 
