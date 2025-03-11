@@ -273,6 +273,11 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
+	// Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+	//
+	// It requires Alertmanager >= 0.24.0.
+	//+optional
+	ClusterTLS *ClusterTLSConfig `json:"clusterTLS,omitempty"`
 	// alertmanagerConfiguration specifies the configuration of Alertmanager.
 	//
 	// If defined, it takes precedence over the `configSecret` field.
@@ -511,4 +516,15 @@ type AlertmanagerList struct {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ClusterTLSConfig defines the mutual TLS configuration for the Alertmanager cluster TLS protocol.
+// +k8s:openapi-gen=true
+type ClusterTLSConfig struct {
+	// Server-side configuration for mutual TLS.
+	// +required
+	ServerTLS WebTLSConfig `json:"server"`
+	// Client-side configuration for mutual TLS.
+	// +required
+	ClientTLS SafeTLSConfig `json:"client"`
 }

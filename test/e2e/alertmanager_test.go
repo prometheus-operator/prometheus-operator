@@ -374,45 +374,118 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 }
 
 func testAMClusterGossipSilences(t *testing.T) {
-	// Don't run Alertmanager tests in parallel. See
-	// https://github.com/prometheus/alertmanager/issues/1835 for details.
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-
-	amClusterSize := 3
-	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
-
-	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
-	require.NoError(t, err)
-
-	for i := 0; i < amClusterSize; i++ {
-		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
-		require.NoError(t, err)
+	secretName := "cluster-tls-creds"
+	testcase := []struct {
+		name             string
+		clusterSize      int
+		clusterTLSConfig *monitoringv1.ClusterTLSConfig
+	}{
+		{
+			name: "alertmanager cluster without mTLS configured",
+		},
+		{
+			name: "alertmanager cluster with mTLS configured",
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
+					ClientCA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "ca.crt",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key.pem",
+					},
+					ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
+				},
+				ClientTLS: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "ca.crt",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key.pem",
+					},
+					// Since we cannot verify hostname in the cert.
+					InsecureSkipVerify: ptr.To(true),
+				},
+			},
+		},
 	}
+	for _, tc := range testcase {
+		t.Run(tc.name, func(t *testing.T) {
+			// Don't run Alertmanager tests in parallel. See
+			// https://github.com/prometheus/alertmanager/issues/1835 for details.
+			clusterSize := 3
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
-	require.NoError(t, err)
+			createMutualTLSSecret(t, secretName, ns)
 
-	for i := 0; i < amClusterSize; i++ {
-		err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-			silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
-			if err != nil {
-				return false, err
+			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(clusterSize))
+			alertmanager.Spec.ClusterTLS = tc.clusterTLSConfig
+
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+			require.NoError(t, err)
+
+			for i := 0; i < tc.clusterSize; i++ {
+				name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+				err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, tc.clusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
+				require.NoError(t, err)
 			}
 
-			if len(silences) != 1 {
-				return false, nil
-			}
+			silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
+			require.NoError(t, err)
 
-			if *silences[0].ID != silID {
-				return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
+			for i := 0; i < tc.clusterSize; i++ {
+				err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
+					silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
+					if err != nil {
+						return false, err
+					}
+
+					if len(silences) != 1 {
+						return false, nil
+					}
+
+					if *silences[0].ID != silID {
+						return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
+					}
+					return true, nil
+				})
+				require.NoError(t, err)
 			}
-			return true, nil
 		})
-		require.NoError(t, err)
 	}
 }
 

@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -49,6 +50,7 @@ const (
 	alertmanagerTemplatesVolumeName    = "notification-templates"
 	alertmanagerTemplatesDir           = "/etc/alertmanager/templates"
 	webConfigDir                       = "/etc/alertmanager/web_config"
+	clusterTLSConfigDir                = "/etc/alertmanager/cluster_tls_config"
 	alertmanagerConfigVolumeName       = "config-volume"
 	alertmanagerConfigDir              = "/etc/alertmanager/config"
 	alertmanagerConfigOutVolumeName    = "config-out"
@@ -465,6 +467,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	var configReloaderWebConfigFile string
+
 	watchedDirectories := []string{alertmanagerConfigDir}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
@@ -624,6 +627,24 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 	}
 
+	if version.GTE(semver.MustParse("0.24.0")) {
+		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), a.Spec.ClusterTLS)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create cluster TLS configuration: %w", err)
+		}
+
+		confArg, configVol, configMount, err := clusterTLSConfig.GetMountParameters()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get mount parameters for cluster TLS configuration: %w", err)
+		}
+
+		if confArg != nil {
+			amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
+		}
+		volumes = append(volumes, configVol...)
+		amVolumeMounts = append(amVolumeMounts, configMount...)
+	}
+
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
@@ -771,6 +792,10 @@ func generatedConfigSecretName(name string) string {
 
 func webConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(name))
+}
+
+func clusterTLSConfigSecretName(name string) string {
+	return fmt.Sprintf("%s-cluster-tls-config", prefixedName(name))
 }
 
 func volumeName(name string) string {
