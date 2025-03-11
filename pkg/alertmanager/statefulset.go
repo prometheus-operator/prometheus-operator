@@ -628,9 +628,9 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if version.GTE(semver.MustParse("0.24.0")) {
-		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), a.Spec.ClusterTLS)
+		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create cluster TLS configuration: %w", err)
+			return nil, fmt.Errorf("failed to create the cluster TLS configuration: %w", err)
 		}
 
 		confArg, configVol, configMount, err := clusterTLSConfig.GetMountParameters()
@@ -638,9 +638,11 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			return nil, fmt.Errorf("failed to get mount parameters for cluster TLS configuration: %w", err)
 		}
 
+		// confArg is nil if the Alertmanager resource doesn't configure mTLS for the cluster protocol.
 		if confArg != nil {
 			amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
 		}
+
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
 	}
@@ -793,10 +795,6 @@ func generatedConfigSecretName(name string) string {
 
 func webConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(name))
-}
-
-func clusterTLSConfigSecretName(name string) string {
-	return fmt.Sprintf("%s-cluster-tls-config", prefixedName(name))
 }
 
 func volumeName(name string) string {

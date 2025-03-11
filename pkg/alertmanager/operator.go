@@ -561,11 +561,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
+	// TODO(simonpasquier): the operator should take into account changes to
+	// the cluster TLS configuration to trigger a rollout of the pods (this
+	// configuration doesn't support live reload).
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
 	}
 
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
@@ -757,7 +760,6 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations map[string]string
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
-		ALertmanagerClusterTLS  string
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
@@ -1709,11 +1711,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	clusterTLSConfig, err := clustertlsconfig.New(
-		clusterTLSConfigDir,
-		clusterTLSConfigSecretName(a.Name),
-		a.Spec.ClusterTLS,
-	)
+	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
 	if err != nil {
 		return fmt.Errorf("failed to initialize the configuration: %w", err)
 	}
