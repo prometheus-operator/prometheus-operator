@@ -1,3 +1,13 @@
+## 0.81.0 / 2025-03-11
+
+* [CHANGE] Remove the lower-case `hypervisor` and `instance` roles for the OpenStack Service Discovery from the ScrapeConfig CRD (users are required to use `Hypervisor` and `Instance` instead). #7370
+* [FEATURE] Add `serviceName` field to the ThanosRuler and Alertmanager CRDs. #7325
+* [FEATURE] Add `shardRetentionPolicy` field to the Prometheus CRD (it requires the `PrometheusShardRetentionPolicy` feature gate). #7274
+* [FEATURE] Add support for the cluster mTLS configuration to the Alertmanager CRD. #7149
+* [FEATURE] Add `LoadBalancer` role for the OpenStack Service Discovery to the ScrapeConfig CRD. #7356
+* [ENHANCEMENT] Add `enableServiceLinks` field to the Alertmanager, Prometheus, PrometheusAgent and ThanosRuler CRDs. #7384
+* [BUGFIX] Fix Alertmanager configuration with PushOver duration fields. #7249
+
 # 0.80.1 / 2025-02-19
 
 * [BUGFIX] Fix msteamsv2_configs to work with either `webhook_url` or `webhook_url_file`. #7352
