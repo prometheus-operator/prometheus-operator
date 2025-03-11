@@ -280,24 +280,25 @@ type PagerDutyLinkConfig struct {
 type DiscordConfig struct {
 	// Whether or not to notify about resolved alerts.
 	// +optional
+	// +kubebuilder:validation:Optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
-
 	// The secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +required
+	// +kubebuilder:validation:Required
 	APIURL v1.SecretKeySelector `json:"apiURL"`
-
 	// The template of the message's title.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Title *string `json:"title,omitempty"`
-
 	// The template of the message's body.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Message *string `json:"message,omitempty"`
-
 	// HTTP client configuration.
 	// +optional
+	// +kubebuilder:validation:Optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// The template of the content's body.
 	// +optional
