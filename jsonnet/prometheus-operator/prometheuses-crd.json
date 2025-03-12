@@ -7692,6 +7692,7 @@
                     "description": "ShardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.\n\nThe final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,\nhowever, the feature is not yet fully implemented in this PR. The limitation being:\n* Retention duration is not settable, for now, shards are retained forever.",
                     "properties": {
                       "retain": {
+                        "description": "Defines the config for retention when the retention policy is set to `Retain`.\nThis field is ineffective as of now.",
                         "properties": {
                           "retentionPeriod": {
                             "description": "Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.\nSupported units: y, w, d, h, m, s, ms\nExamples: `30s`, `1m`, `1h20m15s`, `15d`",

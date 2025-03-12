@@ -1159,8 +1159,8 @@ type ShardRetentionPolicy struct {
 	// +kubebuilder:validation:Enum=Retain;Delete
 	// +optional
 	WhenScaled *WhenScaledRetentionType `json:"whenScaled,omitempty"`
-    // Defines the config for retention when the retention policy is set to `Retain`.
-    // This field is ineffective as of now.
+	// Defines the config for retention when the retention policy is set to `Retain`.
+	// This field is ineffective as of now.
 	// +optional
 	Retain *RetainConfig `json:"retain,omitempty"`
 }

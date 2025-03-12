@@ -16200,6 +16200,8 @@ RetainConfig
 </td>
 <td>
 <em>(Optional)</em>
+<p>Defines the config for retention when the retention policy is set to <code>Retain</code>.
+This field is ineffective as of now.</p>
 </td>
 </tr>
 </tbody>

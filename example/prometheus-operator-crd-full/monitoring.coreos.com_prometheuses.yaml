@@ -9040,6 +9040,9 @@ spec:
                   * Retention duration is not settable, for now, shards are retained forever.
                 properties:
                   retain:
+                    description: |-
+                      Defines the config for retention when the retention policy is set to `Retain`.
+                      This field is ineffective as of now.
                     properties:
                       retentionPeriod:
                         description: |-
