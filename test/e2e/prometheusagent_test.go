@@ -63,7 +63,7 @@ func testCreatePrometheusAgent(t *testing.T) {
 }
 
 func testCreatePrometheusAgentDaemonSet(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -330,7 +330,7 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 }
 
 func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
