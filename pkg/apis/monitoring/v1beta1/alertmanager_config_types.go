@@ -939,7 +939,7 @@ type MSTeamsConfig struct {
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// MSTeams webhook URL.
 	// +kubebuilder:validation:Required
-	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
+	WebhookURL monitoringv1.SecretKeySelector `json:"webhookUrl"`
 	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`
