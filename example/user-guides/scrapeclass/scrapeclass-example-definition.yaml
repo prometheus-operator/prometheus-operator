@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+spec:
+  scrapeClasses:
+    - name: istio-mtls
+      default: true
+      tlsConfig:
+        caFile: "/etc/istio-certs/root-cert.pem"
+        certFile: "/etc/istio-certs/cert-chain.pem"
+        keyFile: "/etc/istio-certs/key.pem"
+        insecureSkipVerify: true
+
+  # mount the certs from the istio sidecar (shown here for illustration purposes)
+  volumeMounts:
+    - name: istio-certs
+      mountPath: "/etc/istio-certs/"
+  volumes:
+  - emptyDir:
+      medium: Memory
+    name: istio-certs
