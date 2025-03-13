@@ -632,9 +632,20 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
-	name := fmt.Sprintf("prom-agent-%s", p.Name)
+	/*name := fmt.Sprintf("prom-agent-%s", p.Name)
 	sts, _ := c.kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, name, metav1.GetOptions{})
 	if sts != nil {
+		return fmt.Errorf("a similar StatefulSet Prometheus Agent has already exists")
+	}*/
+	obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, 0))
+	var notFound bool
+
+	if err != nil {
+		notFound = apierrors.IsNotFound(err)
+		if !notFound {
+			return fmt.Errorf("retrieving statefulset failed: %w", err)
+		}
+	} else if obj != nil {
 		return fmt.Errorf("a similar StatefulSet Prometheus Agent has already exists")
 	}
 
@@ -642,7 +653,6 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
 
-	var notFound bool
 	if _, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key)); err != nil {
 		notFound = apierrors.IsNotFound(err)
 		if !notFound {
@@ -696,9 +706,21 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 }
 
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
-	name := fmt.Sprintf("prom-agent-%s", p.Name)
+	/*name := fmt.Sprintf("prom-agent-%s", p.Name)
 	dms, _ := c.kclient.AppsV1().DaemonSets(p.Namespace).Get(ctx, name, metav1.GetOptions{})
 	if dms != nil {
+		return fmt.Errorf("a similar DaemonSet Prometheus Agent has already exists")
+	}*/
+
+	obj, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key))
+	var notFound bool
+
+	if err != nil {
+		notFound = apierrors.IsNotFound(err)
+		if !notFound {
+			return fmt.Errorf("retrieving daemonset failed: %w", err)
+		}
+	} else if obj != nil {
 		return fmt.Errorf("a similar DaemonSet Prometheus Agent has already exists")
 	}
 
@@ -732,7 +754,6 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		logger.Debug("reconciling statefulset")
 
-		var notFound bool
 		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
 		if err != nil {
 			notFound = apierrors.IsNotFound(err)
@@ -823,7 +844,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		ssets[ssetName] = struct{}{}
 	}
 
-	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
