@@ -7695,6 +7695,20 @@
                   "shardRetentionPolicy": {
                     "description": "ShardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.\n\nThe final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,\nhowever, the feature is not yet fully implemented in this PR. The limitation being:\n* Retention duration is not settable, for now, shards are retained forever.",
                     "properties": {
+                      "retain": {
+                        "description": "Defines the config for retention when the retention policy is set to `Retain`.\nThis field is ineffective as of now.",
+                        "properties": {
+                          "retentionPeriod": {
+                            "description": "Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.\nSupported units: y, w, d, h, m, s, ms\nExamples: `30s`, `1m`, `1h20m15s`, `15d`",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "retentionPeriod"
+                        ],
+                        "type": "object"
+                      },
                       "whenScaled": {
                         "description": "Defines the retention policy when the Prometheus shards are scaled down.\n* `Delete`, the operator will delete the pods from the scaled-down shard(s).\n* `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.\n\nIf not defined, the operator assumes the `Delete` value.",
                         "enum": [
