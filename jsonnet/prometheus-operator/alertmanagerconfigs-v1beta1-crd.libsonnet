@@ -134,6 +134,15 @@
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
                           },
+                          avatarURL: {
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          content: {
+                            description: "The template of the content's body.",
+                            minLength: 1,
+                            type: 'string',
+                          },
                           httpConfig: {
                             description: 'HTTP client configuration.',
                             properties: {
@@ -770,6 +779,7 @@
                           },
                           message: {
                             description: "The template of the message's body.",
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -778,6 +788,11 @@
                           },
                           title: {
                             description: "The template of the message's title.",
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          username: {
+                            minLength: 1,
                             type: 'string',
                           },
                         },
