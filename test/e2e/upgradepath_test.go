@@ -125,7 +125,8 @@ func testOperatorUpgrade(t *testing.T) {
 	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &alertmanagerService)
 	require.NoError(t, err)
 
-	previousVersionFramework.SetupPrometheusRBAC(context.Background(), t, nil, ns)
+	// Setup RBAC rules for the Prometheus service account.
+	previousVersionFramework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 	prometheus := previousVersionFramework.MakeBasicPrometheus(ns, name, name, 1)
 
 	_, err = previousVersionFramework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, previousVersionFramework.MakeBasicPrometheus(ns, name, name, 1))
@@ -140,8 +141,10 @@ func testOperatorUpgrade(t *testing.T) {
 	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &thanosRulerService)
 	require.NoError(t, err)
 
+	// Update the Prometheus Operator to the current version:
+	// 1. Update the RBAC rules for the Prometheus service account.
+	// 2. Upgrade the operator deployment.
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-	// Update Prometheus Operator to current version
 	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
 	require.NoError(t, err)
 	for _, f := range finalizers {
