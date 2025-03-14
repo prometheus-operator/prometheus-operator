@@ -24669,7 +24669,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.</p>
+<p>Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
