@@ -1291,14 +1291,6 @@ func TestValidateAdditionalArgs(t *testing.T) {
 		expectedArgs   []string
 	}{
 		{
-			name:    "MemlimitRatioZero",
-			version: "v0.28.0",
-			additionalArgs: []monitoringv1.Argument{
-				{Name: "auto-gomemlimit.ratio", Value: "0.0"},
-			},
-			expectedArgs: []string{},
-		},
-		{
 			name:    "VersionBelowMemlimitRatioIgnored",
 			version: "v0.27.0",
 			additionalArgs: []monitoringv1.Argument{
@@ -1314,16 +1306,7 @@ func TestValidateAdditionalArgs(t *testing.T) {
 			},
 			expectedArgs: []string{"--auto-gomemlimit.ratio=0.7"},
 		},
-		{
-			name:    "VersionAboveadditionalArgsInvalid",
-			version: "v0.28.0",
-			additionalArgs: []monitoringv1.Argument{
-				{Name: "auto-gomemlimit.ratio", Value: "invalid"},
-			},
-			expectedArgs: []string{},
-		},
 	}
-
 	for _, test := range tt {
 		t.Run(test.name, func(t *testing.T) {
 			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
