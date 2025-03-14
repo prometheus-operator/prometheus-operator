@@ -3223,13 +3223,13 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Valid Server URL (HTTPS)",
+		name: "Invalid - Required Fields Not Specified",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{Server: "https://example.com"},
+				{},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "Invalid Server schema",
