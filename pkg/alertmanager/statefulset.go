@@ -69,23 +69,20 @@ var (
 )
 
 func validateMemlimitRatio(ratio string) float64 {
-	floatRatio, err := strconv.ParseFloat(ratio, 64)
-	if err != nil {
-		return 0.9
-	}
+	floatRatio, _ := strconv.ParseFloat(ratio, 64)
+
 	if floatRatio == 0.0 {
 		return 0.0
 	}
 
-	if floatRatio >= 1.0 {
-		return 1.0
-	} else if floatRatio <= 0.0 {
+	if floatRatio < 0.0 {
 		return 0.0
+	} else if floatRatio > 1.0 {
+		return 1.0
 	}
 
 	return floatRatio
 }
-
 func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
@@ -275,10 +272,25 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		amArgs = append(amArgs, fmt.Sprintf("--enable-feature=%v", strings.Join(a.Spec.EnableFeatures[:], ",")))
 	}
 
+	amAddArgs := []monitoringv1.Argument{}
+
 	if version.GTE(semver.MustParse("0.28.0")) {
-		mlRatio := validateMemlimitRatio(a.Spec.AdditionalArgs)
-		if mlRatio > 0.0 {
-			amArgs = append(amArgs, fmt.Sprintf("--auto-gomemlimit.ratio=%v", mlRatio))
+		for _, arg := range a.Spec.AdditionalArgs {
+			if arg.Name == "auto-gomemlimit.ratio" {
+				mlRatioStr := arg.Value
+				mlRatio := validateMemlimitRatio(mlRatioStr)
+				if mlRatio > 0.0 {
+					amAddArgs = append(amAddArgs, monitoringv1.Argument{
+						Name:  arg.Name,
+						Value: fmt.Sprintf("%v", mlRatio),
+					})
+				}
+				break
+			}
+		}
+
+		if len(amAddArgs) > 0 {
+			amArgs = append(amArgs, fmt.Sprintf("--%s=%s", amAddArgs[0].Name, amAddArgs[0].Value))
 		}
 	}
 

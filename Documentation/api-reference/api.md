@@ -864,16 +864,18 @@ that this behaviour may break at any time without notice.</p>
 <td>
 <code>additionalArgs</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures
-For instance &ndash;auto-gomemlimit.ratio
-The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
-The value must be greater than 0 and less than or equal to 1.</p>
-<p>It requires Alertmanager &gt;= 0.28.0.</p>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;alertmanager&rsquo; container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+alertmanager container which may cause issues if they are invalid or not supported
+by the given alertmanager version.</p>
 </td>
 </tr>
 </table>
@@ -6395,16 +6397,18 @@ that this behaviour may break at any time without notice.</p>
 <td>
 <code>additionalArgs</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures
-For instance &ndash;auto-gomemlimit.ratio
-The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
-The value must be greater than 0 and less than or equal to 1.</p>
-<p>It requires Alertmanager &gt;= 0.28.0.</p>
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;alertmanager&rsquo; container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+alertmanager container which may cause issues if they are invalid or not supported
+by the given alertmanager version.</p>
 </td>
 </tr>
 </tbody>
@@ -6621,7 +6625,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.Argument">Argument
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>Argument as part of the AdditionalArgs list.</p>
