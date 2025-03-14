@@ -1287,32 +1287,40 @@ func TestValidateAdditionalArgs(t *testing.T) {
 	tt := []struct {
 		name           string
 		version        string
-		additionalArgs string
+		additionalArgs []monitoringv1.Argument
 		expectedArgs   []string
 	}{
 		{
-			name:           "additionalArgsZero",
-			version:        "v0.28.0",
-			additionalArgs: "0.0",
-			expectedArgs:   []string{},
+			name:    "MemlimitRatioZero",
+			version: "v0.28.0",
+			additionalArgs: []monitoringv1.Argument{
+				{Name: "auto-gomemlimit.ratio", Value: "0.0"},
+			},
+			expectedArgs: []string{},
 		},
 		{
-			name:           "VersionBelowadditionalArgsIgnored",
-			version:        "v0.27.0",
-			additionalArgs: "0.7",
-			expectedArgs:   []string{},
+			name:    "VersionBelowMemlimitRatioIgnored",
+			version: "v0.27.0",
+			additionalArgs: []monitoringv1.Argument{
+				{Name: "auto-gomemlimit.ratio", Value: "0.7"},
+			},
+			expectedArgs: []string{},
 		},
 		{
-			name:           "VersionAboveadditionalArgsSet",
-			version:        "v0.28.0",
-			additionalArgs: "0.7",
-			expectedArgs:   []string{"--auto-gomemlimit.ratio=0.7"},
+			name:    "VersionAboveMemlimitRatioSet",
+			version: "v0.28.0",
+			additionalArgs: []monitoringv1.Argument{
+				{Name: "auto-gomemlimit.ratio", Value: "0.7"},
+			},
+			expectedArgs: []string{"--auto-gomemlimit.ratio=0.7"},
 		},
 		{
-			name:           "VersionAboveadditionalArgsInvalid",
-			version:        "v0.28.0",
-			additionalArgs: "invalid",
-			expectedArgs:   []string{"--auto-gomemlimit.ratio=0.9"},
+			name:    "VersionAboveadditionalArgsInvalid",
+			version: "v0.28.0",
+			additionalArgs: []monitoringv1.Argument{
+				{Name: "auto-gomemlimit.ratio", Value: "invalid"},
+			},
+			expectedArgs: []string{},
 		},
 	}
 

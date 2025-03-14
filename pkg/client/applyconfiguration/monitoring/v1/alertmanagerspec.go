@@ -81,7 +81,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
-	AdditionalArgs                       *string                                                 `json:"additionalArgs,omitempty"`
+	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -563,10 +563,15 @@ func (b *AlertmanagerSpecApplyConfiguration) WithEnableFeatures(values ...string
 	return b
 }
 
-// WithAdditionalArgs sets the AdditionalArgs field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AdditionalArgs field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithAdditionalArgs(value string) *AlertmanagerSpecApplyConfiguration {
-	b.AdditionalArgs = &value
+// WithAdditionalArgs adds the given value to the AdditionalArgs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AdditionalArgs field.
+func (b *AlertmanagerSpecApplyConfiguration) WithAdditionalArgs(values ...*ArgumentApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAdditionalArgs")
+		}
+		b.AdditionalArgs = append(b.AdditionalArgs, *values[i])
+	}
 	return b
 }

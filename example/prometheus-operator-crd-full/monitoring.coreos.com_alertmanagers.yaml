@@ -79,13 +79,26 @@ spec:
             properties:
               additionalArgs:
                 description: |-
-                  AdditionalArgs allows to add some other flags besides the ones part of EnableFeatures
-                  For instance --auto-gomemlimit.ratio
-                  The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory.
-                  The value must be greater than 0 and less than or equal to 1.
-
-                  It requires Alertmanager >= 0.28.0.
-                type: string
+                  AdditionalArgs allows setting additional arguments for the 'alertmanager' container.
+                  It is intended for e.g. activating hidden flags which are not supported by
+                  the dedicated configuration options yet. The arguments are passed as-is to the
+                  alertmanager container which may cause issues if they are invalid or not supported
+                  by the given alertmanager version.
+                items:
+                  description: Argument as part of the AdditionalArgs list.
+                  properties:
+                    name:
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
+                      type: string
+                    value:
+                      description: Argument value, e.g. 30s. Can be empty for name-only
+                        arguments (e.g. --storage.tsdb.no-lockfile)
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               additionalPeers:
                 description: AdditionalPeers allows injecting a set of additional
                   Alertmanagers to peer with to form a highly available cluster.
