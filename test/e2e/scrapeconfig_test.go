@@ -627,6 +627,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
 	})
+	t.Run("ScalewaySD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -3191,6 +3194,384 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var ScalewaySDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Access Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Access Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Access Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Role - Instance",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Role - Baremetal",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      "Invalid Role",
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Api Url",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					ApiURL:    ptr.To("https://api.scaleway.com"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Api Url",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					ApiURL:    ptr.To("ftp://example.com"),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Api Url",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid NameFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:  "1",
+					Role:       monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:  "AccessKey",
+					NameFilter: ptr.To("my-server"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid NameFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:  "1",
+					Role:       monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:  "AccessKey",
+					NameFilter: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing NameFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:  "1",
+					Role:       monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:  "AccessKey",
+					TagsFilter: []string{"do"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Empty tag values in TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:  "1",
+					Role:       monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:  "AccessKey",
+					TagsFilter: []string{""}, // empty tag
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Repeating tags in TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:  "1",
+					Role:       monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:  "AccessKey",
+					TagsFilter: []string{"do", "do"}, // repeating tags
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					Zone:      ptr.To("fr-par-1"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					Zone:      ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					Port:      ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number exceeding the maximum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					Port:      ptr.To(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					Port:      ptr.To(int32(-1)), // minimum Port number = 0;
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:       "1",
+					Role:            monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:       "AccessKey",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID:       "1",
+					Role:            monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey:       "AccessKey",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
 		},
