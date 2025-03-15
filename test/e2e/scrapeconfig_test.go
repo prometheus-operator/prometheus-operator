@@ -3276,6 +3276,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
+					Server:          "http://example.com",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -3287,6 +3288,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
+					Server:          "http://example.com",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60m")),
 				},
 			},
