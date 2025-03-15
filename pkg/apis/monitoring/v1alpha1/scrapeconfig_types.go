@@ -1399,7 +1399,7 @@ type ScalewaySDConfig struct {
 	// +optional
 	NameFilter *string `json:"nameFilter,omitempty"`
 	// TagsFilter specify a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.
-	// +kubebuilder:validation:MinItems=2
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional

@@ -57716,7 +57716,7 @@ spec:
                       items:
                         minLength: 1
                         type: string
-                      minItems: 2
+                      minItems: 1
                       type: array
                       x-kubernetes-list-type: set
                     tlsConfig:

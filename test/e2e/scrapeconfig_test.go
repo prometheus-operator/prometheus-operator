@@ -3426,22 +3426,6 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Empty TagsFilter",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{
-					ProjectID: "1",
-					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey: "AccessKey",
-					TagsFilter: []string{
-						"foo",
-					},
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
 		name: "Empty tag values in TagsFilter",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
