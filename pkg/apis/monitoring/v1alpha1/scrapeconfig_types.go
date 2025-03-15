@@ -1403,7 +1403,7 @@ type ScalewaySDConfig struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
-	TagsFilter []string `json:"tagsFilter,omitempty"`
+	TagsFilter []string `json:"tagsFilter"`
 	// Refresh interval to re-read the list of instances.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
