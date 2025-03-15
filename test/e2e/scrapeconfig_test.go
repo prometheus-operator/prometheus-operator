@@ -3435,7 +3435,7 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					AccessKey: "AccessKey",
 					TagsFilter: []string{
 						"foo",
-					}, // no tag
+					},
 				},
 			},
 		},
