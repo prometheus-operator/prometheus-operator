@@ -3430,10 +3430,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:  "1",
-					Role:       monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:  "AccessKey",
-					TagsFilter: []string{}, // no tag
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					TagsFilter: []string{
+						"foo",
+					}, // no tag
 				},
 			},
 		},
