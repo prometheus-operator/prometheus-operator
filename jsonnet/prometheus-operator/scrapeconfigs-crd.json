@@ -11433,7 +11433,7 @@
                             "minLength": 1,
                             "type": "string"
                           },
-                          "minItems": 1,
+                          "minItems": 2,
                           "type": "array",
                           "x-kubernetes-list-type": "set"
                         },
