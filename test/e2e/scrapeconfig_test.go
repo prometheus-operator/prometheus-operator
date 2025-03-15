@@ -627,6 +627,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
 	})
+	t.Run("KumaSDConfig", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, KumaSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -3191,6 +3194,99 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var KumaSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid KumaSDConfig - Required Fields",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://kuma-control-plane.example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid - Required Fields Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Server schema",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "ftp://example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid ClientID specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To("valid-client-id"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid empty ClientID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60m")),
 				},
 			},
 		},
