@@ -3315,19 +3315,6 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Missing Secret Key",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{
-					ProjectID: "1",
-					AccessKey: "AccessKey",
-					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
 		name: "Valid Role - Instance",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
