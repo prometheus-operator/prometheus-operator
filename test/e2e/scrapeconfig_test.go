@@ -3285,6 +3285,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3296,6 +3302,25 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
 					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Secret Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					AccessKey: "AccessKey",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 				},
 			},
