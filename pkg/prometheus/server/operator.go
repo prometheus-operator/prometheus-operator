@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -132,7 +133,9 @@ func WithoutUnmanagedConfiguration() ControllerOption {
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
 
-	client, err := kubernetes.NewForConfig(restConfig)
+	restConfigProtobuf := rest.CopyConfig(restConfig)
+	restConfigProtobuf.ContentType = runtime.ContentTypeProtobuf
+	client, err := kubernetes.NewForConfig(restConfigProtobuf)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}

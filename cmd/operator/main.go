@@ -35,6 +35,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -244,7 +245,9 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	kclient, err := kubernetes.NewForConfig(restConfig)
+	restConfigProtobuf := rest.CopyConfig(restConfig)
+	restConfigProtobuf.ContentType = runtime.ContentTypeProtobuf
+	kclient, err := kubernetes.NewForConfig(restConfigProtobuf)
 	if err != nil {
 		logger.Error("failed to create Kubernetes client", "err", err)
 		cancel()

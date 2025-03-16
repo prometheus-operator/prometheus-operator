@@ -86,7 +86,9 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 		return nil, fmt.Errorf("build config from flags failed: %w", err)
 	}
 
-	cli, err := kubernetes.NewForConfig(config)
+	configProtobuf := rest.CopyConfig(config)
+	configProtobuf.ContentType = runtime.ContentTypeProtobuf
+	cli, err := kubernetes.NewForConfig(configProtobuf)
 	if err != nil {
 		return nil, fmt.Errorf("creating new kube-client failed: %w", err)
 	}
