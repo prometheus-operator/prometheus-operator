@@ -3210,6 +3210,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3223,6 +3229,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3235,6 +3247,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3248,6 +3266,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3286,6 +3310,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3299,6 +3329,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3312,6 +3348,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      "Invalid Role",
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3324,6 +3366,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					ProjectID: "1",
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3337,7 +3385,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					ApiURL:    ptr.To("https://api.scaleway.com"),
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					ApiURL: ptr.To("https://api.scaleway.com"),
 				},
 			},
 		},
@@ -3351,7 +3405,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					ApiURL:    ptr.To("ftp://example.com"),
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					ApiURL: ptr.To("ftp://example.com"),
 				},
 			},
 		},
@@ -3365,6 +3425,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3375,9 +3441,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:  "1",
-					Role:       monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:  "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					NameFilter: ptr.To("my-server"),
 				},
 			},
@@ -3389,9 +3461,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:  "1",
-					Role:       monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:  "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					NameFilter: ptr.To(""),
 				},
 			},
@@ -3406,6 +3484,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3416,9 +3500,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:  "1",
-					Role:       monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:  "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					TagsFilter: []string{"do"},
 				},
 			},
@@ -3430,9 +3520,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:  "1",
-					Role:       monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:  "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					TagsFilter: []string{""}, // empty tag
 				},
 			},
@@ -3444,9 +3540,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:  "1",
-					Role:       monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:  "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					TagsFilter: []string{"do", "do"}, // repeating tags
 				},
 			},
@@ -3461,6 +3563,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3474,7 +3582,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					Zone:      ptr.To("fr-par-1"),
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Zone: ptr.To("fr-par-1"),
 				},
 			},
 		},
@@ -3488,7 +3602,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					Zone:      ptr.To(""),
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Zone: ptr.To(""),
 				},
 			},
 		},
@@ -3502,6 +3622,12 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -3515,7 +3641,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					Port:      ptr.To(int32(8080)),
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: ptr.To(int32(8080)),
 				},
 			},
 		},
@@ -3529,7 +3661,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					Port:      ptr.To(int32(65536)), // maximum Port number = 65535
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: ptr.To(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -3543,7 +3681,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					Port:      ptr.To(int32(-1)), // minimum Port number = 0;
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: ptr.To(int32(-1)), // minimum Port number = 0;
 				},
 			},
 		},
@@ -3554,9 +3698,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:       "1",
-					Role:            monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey:       "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -3568,9 +3718,15 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					ProjectID:       "1",
-					Role:            monitoringv1alpha1.ScalewayRoleBaremetal,
-					AccessKey:       "AccessKey",
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
