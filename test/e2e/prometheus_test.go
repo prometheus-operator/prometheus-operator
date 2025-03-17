@@ -5366,7 +5366,7 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusShardRetentionPolicy"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusShardRetentionPolicyFeature},
 		},
 	)
 	require.NoError(t, err)
