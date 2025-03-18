@@ -3430,25 +3430,6 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Missing Api Url",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{
-					ProjectID: "1",
-					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "key.pem",
-					},
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
 		name: "Valid NameFilter",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
@@ -3487,25 +3468,6 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
-	},
-	{
-		name: "Missing NameFilter",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{
-					ProjectID: "1",
-					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "key.pem",
-					},
-				},
-			},
-		},
-		expectedError: false,
 	},
 	{
 		name: "Valid TagsFilter",
@@ -3568,25 +3530,6 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Missing TagsFilter",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{
-					ProjectID: "1",
-					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "key.pem",
-					},
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
 		name: "Valid Zone value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
@@ -3625,25 +3568,6 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
-	},
-	{
-		name: "Empty Zone value",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{
-					ProjectID: "1",
-					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "key.pem",
-					},
-				},
-			},
-		},
-		expectedError: false,
 	},
 	{
 		name: "Valid Port number",
