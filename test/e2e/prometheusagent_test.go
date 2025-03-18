@@ -639,7 +639,7 @@ func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
 		},
 	)
 	require.NoError(t, err)
