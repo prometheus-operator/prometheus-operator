@@ -80,7 +80,7 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "test-ds"
+	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
@@ -210,7 +210,7 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "test-ds"
+	name := "test"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	p.Spec.Resources = v1.ResourceRequirements{
@@ -282,7 +282,7 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "test-ds"
+	name := "test"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	p.Spec.Resources = v1.ResourceRequirements{
@@ -347,7 +347,7 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "test-ds"
+	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
@@ -364,7 +364,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ctx := context.Background()
-	name := "test-ds"
+	name := "test"
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
@@ -407,7 +407,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 		ctx := context.Background()
 
 		appPods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
-			LabelSelector: "group=test-ds",
+			LabelSelector: "group=test",
 		})
 		if err != nil {
 			pollErr = fmt.Errorf("can't list app pods: %w", err)
@@ -644,7 +644,7 @@ func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "test-ds"
+	name := "test"
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
 	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
