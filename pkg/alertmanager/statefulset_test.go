@@ -863,20 +863,14 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
+	a.Spec.ForceEnableClusterMode = false
+
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
-	containsEmptyClusterListenAddress := false
-
-	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=" {
-			containsEmptyClusterListenAddress = true
-		}
-	}
-
-	require.True(t, containsEmptyClusterListenAddress, "expected stateful set to contain arg '--cluster.listen-address='")
+	require.Contains(t, amArgs, "--cluster.listen-address=", "expected stateful set to contain '--cluster.listen-address='")
 }
 
 func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
