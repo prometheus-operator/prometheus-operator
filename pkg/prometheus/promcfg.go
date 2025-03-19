@@ -4824,6 +4824,17 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		}), nil
 }
 
+func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice, nameValidationScheme *monitoringv1.NameValidationSchemeOptions) yaml.MapSlice {
+	if nameValidationScheme == nil {
+		return cfg
+	}
+
+	// need to cast it to a string in order to use strings.ToLower() to render the value in the way prometheus expects it
+	nameValidationSchemeValue := string(*nameValidationScheme)
+
+	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", strings.ToLower(nameValidationSchemeValue))
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4897,8 +4908,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
 	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
-	if cpf.NameValidationScheme != nil {
-		cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", *cpf.NameValidationScheme)
-	}
+	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
+
 	return cfg
 }
