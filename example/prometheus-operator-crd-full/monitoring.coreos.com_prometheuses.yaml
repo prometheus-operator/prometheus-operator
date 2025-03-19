@@ -9043,6 +9043,21 @@ spec:
                   however, the feature is not yet fully implemented in this PR. The limitation being:
                   * Retention duration is not settable, for now, shards are retained forever.
                 properties:
+                  retain:
+                    description: |-
+                      Defines the config for retention when the retention policy is set to `Retain`.
+                      This field is ineffective as of now.
+                    properties:
+                      retentionPeriod:
+                        description: |-
+                          Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
+                          Supported units: y, w, d, h, m, s, ms
+                          Examples: `30s`, `1m`, `1h20m15s`, `15d`
+                        pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                        type: string
+                    required:
+                    - retentionPeriod
+                    type: object
                   whenScaled:
                     description: |-
                       Defines the retention policy when the Prometheus shards are scaled down.

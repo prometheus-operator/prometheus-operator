@@ -4861,6 +4861,22 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "valid-retain-config",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+				},
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: &monitoringv1.RetainWhenScaledRetentionType,
+					Retain: &monitoringv1.RetainConfig{
+						RetentionPeriod: monitoringv1.Duration("3d"),
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {

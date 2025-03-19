@@ -158,6 +158,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RemoteReadSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RemoteWriteSpec"):
 		return &monitoringv1.RemoteWriteSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RetainConfig"):
+		return &monitoringv1.RetainConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Rule"):
 		return &monitoringv1.RuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RuleGroup"):
