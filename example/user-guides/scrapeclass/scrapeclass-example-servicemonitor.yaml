@@ -1,0 +1,9 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-example
+spec:
+  scrapeClass: istio-mtls
+  endpoints:
+    - port: http
+      path: /metrics
