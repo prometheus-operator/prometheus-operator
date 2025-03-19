@@ -1,0 +1,15 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  msteamsv2_configs:
+  - webhook_url_file: /etc/test
+    title: test title
+    text: test text
+templates: []
