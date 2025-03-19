@@ -87,7 +87,7 @@
                 "description": "Specification of the desired behavior of the Alertmanager cluster. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "additionalArgs": {
-                    "description": "AdditionalArgs allows setting additional arguments for the 'alertmanager' container.\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nalertmanager container which may cause issues if they are invalid or not supported\nby the given alertmanager version.",
+                    "description": "AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nAlertmanager container which may cause issues if they are invalid or not supported\nby the given Alertmanager version.",
                     "items": {
                       "description": "Argument as part of the AdditionalArgs list.",
                       "properties": {

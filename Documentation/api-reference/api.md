@@ -871,11 +871,11 @@ that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AdditionalArgs allows setting additional arguments for the &lsquo;alertmanager&rsquo; container.
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;Alertmanager&rsquo; container.
 It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
-alertmanager container which may cause issues if they are invalid or not supported
-by the given alertmanager version.</p>
+Alertmanager container which may cause issues if they are invalid or not supported
+by the given Alertmanager version.</p>
 </td>
 </tr>
 </table>
@@ -6404,11 +6404,11 @@ that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>AdditionalArgs allows setting additional arguments for the &lsquo;alertmanager&rsquo; container.
+<p>AdditionalArgs allows setting additional arguments for the &lsquo;Alertmanager&rsquo; container.
 It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
-alertmanager container which may cause issues if they are invalid or not supported
-by the given alertmanager version.</p>
+Alertmanager container which may cause issues if they are invalid or not supported
+by the given Alertmanager version.</p>
 </td>
 </tr>
 </tbody>

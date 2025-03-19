@@ -10118,11 +10118,11 @@ spec:
             properties:
               additionalArgs:
                 description: |-
-                  AdditionalArgs allows setting additional arguments for the 'alertmanager' container.
+                  AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
                   It is intended for e.g. activating hidden flags which are not supported by
                   the dedicated configuration options yet. The arguments are passed as-is to the
-                  alertmanager container which may cause issues if they are invalid or not supported
-                  by the given alertmanager version.
+                  Alertmanager container which may cause issues if they are invalid or not supported
+                  by the given Alertmanager version.
                 items:
                   description: Argument as part of the AdditionalArgs list.
                   properties:

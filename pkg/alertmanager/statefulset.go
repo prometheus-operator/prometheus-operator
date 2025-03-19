@@ -259,17 +259,6 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		})
 	}
 
-	if version.GTE(semver.MustParse("0.28.0")) && len(a.Spec.AdditionalArgs) > 0 {
-		for _, arg := range a.Spec.AdditionalArgs {
-			if arg.Name == "auto-gomemlimit.ratio" {
-				amArgs = append(amArgs, monitoringv1.Argument{
-					Name:  arg.Name,
-					Value: fmt.Sprintf("%v", arg.Value),
-				})
-			}
-		}
-	}
-
 	webRoutePrefix := "/"
 	if a.Spec.RoutePrefix != "" {
 		webRoutePrefix = a.Spec.RoutePrefix
@@ -322,7 +311,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		if a.Spec.ClusterLabel != nil {
 			clusterLabel = *a.Spec.ClusterLabel
 		}
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.label", Value: string(clusterLabel)})
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.label", Value: clusterLabel})
 	}
 
 	isHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.22.0"))
