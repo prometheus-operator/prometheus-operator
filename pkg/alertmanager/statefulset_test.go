@@ -1278,38 +1278,26 @@ func TestEnableFeatures(t *testing.T) {
 }
 
 func TestValidateAdditionalArgs(t *testing.T) {
-	tt := []struct {
-		name           string
-		additionalArgs []monitoringv1.Argument
-		expectedArgs   []string
-	}{
-		{
-			name: "VersionAboveMemlimitRatioSet",
-			additionalArgs: []monitoringv1.Argument{
-				{Name: "auto-gomemlimit.ratio", Value: "0.7"},
-			},
-			expectedArgs: []string{"--auto-gomemlimit.ratio=0.7"},
-		},
+	additionalArgs := []monitoringv1.Argument{
+		{Name: "auto-gomemlimit.ratio", Value: "0.7"},
 	}
+	expectedArgs := []string{"--auto-gomemlimit.ratio=0.7"}
 
-	for _, test := range tt {
-		t.Run(test.name, func(t *testing.T) {
-			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
-				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas:       toPtr(int32(1)),
-					AdditionalArgs: test.additionalArgs,
-				},
-			}, defaultTestConfig, &operator.ShardedSecret{})
-			require.NoError(t, err)
+	statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Replicas:       toPtr(int32(1)),
+			AdditionalArgs: additionalArgs,
+		},
+	}, defaultTestConfig, &operator.ShardedSecret{})
+	require.NoError(t, err)
 
-			actualArgs := statefulSpec.Template.Spec.Containers[0].Args
+	actualArgs := statefulSpec.Template.Spec.Containers[0].Args
 
-			for _, expectedArg := range test.expectedArgs {
-				require.Contains(t, actualArgs, expectedArg, "Expected additional argument not found")
-			}
-		})
+	for _, expectedArg := range expectedArgs {
+		require.Contains(t, actualArgs, expectedArg, "Expected additional argument not found")
 	}
 }
+
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
