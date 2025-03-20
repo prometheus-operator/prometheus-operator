@@ -17,10 +17,11 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// TLSConfigApplyConfiguration represents an declarative configuration of the TLSConfig type for use
+// TLSConfigApplyConfiguration represents a declarative configuration of the TLSConfig type for use
 // with apply.
 type TLSConfigApplyConfiguration struct {
 	SafeTLSConfigApplyConfiguration `json:",inline"`
@@ -29,7 +30,7 @@ type TLSConfigApplyConfiguration struct {
 	KeyFile                         *string `json:"keyFile,omitempty"`
 }
 
-// TLSConfigApplyConfiguration constructs an declarative configuration of the TLSConfig type for use with
+// TLSConfigApplyConfiguration constructs a declarative configuration of the TLSConfig type for use with
 // apply.
 func TLSConfig() *TLSConfigApplyConfiguration {
 	return &TLSConfigApplyConfiguration{}
@@ -39,7 +40,7 @@ func TLSConfig() *TLSConfigApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CA field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithCA(value *SecretOrConfigMapApplyConfiguration) *TLSConfigApplyConfiguration {
-	b.CA = value
+	b.SafeTLSConfigApplyConfiguration.CA = value
 	return b
 }
 
@@ -47,7 +48,7 @@ func (b *TLSConfigApplyConfiguration) WithCA(value *SecretOrConfigMapApplyConfig
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Cert field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithCert(value *SecretOrConfigMapApplyConfiguration) *TLSConfigApplyConfiguration {
-	b.Cert = value
+	b.SafeTLSConfigApplyConfiguration.Cert = value
 	return b
 }
 
@@ -55,7 +56,7 @@ func (b *TLSConfigApplyConfiguration) WithCert(value *SecretOrConfigMapApplyConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeySecret field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithKeySecret(value corev1.SecretKeySelector) *TLSConfigApplyConfiguration {
-	b.KeySecret = &value
+	b.SafeTLSConfigApplyConfiguration.KeySecret = &value
 	return b
 }
 
@@ -63,7 +64,7 @@ func (b *TLSConfigApplyConfiguration) WithKeySecret(value corev1.SecretKeySelect
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServerName field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithServerName(value string) *TLSConfigApplyConfiguration {
-	b.ServerName = &value
+	b.SafeTLSConfigApplyConfiguration.ServerName = &value
 	return b
 }
 
@@ -71,7 +72,23 @@ func (b *TLSConfigApplyConfiguration) WithServerName(value string) *TLSConfigApp
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the InsecureSkipVerify field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithInsecureSkipVerify(value bool) *TLSConfigApplyConfiguration {
-	b.InsecureSkipVerify = &value
+	b.SafeTLSConfigApplyConfiguration.InsecureSkipVerify = &value
+	return b
+}
+
+// WithMinVersion sets the MinVersion field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MinVersion field is set to the value of the last call.
+func (b *TLSConfigApplyConfiguration) WithMinVersion(value monitoringv1.TLSVersion) *TLSConfigApplyConfiguration {
+	b.SafeTLSConfigApplyConfiguration.MinVersion = &value
+	return b
+}
+
+// WithMaxVersion sets the MaxVersion field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaxVersion field is set to the value of the last call.
+func (b *TLSConfigApplyConfiguration) WithMaxVersion(value monitoringv1.TLSVersion) *TLSConfigApplyConfiguration {
+	b.SafeTLSConfigApplyConfiguration.MaxVersion = &value
 	return b
 }
 

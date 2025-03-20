@@ -16,7 +16,7 @@
 
 package v1
 
-// PrometheusWebSpecApplyConfiguration represents an declarative configuration of the PrometheusWebSpec type for use
+// PrometheusWebSpecApplyConfiguration represents a declarative configuration of the PrometheusWebSpec type for use
 // with apply.
 type PrometheusWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
@@ -24,7 +24,7 @@ type PrometheusWebSpecApplyConfiguration struct {
 	MaxConnections                        *int32  `json:"maxConnections,omitempty"`
 }
 
-// PrometheusWebSpecApplyConfiguration constructs an declarative configuration of the PrometheusWebSpec type for use with
+// PrometheusWebSpecApplyConfiguration constructs a declarative configuration of the PrometheusWebSpec type for use with
 // apply.
 func PrometheusWebSpec() *PrometheusWebSpecApplyConfiguration {
 	return &PrometheusWebSpecApplyConfiguration{}
@@ -34,7 +34,7 @@ func PrometheusWebSpec() *PrometheusWebSpecApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *PrometheusWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfigApplyConfiguration) *PrometheusWebSpecApplyConfiguration {
-	b.TLSConfig = value
+	b.WebConfigFileFieldsApplyConfiguration.TLSConfig = value
 	return b
 }
 
@@ -42,7 +42,7 @@ func (b *PrometheusWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfigA
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *PrometheusWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *PrometheusWebSpecApplyConfiguration {
-	b.HTTPConfig = value
+	b.WebConfigFileFieldsApplyConfiguration.HTTPConfig = value
 	return b
 }
 

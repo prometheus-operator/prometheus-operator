@@ -17,136 +17,31 @@
 package fake
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	typedmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeProbes implements ProbeInterface
-type FakeProbes struct {
+// fakeProbes implements ProbeInterface
+type fakeProbes struct {
+	*gentype.FakeClientWithListAndApply[*v1.Probe, *v1.ProbeList, *monitoringv1.ProbeApplyConfiguration]
 	Fake *FakeMonitoringV1
-	ns   string
 }
 
-var probesResource = v1.SchemeGroupVersion.WithResource("probes")
-
-var probesKind = v1.SchemeGroupVersion.WithKind("Probe")
-
-// Get takes name of the probe, and returns the corresponding probe object, and an error if there is any.
-func (c *FakeProbes) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Probe, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(probesResource, c.ns, name), &v1.Probe{})
-
-	if obj == nil {
-		return nil, err
+func newFakeProbes(fake *FakeMonitoringV1, namespace string) typedmonitoringv1.ProbeInterface {
+	return &fakeProbes{
+		gentype.NewFakeClientWithListAndApply[*v1.Probe, *v1.ProbeList, *monitoringv1.ProbeApplyConfiguration](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("probes"),
+			v1.SchemeGroupVersion.WithKind("Probe"),
+			func() *v1.Probe { return &v1.Probe{} },
+			func() *v1.ProbeList { return &v1.ProbeList{} },
+			func(dst, src *v1.ProbeList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.ProbeList) []*v1.Probe { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.ProbeList, items []*v1.Probe) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1.Probe), err
-}
-
-// List takes label and field selectors, and returns the list of Probes that match those selectors.
-func (c *FakeProbes) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ProbeList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(probesResource, probesKind, c.ns, opts), &v1.ProbeList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.ProbeList{ListMeta: obj.(*v1.ProbeList).ListMeta}
-	for _, item := range obj.(*v1.ProbeList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested probes.
-func (c *FakeProbes) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(probesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a probe and creates it.  Returns the server's representation of the probe, and an error, if there is any.
-func (c *FakeProbes) Create(ctx context.Context, probe *v1.Probe, opts metav1.CreateOptions) (result *v1.Probe, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(probesResource, c.ns, probe), &v1.Probe{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Probe), err
-}
-
-// Update takes the representation of a probe and updates it. Returns the server's representation of the probe, and an error, if there is any.
-func (c *FakeProbes) Update(ctx context.Context, probe *v1.Probe, opts metav1.UpdateOptions) (result *v1.Probe, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(probesResource, c.ns, probe), &v1.Probe{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Probe), err
-}
-
-// Delete takes name of the probe and deletes it. Returns an error if one occurs.
-func (c *FakeProbes) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(probesResource, c.ns, name, opts), &v1.Probe{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeProbes) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(probesResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.ProbeList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched probe.
-func (c *FakeProbes) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Probe, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(probesResource, c.ns, name, pt, data, subresources...), &v1.Probe{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Probe), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied probe.
-func (c *FakeProbes) Apply(ctx context.Context, probe *monitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Probe, err error) {
-	if probe == nil {
-		return nil, fmt.Errorf("probe provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(probe)
-	if err != nil {
-		return nil, err
-	}
-	name := probe.Name
-	if name == nil {
-		return nil, fmt.Errorf("probe.Name must be provided to Apply")
-	}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(probesResource, c.ns, *name, types.ApplyPatchType, data), &v1.Probe{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Probe), err
 }

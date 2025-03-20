@@ -16,7 +16,7 @@
 
 package v1
 
-// RulesAlertApplyConfiguration represents an declarative configuration of the RulesAlert type for use
+// RulesAlertApplyConfiguration represents a declarative configuration of the RulesAlert type for use
 // with apply.
 type RulesAlertApplyConfiguration struct {
 	ForOutageTolerance *string `json:"forOutageTolerance,omitempty"`
@@ -24,7 +24,7 @@ type RulesAlertApplyConfiguration struct {
 	ResendDelay        *string `json:"resendDelay,omitempty"`
 }
 
-// RulesAlertApplyConfiguration constructs an declarative configuration of the RulesAlert type for use with
+// RulesAlertApplyConfiguration constructs a declarative configuration of the RulesAlert type for use with
 // apply.
 func RulesAlert() *RulesAlertApplyConfiguration {
 	return &RulesAlertApplyConfiguration{}

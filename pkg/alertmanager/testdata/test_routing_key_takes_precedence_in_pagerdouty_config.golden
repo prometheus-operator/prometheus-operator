@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  pagerduty_configs:
+  - routing_key: foo
+templates: []

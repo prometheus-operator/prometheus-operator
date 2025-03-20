@@ -16,13 +16,14 @@ package webconfig
 
 import (
 	"context"
-	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -37,13 +38,12 @@ var (
 //
 // Config can make a secret which holds the web config contents, as well as
 // volumes and volume mounts for referencing the secret and the
-// necessary TLS credentials.
+// necessary TLS files.
 type Config struct {
-	tlsConfig      *monitoringv1.WebTLSConfig
-	httpConfig     *monitoringv1.WebHTTPConfig
-	tlsCredentials *tlsCredentials
-	mountingDir    string
-	secretName     string
+	tlsConfig   *monitoringv1.WebTLSConfig
+	httpConfig  *monitoringv1.WebHTTPConfig
+	mountingDir string
+	secretName  string
 }
 
 // New creates a new Config.
@@ -54,22 +54,16 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 		return nil, err
 	}
 
-	var tlsCreds *tlsCredentials
-	if tlsConfig != nil {
-		tlsCreds = newTLSCredentials(mountingDir, tlsConfig.KeySecret, tlsConfig.Cert, tlsConfig.ClientCA)
-	}
-
 	return &Config{
-		tlsConfig:      tlsConfig,
-		httpConfig:     configFileFields.HTTPConfig,
-		tlsCredentials: tlsCreds,
-		mountingDir:    mountingDir,
-		secretName:     secretName,
+		tlsConfig:   tlsConfig,
+		httpConfig:  configFileFields.HTTPConfig,
+		mountingDir: mountingDir,
+		secretName:  secretName,
 	}, nil
 }
 
 // GetMountParameters returns volumes and volume mounts referencing the config file
-// and the associated TLS credentials.
+// and the associated TLS files.
 // In addition, GetMountParameters returns a web.config.file command line option pointing
 // to the file in the volume mount.
 func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
@@ -84,12 +78,15 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
+	tls := c.tlsConfig
 
-	if c.tlsCredentials != nil {
-		tlsVolumes, tlsMounts, err := c.tlsCredentials.getMountParameters()
+	if c.tlsConfig != nil {
+		tlsRefs := NewTLSReferences(c.mountingDir, tls.KeySecret, tls.Cert, tls.ClientCA)
+		tlsVolumes, tlsMounts, err := tlsRefs.GetMountParameters(volumePrefix)
 		if err != nil {
 			return monitoringv1.Argument{}, nil, nil, err
 		}
+
 		volumes = append(volumes, tlsVolumes...)
 		mounts = append(mounts, tlsMounts...)
 	}
@@ -97,7 +94,8 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 	return arg, volumes, mounts, nil
 }
 
-// CreateOrUpdateWebConfigSecret create or update a Kubernetes secret with the data for the web config file.
+// CreateOrUpdateWebConfigSecret create or update a Kubernetes secret with the
+// data for the web config file.
 // The format of the web config file is available in the official prometheus documentation:
 // https://prometheus.io/docs/prometheus/latest/configuration/https/#https-and-authentication
 func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, s *v1.Secret) error {
@@ -119,8 +117,7 @@ func (c Config) generateConfigFileContents() ([]byte, error) {
 		return []byte{}, nil
 	}
 
-	cfg := yaml.MapSlice{}
-
+	var cfg yaml.MapSlice
 	cfg = c.addTLSServerConfigToYaml(cfg)
 	cfg = c.addHTTPServerConfigToYaml(cfg)
 
@@ -134,36 +131,47 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	tlsServerConfig := yaml.MapSlice{}
-	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, c.tlsCredentials.getCertFilename())})
+	tlsRefs := NewTLSReferences(c.mountingDir, tls.KeySecret, tls.Cert, tls.ClientCA)
+
+	switch {
+	case ptr.Deref(tls.CertFile, "") != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: *tls.CertFile})
+	case tlsRefs.GetCertMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: filepath.Join(tlsRefs.GetCertMountPath(), tlsRefs.GetCertFilename())})
 	}
 
-	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, c.tlsCredentials.getKeyFilename())})
+	switch {
+	case ptr.Deref(tls.KeyFile, "") != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: *tls.KeyFile})
+	case tlsRefs.GetKeyMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: filepath.Join(tlsRefs.GetKeyMountPath(), tlsRefs.GetKeyFilename())})
 	}
 
-	if tls.ClientAuthType != "" {
+	if ptr.Deref(tls.ClientAuthType, "") != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
 			Key:   "client_auth_type",
-			Value: tls.ClientAuthType,
+			Value: *tls.ClientAuthType,
 		})
 	}
 
-	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", caPath, c.tlsCredentials.getCAFilename())})
+	switch {
+	case ptr.Deref(tls.ClientCAFile, "") != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: *tls.ClientCAFile})
+	case tlsRefs.GetCAMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: filepath.Join(tlsRefs.GetCAMountPath(), tlsRefs.GetCAFilename())})
 	}
 
-	if tls.MinVersion != "" {
+	if ptr.Deref(tls.MinVersion, "") != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
 			Key:   "min_version",
-			Value: tls.MinVersion,
+			Value: *tls.MinVersion,
 		})
 	}
 
-	if tls.MaxVersion != "" {
+	if ptr.Deref(tls.MaxVersion, "") != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{
 			Key:   "max_version",
-			Value: tls.MaxVersion,
+			Value: *tls.MaxVersion,
 		})
 	}
 

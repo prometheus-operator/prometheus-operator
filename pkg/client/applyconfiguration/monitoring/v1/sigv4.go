@@ -17,20 +17,20 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
-// Sigv4ApplyConfiguration represents an declarative configuration of the Sigv4 type for use
+// Sigv4ApplyConfiguration represents a declarative configuration of the Sigv4 type for use
 // with apply.
 type Sigv4ApplyConfiguration struct {
-	Region    *string               `json:"region,omitempty"`
-	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
-	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
-	Profile   *string               `json:"profile,omitempty"`
-	RoleArn   *string               `json:"roleArn,omitempty"`
+	Region    *string                   `json:"region,omitempty"`
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	Profile   *string                   `json:"profile,omitempty"`
+	RoleArn   *string                   `json:"roleArn,omitempty"`
 }
 
-// Sigv4ApplyConfiguration constructs an declarative configuration of the Sigv4 type for use with
+// Sigv4ApplyConfiguration constructs a declarative configuration of the Sigv4 type for use with
 // apply.
 func Sigv4() *Sigv4ApplyConfiguration {
 	return &Sigv4ApplyConfiguration{}
@@ -47,7 +47,7 @@ func (b *Sigv4ApplyConfiguration) WithRegion(value string) *Sigv4ApplyConfigurat
 // WithAccessKey sets the AccessKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AccessKey field is set to the value of the last call.
-func (b *Sigv4ApplyConfiguration) WithAccessKey(value v1.SecretKeySelector) *Sigv4ApplyConfiguration {
+func (b *Sigv4ApplyConfiguration) WithAccessKey(value corev1.SecretKeySelector) *Sigv4ApplyConfiguration {
 	b.AccessKey = &value
 	return b
 }
@@ -55,7 +55,7 @@ func (b *Sigv4ApplyConfiguration) WithAccessKey(value v1.SecretKeySelector) *Sig
 // WithSecretKey sets the SecretKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SecretKey field is set to the value of the last call.
-func (b *Sigv4ApplyConfiguration) WithSecretKey(value v1.SecretKeySelector) *Sigv4ApplyConfiguration {
+func (b *Sigv4ApplyConfiguration) WithSecretKey(value corev1.SecretKeySelector) *Sigv4ApplyConfiguration {
 	b.SecretKey = &value
 	return b
 }

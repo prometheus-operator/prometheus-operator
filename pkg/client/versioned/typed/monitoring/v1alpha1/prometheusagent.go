@@ -17,19 +17,16 @@
 package v1alpha1
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-	"time"
+	context "context"
 
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	applyconfigurationmonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // PrometheusAgentsGetter has a method to return a PrometheusAgentInterface.
@@ -40,17 +37,19 @@ type PrometheusAgentsGetter interface {
 
 // PrometheusAgentInterface has methods to work with PrometheusAgent resources.
 type PrometheusAgentInterface interface {
-	Create(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.CreateOptions) (*v1alpha1.PrometheusAgent, error)
-	Update(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*v1alpha1.PrometheusAgent, error)
-	UpdateStatus(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*v1alpha1.PrometheusAgent, error)
+	Create(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgent, opts v1.CreateOptions) (*monitoringv1alpha1.PrometheusAgent, error)
+	Update(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*monitoringv1alpha1.PrometheusAgent, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*monitoringv1alpha1.PrometheusAgent, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.PrometheusAgent, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.PrometheusAgentList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*monitoringv1alpha1.PrometheusAgent, error)
+	List(ctx context.Context, opts v1.ListOptions) (*monitoringv1alpha1.PrometheusAgentList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusAgent, err error)
-	Apply(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error)
-	ApplyStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1alpha1.PrometheusAgent, err error)
+	Apply(ctx context.Context, prometheusAgent *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.PrometheusAgent, err error)
+	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+	ApplyStatus(ctx context.Context, prometheusAgent *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.PrometheusAgent, err error)
 	GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -59,209 +58,28 @@ type PrometheusAgentInterface interface {
 
 // prometheusAgents implements PrometheusAgentInterface
 type prometheusAgents struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithListAndApply[*monitoringv1alpha1.PrometheusAgent, *monitoringv1alpha1.PrometheusAgentList, *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration]
 }
 
 // newPrometheusAgents returns a PrometheusAgents
 func newPrometheusAgents(c *MonitoringV1alpha1Client, namespace string) *prometheusAgents {
 	return &prometheusAgents{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithListAndApply[*monitoringv1alpha1.PrometheusAgent, *monitoringv1alpha1.PrometheusAgentList, *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration](
+			"prometheusagents",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *monitoringv1alpha1.PrometheusAgent { return &monitoringv1alpha1.PrometheusAgent{} },
+			func() *monitoringv1alpha1.PrometheusAgentList { return &monitoringv1alpha1.PrometheusAgentList{} },
+		),
 	}
-}
-
-// Get takes name of the prometheusAgent, and returns the corresponding prometheusAgent object, and an error if there is any.
-func (c *prometheusAgents) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of PrometheusAgents that match those selectors.
-func (c *prometheusAgents) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PrometheusAgentList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.PrometheusAgentList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested prometheusAgents.
-func (c *prometheusAgents) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a prometheusAgent and creates it.  Returns the server's representation of the prometheusAgent, and an error, if there is any.
-func (c *prometheusAgents) Create(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.CreateOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(prometheusAgent).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a prometheusAgent and updates it. Returns the server's representation of the prometheusAgent, and an error, if there is any.
-func (c *prometheusAgents) Update(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(prometheusAgent.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(prometheusAgent).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *prometheusAgents) UpdateStatus(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(prometheusAgent.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(prometheusAgent).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the prometheusAgent and deletes it. Returns an error if one occurs.
-func (c *prometheusAgents) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *prometheusAgents) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched prometheusAgent.
-func (c *prometheusAgents) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusAgent, err error) {
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied prometheusAgent.
-func (c *prometheusAgents) Apply(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	if prometheusAgent == nil {
-		return nil, fmt.Errorf("prometheusAgent provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(prometheusAgent)
-	if err != nil {
-		return nil, err
-	}
-	name := prometheusAgent.Name
-	if name == nil {
-		return nil, fmt.Errorf("prometheusAgent.Name must be provided to Apply")
-	}
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(*name).
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// ApplyStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *prometheusAgents) ApplyStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	if prometheusAgent == nil {
-		return nil, fmt.Errorf("prometheusAgent provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(prometheusAgent)
-	if err != nil {
-		return nil, err
-	}
-
-	name := prometheusAgent.Name
-	if name == nil {
-		return nil, fmt.Errorf("prometheusAgent.Name must be provided to Apply")
-	}
-
-	result = &v1alpha1.PrometheusAgent{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("prometheusagents").
-		Name(*name).
-		SubResource("status").
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }
 
 // GetScale takes name of the prometheusAgent, and returns the corresponding autoscalingv1.Scale object, and an error if there is any.
 func (c *prometheusAgents) GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
 	result = &autoscalingv1.Scale{}
-	err = c.client.Get().
-		Namespace(c.ns).
+	err = c.GetClient().Get().
+		Namespace(c.GetNamespace()).
 		Resource("prometheusagents").
 		Name(prometheusAgentName).
 		SubResource("scale").
@@ -274,8 +92,8 @@ func (c *prometheusAgents) GetScale(ctx context.Context, prometheusAgentName str
 // UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
 func (c *prometheusAgents) UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
 	result = &autoscalingv1.Scale{}
-	err = c.client.Put().
-		Namespace(c.ns).
+	err = c.GetClient().Put().
+		Namespace(c.GetNamespace()).
 		Resource("prometheusagents").
 		Name(prometheusAgentName).
 		SubResource("scale").

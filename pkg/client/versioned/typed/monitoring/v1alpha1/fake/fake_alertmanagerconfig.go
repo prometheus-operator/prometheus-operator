@@ -17,136 +17,35 @@
 package fake
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	typedmonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1alpha1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeAlertmanagerConfigs implements AlertmanagerConfigInterface
-type FakeAlertmanagerConfigs struct {
+// fakeAlertmanagerConfigs implements AlertmanagerConfigInterface
+type fakeAlertmanagerConfigs struct {
+	*gentype.FakeClientWithListAndApply[*v1alpha1.AlertmanagerConfig, *v1alpha1.AlertmanagerConfigList, *monitoringv1alpha1.AlertmanagerConfigApplyConfiguration]
 	Fake *FakeMonitoringV1alpha1
-	ns   string
 }
 
-var alertmanagerconfigsResource = v1alpha1.SchemeGroupVersion.WithResource("alertmanagerconfigs")
-
-var alertmanagerconfigsKind = v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig")
-
-// Get takes name of the alertmanagerConfig, and returns the corresponding alertmanagerConfig object, and an error if there is any.
-func (c *FakeAlertmanagerConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(alertmanagerconfigsResource, c.ns, name), &v1alpha1.AlertmanagerConfig{})
-
-	if obj == nil {
-		return nil, err
+func newFakeAlertmanagerConfigs(fake *FakeMonitoringV1alpha1, namespace string) typedmonitoringv1alpha1.AlertmanagerConfigInterface {
+	return &fakeAlertmanagerConfigs{
+		gentype.NewFakeClientWithListAndApply[*v1alpha1.AlertmanagerConfig, *v1alpha1.AlertmanagerConfigList, *monitoringv1alpha1.AlertmanagerConfigApplyConfiguration](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("alertmanagerconfigs"),
+			v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig"),
+			func() *v1alpha1.AlertmanagerConfig { return &v1alpha1.AlertmanagerConfig{} },
+			func() *v1alpha1.AlertmanagerConfigList { return &v1alpha1.AlertmanagerConfigList{} },
+			func(dst, src *v1alpha1.AlertmanagerConfigList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.AlertmanagerConfigList) []*v1alpha1.AlertmanagerConfig {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.AlertmanagerConfigList, items []*v1alpha1.AlertmanagerConfig) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.AlertmanagerConfig), err
-}
-
-// List takes label and field selectors, and returns the list of AlertmanagerConfigs that match those selectors.
-func (c *FakeAlertmanagerConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AlertmanagerConfigList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(alertmanagerconfigsResource, alertmanagerconfigsKind, c.ns, opts), &v1alpha1.AlertmanagerConfigList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.AlertmanagerConfigList{ListMeta: obj.(*v1alpha1.AlertmanagerConfigList).ListMeta}
-	for _, item := range obj.(*v1alpha1.AlertmanagerConfigList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested alertmanagerConfigs.
-func (c *FakeAlertmanagerConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(alertmanagerconfigsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a alertmanagerConfig and creates it.  Returns the server's representation of the alertmanagerConfig, and an error, if there is any.
-func (c *FakeAlertmanagerConfigs) Create(ctx context.Context, alertmanagerConfig *v1alpha1.AlertmanagerConfig, opts v1.CreateOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(alertmanagerconfigsResource, c.ns, alertmanagerConfig), &v1alpha1.AlertmanagerConfig{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.AlertmanagerConfig), err
-}
-
-// Update takes the representation of a alertmanagerConfig and updates it. Returns the server's representation of the alertmanagerConfig, and an error, if there is any.
-func (c *FakeAlertmanagerConfigs) Update(ctx context.Context, alertmanagerConfig *v1alpha1.AlertmanagerConfig, opts v1.UpdateOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(alertmanagerconfigsResource, c.ns, alertmanagerConfig), &v1alpha1.AlertmanagerConfig{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.AlertmanagerConfig), err
-}
-
-// Delete takes name of the alertmanagerConfig and deletes it. Returns an error if one occurs.
-func (c *FakeAlertmanagerConfigs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(alertmanagerconfigsResource, c.ns, name, opts), &v1alpha1.AlertmanagerConfig{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeAlertmanagerConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(alertmanagerconfigsResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.AlertmanagerConfigList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched alertmanagerConfig.
-func (c *FakeAlertmanagerConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AlertmanagerConfig, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(alertmanagerconfigsResource, c.ns, name, pt, data, subresources...), &v1alpha1.AlertmanagerConfig{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.AlertmanagerConfig), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied alertmanagerConfig.
-func (c *FakeAlertmanagerConfigs) Apply(ctx context.Context, alertmanagerConfig *monitoringv1alpha1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
-	if alertmanagerConfig == nil {
-		return nil, fmt.Errorf("alertmanagerConfig provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(alertmanagerConfig)
-	if err != nil {
-		return nil, err
-	}
-	name := alertmanagerConfig.Name
-	if name == nil {
-		return nil, fmt.Errorf("alertmanagerConfig.Name must be provided to Apply")
-	}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(alertmanagerconfigsResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.AlertmanagerConfig{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.AlertmanagerConfig), err
 }

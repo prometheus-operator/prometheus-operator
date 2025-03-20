@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Import environment variables from file
-        run: cat ".github/env" >> $GITHUB_ENV
+        run: cat ".github/env" >> "$GITHUB_ENV"
       - name: Install Go
         uses: actions/setup-go@v5
         with:

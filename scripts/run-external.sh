@@ -14,6 +14,8 @@ declare SKIP_OPERATOR_RUN_CHECK=false
 declare USE_DEFAULT_CONTEXT=false
 declare API_SERVER=""
 declare IMPERSONATE_USER="${IMPERSONATE_USER:-}"
+declare FEATURE_GATES="${FEATURE_GATES:-}"
+declare LOG_LEVEL="${LOG_LEVEL:-info}"
 
 # tmp operator files that needs to be cleaned up
 declare -r CA_FILE="tmp/CA_FILE"
@@ -130,6 +132,8 @@ run_operator() {
 		--apiserver="$API_SERVER" \
 		--ca-file="$CA_FILE" \
 		--cert-file="$CERT_FILE" \
+		--feature-gates="$FEATURE_GATES" \
+		--log-level="$LOG_LEVEL" \
 		--key-file="$KEY_FILE" 2>&1 | tee tmp/operator.log
 }
 

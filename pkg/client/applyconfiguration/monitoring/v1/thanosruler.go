@@ -17,21 +17,21 @@
 package v1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
-	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ThanosRulerApplyConfiguration represents an declarative configuration of the ThanosRuler type for use
+// ThanosRulerApplyConfiguration represents a declarative configuration of the ThanosRuler type for use
 // with apply.
 type ThanosRulerApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
-	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *ThanosRulerSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                           *ThanosRulerStatusApplyConfiguration `json:"status,omitempty"`
+	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
+	Spec                                 *ThanosRulerSpecApplyConfiguration   `json:"spec,omitempty"`
+	Status                               *ThanosRulerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// ThanosRuler constructs an declarative configuration of the ThanosRuler type for use with
+// ThanosRuler constructs a declarative configuration of the ThanosRuler type for use with
 // apply.
 func ThanosRuler(name, namespace string) *ThanosRulerApplyConfiguration {
 	b := &ThanosRulerApplyConfiguration{}
@@ -46,7 +46,7 @@ func ThanosRuler(name, namespace string) *ThanosRulerApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Kind field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithKind(value string) *ThanosRulerApplyConfiguration {
-	b.Kind = &value
+	b.TypeMetaApplyConfiguration.Kind = &value
 	return b
 }
 
@@ -54,7 +54,7 @@ func (b *ThanosRulerApplyConfiguration) WithKind(value string) *ThanosRulerApply
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithAPIVersion(value string) *ThanosRulerApplyConfiguration {
-	b.APIVersion = &value
+	b.TypeMetaApplyConfiguration.APIVersion = &value
 	return b
 }
 
@@ -63,7 +63,7 @@ func (b *ThanosRulerApplyConfiguration) WithAPIVersion(value string) *ThanosRule
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithName(value string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Name = &value
+	b.ObjectMetaApplyConfiguration.Name = &value
 	return b
 }
 
@@ -72,7 +72,7 @@ func (b *ThanosRulerApplyConfiguration) WithName(value string) *ThanosRulerApply
 // If called multiple times, the GenerateName field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithGenerateName(value string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.GenerateName = &value
+	b.ObjectMetaApplyConfiguration.GenerateName = &value
 	return b
 }
 
@@ -81,7 +81,7 @@ func (b *ThanosRulerApplyConfiguration) WithGenerateName(value string) *ThanosRu
 // If called multiple times, the Namespace field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithNamespace(value string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Namespace = &value
+	b.ObjectMetaApplyConfiguration.Namespace = &value
 	return b
 }
 
@@ -90,7 +90,7 @@ func (b *ThanosRulerApplyConfiguration) WithNamespace(value string) *ThanosRuler
 // If called multiple times, the UID field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithUID(value types.UID) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.UID = &value
+	b.ObjectMetaApplyConfiguration.UID = &value
 	return b
 }
 
@@ -99,7 +99,7 @@ func (b *ThanosRulerApplyConfiguration) WithUID(value types.UID) *ThanosRulerApp
 // If called multiple times, the ResourceVersion field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithResourceVersion(value string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.ResourceVersion = &value
+	b.ObjectMetaApplyConfiguration.ResourceVersion = &value
 	return b
 }
 
@@ -108,25 +108,25 @@ func (b *ThanosRulerApplyConfiguration) WithResourceVersion(value string) *Thano
 // If called multiple times, the Generation field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithGeneration(value int64) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Generation = &value
+	b.ObjectMetaApplyConfiguration.Generation = &value
 	return b
 }
 
 // WithCreationTimestamp sets the CreationTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CreationTimestamp field is set to the value of the last call.
-func (b *ThanosRulerApplyConfiguration) WithCreationTimestamp(value metav1.Time) *ThanosRulerApplyConfiguration {
+func (b *ThanosRulerApplyConfiguration) WithCreationTimestamp(value apismetav1.Time) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.CreationTimestamp = &value
+	b.ObjectMetaApplyConfiguration.CreationTimestamp = &value
 	return b
 }
 
 // WithDeletionTimestamp sets the DeletionTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DeletionTimestamp field is set to the value of the last call.
-func (b *ThanosRulerApplyConfiguration) WithDeletionTimestamp(value metav1.Time) *ThanosRulerApplyConfiguration {
+func (b *ThanosRulerApplyConfiguration) WithDeletionTimestamp(value apismetav1.Time) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.DeletionTimestamp = &value
+	b.ObjectMetaApplyConfiguration.DeletionTimestamp = &value
 	return b
 }
 
@@ -135,7 +135,7 @@ func (b *ThanosRulerApplyConfiguration) WithDeletionTimestamp(value metav1.Time)
 // If called multiple times, the DeletionGracePeriodSeconds field is set to the value of the last call.
 func (b *ThanosRulerApplyConfiguration) WithDeletionGracePeriodSeconds(value int64) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.DeletionGracePeriodSeconds = &value
+	b.ObjectMetaApplyConfiguration.DeletionGracePeriodSeconds = &value
 	return b
 }
 
@@ -145,11 +145,11 @@ func (b *ThanosRulerApplyConfiguration) WithDeletionGracePeriodSeconds(value int
 // overwriting an existing map entries in Labels field with the same key.
 func (b *ThanosRulerApplyConfiguration) WithLabels(entries map[string]string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	if b.Labels == nil && len(entries) > 0 {
-		b.Labels = make(map[string]string, len(entries))
+	if b.ObjectMetaApplyConfiguration.Labels == nil && len(entries) > 0 {
+		b.ObjectMetaApplyConfiguration.Labels = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
-		b.Labels[k] = v
+		b.ObjectMetaApplyConfiguration.Labels[k] = v
 	}
 	return b
 }
@@ -160,11 +160,11 @@ func (b *ThanosRulerApplyConfiguration) WithLabels(entries map[string]string) *T
 // overwriting an existing map entries in Annotations field with the same key.
 func (b *ThanosRulerApplyConfiguration) WithAnnotations(entries map[string]string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	if b.Annotations == nil && len(entries) > 0 {
-		b.Annotations = make(map[string]string, len(entries))
+	if b.ObjectMetaApplyConfiguration.Annotations == nil && len(entries) > 0 {
+		b.ObjectMetaApplyConfiguration.Annotations = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
-		b.Annotations[k] = v
+		b.ObjectMetaApplyConfiguration.Annotations[k] = v
 	}
 	return b
 }
@@ -172,13 +172,13 @@ func (b *ThanosRulerApplyConfiguration) WithAnnotations(entries map[string]strin
 // WithOwnerReferences adds the given value to the OwnerReferences field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the OwnerReferences field.
-func (b *ThanosRulerApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *ThanosRulerApplyConfiguration {
+func (b *ThanosRulerApplyConfiguration) WithOwnerReferences(values ...*metav1.OwnerReferenceApplyConfiguration) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithOwnerReferences")
 		}
-		b.OwnerReferences = append(b.OwnerReferences, *values[i])
+		b.ObjectMetaApplyConfiguration.OwnerReferences = append(b.ObjectMetaApplyConfiguration.OwnerReferences, *values[i])
 	}
 	return b
 }
@@ -189,14 +189,14 @@ func (b *ThanosRulerApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerR
 func (b *ThanosRulerApplyConfiguration) WithFinalizers(values ...string) *ThanosRulerApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
-		b.Finalizers = append(b.Finalizers, values[i])
+		b.ObjectMetaApplyConfiguration.Finalizers = append(b.ObjectMetaApplyConfiguration.Finalizers, values[i])
 	}
 	return b
 }
 
 func (b *ThanosRulerApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
 	if b.ObjectMetaApplyConfiguration == nil {
-		b.ObjectMetaApplyConfiguration = &v1.ObjectMetaApplyConfiguration{}
+		b.ObjectMetaApplyConfiguration = &metav1.ObjectMetaApplyConfiguration{}
 	}
 }
 
@@ -214,4 +214,10 @@ func (b *ThanosRulerApplyConfiguration) WithSpec(value *ThanosRulerSpecApplyConf
 func (b *ThanosRulerApplyConfiguration) WithStatus(value *ThanosRulerStatusApplyConfiguration) *ThanosRulerApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *ThanosRulerApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.ObjectMetaApplyConfiguration.Name
 }

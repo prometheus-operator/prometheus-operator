@@ -17,20 +17,20 @@
 package v1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
-	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PodMonitorApplyConfiguration represents an declarative configuration of the PodMonitor type for use
+// PodMonitorApplyConfiguration represents a declarative configuration of the PodMonitor type for use
 // with apply.
 type PodMonitorApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
-	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *PodMonitorSpecApplyConfiguration `json:"spec,omitempty"`
+	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
+	Spec                                 *PodMonitorSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// PodMonitor constructs an declarative configuration of the PodMonitor type for use with
+// PodMonitor constructs a declarative configuration of the PodMonitor type for use with
 // apply.
 func PodMonitor(name, namespace string) *PodMonitorApplyConfiguration {
 	b := &PodMonitorApplyConfiguration{}
@@ -45,7 +45,7 @@ func PodMonitor(name, namespace string) *PodMonitorApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Kind field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithKind(value string) *PodMonitorApplyConfiguration {
-	b.Kind = &value
+	b.TypeMetaApplyConfiguration.Kind = &value
 	return b
 }
 
@@ -53,7 +53,7 @@ func (b *PodMonitorApplyConfiguration) WithKind(value string) *PodMonitorApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithAPIVersion(value string) *PodMonitorApplyConfiguration {
-	b.APIVersion = &value
+	b.TypeMetaApplyConfiguration.APIVersion = &value
 	return b
 }
 
@@ -62,7 +62,7 @@ func (b *PodMonitorApplyConfiguration) WithAPIVersion(value string) *PodMonitorA
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithName(value string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Name = &value
+	b.ObjectMetaApplyConfiguration.Name = &value
 	return b
 }
 
@@ -71,7 +71,7 @@ func (b *PodMonitorApplyConfiguration) WithName(value string) *PodMonitorApplyCo
 // If called multiple times, the GenerateName field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithGenerateName(value string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.GenerateName = &value
+	b.ObjectMetaApplyConfiguration.GenerateName = &value
 	return b
 }
 
@@ -80,7 +80,7 @@ func (b *PodMonitorApplyConfiguration) WithGenerateName(value string) *PodMonito
 // If called multiple times, the Namespace field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithNamespace(value string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Namespace = &value
+	b.ObjectMetaApplyConfiguration.Namespace = &value
 	return b
 }
 
@@ -89,7 +89,7 @@ func (b *PodMonitorApplyConfiguration) WithNamespace(value string) *PodMonitorAp
 // If called multiple times, the UID field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithUID(value types.UID) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.UID = &value
+	b.ObjectMetaApplyConfiguration.UID = &value
 	return b
 }
 
@@ -98,7 +98,7 @@ func (b *PodMonitorApplyConfiguration) WithUID(value types.UID) *PodMonitorApply
 // If called multiple times, the ResourceVersion field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithResourceVersion(value string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.ResourceVersion = &value
+	b.ObjectMetaApplyConfiguration.ResourceVersion = &value
 	return b
 }
 
@@ -107,25 +107,25 @@ func (b *PodMonitorApplyConfiguration) WithResourceVersion(value string) *PodMon
 // If called multiple times, the Generation field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithGeneration(value int64) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Generation = &value
+	b.ObjectMetaApplyConfiguration.Generation = &value
 	return b
 }
 
 // WithCreationTimestamp sets the CreationTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CreationTimestamp field is set to the value of the last call.
-func (b *PodMonitorApplyConfiguration) WithCreationTimestamp(value metav1.Time) *PodMonitorApplyConfiguration {
+func (b *PodMonitorApplyConfiguration) WithCreationTimestamp(value apismetav1.Time) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.CreationTimestamp = &value
+	b.ObjectMetaApplyConfiguration.CreationTimestamp = &value
 	return b
 }
 
 // WithDeletionTimestamp sets the DeletionTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DeletionTimestamp field is set to the value of the last call.
-func (b *PodMonitorApplyConfiguration) WithDeletionTimestamp(value metav1.Time) *PodMonitorApplyConfiguration {
+func (b *PodMonitorApplyConfiguration) WithDeletionTimestamp(value apismetav1.Time) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.DeletionTimestamp = &value
+	b.ObjectMetaApplyConfiguration.DeletionTimestamp = &value
 	return b
 }
 
@@ -134,7 +134,7 @@ func (b *PodMonitorApplyConfiguration) WithDeletionTimestamp(value metav1.Time) 
 // If called multiple times, the DeletionGracePeriodSeconds field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithDeletionGracePeriodSeconds(value int64) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.DeletionGracePeriodSeconds = &value
+	b.ObjectMetaApplyConfiguration.DeletionGracePeriodSeconds = &value
 	return b
 }
 
@@ -144,11 +144,11 @@ func (b *PodMonitorApplyConfiguration) WithDeletionGracePeriodSeconds(value int6
 // overwriting an existing map entries in Labels field with the same key.
 func (b *PodMonitorApplyConfiguration) WithLabels(entries map[string]string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	if b.Labels == nil && len(entries) > 0 {
-		b.Labels = make(map[string]string, len(entries))
+	if b.ObjectMetaApplyConfiguration.Labels == nil && len(entries) > 0 {
+		b.ObjectMetaApplyConfiguration.Labels = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
-		b.Labels[k] = v
+		b.ObjectMetaApplyConfiguration.Labels[k] = v
 	}
 	return b
 }
@@ -159,11 +159,11 @@ func (b *PodMonitorApplyConfiguration) WithLabels(entries map[string]string) *Po
 // overwriting an existing map entries in Annotations field with the same key.
 func (b *PodMonitorApplyConfiguration) WithAnnotations(entries map[string]string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	if b.Annotations == nil && len(entries) > 0 {
-		b.Annotations = make(map[string]string, len(entries))
+	if b.ObjectMetaApplyConfiguration.Annotations == nil && len(entries) > 0 {
+		b.ObjectMetaApplyConfiguration.Annotations = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
-		b.Annotations[k] = v
+		b.ObjectMetaApplyConfiguration.Annotations[k] = v
 	}
 	return b
 }
@@ -171,13 +171,13 @@ func (b *PodMonitorApplyConfiguration) WithAnnotations(entries map[string]string
 // WithOwnerReferences adds the given value to the OwnerReferences field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the OwnerReferences field.
-func (b *PodMonitorApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *PodMonitorApplyConfiguration {
+func (b *PodMonitorApplyConfiguration) WithOwnerReferences(values ...*metav1.OwnerReferenceApplyConfiguration) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithOwnerReferences")
 		}
-		b.OwnerReferences = append(b.OwnerReferences, *values[i])
+		b.ObjectMetaApplyConfiguration.OwnerReferences = append(b.ObjectMetaApplyConfiguration.OwnerReferences, *values[i])
 	}
 	return b
 }
@@ -188,14 +188,14 @@ func (b *PodMonitorApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerRe
 func (b *PodMonitorApplyConfiguration) WithFinalizers(values ...string) *PodMonitorApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
-		b.Finalizers = append(b.Finalizers, values[i])
+		b.ObjectMetaApplyConfiguration.Finalizers = append(b.ObjectMetaApplyConfiguration.Finalizers, values[i])
 	}
 	return b
 }
 
 func (b *PodMonitorApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
 	if b.ObjectMetaApplyConfiguration == nil {
-		b.ObjectMetaApplyConfiguration = &v1.ObjectMetaApplyConfiguration{}
+		b.ObjectMetaApplyConfiguration = &metav1.ObjectMetaApplyConfiguration{}
 	}
 }
 
@@ -205,4 +205,10 @@ func (b *PodMonitorApplyConfiguration) ensureObjectMetaApplyConfigurationExists(
 func (b *PodMonitorApplyConfiguration) WithSpec(value *PodMonitorSpecApplyConfiguration) *PodMonitorApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *PodMonitorApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.ObjectMetaApplyConfiguration.Name
 }

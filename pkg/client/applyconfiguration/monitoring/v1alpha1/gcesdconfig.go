@@ -20,18 +20,18 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// GCESDConfigApplyConfiguration represents an declarative configuration of the GCESDConfig type for use
+// GCESDConfigApplyConfiguration represents a declarative configuration of the GCESDConfig type for use
 // with apply.
 type GCESDConfigApplyConfiguration struct {
 	Project         *string      `json:"project,omitempty"`
 	Zone            *string      `json:"zone,omitempty"`
 	Filter          *string      `json:"filter,omitempty"`
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	Port            *int         `json:"port,omitempty"`
+	Port            *int32       `json:"port,omitempty"`
 	TagSeparator    *string      `json:"tagSeparator,omitempty"`
 }
 
-// GCESDConfigApplyConfiguration constructs an declarative configuration of the GCESDConfig type for use with
+// GCESDConfigApplyConfiguration constructs a declarative configuration of the GCESDConfig type for use with
 // apply.
 func GCESDConfig() *GCESDConfigApplyConfiguration {
 	return &GCESDConfigApplyConfiguration{}
@@ -72,7 +72,7 @@ func (b *GCESDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration) *
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *GCESDConfigApplyConfiguration) WithPort(value int) *GCESDConfigApplyConfiguration {
+func (b *GCESDConfigApplyConfiguration) WithPort(value int32) *GCESDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }

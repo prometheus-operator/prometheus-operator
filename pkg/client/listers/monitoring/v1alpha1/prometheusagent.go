@@ -17,10 +17,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // PrometheusAgentLister helps list PrometheusAgents.
@@ -28,7 +28,7 @@ import (
 type PrometheusAgentLister interface {
 	// List lists all PrometheusAgents in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.PrometheusAgent, err error)
+	List(selector labels.Selector) (ret []*monitoringv1alpha1.PrometheusAgent, err error)
 	// PrometheusAgents returns an object that can list and get PrometheusAgents.
 	PrometheusAgents(namespace string) PrometheusAgentNamespaceLister
 	PrometheusAgentListerExpansion
@@ -36,25 +36,17 @@ type PrometheusAgentLister interface {
 
 // prometheusAgentLister implements the PrometheusAgentLister interface.
 type prometheusAgentLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*monitoringv1alpha1.PrometheusAgent]
 }
 
 // NewPrometheusAgentLister returns a new PrometheusAgentLister.
 func NewPrometheusAgentLister(indexer cache.Indexer) PrometheusAgentLister {
-	return &prometheusAgentLister{indexer: indexer}
-}
-
-// List lists all PrometheusAgents in the indexer.
-func (s *prometheusAgentLister) List(selector labels.Selector) (ret []*v1alpha1.PrometheusAgent, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.PrometheusAgent))
-	})
-	return ret, err
+	return &prometheusAgentLister{listers.New[*monitoringv1alpha1.PrometheusAgent](indexer, monitoringv1alpha1.Resource("prometheusagent"))}
 }
 
 // PrometheusAgents returns an object that can list and get PrometheusAgents.
 func (s *prometheusAgentLister) PrometheusAgents(namespace string) PrometheusAgentNamespaceLister {
-	return prometheusAgentNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return prometheusAgentNamespaceLister{listers.NewNamespaced[*monitoringv1alpha1.PrometheusAgent](s.ResourceIndexer, namespace)}
 }
 
 // PrometheusAgentNamespaceLister helps list and get PrometheusAgents.
@@ -62,36 +54,15 @@ func (s *prometheusAgentLister) PrometheusAgents(namespace string) PrometheusAge
 type PrometheusAgentNamespaceLister interface {
 	// List lists all PrometheusAgents in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.PrometheusAgent, err error)
+	List(selector labels.Selector) (ret []*monitoringv1alpha1.PrometheusAgent, err error)
 	// Get retrieves the PrometheusAgent from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.PrometheusAgent, error)
+	Get(name string) (*monitoringv1alpha1.PrometheusAgent, error)
 	PrometheusAgentNamespaceListerExpansion
 }
 
 // prometheusAgentNamespaceLister implements the PrometheusAgentNamespaceLister
 // interface.
 type prometheusAgentNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all PrometheusAgents in the indexer for a given namespace.
-func (s prometheusAgentNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.PrometheusAgent, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.PrometheusAgent))
-	})
-	return ret, err
-}
-
-// Get retrieves the PrometheusAgent from the indexer for a given namespace and name.
-func (s prometheusAgentNamespaceLister) Get(name string) (*v1alpha1.PrometheusAgent, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("prometheusagent"), name)
-	}
-	return obj.(*v1alpha1.PrometheusAgent), nil
+	listers.ResourceIndexer[*monitoringv1alpha1.PrometheusAgent]
 }

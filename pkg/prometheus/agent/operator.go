@@ -17,11 +17,10 @@ package prometheusagent
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -30,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -39,6 +37,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
@@ -62,7 +61,8 @@ type Operator struct {
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
-	logger   log.Logger
+	logger *slog.Logger
+
 	accessor *operator.Accessor
 
 	controllerID string
@@ -78,25 +78,53 @@ type Operator struct {
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
+	dsetInfs  *informers.ForResource
 
 	rr *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	config                 prompkg.Config
-	endpointSliceSupported bool
+	config prompkg.Config
+
+	endpointSliceSupported bool // Whether the Kubernetes API suports the EndpointSlice kind.
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
 	eventRecorder record.EventRecorder
 
 	statusReporter prompkg.StatusReporter
+
+	daemonSetFeatureGateEnabled bool
+}
+
+type ControllerOption func(*Operator)
+
+// WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
+func WithEndpointSlice() ControllerOption {
+	return func(o *Operator) {
+		o.endpointSliceSupported = true
+	}
+}
+
+// WithScrapeConfig tells that the controller manages ScrapeConfig objects.
+func WithScrapeConfig() ControllerOption {
+	return func(o *Operator) {
+		o.scrapeConfigSupported = true
+	}
+}
+
+// WithStorageClassValidation tells that the controller should verify that the
+// Prometheus spec references a valid StorageClass name.
+func WithStorageClassValidation() ControllerOption {
+	return func(o *Operator) {
+		o.canReadStorageClass = true
+	}
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
-	logger = log.With(logger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
+	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -129,25 +157,17 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                c.Annotations,
 			Labels:                     c.Labels,
 		},
-		metrics:               operator.NewMetrics(r),
-		reconciliations:       &operator.ReconciliationTracker{},
-		controllerID:          c.ControllerID,
-		scrapeConfigSupported: scrapeConfigSupported,
-		canReadStorageClass:   canReadStorageClass,
-		eventRecorder:         erf(client, controllerName),
+		metrics:         operator.NewMetrics(r),
+		reconciliations: &operator.ReconciliationTracker{},
+		controllerID:    c.ControllerID,
+		eventRecorder:   c.EventRecorderFactory(client, controllerName),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
 	)
-
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1alpha1.PrometheusAgentsKind,
-		r,
-		o.controllerID,
-	)
+	for _, opt := range options {
+		opt(o)
+	}
 
 	o.promInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -169,8 +189,17 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	for _, informer := range o.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
-
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.promInfs,
+		o.metrics,
+		monitoringv1alpha1.PrometheusAgentsKind,
+		r,
+		o.controllerID,
+	)
 
 	o.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -254,7 +283,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			o.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.FieldSelector = c.SecretListWatchSelector.String()
+				options.FieldSelector = c.SecretListWatchFieldSelector.String()
+				options.LabelSelector = c.SecretListWatchLabelSelector.String()
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
@@ -278,6 +308,24 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("error creating statefulset informers: %w", err)
 	}
 
+	if c.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
+		o.daemonSetFeatureGateEnabled = true
+
+		o.dsetInfs, err = informers.NewInformersForResource(
+			informers.NewKubeInformerFactories(
+				c.Namespaces.PrometheusAllowList,
+				c.Namespaces.DenyList,
+				o.kclient,
+				resyncPeriod,
+				nil,
+			),
+			appsv1.SchemeGroupVersion.WithResource("daemonsets"),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error creating daemonset informers: %w", err)
+		}
+	}
+
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
@@ -292,7 +340,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			return nil, err
 		}
 
-		level.Debug(o.logger).Log("msg", "creating namespace informer", "privileged", privileged)
+		logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
 			&v1.Namespace{}, resyncPeriod, cache.Indexers{},
@@ -312,16 +360,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			return nil, err
 		}
 	}
-
-	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
-	if err != nil {
-		level.Warn(o.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
-	}
-	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
-	// The operator doesn't yet support the endpointslices API.
-	// See https://github.com/prometheus-operator/prometheus-operator/issues/3862
-	// for details.
-	o.endpointSliceSupported = false
 
 	o.statusReporter = prompkg.StatusReporter{
 		Kclient:         o.kclient,
@@ -348,6 +386,9 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
+	if c.dsetInfs != nil {
+		go c.dsetInfs.Start(ctx.Done())
+	}
 	go c.nsMonInf.Run(ctx.Done())
 	if c.nsPromInf != c.nsMonInf {
 		go c.nsPromInf.Run(ctx.Done())
@@ -377,7 +418,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 		p := o.(*monitoringv1alpha1.PrometheusAgent)
 		processFn(p, p.Status.Conditions)
 	}); err != nil {
-		level.Error(c.logger).Log("msg", "failed to list PrometheusAgent objects", "err", err)
+		c.logger.Error("failed to list PrometheusAgent objects", "err", err)
 	}
 }
 
@@ -400,6 +441,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
+		{"DaemonSet", c.dsetInfs},
 	} {
 		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
 		// nil. ScrapeConfig is one example.
@@ -408,7 +450,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		}
 
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", c.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -421,12 +463,12 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PromNamespace", c.nsPromInf},
 		{"MonNamespace", c.nsMonInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", c.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
-	level.Info(c.logger).Log("msg", "successfully synced all caches")
+	c.logger.Info("successfully synced all caches")
 	return nil
 }
 
@@ -435,6 +477,10 @@ func (c *Operator) addHandlers() {
 	c.promInfs.AddEventHandler(c.rr)
 
 	c.ssetInfs.AddEventHandler(c.rr)
+
+	if c.dsetInfs != nil {
+		c.dsetInfs.AddEventHandler(c.rr)
+	}
 
 	c.smonInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
@@ -496,32 +542,6 @@ func (c *Operator) addHandlers() {
 	})
 }
 
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
-	if !match {
-		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
-		return nil
-	}
-
-	p, err := c.promInfs.Get(promKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		level.Error(c.logger).Log("msg", "Prometheus lookup failed", "err", err)
-		return nil
-	}
-
-	return p.(*monitoringv1alpha1.PrometheusAgent)
-}
-
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
 	err := c.sync(ctx, key)
@@ -538,6 +558,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
@@ -548,7 +569,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
 
-	logger := log.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
@@ -556,27 +577,38 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if p.Spec.Paused {
-		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
+		logger.Info("the resource is paused, not reconciling")
 		return nil
 	}
 
-	level.Info(logger).Log("msg", "sync prometheus")
+	logger.Info("sync prometheusagent")
 
-	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
-		return err
+	if ptr.Deref(p.Spec.Mode, "") == v1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
+		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	// Generate the configuration data.
+	var (
+		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+		opts       = []prompkg.ConfigGeneratorOption{}
+	)
+	if c.endpointSliceSupported {
+		opts = append(opts, prompkg.WithEndpointSliceSupport())
+	}
+	if ptr.Deref(p.Spec.Mode, "") == v1alpha1.DaemonSetPrometheusAgentMode {
+		opts = append(opts, prompkg.WithDaemonSet())
+	}
+
+	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
 		return err
 	}
 
-	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
-	tlsAssets, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
+	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
 		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
@@ -585,10 +617,99 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	switch ptr.Deref(p.Spec.Mode, "") {
+	case v1alpha1.DaemonSetPrometheusAgentMode:
+		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
+	default:
+		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
+			return err
+		}
+
+		err = c.syncStatefulSet(ctx, key, p, cg, tlsAssets)
+	}
+
+	return err
+}
+
+func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
+	logger := c.logger.With("key", key)
+
+	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
+
+	var notFound bool
+	if _, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key)); err != nil {
+		notFound = apierrors.IsNotFound(err)
+		if !notFound {
+			return fmt.Errorf("retrieving daemonset failed: %w", err)
+		}
+	}
+
+	dset, err := makeDaemonSet(
+		p,
+		c.config,
+		cg,
+		tlsAssets)
+	if err != nil {
+		return fmt.Errorf("making daemonset failed: %w", err)
+	}
+
+	if notFound {
+		logger.Debug("creating daemonset")
+		if _, err := dsetClient.Create(ctx, dset, metav1.CreateOptions{}); err != nil {
+			return fmt.Errorf("creating daemonset failed: %w", err)
+		}
+
+		logger.Info("daemonset successfully created")
+		return nil
+	}
+
+	err = k8sutil.UpdateDaemonSet(ctx, dsetClient, dset)
+	sErr, ok := err.(*apierrors.StatusError)
+
+	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+		// Gather only reason for failed update
+		failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+		for i, cause := range sErr.ErrStatus.Details.Causes {
+			failMsg[i] = cause.Message
+		}
+
+		logger.Info("recreating DaemonSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+
+		propagationPolicy := metav1.DeletePropagationForeground
+		if err := dsetClient.Delete(ctx, dset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			return fmt.Errorf("failed to delete DaemonSet to avoid forbidden action: %w", err)
+		}
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("updating DaemonSet failed: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
+	logger := c.logger.With("key", key)
+
+	if p.Spec.ServiceName != nil {
+		svcClient := c.kclient.CoreV1().Services(p.Namespace)
+		selectorLabels := makeSelectorLabels(p.Name)
+
+		if err := k8sutil.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		svc := prompkg.BuildStatefulSetService(
+			governingServiceName,
+			map[string]string{"app.kubernetes.io/name": "prometheus-agent"},
+			p,
+			c.config,
+		)
+
+		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+			return fmt.Errorf("synchronizing default governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
@@ -596,13 +717,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Ensure we have a StatefulSet running Prometheus Agent deployed and that StatefulSet names are created correctly.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
-		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
-		level.Debug(logger).Log("msg", "reconciling statefulset")
+		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
+		logger.Debug("reconciling statefulset")
 
+		var notFound bool
 		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
-		exists := !apierrors.IsNotFound(err)
-		if err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf("retrieving statefulset failed: %w", err)
+		if err != nil {
+			notFound = apierrors.IsNotFound(err)
+			if !notFound {
+				return fmt.Errorf("retrieving statefulset failed: %w", err)
+			}
 		}
 
 		existingStatefulSet := &appsv1.StatefulSet{}
@@ -628,7 +752,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		sset, err := makeStatefulSet(
 			ssetName,
 			p,
-			&c.config,
+			c.config,
 			cg,
 			newSSetInputHash,
 			int32(shard),
@@ -638,24 +762,22 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 		operator.SanitizeSTS(sset)
 
-		if !exists {
-			level.Debug(logger).Log("msg", "no current statefulset found")
-			level.Debug(logger).Log("msg", "creating statefulset")
+		if notFound {
+			logger.Debug("creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return fmt.Errorf("creating statefulset failed: %w", err)
 			}
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName] {
-			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+			logger.Debug("new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
 
-		level.Debug(logger).Log(
-			"msg", "updating current statefulset because of hash divergence",
+		logger.Debug("updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName],
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -670,7 +792,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				failMsg[i] = cause.Message
 			}
 
-			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+			logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
@@ -689,7 +811,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
+	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
@@ -702,9 +824,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
+			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
 	if err != nil {
@@ -714,8 +835,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
+	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	if err != nil {
+		return err
+	}
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
@@ -760,7 +884,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
-		ctx,
 		smons,
 		pmons,
 		bmons,
@@ -778,7 +901,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return fmt.Errorf("creating compressed secret failed: %w", err)
 	}
 
-	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
+	c.logger.Debug("updating Prometheus configuration secret")
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
@@ -849,7 +972,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
 
 	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		level.Info(c.logger).Log("msg", "failed to apply prometheus status subresource, trying again without scale fields", "err", err)
+		c.logger.Info("failed to apply prometheus status subresource, trying again without scale fields", "err", err)
 		// Try again, but this time does not update scale subresource.
 		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
@@ -900,18 +1023,16 @@ func (c *Operator) enqueueForMonitorNamespace(nsName string) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	nsObject, exists, err := store.GetByKey(nsName)
+	nsObject, found, err := store.GetByKey(nsName)
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Prometheus instances failed",
+		c.logger.Error(
+			"get namespace to enqueue Prometheus instances failed",
 			"err", err,
 		)
 		return
 	}
-	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-		)
+	if !found {
+		c.logger.Error(fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName))
 		return
 	}
 	ns := nsObject.(*v1.Namespace)
@@ -928,8 +1049,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// the namespace.
 		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -943,8 +1064,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances selecting PodMonitors in the NS.
 		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -958,8 +1079,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances selecting Probes in the NS.
 		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -972,14 +1093,12 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances selecting Probes in the NS.
 		ScrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
 		}
-
-		level.Info(c.logger).Log("msg", "we are gonna check if it Matches")
 
 		if ScrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
 			c.rr.EnqueueForReconciliation(p)
@@ -987,8 +1106,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Prometheus instances from cache failed",
+		c.logger.Error("listing all Prometheus instances from cache failed",
 			"err", err,
 		)
 	}
@@ -999,7 +1117,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
-	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the Namespace without changes
 	// in-between.
@@ -1007,7 +1125,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Monitor namespace updated", "namespace", cur.GetName())
+	c.logger.Debug("Monitor namespace updated", "namespace", cur.GetName())
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus Agent instances selecting ServiceMonitors, PodMonitors,
@@ -1023,7 +1141,8 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 
 			sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
-				level.Error(c.logger).Log(
+				c.logger.Error(
+					"failed to detect label selection change",
 					"err", err,
 					"name", p.Name,
 					"namespace", p.Namespace,
@@ -1039,8 +1158,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Prometheus Agent instances from cache failed",
+		c.logger.Error("listing all Prometheus Agent instances from cache failed",
 			"err", err,
 		)
 	}
@@ -1063,4 +1181,9 @@ func makeSelectorLabels(name string) map[string]string {
 		"app.kubernetes.io/instance":    name,
 		prompkg.PrometheusNameLabelName: name,
 	}
+}
+
+func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
+	keyParts := strings.Split(key, "/")
+	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
 }

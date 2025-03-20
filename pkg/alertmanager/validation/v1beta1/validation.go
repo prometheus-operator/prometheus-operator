@@ -42,7 +42,7 @@ func ValidateAlertmanagerConfig(amc *monitoringv1beta1.AlertmanagerConfig) error
 		return err
 	}
 
-	return validateAlertManagerRoutes(amc.Spec.Route, receivers, timeIntervals, true)
+	return validateRoute(amc.Spec.Route, receivers, timeIntervals, true)
 }
 
 func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struct{}, error) {
@@ -312,7 +312,7 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 
 func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 	for _, config := range configs {
-		if *config.APIURL != "" {
+		if config.APIURL != nil && *config.APIURL != "" {
 			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
 				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
@@ -346,10 +346,11 @@ func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
 	return nil
 }
 
-// validateAlertManagerRoutes verifies that the given route and all its children are semantically valid.
-// because of the self-referential issues mentioned in https://github.com/kubernetes/kubernetes/issues/62872
-// it is not currently possible to apply OpenAPI validation to a v1beta1.Route.
-func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeIntervals map[string]struct{}, topLevelRoute bool) error {
+// validateRoute verifies that the given route and all its children are
+// semantically valid.  because of the self-referential issues mentioned in
+// https://github.com/kubernetes/kubernetes/issues/62872 it is not currently
+// possible to apply OpenAPI validation to a v1beta1.Route.
+func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[string]struct{}, topLevelRoute bool) error {
 	if r == nil {
 		return nil
 	}
@@ -389,7 +390,6 @@ func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeInter
 		}
 	}
 
-	// validate that if defaults are set, they match regex
 	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
 		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
 
@@ -402,13 +402,20 @@ func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeInter
 		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
 	}
 
+	for i, v := range r.Matchers {
+		if err := v.Validate(); err != nil {
+			return fmt.Errorf("matcher[%d]: %w", i, err)
+		}
+	}
+
+	// Unmarshal the child routes and validate them recursively.
 	children, err := r.ChildRoutes()
 	if err != nil {
 		return err
 	}
 
 	for i := range children {
-		if err := validateAlertManagerRoutes(&children[i], receivers, timeIntervals, false); err != nil {
+		if err := validateRoute(&children[i], receivers, timeIntervals, false); err != nil {
 			return fmt.Errorf("route[%d]: %w", i, err)
 		}
 	}

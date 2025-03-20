@@ -16,13 +16,17 @@
 
 package v1
 
-// AlertmanagerConfigMatcherStrategyApplyConfiguration represents an declarative configuration of the AlertmanagerConfigMatcherStrategy type for use
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
+// AlertmanagerConfigMatcherStrategyApplyConfiguration represents a declarative configuration of the AlertmanagerConfigMatcherStrategy type for use
 // with apply.
 type AlertmanagerConfigMatcherStrategyApplyConfiguration struct {
-	Type *string `json:"type,omitempty"`
+	Type *monitoringv1.AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
 
-// AlertmanagerConfigMatcherStrategyApplyConfiguration constructs an declarative configuration of the AlertmanagerConfigMatcherStrategy type for use with
+// AlertmanagerConfigMatcherStrategyApplyConfiguration constructs a declarative configuration of the AlertmanagerConfigMatcherStrategy type for use with
 // apply.
 func AlertmanagerConfigMatcherStrategy() *AlertmanagerConfigMatcherStrategyApplyConfiguration {
 	return &AlertmanagerConfigMatcherStrategyApplyConfiguration{}
@@ -31,7 +35,7 @@ func AlertmanagerConfigMatcherStrategy() *AlertmanagerConfigMatcherStrategyApply
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *AlertmanagerConfigMatcherStrategyApplyConfiguration) WithType(value string) *AlertmanagerConfigMatcherStrategyApplyConfiguration {
+func (b *AlertmanagerConfigMatcherStrategyApplyConfiguration) WithType(value monitoringv1.AlertmanagerConfigMatcherStrategyType) *AlertmanagerConfigMatcherStrategyApplyConfiguration {
 	b.Type = &value
 	return b
 }

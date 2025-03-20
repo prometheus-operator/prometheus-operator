@@ -15,9 +15,12 @@
 package v1beta1
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
+	"regexp"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -40,8 +43,9 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 
-// AlertmanagerConfig configures the Prometheus Alertmanager,
-// specifying how alerts should be grouped, inhibited and notified to external systems.
+// The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
+//
+// `Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -57,7 +61,7 @@ type AlertmanagerConfigList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of AlertmanagerConfig
-	Items []*AlertmanagerConfig `json:"items"`
+	Items []AlertmanagerConfig `json:"items"`
 }
 
 // AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
@@ -140,7 +144,9 @@ func (r *Route) ChildRoutes() ([]Route, error) {
 	out := make([]Route, len(r.Routes))
 
 	for i, v := range r.Routes {
-		if err := json.Unmarshal(v.Raw, &out[i]); err != nil {
+		dec := json.NewDecoder(bytes.NewBuffer(v.Raw))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&out[i]); err != nil {
 			return nil, fmt.Errorf("route[%d]: %w", i, err)
 		}
 	}
@@ -237,6 +243,9 @@ type PagerDutyConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// Unique location of the affected system.
+	// +optional
+	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
@@ -559,13 +568,28 @@ type OpsGenieConfigResponder struct {
 	Type string `json:"type"`
 }
 
+const opsgenieValidTypesRe = `^(team|teams|user|escalation|schedule)$`
+
+var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
+
 // Validate ensures OpsGenieConfigResponder is valid.
 func (r *OpsGenieConfigResponder) Validate() error {
 	if r.ID == "" && r.Name == "" && r.Username == "" {
 		return errors.New("responder must have at least an ID, a Name or an Username defined")
 	}
 
-	return nil
+	if strings.Contains(r.Type, "{{") {
+		_, err := template.New("").Parse(r.Type)
+		if err != nil {
+			return fmt.Errorf("responder %v type is not a valid template: %w", r, err)
+		}
+		return nil
+	}
+
+	if opsgenieTypeMatcher.MatchString(strings.ToLower(r.Type)) {
+		return nil
+	}
+	return fmt.Errorf("opsGenieConfig responder %v type does not match valid options %s", r, opsgenieValidTypesRe)
 }
 
 // HTTPConfig defines a client HTTP configuration.
@@ -591,9 +615,16 @@ type HTTPConfig struct {
 	// TLS configuration for the client.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+
 	// Optional proxy URL.
+	//
+	// If defined, this field takes precedence over `proxyUrl`.
+	//
 	// +optional
-	ProxyURL string `json:"proxyURL,omitempty"`
+	ProxyURLOriginal *string `json:"proxyURL,omitempty"`
+
+	monitoringv1.ProxyConfig `json:",inline"`
+
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -784,6 +815,9 @@ type PushoverConfig struct {
 	// A title for supplementary URL, otherwise just the URL is shown
 	// +optional
 	URLTitle string `json:"urlTitle,omitempty"`
+	// The time to live definition for the alert notification
+	// +optional
+	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// The name of a device to send the notification to
 	// +optional
 	Device *string `json:"device,omitempty"`
@@ -878,6 +912,10 @@ type TelegramConfig struct {
 	// The Telegram chat ID.
 	// +required
 	ChatID int64 `json:"chatID,omitempty"`
+	// The Telegram Group Topic ID.
+	// It requires Alertmanager >= 0.26.0.
+	// +optional
+	MessageThreadID *int64 `json:"messageThreadID,omitempty"`
 	// Message template
 	// +optional
 	Message string `json:"message,omitempty"`

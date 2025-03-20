@@ -18,17 +18,17 @@ package v1alpha1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// FileSDConfigApplyConfiguration represents an declarative configuration of the FileSDConfig type for use
+// FileSDConfigApplyConfiguration represents a declarative configuration of the FileSDConfig type for use
 // with apply.
 type FileSDConfigApplyConfiguration struct {
-	Files           []v1alpha1.SDFile `json:"files,omitempty"`
-	RefreshInterval *v1.Duration      `json:"refreshInterval,omitempty"`
+	Files           []monitoringv1alpha1.SDFile `json:"files,omitempty"`
+	RefreshInterval *v1.Duration                `json:"refreshInterval,omitempty"`
 }
 
-// FileSDConfigApplyConfiguration constructs an declarative configuration of the FileSDConfig type for use with
+// FileSDConfigApplyConfiguration constructs a declarative configuration of the FileSDConfig type for use with
 // apply.
 func FileSDConfig() *FileSDConfigApplyConfiguration {
 	return &FileSDConfigApplyConfiguration{}
@@ -37,7 +37,7 @@ func FileSDConfig() *FileSDConfigApplyConfiguration {
 // WithFiles adds the given value to the Files field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Files field.
-func (b *FileSDConfigApplyConfiguration) WithFiles(values ...v1alpha1.SDFile) *FileSDConfigApplyConfiguration {
+func (b *FileSDConfigApplyConfiguration) WithFiles(values ...monitoringv1alpha1.SDFile) *FileSDConfigApplyConfiguration {
 	for i := range values {
 		b.Files = append(b.Files, values[i])
 	}

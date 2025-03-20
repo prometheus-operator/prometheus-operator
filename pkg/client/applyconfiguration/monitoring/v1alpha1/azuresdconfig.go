@@ -18,24 +18,33 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
-// AzureSDConfigApplyConfiguration represents an declarative configuration of the AzureSDConfig type for use
+// AzureSDConfigApplyConfiguration represents a declarative configuration of the AzureSDConfig type for use
 // with apply.
 type AzureSDConfigApplyConfiguration struct {
-	Environment          *string                `json:"environment,omitempty"`
-	AuthenticationMethod *string                `json:"authenticationMethod,omitempty"`
-	SubscriptionID       *string                `json:"subscriptionID,omitempty"`
-	TenantID             *string                `json:"tenantID,omitempty"`
-	ClientID             *string                `json:"clientID,omitempty"`
-	ClientSecret         *v1.SecretKeySelector  `json:"clientSecret,omitempty"`
-	ResourceGroup        *string                `json:"resourceGroup,omitempty"`
-	RefreshInterval      *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	Port                 *int                   `json:"port,omitempty"`
+	Environment                                                  *string                                                             `json:"environment,omitempty"`
+	AuthenticationMethod                                         *monitoringv1alpha1.AuthenticationMethodType                        `json:"authenticationMethod,omitempty"`
+	SubscriptionID                                               *string                                                             `json:"subscriptionID,omitempty"`
+	TenantID                                                     *string                                                             `json:"tenantID,omitempty"`
+	ClientID                                                     *string                                                             `json:"clientID,omitempty"`
+	ClientSecret                                                 *v1.SecretKeySelector                                               `json:"clientSecret,omitempty"`
+	ResourceGroup                                                *string                                                             `json:"resourceGroup,omitempty"`
+	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
+	Port                                                         *int32                                                              `json:"port,omitempty"`
+	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
+	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
+	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// AzureSDConfigApplyConfiguration constructs an declarative configuration of the AzureSDConfig type for use with
+// AzureSDConfigApplyConfiguration constructs a declarative configuration of the AzureSDConfig type for use with
 // apply.
 func AzureSDConfig() *AzureSDConfigApplyConfiguration {
 	return &AzureSDConfigApplyConfiguration{}
@@ -52,7 +61,7 @@ func (b *AzureSDConfigApplyConfiguration) WithEnvironment(value string) *AzureSD
 // WithAuthenticationMethod sets the AuthenticationMethod field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AuthenticationMethod field is set to the value of the last call.
-func (b *AzureSDConfigApplyConfiguration) WithAuthenticationMethod(value string) *AzureSDConfigApplyConfiguration {
+func (b *AzureSDConfigApplyConfiguration) WithAuthenticationMethod(value monitoringv1alpha1.AuthenticationMethodType) *AzureSDConfigApplyConfiguration {
 	b.AuthenticationMethod = &value
 	return b
 }
@@ -108,7 +117,93 @@ func (b *AzureSDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *AzureSDConfigApplyConfiguration) WithPort(value int) *AzureSDConfigApplyConfiguration {
+func (b *AzureSDConfigApplyConfiguration) WithPort(value int32) *AzureSDConfigApplyConfiguration {
 	b.Port = &value
+	return b
+}
+
+// WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BasicAuth field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithBasicAuth(value *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration) *AzureSDConfigApplyConfiguration {
+	b.BasicAuth = value
+	return b
+}
+
+// WithAuthorization sets the Authorization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Authorization field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithAuthorization(value *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration) *AzureSDConfigApplyConfiguration {
+	b.Authorization = value
+	return b
+}
+
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithOAuth2(value *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration) *AzureSDConfigApplyConfiguration {
+	b.OAuth2 = value
+	return b
+}
+
+// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURL field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithProxyURL(value string) *AzureSDConfigApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithNoProxy(value string) *AzureSDConfigApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *AzureSDConfigApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *AzureSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *AzureSDConfigApplyConfiguration {
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithFollowRedirects(value bool) *AzureSDConfigApplyConfiguration {
+	b.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *AzureSDConfigApplyConfiguration {
+	b.EnableHTTP2 = &value
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *AzureSDConfigApplyConfiguration) WithTLSConfig(value *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration) *AzureSDConfigApplyConfiguration {
+	b.TLSConfig = value
 	return b
 }

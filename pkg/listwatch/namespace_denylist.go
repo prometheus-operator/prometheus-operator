@@ -16,9 +16,8 @@ package listwatch
 
 import (
 	"fmt"
+	"log/slog"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,13 +32,13 @@ import (
 type denylistListerWatcher struct {
 	denylist map[string]struct{}
 	next     cache.ListerWatcher
-	logger   log.Logger
+	logger   *slog.Logger
 }
 
 // newDenylistListerWatcher creates a cache.ListerWatcher
 // wrapping the given next cache.ListerWatcher
 // filtering lists and watch events by the given namespaces.
-func newDenylistListerWatcher(l log.Logger, namespaces map[string]struct{}, next cache.ListerWatcher) cache.ListerWatcher {
+func newDenylistListerWatcher(l *slog.Logger, namespaces map[string]struct{}, next cache.ListerWatcher) cache.ListerWatcher {
 	if len(namespaces) == 0 {
 		return next
 	}
@@ -55,44 +54,42 @@ func newDenylistListerWatcher(l log.Logger, namespaces map[string]struct{}, next
 // but filtering denied namespaces from the result.
 func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
 	var (
-		l      = metav1.List{}
-		errL   = level.Error(w.logger)
-		debugL = level.Debug(w.logger)
+		l = metav1.List{}
 	)
 
 	list, err := w.next.List(options)
 	if err != nil {
-		errL.Log("msg", "error listing", "err", err)
+		w.logger.Error("error listing", "err", err)
 		return nil, err
 	}
 
 	objs, err := meta.ExtractList(list)
 	if err != nil {
-		errL.Log("msg", "error extracting list", "err", err)
+		w.logger.Error("error extracting list", "err", err)
 		return nil, err
 	}
 
 	metaObj, err := meta.ListAccessor(list)
 	if err != nil {
-		errL.Log("msg", "error getting list accessor", "err", err)
+		w.logger.Error("error getting list accessor", "err", err)
 		return nil, err
 	}
 
 	for _, obj := range objs {
 		acc, err := meta.Accessor(obj)
 		if err != nil {
-			errL.Log("msg", "error getting meta accessor accessor", "obj", fmt.Sprintf("%v", obj), "err", err)
+			w.logger.Error("error getting meta accessor accessor", "obj", fmt.Sprintf("%v", obj), "err", err)
 			return nil, err
 		}
 
-		debugDetailed := log.With(debugL, "selflink", acc.GetSelfLink())
+		debugDetailed := w.logger.With("selflink", acc.GetSelfLink())
 
 		if _, denied := w.denylist[getNamespace(acc)]; denied {
-			debugDetailed.Log("msg", "denied")
+			debugDetailed.Debug("denied")
 			continue
 		}
 
-		debugDetailed.Log("msg", "allowed")
+		debugDetailed.Debug("allowed")
 
 		l.Items = append(l.Items, runtime.RawExtension{Object: obj.DeepCopyObject()})
 	}
@@ -118,17 +115,15 @@ func (w *denylistListerWatcher) Watch(options metav1.ListOptions) (watch.Interfa
 // It starts a new goroutine until either
 // a) the result channel of the wrapped next watcher is closed, or
 // b) Stop() was invoked on the returned watcher.
-func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Interface) watch.Interface {
+func newDenylistWatch(l *slog.Logger, denylist map[string]struct{}, next watch.Interface) watch.Interface {
 	var (
-		result  = make(chan watch.Event)
-		proxy   = watch.NewProxyWatcher(result)
-		debug   = level.Debug(l)
-		warning = level.Warn(l)
+		result = make(chan watch.Event)
+		proxy  = watch.NewProxyWatcher(result)
 	)
 
 	go func() {
 		defer func() {
-			debug.Log("msg", "stopped denylist watcher")
+			l.Debug("stopped denylist watcher")
 			// According to watch.Interface the result channel is supposed to be called
 			// in case of error or if the listwach is closed, see [1].
 			//
@@ -140,7 +135,7 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 			select {
 			case event, ok := <-next.ResultChan():
 				if !ok {
-					debug.Log("msg", "result channel closed")
+					l.Debug("result channel closed")
 					return
 				}
 
@@ -148,21 +143,21 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 				if err != nil {
 					// ignore this event, it doesn't implement the metav1.Object interface,
 					// hence we cannot determine its namespace.
-					warning.Log("msg", fmt.Sprintf("unexpected object type in event (%T): %v", event.Object, event.Object))
+					l.Warn(fmt.Sprintf("unexpected object type in event (%T): %v", event.Object, event.Object))
 					continue
 				}
 
-				debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
+				debugDetailed := l.With("selflink", acc.GetSelfLink())
 				if _, denied := denylist[getNamespace(acc)]; denied {
-					debugDetailed.Log("msg", "denied")
+					debugDetailed.Debug("denied")
 					continue
 				}
 
-				debugDetailed.Log("msg", "allowed")
+				debugDetailed.Debug("allowed")
 
 				select {
 				case result <- event:
-					debugDetailed.Log("msg", "dispatched")
+					debugDetailed.Debug("dispatched")
 				case <-proxy.StopChan():
 					next.Stop()
 					return

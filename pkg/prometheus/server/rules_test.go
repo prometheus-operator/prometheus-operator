@@ -18,15 +18,15 @@ import (
 	"strings"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldReturnAtLeastOneConfigMap", shouldReturnAtLeastOneConfigMap)
-	t.Run("ShouldErrorOnTooLargeRuleFile", shouldErrorOnTooLargeRuleFile)
 	t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
 }
 
@@ -38,43 +38,21 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 	ruleFiles := map[string]string{}
 
 	configMaps, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
-	if err != nil {
-		t.Fatalf("expected no error but got: %v", err.Error())
-	}
+	require.NoError(t, err)
 
-	if len(configMaps) != 1 {
-		t.Fatalf("expected one ConfigMaps but got %v", len(configMaps))
-	}
-}
-
-func shouldErrorOnTooLargeRuleFile(t *testing.T) {
-	expectedError := "rule file 'my-rule-file' is too large for a single Kubernetes ConfigMap"
-	ruleFiles := map[string]string{}
-
-	ruleFiles["my-rule-file"] = strings.Repeat("a", v1.MaxSecretSize+1)
-
-	_, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
-	if err == nil || err.Error() != expectedError {
-		t.Fatalf("expected makeRulesConfigMaps to return error '%v' but got '%v'", expectedError, err)
-	}
+	require.Len(t, configMaps, 1, "expected one ConfigMaps but got %v", len(configMaps))
 }
 
 func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	ruleFiles := map[string]string{}
 
-	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
+	ruleFiles["first"] = strings.Repeat("a", operator.MaxConfigMapDataSize)
 	ruleFiles["second"] = "a"
 
 	configMaps, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
-	if err != nil {
-		t.Fatalf("expected no error but got: %v", err)
-	}
+	require.NoError(t, err)
 
-	if len(configMaps) != 2 {
-		t.Fatalf("expected rule files to be split up into two ConfigMaps, but got '%v' instead", len(configMaps))
-	}
+	require.Len(t, configMaps, 2, "expected rule files to be split up into two ConfigMaps, but got '%v' instead", len(configMaps))
 
-	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] {
-		t.Fatal("expected ConfigMap data to match rule file content")
-	}
+	require.False(t, (configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"]), "expected ConfigMap data to match rule file content")
 }

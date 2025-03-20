@@ -85,6 +85,19 @@ Details:
 - 800K samples/s
 - 30M active series
 
+## DACHS IT
+
+[dachs-it.de](https://dachs-it.de)
+
+Environments: AWS, Azure, Bare Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): No
+
+Details (optional):
+- HA Pair of Prometheus
+- 25k samples/s
+- 750k active series
+
 ## Deckhouse
 
 [deckhouse.io](https://deckhouse.io/)
@@ -134,6 +147,19 @@ Details:
 - One prometheus instance per cluster (8 so far)
 - 20000 samples/s
 - 1M active series
+
+## iFlytek
+
+https://www.iflytek.com/
+
+Environments: iflytek Cloud, etc
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- One prometheus operator per management cluster and one prometheus instance per workload cluster
+- 700000 samples/s
+- 30M active series
 
 ## Innovaccer
 

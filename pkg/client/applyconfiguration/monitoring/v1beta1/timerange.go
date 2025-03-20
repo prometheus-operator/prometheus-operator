@@ -17,17 +17,17 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
-// TimeRangeApplyConfiguration represents an declarative configuration of the TimeRange type for use
+// TimeRangeApplyConfiguration represents a declarative configuration of the TimeRange type for use
 // with apply.
 type TimeRangeApplyConfiguration struct {
-	StartTime *v1beta1.Time `json:"startTime,omitempty"`
-	EndTime   *v1beta1.Time `json:"endTime,omitempty"`
+	StartTime *monitoringv1beta1.Time `json:"startTime,omitempty"`
+	EndTime   *monitoringv1beta1.Time `json:"endTime,omitempty"`
 }
 
-// TimeRangeApplyConfiguration constructs an declarative configuration of the TimeRange type for use with
+// TimeRangeApplyConfiguration constructs a declarative configuration of the TimeRange type for use with
 // apply.
 func TimeRange() *TimeRangeApplyConfiguration {
 	return &TimeRangeApplyConfiguration{}
@@ -36,7 +36,7 @@ func TimeRange() *TimeRangeApplyConfiguration {
 // WithStartTime sets the StartTime field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the StartTime field is set to the value of the last call.
-func (b *TimeRangeApplyConfiguration) WithStartTime(value v1beta1.Time) *TimeRangeApplyConfiguration {
+func (b *TimeRangeApplyConfiguration) WithStartTime(value monitoringv1beta1.Time) *TimeRangeApplyConfiguration {
 	b.StartTime = &value
 	return b
 }
@@ -44,7 +44,7 @@ func (b *TimeRangeApplyConfiguration) WithStartTime(value v1beta1.Time) *TimeRan
 // WithEndTime sets the EndTime field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EndTime field is set to the value of the last call.
-func (b *TimeRangeApplyConfiguration) WithEndTime(value v1beta1.Time) *TimeRangeApplyConfiguration {
+func (b *TimeRangeApplyConfiguration) WithEndTime(value monitoringv1beta1.Time) *TimeRangeApplyConfiguration {
 	b.EndTime = &value
 	return b
 }

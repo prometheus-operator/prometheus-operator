@@ -17,21 +17,22 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// PodMetricsEndpointApplyConfiguration represents an declarative configuration of the PodMetricsEndpoint type for use
+// PodMetricsEndpointApplyConfiguration represents a declarative configuration of the PodMetricsEndpoint type for use
 // with apply.
 type PodMetricsEndpointApplyConfiguration struct {
 	Port                     *string                              `json:"port,omitempty"`
+	PortNumber               *int32                               `json:"portNumber,omitempty"`
 	TargetPort               *intstr.IntOrString                  `json:"targetPort,omitempty"`
 	Path                     *string                              `json:"path,omitempty"`
 	Scheme                   *string                              `json:"scheme,omitempty"`
 	Params                   map[string][]string                  `json:"params,omitempty"`
-	Interval                 *v1.Duration                         `json:"interval,omitempty"`
-	ScrapeTimeout            *v1.Duration                         `json:"scrapeTimeout,omitempty"`
+	Interval                 *monitoringv1.Duration               `json:"interval,omitempty"`
+	ScrapeTimeout            *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
 	TLSConfig                *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	BearerTokenSecret        *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
 	HonorLabels              *bool                                `json:"honorLabels,omitempty"`
@@ -40,15 +41,15 @@ type PodMetricsEndpointApplyConfiguration struct {
 	BasicAuth                *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	OAuth2                   *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	Authorization            *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	MetricRelabelConfigs     []*v1.RelabelConfig                  `json:"metricRelabelings,omitempty"`
-	RelabelConfigs           []*v1.RelabelConfig                  `json:"relabelings,omitempty"`
+	MetricRelabelConfigs     []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
+	RelabelConfigs           []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
 	ProxyURL                 *string                              `json:"proxyUrl,omitempty"`
 	FollowRedirects          *bool                                `json:"followRedirects,omitempty"`
 	EnableHttp2              *bool                                `json:"enableHttp2,omitempty"`
 	FilterRunning            *bool                                `json:"filterRunning,omitempty"`
 }
 
-// PodMetricsEndpointApplyConfiguration constructs an declarative configuration of the PodMetricsEndpoint type for use with
+// PodMetricsEndpointApplyConfiguration constructs a declarative configuration of the PodMetricsEndpoint type for use with
 // apply.
 func PodMetricsEndpoint() *PodMetricsEndpointApplyConfiguration {
 	return &PodMetricsEndpointApplyConfiguration{}
@@ -59,6 +60,14 @@ func PodMetricsEndpoint() *PodMetricsEndpointApplyConfiguration {
 // If called multiple times, the Port field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithPort(value string) *PodMetricsEndpointApplyConfiguration {
 	b.Port = &value
+	return b
+}
+
+// WithPortNumber sets the PortNumber field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PortNumber field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithPortNumber(value int32) *PodMetricsEndpointApplyConfiguration {
+	b.PortNumber = &value
 	return b
 }
 
@@ -103,7 +112,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithParams(entries map[string][]s
 // WithInterval sets the Interval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Interval field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithInterval(value v1.Duration) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithInterval(value monitoringv1.Duration) *PodMetricsEndpointApplyConfiguration {
 	b.Interval = &value
 	return b
 }
@@ -111,7 +120,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithInterval(value v1.Duration) *
 // WithScrapeTimeout sets the ScrapeTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeTimeout field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithScrapeTimeout(value v1.Duration) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithScrapeTimeout(value monitoringv1.Duration) *PodMetricsEndpointApplyConfiguration {
 	b.ScrapeTimeout = &value
 	return b
 }
@@ -183,7 +192,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithAuthorization(value *SafeAuth
 // WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
-func (b *PodMetricsEndpointApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.RelabelConfig) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithMetricRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithMetricRelabelConfigs")
@@ -196,7 +205,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithMetricRelabelConfigs(values .
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
-func (b *PodMetricsEndpointApplyConfiguration) WithRelabelConfigs(values ...**v1.RelabelConfig) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithRelabelConfigs")

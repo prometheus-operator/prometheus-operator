@@ -53,7 +53,9 @@ func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 // +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
 
-// PrometheusAgent defines a Prometheus agent deployment.
+// The `PrometheusAgent` custom resource definition (CRD) defines a desired [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) setup to run in a Kubernetes cluster.
+//
+// The CRD is very similar to the `Prometheus` CRD except for features which aren't available in agent mode like rule evaluation, persistent storage and Thanos sidecar.
 type PrometheusAgent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -79,7 +81,7 @@ type PrometheusAgentList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheus agents
-	Items []*PrometheusAgent `json:"items"`
+	Items []PrometheusAgent `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -91,5 +93,23 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusAgentSpec struct {
+	// Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
+	//
+	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
+	//
+	// +optional
+	Mode *PrometheusAgentMode `json:"mode,omitempty"`
+
 	monitoringv1.CommonPrometheusFields `json:",inline"`
 }
+
+// +kubebuilder:validation:Enum=StatefulSet;DaemonSet
+type PrometheusAgentMode string
+
+const (
+	// Deploys PrometheusAgent as DaemonSet.
+	DaemonSetPrometheusAgentMode PrometheusAgentMode = "DaemonSet"
+
+	// Deploys PrometheusAgent as StatefulSet.
+	StatefulSetPrometheusAgentMode PrometheusAgentMode = "StatefulSet"
+)

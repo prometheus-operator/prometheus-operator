@@ -30,7 +30,13 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="prb"
 
-// Probe defines monitoring for a set of static targets or ingresses.
+// The `Probe` custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+//
+// The `Probe` resource needs 2 pieces of information:
+// * The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.
+// * The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, ...) as Prometheus metrics.
+//
+// `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
 type Probe struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -62,6 +68,7 @@ type ProbeSpec struct {
 	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	// If not specified, the Prometheus global scrape timeout is used.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -75,7 +82,7 @@ type ProbeSpec struct {
 	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
-	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 	// Authorization section for this endpoint
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
@@ -94,6 +101,11 @@ type ProbeSpec struct {
 	// +listType=set
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
@@ -106,6 +118,8 @@ type ProbeSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+
+	NativeHistogramConfig `json:",inline"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -166,7 +180,7 @@ type ProbeTargetStaticConfig struct {
 	// RelabelConfigs to apply to the label set of the targets before it gets
 	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetIngress defines the set of Ingress objects considered for probing.
@@ -184,7 +198,7 @@ type ProbeTargetIngress struct {
 	// probed URL.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
 // ProberSpec contains specification parameters for the Prober used for probing.
@@ -213,7 +227,7 @@ type ProbeList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Probes
-	Items []*Probe `json:"items"`
+	Items []Probe `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

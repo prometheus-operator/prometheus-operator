@@ -17,16 +17,16 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// TSDBSpecApplyConfiguration represents an declarative configuration of the TSDBSpec type for use
+// TSDBSpecApplyConfiguration represents a declarative configuration of the TSDBSpec type for use
 // with apply.
 type TSDBSpecApplyConfiguration struct {
-	OutOfOrderTimeWindow *v1.Duration `json:"outOfOrderTimeWindow,omitempty"`
+	OutOfOrderTimeWindow *monitoringv1.Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
-// TSDBSpecApplyConfiguration constructs an declarative configuration of the TSDBSpec type for use with
+// TSDBSpecApplyConfiguration constructs a declarative configuration of the TSDBSpec type for use with
 // apply.
 func TSDBSpec() *TSDBSpecApplyConfiguration {
 	return &TSDBSpecApplyConfiguration{}
@@ -35,7 +35,7 @@ func TSDBSpec() *TSDBSpecApplyConfiguration {
 // WithOutOfOrderTimeWindow sets the OutOfOrderTimeWindow field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OutOfOrderTimeWindow field is set to the value of the last call.
-func (b *TSDBSpecApplyConfiguration) WithOutOfOrderTimeWindow(value v1.Duration) *TSDBSpecApplyConfiguration {
+func (b *TSDBSpecApplyConfiguration) WithOutOfOrderTimeWindow(value monitoringv1.Duration) *TSDBSpecApplyConfiguration {
 	b.OutOfOrderTimeWindow = &value
 	return b
 }

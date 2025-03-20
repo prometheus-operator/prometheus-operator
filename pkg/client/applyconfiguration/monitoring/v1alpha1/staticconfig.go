@@ -17,18 +17,17 @@
 package v1alpha1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// StaticConfigApplyConfiguration represents an declarative configuration of the StaticConfig type for use
+// StaticConfigApplyConfiguration represents a declarative configuration of the StaticConfig type for use
 // with apply.
 type StaticConfigApplyConfiguration struct {
-	Targets []v1alpha1.Target       `json:"targets,omitempty"`
-	Labels  map[v1.LabelName]string `json:"labels,omitempty"`
+	Targets []monitoringv1alpha1.Target `json:"targets,omitempty"`
+	Labels  map[string]string           `json:"labels,omitempty"`
 }
 
-// StaticConfigApplyConfiguration constructs an declarative configuration of the StaticConfig type for use with
+// StaticConfigApplyConfiguration constructs a declarative configuration of the StaticConfig type for use with
 // apply.
 func StaticConfig() *StaticConfigApplyConfiguration {
 	return &StaticConfigApplyConfiguration{}
@@ -37,7 +36,7 @@ func StaticConfig() *StaticConfigApplyConfiguration {
 // WithTargets adds the given value to the Targets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Targets field.
-func (b *StaticConfigApplyConfiguration) WithTargets(values ...v1alpha1.Target) *StaticConfigApplyConfiguration {
+func (b *StaticConfigApplyConfiguration) WithTargets(values ...monitoringv1alpha1.Target) *StaticConfigApplyConfiguration {
 	for i := range values {
 		b.Targets = append(b.Targets, values[i])
 	}
@@ -48,9 +47,9 @@ func (b *StaticConfigApplyConfiguration) WithTargets(values ...v1alpha1.Target) 
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the Labels field,
 // overwriting an existing map entries in Labels field with the same key.
-func (b *StaticConfigApplyConfiguration) WithLabels(entries map[v1.LabelName]string) *StaticConfigApplyConfiguration {
+func (b *StaticConfigApplyConfiguration) WithLabels(entries map[string]string) *StaticConfigApplyConfiguration {
 	if b.Labels == nil && len(entries) > 0 {
-		b.Labels = make(map[v1.LabelName]string, len(entries))
+		b.Labels = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
 		b.Labels[k] = v

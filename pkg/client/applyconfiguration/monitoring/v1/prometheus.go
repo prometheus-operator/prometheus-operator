@@ -17,21 +17,21 @@
 package v1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
-	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PrometheusApplyConfiguration represents an declarative configuration of the Prometheus type for use
+// PrometheusApplyConfiguration represents a declarative configuration of the Prometheus type for use
 // with apply.
 type PrometheusApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
-	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *PrometheusSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                           *PrometheusStatusApplyConfiguration `json:"status,omitempty"`
+	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
+	Spec                                 *PrometheusSpecApplyConfiguration   `json:"spec,omitempty"`
+	Status                               *PrometheusStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// Prometheus constructs an declarative configuration of the Prometheus type for use with
+// Prometheus constructs a declarative configuration of the Prometheus type for use with
 // apply.
 func Prometheus(name, namespace string) *PrometheusApplyConfiguration {
 	b := &PrometheusApplyConfiguration{}
@@ -46,7 +46,7 @@ func Prometheus(name, namespace string) *PrometheusApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Kind field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithKind(value string) *PrometheusApplyConfiguration {
-	b.Kind = &value
+	b.TypeMetaApplyConfiguration.Kind = &value
 	return b
 }
 
@@ -54,7 +54,7 @@ func (b *PrometheusApplyConfiguration) WithKind(value string) *PrometheusApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithAPIVersion(value string) *PrometheusApplyConfiguration {
-	b.APIVersion = &value
+	b.TypeMetaApplyConfiguration.APIVersion = &value
 	return b
 }
 
@@ -63,7 +63,7 @@ func (b *PrometheusApplyConfiguration) WithAPIVersion(value string) *PrometheusA
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithName(value string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Name = &value
+	b.ObjectMetaApplyConfiguration.Name = &value
 	return b
 }
 
@@ -72,7 +72,7 @@ func (b *PrometheusApplyConfiguration) WithName(value string) *PrometheusApplyCo
 // If called multiple times, the GenerateName field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithGenerateName(value string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.GenerateName = &value
+	b.ObjectMetaApplyConfiguration.GenerateName = &value
 	return b
 }
 
@@ -81,7 +81,7 @@ func (b *PrometheusApplyConfiguration) WithGenerateName(value string) *Prometheu
 // If called multiple times, the Namespace field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithNamespace(value string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Namespace = &value
+	b.ObjectMetaApplyConfiguration.Namespace = &value
 	return b
 }
 
@@ -90,7 +90,7 @@ func (b *PrometheusApplyConfiguration) WithNamespace(value string) *PrometheusAp
 // If called multiple times, the UID field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithUID(value types.UID) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.UID = &value
+	b.ObjectMetaApplyConfiguration.UID = &value
 	return b
 }
 
@@ -99,7 +99,7 @@ func (b *PrometheusApplyConfiguration) WithUID(value types.UID) *PrometheusApply
 // If called multiple times, the ResourceVersion field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithResourceVersion(value string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.ResourceVersion = &value
+	b.ObjectMetaApplyConfiguration.ResourceVersion = &value
 	return b
 }
 
@@ -108,25 +108,25 @@ func (b *PrometheusApplyConfiguration) WithResourceVersion(value string) *Promet
 // If called multiple times, the Generation field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithGeneration(value int64) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.Generation = &value
+	b.ObjectMetaApplyConfiguration.Generation = &value
 	return b
 }
 
 // WithCreationTimestamp sets the CreationTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CreationTimestamp field is set to the value of the last call.
-func (b *PrometheusApplyConfiguration) WithCreationTimestamp(value metav1.Time) *PrometheusApplyConfiguration {
+func (b *PrometheusApplyConfiguration) WithCreationTimestamp(value apismetav1.Time) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.CreationTimestamp = &value
+	b.ObjectMetaApplyConfiguration.CreationTimestamp = &value
 	return b
 }
 
 // WithDeletionTimestamp sets the DeletionTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DeletionTimestamp field is set to the value of the last call.
-func (b *PrometheusApplyConfiguration) WithDeletionTimestamp(value metav1.Time) *PrometheusApplyConfiguration {
+func (b *PrometheusApplyConfiguration) WithDeletionTimestamp(value apismetav1.Time) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.DeletionTimestamp = &value
+	b.ObjectMetaApplyConfiguration.DeletionTimestamp = &value
 	return b
 }
 
@@ -135,7 +135,7 @@ func (b *PrometheusApplyConfiguration) WithDeletionTimestamp(value metav1.Time) 
 // If called multiple times, the DeletionGracePeriodSeconds field is set to the value of the last call.
 func (b *PrometheusApplyConfiguration) WithDeletionGracePeriodSeconds(value int64) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	b.DeletionGracePeriodSeconds = &value
+	b.ObjectMetaApplyConfiguration.DeletionGracePeriodSeconds = &value
 	return b
 }
 
@@ -145,11 +145,11 @@ func (b *PrometheusApplyConfiguration) WithDeletionGracePeriodSeconds(value int6
 // overwriting an existing map entries in Labels field with the same key.
 func (b *PrometheusApplyConfiguration) WithLabels(entries map[string]string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	if b.Labels == nil && len(entries) > 0 {
-		b.Labels = make(map[string]string, len(entries))
+	if b.ObjectMetaApplyConfiguration.Labels == nil && len(entries) > 0 {
+		b.ObjectMetaApplyConfiguration.Labels = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
-		b.Labels[k] = v
+		b.ObjectMetaApplyConfiguration.Labels[k] = v
 	}
 	return b
 }
@@ -160,11 +160,11 @@ func (b *PrometheusApplyConfiguration) WithLabels(entries map[string]string) *Pr
 // overwriting an existing map entries in Annotations field with the same key.
 func (b *PrometheusApplyConfiguration) WithAnnotations(entries map[string]string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
-	if b.Annotations == nil && len(entries) > 0 {
-		b.Annotations = make(map[string]string, len(entries))
+	if b.ObjectMetaApplyConfiguration.Annotations == nil && len(entries) > 0 {
+		b.ObjectMetaApplyConfiguration.Annotations = make(map[string]string, len(entries))
 	}
 	for k, v := range entries {
-		b.Annotations[k] = v
+		b.ObjectMetaApplyConfiguration.Annotations[k] = v
 	}
 	return b
 }
@@ -172,13 +172,13 @@ func (b *PrometheusApplyConfiguration) WithAnnotations(entries map[string]string
 // WithOwnerReferences adds the given value to the OwnerReferences field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the OwnerReferences field.
-func (b *PrometheusApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerReferenceApplyConfiguration) *PrometheusApplyConfiguration {
+func (b *PrometheusApplyConfiguration) WithOwnerReferences(values ...*metav1.OwnerReferenceApplyConfiguration) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithOwnerReferences")
 		}
-		b.OwnerReferences = append(b.OwnerReferences, *values[i])
+		b.ObjectMetaApplyConfiguration.OwnerReferences = append(b.ObjectMetaApplyConfiguration.OwnerReferences, *values[i])
 	}
 	return b
 }
@@ -189,14 +189,14 @@ func (b *PrometheusApplyConfiguration) WithOwnerReferences(values ...*v1.OwnerRe
 func (b *PrometheusApplyConfiguration) WithFinalizers(values ...string) *PrometheusApplyConfiguration {
 	b.ensureObjectMetaApplyConfigurationExists()
 	for i := range values {
-		b.Finalizers = append(b.Finalizers, values[i])
+		b.ObjectMetaApplyConfiguration.Finalizers = append(b.ObjectMetaApplyConfiguration.Finalizers, values[i])
 	}
 	return b
 }
 
 func (b *PrometheusApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
 	if b.ObjectMetaApplyConfiguration == nil {
-		b.ObjectMetaApplyConfiguration = &v1.ObjectMetaApplyConfiguration{}
+		b.ObjectMetaApplyConfiguration = &metav1.ObjectMetaApplyConfiguration{}
 	}
 }
 
@@ -214,4 +214,10 @@ func (b *PrometheusApplyConfiguration) WithSpec(value *PrometheusSpecApplyConfig
 func (b *PrometheusApplyConfiguration) WithStatus(value *PrometheusStatusApplyConfiguration) *PrometheusApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *PrometheusApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.ObjectMetaApplyConfiguration.Name
 }

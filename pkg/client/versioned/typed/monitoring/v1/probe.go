@@ -17,18 +17,15 @@
 package v1
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-	"time"
+	context "context"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // ProbesGetter has a method to return a ProbeInterface.
@@ -39,168 +36,33 @@ type ProbesGetter interface {
 
 // ProbeInterface has methods to work with Probe resources.
 type ProbeInterface interface {
-	Create(ctx context.Context, probe *v1.Probe, opts metav1.CreateOptions) (*v1.Probe, error)
-	Update(ctx context.Context, probe *v1.Probe, opts metav1.UpdateOptions) (*v1.Probe, error)
+	Create(ctx context.Context, probe *monitoringv1.Probe, opts metav1.CreateOptions) (*monitoringv1.Probe, error)
+	Update(ctx context.Context, probe *monitoringv1.Probe, opts metav1.UpdateOptions) (*monitoringv1.Probe, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.Probe, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ProbeList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*monitoringv1.Probe, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*monitoringv1.ProbeList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Probe, err error)
-	Apply(ctx context.Context, probe *monitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Probe, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *monitoringv1.Probe, err error)
+	Apply(ctx context.Context, probe *applyconfigurationmonitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.Probe, err error)
 	ProbeExpansion
 }
 
 // probes implements ProbeInterface
 type probes struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithListAndApply[*monitoringv1.Probe, *monitoringv1.ProbeList, *applyconfigurationmonitoringv1.ProbeApplyConfiguration]
 }
 
 // newProbes returns a Probes
 func newProbes(c *MonitoringV1Client, namespace string) *probes {
 	return &probes{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithListAndApply[*monitoringv1.Probe, *monitoringv1.ProbeList, *applyconfigurationmonitoringv1.ProbeApplyConfiguration](
+			"probes",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *monitoringv1.Probe { return &monitoringv1.Probe{} },
+			func() *monitoringv1.ProbeList { return &monitoringv1.ProbeList{} },
+		),
 	}
-}
-
-// Get takes name of the probe, and returns the corresponding probe object, and an error if there is any.
-func (c *probes) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Probe, err error) {
-	result = &v1.Probe{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("probes").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of Probes that match those selectors.
-func (c *probes) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ProbeList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1.ProbeList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("probes").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested probes.
-func (c *probes) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("probes").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a probe and creates it.  Returns the server's representation of the probe, and an error, if there is any.
-func (c *probes) Create(ctx context.Context, probe *v1.Probe, opts metav1.CreateOptions) (result *v1.Probe, err error) {
-	result = &v1.Probe{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("probes").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(probe).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a probe and updates it. Returns the server's representation of the probe, and an error, if there is any.
-func (c *probes) Update(ctx context.Context, probe *v1.Probe, opts metav1.UpdateOptions) (result *v1.Probe, err error) {
-	result = &v1.Probe{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("probes").
-		Name(probe.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(probe).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the probe and deletes it. Returns an error if one occurs.
-func (c *probes) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("probes").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *probes) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("probes").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched probe.
-func (c *probes) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Probe, err error) {
-	result = &v1.Probe{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("probes").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied probe.
-func (c *probes) Apply(ctx context.Context, probe *monitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Probe, err error) {
-	if probe == nil {
-		return nil, fmt.Errorf("probe provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(probe)
-	if err != nil {
-		return nil, err
-	}
-	name := probe.Name
-	if name == nil {
-		return nil, fmt.Errorf("probe.Name must be provided to Apply")
-	}
-	result = &v1.Probe{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("probes").
-		Name(*name).
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

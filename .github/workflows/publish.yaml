@@ -24,7 +24,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Import environment variables from file
-        run: cat ".github/env" >> $GITHUB_ENV
+        run: cat ".github/env" >> "$GITHUB_ENV"
+      - name: Reclaim disk space
+        run: |
+          docker image prune --force --all
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
       - name: Install Go
         uses: actions/setup-go@v5
         with:
@@ -37,7 +42,7 @@ jobs:
       - name: Check the cosign version
         run: cosign version
       - name: Install crane
-        uses: imjasonh/setup-crane@v0.3
+        uses: imjasonh/setup-crane@v0.4
       - name: Login to quay.io
         uses: docker/login-action@v3
         with:

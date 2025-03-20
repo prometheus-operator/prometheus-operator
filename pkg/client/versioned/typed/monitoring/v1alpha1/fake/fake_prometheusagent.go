@@ -17,194 +17,64 @@
 package fake
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
+	context "context"
 
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
+	typedmonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1alpha1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
+	gentype "k8s.io/client-go/gentype"
 	testing "k8s.io/client-go/testing"
 )
 
-// FakePrometheusAgents implements PrometheusAgentInterface
-type FakePrometheusAgents struct {
+// fakePrometheusAgents implements PrometheusAgentInterface
+type fakePrometheusAgents struct {
+	*gentype.FakeClientWithListAndApply[*v1alpha1.PrometheusAgent, *v1alpha1.PrometheusAgentList, *monitoringv1alpha1.PrometheusAgentApplyConfiguration]
 	Fake *FakeMonitoringV1alpha1
-	ns   string
 }
 
-var prometheusagentsResource = v1alpha1.SchemeGroupVersion.WithResource("prometheusagents")
-
-var prometheusagentsKind = v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgent")
-
-// Get takes name of the prometheusAgent, and returns the corresponding prometheusAgent object, and an error if there is any.
-func (c *FakePrometheusAgents) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(prometheusagentsResource, c.ns, name), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
+func newFakePrometheusAgents(fake *FakeMonitoringV1alpha1, namespace string) typedmonitoringv1alpha1.PrometheusAgentInterface {
+	return &fakePrometheusAgents{
+		gentype.NewFakeClientWithListAndApply[*v1alpha1.PrometheusAgent, *v1alpha1.PrometheusAgentList, *monitoringv1alpha1.PrometheusAgentApplyConfiguration](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("prometheusagents"),
+			v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgent"),
+			func() *v1alpha1.PrometheusAgent { return &v1alpha1.PrometheusAgent{} },
+			func() *v1alpha1.PrometheusAgentList { return &v1alpha1.PrometheusAgentList{} },
+			func(dst, src *v1alpha1.PrometheusAgentList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.PrometheusAgentList) []*v1alpha1.PrometheusAgent {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.PrometheusAgentList, items []*v1alpha1.PrometheusAgent) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.PrometheusAgent), err
-}
-
-// List takes label and field selectors, and returns the list of PrometheusAgents that match those selectors.
-func (c *FakePrometheusAgents) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PrometheusAgentList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(prometheusagentsResource, prometheusagentsKind, c.ns, opts), &v1alpha1.PrometheusAgentList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.PrometheusAgentList{ListMeta: obj.(*v1alpha1.PrometheusAgentList).ListMeta}
-	for _, item := range obj.(*v1alpha1.PrometheusAgentList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested prometheusAgents.
-func (c *FakePrometheusAgents) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(prometheusagentsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a prometheusAgent and creates it.  Returns the server's representation of the prometheusAgent, and an error, if there is any.
-func (c *FakePrometheusAgents) Create(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.CreateOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(prometheusagentsResource, c.ns, prometheusAgent), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.PrometheusAgent), err
-}
-
-// Update takes the representation of a prometheusAgent and updates it. Returns the server's representation of the prometheusAgent, and an error, if there is any.
-func (c *FakePrometheusAgents) Update(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(prometheusagentsResource, c.ns, prometheusAgent), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.PrometheusAgent), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePrometheusAgents) UpdateStatus(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*v1alpha1.PrometheusAgent, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusagentsResource, "status", c.ns, prometheusAgent), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.PrometheusAgent), err
-}
-
-// Delete takes name of the prometheusAgent and deletes it. Returns an error if one occurs.
-func (c *FakePrometheusAgents) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(prometheusagentsResource, c.ns, name, opts), &v1alpha1.PrometheusAgent{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakePrometheusAgents) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(prometheusagentsResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.PrometheusAgentList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched prometheusAgent.
-func (c *FakePrometheusAgents) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusAgent, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusagentsResource, c.ns, name, pt, data, subresources...), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.PrometheusAgent), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied prometheusAgent.
-func (c *FakePrometheusAgents) Apply(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	if prometheusAgent == nil {
-		return nil, fmt.Errorf("prometheusAgent provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(prometheusAgent)
-	if err != nil {
-		return nil, err
-	}
-	name := prometheusAgent.Name
-	if name == nil {
-		return nil, fmt.Errorf("prometheusAgent.Name must be provided to Apply")
-	}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusagentsResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.PrometheusAgent), err
-}
-
-// ApplyStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *FakePrometheusAgents) ApplyStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error) {
-	if prometheusAgent == nil {
-		return nil, fmt.Errorf("prometheusAgent provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(prometheusAgent)
-	if err != nil {
-		return nil, err
-	}
-	name := prometheusAgent.Name
-	if name == nil {
-		return nil, fmt.Errorf("prometheusAgent.Name must be provided to Apply")
-	}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusagentsResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1alpha1.PrometheusAgent{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.PrometheusAgent), err
 }
 
 // GetScale takes name of the prometheusAgent, and returns the corresponding scale object, and an error if there is any.
-func (c *FakePrometheusAgents) GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+func (c *fakePrometheusAgents) GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(prometheusagentsResource, c.ns, "scale", prometheusAgentName), &autoscalingv1.Scale{})
+		Invokes(testing.NewGetSubresourceActionWithOptions(c.Resource(), c.Namespace(), "scale", prometheusAgentName, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *FakePrometheusAgents) UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+func (c *fakePrometheusAgents) UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusagentsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(c.Resource(), "scale", c.Namespace(), scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }

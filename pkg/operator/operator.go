@@ -17,11 +17,10 @@ package operator
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -431,7 +430,7 @@ func SanitizeSTS(sts *appsv1.StatefulSet) {
 // than 1 minute, it means that something is stuck and the message will
 // indicate to the admin which informer is the culprit.
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347.
-func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger log.Logger, inf cache.SharedIndexInformer) bool {
+func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger *slog.Logger, inf cache.SharedIndexInformer) bool {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
@@ -442,7 +441,7 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger lo
 		for {
 			select {
 			case <-t.C:
-				level.Warn(logger).Log("msg", "cache sync not yet completed")
+				logger.Warn("cache sync not yet completed")
 			case <-ctx.Done():
 				return
 			}
@@ -451,9 +450,9 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger lo
 
 	ok := cache.WaitForNamedCacheSync(controllerName, ctx.Done(), inf.HasSynced)
 	if !ok {
-		level.Error(logger).Log("msg", "failed to sync cache")
+		logger.Error("failed to sync cache")
 	} else {
-		level.Debug(logger).Log("msg", "successfully synced cache")
+		logger.Debug("successfully synced cache")
 	}
 
 	return ok

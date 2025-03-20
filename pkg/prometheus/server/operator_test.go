@@ -15,12 +15,15 @@
 package prometheus
 
 import (
+	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -31,9 +34,7 @@ import (
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		o := ListOptions("test")
-		if o.LabelSelector != "app.kubernetes.io/name=prometheus,prometheus=test" && o.LabelSelector != "prometheus=test,app.kubernetes.io/name=prometheus" {
-			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
-		}
+		require.True(t, (o.LabelSelector == "app.kubernetes.io/name=prometheus,prometheus=test" || o.LabelSelector == "prometheus=test,app.kubernetes.io/name=prometheus"), "LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
 	}
 }
 
@@ -209,34 +210,57 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 			c := prompkg.Config{}
 
 			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			if !tc.equal {
-				if p1Hash == p2Hash {
-					t.Fatal("expected two different Prometheus CRDs to produce different hashes but got equal hash")
-				}
+				require.NotEqual(t, p1Hash, p2Hash, "expected two different Prometheus CRDs to produce different hashes but got equal hash")
 				return
 			}
 
-			if p1Hash != p2Hash {
-				t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
-			}
+			require.Equal(t, p1Hash, p2Hash, "expected two Prometheus CRDs to produce the same hash but got different hash")
 
 			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
-			if p1Hash == p2Hash {
-				t.Fatal("expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
+			require.NotEqual(t, p1Hash, p2Hash, "expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
+		})
+	}
+}
+
+func TestCreateThanosConfigSecret(t *testing.T) {
+	version := "v0.24.0"
+	ctx := context.Background()
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+	}{
+		{
+			name: "prometheus with thanos sidecar",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					Version: &version,
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-thanos-config-secret",
+					Namespace: "test",
+				},
+				Spec: tc.spec,
 			}
+			o := Operator{kclient: fake.NewClientset()}
+			err := o.createOrUpdateThanosConfigSecret(ctx, p)
+			require.NoError(t, err)
+
+			get, err := o.kclient.CoreV1().Secrets("test").Get(ctx, thanosPrometheusHTTPClientConfigSecretName(p), metav1.GetOptions{})
+			require.NoError(t, err)
+			require.Equal(t, "tls_config:\n  insecure_skip_verify: true\n", string(get.Data[thanosPrometheusHTTPClientConfigFileName]))
 		})
 	}
 }

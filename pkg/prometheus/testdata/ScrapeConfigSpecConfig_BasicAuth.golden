@@ -1,19 +1,19 @@
 global:
-  evaluation_interval: 30s
   scrape_interval: 30s
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  evaluation_interval: 30s
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   basic_auth:
     username: scrape-bob
     password: scrape-alice
   http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    basic_auth:
+  - basic_auth:
       username: http-sd-bob
       password: http-sd-alice
+    url: http://localhost:9100/sd.json
   relabel_configs:
   - source_labels:
     - job

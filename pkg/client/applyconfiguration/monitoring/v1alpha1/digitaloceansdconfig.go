@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DigitalOceanSDConfigApplyConfiguration represents an declarative configuration of the DigitalOceanSDConfig type for use
+// DigitalOceanSDConfigApplyConfiguration represents a declarative configuration of the DigitalOceanSDConfig type for use
 // with apply.
 type DigitalOceanSDConfigApplyConfiguration struct {
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -31,11 +31,11 @@ type DigitalOceanSDConfigApplyConfiguration struct {
 	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
 	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int                                `json:"port,omitempty"`
+	Port                             *int32                              `json:"port,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
 }
 
-// DigitalOceanSDConfigApplyConfiguration constructs an declarative configuration of the DigitalOceanSDConfig type for use with
+// DigitalOceanSDConfigApplyConfiguration constructs a declarative configuration of the DigitalOceanSDConfig type for use with
 // apply.
 func DigitalOceanSDConfig() *DigitalOceanSDConfigApplyConfiguration {
 	return &DigitalOceanSDConfigApplyConfiguration{}
@@ -61,7 +61,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithOAuth2(value *v1.OAuth2Appl
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyURL(value string) *DigitalOceanSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -69,7 +69,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyURL(value string) *Dig
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithNoProxy(value string) *DigitalOceanSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -77,7 +77,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithNoProxy(value string) *Digi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *DigitalOceanSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -85,12 +85,12 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyFromEnvironment(value 
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]corev1.SecretKeySelector) *DigitalOceanSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string]corev1.SecretKeySelector, len(entries))
+func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *DigitalOceanSDConfigApplyConfiguration {
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -122,7 +122,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLS
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *DigitalOceanSDConfigApplyConfiguration) WithPort(value int) *DigitalOceanSDConfigApplyConfiguration {
+func (b *DigitalOceanSDConfigApplyConfiguration) WithPort(value int32) *DigitalOceanSDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }

@@ -20,14 +20,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// AuthorizationApplyConfiguration represents an declarative configuration of the Authorization type for use
+// AuthorizationApplyConfiguration represents a declarative configuration of the Authorization type for use
 // with apply.
 type AuthorizationApplyConfiguration struct {
 	SafeAuthorizationApplyConfiguration `json:",inline"`
 	CredentialsFile                     *string `json:"credentialsFile,omitempty"`
 }
 
-// AuthorizationApplyConfiguration constructs an declarative configuration of the Authorization type for use with
+// AuthorizationApplyConfiguration constructs a declarative configuration of the Authorization type for use with
 // apply.
 func Authorization() *AuthorizationApplyConfiguration {
 	return &AuthorizationApplyConfiguration{}
@@ -37,7 +37,7 @@ func Authorization() *AuthorizationApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
 func (b *AuthorizationApplyConfiguration) WithType(value string) *AuthorizationApplyConfiguration {
-	b.Type = &value
+	b.SafeAuthorizationApplyConfiguration.Type = &value
 	return b
 }
 
@@ -45,7 +45,7 @@ func (b *AuthorizationApplyConfiguration) WithType(value string) *AuthorizationA
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Credentials field is set to the value of the last call.
 func (b *AuthorizationApplyConfiguration) WithCredentials(value corev1.SecretKeySelector) *AuthorizationApplyConfiguration {
-	b.Credentials = &value
+	b.SafeAuthorizationApplyConfiguration.Credentials = &value
 	return b
 }
 

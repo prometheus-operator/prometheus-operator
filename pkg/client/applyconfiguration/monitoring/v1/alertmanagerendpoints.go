@@ -18,28 +18,32 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// AlertmanagerEndpointsApplyConfiguration represents an declarative configuration of the AlertmanagerEndpoints type for use
+// AlertmanagerEndpointsApplyConfiguration represents a declarative configuration of the AlertmanagerEndpoints type for use
 // with apply.
 type AlertmanagerEndpointsApplyConfiguration struct {
-	Namespace       *string                              `json:"namespace,omitempty"`
-	Name            *string                              `json:"name,omitempty"`
-	Port            *intstr.IntOrString                  `json:"port,omitempty"`
-	Scheme          *string                              `json:"scheme,omitempty"`
-	PathPrefix      *string                              `json:"pathPrefix,omitempty"`
-	TLSConfig       *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
-	BasicAuth       *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	BearerTokenFile *string                              `json:"bearerTokenFile,omitempty"`
-	Authorization   *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	Sigv4           *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
-	APIVersion      *string                              `json:"apiVersion,omitempty"`
-	Timeout         *monitoringv1.Duration               `json:"timeout,omitempty"`
-	EnableHttp2     *bool                                `json:"enableHttp2,omitempty"`
+	Namespace                     *string                              `json:"namespace,omitempty"`
+	Name                          *string                              `json:"name,omitempty"`
+	Port                          *intstr.IntOrString                  `json:"port,omitempty"`
+	Scheme                        *string                              `json:"scheme,omitempty"`
+	PathPrefix                    *string                              `json:"pathPrefix,omitempty"`
+	TLSConfig                     *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
+	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	BearerTokenFile               *string                              `json:"bearerTokenFile,omitempty"`
+	Authorization                 *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	Sigv4                         *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
+	ProxyConfigApplyConfiguration `json:",inline"`
+	APIVersion                    *monitoringv1.AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
+	Timeout                       *monitoringv1.Duration               `json:"timeout,omitempty"`
+	EnableHttp2                   *bool                                `json:"enableHttp2,omitempty"`
+	RelabelConfigs                []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
+	AlertRelabelConfigs           []RelabelConfigApplyConfiguration    `json:"alertRelabelings,omitempty"`
 }
 
-// AlertmanagerEndpointsApplyConfiguration constructs an declarative configuration of the AlertmanagerEndpoints type for use with
+// AlertmanagerEndpointsApplyConfiguration constructs a declarative configuration of the AlertmanagerEndpoints type for use with
 // apply.
 func AlertmanagerEndpoints() *AlertmanagerEndpointsApplyConfiguration {
 	return &AlertmanagerEndpointsApplyConfiguration{}
@@ -125,10 +129,48 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithSigv4(value *Sigv4ApplyCon
 	return b
 }
 
+// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURL field is set to the value of the last call.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithProxyURL(value string) *AlertmanagerEndpointsApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithNoProxy(value string) *AlertmanagerEndpointsApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithProxyFromEnvironment(value bool) *AlertmanagerEndpointsApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *AlertmanagerEndpointsApplyConfiguration {
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
 // WithAPIVersion sets the APIVersion field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
-func (b *AlertmanagerEndpointsApplyConfiguration) WithAPIVersion(value string) *AlertmanagerEndpointsApplyConfiguration {
+func (b *AlertmanagerEndpointsApplyConfiguration) WithAPIVersion(value monitoringv1.AlertmanagerAPIVersion) *AlertmanagerEndpointsApplyConfiguration {
 	b.APIVersion = &value
 	return b
 }
@@ -146,5 +188,31 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithTimeout(value monitoringv1
 // If called multiple times, the EnableHttp2 field is set to the value of the last call.
 func (b *AlertmanagerEndpointsApplyConfiguration) WithEnableHttp2(value bool) *AlertmanagerEndpointsApplyConfiguration {
 	b.EnableHttp2 = &value
+	return b
+}
+
+// WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *AlertmanagerEndpointsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithRelabelConfigs")
+		}
+		b.RelabelConfigs = append(b.RelabelConfigs, *values[i])
+	}
+	return b
+}
+
+// WithAlertRelabelConfigs adds the given value to the AlertRelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AlertRelabelConfigs field.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithAlertRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *AlertmanagerEndpointsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAlertRelabelConfigs")
+		}
+		b.AlertRelabelConfigs = append(b.AlertRelabelConfigs, *values[i])
+	}
 	return b
 }

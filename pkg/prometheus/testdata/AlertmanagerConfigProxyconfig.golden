@@ -1,0 +1,34 @@
+global:
+  scrape_interval: ""
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+  evaluation_interval: ""
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: false
+    proxy_connect_header:
+      header:
+      - value
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: foo
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web

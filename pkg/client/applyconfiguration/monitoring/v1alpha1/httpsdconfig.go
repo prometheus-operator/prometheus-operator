@@ -22,18 +22,21 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HTTPSDConfigApplyConfiguration represents an declarative configuration of the HTTPSDConfig type for use
+// HTTPSDConfigApplyConfiguration represents a declarative configuration of the HTTPSDConfig type for use
 // with apply.
 type HTTPSDConfigApplyConfiguration struct {
 	URL                                        *string                                           `json:"url,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
+	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
-// HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
+// HTTPSDConfigApplyConfiguration constructs a declarative configuration of the HTTPSDConfig type for use with
 // apply.
 func HTTPSDConfig() *HTTPSDConfigApplyConfiguration {
 	return &HTTPSDConfigApplyConfiguration{}
@@ -71,6 +74,52 @@ func (b *HTTPSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.S
 	return b
 }
 
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithOAuth2(value *monitoringv1.OAuth2ApplyConfiguration) *HTTPSDConfigApplyConfiguration {
+	b.OAuth2 = value
+	return b
+}
+
+// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURL field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithProxyURL(value string) *HTTPSDConfigApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithNoProxy(value string) *HTTPSDConfigApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *HTTPSDConfigApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *HTTPSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *HTTPSDConfigApplyConfiguration {
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
@@ -79,40 +128,18 @@ func (b *HTTPSDConfigApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeT
 	return b
 }
 
-// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ProxyURL field is set to the value of the last call.
-func (b *HTTPSDConfigApplyConfiguration) WithProxyURL(value string) *HTTPSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithFollowRedirects(value bool) *HTTPSDConfigApplyConfiguration {
+	b.FollowRedirects = &value
 	return b
 }
 
-// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the NoProxy field is set to the value of the last call.
-func (b *HTTPSDConfigApplyConfiguration) WithNoProxy(value string) *HTTPSDConfigApplyConfiguration {
-	b.NoProxy = &value
-	return b
-}
-
-// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
-func (b *HTTPSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *HTTPSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
-	return b
-}
-
-// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
-// overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *HTTPSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]corev1.SecretKeySelector) *HTTPSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string]corev1.SecretKeySelector, len(entries))
-	}
-	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
-	}
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *HTTPSDConfigApplyConfiguration {
+	b.EnableHTTP2 = &value
 	return b
 }

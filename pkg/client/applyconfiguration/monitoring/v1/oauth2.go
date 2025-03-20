@@ -20,17 +20,19 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// OAuth2ApplyConfiguration represents an declarative configuration of the OAuth2 type for use
+// OAuth2ApplyConfiguration represents a declarative configuration of the OAuth2 type for use
 // with apply.
 type OAuth2ApplyConfiguration struct {
-	ClientID       *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
-	ClientSecret   *corev1.SecretKeySelector            `json:"clientSecret,omitempty"`
-	TokenURL       *string                              `json:"tokenUrl,omitempty"`
-	Scopes         []string                             `json:"scopes,omitempty"`
-	EndpointParams map[string]string                    `json:"endpointParams,omitempty"`
+	ClientID                      *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
+	ClientSecret                  *corev1.SecretKeySelector            `json:"clientSecret,omitempty"`
+	TokenURL                      *string                              `json:"tokenUrl,omitempty"`
+	Scopes                        []string                             `json:"scopes,omitempty"`
+	EndpointParams                map[string]string                    `json:"endpointParams,omitempty"`
+	TLSConfig                     *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
-// OAuth2ApplyConfiguration constructs an declarative configuration of the OAuth2 type for use with
+// OAuth2ApplyConfiguration constructs a declarative configuration of the OAuth2 type for use with
 // apply.
 func OAuth2() *OAuth2ApplyConfiguration {
 	return &OAuth2ApplyConfiguration{}
@@ -80,6 +82,52 @@ func (b *OAuth2ApplyConfiguration) WithEndpointParams(entries map[string]string)
 	}
 	for k, v := range entries {
 		b.EndpointParams[k] = v
+	}
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *OAuth2ApplyConfiguration {
+	b.TLSConfig = value
+	return b
+}
+
+// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURL field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithProxyURL(value string) *OAuth2ApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithNoProxy(value string) *OAuth2ApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithProxyFromEnvironment(value bool) *OAuth2ApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *OAuth2ApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *OAuth2ApplyConfiguration {
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }

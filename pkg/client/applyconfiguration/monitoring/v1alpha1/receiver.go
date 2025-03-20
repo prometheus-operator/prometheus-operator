@@ -16,7 +16,7 @@
 
 package v1alpha1
 
-// ReceiverApplyConfiguration represents an declarative configuration of the Receiver type for use
+// ReceiverApplyConfiguration represents a declarative configuration of the Receiver type for use
 // with apply.
 type ReceiverApplyConfiguration struct {
 	Name             *string                             `json:"name,omitempty"`
@@ -35,7 +35,7 @@ type ReceiverApplyConfiguration struct {
 	MSTeamsConfigs   []MSTeamsConfigApplyConfiguration   `json:"msteamsConfigs,omitempty"`
 }
 
-// ReceiverApplyConfiguration constructs an declarative configuration of the Receiver type for use with
+// ReceiverApplyConfiguration constructs a declarative configuration of the Receiver type for use with
 // apply.
 func Receiver() *ReceiverApplyConfiguration {
 	return &ReceiverApplyConfiguration{}
