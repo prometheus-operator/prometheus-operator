@@ -47,36 +47,20 @@ The main goal of this proposal is to reduce the manual effort and domain knowled
 
 We propose to create a new CLI tool allowing users to create, update, and delete Prometheus Operator resources using a simple CLI interface as well as troubleshoot and debug Prometheus Operator resources. As a source of inspiration, the new cli could work as the example below, for different commands:
 
-## Create a Prometheus resource interactively mode
+## Deploy a Kube-Prometheus Stack
 
-The CLI could provide an interactive mode, where users can answer questions to create the Prometheus resource with the desired configuration.
+The CLI could provide a command to deploy a Kube-Prometheus stack, where users can deploy the Prometheus Operator, Alertmanager, Node-Exporter and others with a single command.
 
 ```bash
-kubectl prometheus-operator create prometheus example --interactive
-How many replicas (default: 2)?
-How many shards (default: 1)?
-Create service account (Yes/No, default: Yes)?
-Service account name (default: example)?
-Create service (Yes/No, default: Yes)?
-...
-Create Pod disruption budget (Yes/No, default: Yes)?
-Service monitor selector (default: {})?
-Service monitor namespace selector (default: {})?
+poctl create stack --version 0.81.0
 ```
 
-## Troubleshoot
+## Analyze
 
-The CLI could provide an troublehosot command, where users can check if the Prometheus resource is correctly configured.
+The CLI could provide an analyze command, where users can check if the Prometheus Operator resources are correctly configured, the troubleshoot command will analyze the given resource and provide suggestions on how to fix the issues.
 
 ```bash
-kubectl prometheus-operator troubleshoot prometheus --name prometheus --service-monitor 
-
-ServiceMonitor exists: yes
-ServiceMonitor matches selector: yes
-Prometheus has been reconciled: yes
-Prometheus has the job: yes
-Prometheus discovered the targets: yes
-Prometheus scrapes the targets: yes
+poctl analyze --kind prometheus --name prometheus --namespace monitoring
 ```
 
 ## Where the code will live?
