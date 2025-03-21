@@ -302,6 +302,13 @@ type AlertmanagerSpec struct {
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet. The arguments are passed as-is to the
+	// Alertmanager container which may cause issues if they are invalid or not supported
+	// by the given Alertmanager version.
+	// +optional
+	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {

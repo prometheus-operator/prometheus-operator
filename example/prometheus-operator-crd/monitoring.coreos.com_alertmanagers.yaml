@@ -78,6 +78,28 @@ spec:
               Specification of the desired behavior of the Alertmanager cluster. More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
+              additionalArgs:
+                description: |-
+                  AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
+                  It is intended for e.g. activating hidden flags which are not supported by
+                  the dedicated configuration options yet. The arguments are passed as-is to the
+                  Alertmanager container which may cause issues if they are invalid or not supported
+                  by the given Alertmanager version.
+                items:
+                  description: Argument as part of the AdditionalArgs list.
+                  properties:
+                    name:
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
+                      type: string
+                    value:
+                      description: Argument value, e.g. 30s. Can be empty for name-only
+                        arguments (e.g. --storage.tsdb.no-lockfile)
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               additionalPeers:
                 description: AdditionalPeers allows injecting a set of additional
                   Alertmanagers to peer with to form a highly available cluster.
