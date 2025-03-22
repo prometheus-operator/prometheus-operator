@@ -27,6 +27,9 @@ local defaults = {
     if !std.setMember(labelName, ['app.kubernetes.io/version'])
   },
   enableAlertmanagerConfigV1beta1: false,
+  kubeletService: 'kube-system/kubelet',
+  kubeletEndpointsEnabled: true,
+  kubeletEndpointSliceEnabled: false,
 };
 
 function(params) {
@@ -75,80 +78,106 @@ function(params) {
       labels: po.config.commonLabels,
     },
     rules: [
-      {
-        apiGroups: ['monitoring.coreos.com'],
-        resources: [
-          'alertmanagers',
-          'alertmanagers/finalizers',
-          'alertmanagers/status',
-          'alertmanagerconfigs',
-          'prometheuses',
-          'prometheuses/finalizers',
-          'prometheuses/status',
-          'prometheusagents',
-          'prometheusagents/finalizers',
-          'prometheusagents/status',
-          'thanosrulers',
-          'thanosrulers/finalizers',
-          'thanosrulers/status',
-          'scrapeconfigs',
-          'servicemonitors',
-          'podmonitors',
-          'probes',
-          'prometheusrules',
-        ],
-        verbs: ['*'],
-      },
-      {
-        apiGroups: ['apps'],
-        resources: ['statefulsets'],
-        verbs: ['*'],
-      },
-      {
-        apiGroups: [''],
-        resources: ['configmaps', 'secrets'],
-        verbs: ['*'],
-      },
-      {
-        apiGroups: [''],
-        resources: ['pods'],
-        verbs: ['list', 'delete'],
-      },
-      {
-        apiGroups: [''],
-        resources: [
-          'services',
-          'services/finalizers',
-          'endpoints',
-        ],
-        verbs: ['get', 'create', 'update', 'delete'],
-      },
-      {
-        apiGroups: [''],
-        resources: ['nodes'],
-        verbs: ['list', 'watch'],
-      },
-      {
-        apiGroups: [''],
-        resources: ['namespaces'],
-        verbs: ['get', 'list', 'watch'],
-      },
-      {
-        apiGroups: [''],
-        resources: ['events'],
-        verbs: ['patch', 'create'],
-      },
-      {
-        apiGroups: ['networking.k8s.io'],
-        resources: ['ingresses'],
-        verbs: ['get', 'list', 'watch'],
-      },
-      {
-        apiGroups: ['storage.k8s.io'],
-        resources: ['storageclasses'],
-        verbs: ['get'],
-      },
-    ],
+             {
+               apiGroups: ['monitoring.coreos.com'],
+               resources: [
+                 'alertmanagers',
+                 'alertmanagers/finalizers',
+                 'alertmanagers/status',
+                 'alertmanagerconfigs',
+                 'prometheuses',
+                 'prometheuses/finalizers',
+                 'prometheuses/status',
+                 'prometheusagents',
+                 'prometheusagents/finalizers',
+                 'prometheusagents/status',
+                 'thanosrulers',
+                 'thanosrulers/finalizers',
+                 'thanosrulers/status',
+                 'scrapeconfigs',
+                 'servicemonitors',
+                 'podmonitors',
+                 'probes',
+                 'prometheusrules',
+               ],
+               verbs: ['*'],
+             },
+             {
+               apiGroups: ['apps'],
+               resources: ['statefulsets'],
+               verbs: ['*'],
+             },
+             {
+               apiGroups: [''],
+               resources: ['configmaps', 'secrets'],
+               verbs: ['*'],
+             },
+             {
+               apiGroups: [''],
+               resources: ['pods'],
+               verbs: ['list', 'delete'],
+             },
+             {
+               apiGroups: [''],
+               resources: [
+                 'services',
+                 'services/finalizers',
+               ],
+               verbs: ['get', 'create', 'update', 'delete'],
+             },
+             {
+               apiGroups: [''],
+               resources: ['nodes'],
+               verbs: ['list', 'watch'],
+             },
+             {
+               apiGroups: [''],
+               resources: ['namespaces'],
+               verbs: ['get', 'list', 'watch'],
+             },
+             {
+               apiGroups: [''],
+               resources: ['events'],
+               verbs: ['patch', 'create'],
+             },
+             {
+               apiGroups: ['networking.k8s.io'],
+               resources: ['ingresses'],
+               verbs: ['get', 'list', 'watch'],
+             },
+             {
+               apiGroups: ['storage.k8s.io'],
+               resources: ['storageclasses'],
+               verbs: ['get'],
+             },
+           ] + (
+             if po.config.kubeletEndpointsEnabled then
+               [
+                 {
+                   apiGroups: [''],
+                   resources: [
+                     'endpoints',
+                   ],
+                   verbs: ['get', 'create', 'update', 'delete'],
+                 },
+               ]
+             else
+               []
+           )
+           + (
+             if po.config.kubeletEndpointSliceEnabled then
+               [
+                 {
+                   apiGroups: ['discovery.k8s.io'],
+                   resources: [
+                     'endpointslices',
+                   ],
+                   verbs: ['get', 'create', 'list', 'update', 'delete'],
+                 },
+               ]
+             else
+               []
+           ),
   },
 
   deployment:
@@ -161,9 +190,11 @@ function(params) {
       name: po.config.name,
       image: po.config.image,
       args: [
-              '--kubelet-service=kube-system/kubelet',
+              '--kubelet-service=' + po.config.kubeletService,
               '--prometheus-config-reloader=' + po.config.configReloaderImage,
             ] +
+            [std.format('--kubelet-endpoints=%s', po.config.kubeletEndpointsEnabled)] +
+            [std.format('--kubelet-endpointslice=%s', po.config.kubeletEndpointSliceEnabled)] +
             reloaderResourceArg('--config-reloader-cpu-limit', po.config.configReloaderResources.limits.cpu) +
             reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
             reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +

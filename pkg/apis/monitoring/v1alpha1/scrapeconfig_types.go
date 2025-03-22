@@ -28,6 +28,7 @@ const (
 )
 
 // Target represents a target for Prometheus to scrape
+// kubebuilder:validation:MinLength:=1
 type Target string
 
 // SDFile represents a file used for service discovery
@@ -133,7 +134,7 @@ type ScrapeConfigList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ScrapeConfigs
-	Items []*ScrapeConfig `json:"items"`
+	Items []ScrapeConfig `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -237,6 +238,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	ScrapeInterval *v1.Duration `json:"scrapeInterval,omitempty"`
 	// ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
 	ScrapeTimeout *v1.Duration `json:"scrapeTimeout,omitempty"`
 	// The protocols to negotiate during a scrape. It tells clients the
@@ -250,6 +252,11 @@ type ScrapeConfigSpec struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *v1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
@@ -279,6 +286,9 @@ type ScrapeConfigSpec struct {
 	// If unset, Prometheus uses true by default.
 	// +optional
 	EnableCompression *bool `json:"enableCompression,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
@@ -309,6 +319,8 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+
+	v1.NativeHistogramConfig `json:",inline"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -334,12 +346,14 @@ type ScrapeConfigSpec struct {
 // +k8s:openapi-gen=true
 type StaticConfig struct {
 	// List of targets for this static configuration.
-	// +optional
-	Targets []Target `json:"targets,omitempty"`
+	// +kubebuilder:validation:MinItems:=1
+	// +listType=set
+	// +required
+	Targets []Target `json:"targets"`
 	// Labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
-	Labels map[v1.LabelName]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // FileSDConfig defines a Prometheus file service discovery configuration
@@ -455,20 +469,31 @@ type KubernetesSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
 // +k8s:openapi-gen=true
 type ConsulSDConfig struct {
-	// A valid string consisting of a hostname or IP followed by an optional port number.
+	// Consul server address. A valid string consisting of a hostname or IP followed by an optional port number.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
+	// Prefix for URIs for when consul is behind an API gateway (reverse proxy).
+	//
+	// It requires Prometheus >= 2.45.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	PathPrefix *string `json:"pathPrefix,omitempty"`
 	// Consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.
 	// +optional
 	TokenRef *corev1.SecretKeySelector `json:"tokenRef,omitempty"`
 	// Consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Datacenter *string `json:"datacenter,omitempty"`
 	// Namespaces are only supported in Consul Enterprise.
+	//
+	// It requires Prometheus >= 2.28.0.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 	// Admin Partitions are only supported in Consul Enterprise.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Partition *string `json:"partition,omitempty"`
 	// HTTP Scheme default "http"
@@ -476,21 +501,30 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
-	// +listType=atomic
+	// +listType:=set
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
-	//+listType:=atomic
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
+	// +listType:=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// The string by which Consul tags are joined into the tag label.
 	// If unset, Prometheus uses its default value.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
 	// +mapType:=atomic
 	// +optional
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
+	// Filter expression used to filter the catalog results.
+	// See https://www.consul.io/api-docs/catalog#list-services
+	// It requires Prometheus >= 3.0.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Filter *string `json:"filter,omitempty"`
 	// Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional
@@ -500,18 +534,19 @@ type ConsulSDConfig struct {
 	// If unset, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// BasicAuth information to authenticate against the Consul Server.
+	// Optional BasicAuth information to authenticate against the Consul Server.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// Authorization header configuration to authenticate against the Consul Server.
+	// Optional Authorization header configuration to authenticate against the Consul Server.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
-	// Optional OAuth 2.0 configuration.
+	// Optional OAuth2.0 configuration.
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
 	// +optional
-	Oauth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
@@ -521,7 +556,7 @@ type ConsulSDConfig struct {
 	// If unset, Prometheus uses its default value.
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
-	// TLS Config
+	// TLS configuration to connect to the Consul API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
@@ -622,34 +657,47 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+type AuthenticationMethodType string
+
+const (
+	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+)
+
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
 // +k8s:openapi-gen=true
 type AzureSDConfig struct {
 	// The Azure environment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Environment *string `json:"environment,omitempty"`
 	// # The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
 	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
 	// SDK authentication method uses environment variables by default.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
 	// +optional
-	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
+	AuthenticationMethod *AuthenticationMethodType `json:"authenticationMethod,omitempty"`
 	// The subscription ID. Always required.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	SubscriptionID string `json:"subscriptionID"`
 	// Optional tenant ID. Only required with the OAuth authentication method.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TenantID *string `json:"tenantID,omitempty"`
 	// Optional client ID. Only required with the OAuth authentication method.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 	// Optional client secret. Only required with the OAuth authentication method.
 	// +optional
 	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
 	// Optional resource group name. Limits discovery to this resource group.
+	// Requires  Prometheus v2.35.0 and above
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ResourceGroup *string `json:"resourceGroup,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
@@ -657,8 +705,35 @@ type AzureSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
+	// BasicAuth information to authenticate against the target HTTP endpoint.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oAuth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `oAuth2`, or `basicAuth`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // GCESDConfig configures scrape targets from GCP GCE instances.
@@ -687,6 +762,7 @@ type GCESDConfig struct {
 	// Filter can be used optionally to filter the instance list by other criteria
 	// Syntax of this filter is described in the filter query parameter section:
 	// https://cloud.google.com/compute/docs/reference/latest/instances/list
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	Filter *string `json:"filter,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
@@ -694,36 +770,53 @@ type GCESDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 	// The tag separator is used to separate the tags on concatenation
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=Instance;Hypervisor;LoadBalancer
+type OpenStackRole string
+
+const (
+	OpenStackRoleInstance     OpenStackRole = "Instance"
+	OpenStackRoleHypervisor   OpenStackRole = "Hypervisor"
+	OpenStackRoleLoadBalancer OpenStackRole = "LoadBalancer"
+)
 
 // OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config
 // +k8s:openapi-gen=true
 type OpenStackSDConfig struct {
 	// The OpenStack role of entities that should be discovered.
-	// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor
+	//
+	// Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
+	//
 	// +required
-	Role string `json:"role"`
+	Role OpenStackRole `json:"role"`
 	// The OpenStack Region.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
 	Region string `json:"region"`
 	// IdentityEndpoint specifies the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
+	// +kubebuilder:validation:Pattern:=`^http(s)?:\/\/.+$`
 	// +optional
 	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
 	// Username is required if using Identity V2 API. Consult with your provider's
 	// control panel to discover your account's username.
 	// In Identity V3, either userid or a combination of username
 	// and domainId or domainName are needed
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	Username *string `json:"username,omitempty"`
 	// UserID
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	UserID *string `json:"userid,omitempty"`
 	// Password for the Identity V2 and V3 APIs. Consult with your provider's
@@ -732,24 +825,29 @@ type OpenStackSDConfig struct {
 	Password *corev1.SecretKeySelector `json:"password,omitempty"`
 	// At most one of domainId and domainName must be provided if using username
 	// with Identity V3. Otherwise, either are optional.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	DomainName *string `json:"domainName,omitempty"`
 	// DomainID
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	DomainID *string `json:"domainID,omitempty"`
 	// The ProjectId and ProjectName fields are optional for the Identity V2 API.
 	// Some providers allow you to specify a ProjectName instead of the ProjectId.
 	// Some require both. Your provider's authentication policies will determine
 	// how these fields influence authentication.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ProjectName *string `json:"projectName,omitempty"`
 	//  ProjectID
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ProjectID *string `json:"projectID,omitempty"`
 	// The ApplicationCredentialID or ApplicationCredentialName fields are
 	// required if using an application credential to authenticate. Some providers
 	// allow you to create an application credential to authenticate rather than a
 	// password.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// ApplicationCredentialID
@@ -768,8 +866,10 @@ type OpenStackSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 	// Availability of the endpoint to connect to.
 	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
@@ -805,8 +905,10 @@ type DigitalOceanSDConfig struct {
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// The port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port,omitempty"`
+	Port *int32 `json:"port,omitempty"`
 	// Refresh interval to re-read the instance list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
@@ -1031,8 +1133,8 @@ type NomadSDConfig struct {
 type OVHService string
 
 const (
-	VPS             OVHService = "VPS"
-	DedicatedServer OVHService = "DedicatedServer"
+	OVHServiceVPS             OVHService = "VPS"
+	OVHServiceDedicatedServer OVHService = "DedicatedServer"
 )
 
 // OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
@@ -1346,4 +1448,7 @@ type IonosSDConfig struct {
 	// Configure whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// Configure whether to enable OAuth2.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 }

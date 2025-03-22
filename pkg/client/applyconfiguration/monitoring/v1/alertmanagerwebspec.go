@@ -34,7 +34,7 @@ func AlertmanagerWebSpec() *AlertmanagerWebSpecApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *AlertmanagerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfigApplyConfiguration) *AlertmanagerWebSpecApplyConfiguration {
-	b.TLSConfig = value
+	b.WebConfigFileFieldsApplyConfiguration.TLSConfig = value
 	return b
 }
 
@@ -42,7 +42,7 @@ func (b *AlertmanagerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *AlertmanagerWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *AlertmanagerWebSpecApplyConfiguration {
-	b.HTTPConfig = value
+	b.WebConfigFileFieldsApplyConfiguration.HTTPConfig = value
 	return b
 }
 

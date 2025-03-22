@@ -148,15 +148,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1.ThanosRulerKind,
-		r,
-		o.controllerID,
-	)
-
 	o.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewMetadataInformerFactory(
 			c.Namespaces.ThanosRulerAllowList,
@@ -194,6 +185,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		thanosStores = append(thanosStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(newThanosRulerCollectorForStores(thanosStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.thanosRulerInfs,
+		o.metrics,
+		monitoringv1.ThanosRulerKind,
+		r,
+		o.controllerID,
+	)
 
 	o.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -374,34 +375,6 @@ func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
 }
 
-// Resolve implements the operator.Syncer interface.
-func (o *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := o.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	thanosKey := statefulSetKeyToThanosKey(key)
-	tr, err := o.thanosRulerInfs.Get(thanosKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		o.logger.Error("ThanosRuler lookup failed", "err", err)
-		return nil
-	}
-
-	return tr.(*monitoringv1.ThanosRuler)
-}
-
-func statefulSetKeyToThanosKey(key string) string {
-	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "thanos-ruler-")
-}
-
 func thanosKeyToStatefulSetKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/thanos-ruler-" + keyParts[1]
@@ -427,7 +400,8 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, tr.Spec.RuleNamespaceSelector)
 		if err != nil {
-			o.logger.Error("",
+			o.logger.Error(
+				"failed to detect label selection change",
 				"err", err,
 				"name", tr.Name,
 				"namespace", tr.Namespace,
@@ -503,10 +477,17 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to synchronize web config secret: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
-	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if tr.Spec.ServiceName != nil {
+		selectorLabels := makeSelectorLabels(tr.Name)
+		if err := k8sutil.EnsureCustomGoverningService(ctx, tr.Namespace, *tr.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Create governing service if it doesn't exist.
+		if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	// Ensure we have a StatefulSet running Thanos deployed.
@@ -547,10 +528,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	operator.SanitizeSTS(sset)
 
 	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
-		logger.Debug("new statefulset generation inputs match current, skipping any actions")
+		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
 		return nil
 	}
 
+	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName])
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 	sErr, ok := err.(*apierrors.StatusError)
@@ -818,4 +800,17 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 	)
 
 	return s
+}
+
+// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+// We should try to avoid removing such immutable fields whenever possible since doing
+// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+// The requirement to make a change here should be carefully evaluated.
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":       "thanos-ruler",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   name,
+		"thanos-ruler":                 name,
+	}
 }

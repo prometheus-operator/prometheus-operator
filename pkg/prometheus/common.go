@@ -17,11 +17,9 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
-	"math"
 	"net/url"
 	"path"
 	"path/filepath"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,13 +41,14 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	RulesDir                 = "/etc/prometheus/rules"
-	secretsDir               = "/etc/prometheus/secrets/"
-	configmapsDir            = "/etc/prometheus/configmaps/"
-	ConfigFilename           = "prometheus.yaml.gz"
-	ConfigEnvsubstFilename   = "prometheus.env.yaml"
-	DefaultPortName          = "web"
-	DefaultQueryLogDirectory = "/var/log/prometheus"
+	RulesDir               = "/etc/prometheus/rules"
+	secretsDir             = "/etc/prometheus/secrets/"
+	configmapsDir          = "/etc/prometheus/configmaps/"
+	ConfigFilename         = "prometheus.yaml.gz"
+	ConfigEnvsubstFilename = "prometheus.env.yaml"
+	DefaultPortName        = "web"
+	DefaultLogFileVolume   = "log-file"
+	DefaultLogDirectory    = "/var/log/prometheus"
 )
 
 var (
@@ -170,7 +169,6 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 	}
 }
 
-// TODO: Storage methods should be moved to server package.
 // It is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -181,73 +179,16 @@ func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-// TODO: QueryLogFile methods should be moved to server package.
-// They are still here because promcfg is using them.
-func UsesDefaultQueryLogVolume(queryLogFile string) bool {
-	return queryLogFile != "" && filepath.Dir(queryLogFile) == "."
+func UsesDefaultFileVolume(file string) bool {
+	return file != "" && filepath.Dir(file) == "."
 }
 
-func queryLogFilePath(queryLogFile string) string {
-	if !UsesDefaultQueryLogVolume(queryLogFile) {
-		return queryLogFile
+func logFilePath(logFile string) string {
+	if !UsesDefaultFileVolume(logFile) {
+		return logFile
 	}
 
-	return filepath.Join(DefaultQueryLogDirectory, queryLogFile)
-}
-
-// BuildCommonPrometheusArgs builds a slice of arguments that are common between Prometheus Server and Agent.
-func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) []monitoringv1.Argument {
-	promArgs := []monitoringv1.Argument{
-		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
-		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
-		{Name: "config.file", Value: path.Join(ConfOutDir, ConfigEnvsubstFilename)},
-	}
-
-	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.HTTPReloadStrategyType {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-lifecycle"})
-	}
-
-	if cpf.Web != nil {
-		if cpf.Web.PageTitle != nil {
-			promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *cpf.Web.PageTitle})
-		}
-
-		if cpf.Web.MaxConnections != nil {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.max-connections", Value: fmt.Sprintf("%d", *cpf.Web.MaxConnections)})
-		}
-	}
-
-	if cpf.EnableRemoteWriteReceiver {
-		promArgs = cg.WithMinimumVersion("2.33.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
-	}
-
-	if len(cpf.EnableFeatures) > 0 {
-		efs := make([]string, len(cpf.EnableFeatures))
-		for i := range cpf.EnableFeatures {
-			efs[i] = string(cpf.EnableFeatures[i])
-		}
-		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
-	}
-
-	if cpf.ExternalURL != "" {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
-	}
-
-	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
-
-	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
-	}
-
-	if cpf.LogFormat != "" && cpf.LogFormat != "logfmt" {
-		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
-	}
-
-	if cpf.ListenLocal {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
-	}
-
-	return promArgs
+	return filepath.Join(DefaultLogDirectory, logFile)
 }
 
 // BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
@@ -346,6 +287,21 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		})
 	}
 
+	// scrape failure log file
+	if cpf.ScrapeFailureLogFile != nil && UsesDefaultFileVolume(*cpf.ScrapeFailureLogFile) {
+		volumes = append(volumes, v1.Volume{
+			Name: DefaultLogFileVolume,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      DefaultLogFileVolume,
+			ReadOnly:  false,
+			MountPath: DefaultLogDirectory,
+		})
+	}
+
 	return volumes, promVolumeMounts, nil
 }
 
@@ -359,54 +315,9 @@ func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.Common
 	return volName
 }
 
-func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator) v1.ProbeHandler {
-	probePath = path.Clean(cpf.WebRoutePrefix() + probePath)
-	handler := v1.ProbeHandler{}
-	if cpf.ListenLocal {
-		probeURL := url.URL{
-			Scheme: "http",
-			Host:   "localhost:9090",
-			Path:   probePath,
-		}
-		handler.Exec = operator.ExecAction(probeURL.String())
-
-		return handler
-	}
-
-	handler.HTTPGet = &v1.HTTPGetAction{
-		Path: probePath,
-		Port: intstr.FromString(cpf.PortName),
-	}
-	if cpf.Web != nil && cpf.Web.TLSConfig != nil && webConfigGenerator.IsCompatible() {
-		handler.HTTPGet.Scheme = v1.URISchemeHTTPS
-	}
-	return handler
-}
-
-func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) (map[string]string, map[string]string) {
-	podAnnotations := map[string]string{
-		"kubectl.kubernetes.io/default-container": "prometheus",
-	}
-
-	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
-	}
-
-	if cpf.PodMetadata != nil {
-		for k, v := range cpf.PodMetadata.Labels {
-			podLabels[k] = v
-		}
-		for k, v := range cpf.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
-	}
-
-	return podAnnotations, podLabels
-}
-
 func BuildConfigReloader(
 	p monitoringv1.PrometheusInterface,
-	c *Config,
+	c Config,
 	initContainer bool,
 	mounts []v1.VolumeMount,
 	watchedDirectories []string,
@@ -499,20 +410,6 @@ func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []mo
 	return coreTscs
 }
 
-func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonPrometheusFields) (int32, int32) {
-	var startupPeriodSeconds float64 = 15
-	var startupFailureThreshold float64 = 60
-
-	maximumStartupDurationSeconds := float64(ptr.Deref(cfp.MaximumStartupDurationSeconds, 0))
-
-	if maximumStartupDurationSeconds >= 60 {
-		startupFailureThreshold = math.Ceil(maximumStartupDurationSeconds / 60)
-		startupPeriodSeconds = math.Ceil(maximumStartupDurationSeconds / startupFailureThreshold)
-	}
-
-	return int32(startupPeriodSeconds), int32(startupFailureThreshold)
-}
-
 func MakeContainerPorts(cpf monitoringv1.CommonPrometheusFields) []v1.ContainerPort {
 	if cpf.ListenLocal {
 		return nil
@@ -557,40 +454,36 @@ func BuildWebconfig(
 	return webConfig.GetMountParameters()
 }
 
-// The /-/ready handler returns OK only after the TSDB initialization has
-// completed. The WAL replay can take a significant time for large setups
-// hence we enable the startup probe with a generous failure threshold (15
-// minutes) to ensure that the readiness probe only comes into effect once
-// Prometheus is effectively ready.
-// We don't want to use the /-/healthy handler here because it returns OK as
-// soon as the web server is started (irrespective of the WAL replay).
-func MakeProbes(
-	cpf monitoringv1.CommonPrometheusFields,
-	webConfigGenerator *ConfigGenerator,
-) (*v1.Probe, *v1.Probe, *v1.Probe) {
-	readyProbeHandler := ProbeHandler("/-/ready", cpf, webConfigGenerator)
-	startupPeriodSeconds, startupFailureThreshold := GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
-
-	startupProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   ProbeTimeoutSeconds,
-		PeriodSeconds:    startupPeriodSeconds,
-		FailureThreshold: startupFailureThreshold,
+// BuildStatefulSetService returns a governing service to be used for a statefulset.
+func BuildStatefulSetService(name string, selector map[string]string, p monitoringv1.PrometheusInterface, config Config) *v1.Service {
+	cpf := p.GetCommonPrometheusFields()
+	portName := DefaultPortName
+	if cpf.PortName != "" {
+		portName = cpf.PortName
 	}
 
-	readinessProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
+	svc := &v1.Service{
+		Spec: v1.ServiceSpec{
+			ClusterIP: v1.ClusterIPNone,
+			Ports: []v1.ServicePort{
+				{
+					Name:       portName,
+					Port:       9090,
+					TargetPort: intstr.FromString(portName),
+				},
+			},
+			Selector: selector,
+		},
 	}
 
-	livenessProbe := &v1.Probe{
-		ProbeHandler:     ProbeHandler("/-/healthy", cpf, webConfigGenerator),
-		TimeoutSeconds:   ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
+	operator.UpdateObject(
+		svc,
+		operator.WithName(name),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
+		operator.WithLabels(config.Labels),
+		operator.WithOwner(p),
+	)
 
-	return startupProbe, readinessProbe, livenessProbe
+	return svc
 }

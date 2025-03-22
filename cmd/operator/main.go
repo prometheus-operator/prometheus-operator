@@ -24,18 +24,16 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"regexp"
+	"strings"
 	"syscall"
 
 	"github.com/blang/semver/v4"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
-	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -46,6 +44,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -117,10 +116,14 @@ var (
 
 	serverConfig = server.DefaultConfig(":8080", false)
 
+	disableUnmanagedPrometheusConfiguration bool
+
 	// Parameters for the kubelet endpoints controller.
-	kubeletObject       string
-	kubeletSelector     operator.LabelSelector
-	nodeAddressPriority operator.NodeAddressPriority
+	kubeletObject        string
+	kubeletSelector      operator.LabelSelector
+	nodeAddressPriority  operator.NodeAddressPriority
+	kubeletEndpoints     bool
+	kubeletEndpointSlice bool
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -140,6 +143,8 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.StringVar(&kubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	fs.Var(&kubeletSelector, "kubelet-selector", "Label selector to filter nodes.")
 	fs.Var(&nodeAddressPriority, "kubelet-node-address-priority", "Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.")
+	fs.BoolVar(&kubeletEndpointSlice, "kubelet-endpointslice", false, "Create EndpointSlice objects for kubelet targets.")
+	fs.BoolVar(&kubeletEndpoints, "kubelet-endpoints", true, "Create Endpoints objects for kubelet targets.")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -177,7 +182,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
-
+	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
 
 	logging.RegisterFlags(fs, &logConfig)
@@ -202,7 +207,7 @@ func run(fs *flag.FlagSet) int {
 	klog.SetSlogLogger(logger)
 
 	if err := cfg.Gates.UpdateFeatureGates(*featureGates.Map); err != nil {
-		logger.Error("", "error", err)
+		logger.Error("failed to update feature gates", "error", err)
 		return 1
 	}
 
@@ -223,7 +228,7 @@ func run(fs *flag.FlagSet) int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
-	r := prometheus.NewRegistry()
+	r := metrics.NewRegistry("prometheus_operator")
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
@@ -268,6 +273,10 @@ func run(fs *flag.FlagSet) int {
 		promControllerOptions         = []prometheuscontroller.ControllerOption{}
 		thanosControllerOptions       = []thanoscontroller.ControllerOption{}
 	)
+	if disableUnmanagedPrometheusConfiguration {
+		logger.Info("Disabling support for unmanaged Prometheus configurations")
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithoutUnmanagedConfiguration())
+	}
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
@@ -519,15 +528,55 @@ func run(fs *flag.FlagSet) int {
 
 	var kec *kubelet.Controller
 	if kubeletObject != "" {
+		opts := []kubelet.ControllerOption{kubelet.WithNodeAddressPriority(nodeAddressPriority.String())}
+
+		kubeletService := strings.Split(kubeletObject, "/")
+		if len(kubeletService) != 2 {
+			logger.Error(fmt.Sprintf("malformatted kubelet object string %q, must be in format \"namespace/name\"", kubeletObject))
+			cancel()
+			return 1
+		}
+
+		if kubeletEndpointSlice {
+			allowed, errs, err := k8sutil.IsAllowed(
+				ctx,
+				kclient.AuthorizationV1().SelfSubjectAccessReviews(),
+				[]string{kubeletService[0]},
+				k8sutil.ResourceAttribute{
+					Group:    discoveryv1.SchemeGroupVersion.Group,
+					Version:  discoveryv1.SchemeGroupVersion.Version,
+					Resource: "endpointslices",
+					Verbs:    []string{"get", "list", "create", "update", "delete"},
+				})
+			if err != nil {
+				logger.Error(fmt.Sprintf("failed to check permissions on resource 'endpointslices' (group %q)", discoveryv1.SchemeGroupVersion.Group), "err", err)
+				cancel()
+				return 1
+			}
+
+			if !allowed {
+				for _, reason := range errs {
+					logger.Warn(fmt.Sprintf("missing permission on resource 'endpointslices' (group: %q)", discoveryv1.SchemeGroupVersion.Group), "reason", reason)
+				}
+			} else {
+				opts = append(opts, kubelet.WithEndpointSlice())
+			}
+		}
+
+		if kubeletEndpoints {
+			opts = append(opts, kubelet.WithEndpoints())
+		}
+
 		if kec, err = kubelet.New(
 			logger.With("component", "kubelet_endpoints"),
 			kclient,
 			r,
-			kubeletObject,
+			kubeletService[1],
+			kubeletService[0],
 			kubeletSelector,
 			cfg.Annotations,
 			cfg.Labels,
-			nodeAddressPriority,
+			opts...,
 		); err != nil {
 			logger.Error("instantiating kubelet endpoints controller failed", "err", err)
 			cancel()
@@ -546,17 +595,7 @@ func run(fs *flag.FlagSet) int {
 	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
-	r.MustRegister(
-		collectors.NewGoCollector(
-			collectors.WithGoCollectorRuntimeMetrics(
-				collectors.MetricsScheduler,
-				collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile(`^/sync/.*`)},
-			),
-		),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		versioncollector.NewCollector("prometheus_operator"),
-		cfg.Gates,
-	)
+	r.MustRegister(cfg.Gates)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))

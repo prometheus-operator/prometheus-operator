@@ -17,21 +17,20 @@ package prometheusagent
 import (
 	"fmt"
 
-	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 func makeDaemonSet(
-	p monitoringv1.PrometheusInterface,
-	config *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	config prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.DaemonSet, error) {
@@ -71,16 +70,12 @@ func makeDaemonSet(
 		daemonSet.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 
-	if cpf.HostNetwork {
-		daemonSet.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return daemonSet, nil
 }
 
 func makeDaemonSetSpec(
-	p monitoringv1.PrometheusInterface,
-	c *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	c prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.DaemonSetSpec, error) {
@@ -89,17 +84,13 @@ func makeDaemonSetSpec(
 	pImagePath, err := operator.BuildImagePathForAgent(
 		ptr.Deref(cpf.Image, ""),
 		c.PrometheusDefaultBaseImage,
-		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
+		"v"+cg.Version().String(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if !slices.Contains(cpf.EnableFeatures, "agent") {
-		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
-	}
-
-	promArgs := buildAgentArgs(cpf, cg)
+	promArgs := buildAgentArgs(cg, cpf.WALCompression)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, false)
 	if err != nil {
@@ -122,9 +113,9 @@ func makeDaemonSetSpec(
 	configReloaderWebConfigFile = confArg.Value
 	configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
+	startupProbe, readinessProbe, livenessProbe := cg.BuildProbes()
 
-	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
+	podAnnotations, podLabels := cg.BuildPodMetadata()
 	// In cases where an existing selector label is modified, or a new one is added, new daemonset cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
@@ -205,7 +196,7 @@ func makeDaemonSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	return &appsv1.DaemonSetSpec{
+	spec := appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
@@ -233,7 +224,16 @@ func makeDaemonSetSpec(
 				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
+				EnableServiceLinks:            cpf.EnableServiceLinks,
 			},
 		},
-	}, nil
+	}
+
+	if cpf.HostNetwork {
+		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+
+	return &spec, nil
 }

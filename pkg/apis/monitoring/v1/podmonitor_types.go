@@ -78,6 +78,17 @@ type PodMonitorSpec struct {
 
 	// Label selector to select the Kubernetes `Pod` objects to scrape metrics from.
 	Selector metav1.LabelSelector `json:"selector"`
+
+	// Mechanism used to select the endpoints to scrape.
+	// By default, the selection process relies on relabel configurations to filter the discovered targets.
+	// Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+	// Which strategy is best for your use case needs to be carefully evaluated.
+	//
+	// It requires Prometheus >= v2.17.0.
+	//
+	// +optional
+	SelectorMechanism *SelectorMechanism `json:"selectorMechanism,omitempty"`
+
 	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.
 	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
@@ -105,6 +116,12 @@ type PodMonitorSpec struct {
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
@@ -123,6 +140,9 @@ type PodMonitorSpec struct {
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+
+	NativeHistogramConfig `json:",inline"`
+
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -161,7 +181,7 @@ type PodMonitorList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of PodMonitors
-	Items []*PodMonitor `json:"items"`
+	Items []PodMonitor `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -174,15 +194,22 @@ func (l *PodMonitorList) DeepCopyObject() runtime.Object {
 //
 // +k8s:openapi-gen=true
 type PodMetricsEndpoint struct {
-	// Name of the Pod port which this endpoint refers to.
+	// The `Pod` port name which exposes the endpoint.
 	//
-	// It takes precedence over `targetPort`.
-	Port string `json:"port,omitempty"`
+	// It takes precedence over the `portNumber` and `targetPort` fields.
+	// +optional
+	Port *string `json:"port,omitempty"`
+
+	// The `Pod` port number which exposes the endpoint.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	PortNumber *int32 `json:"portNumber,omitempty"`
 
 	// Name or number of the target port of the `Pod` object behind the Service, the
 	// port must be specified with container port property.
 	//
-	// Deprecated: use 'port' instead.
+	// Deprecated: use 'port' or 'portNumber' instead.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 
 	// HTTP path from which to scrape for metrics.
@@ -212,6 +239,7 @@ type PodMetricsEndpoint struct {
 	//
 	// If empty, Prometheus uses the global scrape timeout unless it is less
 	// than the target's scrape interval value in which the latter is used.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// TLS configuration to use when scraping the target.

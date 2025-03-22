@@ -30,8 +30,6 @@ import (
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/oklog/run"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
@@ -39,6 +37,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
@@ -150,11 +149,7 @@ func main() {
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, *memlimitRatio)
 
-	r := prometheus.NewRegistry()
-	r.MustRegister(
-		collectors.NewGoCollector(),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-	)
+	r := metrics.NewRegistry("prometheus_config_reloader")
 
 	var (
 		g           run.Group

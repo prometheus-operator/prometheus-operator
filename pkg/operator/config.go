@@ -17,12 +17,11 @@ package operator
 import (
 	"flag"
 	"fmt"
+	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
@@ -95,6 +94,14 @@ func DefaultConfig(cpu, memory string) Config {
 				description: "Enables the DaemonSet mode for PrometheusAgent",
 				enabled:     false,
 			},
+			PrometheusTopologyShardingFeature: FeatureGate{
+				description: "Enables the zone aware sharding for Prometheus",
+				enabled:     false,
+			},
+			PrometheusShardRetentionPolicyFeature: FeatureGate{
+				description: "Enables shard retention policy for Prometheus",
+				enabled:     false,
+			},
 		},
 	}
 }
@@ -144,6 +151,7 @@ func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
 	return resources
 }
 
+// nolint: recvcheck
 type Quantity struct {
 	q resource.Quantity
 }
@@ -229,10 +237,7 @@ func (m *Map) SortedKeys() []string {
 		return nil
 	}
 
-	keys := maps.Keys(*m)
-	sort.Strings(keys)
-
-	return keys
+	return slices.Sorted(maps.Keys(*m))
 }
 
 type Namespaces struct {

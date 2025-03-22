@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,6 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -228,32 +230,37 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	}
 }
 
-func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
-	cases := []struct {
-		input         string
-		expectedKey   string
-		expectedMatch bool
+func TestCreateThanosConfigSecret(t *testing.T) {
+	version := "v0.24.0"
+	ctx := context.Background()
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
 	}{
 		{
-			input:         "namespace/prometheus-test",
-			expectedKey:   "namespace/test",
-			expectedMatch: true,
+			name: "prometheus with thanos sidecar",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					Version: &version,
+				},
+			},
 		},
-		{
-			input:         "namespace/prometheus-test-shard-1",
-			expectedKey:   "namespace/test",
-			expectedMatch: true,
-		},
-		{
-			input:         "allns-z-thanosrulercreatedeletecluster-qcwdmj-0/thanos-ruler-test",
-			expectedKey:   "",
-			expectedMatch: false,
-		},
-	}
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-thanos-config-secret",
+					Namespace: "test",
+				},
+				Spec: tc.spec,
+			}
+			o := Operator{kclient: fake.NewClientset()}
+			err := o.createOrUpdateThanosConfigSecret(ctx, p)
+			require.NoError(t, err)
 
-	for _, c := range cases {
-		match, key := statefulSetKeyToPrometheusKey(c.input)
-		require.Equal(t, c.expectedKey, key)
-		require.Equal(t, c.expectedMatch, match)
+			get, err := o.kclient.CoreV1().Secrets("test").Get(ctx, thanosPrometheusHTTPClientConfigSecretName(p), metav1.GetOptions{})
+			require.NoError(t, err)
+			require.Equal(t, "tls_config:\n  insecure_skip_verify: true\n", string(get.Data[thanosPrometheusHTTPClientConfigFileName]))
+		})
 	}
 }

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-for-daemonset-test
+  labels:
+    group: test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      group: test
+  template:
+    metadata:
+      labels:
+        group: test
+    spec:
+      containers:
+      - name: example-app
+        image: quay.io/prometheus-operator/instrumented-sample-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: web
+          containerPort: 8080
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: group
+                operator: In
+                values:
+                - test
+            topologyKey: "kubernetes.io/hostname"

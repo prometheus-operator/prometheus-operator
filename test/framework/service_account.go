@@ -24,33 +24,36 @@ import (
 )
 
 func (f *Framework) createOrUpdateServiceAccount(ctx context.Context, namespace string, source string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteServiceAccount(ctx, namespace, source) }
-
 	serviceAccount, err := parseServiceAccountYaml(source)
 	if err != nil {
-		return finalizerFn, err
+		return nil, err
 	}
+
 	serviceAccount.Namespace = namespace
+	finalizer := func() error { return f.deleteServiceAccount(ctx, namespace, serviceAccount.Name) }
+
 	_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccount.Name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return finalizerFn, err
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// ServiceAccount doesn't exists -> Create
+			_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			return finalizer, nil
+		}
+
+		return nil, err
 	}
 
-	if apierrors.IsNotFound(err) {
-		// ServiceAccount doesn't exists -> Create
-		_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
-		if err != nil {
-			return finalizerFn, err
-		}
-	} else {
-		// ServiceAccount already exists -> Update
-		_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Update(ctx, serviceAccount, metav1.UpdateOptions{})
-		if err != nil {
-			return finalizerFn, err
-		}
+	// ServiceAccount already exists -> Update
+	_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Update(ctx, serviceAccount, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, err
 	}
 
-	return finalizerFn, nil
+	return finalizer, nil
 }
 
 func parseServiceAccountYaml(source string) (*v1.ServiceAccount, error) {
@@ -67,11 +70,11 @@ func parseServiceAccountYaml(source string) (*v1.ServiceAccount, error) {
 	return &serviceAccount, nil
 }
 
-func (f *Framework) DeleteServiceAccount(ctx context.Context, namespace string, source string) error {
-	serviceAccount, err := parseServiceAccountYaml(source)
-	if err != nil {
+func (f *Framework) deleteServiceAccount(ctx context.Context, namespace, name string) error {
+	err := f.KubeClient.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 
-	return f.KubeClient.CoreV1().ServiceAccounts(namespace).Delete(ctx, serviceAccount.Name, metav1.DeleteOptions{})
+	return nil
 }

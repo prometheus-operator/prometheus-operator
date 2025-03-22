@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.1",
-      "operator.prometheus.io/version": "0.76.2"
+      "controller-gen.kubebuilder.io/version": "v0.17.2",
+      "operator.prometheus.io/version": "0.81.0"
     },
     "name": "prometheusrules.monitoring.coreos.com"
   },
@@ -54,6 +54,13 @@
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
+                        "labels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Labels to add or overwrite before storing the result for its rules.\nThe labels defined at the rule level take precedence.\n\nIt requires Prometheus >= 3.0.0.\nThe field is ignored for Thanos Ruler.",
+                          "type": "object"
+                        },
                         "limit": {
                           "description": "Limit the number of alerts an alerting rule and series a recording\nrule can produce.\nLimit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.",
                           "type": "integer"
@@ -66,6 +73,11 @@
                         "partial_response_strategy": {
                           "description": "PartialResponseStrategy is only used by ThanosRuler and will\nbe ignored by Prometheus instances.\nMore info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response",
                           "pattern": "^(?i)(abort|warn)?$",
+                          "type": "string"
+                        },
+                        "query_offset": {
+                          "description": "Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.\n\nIt requires Prometheus >= v2.53.0.\nIt is not supported for ThanosRuler.",
+                          "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "rules": {

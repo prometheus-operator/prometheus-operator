@@ -17,12 +17,15 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+	"net/url"
+
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"net/url"
-	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
@@ -105,18 +108,42 @@ type ProxyConfig struct {
 }
 
 // Validate semantically validates the given ProxyConfig.
-func (c *ProxyConfig) Validate() error {
-	if c == nil {
+func (pc *ProxyConfig) Validate() error {
+	if pc == nil {
 		return nil
 	}
 
-	for _, v := range c.ProxyConnectHeader {
+	if reflect.ValueOf(pc).IsZero() {
+		return nil
+	}
+
+	proxyFromEnvironmentDefined := pc.ProxyFromEnvironment != nil && *pc.ProxyFromEnvironment
+	proxyURLDefined := pc.ProxyURL != nil && *pc.ProxyURL != ""
+	noProxyDefined := pc.NoProxy != nil && *pc.NoProxy != ""
+
+	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
+		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
+	}
+
+	if proxyFromEnvironmentDefined && proxyURLDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
+	}
+
+	if proxyFromEnvironmentDefined && noProxyDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
+	}
+
+	if !proxyURLDefined && noProxyDefined {
+		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
 		if len(v) == 0 {
-			return errors.New("ProxyConnectHeader selectors must not be empty")
+			return fmt.Errorf("proxyConnetHeader[%s]: selector must not be empty", k)
 		}
-		for _, k := range v {
-			if k == (v1.SecretKeySelector{}) {
-				return errors.New("ProxyConnectHeader selector must be defined")
+		for i, sel := range v {
+			if sel == (v1.SecretKeySelector{}) {
+				return fmt.Errorf("proxyConnectHeader[%s][%d]: selector must be defined", k, i)
 			}
 		}
 	}
@@ -212,6 +239,7 @@ type Condition struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
+// +kubebuilder:validation:MinLength=1
 type ConditionType string
 
 const (
@@ -232,6 +260,7 @@ const (
 	Reconciled ConditionType = "Reconciled"
 )
 
+// +kubebuilder:validation:MinLength=1
 type ConditionStatus string
 
 const (
@@ -338,37 +367,101 @@ type WebHTTPHeaders struct {
 // WebTLSConfig defines the TLS parameters for HTTPS.
 // +k8s:openapi-gen=true
 type WebTLSConfig struct {
-	// Secret containing the TLS key for the server.
-	KeySecret v1.SecretKeySelector `json:"keySecret"`
-	// Contains the TLS certificate for the server.
-	Cert SecretOrConfigMap `json:"cert"`
-	// Server policy for client authentication. Maps to ClientAuth Policies.
+	// Secret or ConfigMap containing the TLS certificate for the web server.
+	//
+	// Either `keySecret` or `keyFile` must be defined.
+	//
+	// It is mutually exclusive with `certFile`.
+	//
+	// +optional
+	Cert SecretOrConfigMap `json:"cert,omitempty"`
+	// Path to the TLS certificate file in the container for the web server.
+	//
+	// Either `keySecret` or `keyFile` must be defined.
+	//
+	// It is mutually exclusive with `cert`.
+	//
+	// +optional
+	CertFile *string `json:"certFile,omitempty"`
+
+	// Secret containing the TLS private key for the web server.
+	//
+	// Either `cert` or `certFile` must be defined.
+	//
+	// It is mutually exclusive with `keyFile`.
+	//
+	// +optional
+	KeySecret v1.SecretKeySelector `json:"keySecret,omitempty"`
+	// Path to the TLS private key file in the container for the web server.
+	//
+	// If defined, either `cert` or `certFile` must be defined.
+	//
+	// It is mutually exclusive with `keySecret`.
+	//
+	// +optional
+	KeyFile *string `json:"keyFile,omitempty"`
+
+	// Secret or ConfigMap containing the CA certificate for client certificate
+	// authentication to the server.
+	//
+	// It is mutually exclusive with `clientCAFile`.
+	//
+	// +optional
+	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
+	// Path to the CA certificate file for client certificate authentication to
+	// the server.
+	//
+	// It is mutually exclusive with `client_ca`.
+	//
+	// +optional
+	ClientCAFile *string `json:"clientCAFile,omitempty"`
+	// The server policy for client TLS authentication.
+	//
 	// For more detail on clientAuth options:
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
-	ClientAuthType string `json:"clientAuthType,omitempty"`
-	// Contains the CA certificate for client certificate authentication to the server.
-	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
-	// Minimum TLS version that is acceptable. Defaults to TLS12.
-	MinVersion string `json:"minVersion,omitempty"`
-	// Maximum TLS version that is acceptable. Defaults to TLS13.
-	MaxVersion string `json:"maxVersion,omitempty"`
-	// List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
-	// Go default cipher suites are used. Available cipher suites are documented
-	// in the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants
+	//
+	// +optional
+	ClientAuthType *string `json:"clientAuthType,omitempty"`
+
+	// Minimum TLS version that is acceptable.
+	//
+	// +optional
+	MinVersion *string `json:"minVersion,omitempty"`
+	// Maximum TLS version that is acceptable.
+	//
+	// +optional
+	MaxVersion *string `json:"maxVersion,omitempty"`
+
+	// List of supported cipher suites for TLS versions up to TLS 1.2.
+	//
+	// If not defined, the Go default cipher suites are used.
+	// Available cipher suites are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#pkg-constants
+	//
+	// +optional
 	CipherSuites []string `json:"cipherSuites,omitempty"`
-	// Controls whether the server selects the
-	// client's most preferred cipher suite, or the server's most preferred
-	// cipher suite. If true then the server's preference, as expressed in
+
+	// Controls whether the server selects the client's most preferred cipher
+	// suite, or the server's most preferred cipher suite.
+	//
+	// If true then the server's preference, as expressed in
 	// the order of elements in cipherSuites, is used.
+	//
+	// +optional
 	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
+
 	// Elliptic curves that will be used in an ECDHE handshake, in preference
-	// order. Available curves are documented in the go documentation:
+	// order.
+	//
+	// Available curves are documented in the Go documentation:
 	// https://golang.org/pkg/crypto/tls/#CurveID
+	//
+	// +optional
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
 
 // Validate returns an error if one of the WebTLSConfig fields is invalid.
-// A valid WebTLSConfig should have Cert and KeySecret fields which are not
+// A valid WebTLSConfig should have (Cert or CertFile) and (KeySecret or KeyFile) fields which are not
 // zero values.
 func (c *WebTLSConfig) Validate() error {
 	if c == nil {
@@ -376,19 +469,34 @@ func (c *WebTLSConfig) Validate() error {
 	}
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
+		if c.ClientCAFile != nil && *c.ClientCAFile != "" {
+			return errors.New("cannot specify both clientCAFile and clientCA")
+		}
+
 		if err := c.ClientCA.Validate(); err != nil {
-			return fmt.Errorf("client CA: %w", err)
+			return fmt.Errorf("invalid client CA: %w", err)
 		}
 	}
 
-	if c.Cert == (SecretOrConfigMap{}) {
-		return errors.New("TLS cert must be defined")
-	} else if err := c.Cert.Validate(); err != nil {
-		return fmt.Errorf("TLS cert: %w", err)
+	if c.Cert != (SecretOrConfigMap{}) {
+		if c.CertFile != nil && *c.CertFile != "" {
+			return errors.New("cannot specify both cert and certFile")
+		}
+		if err := c.Cert.Validate(); err != nil {
+			return fmt.Errorf("invalid TLS certificate: %w", err)
+		}
 	}
 
-	if c.KeySecret == (v1.SecretKeySelector{}) {
-		return errors.New("TLS key must be defined")
+	if c.KeyFile != nil && *c.KeyFile != "" && c.KeySecret != (v1.SecretKeySelector{}) {
+		return errors.New("cannot specify both keyFile and keySecret")
+	}
+
+	if (c.KeyFile == nil || *c.KeyFile == "") && c.KeySecret == (v1.SecretKeySelector{}) {
+		return errors.New("TLS private key must be defined")
+	}
+
+	if (c.CertFile == nil || *c.CertFile == "") && c.Cert == (SecretOrConfigMap{}) {
+		return errors.New("TLS certificate must be defined")
 	}
 
 	return nil
@@ -443,6 +551,7 @@ type Endpoint struct {
 	//
 	// If empty, Prometheus uses the global scrape timeout unless it is less
 	// than the target's scrape interval value in which the latter is used.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// TLS configuration to use when scraping the target.
@@ -857,4 +966,36 @@ const (
 	RoleEndpoint      = "endpoints"
 	RoleEndpointSlice = "endpointslice"
 	RoleIngress       = "ingress"
+)
+
+// NativeHistogramConfig extends the native histogram configuration settings.
+// +k8s:openapi-gen=true
+type NativeHistogramConfig struct {
+	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	// It requires Prometheus >= v2.45.0.
+	//
+	// +optional
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+
+	// If there are more than this many buckets in a native histogram,
+	// buckets will be merged to stay within the limit.
+	// It requires Prometheus >= v2.45.0.
+	//
+	// +optional
+	NativeHistogramBucketLimit *uint64 `json:"nativeHistogramBucketLimit,omitempty"`
+
+	// If the growth factor of one bucket to the next is smaller than this,
+	// buckets will be merged to increase the factor sufficiently.
+	// It requires Prometheus >= v2.50.0.
+	//
+	// +optional
+	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
+type SelectorMechanism string
+
+const (
+	SelectorMechanismRelabel SelectorMechanism = "RelabelConfig"
+	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )

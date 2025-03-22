@@ -20,59 +20,63 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ScrapeConfigSpecApplyConfiguration represents a declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
-	JobName                          *string                                  `json:"jobName,omitempty"`
-	StaticConfigs                    []StaticConfigApplyConfiguration         `json:"staticConfigs,omitempty"`
-	FileSDConfigs                    []FileSDConfigApplyConfiguration         `json:"fileSDConfigs,omitempty"`
-	HTTPSDConfigs                    []HTTPSDConfigApplyConfiguration         `json:"httpSDConfigs,omitempty"`
-	KubernetesSDConfigs              []KubernetesSDConfigApplyConfiguration   `json:"kubernetesSDConfigs,omitempty"`
-	ConsulSDConfigs                  []ConsulSDConfigApplyConfiguration       `json:"consulSDConfigs,omitempty"`
-	DNSSDConfigs                     []DNSSDConfigApplyConfiguration          `json:"dnsSDConfigs,omitempty"`
-	EC2SDConfigs                     []EC2SDConfigApplyConfiguration          `json:"ec2SDConfigs,omitempty"`
-	AzureSDConfigs                   []AzureSDConfigApplyConfiguration        `json:"azureSDConfigs,omitempty"`
-	GCESDConfigs                     []GCESDConfigApplyConfiguration          `json:"gceSDConfigs,omitempty"`
-	OpenStackSDConfigs               []OpenStackSDConfigApplyConfiguration    `json:"openstackSDConfigs,omitempty"`
-	DigitalOceanSDConfigs            []DigitalOceanSDConfigApplyConfiguration `json:"digitalOceanSDConfigs,omitempty"`
-	KumaSDConfigs                    []KumaSDConfigApplyConfiguration         `json:"kumaSDConfigs,omitempty"`
-	EurekaSDConfigs                  []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
-	DockerSDConfigs                  []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
-	LinodeSDConfigs                  []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
-	HetznerSDConfigs                 []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
-	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"nomadSDConfigs,omitempty"`
-	DockerSwarmSDConfigs             []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
-	PuppetDBSDConfigs                []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
-	LightSailSDConfigs               []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
-	OVHCloudSDConfigs                []OVHCloudSDConfigApplyConfiguration     `json:"ovhcloudSDConfigs,omitempty"`
-	ScalewaySDConfigs                []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfigs,omitempty"`
-	IonosSDConfigs                   []IonosSDConfigApplyConfiguration        `json:"ionosSDConfigs,omitempty"`
-	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
-	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
-	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
-	ScrapeTimeout                    *monitoringv1.Duration                   `json:"scrapeTimeout,omitempty"`
-	ScrapeProtocols                  []monitoringv1.ScrapeProtocol            `json:"scrapeProtocols,omitempty"`
-	HonorTimestamps                  *bool                                    `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness         *bool                                    `json:"trackTimestampsStaleness,omitempty"`
-	HonorLabels                      *bool                                    `json:"honorLabels,omitempty"`
-	Params                           map[string][]string                      `json:"params,omitempty"`
-	Scheme                           *string                                  `json:"scheme,omitempty"`
-	EnableCompression                *bool                                    `json:"enableCompression,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration          `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration  `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration             `json:"oauth2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	SampleLimit                      *uint64                                  `json:"sampleLimit,omitempty"`
-	TargetLimit                      *uint64                                  `json:"targetLimit,omitempty"`
-	LabelLimit                       *uint64                                  `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit             *uint64                                  `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit            *uint64                                  `json:"labelValueLengthLimit,omitempty"`
-	KeepDroppedTargets               *uint64                                  `json:"keepDroppedTargets,omitempty"`
-	MetricRelabelConfigs             []v1.RelabelConfigApplyConfiguration     `json:"metricRelabelings,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	ScrapeClassName                  *string `json:"scrapeClass,omitempty"`
+	JobName                                    *string                                  `json:"jobName,omitempty"`
+	StaticConfigs                              []StaticConfigApplyConfiguration         `json:"staticConfigs,omitempty"`
+	FileSDConfigs                              []FileSDConfigApplyConfiguration         `json:"fileSDConfigs,omitempty"`
+	HTTPSDConfigs                              []HTTPSDConfigApplyConfiguration         `json:"httpSDConfigs,omitempty"`
+	KubernetesSDConfigs                        []KubernetesSDConfigApplyConfiguration   `json:"kubernetesSDConfigs,omitempty"`
+	ConsulSDConfigs                            []ConsulSDConfigApplyConfiguration       `json:"consulSDConfigs,omitempty"`
+	DNSSDConfigs                               []DNSSDConfigApplyConfiguration          `json:"dnsSDConfigs,omitempty"`
+	EC2SDConfigs                               []EC2SDConfigApplyConfiguration          `json:"ec2SDConfigs,omitempty"`
+	AzureSDConfigs                             []AzureSDConfigApplyConfiguration        `json:"azureSDConfigs,omitempty"`
+	GCESDConfigs                               []GCESDConfigApplyConfiguration          `json:"gceSDConfigs,omitempty"`
+	OpenStackSDConfigs                         []OpenStackSDConfigApplyConfiguration    `json:"openstackSDConfigs,omitempty"`
+	DigitalOceanSDConfigs                      []DigitalOceanSDConfigApplyConfiguration `json:"digitalOceanSDConfigs,omitempty"`
+	KumaSDConfigs                              []KumaSDConfigApplyConfiguration         `json:"kumaSDConfigs,omitempty"`
+	EurekaSDConfigs                            []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
+	DockerSDConfigs                            []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
+	LinodeSDConfigs                            []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
+	HetznerSDConfigs                           []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
+	NomadSDConfigs                             []NomadSDConfigApplyConfiguration        `json:"nomadSDConfigs,omitempty"`
+	DockerSwarmSDConfigs                       []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
+	PuppetDBSDConfigs                          []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
+	LightSailSDConfigs                         []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
+	OVHCloudSDConfigs                          []OVHCloudSDConfigApplyConfiguration     `json:"ovhcloudSDConfigs,omitempty"`
+	ScalewaySDConfigs                          []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfigs,omitempty"`
+	IonosSDConfigs                             []IonosSDConfigApplyConfiguration        `json:"ionosSDConfigs,omitempty"`
+	RelabelConfigs                             []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
+	MetricsPath                                *string                                  `json:"metricsPath,omitempty"`
+	ScrapeInterval                             *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
+	ScrapeTimeout                              *monitoringv1.Duration                   `json:"scrapeTimeout,omitempty"`
+	ScrapeProtocols                            []monitoringv1.ScrapeProtocol            `json:"scrapeProtocols,omitempty"`
+	FallbackScrapeProtocol                     *monitoringv1.ScrapeProtocol             `json:"fallbackScrapeProtocol,omitempty"`
+	HonorTimestamps                            *bool                                    `json:"honorTimestamps,omitempty"`
+	TrackTimestampsStaleness                   *bool                                    `json:"trackTimestampsStaleness,omitempty"`
+	HonorLabels                                *bool                                    `json:"honorLabels,omitempty"`
+	Params                                     map[string][]string                      `json:"params,omitempty"`
+	Scheme                                     *string                                  `json:"scheme,omitempty"`
+	EnableCompression                          *bool                                    `json:"enableCompression,omitempty"`
+	EnableHTTP2                                *bool                                    `json:"enableHTTP2,omitempty"`
+	BasicAuth                                  *v1.BasicAuthApplyConfiguration          `json:"basicAuth,omitempty"`
+	Authorization                              *v1.SafeAuthorizationApplyConfiguration  `json:"authorization,omitempty"`
+	OAuth2                                     *v1.OAuth2ApplyConfiguration             `json:"oauth2,omitempty"`
+	TLSConfig                                  *v1.SafeTLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	SampleLimit                                *uint64                                  `json:"sampleLimit,omitempty"`
+	TargetLimit                                *uint64                                  `json:"targetLimit,omitempty"`
+	LabelLimit                                 *uint64                                  `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                       *uint64                                  `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                      *uint64                                  `json:"labelValueLengthLimit,omitempty"`
+	v1.NativeHistogramConfigApplyConfiguration `json:",inline"`
+	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
+	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	v1.ProxyConfigApplyConfiguration           `json:",inline"`
+	ScrapeClassName                            *string `json:"scrapeClass,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs a declarative configuration of the ScrapeConfigSpec type for use with
@@ -435,6 +439,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeProtocols(values ...monit
 	return b
 }
 
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ScrapeConfigSpecApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
+	return b
+}
+
 // WithHonorTimestamps sets the HonorTimestamps field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HonorTimestamps field is set to the value of the last call.
@@ -486,6 +498,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScheme(value string) *ScrapeCon
 // If called multiple times, the EnableCompression field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithEnableCompression(value bool) *ScrapeConfigSpecApplyConfiguration {
 	b.EnableCompression = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithEnableHTTP2(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.EnableHTTP2 = &value
 	return b
 }
 
@@ -561,6 +581,30 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uin
 	return b
 }
 
+// WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.ScrapeClassicHistograms = &value
+	return b
+}
+
+// WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
+	return b
+}
+
+// WithNativeHistogramMinBucketFactor sets the NativeHistogramMinBucketFactor field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ScrapeConfigSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramMinBucketFactor = &value
+	return b
+}
+
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
@@ -586,7 +630,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithMetricRelabelConfigs(values ...
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithProxyURL(value string) *ScrapeConfigSpecApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -594,7 +638,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyURL(value string) *ScrapeC
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithNoProxy(value string) *ScrapeConfigSpecApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -602,7 +646,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNoProxy(value string) *ScrapeCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithProxyFromEnvironment(value bool) *ScrapeConfigSpecApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -611,11 +655,11 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyFromEnvironment(value bool
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *ScrapeConfigSpecApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }

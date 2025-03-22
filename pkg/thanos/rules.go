@@ -18,12 +18,13 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
@@ -31,12 +32,6 @@ import (
 )
 
 const labelThanosRulerName = "thanos-ruler-name"
-
-// The maximum `Data` size of a ConfigMap seems to differ between
-// environments. This is probably due to different meta data sizes which count
-// into the overall maximum size of a ConfigMap. Thereby lets leave a
-// large buffer.
-var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
 func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
@@ -64,7 +59,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	)
 
 	logger := o.logger.With("thanos", t.Name, "namespace", t.Namespace)
-	thanosVersion := operator.StringValOrDefault(t.Spec.Version, operator.DefaultThanosVersion)
+	thanosVersion := operator.StringValOrDefault(ptr.Deref(t.Spec.Version, ""), operator.DefaultThanosVersion)
 
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger)
 	if err != nil {
@@ -199,15 +194,6 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
 func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]string, opts ...operator.ObjectOption) ([]v1.ConfigMap, error) {
-	//check if none of the rule files is too large for a single ConfigMap
-	for filename, file := range ruleFiles {
-		if len(file) > maxConfigMapDataSize {
-			return nil, fmt.Errorf(
-				"rule file '%v' is too large for a single Kubernetes ConfigMap",
-				filename,
-			)
-		}
-	}
 
 	buckets := []map[string]string{
 		{},
@@ -216,15 +202,9 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 
 	// To make bin packing algorithm deterministic, sort ruleFiles filenames and
 	// iterate over filenames instead of ruleFiles map (not deterministic).
-	fileNames := []string{}
-	for n := range ruleFiles {
-		fileNames = append(fileNames, n)
-	}
-	sort.Strings(fileNames)
-
-	for _, filename := range fileNames {
+	for _, filename := range util.SortedKeys(ruleFiles) {
 		// If rule file doesn't fit into current bucket, create new bucket.
-		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > maxConfigMapDataSize {
+		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > operator.MaxConfigMapDataSize {
 			buckets = append(buckets, map[string]string{})
 			currBucketIndex++
 		}

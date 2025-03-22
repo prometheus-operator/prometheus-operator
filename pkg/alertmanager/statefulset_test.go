@@ -19,16 +19,17 @@ import (
 	"log/slog"
 	"math"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -644,6 +645,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
+		"--web-config-file=/etc/alertmanager/web_config/web-config.yaml",
 		"--reload-url=http://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
@@ -861,20 +863,14 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
+	a.Spec.ForceEnableClusterMode = false
+
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
-	containsEmptyClusterListenAddress := false
-
-	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=" {
-			containsEmptyClusterListenAddress = true
-		}
-	}
-
-	require.True(t, containsEmptyClusterListenAddress, "expected stateful set to contain arg '--cluster.listen-address='")
+	require.Contains(t, amArgs, "--cluster.listen-address=", "expected stateful set to contain '--cluster.listen-address='")
 }
 
 func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
@@ -1023,6 +1019,7 @@ func TestConfigReloader(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
+		"--web-config-file=/etc/alertmanager/web_config/web-config.yaml",
 		"--reload-url=http://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
@@ -1277,5 +1274,106 @@ func TestEnableFeatures(t *testing.T) {
 			}
 			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)
 		})
+	}
+}
+
+func TestValidateAdditionalArgs(t *testing.T) {
+	additionalArgs := []monitoringv1.Argument{
+		{Name: "auto-gomemlimit.ratio", Value: "0.7"},
+	}
+	expectedArgs := []string{"--auto-gomemlimit.ratio=0.7"}
+
+	statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Replicas:       toPtr(int32(1)),
+			AdditionalArgs: additionalArgs,
+		},
+	}, defaultTestConfig, &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	actualArgs := statefulSpec.Template.Spec.Containers[0].Args
+
+	for _, expectedArg := range expectedArgs {
+		require.Contains(t, actualArgs, expectedArg, "Expected additional argument not found")
+	}
+}
+
+func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			DNSPolicy: ptr.To(monitoringv1.DNSClusterFirst),
+			DNSConfig: &monitoringv1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8"},
+				Searches:    []string{"custom.search"},
+				Options: []monitoringv1.PodDNSConfigOption{
+					{
+						Name:  "ndots",
+						Value: ptr.To("5"),
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+	require.Equal(t,
+		&v1.PodDNSConfig{
+			Nameservers: []string{"8.8.8.8"},
+			Searches:    []string{"custom.search"},
+			Options: []v1.PodDNSConfigOption{
+				{
+					Name:  "ndots",
+					Value: ptr.To("5"),
+				},
+			},
+		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
+}
+
+func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+			},
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
+		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenDeleted to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted)
+	}
+
+	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
+		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenScaled to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled)
+	}
+}
+
+func TestStatefulSetEnableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks    *bool
+		expectedEnableService *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableService: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableService: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableService: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec:       monitoringv1.AlertmanagerSpec{EnableServiceLinks: test.expectedEnableService},
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		require.NoError(t, err)
+
+		if test.expectedEnableService != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks not nil")
+			require.Equal(t, *test.expectedEnableService, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks is nil")
+		}
 	}
 }

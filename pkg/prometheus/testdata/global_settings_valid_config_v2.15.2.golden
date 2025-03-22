@@ -1,7 +1,7 @@
 global:
-  evaluation_interval: 30s
   scrape_interval: 15s
   external_labels:
-    prometheus: /
+    prometheus: test/example
     prometheus_replica: $(POD_NAME)
+  evaluation_interval: 30s
 scrape_configs: []

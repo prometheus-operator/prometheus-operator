@@ -1,3 +1,122 @@
+## 0.81.0 / 2025-03-11
+
+* [CHANGE] Remove the lower-case `hypervisor` and `instance` roles for the OpenStack Service Discovery from the ScrapeConfig CRD (users are required to use `Hypervisor` and `Instance` instead). #7370
+* [FEATURE] Add `serviceName` field to the ThanosRuler and Alertmanager CRDs. #7325
+* [FEATURE] Add `shardRetentionPolicy` field to the Prometheus CRD (it requires the `PrometheusShardRetentionPolicy` feature gate). #7274
+* [FEATURE] Add support for the cluster mTLS configuration to the Alertmanager CRD. #7149
+* [FEATURE] Add `LoadBalancer` role for the OpenStack Service Discovery to the ScrapeConfig CRD. #7356
+* [ENHANCEMENT] Add `enableServiceLinks` field to the Alertmanager, Prometheus, PrometheusAgent and ThanosRuler CRDs. #7384
+* [BUGFIX] Fix Alertmanager configuration with PushOver duration fields. #7249
+
+# 0.80.1 / 2025-02-19
+
+* [BUGFIX] Fix msteamsv2_configs to work with either `webhook_url` or `webhook_url_file`. #7352
+
+# 0.80.0 / 2025-02-04
+
+* [CHANGE] Add more API validations to the ScrapeConfig CRD. #7231 #7220 #7215 #7238 #7244 #7255
+* [FEATURE] Add `serviceName` field to the Prometheus and PrometheusAgent CRDs. #6687
+* [FEATURE] Add `keepIdentifyingResourceAttributes` field in OTLPConfig for `Prometheus` and `PrometheusAgent` CRDs. #7240
+* [FEATURE] Add `fallbackScrapeProtocol` field to ScrapeClass for `Prometheus` and `PrometheusAgent` CRDs. #7288
+* [FEATURE] Support `MSTeamsV2Config` receiver in Alertmanager configuration Secret. #7296
+* [FEATURE] Support `JiraConfig` and `RocketChat` receivers in Alertmanager configuration secret. #7315
+* [FEATURE] Support global `smtp_tls_config` field in Alertmanager configuration secret. #7316
+* [FEATURE] Add `timeout` field in Webhook receiver in Alertmanager configuration Secret. #7312
+* [FEATURE] Add `content`, `username` and `avatarUrl` fields in Discord receiver in Alertmanager configuration secret. #7313
+* [FEATURE] Add `scrapeFailureLogFile` field to the Prometheus and PrometheusAgent CRDs. #7038 #7311
+* [BUGFIX] Validate respective api URL field in PagerDutyConfigs, DiscordConfigs, SlackConfigs and WebhookConfigs in AlertManagerConfig CRD. #6585
+
+# 0.79.2 / 2024-12-18
+
+* [BUGFIX] Fix pod and service monitor selector validation. #7214
+
+# 0.79.1 / 2024-12-17
+
+* [CHANGE] Rename the field `scrapeFallbackProtocol` to `fallbackScrapeProtocol` to match with naming as in Prometheus #7199
+* [BUGFIX] Remove the field `scrapeFallbackProtocol` from Prometheus/PrometheusAgent global config. #7197
+
+# 0.79.0 / 2024-12-13
+
+> [!IMPORTANT]
+> With this release, the operator will be deploying Prometheus `v3.0.1` unless a specific version is specified.
+> Users who want to stay with Prometheus v2 need to set the `version` field under
+> `Prometheus/PrometheusAgent` Spec.
+
+* [CHANGE/FEATURE] Set Prometheus `v3.0.1` as default version installed by operator. #7158
+* [CHANGE] Add more API validations to the ScrapeConfig CRD. #6738 #7006
+* [FEATURE] Set Alertmanager API version to v2 for Prometheus v3 and above. #7102
+* [FEATURE] Add `enableOTLPReceiver` field in the Prometheus/PrometheusAgent CRDs. #7105
+* [FEATURE] Add support for `TranslationStrategy` option for OTLP receiver. #7112
+* [FEATURE] Add `nameValidationScheme` field in Prometheus global configuration. #7116
+* [FEATURE] Add `scrapeFallbackProtocol` field in `Prometheus`, `PrometheusAgent`, `ServiceMonitor`, `PodMonitor`, `Probe`, `ScrapeConfig` and globally. #7131
+* [FEATURE] Add support for labels in PrometheusRule CRD at rules level. #7140
+* [FEATURE] Add support for ProxyConfig in Alertmanager Endpoints. #7191
+* [FEATURE] Add support for configuring Alertmanager STS `persistentVolumeClaimRetentionPolicy`. #7183
+* [FEATURE] Add `enableHTTP2` to ScrapeConfig CRD. #7024
+* [FEATURE] Add `filter` field in `ConsulSDConfig` in ScrapeConfig CRD #7124
+* [FEATURE] Add `messageThreadID` field to TelegramConfig in AlertmanagerConfig CRD. #6999
+* [ENHANCEMENT] Allow users to control the sharding label(s). #7126
+* [ENHANCEMENT] Add support for role selector field `selectorMechanism` on ServiceMonitor. #7086
+* [ENHANCEMENT] Add support for role selector field `selectorMechanism` on PodMonitor. #7185
+* [ENHANCEMENT] Add support for the `PrometheusText1.0.0` scrape protocol. #7085
+* [ENHANCEMENT] Allow users to toggle Prometheus controller's custom configuration deprecation behavior using the `--deprecate-custom-configuration` flag. #6955
+* [BUGFIX] Add `goGC` field to `PrometheusAgent` CRD. #6667
+* [BUGFIX] Validate `SMTPSmarthost` and `SMTPFrom` fields in EmailConfig in AlertManagerConfig CRD. #6004
+* [BUGFIX] Fix flaky discovery behavior caused by delayed endpoints publishing for Alertmanager. #7084
+
+## 0.78.2 / 2024-11-21
+
+* [BUGFIX] Revert the removal of the `proxyURL` field in `AlertmanagerConfig` CRD. The field takes precedence over `proxyUrl`. #7114
+
+## 0.78.1 / 2024-10-30
+
+* [BUGFIX] Fix container images for architectures other than `amd64`. #7065 #7066 #7067
+
+## 0.78.0 / 2024-10-30
+
+* [CHANGE] Allow overlapping compactions by default in Prometheus when the Thanos sidecar is configured with uploads. #6906
+* [CHANGE] Drop support (officially) for Alertmanager less than v0.15. #7057
+* [FEATURE] Add `dnsConfig` and `dnsPolicy` fields to `Alertmanager`, `Prometheus`, `PrometheusAgent` and `ThanosRuler` CRDs. #3889
+* [FEATURE] Add `ruleQueryOffset` field to `Prometheus` CRD and `query_offset` field to `PrometheusRule` CRD. #6957
+* [FEATURE] Add support for Remote Write v2.0 to `Prometheus` and `PrometheusAgent` CRDs. #7033
+* [ENHANCEMENT] Add `goGC` field to `Prometheus` and `PrometheusAgent` CRDs. #6667
+* [BUGFIX] Fix label name validation in `ScrapeConfig` CRD. #6892
+* [BUGFIX] Fix version checking for the `promoteResourceAttributes` field. #7017
+
+## 0.77.2 / 2024-10-21
+
+* [BUGFIX] Correct HTTP port name for the Kubelet endpoint. #7027
+
+## 0.77.1 / 2024-09-25
+
+* [BUGFIX] Fix Thanos Ruler reconciliations not triggered on StatefulSet updates. #6964
+* [BUGFIX] Fix error message for unsupported versions. #6965
+
+## 0.77.0 / 2024-09-19
+
+> [!NOTE]
+> Along with this release we also introduce a new command line tool [poctl](https://github.com/prometheus-operator/poctl). It is designed specifically for managing Prometheus Operator Custom Resources.
+> This project is currently under active development and fully experimental, so expect breaking changes and rough edges. We encourage you to [try it out](https://github.com/prometheus-operator/poctl/releases/tag/v0.1.0) and provide the feedback.
+
+> [!WARNING]
+> Another notable change is that we have switched the logging framework from [go-kit/log](https://github.com/go-kit/log) to [slog](https://pkg.go.dev/log/slog) which may lead to some differences in the log output.
+
+* [CHANGE] Add more API validation and changes to the `ScrapeConfig` CRD. #6921 #6855 #6744
+* [CHANGE] Update the validating webhook to reject `PrometheusRule` objects that would generate configuration greater than the max ConfigMap size (512KiB). #6606
+* [FEATURE] Add experimental Prometheus 3 support. It allows to try the new Prometheus `v3.0.0-beta.0`. #6940
+  * Feature requests in this version won't be supported until Prometheus 3 reaches a stable release. However, users are encouraged to try the beta version with the Operator and report any issues they encounter.
+* [FEATURE] Add support for `PodMonitor` to the `PrometheusAgent` CRD in DaemonSet mode. #6879
+* [FEATURE] Add `-kubelet-endpointslice` argument to support `EndpointSlice` for the kubelet controller. #6882
+* [FEATURE] Add `outOfOrderTimeWindow` field to the `PrometheusAgent` CRD. #6851
+* [FEATURE] Add `matchFirstNetwork` field to the `ScrapeConfig` CRD for the Docker Service Discovery. #6849 #6894
+* [FEATURE] Add the `otlp` field to the `Prometheus` and `PrometheusAgent` CRDs. #6780
+* [FEATURE] Add support for certificate, key and client CA file paths to the web TLS configuration. #6358
+* [FEATURE] Add `noProxy`, `proxyFromEnvironment` and `proxyConnectHeader` fields to the AlertmanagerConfig CRD for OAuth2 clients. #6922
+* [FEATURE] Add `noProxy`, `proxyFromEnvironment` and `proxyConnectHeader` fields to the AlertmanagerConfig CRD for HTTP clients. #6864
+* [FEATURE] Add Ionos Service Discovery support to `ScrapeConfig` CRD. (#6732)
+* [BUGFIX] Fix panic when processing an invalid `AlertmanagerConfig` object used for global configuration. #6931
+* [BUGFIX] Allow configuring proxy URL for all Prometheus versions. #6845
+
 ## 0.76.2 / 2024-09-09
 
 * [BUGFIX] Fix OAuth2 TLSConfig nil pointer. #6909

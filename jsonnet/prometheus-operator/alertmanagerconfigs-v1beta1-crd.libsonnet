@@ -595,6 +595,10 @@
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
+                              },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
                                 pattern: '^http(s)?://.+$',
@@ -1524,6 +1528,10 @@
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
+                              },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
                                 pattern: '^http(s)?://.+$',
@@ -2269,6 +2277,10 @@
                               proxyFromEnvironment: {
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
@@ -3018,6 +3030,10 @@
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
+                              },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
                                 pattern: '^http(s)?://.+$',
@@ -3766,6 +3782,10 @@
                               proxyFromEnvironment: {
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
@@ -4610,6 +4630,10 @@
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
+                              },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
                                 pattern: '^http(s)?://.+$',
@@ -5303,6 +5327,10 @@
                               proxyFromEnvironment: {
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
@@ -6069,6 +6097,10 @@
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
+                              },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
                                 pattern: '^http(s)?://.+$',
@@ -6241,6 +6273,11 @@
                           message: {
                             description: 'Message template',
                             type: 'string',
+                          },
+                          messageThreadID: {
+                            description: 'The Telegram Group Topic ID.\nIt requires Alertmanager >= 0.26.0.',
+                            format: 'int64',
+                            type: 'integer',
                           },
                           parseMode: {
                             description: 'Parse mode for telegram message',
@@ -6779,6 +6816,10 @@
                               proxyFromEnvironment: {
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
@@ -7445,6 +7486,10 @@
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
+                              },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
                                 pattern: '^http(s)?://.+$',
@@ -8100,6 +8145,10 @@
                               proxyFromEnvironment: {
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
@@ -8805,6 +8854,10 @@
                               proxyFromEnvironment: {
                                 description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
+                              },
+                              proxyURL: {
+                                description: 'Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.',
+                                type: 'string',
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',

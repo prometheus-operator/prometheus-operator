@@ -39,7 +39,7 @@ func TopologySpreadConstraint() *TopologySpreadConstraintApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxSkew field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithMaxSkew(value int32) *TopologySpreadConstraintApplyConfiguration {
-	b.MaxSkew = &value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.MaxSkew = &value
 	return b
 }
 
@@ -47,7 +47,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithMaxSkew(value int32) *T
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TopologyKey field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithTopologyKey(value string) *TopologySpreadConstraintApplyConfiguration {
-	b.TopologyKey = &value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.TopologyKey = &value
 	return b
 }
 
@@ -55,7 +55,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithTopologyKey(value strin
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WhenUnsatisfiable field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithWhenUnsatisfiable(value corev1.UnsatisfiableConstraintAction) *TopologySpreadConstraintApplyConfiguration {
-	b.WhenUnsatisfiable = &value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.WhenUnsatisfiable = &value
 	return b
 }
 
@@ -63,7 +63,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithWhenUnsatisfiable(value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelSelector field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value *metav1.LabelSelectorApplyConfiguration) *TopologySpreadConstraintApplyConfiguration {
-	b.LabelSelector = value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.LabelSelector = value
 	return b
 }
 
@@ -71,7 +71,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value *me
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinDomains field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithMinDomains(value int32) *TopologySpreadConstraintApplyConfiguration {
-	b.MinDomains = &value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.MinDomains = &value
 	return b
 }
 
@@ -79,7 +79,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithMinDomains(value int32)
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NodeAffinityPolicy field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithNodeAffinityPolicy(value corev1.NodeInclusionPolicy) *TopologySpreadConstraintApplyConfiguration {
-	b.NodeAffinityPolicy = &value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.NodeAffinityPolicy = &value
 	return b
 }
 
@@ -87,7 +87,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithNodeAffinityPolicy(valu
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NodeTaintsPolicy field is set to the value of the last call.
 func (b *TopologySpreadConstraintApplyConfiguration) WithNodeTaintsPolicy(value corev1.NodeInclusionPolicy) *TopologySpreadConstraintApplyConfiguration {
-	b.NodeTaintsPolicy = &value
+	b.CoreV1TopologySpreadConstraintApplyConfiguration.NodeTaintsPolicy = &value
 	return b
 }
 
@@ -96,7 +96,7 @@ func (b *TopologySpreadConstraintApplyConfiguration) WithNodeTaintsPolicy(value 
 // If called multiple times, values provided by each call will be appended to the MatchLabelKeys field.
 func (b *TopologySpreadConstraintApplyConfiguration) WithMatchLabelKeys(values ...string) *TopologySpreadConstraintApplyConfiguration {
 	for i := range values {
-		b.MatchLabelKeys = append(b.MatchLabelKeys, values[i])
+		b.CoreV1TopologySpreadConstraintApplyConfiguration.MatchLabelKeys = append(b.CoreV1TopologySpreadConstraintApplyConfiguration.MatchLabelKeys, values[i])
 	}
 	return b
 }

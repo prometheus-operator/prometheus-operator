@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -40,6 +41,12 @@ const (
 	PrometheusFormat RuleConfigurationFormat = iota
 	ThanosFormat
 )
+
+// The maximum `Data` size of a ConfigMap seems to differ between
+// environments. This is probably due to different meta data sizes which count
+// into the overall maximum size of a ConfigMap. Thereby lets leave a
+// large buffer.
+var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
 type PrometheusRuleSelector struct {
 	ruleFormat   RuleConfigurationFormat
@@ -103,11 +110,15 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec monitoringv1.PrometheusRuleSpec, logger *slog.Logger) monitoringv1.PrometheusRuleSpec {
 	minVersionKeepFiringFor := semver.MustParse("2.42.0")
 	minVersionLimits := semver.MustParse("2.31.0")
+	minVersionQueryOffset := semver.MustParse("2.53.0")
+	minVersionRuleGroupLabels := semver.MustParse("3.0.0")
 	component := "Prometheus"
 
 	if prs.ruleFormat == ThanosFormat {
 		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
+		minVersionQueryOffset = semver.MustParse("100.0.0")     // Arbitrary very high major version because it's not yet supported by Thanos.
+		minVersionRuleGroupLabels = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
 		component = "Thanos"
 	}
 
@@ -117,9 +128,19 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 			logger.Warn(fmt.Sprintf("ignoring `limit` not supported by %s", component), "minimum_version", minVersionLimits)
 		}
 
+		if promRuleSpec.Groups[i].QueryOffset != nil && prs.version.LT(minVersionQueryOffset) {
+			promRuleSpec.Groups[i].QueryOffset = nil
+			logger.Warn(fmt.Sprintf("ignoring `query_offset` not supported by %s", component), "minimum_version", minVersionQueryOffset)
+		}
+
 		if prs.ruleFormat == PrometheusFormat {
 			// Unset partialResponseStrategy field.
 			promRuleSpec.Groups[i].PartialResponseStrategy = ""
+		}
+
+		if len(promRuleSpec.Groups[i].Labels) > 0 && prs.version.LT(minVersionRuleGroupLabels) {
+			promRuleSpec.Groups[i].Labels = nil
+			logger.Warn(fmt.Sprintf("ignoring group labels since not supported by %s", component), "minimum_version", minVersionRuleGroupLabels)
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
@@ -147,7 +168,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
-			if promRuleSpec.Groups[i].Rules[j].For != nil && *promRuleSpec.Groups[i].Rules[j].For == "" {
+			if ptr.Deref(promRuleSpec.Groups[i].Rules[j].For, "") == "" {
 				promRuleSpec.Groups[i].Rules[j].For = nil
 			}
 		}
@@ -157,6 +178,13 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 	if err != nil {
 		return []error{fmt.Errorf("failed to marshal content: %w", err)}
 	}
+
+	// Check if the serialized rules exceed our internal limit.
+	promRuleSize := len(content)
+	if promRuleSize > MaxConfigMapDataSize {
+		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
+	}
+
 	_, errs := rulefmt.Parse(content)
 	return errs
 }

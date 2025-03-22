@@ -117,7 +117,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   labels:
-    prometheus: prometheus
+    prometheus: shards
   name: prometheus
   namespace: default
 spec:

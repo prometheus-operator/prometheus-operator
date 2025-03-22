@@ -26,6 +26,7 @@ import (
 // with apply.
 type ConsulSDConfigApplyConfiguration struct {
 	Server                                                       *string                                                             `json:"server,omitempty"`
+	PathPrefix                                                   *string                                                             `json:"pathPrefix,omitempty"`
 	TokenRef                                                     *v1.SecretKeySelector                                               `json:"tokenRef,omitempty"`
 	Datacenter                                                   *string                                                             `json:"datacenter,omitempty"`
 	Namespace                                                    *string                                                             `json:"namespace,omitempty"`
@@ -35,11 +36,12 @@ type ConsulSDConfigApplyConfiguration struct {
 	Tags                                                         []string                                                            `json:"tags,omitempty"`
 	TagSeparator                                                 *string                                                             `json:"tagSeparator,omitempty"`
 	NodeMeta                                                     map[string]string                                                   `json:"nodeMeta,omitempty"`
+	Filter                                                       *string                                                             `json:"filter,omitempty"`
 	AllowStale                                                   *bool                                                               `json:"allowStale,omitempty"`
 	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
 	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	Oauth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
 	EnableHttp2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
@@ -57,6 +59,14 @@ func ConsulSDConfig() *ConsulSDConfigApplyConfiguration {
 // If called multiple times, the Server field is set to the value of the last call.
 func (b *ConsulSDConfigApplyConfiguration) WithServer(value string) *ConsulSDConfigApplyConfiguration {
 	b.Server = &value
+	return b
+}
+
+// WithPathPrefix sets the PathPrefix field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PathPrefix field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithPathPrefix(value string) *ConsulSDConfigApplyConfiguration {
+	b.PathPrefix = &value
 	return b
 }
 
@@ -142,6 +152,14 @@ func (b *ConsulSDConfigApplyConfiguration) WithNodeMeta(entries map[string]strin
 	return b
 }
 
+// WithFilter sets the Filter field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Filter field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithFilter(value string) *ConsulSDConfigApplyConfiguration {
+	b.Filter = &value
+	return b
+}
+
 // WithAllowStale sets the AllowStale field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AllowStale field is set to the value of the last call.
@@ -174,11 +192,11 @@ func (b *ConsulSDConfigApplyConfiguration) WithAuthorization(value *applyconfigu
 	return b
 }
 
-// WithOauth2 sets the Oauth2 field in the declarative configuration to the given value
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Oauth2 field is set to the value of the last call.
-func (b *ConsulSDConfigApplyConfiguration) WithOauth2(value *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration) *ConsulSDConfigApplyConfiguration {
-	b.Oauth2 = value
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithOAuth2(value *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration) *ConsulSDConfigApplyConfiguration {
+	b.OAuth2 = value
 	return b
 }
 
@@ -186,7 +204,7 @@ func (b *ConsulSDConfigApplyConfiguration) WithOauth2(value *applyconfigurationm
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *ConsulSDConfigApplyConfiguration) WithProxyURL(value string) *ConsulSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -194,7 +212,7 @@ func (b *ConsulSDConfigApplyConfiguration) WithProxyURL(value string) *ConsulSDC
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *ConsulSDConfigApplyConfiguration) WithNoProxy(value string) *ConsulSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -202,7 +220,7 @@ func (b *ConsulSDConfigApplyConfiguration) WithNoProxy(value string) *ConsulSDCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *ConsulSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *ConsulSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -211,11 +229,11 @@ func (b *ConsulSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) 
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *ConsulSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *ConsulSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }

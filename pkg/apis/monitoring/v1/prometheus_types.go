@@ -38,8 +38,26 @@ const (
 // * `OpenMetricsText1.0.0`
 // * `PrometheusProto`
 // * `PrometheusText0.0.4`
-// +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
+// * `PrometheusText1.0.0`
+// +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4;PrometheusText1.0.0
 type ScrapeProtocol string
+
+const (
+	PrometheusProto      ScrapeProtocol = "PrometheusProto"
+	PrometheusText0_0_4  ScrapeProtocol = "PrometheusText0.0.4"
+	PrometheusText1_0_0  ScrapeProtocol = "PrometheusText1.0.0"
+	OpenMetricsText0_0_1 ScrapeProtocol = "OpenMetricsText0.0.1"
+	OpenMetricsText1_0_0 ScrapeProtocol = "OpenMetricsText1.0.0"
+)
+
+// RuntimeConfig configures the values for the process behavior.
+type RuntimeConfig struct {
+	// The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+	// See: https://tip.golang.org/doc/gc-guide#GOGC
+	// +optional
+	// +kubebuilder:validation:Minimum=-1
+	GoGC *int32 `json:"goGC,omitempty"`
+}
 
 // PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
 // +k8s:deepcopy-gen=false
@@ -223,19 +241,30 @@ type CommonPrometheusFields struct {
 	// Default: 1
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
-	// Number of shards to distribute targets onto. `spec.replicas`
-	// multiplied by `spec.shards` is the total number of Pods created.
+
+	// Number of shards to distribute the scraped targets onto.
 	//
-	// Note that scaling down shards will not reshard data onto remaining
+	// `spec.replicas` multiplied by `spec.shards` is the total number of Pods
+	// being created.
+	//
+	// When not defined, the operator assumes only one shard.
+	//
+	// Note that scaling down shards will not reshard data onto the remaining
 	// instances, it must be manually moved. Increasing shards will not reshard
 	// data either but it will continue to be available from the same
-	// instances. To query globally, use Thanos sidecar and Thanos querier or
-	// remote write data to a central location.
+	// instances. To query globally, use either
+	// * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+	// * Remote-write to send metrics to a central location.
 	//
-	// Sharding is performed on the content of the `__address__` target meta-label
-	// for PodMonitors and ServiceMonitors and `__param_target__` for Probes.
+	// By default, the sharding of targets is performed on:
+	// * The `__address__` target's metadata label for PodMonitor,
+	// ServiceMonitor and ScrapeConfig resources.
+	// * The `__param_target__` label for Probe resources.
 	//
-	// Default: 1
+	// Users can define their own sharding implementation by setting the
+	// `__tmp_hash` label during the target discovery with relabeling
+	// configuration (either in the monitoring resources or via scrape class).
+	//
 	// +optional
 	Shards *int32 `json:"shards,omitempty"`
 
@@ -267,6 +296,7 @@ type CommonPrometheusFields struct {
 	// +kubebuilder:default:="30s"
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait until a scrape request times out.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// The protocols to negotiate during a scrape. It tells clients the
@@ -275,6 +305,8 @@ type CommonPrometheusFields struct {
 	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.49.0.
+	//
+	// `PrometheusText1.0.0` requires Prometheus >= v3.0.0.
 	//
 	// +listType=set
 	// +optional
@@ -297,6 +329,24 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.33.0.
 	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
+
+	// Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.
+	//
+	// Note that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.
+	//
+	// It requires Prometheus >= v2.47.0.
+	// +optional
+	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
+
+	// List of the protobuf message versions to accept when receiving the
+	// remote writes.
+	//
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType:=set
+	// +optional
+	RemoteWriteReceiverMessageVersions []RemoteWriteMessageVersion `json:"remoteWriteReceiverMessageVersions,omitempty"`
 
 	// Enable access to Prometheus feature flags. By default, no features are enabled.
 	//
@@ -392,7 +442,7 @@ type CommonPrometheusFields struct {
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
 	// Settings related to the OTLP receiver feature.
-	// It requires Prometheus >= v2.54.0.
+	// It requires Prometheus >= v2.55.0.
 	//
 	// +optional
 	OTLP *OTLPConfig `json:"otlp,omitempty"`
@@ -402,9 +452,21 @@ type CommonPrometheusFields struct {
 	// +optional
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
+	// Defines the DNS policy for the pods.
+	//
+	// +optional
+	DNSPolicy *DNSPolicy `json:"dnsPolicy,omitempty"`
+	// Defines the DNS configuration for the pods.
+	//
+	// +optional
+	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 	// When true, the Prometheus server listens on the loopback address
 	// instead of the Pod IP's address.
 	ListenLocal bool `json:"listenLocal,omitempty"`
+
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 
 	// Containers allows injecting additional containers or modifying operator
 	// generated containers. This can be used to allow adding an authentication
@@ -628,6 +690,10 @@ type CommonPrometheusFields struct {
 	//
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
+	// Specifies the validation scheme for metric and label names.
+	// +optional
+	NameValidationScheme *NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
@@ -683,7 +749,8 @@ type CommonPrometheusFields struct {
 	// it (https://kubernetes.io/docs/concepts/configuration/overview/).
 	//
 	// When hostNetwork is enabled, this will set the DNS policy to
-	// `ClusterFirstWithHostNet` automatically.
+	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
+	// to a different value).
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// PodTargetLabels are appended to the `spec.podTargetLabels` field of all
@@ -793,7 +860,48 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
+
+	// File to which scrape failures are logged.
+	// Reloading the configuration will reopen the file.
+	//
+	// If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
+	// will mount the file into an emptyDir volume at `/var/log/prometheus`.
+	// If a full path is provided, e.g. '/var/log/prometheus/file.log', you
+	// must mount a volume in the specified directory and it must be writable.
+	// It requires Prometheus >= v2.55.0.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
+
+	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,
+	// or `prometheus-agent-operated` for PrometheusAgent resources.
+	// When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ServiceName *string `json:"serviceName,omitempty"`
+
+	// RuntimeConfig configures the values for the Prometheus process behavior
+	// +optional
+	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 }
+
+// Specifies the validation scheme for metric and label names.
+// Supported values are:
+// * `UTF8NameValidationScheme` for UTF-8 support.
+// * `LegacyNameValidationScheme` for letters, numbers, colons, and underscores.
+//
+// Note that `LegacyNameValidationScheme` cannot be used along with the OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if enabled).
+// +kubebuilder:validation:Enum=UTF8;Legacy
+type NameValidationSchemeOptions string
+
+const (
+	UTF8NameValidationScheme   NameValidationSchemeOptions = "UTF8"
+	LegacyNameValidationScheme NameValidationSchemeOptions = "Legacy"
+)
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
 type ReloadStrategyType string
@@ -877,7 +985,7 @@ type PrometheusList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses
-	Items []*Prometheus `json:"items"`
+	Items []Prometheus `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -905,7 +1013,19 @@ type PrometheusSpec struct {
 	// Maximum number of bytes used by the Prometheus data.
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
+	// ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+	//
+	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+	// however, the feature is not yet fully implemented in this PR. The limitation being:
+	// * Retention duration is not settable, for now, shards are retained forever.
+	//
+	// +optional
+	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
+
 	// When true, the Prometheus compaction is disabled.
+	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
+	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
 	// Defines the configuration of the Prometheus rules' engine.
@@ -1005,6 +1125,11 @@ type PrometheusSpec struct {
 	// +kubebuilder:default:="30s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
+	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+	// It requires Prometheus >= v2.53.0.
+	// +optional
+	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
+
 	// Enables access to the Prometheus web admin API.
 	//
 	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
@@ -1015,6 +1140,24 @@ type PrometheusSpec struct {
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+}
+
+type WhenScaledRetentionType string
+
+var (
+	RetainWhenScaledRetentionType WhenScaledRetentionType = "Retain"
+	DeleteWhenScaledRetentionType WhenScaledRetentionType = "Delete"
+)
+
+type ShardRetentionPolicy struct {
+	// Defines the retention policy when the Prometheus shards are scaled down.
+	// * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+	// * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+	//
+	// If not defined, the operator assumes the `Delete` value.
+	// +kubebuilder:validation:Enum=Retain;Delete
+	// +optional
+	WhenScaled *WhenScaledRetentionType `json:"whenScaled,omitempty"`
 }
 
 type PrometheusTracingConfig struct {
@@ -1311,6 +1454,8 @@ type ThanosSpec struct {
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	// The URL of the endpoint to send samples to.
+	// +kubebuilder:validation:MinLength=1
+	// +required
 	URL string `json:"url"`
 
 	// The name of the remote write queue, it must be unique if specified. The
@@ -1318,10 +1463,27 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.15.0.
 	//
-	Name string `json:"name,omitempty"`
+	//+optional
+	Name *string `json:"name,omitempty"`
+
+	// The Remote Write message's version to use when writing to the endpoint.
+	//
+	// `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.
+	// `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.
+	//
+	// When `Version2.0` is selected, Prometheus will automatically be
+	// configured to append the metadata of scraped metrics to the WAL.
+	//
+	// Before setting this field, consult with your remote storage provider
+	// what message version it supports.
+	//
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +optional
+	MessageVersion *RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
 
 	// Enables sending of exemplars over remote write. Note that
-	// exemplar-storage itself must be enabled using the `spec.enableFeature`
+	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
 	// option for exemplars to be scraped in the first place.
 	//
 	// It requires Prometheus >= v2.27.0.
@@ -1338,7 +1500,8 @@ type RemoteWriteSpec struct {
 	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
 
 	// Timeout for requests to the remote write endpoint.
-	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
+	// +optional
+	RemoteTimeout *Duration `json:"remoteTimeout,omitempty"`
 
 	// Custom HTTP headers to be sent along with each remote write request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
@@ -1359,16 +1522,19 @@ type RemoteWriteSpec struct {
 	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
 	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+
 	// BasicAuth configuration for the URL.
 	//
 	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+
 	// File from which to read bearer token for the URL.
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+
 	// Authorization section for the URL.
 	//
 	// It requires Prometheus >= v2.26.0.
@@ -1377,6 +1543,7 @@ type RemoteWriteSpec struct {
 	//
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
+
 	// Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
 	//
 	// It requires Prometheus >= v2.26.0.
@@ -1427,7 +1594,33 @@ type RemoteWriteSpec struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+
+	// When enabled:
+	//     - The remote-write mechanism will resolve the hostname via DNS.
+	//     - It will randomly select one of the resolved IP addresses and connect to it.
+	//
+	// When disabled (default behavior):
+	//     - The Go standard library will handle hostname resolution.
+	//     - It will attempt connections to each resolved IP address sequentially.
+	//
+	// Note: The connection timeout applies to the entire resolution and connection process.
+	//       If disabled, the timeout is distributed across all connection attempts.
+	//
+	// It requires Prometheus >= v3.1.0.
+	//
+	// +optional
+	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=V1.0;V2.0
+type RemoteWriteMessageVersion string
+
+const (
+	// Remote Write message's version 1.0.
+	RemoteWriteMessageVersion1_0 = RemoteWriteMessageVersion("V1.0")
+	// Remote Write message's version 2.0.
+	RemoteWriteMessageVersion2_0 = RemoteWriteMessageVersion("V2.0")
+)
 
 // QueueConfig allows the tuning of remote write's queue_config parameters.
 // This object is referenced in the RemoteWriteSpec object.
@@ -1566,7 +1759,8 @@ type RemoteReadSpec struct {
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 
 	// Timeout for requests to the remote read endpoint.
-	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
+	// +optional
+	RemoteTimeout *Duration `json:"remoteTimeout,omitempty"`
 
 	// Custom HTTP headers to be sent along with each remote read request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
@@ -1732,6 +1926,14 @@ type APIServerConfig struct {
 	BearerToken string `json:"bearerToken,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=v1;V1;v2;V2
+type AlertmanagerAPIVersion string
+
+const (
+	AlertmanagerAPIVersion1 = AlertmanagerAPIVersion("V1")
+	AlertmanagerAPIVersion2 = AlertmanagerAPIVersion("V2")
+)
+
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing Alertmanager IPs to fire alerts against.
 // +k8s:openapi-gen=true
@@ -1795,9 +1997,15 @@ type AlertmanagerEndpoints struct {
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
+	// ProxyConfig
+	ProxyConfig `json:",inline"`
+
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
-	// It can be "v1" or "v2".
-	APIVersion string `json:"apiVersion,omitempty"`
+	// It can be "V1" or "V2".
+	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
+	//
+	// +optional
+	APIVersion *AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
 
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
 	//
@@ -1884,7 +2092,8 @@ type TSDBSpec struct {
 	// in a breaking way.
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
-	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// +optional
+	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
 type Exemplars struct {
@@ -1943,6 +2152,10 @@ type Authorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *Authorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
@@ -1980,6 +2193,13 @@ type ScrapeClass struct {
 	// +optional
 	Default *bool `json:"default,omitempty"`
 
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
 	// TLSConfig defines the TLS settings to use for the scrape. When the
 	// scrape objects define their own CA, certificate and/or key, they take
 	// precedence over the corresponding scrape class fields.
@@ -1988,6 +2208,11 @@ type ScrapeClass struct {
 	//
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+
+	// Authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
+	// +optional
+	Authorization *Authorization `json:"authorization,omitempty"`
 
 	// Relabelings configures the relabeling rules to apply to all scrape targets.
 	//
@@ -2020,6 +2245,18 @@ type ScrapeClass struct {
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
 
+// TranslationStrategyOption represents a translation strategy option for the OTLP endpoint.
+// Supported values are:
+// * `NoUTF8EscapingWithSuffixes`
+// * `UnderscoreEscapingWithSuffixes`
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes
+type TranslationStrategyOption string
+
+const (
+	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
+	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+)
+
 // OTLPConfig is the configuration for writing to the OTLP endpoint.
 //
 // +k8s:openapi-gen=true
@@ -2031,4 +2268,17 @@ type OTLPConfig struct {
 	// +listType=set
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
+
+	// Configures how the OTLP receiver endpoint translates the incoming metrics.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
+
+	// Enables adding `service.name`, `service.namespace` and `service.instance.id`
+	// resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
+	//
+	// It requires Prometheus >= v3.1.0.
+	// +optional
+	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
 }

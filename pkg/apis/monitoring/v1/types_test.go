@@ -282,6 +282,114 @@ func TestValidateTLSConfig(t *testing.T) {
 	}
 }
 
+func TestValidateWebTlsConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		config *WebTLSConfig
+		err    bool
+	}{
+		{
+			name: "caFile, certFile and keyFile",
+			config: &WebTLSConfig{
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				CertFile:     func(s string) *string { return &s }("certfile"),
+				KeyFile:      func(s string) *string { return &s }("keyfile"),
+			},
+		},
+		{
+			name: "certFile and keyFile",
+			config: &WebTLSConfig{
+				CertFile: func(s string) *string { return &s }("certfile"),
+				KeyFile:  func(s string) *string { return &s }("keyfile"),
+			},
+		},
+		{
+			name: "caFile and keyFile",
+			config: &WebTLSConfig{
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				KeyFile:      func(s string) *string { return &s }("keyfile"),
+			},
+			err: true,
+		},
+		{
+			name: "caFile and certFile",
+			config: &WebTLSConfig{
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				CertFile:     func(s string) *string { return &s }("certfile"),
+			},
+			err: true,
+		},
+		{
+			name: "caFile, cert and keyFile",
+			config: &WebTLSConfig{
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				KeyFile:      func(s string) *string { return &s }("keyfile"),
+				Cert:         SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+			},
+		},
+		{
+			name: "caFile, certFile and keySecret",
+			config: &WebTLSConfig{
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				CertFile:     func(s string) *string { return &s }("certfile"),
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.key",
+				},
+			},
+		},
+		{
+			name: "ca, cert and keySecret",
+			config: &WebTLSConfig{
+				Cert:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientCA: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.key",
+				},
+			},
+		},
+		{
+			name: "cert and keySecret",
+			config: &WebTLSConfig{
+				ClientCA: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "test-secret",
+					},
+					Key: "tls.key",
+				},
+			},
+			err: true,
+		},
+		{
+			name: "ca and cert",
+			config: &WebTLSConfig{
+				ClientCA: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				Cert:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+			},
+			err: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if tc.err {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error but got: %s", err)
+			}
+		})
+	}
+}
+
 func TestValidateAuthorization(t *testing.T) {
 	creds := &v1.SecretKeySelector{
 		LocalObjectReference: v1.LocalObjectReference{

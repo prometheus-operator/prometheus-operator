@@ -18,28 +18,32 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // ServiceMonitorSpecApplyConfiguration represents a declarative configuration of the ServiceMonitorSpec type for use
 // with apply.
 type ServiceMonitorSpecApplyConfiguration struct {
-	JobLabel              *string                                 `json:"jobLabel,omitempty"`
-	TargetLabels          []string                                `json:"targetLabels,omitempty"`
-	PodTargetLabels       []string                                `json:"podTargetLabels,omitempty"`
-	Endpoints             []EndpointApplyConfiguration            `json:"endpoints,omitempty"`
-	Selector              *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
-	NamespaceSelector     *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
-	SampleLimit           *uint64                                 `json:"sampleLimit,omitempty"`
-	ScrapeProtocols       []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
-	TargetLimit           *uint64                                 `json:"targetLimit,omitempty"`
-	LabelLimit            *uint64                                 `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit  *uint64                                 `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit *uint64                                 `json:"labelValueLengthLimit,omitempty"`
-	KeepDroppedTargets    *uint64                                 `json:"keepDroppedTargets,omitempty"`
-	AttachMetadata        *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
-	ScrapeClassName       *string                                 `json:"scrapeClass,omitempty"`
-	BodySizeLimit         *monitoringv1.ByteSize                  `json:"bodySizeLimit,omitempty"`
+	JobLabel                                *string                                 `json:"jobLabel,omitempty"`
+	TargetLabels                            []string                                `json:"targetLabels,omitempty"`
+	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
+	Endpoints                               []EndpointApplyConfiguration            `json:"endpoints,omitempty"`
+	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
+	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
+	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
+	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
+	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
+	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
+	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
+	NativeHistogramConfigApplyConfiguration `json:",inline"`
+	KeepDroppedTargets                      *uint64                           `json:"keepDroppedTargets,omitempty"`
+	AttachMetadata                          *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	ScrapeClassName                         *string                           `json:"scrapeClass,omitempty"`
+	BodySizeLimit                           *monitoringv1.ByteSize            `json:"bodySizeLimit,omitempty"`
 }
 
 // ServiceMonitorSpecApplyConfiguration constructs a declarative configuration of the ServiceMonitorSpec type for use with
@@ -97,6 +101,14 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithSelector(value *metav1.LabelS
 	return b
 }
 
+// WithSelectorMechanism sets the SelectorMechanism field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SelectorMechanism field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithSelectorMechanism(value monitoringv1.SelectorMechanism) *ServiceMonitorSpecApplyConfiguration {
+	b.SelectorMechanism = &value
+	return b
+}
+
 // WithNamespaceSelector sets the NamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NamespaceSelector field is set to the value of the last call.
@@ -120,6 +132,14 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...mon
 	for i := range values {
 		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
 	}
+	return b
+}
+
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
 	return b
 }
 
@@ -152,6 +172,30 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value ui
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ServiceMonitorSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.ScrapeClassicHistograms = &value
+	return b
+}
+
+// WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
+	return b
+}
+
+// WithNativeHistogramMinBucketFactor sets the NativeHistogramMinBucketFactor field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ServiceMonitorSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramMinBucketFactor = &value
 	return b
 }
 

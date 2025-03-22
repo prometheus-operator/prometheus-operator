@@ -88,6 +88,39 @@ func TestWALCompression(t *testing.T) {
 	}
 }
 
+func TestPrometheusAgentCommandLineFlag(t *testing.T) {
+	tests := []struct {
+		version       string
+		expectedArg   string
+		shouldContain bool
+	}{
+		{"v3.0.0", "--agent", true},
+		{"v3.0.0-beta.0", "--agent", true},
+		{"v2.53.0", "--agent", false},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Version: test.version,
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		found := false
+		for _, flag := range promArgs {
+			if flag == test.expectedArg {
+				found = true
+				break
+			}
+		}
+		require.Equal(t, test.shouldContain, found)
+	}
+}
+
 func TestStartupProbeTimeoutSeconds(t *testing.T) {
 	testcases := createTestCasesForTestStartupProbeTimeoutSeconds()
 
@@ -184,5 +217,147 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 			require.NotNil(t, sset.Spec.Template.Spec.AutomountServiceAccountToken)
 			require.Equal(t, tc.expectedValue, *sset.Spec.Template.Spec.AutomountServiceAccountToken)
 		})
+	}
+}
+
+func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
+	// Monitoring DNS settings
+	monitoringDNSPolicy := v1.DNSClusterFirst
+	monitoringDNSConfig := &monitoringv1.PodDNSConfig{
+		Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+		Searches:    []string{"custom.search"},
+		Options: []monitoringv1.PodDNSConfigOption{
+			{
+				Name:  "ndots",
+				Value: ptr.To("5"),
+			},
+		},
+	}
+	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(monitoringDNSPolicy))
+
+	// Create the PrometheusAgent object with DNS settings
+	prometheusAgent := monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				DNSPolicy: monitoringDNSPolicyPtr,
+				DNSConfig: monitoringDNSConfig,
+			},
+		},
+	}
+
+	// Generate the StatefulSet
+	sset, err := makeStatefulSetFromPrometheus(prometheusAgent)
+	require.NoError(t, err)
+
+	// Validate the DNS Policy
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
+
+	// Validate the DNS Config
+	require.NotNil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNS config to be set")
+	require.Equal(t, monitoringDNSConfig.Nameservers, sset.Spec.Template.Spec.DNSConfig.Nameservers, "expected nameservers to match")
+	require.Equal(t, monitoringDNSConfig.Searches, sset.Spec.Template.Spec.DNSConfig.Searches, "expected searches to match")
+
+	require.Equal(t, len(monitoringDNSConfig.Options), len(sset.Spec.Template.Spec.DNSConfig.Options), "expected options length to match")
+	for i, option := range monitoringDNSConfig.Options {
+		k8sOption := sset.Spec.Template.Spec.DNSConfig.Options[i]
+		require.Equal(t, option.Name, k8sOption.Name, "expected option names to match")
+		require.Equal(t, option.Value, k8sOption.Value, "expected option values to match")
+	}
+}
+
+func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
+	sset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultLogFileVolume {
+			found = true
+		}
+	}
+
+	require.True(t, found, "Volume for scrape failure log file not found.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultLogFileVolume {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.True(t, found, "Scrape failure log file not mounted.")
+}
+
+func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
+	// An emptyDir is only mounted by the Operator if the given
+	// path is only a base filename.
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultLogFileVolume {
+			found = true
+		}
+	}
+
+	require.False(t, found, "Volume for scrape failure file found, when it shouldn't be.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultLogFileVolume {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.False(t, found, "Scrape failure log file mounted, when it shouldn't be.")
+}
+
+func TestStatefulSetenableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks         *bool
+		expectedEnableServiceLinks *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnableServiceLinks: test.enableServiceLinks,
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		if test.expectedEnableServiceLinks != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be non-nil")
+			require.Equal(t, *test.expectedEnableServiceLinks, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be nil")
+		}
 	}
 }

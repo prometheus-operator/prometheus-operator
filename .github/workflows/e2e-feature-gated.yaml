@@ -1,8 +1,7 @@
 name: e2e-feature-gated
 on:
+  workflow_dispatch:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,16 +9,24 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
+# To cancel running workflow when new commits pushed in a pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
+  changed-files:
+     uses: ./.github/workflows/changed-files.yaml
   e2e-tests:
     name: E2E tests for feature gates
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: |
+        cat ".github/env" >> "$GITHUB_ENV"
+        echo "E2E_DIAGNOSTIC_DIRECTORY=$(mktemp -d)" >> "$GITHUB_ENV"
     - name: Install Go
       uses: actions/setup-go@v5
       with:
@@ -30,7 +37,7 @@ jobs:
         export SHELL=/bin/bash
         make build image
     - name: Start kind cluster
-      uses: helm/kind-action@v1.10.0
+      uses: helm/kind-action@v1.12.0
       with:
         version: ${{ env.kind-version }}
         node_image: ${{ env.kind-image }}
@@ -49,16 +56,17 @@ jobs:
         kubectl cluster-info
     - name: Load images
       run: |
-        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
-        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
-        kind load docker-image -n e2e quay.io/prometheus-operator/admission-webhook:$(git rev-parse --short HEAD)
+        make test-e2e-images
         kubectl apply -f scripts/kind-rbac.yaml
     - name: Run tests
-      run: >
-        EXCLUDE_ALERTMANAGER_TESTS=exclude
-        EXCLUDE_PROMETHEUS_TESTS=exclude
-        EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude
-        EXCLUDE_THANOSRULER_TESTS=exclude
-        EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude
-        EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude
-        make test-e2e
+      env:
+        E2E_DIAGNOSTIC_DIRECTORY: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
+      run: |
+        make test-e2e-feature-gates
+    - name: Upload diagnostics artifact
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cluster-state
+        path: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
+        retention-days: 15

@@ -18,19 +18,19 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
 // OVHCloudSDConfigApplyConfiguration represents a declarative configuration of the OVHCloudSDConfig type for use
 // with apply.
 type OVHCloudSDConfigApplyConfiguration struct {
-	ApplicationKey    *string                `json:"applicationKey,omitempty"`
-	ApplicationSecret *v1.SecretKeySelector  `json:"applicationSecret,omitempty"`
-	ConsumerKey       *v1.SecretKeySelector  `json:"consumerKey,omitempty"`
-	Service           *v1alpha1.OVHService   `json:"service,omitempty"`
-	Endpoint          *string                `json:"endpoint,omitempty"`
-	RefreshInterval   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	ApplicationKey    *string                        `json:"applicationKey,omitempty"`
+	ApplicationSecret *v1.SecretKeySelector          `json:"applicationSecret,omitempty"`
+	ConsumerKey       *v1.SecretKeySelector          `json:"consumerKey,omitempty"`
+	Service           *monitoringv1alpha1.OVHService `json:"service,omitempty"`
+	Endpoint          *string                        `json:"endpoint,omitempty"`
+	RefreshInterval   *monitoringv1.Duration         `json:"refreshInterval,omitempty"`
 }
 
 // OVHCloudSDConfigApplyConfiguration constructs a declarative configuration of the OVHCloudSDConfig type for use with
@@ -66,7 +66,7 @@ func (b *OVHCloudSDConfigApplyConfiguration) WithConsumerKey(value v1.SecretKeyS
 // WithService sets the Service field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Service field is set to the value of the last call.
-func (b *OVHCloudSDConfigApplyConfiguration) WithService(value v1alpha1.OVHService) *OVHCloudSDConfigApplyConfiguration {
+func (b *OVHCloudSDConfigApplyConfiguration) WithService(value monitoringv1alpha1.OVHService) *OVHCloudSDConfigApplyConfiguration {
 	b.Service = &value
 	return b
 }

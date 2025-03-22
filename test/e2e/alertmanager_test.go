@@ -323,18 +323,6 @@ func testAMClusterInitialization(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	// Print Alertmanager logs on failure.
-	defer func() {
-		if !t.Failed() {
-			return
-		}
-
-		for i := 0; i < amClusterSize; i++ {
-			err := framework.PrintPodLogs(context.Background(), ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)))
-			require.NoError(t, err)
-		}
-	}()
-
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
 
@@ -386,45 +374,118 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 }
 
 func testAMClusterGossipSilences(t *testing.T) {
-	// Don't run Alertmanager tests in parallel. See
-	// https://github.com/prometheus/alertmanager/issues/1835 for details.
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-
-	amClusterSize := 3
-	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
-
-	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
-	require.NoError(t, err)
-
-	for i := 0; i < amClusterSize; i++ {
-		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
-		require.NoError(t, err)
+	secretName := "cluster-tls-creds"
+	testcase := []struct {
+		name             string
+		clusterSize      int
+		clusterTLSConfig *monitoringv1.ClusterTLSConfig
+	}{
+		{
+			name: "alertmanager cluster without mTLS configured",
+		},
+		{
+			name: "alertmanager cluster with mTLS configured",
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
+				ServerTLS: monitoringv1.WebTLSConfig{
+					ClientCA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "ca.crt",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key.pem",
+					},
+					ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
+				},
+				ClientTLS: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "ca.crt",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key.pem",
+					},
+					// Since we cannot verify hostname in the cert.
+					InsecureSkipVerify: ptr.To(true),
+				},
+			},
+		},
 	}
+	for _, tc := range testcase {
+		t.Run(tc.name, func(t *testing.T) {
+			// Don't run Alertmanager tests in parallel. See
+			// https://github.com/prometheus/alertmanager/issues/1835 for details.
+			clusterSize := 3
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
-	require.NoError(t, err)
+			createMutualTLSSecret(t, secretName, ns)
 
-	for i := 0; i < amClusterSize; i++ {
-		err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-			silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
-			if err != nil {
-				return false, err
+			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(clusterSize))
+			alertmanager.Spec.ClusterTLS = tc.clusterTLSConfig
+
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+			require.NoError(t, err)
+
+			for i := 0; i < tc.clusterSize; i++ {
+				name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+				err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, tc.clusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
+				require.NoError(t, err)
 			}
 
-			if len(silences) != 1 {
-				return false, nil
-			}
+			silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
+			require.NoError(t, err)
 
-			if *silences[0].ID != silID {
-				return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
+			for i := 0; i < tc.clusterSize; i++ {
+				err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
+					silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
+					if err != nil {
+						return false, err
+					}
+
+					if len(silences) != 1 {
+						return false, nil
+					}
+
+					if *silences[0].ID != silID {
+						return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
+					}
+					return true, nil
+				})
+				require.NoError(t, err)
 			}
-			return true, nil
 		})
-		require.NoError(t, err)
 	}
 }
 
@@ -822,10 +883,11 @@ inhibit_rules:
 	require.Len(t, pl.Items, 1)
 
 	podName := pl.Items[0].Name
-	logs, err := framework.GetLogs(context.Background(), ns, podName, "webhook-server")
+	b := &bytes.Buffer{}
+	err = framework.WritePodLogs(context.Background(), b, ns, podName, testFramework.LogOptions{Container: "webhook-server"})
 	require.NoError(t, err)
 
-	c := strings.Count(logs, "Alertmanager Notification Payload Received")
+	c := strings.Count(b.String(), "Alertmanager Notification Payload Received")
 	require.Equal(t, 1, c)
 
 	// We need to force a rolling update, e.g. by changing one of the command
@@ -845,10 +907,11 @@ inhibit_rules:
 
 	time.Sleep(time.Minute)
 
-	logs, err = framework.GetLogs(context.Background(), ns, podName, "webhook-server")
+	b.Reset()
+	err = framework.WritePodLogs(context.Background(), b, ns, podName, testFramework.LogOptions{Container: "webhook-server"})
 	require.NoError(t, err)
 
-	c = strings.Count(logs, "Alertmanager Notification Payload Received")
+	c = strings.Count(b.String(), "Alertmanager Notification Payload Received")
 	require.Equal(t, 1, c)
 }
 
@@ -1093,7 +1156,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					To: "test@example.com",
+					Smarthost: "example.com:25",
+					From:      "admin@example.com",
+					To:        "test@example.com",
 					AuthPassword: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -1506,6 +1571,8 @@ receivers:
   email_configs:
   - send_resolved: true
     to: test@example.com
+    from: admin@example.com
+    smarthost: example.com:25
     auth_password: 1234abc
     auth_secret: 1234abc
     headers:
@@ -2183,7 +2250,7 @@ func testAMWeb(t *testing.T) {
 			}
 		}
 
-		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		reloadSuccessTimestamp, err := framework.GetMetricValueFromPod(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -2388,6 +2455,80 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "valid-dns-policy-and-config",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{"8.8.8.8"},
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "ndots",
+							Value: ptr.To("5"),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-policy",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-dns-config",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{"8.8.4.4"},
+					Searches:    []string{"svc.cluster.local"},
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "ndots",
+							Value: ptr.To("5"),
+						},
+						{
+							Name:  "timeout",
+							Value: ptr.To("2"),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-config-nameservers",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{""}, // Empty string violates MinLength constraint
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-dns-config-options",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "", // Empty string violates MinLength constraint
+							Value: ptr.To("some-value"),
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -2553,4 +2694,52 @@ templates: []
 
 	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName)
 	require.NoError(t, err)
+}
+
+func testAlertManagerServiceName(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	name := "test-servicename"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 9090,
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name":       "alertmanager",
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"app.kubernetes.io/instance":   name,
+				"alertmanager":                 name,
+			},
+		},
+	}
+
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.ServiceName = &svc.Name
+
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	require.NoError(t, err)
+
+	// Ensure that the default governing service was not created by the operator.
+	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
+	require.NoError(t, err)
+	require.Len(t, svcList.Items, 1)
+	require.Equal(t, svcList.Items[0].Name, svc.Name)
 }

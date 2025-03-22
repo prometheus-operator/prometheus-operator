@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 30s
+  scrape_protocols:
+  - PrometheusText1.0.0
+  external_labels:
+    prometheus: test/example
+    prometheus_replica: $(POD_NAME)
+  evaluation_interval: 30s
+scrape_configs: []

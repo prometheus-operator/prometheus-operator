@@ -25,6 +25,12 @@ import (
 const (
 	// PrometheusAgentDaemonSetFeature enables the DaemonSet mode for PrometheusAgent.
 	PrometheusAgentDaemonSetFeature FeatureGateName = "PrometheusAgentDaemonSet"
+
+	// PrometheusTopologySharding enables the zone-aware sharding for Prometheus.
+	PrometheusTopologyShardingFeature FeatureGateName = "PrometheusTopologySharding"
+
+	// PrometheusShardRetentionPolicyFeature enables the shard retention policy for Prometheus.
+	PrometheusShardRetentionPolicyFeature FeatureGateName = "PrometheusShardRetentionPolicy"
 )
 
 type FeatureGateName string
@@ -36,8 +42,8 @@ type FeatureGate struct {
 	enabled     bool
 }
 
-func (fg FeatureGates) Enabled(name FeatureGateName) bool {
-	return fg[name].enabled
+func (fg *FeatureGates) Enabled(name FeatureGateName) bool {
+	return (*fg)[name].enabled
 }
 
 // UpdateFeatureGates merges the current feature gate values with

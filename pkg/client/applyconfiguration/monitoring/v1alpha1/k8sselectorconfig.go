@@ -17,15 +17,15 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
 // K8SSelectorConfigApplyConfiguration represents a declarative configuration of the K8SSelectorConfig type for use
 // with apply.
 type K8SSelectorConfigApplyConfiguration struct {
-	Role  *v1alpha1.KubernetesRole `json:"role,omitempty"`
-	Label *string                  `json:"label,omitempty"`
-	Field *string                  `json:"field,omitempty"`
+	Role  *monitoringv1alpha1.KubernetesRole `json:"role,omitempty"`
+	Label *string                            `json:"label,omitempty"`
+	Field *string                            `json:"field,omitempty"`
 }
 
 // K8SSelectorConfigApplyConfiguration constructs a declarative configuration of the K8SSelectorConfig type for use with
@@ -37,7 +37,7 @@ func K8SSelectorConfig() *K8SSelectorConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *K8SSelectorConfigApplyConfiguration) WithRole(value v1alpha1.KubernetesRole) *K8SSelectorConfigApplyConfiguration {
+func (b *K8SSelectorConfigApplyConfiguration) WithRole(value monitoringv1alpha1.KubernetesRole) *K8SSelectorConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }

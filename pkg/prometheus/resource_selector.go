@@ -139,6 +139,18 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 		}
 
+		_, err = metav1.LabelSelectorAsSelector(&sm.Spec.Selector)
+		if err != nil {
+			rejectFn(sm, fmt.Errorf("failed to parse label selector: %w", err))
+			continue
+		}
+
+		err = validateMonitorSelectorMechanism(sm.Spec.SelectorMechanism, rs.version)
+		if err != nil {
+			rejectFn(sm, err)
+			continue
+		}
+
 		for _, endpoint := range sm.Spec.Endpoints {
 			// If denied by Prometheus spec, filter out all service monitors that access
 			// the file system.
@@ -372,6 +384,13 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
 }
 
+func validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMechanism, version semver.Version) error {
+	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !version.GTE(semver.MustParse("2.17.0")) {
+		return fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer")
+	}
+	return nil
+}
+
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
@@ -434,6 +453,18 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
+		}
+
+		_, err = metav1.LabelSelectorAsSelector(&pm.Spec.Selector)
+		if err != nil {
+			rejectFn(pm, fmt.Errorf("failed to parse label selector: %w", err))
+			continue
+		}
+
+		err = validateMonitorSelectorMechanism(pm.Spec.SelectorMechanism, rs.version)
+		if err != nil {
+			rejectFn(pm, err)
+			continue
 		}
 
 		for _, endpoint := range pm.Spec.PodMetricsEndpoints {
@@ -817,13 +848,20 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = validateProxyConfig(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err = addProxyConfigToStore(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			rejectFn(sc, err)
 			continue
 		}
 
 		if err = rs.ValidateRelabelConfigs(sc.Spec.MetricRelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
+			continue
+		}
+
+		// The Kubernetes API can't do the validation (for now) because kubebuilder validation markers don't work on map keys with custom type.
+		// https://github.com/prometheus-operator/prometheus-operator/issues/6889
+		if err = rs.validateStaticConfig(sc); err != nil {
+			rejectFn(sc, fmt.Errorf("staticConfigs: %w", err))
 			continue
 		}
 
@@ -962,7 +1000,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1020,6 +1058,18 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 
 func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.ConsulSDConfigs {
+		if config.PathPrefix != nil && rs.version.LT(semver.MustParse("2.45.0")) {
+			return fmt.Errorf("field `config.PathPrefix` is only supported for Prometheus version >= 2.45.0")
+		}
+
+		if config.Namespace != nil && rs.version.LT(semver.MustParse("2.28.0")) {
+			return fmt.Errorf("field `config.Namespace` is only supported for Prometheus version >= 2.28.0")
+		}
+
+		if config.Filter != nil && rs.version.Major < 3 {
+			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1038,7 +1088,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			}
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1072,7 +1122,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1110,7 +1160,7 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1123,6 +1173,10 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 		authMethod := ptr.Deref(config.AuthenticationMethod, "")
 		if authMethod == "SDK" && rs.version.LT(semver.MustParse("2.52.0")) {
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
+		}
+
+		if config.ResourceGroup != nil && rs.version.LT(semver.MustParse("2.35.0")) {
+			return fmt.Errorf("[%d]: ResourceGroup is only supported from Prometheus version >= 2.35.0", i)
 		}
 
 		// Since Prometheus uses default authentication method as "OAuth"
@@ -1145,6 +1199,27 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ClientSecret); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 	}
 
 	return nil
@@ -1152,6 +1227,9 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 
 func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.OpenStackSDConfigs {
+		if config.Role == monitoringv1alpha1.OpenStackRoleLoadBalancer && rs.version.LT(semver.MustParse("3.2.0")) {
+			return fmt.Errorf("[%d]: The %s role is only supported from Prometheus version 3.2.0", i, string(config.Role))
+		}
 		if config.Password != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.Password); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
@@ -1168,6 +1246,10 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 }
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if rs.version.LT(semver.MustParse("2.20.0")) {
+		return fmt.Errorf("Digital Ocean SD configuration is only supported for Prometheus version >= 2.20.0")
+	}
+
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -1181,7 +1263,7 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1212,7 +1294,7 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1237,7 +1319,7 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1266,7 +1348,7 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1292,7 +1374,7 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1318,7 +1400,7 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1344,7 +1426,7 @@ func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1378,7 +1460,7 @@ func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1419,7 +1501,7 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1460,7 +1542,7 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1494,6 +1576,26 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.StaticConfigs {
+		for labelName := range config.Labels {
+			if !model.LabelName(labelName).IsValid() {
+				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
+			}
+		}
 	}
 
 	return nil
@@ -1509,13 +1611,17 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 	}
 	return nil
 }

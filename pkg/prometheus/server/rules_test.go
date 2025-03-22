@@ -19,15 +19,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldReturnAtLeastOneConfigMap", shouldReturnAtLeastOneConfigMap)
-	t.Run("ShouldErrorOnTooLargeRuleFile", shouldErrorOnTooLargeRuleFile)
 	t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
 }
 
@@ -44,20 +43,10 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 	require.Len(t, configMaps, 1, "expected one ConfigMaps but got %v", len(configMaps))
 }
 
-func shouldErrorOnTooLargeRuleFile(t *testing.T) {
-	expectedError := "rule file 'my-rule-file' is too large for a single Kubernetes ConfigMap"
-	ruleFiles := map[string]string{}
-
-	ruleFiles["my-rule-file"] = strings.Repeat("a", v1.MaxSecretSize+1)
-
-	_, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
-	require.Equal(t, expectedError, err.Error(), "expected makeRulesConfigMaps to return error '%v' but got '%v'", expectedError, err)
-}
-
 func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	ruleFiles := map[string]string{}
 
-	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
+	ruleFiles["first"] = strings.Repeat("a", operator.MaxConfigMapDataSize)
 	ruleFiles["second"] = "a"
 
 	configMaps, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)

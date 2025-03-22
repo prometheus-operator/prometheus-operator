@@ -38,7 +38,7 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-var defaultTestConfig = &prompkg.Config{
+var defaultTestConfig = prompkg.Config{
 	LocalHost:                  "localhost",
 	ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 	PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
@@ -56,18 +56,6 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 	return makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		defaultTestConfig,
 		cg,
 		nil,
@@ -434,18 +422,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"volume-init-test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		defaultTestConfig,
 		cg,
 		[]string{"rules-configmap-one"},
@@ -815,7 +791,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 }
 
 func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
-	operatorConfig := &prompkg.Config{
+	operatorConfig := prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -841,18 +817,6 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		operatorConfig,
 		cg,
 		nil,
@@ -867,7 +831,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 }
 
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
-	thanosBaseImageConfig := &prompkg.Config{
+	thanosBaseImageConfig := prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -895,18 +859,6 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		thanosBaseImageConfig,
 		cg,
 		nil,
@@ -1409,7 +1361,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 }
 
 func TestReplicasConfigurationWithSharding(t *testing.T) {
-	testConfig := &prompkg.Config{
+	testConfig := prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
@@ -1432,18 +1384,6 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		testConfig,
 		cg,
 		nil,
@@ -1469,7 +1409,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 
 func TestSidecarResources(t *testing.T) {
 	operator.TestSidecarsResources(t, func(reloaderConfig operator.ContainerConfig) *appsv1.StatefulSet {
-		testConfig := &prompkg.Config{
+		testConfig := prompkg.Config{
 			ReloaderConfig:             reloaderConfig,
 			PrometheusDefaultBaseImage: defaultTestConfig.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     defaultTestConfig.ThanosDefaultBaseImage,
@@ -1485,18 +1425,6 @@ func TestSidecarResources(t *testing.T) {
 		sset, err := makeStatefulSet(
 			"test",
 			&p,
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-			p.Spec.Retention,
-			p.Spec.RetentionSize,
-			p.Spec.Rules,
-			p.Spec.Query,
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			p.Spec.AllowOverlappingBlocks,
-			p.Spec.EnableAdminAPI,
-			p.Spec.QueryLogFile,
-			p.Spec.Thanos,
-			p.Spec.DisableCompaction,
 			testConfig,
 			cg,
 			nil,
@@ -1634,6 +1562,73 @@ func TestTSDBAllowOverlappingBlocks(t *testing.T) {
 		}
 
 		require.Equal(t, test.shouldContain, found)
+	}
+}
+
+func TestTSDBAllowOverlappingCompaction(t *testing.T) {
+	expectedArg := "--storage.tsdb.allow-overlapping-compaction"
+	tests := []struct {
+		name                    string
+		version                 string
+		outOfOrderTimeWindow    monitoringv1.Duration
+		objectStorageConfigFile *string
+		shouldContain           bool
+	}{
+		{
+			name:          "Prometheus version less than or equal to v2.55.0",
+			version:       "v2.54.0",
+			shouldContain: false,
+		},
+		{
+			name:          "outOfOrderTimeWindow equal to 0s",
+			version:       "v2.55.0",
+			shouldContain: false,
+		},
+		{
+			name:                    "Thanos is not object storage",
+			version:                 "v2.55.0",
+			outOfOrderTimeWindow:    "1s",
+			objectStorageConfigFile: nil,
+			shouldContain:           false,
+		},
+		{
+			name:                    "Verify AllowOverlappingCompaction",
+			version:                 "v2.55.0",
+			outOfOrderTimeWindow:    "1s",
+			objectStorageConfigFile: ptr.To("/etc/thanos.cfg"),
+			shouldContain:           true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: test.version,
+						TSDB: &monitoringv1.TSDBSpec{
+							OutOfOrderTimeWindow: ptr.To(test.outOfOrderTimeWindow),
+						},
+					},
+					Thanos: &monitoringv1.ThanosSpec{
+						ListenLocal:             true,
+						ObjectStorageConfigFile: test.objectStorageConfigFile,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			promArgs := sset.Spec.Template.Spec.Containers[0].Args
+			found := false
+			for _, flag := range promArgs {
+				if flag == expectedArg {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, test.shouldContain, found)
+		})
 	}
 }
 
@@ -1854,18 +1849,6 @@ func TestConfigReloader(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		defaultTestConfig,
 		cg,
 		nil,
@@ -1924,18 +1907,6 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
 		defaultTestConfig,
 		cg,
 		nil,
@@ -2068,7 +2039,7 @@ func TestQueryLogFileVolumeMountPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == "query-log-file" {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2079,7 +2050,7 @@ func TestQueryLogFileVolumeMountPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == "query-log-file" {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2101,7 +2072,7 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == "query-log-file" {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2112,7 +2083,7 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == "query-log-file" {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2122,23 +2093,95 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 	require.False(t, found, "Query log file mounted, when it shouldn't be.")
 }
 
-func TestEnableRemoteWriteReceiver(t *testing.T) {
+func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultLogFileVolume {
+			found = true
+		}
+	}
+
+	require.True(t, found, "Volume for scrape failure log file not found.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultLogFileVolume {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.True(t, found, "Scrape failure log file not mounted.")
+}
+
+func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
+	// An emptyDir is only mounted by the Operator if the given
+	// path is only a base filename.
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultLogFileVolume {
+			found = true
+		}
+	}
+
+	require.False(t, found, "Volume for scrape failure file found, when it shouldn't be.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultLogFileVolume {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.False(t, found, "Scrape failure log file mounted, when it shouldn't be.")
+}
+
+func TestRemoteWriteReceiver(t *testing.T) {
 	for _, tc := range []struct {
-		version                         string
-		enableRemoteWriteReceiver       bool
+		version                   string
+		enableRemoteWriteReceiver bool
+		messageVersions           []monitoringv1.RemoteWriteMessageVersion
+
 		expectedRemoteWriteReceiverFlag bool
+		expectedMessageVersions         string
 	}{
-		// Test lower version where feature not available
+		// Remote write receiver not supported.
 		{
 			version:                   "2.32.0",
 			enableRemoteWriteReceiver: true,
 		},
-		// Test correct version from which feature available
+		// Remote write receiver supported starting with v2.33.0.
 		{
 			version:                         "2.33.0",
 			enableRemoteWriteReceiver:       true,
 			expectedRemoteWriteReceiverFlag: true,
 		},
+		// Remote write receiver supported but not enabled.
 		{
 			version:                         "2.33.0",
 			enableRemoteWriteReceiver:       false,
@@ -2150,27 +2193,67 @@ func TestEnableRemoteWriteReceiver(t *testing.T) {
 			enableRemoteWriteReceiver:       true,
 			expectedRemoteWriteReceiverFlag: true,
 		},
+		// RemoteWriteMessageVersions not supported.
+		{
+			version:                         "2.53.0",
+			enableRemoteWriteReceiver:       true,
+			expectedRemoteWriteReceiverFlag: true,
+			messageVersions: []monitoringv1.RemoteWriteMessageVersion{
+				monitoringv1.RemoteWriteMessageVersion2_0,
+			},
+		},
+		// RemoteWriteMessageVersions supported and set to one value.
+		{
+			version:                   "2.54.0",
+			enableRemoteWriteReceiver: true,
+			messageVersions: []monitoringv1.RemoteWriteMessageVersion{
+				monitoringv1.RemoteWriteMessageVersion2_0,
+			},
+			expectedRemoteWriteReceiverFlag: true,
+			expectedMessageVersions:         "io.prometheus.write.v2.Request",
+		},
+		// RemoteWriteMessageVersions supported and set to 2 values.
+		{
+			version:                   "2.54.0",
+			enableRemoteWriteReceiver: true,
+			messageVersions: []monitoringv1.RemoteWriteMessageVersion{
+				monitoringv1.RemoteWriteMessageVersion1_0,
+				monitoringv1.RemoteWriteMessageVersion2_0,
+			},
+			expectedRemoteWriteReceiverFlag: true,
+			expectedMessageVersions:         "prometheus.WriteRequest,io.prometheus.write.v2.Request",
+		},
 	} {
-		t.Run(fmt.Sprintf("case %s", tc.version), func(t *testing.T) {
-			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		t.Run(tc.version, func(t *testing.T) {
+			p := monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version:                   tc.version,
-						EnableRemoteWriteReceiver: tc.enableRemoteWriteReceiver,
+						Version:                            tc.version,
+						EnableRemoteWriteReceiver:          tc.enableRemoteWriteReceiver,
+						RemoteWriteReceiverMessageVersions: tc.messageVersions,
 					},
 				},
-			})
+			}
+			sset, err := makeStatefulSetFromPrometheus(p)
 			require.NoError(t, err)
 
-			found := false
+			var (
+				enabled         bool
+				messageVersions string
+			)
 			for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
-				if flag == "--web.enable-remote-write-receiver" {
-					found = true
-					break
+				flag = strings.TrimPrefix(flag, "--")
+				values := strings.Split(flag, "=")
+				switch values[0] {
+				case "web.enable-remote-write-receiver":
+					enabled = true
+				case "web.remote-write-receiver.accepted-protobuf-messages":
+					messageVersions = values[1]
 				}
 			}
 
-			require.Equal(t, tc.expectedRemoteWriteReceiverFlag, found, "Expecting Prometheus remote write receiver to be %t, got %t", tc.expectedRemoteWriteReceiverFlag, found)
+			require.Equal(t, tc.expectedRemoteWriteReceiverFlag, enabled)
+			require.Equal(t, tc.expectedMessageVersions, messageVersions)
 		})
 	}
 }
@@ -2333,6 +2416,60 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 	require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
 }
 
+func TestRuntimeGOGCEnvVar(t *testing.T) {
+	for _, tc := range []struct {
+		scenario       string
+		version        string
+		gogc           *int32
+		expectedEnvVar bool
+	}{
+		{
+			scenario:       "Prometheus < 2.53.0",
+			version:        "v2.51.2",
+			gogc:           ptr.To(int32(50)),
+			expectedEnvVar: true,
+		},
+		{
+			scenario:       "Prometheus > 2.53.0",
+			version:        "v2.54.0",
+			gogc:           ptr.To(int32(50)),
+			expectedEnvVar: false,
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
+			ss, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+						Runtime: &monitoringv1.RuntimeConfig{
+							GoGC: tc.gogc,
+						},
+					},
+				},
+			})
+
+			var containsEnvVar bool
+			for _, env := range ss.Spec.Template.Spec.Containers[0].Env {
+				if env.Name == "GOGC" {
+					if env.Value == fmt.Sprintf("%d", *tc.gogc) {
+						containsEnvVar = true
+						break
+					}
+				}
+			}
+
+			require.NoError(t, err)
+			if tc.expectedEnvVar {
+				require.True(t, containsEnvVar, "Prometheus is missing expected GOGC env var with correct value")
+			}
+
+			if !tc.expectedEnvVar {
+				require.False(t, containsEnvVar, "Prometheus didn't expect GOGC env var for this version of Prometheus")
+			}
+		})
+	}
+}
+
 func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
 	expectedErrorMsg := "can't set arguments which are already managed by the operator: web.enable-lifecycle"
 
@@ -2403,7 +2540,7 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 		"--grpc-address=:10901",
 		"--http-address=:10902",
 		"--log.level=info",
-		`--prometheus.http-client={"tls_config": {"insecure_skip_verify":true}}`,
+		"--prometheus.http-client-file=/etc/thanos/config/prometheus.http-client-file.yaml",
 		"--reloader.watch-interval=5m",
 	}
 
@@ -2886,6 +3023,41 @@ func TestIfThanosVersionDontHaveHttpClientFlag(t *testing.T) {
 	}
 }
 
+func TestThanosWithPrometheusHTTPClientConfigFile(t *testing.T) {
+	version := "0.24.0"
+
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+	}{
+		{
+			name: "thanos sidecar with prometheus.http-client-file",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					Version: &version,
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := monitoringv1.Prometheus{Spec: tc.spec}
+			sset, err := makeStatefulSetFromPrometheus(p)
+			require.NoError(t, err)
+			for _, v := range sset.Spec.Template.Spec.Volumes {
+				if v.Name == thanosPrometheusHTTPClientConfigSecretNameSuffix {
+					require.Equal(t, v.VolumeSource.Secret.SecretName, thanosPrometheusHTTPClientConfigSecretName(&p))
+				}
+			}
+			for _, c := range sset.Spec.Template.Spec.Containers {
+				if c.Name == "thanos-sidecar" {
+					require.NotEmpty(t, c.VolumeMounts)
+					require.Equal(t, thanosPrometheusHTTPClientConfigSecretNameSuffix, c.VolumeMounts[0].Name)
+				}
+			}
+		})
+	}
+}
+
 func TestAutomountServiceAccountToken(t *testing.T) {
 	for _, tc := range []struct {
 		name                         string
@@ -2923,5 +3095,117 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 
 			require.Equal(t, tc.expectedValue, *sset.Spec.Template.Spec.AutomountServiceAccountToken, "expected automountServiceAccountToken to be %v", tc.expectedValue)
 		})
+	}
+}
+
+func TestDNSPolicyAndDNSConfig(t *testing.T) {
+	tests := []struct {
+		name              string
+		dnsPolicy         v1.DNSPolicy
+		dnsConfig         *v1.PodDNSConfig
+		expectedDNSPolicy v1.DNSPolicy
+		expectedDNSConfig *v1.PodDNSConfig
+	}{
+		{
+			name:              "Default DNSPolicy and DNSConfig",
+			dnsPolicy:         v1.DNSClusterFirst,
+			dnsConfig:         nil,
+			expectedDNSPolicy: v1.DNSClusterFirst,
+			expectedDNSConfig: nil,
+		},
+		{
+			name:              "Custom DNSPolicy",
+			dnsPolicy:         v1.DNSDefault,
+			dnsConfig:         nil,
+			expectedDNSPolicy: v1.DNSDefault,
+			expectedDNSConfig: nil,
+		},
+		{
+			name:      "Custom DNSConfig",
+			dnsPolicy: v1.DNSClusterFirst,
+			dnsConfig: &v1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+				Searches:    []string{"custom.svc.cluster.local"},
+			},
+			expectedDNSPolicy: v1.DNSClusterFirst,
+			expectedDNSConfig: &v1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+				Searches:    []string{"custom.svc.cluster.local"},
+			},
+		},
+		{
+			name:      "Custom DNS Policy with Search Domains",
+			dnsPolicy: v1.DNSDefault,
+			dnsConfig: &v1.PodDNSConfig{
+				Searches: []string{"kitsos.com", "kitsos.org"},
+			},
+			expectedDNSPolicy: v1.DNSDefault,
+			expectedDNSConfig: &v1.PodDNSConfig{
+				Searches: []string{"kitsos.com", "kitsos.org"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(test.dnsPolicy))
+
+			var monitoringDNSConfig *monitoringv1.PodDNSConfig
+			if test.dnsConfig != nil {
+				monitoringDNSConfig = &monitoringv1.PodDNSConfig{
+					Nameservers: test.dnsConfig.Nameservers,
+					Searches:    test.dnsConfig.Searches,
+				}
+			}
+
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						DNSPolicy: monitoringDNSPolicyPtr,
+						DNSConfig: monitoringDNSConfig,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			require.Equal(t, test.expectedDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected DNSPolicy to match, want %v, got %v", test.expectedDNSPolicy, sset.Spec.Template.Spec.DNSPolicy)
+			if test.expectedDNSConfig != nil {
+				require.NotNil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNSConfig to be set")
+				require.Equal(t, test.expectedDNSConfig.Nameservers, sset.Spec.Template.Spec.DNSConfig.Nameservers, "expected DNSConfig Nameservers to match, want %v, got %v", test.expectedDNSConfig.Nameservers, sset.Spec.Template.Spec.DNSConfig.Nameservers)
+				require.Equal(t, test.expectedDNSConfig.Searches, sset.Spec.Template.Spec.DNSConfig.Searches, "expected DNSConfig Searches to match, want %v, got %v", test.expectedDNSConfig.Searches, sset.Spec.Template.Spec.DNSConfig.Searches)
+			} else {
+				require.Nil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNSConfig to be nil")
+			}
+		})
+	}
+}
+
+func TestStatefulSetenableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks         *bool
+		expectedEnableServiceLinks *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnableServiceLinks: test.enableServiceLinks,
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		if test.expectedEnableServiceLinks != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be non-nil")
+			require.Equal(t, *test.expectedEnableServiceLinks, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be nil")
+		}
 	}
 }
