@@ -41,14 +41,15 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	RulesDir               = "/etc/prometheus/rules"
-	secretsDir             = "/etc/prometheus/secrets/"
-	configmapsDir          = "/etc/prometheus/configmaps/"
-	ConfigFilename         = "prometheus.yaml.gz"
-	ConfigEnvsubstFilename = "prometheus.env.yaml"
-	DefaultPortName        = "web"
-	DefaultLogFileVolume   = "log-file"
-	DefaultLogDirectory    = "/var/log/prometheus"
+	RulesDir                 = "/etc/prometheus/rules"
+	secretsDir               = "/etc/prometheus/secrets/"
+	configmapsDir            = "/etc/prometheus/configmaps/"
+	ConfigFilename           = "prometheus.yaml.gz"
+	ConfigEnvsubstFilename   = "prometheus.env.yaml"
+	DefaultPortName          = "web"
+	DefaultLogFileVolume     = "log-file"
+	DefaultLogDirectory      = "/var/log/prometheus"
+	ConfigReloaderSecretsDir = "/etc/config-reloader/secrets"
 )
 
 var (
@@ -368,7 +369,9 @@ func BuildConfigReloader(
 			}),
 		)
 	}
-
+	if cpf.Web != nil && cpf.Web.BasicAuthUsers != nil {
+		reloaderOptions = append(reloaderOptions, operator.BasicAuthUserInfo(cpf.ServiceAccountName, fmt.Sprintf("%s/%s", ConfigReloaderSecretsDir, "basic-auth-password")))
+	}
 	return operator.CreateConfigReloader(name, reloaderOptions...)
 }
 

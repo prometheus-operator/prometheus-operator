@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth-users
+stringData:
+  foo: "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay"
+  bar: "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay"
+  prometheus: "$2a$12$6H/IeGCSIqdl2Bg1Mk3D5ebqbc6qESkmIwBXiJLLg/nDN3OVQBF76"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: service-account-password
+stringData:
+  password: "prometheus-password"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  labels:
+    prometheus: basic-auth
+spec:
+  replicas: 1
+  thanos:
+    logLevel: info
+  serviceAccountName: prometheus
+  serviceMonitorSelector: {}
+  web:
+    basicAuthUsers:
+      secretRef: basic-auth-users
+      serviceAccountPasswordRef:
+        key: password
+        secretRef:
+          name: service-account-password

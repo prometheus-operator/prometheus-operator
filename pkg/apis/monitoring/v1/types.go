@@ -316,6 +316,36 @@ type WebConfigFileFields struct {
 	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
 	// Defines HTTP parameters for web server.
 	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
+	// Defines the basic auth users for server.
+	// +optional
+	BasicAuthUsers *BasicAuthUsers `json:"basicAuthUsers,omitempty"`
+}
+
+// BasicAuthUsers defines the basic auth users for prometheus server.
+type BasicAuthUsers struct {
+	// Defines the secret containing the list of users (keys) with their hashed passwords (values).
+	// The secret must contain a key for the service account.
+	// +required
+	SecretRef SecretReference `json:"secretRef"`
+	// Defines the secret's key holding the password used by the service account to query the web server.
+	// The service account must exist in the users secret.
+	// +required
+	ServiceAccountPasswordRef SecretKeySelector `json:"serviceAccountPasswordRef"`
+}
+
+type SecretKeySelector struct {
+	SecretReference `json:"secretRef"`
+	// Key of the secret to select from.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	Key string `json:"key"`
+}
+
+type SecretReference struct {
+	// Name of the secret in the resource's namespace.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
 }
 
 // WebHTTPConfig defines HTTP parameters for web server.
