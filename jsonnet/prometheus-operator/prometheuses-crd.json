@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.78.2"
+      "controller-gen.kubebuilder.io/version": "v0.17.2",
+      "operator.prometheus.io/version": "0.81.0"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -1122,6 +1122,10 @@
                               "minLength": 1,
                               "type": "string"
                             },
+                            "noProxy": {
+                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                              "type": "string"
+                            },
                             "pathPrefix": {
                               "description": "Prefix for the HTTP path alerts are pushed to.",
                               "type": "string"
@@ -1137,6 +1141,46 @@
                               ],
                               "description": "Port on which the Alertmanager API is exposed.",
                               "x-kubernetes-int-or-string": true
+                            },
+                            "proxyConnectHeader": {
+                              "additionalProperties": {
+                                "items": {
+                                  "description": "SecretKeySelector selects a key of a Secret.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                },
+                                "type": "array"
+                              },
+                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "proxyFromEnvironment": {
+                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                              "type": "boolean"
+                            },
+                            "proxyUrl": {
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
+                              "pattern": "^http(s)?://.+$",
+                              "type": "string"
                             },
                             "relabelings": {
                               "description": "Relabel configuration applied to the discovered Alertmanagers.",
@@ -1993,7 +2037,7 @@
                               "description": "PostStart is called immediately after a container is created. If the handler fails,\nthe container is terminated and restarted according to its restart policy.\nOther management of the container blocks until the hook completes.\nMore info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks",
                               "properties": {
                                 "exec": {
-                                  "description": "Exec specifies the action to take.",
+                                  "description": "Exec specifies a command to execute in the container.",
                                   "properties": {
                                     "command": {
                                       "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -2007,7 +2051,7 @@
                                   "type": "object"
                                 },
                                 "httpGet": {
-                                  "description": "HTTPGet specifies the http request to perform.",
+                                  "description": "HTTPGet specifies an HTTP GET request to perform.",
                                   "properties": {
                                     "host": {
                                       "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -2063,7 +2107,7 @@
                                   "type": "object"
                                 },
                                 "sleep": {
-                                  "description": "Sleep represents the duration that the container should sleep before being terminated.",
+                                  "description": "Sleep represents a duration that the container should sleep.",
                                   "properties": {
                                     "seconds": {
                                       "description": "Seconds is the number of seconds to sleep.",
@@ -2077,7 +2121,7 @@
                                   "type": "object"
                                 },
                                 "tcpSocket": {
-                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor the backward compatibility. There are no validation of this field and\nlifecycle hooks will fail in runtime when tcp handler is specified.",
+                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor backward compatibility. There is no validation of this field and\nlifecycle hooks will fail at runtime when it is specified.",
                                   "properties": {
                                     "host": {
                                       "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -2108,7 +2152,7 @@
                               "description": "PreStop is called immediately before a container is terminated due to an\nAPI request or management event such as liveness/startup probe failure,\npreemption, resource contention, etc. The handler is not called if the\ncontainer crashes or exits. The Pod's termination grace period countdown begins before the\nPreStop hook is executed. Regardless of the outcome of the handler, the\ncontainer will eventually terminate within the Pod's termination grace\nperiod (unless delayed by finalizers). Other management of the container blocks until the hook completes\nor until the termination grace period is reached.\nMore info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks",
                               "properties": {
                                 "exec": {
-                                  "description": "Exec specifies the action to take.",
+                                  "description": "Exec specifies a command to execute in the container.",
                                   "properties": {
                                     "command": {
                                       "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -2122,7 +2166,7 @@
                                   "type": "object"
                                 },
                                 "httpGet": {
-                                  "description": "HTTPGet specifies the http request to perform.",
+                                  "description": "HTTPGet specifies an HTTP GET request to perform.",
                                   "properties": {
                                     "host": {
                                       "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -2178,7 +2222,7 @@
                                   "type": "object"
                                 },
                                 "sleep": {
-                                  "description": "Sleep represents the duration that the container should sleep before being terminated.",
+                                  "description": "Sleep represents a duration that the container should sleep.",
                                   "properties": {
                                     "seconds": {
                                       "description": "Seconds is the number of seconds to sleep.",
@@ -2192,7 +2236,7 @@
                                   "type": "object"
                                 },
                                 "tcpSocket": {
-                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor the backward compatibility. There are no validation of this field and\nlifecycle hooks will fail in runtime when tcp handler is specified.",
+                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor backward compatibility. There is no validation of this field and\nlifecycle hooks will fail at runtime when it is specified.",
                                   "properties": {
                                     "host": {
                                       "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -2226,7 +2270,7 @@
                           "description": "Periodic probe of container liveness.\nContainer will be restarted if the probe fails.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
                           "properties": {
                             "exec": {
-                              "description": "Exec specifies the action to take.",
+                              "description": "Exec specifies a command to execute in the container.",
                               "properties": {
                                 "command": {
                                   "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -2245,7 +2289,7 @@
                               "type": "integer"
                             },
                             "grpc": {
-                              "description": "GRPC specifies an action involving a GRPC port.",
+                              "description": "GRPC specifies a GRPC HealthCheckRequest.",
                               "properties": {
                                 "port": {
                                   "description": "Port number of the gRPC service. Number must be in the range 1 to 65535.",
@@ -2264,7 +2308,7 @@
                               "type": "object"
                             },
                             "httpGet": {
-                              "description": "HTTPGet specifies the http request to perform.",
+                              "description": "HTTPGet specifies an HTTP GET request to perform.",
                               "properties": {
                                 "host": {
                                   "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -2335,7 +2379,7 @@
                               "type": "integer"
                             },
                             "tcpSocket": {
-                              "description": "TCPSocket specifies an action involving a TCP port.",
+                              "description": "TCPSocket specifies a connection to a TCP port.",
                               "properties": {
                                 "host": {
                                   "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -2421,7 +2465,7 @@
                           "description": "Periodic probe of container service readiness.\nContainer will be removed from service endpoints if the probe fails.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
                           "properties": {
                             "exec": {
-                              "description": "Exec specifies the action to take.",
+                              "description": "Exec specifies a command to execute in the container.",
                               "properties": {
                                 "command": {
                                   "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -2440,7 +2484,7 @@
                               "type": "integer"
                             },
                             "grpc": {
-                              "description": "GRPC specifies an action involving a GRPC port.",
+                              "description": "GRPC specifies a GRPC HealthCheckRequest.",
                               "properties": {
                                 "port": {
                                   "description": "Port number of the gRPC service. Number must be in the range 1 to 65535.",
@@ -2459,7 +2503,7 @@
                               "type": "object"
                             },
                             "httpGet": {
-                              "description": "HTTPGet specifies the http request to perform.",
+                              "description": "HTTPGet specifies an HTTP GET request to perform.",
                               "properties": {
                                 "host": {
                                   "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -2530,7 +2574,7 @@
                               "type": "integer"
                             },
                             "tcpSocket": {
-                              "description": "TCPSocket specifies an action involving a TCP port.",
+                              "description": "TCPSocket specifies a connection to a TCP port.",
                               "properties": {
                                 "host": {
                                   "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -2799,7 +2843,7 @@
                           "description": "StartupProbe indicates that the Pod has successfully initialized.\nIf specified, no other probes are executed until this completes successfully.\nIf this probe fails, the Pod will be restarted, just as if the livenessProbe failed.\nThis can be used to provide different probe parameters at the beginning of a Pod's lifecycle,\nwhen it might take a long time to load data or warm a cache, than during steady-state operation.\nThis cannot be updated.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
                           "properties": {
                             "exec": {
-                              "description": "Exec specifies the action to take.",
+                              "description": "Exec specifies a command to execute in the container.",
                               "properties": {
                                 "command": {
                                   "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -2818,7 +2862,7 @@
                               "type": "integer"
                             },
                             "grpc": {
-                              "description": "GRPC specifies an action involving a GRPC port.",
+                              "description": "GRPC specifies a GRPC HealthCheckRequest.",
                               "properties": {
                                 "port": {
                                   "description": "Port number of the gRPC service. Number must be in the range 1 to 65535.",
@@ -2837,7 +2881,7 @@
                               "type": "object"
                             },
                             "httpGet": {
-                              "description": "HTTPGet specifies the http request to perform.",
+                              "description": "HTTPGet specifies an HTTP GET request to perform.",
                               "properties": {
                                 "host": {
                                   "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -2908,7 +2952,7 @@
                               "type": "integer"
                             },
                             "tcpSocket": {
-                              "description": "TCPSocket specifies an action involving a TCP port.",
+                              "description": "TCPSocket specifies a connection to a TCP port.",
                               "properties": {
                                 "host": {
                                   "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -3132,6 +3176,10 @@
                   },
                   "enableRemoteWriteReceiver": {
                     "description": "Enable Prometheus to be used as a receiver for the Prometheus remote\nwrite protocol.\n\nWARNING: This is not considered an efficient way of ingesting samples.\nUse it with caution for specific low-volume use cases.\nIt is not suitable for replacing the ingestion via scraping and turning\nPrometheus into a push-based metrics collection system.\nFor more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver\n\nIt requires Prometheus >= v2.33.0.",
+                    "type": "boolean"
+                  },
+                  "enableServiceLinks": {
+                    "description": "Indicates whether information about services should be injected into pod's environment variables",
                     "type": "boolean"
                   },
                   "enforcedBodySizeLimit": {
@@ -3519,7 +3567,7 @@
                               "description": "PostStart is called immediately after a container is created. If the handler fails,\nthe container is terminated and restarted according to its restart policy.\nOther management of the container blocks until the hook completes.\nMore info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks",
                               "properties": {
                                 "exec": {
-                                  "description": "Exec specifies the action to take.",
+                                  "description": "Exec specifies a command to execute in the container.",
                                   "properties": {
                                     "command": {
                                       "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -3533,7 +3581,7 @@
                                   "type": "object"
                                 },
                                 "httpGet": {
-                                  "description": "HTTPGet specifies the http request to perform.",
+                                  "description": "HTTPGet specifies an HTTP GET request to perform.",
                                   "properties": {
                                     "host": {
                                       "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -3589,7 +3637,7 @@
                                   "type": "object"
                                 },
                                 "sleep": {
-                                  "description": "Sleep represents the duration that the container should sleep before being terminated.",
+                                  "description": "Sleep represents a duration that the container should sleep.",
                                   "properties": {
                                     "seconds": {
                                       "description": "Seconds is the number of seconds to sleep.",
@@ -3603,7 +3651,7 @@
                                   "type": "object"
                                 },
                                 "tcpSocket": {
-                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor the backward compatibility. There are no validation of this field and\nlifecycle hooks will fail in runtime when tcp handler is specified.",
+                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor backward compatibility. There is no validation of this field and\nlifecycle hooks will fail at runtime when it is specified.",
                                   "properties": {
                                     "host": {
                                       "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -3634,7 +3682,7 @@
                               "description": "PreStop is called immediately before a container is terminated due to an\nAPI request or management event such as liveness/startup probe failure,\npreemption, resource contention, etc. The handler is not called if the\ncontainer crashes or exits. The Pod's termination grace period countdown begins before the\nPreStop hook is executed. Regardless of the outcome of the handler, the\ncontainer will eventually terminate within the Pod's termination grace\nperiod (unless delayed by finalizers). Other management of the container blocks until the hook completes\nor until the termination grace period is reached.\nMore info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks",
                               "properties": {
                                 "exec": {
-                                  "description": "Exec specifies the action to take.",
+                                  "description": "Exec specifies a command to execute in the container.",
                                   "properties": {
                                     "command": {
                                       "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -3648,7 +3696,7 @@
                                   "type": "object"
                                 },
                                 "httpGet": {
-                                  "description": "HTTPGet specifies the http request to perform.",
+                                  "description": "HTTPGet specifies an HTTP GET request to perform.",
                                   "properties": {
                                     "host": {
                                       "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -3704,7 +3752,7 @@
                                   "type": "object"
                                 },
                                 "sleep": {
-                                  "description": "Sleep represents the duration that the container should sleep before being terminated.",
+                                  "description": "Sleep represents a duration that the container should sleep.",
                                   "properties": {
                                     "seconds": {
                                       "description": "Seconds is the number of seconds to sleep.",
@@ -3718,7 +3766,7 @@
                                   "type": "object"
                                 },
                                 "tcpSocket": {
-                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor the backward compatibility. There are no validation of this field and\nlifecycle hooks will fail in runtime when tcp handler is specified.",
+                                  "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor backward compatibility. There is no validation of this field and\nlifecycle hooks will fail at runtime when it is specified.",
                                   "properties": {
                                     "host": {
                                       "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -3752,7 +3800,7 @@
                           "description": "Periodic probe of container liveness.\nContainer will be restarted if the probe fails.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
                           "properties": {
                             "exec": {
-                              "description": "Exec specifies the action to take.",
+                              "description": "Exec specifies a command to execute in the container.",
                               "properties": {
                                 "command": {
                                   "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -3771,7 +3819,7 @@
                               "type": "integer"
                             },
                             "grpc": {
-                              "description": "GRPC specifies an action involving a GRPC port.",
+                              "description": "GRPC specifies a GRPC HealthCheckRequest.",
                               "properties": {
                                 "port": {
                                   "description": "Port number of the gRPC service. Number must be in the range 1 to 65535.",
@@ -3790,7 +3838,7 @@
                               "type": "object"
                             },
                             "httpGet": {
-                              "description": "HTTPGet specifies the http request to perform.",
+                              "description": "HTTPGet specifies an HTTP GET request to perform.",
                               "properties": {
                                 "host": {
                                   "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -3861,7 +3909,7 @@
                               "type": "integer"
                             },
                             "tcpSocket": {
-                              "description": "TCPSocket specifies an action involving a TCP port.",
+                              "description": "TCPSocket specifies a connection to a TCP port.",
                               "properties": {
                                 "host": {
                                   "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -3947,7 +3995,7 @@
                           "description": "Periodic probe of container service readiness.\nContainer will be removed from service endpoints if the probe fails.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
                           "properties": {
                             "exec": {
-                              "description": "Exec specifies the action to take.",
+                              "description": "Exec specifies a command to execute in the container.",
                               "properties": {
                                 "command": {
                                   "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -3966,7 +4014,7 @@
                               "type": "integer"
                             },
                             "grpc": {
-                              "description": "GRPC specifies an action involving a GRPC port.",
+                              "description": "GRPC specifies a GRPC HealthCheckRequest.",
                               "properties": {
                                 "port": {
                                   "description": "Port number of the gRPC service. Number must be in the range 1 to 65535.",
@@ -3985,7 +4033,7 @@
                               "type": "object"
                             },
                             "httpGet": {
-                              "description": "HTTPGet specifies the http request to perform.",
+                              "description": "HTTPGet specifies an HTTP GET request to perform.",
                               "properties": {
                                 "host": {
                                   "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -4056,7 +4104,7 @@
                               "type": "integer"
                             },
                             "tcpSocket": {
-                              "description": "TCPSocket specifies an action involving a TCP port.",
+                              "description": "TCPSocket specifies a connection to a TCP port.",
                               "properties": {
                                 "host": {
                                   "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -4325,7 +4373,7 @@
                           "description": "StartupProbe indicates that the Pod has successfully initialized.\nIf specified, no other probes are executed until this completes successfully.\nIf this probe fails, the Pod will be restarted, just as if the livenessProbe failed.\nThis can be used to provide different probe parameters at the beginning of a Pod's lifecycle,\nwhen it might take a long time to load data or warm a cache, than during steady-state operation.\nThis cannot be updated.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
                           "properties": {
                             "exec": {
-                              "description": "Exec specifies the action to take.",
+                              "description": "Exec specifies a command to execute in the container.",
                               "properties": {
                                 "command": {
                                   "description": "Command is the command line to execute inside the container, the working directory for the\ncommand  is root ('/') in the container's filesystem. The command is simply exec'd, it is\nnot run inside a shell, so traditional shell instructions ('|', etc) won't work. To use\na shell, you need to explicitly call out to that shell.\nExit status of 0 is treated as live/healthy and non-zero is unhealthy.",
@@ -4344,7 +4392,7 @@
                               "type": "integer"
                             },
                             "grpc": {
-                              "description": "GRPC specifies an action involving a GRPC port.",
+                              "description": "GRPC specifies a GRPC HealthCheckRequest.",
                               "properties": {
                                 "port": {
                                   "description": "Port number of the gRPC service. Number must be in the range 1 to 65535.",
@@ -4363,7 +4411,7 @@
                               "type": "object"
                             },
                             "httpGet": {
-                              "description": "HTTPGet specifies the http request to perform.",
+                              "description": "HTTPGet specifies an HTTP GET request to perform.",
                               "properties": {
                                 "host": {
                                   "description": "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead.",
@@ -4434,7 +4482,7 @@
                               "type": "integer"
                             },
                             "tcpSocket": {
-                              "description": "TCPSocket specifies an action involving a TCP port.",
+                              "description": "TCPSocket specifies a connection to a TCP port.",
                               "properties": {
                                 "host": {
                                   "description": "Optional: Host name to connect to, defaults to the pod IP.",
@@ -4648,6 +4696,10 @@
                   "otlp": {
                     "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.55.0.",
                     "properties": {
+                      "keepIdentifyingResourceAttributes": {
+                        "description": "Enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",
+                        "type": "boolean"
+                      },
                       "promoteResourceAttributes": {
                         "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
                         "items": {
@@ -4659,7 +4711,7 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "translationStrategy": {
-                        "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.0.0.",
+                        "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\n\nIt requires Prometheus >= v3.0.0.",
                         "enum": [
                           "NoUTF8EscapingWithSuffixes",
                           "UnderscoreEscapingWithSuffixes"
@@ -6292,6 +6344,10 @@
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
+                        "roundRobinDNS": {
+                          "description": "When enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0.",
+                          "type": "boolean"
+                        },
                         "sendExemplars": {
                           "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0.",
                           "type": "boolean"
@@ -6868,9 +6924,57 @@
                           },
                           "type": "object"
                         },
+                        "authorization": {
+                          "description": "Authorization section for the ScrapeClass.\nIt will only apply if the scrape resource doesn't specify any Authorization.",
+                          "properties": {
+                            "credentials": {
+                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "credentialsFile": {
+                              "description": "File to read a secret from, mutually exclusive with `credentials`.",
+                              "type": "string"
+                            },
+                            "type": {
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
                         "default": {
                           "description": "Default indicates that the scrape applies to all scrape objects that\ndon't configure an explicit scrape class name.\n\nOnly one scrape class can be set as the default.",
                           "type": "boolean"
+                        },
+                        "fallbackScrapeProtocol": {
+                          "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\nIt will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol\n\nIt requires Prometheus >= v3.0.0.",
+                          "enum": [
+                            "PrometheusProto",
+                            "OpenMetricsText0.0.1",
+                            "OpenMetricsText1.0.0",
+                            "PrometheusText0.0.4",
+                            "PrometheusText1.0.0"
+                          ],
+                          "type": "string"
                         },
                         "metricRelabelings": {
                           "description": "MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.\n\nThe Operator adds the scrape class metric relabelings defined here.\nThen the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.\nThen the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
@@ -7290,15 +7394,9 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
-                  "scrapeFallbackProtocol": {
-                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
-                    "enum": [
-                      "PrometheusProto",
-                      "OpenMetricsText0.0.1",
-                      "OpenMetricsText1.0.0",
-                      "PrometheusText0.0.4",
-                      "PrometheusText1.0.0"
-                    ],
+                  "scrapeFailureLogFile": {
+                    "description": "File to which scrape failures are logged.\nReloading the configuration will reopen the file.\n\nIf the filename has an empty path, e.g. 'file.log', The Prometheus Pods\nwill mount the file into an emptyDir volume at `/var/log/prometheus`.\nIf a full path is provided, e.g. '/var/log/prometheus/file.log', you\nmust mount a volume in the specified directory and it must be writable.\nIt requires Prometheus >= v2.55.0.",
+                    "minLength": 1,
                     "type": "string"
                   },
                   "scrapeInterval": {
@@ -7324,7 +7422,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "scrapeTimeout": {
-                    "description": "Number of seconds to wait until a scrape request times out.",
+                    "description": "Number of seconds to wait until a scrape request times out.\nThe value cannot be greater than the scrape interval otherwise the operator will reject the resource.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
@@ -7378,6 +7476,10 @@
                         "description": "The UID to run the entrypoint of the container process.\nDefaults to user specified in image metadata if unspecified.\nMay also be set in SecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence\nfor that container.\nNote that this field cannot be set when spec.os.name is windows.",
                         "format": "int64",
                         "type": "integer"
+                      },
+                      "seLinuxChangePolicy": {
+                        "description": "seLinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod.\nIt has no effect on nodes that do not support SELinux or to volumes does not support SELinux.\nValid values are \"MountOption\" and \"Recursive\".\n\n\"Recursive\" means relabeling of all files on all Pod volumes by the container runtime.\nThis may be slow for large volumes, but allows mixing privileged and unprivileged Pods sharing the same volume on the same node.\n\n\"MountOption\" mounts all eligible Pod volumes with `-o context` mount option.\nThis requires all Pods that share the same volume to use the same SELinux label.\nIt is not possible to share the same volume among privileged and unprivileged Pods.\nEligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes\nwhose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their\nCSIDriver instance. Other volumes are always re-labelled recursively.\n\"MountOption\" value is allowed only when SELinuxMount feature gate is enabled.\n\nIf not specified and SELinuxMount feature gate is enabled, \"MountOption\" is used.\nIf not specified and SELinuxMount feature gate is disabled, \"MountOption\" is used for ReadWriteOncePod volumes\nand \"Recursive\" for all other volumes.\n\nThis field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.\n\nAll Pods that use the same volume should use the same seLinuxChangePolicy, otherwise some pods can get stuck in ContainerCreating state.\nNote that this field cannot be set when spec.os.name is windows.",
+                        "type": "string"
                       },
                       "seLinuxOptions": {
                         "description": "The SELinux context to be applied to all containers.\nIf unspecified, the container runtime will allocate a random SELinux context for each\ncontainer.  May also be set in SecurityContext.  If set in\nboth SecurityContext and PodSecurityContext, the value specified in SecurityContext\ntakes precedence for that container.\nNote that this field cannot be set when spec.os.name is windows.",
@@ -7581,12 +7683,31 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "serviceName": {
+                    "description": "The name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,\nor `prometheus-agent-operated` for PrometheusAgent resources.\nWhen deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "sha": {
                     "description": "Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.",
                     "type": "string"
                   },
+                  "shardRetentionPolicy": {
+                    "description": "ShardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.\n\nThe final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,\nhowever, the feature is not yet fully implemented in this PR. The limitation being:\n* Retention duration is not settable, for now, shards are retained forever.",
+                    "properties": {
+                      "whenScaled": {
+                        "description": "Defines the retention policy when the Prometheus shards are scaled down.\n* `Delete`, the operator will delete the pods from the scaled-down shard(s).\n* `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.\n\nIf not defined, the operator assumes the `Delete` value.",
+                        "enum": [
+                          "Retain",
+                          "Delete"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "shards": {
-                    "description": "Number of shards to distribute scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use Thanos sidecar and Thanos querier or\nremote write data to a central location.\nAlerting and recording rules\n\nBy default, the sharding is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).",
+                    "description": "Number of shards to distribute the scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use either\n* Thanos sidecar + querier for query federation and Thanos Ruler for rules.\n* Remote-write to send metrics to a central location.\n\nBy default, the sharding of targets is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).",
                     "format": "int32",
                     "type": "integer"
                   },
@@ -8074,10 +8195,11 @@
                                       "type": "string"
                                     },
                                     "status": {
+                                      "description": "Status is the status of the condition.\nCan be True, False, Unknown.\nMore info: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#:~:text=state%20of%20pvc-,conditions.status,-(string)%2C%20required",
                                       "type": "string"
                                     },
                                     "type": {
-                                      "description": "PersistentVolumeClaimConditionType defines the condition of PV claim.\nValid values are:\n  - \"Resizing\", \"FileSystemResizePending\"\n\nIf RecoverVolumeExpansionFailure feature gate is enabled, then following additional values can be expected:\n  - \"ControllerResizeError\", \"NodeResizeError\"\n\nIf VolumeAttributesClass feature gate is enabled, then following additional values can be expected:\n  - \"ModifyVolumeError\", \"ModifyingVolume\"",
+                                      "description": "Type is the type of the condition.\nMore info: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#:~:text=set%20to%20%27ResizeStarted%27.-,PersistentVolumeClaimCondition,-contains%20details%20about",
                                       "type": "string"
                                     }
                                   },
@@ -8999,7 +9121,7 @@
                       "description": "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
                       "properties": {
                         "awsElasticBlockStore": {
-                          "description": "awsElasticBlockStore represents an AWS Disk resource that is attached to a\nkubelet's host machine and then exposed to the pod.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+                          "description": "awsElasticBlockStore represents an AWS Disk resource that is attached to a\nkubelet's host machine and then exposed to the pod.\nDeprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree\nawsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
                           "properties": {
                             "fsType": {
                               "description": "fsType is the filesystem type of the volume that you want to mount.\nTip: Ensure that the filesystem type is supported by the host operating system.\nExamples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
@@ -9025,7 +9147,7 @@
                           "type": "object"
                         },
                         "azureDisk": {
-                          "description": "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.",
+                          "description": "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.\nDeprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type\nare redirected to the disk.csi.azure.com CSI driver.",
                           "properties": {
                             "cachingMode": {
                               "description": "cachingMode is the Host Caching mode: None, Read Only, Read Write.",
@@ -9061,7 +9183,7 @@
                           "type": "object"
                         },
                         "azureFile": {
-                          "description": "azureFile represents an Azure File Service mount on the host and bind mount to the pod.",
+                          "description": "azureFile represents an Azure File Service mount on the host and bind mount to the pod.\nDeprecated: AzureFile is deprecated. All operations for the in-tree azureFile type\nare redirected to the file.csi.azure.com CSI driver.",
                           "properties": {
                             "readOnly": {
                               "description": "readOnly defaults to false (read/write). ReadOnly here will force\nthe ReadOnly setting in VolumeMounts.",
@@ -9083,7 +9205,7 @@
                           "type": "object"
                         },
                         "cephfs": {
-                          "description": "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
+                          "description": "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime.\nDeprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.",
                           "properties": {
                             "monitors": {
                               "description": "monitors is Required: Monitors is a collection of Ceph monitors\nMore info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it",
@@ -9128,7 +9250,7 @@
                           "type": "object"
                         },
                         "cinder": {
-                          "description": "cinder represents a cinder volume attached and mounted on kubelets host machine.\nMore info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+                          "description": "cinder represents a cinder volume attached and mounted on kubelets host machine.\nDeprecated: Cinder is deprecated. All operations for the in-tree cinder type\nare redirected to the cinder.csi.openstack.org CSI driver.\nMore info: https://examples.k8s.io/mysql-cinder-pd/README.md",
                           "properties": {
                             "fsType": {
                               "description": "fsType is the filesystem type to mount.\nMust be a filesystem type supported by the host operating system.\nExamples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.\nMore info: https://examples.k8s.io/mysql-cinder-pd/README.md",
@@ -9210,7 +9332,7 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "csi": {
-                          "description": "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers (Beta feature).",
+                          "description": "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers.",
                           "properties": {
                             "driver": {
                               "description": "driver is the name of the CSI driver that handles this volume.\nConsult with your admin for the correct name as registered in the cluster.",
@@ -9572,7 +9694,7 @@
                           "type": "object"
                         },
                         "flexVolume": {
-                          "description": "flexVolume represents a generic volume resource that is\nprovisioned/attached using an exec based plugin.",
+                          "description": "flexVolume represents a generic volume resource that is\nprovisioned/attached using an exec based plugin.\nDeprecated: FlexVolume is deprecated. Consider using a CSIDriver instead.",
                           "properties": {
                             "driver": {
                               "description": "driver is the name of the driver to use for this volume.",
@@ -9612,7 +9734,7 @@
                           "type": "object"
                         },
                         "flocker": {
-                          "description": "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running",
+                          "description": "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running.\nDeprecated: Flocker is deprecated and the in-tree flocker type is no longer supported.",
                           "properties": {
                             "datasetName": {
                               "description": "datasetName is Name of the dataset stored as metadata -> name on the dataset for Flocker\nshould be considered as deprecated",
@@ -9626,7 +9748,7 @@
                           "type": "object"
                         },
                         "gcePersistentDisk": {
-                          "description": "gcePersistentDisk represents a GCE Disk resource that is attached to a\nkubelet's host machine and then exposed to the pod.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+                          "description": "gcePersistentDisk represents a GCE Disk resource that is attached to a\nkubelet's host machine and then exposed to the pod.\nDeprecated: GCEPersistentDisk is deprecated. All operations for the in-tree\ngcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
                           "properties": {
                             "fsType": {
                               "description": "fsType is filesystem type of the volume that you want to mount.\nTip: Ensure that the filesystem type is supported by the host operating system.\nExamples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
@@ -9652,7 +9774,7 @@
                           "type": "object"
                         },
                         "gitRepo": {
-                          "description": "gitRepo represents a git repository at a particular revision.\nDEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an\nEmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir\ninto the Pod's container.",
+                          "description": "gitRepo represents a git repository at a particular revision.\nDeprecated: GitRepo is deprecated. To provision a container with a git repo, mount an\nEmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir\ninto the Pod's container.",
                           "properties": {
                             "directory": {
                               "description": "directory is the target directory name.\nMust not contain or start with '..'.  If '.' is supplied, the volume directory will be the\ngit repository.  Otherwise, if specified, the volume will contain the git repository in\nthe subdirectory with the given name.",
@@ -9673,7 +9795,7 @@
                           "type": "object"
                         },
                         "glusterfs": {
-                          "description": "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime.\nMore info: https://examples.k8s.io/volumes/glusterfs/README.md",
+                          "description": "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime.\nDeprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported.\nMore info: https://examples.k8s.io/volumes/glusterfs/README.md",
                           "properties": {
                             "endpoints": {
                               "description": "endpoints is the endpoint name that details Glusterfs topology.\nMore info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod",
@@ -9838,7 +9960,7 @@
                           "type": "object"
                         },
                         "photonPersistentDisk": {
-                          "description": "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine",
+                          "description": "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine.\nDeprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.",
                           "properties": {
                             "fsType": {
                               "description": "fsType is the filesystem type to mount.\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.",
@@ -9855,7 +9977,7 @@
                           "type": "object"
                         },
                         "portworxVolume": {
-                          "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine",
+                          "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate\nis on.",
                           "properties": {
                             "fsType": {
                               "description": "fSType represents the filesystem type to mount\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\". Implicitly inferred to be \"ext4\" if unspecified.",
@@ -10156,7 +10278,7 @@
                           "type": "object"
                         },
                         "quobyte": {
-                          "description": "quobyte represents a Quobyte mount on the host that shares a pod's lifetime",
+                          "description": "quobyte represents a Quobyte mount on the host that shares a pod's lifetime.\nDeprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported.",
                           "properties": {
                             "group": {
                               "description": "group to map volume access to\nDefault is no group",
@@ -10190,7 +10312,7 @@
                           "type": "object"
                         },
                         "rbd": {
-                          "description": "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime.\nMore info: https://examples.k8s.io/volumes/rbd/README.md",
+                          "description": "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime.\nDeprecated: RBD is deprecated and the in-tree rbd type is no longer supported.\nMore info: https://examples.k8s.io/volumes/rbd/README.md",
                           "properties": {
                             "fsType": {
                               "description": "fsType is the filesystem type of the volume that you want to mount.\nTip: Ensure that the filesystem type is supported by the host operating system.\nExamples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#rbd",
@@ -10247,7 +10369,7 @@
                           "type": "object"
                         },
                         "scaleIO": {
-                          "description": "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.",
+                          "description": "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.\nDeprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.",
                           "properties": {
                             "fsType": {
                               "default": "xfs",
@@ -10355,7 +10477,7 @@
                           "type": "object"
                         },
                         "storageos": {
-                          "description": "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes.",
+                          "description": "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes.\nDeprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported.",
                           "properties": {
                             "fsType": {
                               "description": "fsType is the filesystem type to mount.\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.",
@@ -10389,7 +10511,7 @@
                           "type": "object"
                         },
                         "vsphereVolume": {
-                          "description": "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine",
+                          "description": "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine.\nDeprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type\nare redirected to the csi.vsphere.vmware.com CSI driver.",
                           "properties": {
                             "fsType": {
                               "description": "fsType is filesystem type to mount.\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified.",
@@ -10487,7 +10609,7 @@
                         "description": "Defines the TLS parameters for HTTPS.",
                         "properties": {
                           "cert": {
-                            "description": "Contains the TLS certificate for the server.",
+                            "description": "Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
                             "properties": {
                               "configMap": {
                                 "description": "ConfigMap containing data to use for the targets.",
@@ -10539,26 +10661,26 @@
                             "type": "object"
                           },
                           "certFile": {
-                            "description": "Path to the TLS certificate file in the Prometheus container for the server.\nMutually exclusive with `cert`.",
+                            "description": "Path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
                             "type": "string"
                           },
                           "cipherSuites": {
-                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2. If empty,\nGo default cipher suites are used. Available cipher suites are documented\nin the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "clientAuthType": {
-                            "description": "Server policy for client authentication. Maps to ClientAuth Policies.\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "description": "The server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
                             "type": "string"
                           },
                           "clientCAFile": {
-                            "description": "Path to the CA certificate file for client certificate authentication to the server.\nMutually exclusive with `client_ca`.",
+                            "description": "Path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
-                            "description": "Contains the CA certificate for client certificate authentication to the server.",
+                            "description": "Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
                             "properties": {
                               "configMap": {
                                 "description": "ConfigMap containing data to use for the targets.",
@@ -10610,18 +10732,18 @@
                             "type": "object"
                           },
                           "curvePreferences": {
-                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder. Available curves are documented in the go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "keyFile": {
-                            "description": "Path to the TLS key file in the Prometheus container for the server.\nMutually exclusive with `keySecret`.",
+                            "description": "Path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
                             "type": "string"
                           },
                           "keySecret": {
-                            "description": "Secret containing the TLS key for the server.",
+                            "description": "Secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -10644,15 +10766,15 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum TLS version that is acceptable. Defaults to TLS13.",
+                            "description": "Maximum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum TLS version that is acceptable. Defaults to TLS12.",
+                            "description": "Minimum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "preferServerCipherSuites": {
-                            "description": "Controls whether the server selects the\nclient's most preferred cipher suite, or the server's most preferred\ncipher suite. If true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "description": "Controls whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
                             "type": "boolean"
                           }
                         },

@@ -48,13 +48,9 @@ func (in *AlertmanagerConfigList) DeepCopyInto(out *AlertmanagerConfigList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]*AlertmanagerConfig, len(*in))
+		*out = make([]AlertmanagerConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(AlertmanagerConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }

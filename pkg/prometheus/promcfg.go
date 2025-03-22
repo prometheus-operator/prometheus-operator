@@ -65,14 +65,16 @@ func sanitizeLabelName(name string) string {
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger                 *slog.Logger
-	version                semver.Version
-	notCompatible          bool
-	prom                   monitoringv1.PrometheusInterface
-	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
-	scrapeClasses          map[string]monitoringv1.ScrapeClass
-	defaultScrapeClassName string
-	daemonSet              bool
+	logger                     *slog.Logger
+	version                    semver.Version
+	notCompatible              bool
+	prom                       monitoringv1.PrometheusInterface
+	useEndpointSlice           bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
+	scrapeClasses              map[string]monitoringv1.ScrapeClass
+	defaultScrapeClassName     string
+	daemonSet                  bool
+	prometheusTopologySharding bool
+	inlineTLSConfig            bool
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -87,6 +89,18 @@ func WithEndpointSliceSupport() ConfigGeneratorOption {
 func WithDaemonSet() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.daemonSet = true
+	}
+}
+
+func WithPrometheusTopologySharding() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.prometheusTopologySharding = true
+	}
+}
+
+func WithInlineTLSConfig() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.inlineTLSConfig = true
 	}
 }
 
@@ -169,6 +183,14 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 			return nil, "", fmt.Errorf("invalid metric relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
 
+		if err := scrapeClass.TLSConfig.Validate(); err != nil {
+			return nil, "", fmt.Errorf("invalid TLS config for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
+
+		if err := scrapeClass.Authorization.Validate(); err != nil {
+			return nil, "", fmt.Errorf("invalid authorization for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
+
 		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass != "" {
 				return nil, "", fmt.Errorf("multiple default scrape classes defined")
@@ -201,6 +223,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
 		daemonSet:              cg.daemonSet,
+		inlineTLSConfig:        cg.inlineTLSConfig,
 	}
 }
 
@@ -221,6 +244,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 			daemonSet:              cg.daemonSet,
+			inlineTLSConfig:        cg.inlineTLSConfig,
 		}
 	}
 
@@ -244,6 +268,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 			daemonSet:              cg.daemonSet,
+			inlineTLSConfig:        cg.inlineTLSConfig,
 		}
 	}
 
@@ -387,13 +412,13 @@ func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", sps)
 }
 
-// addScrapeFallbackProtocol adds the fallback_scrape_protocol field into the configuration.
-func (cg *ConfigGenerator) addScrapeFallbackProtocol(cfg yaml.MapSlice, scrapeFallbackProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
-	if scrapeFallbackProtocol == nil {
+// addFallbackScrapeProtocol adds the fallback_scrape_protocol field into the configuration.
+func (cg *ConfigGenerator) addFallbackScrapeProtocol(cfg yaml.MapSlice, fallbackScrapeProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
+	if fallbackScrapeProtocol == nil {
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", scrapeFallbackProtocol)
+	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "fallback_scrape_protocol", fallbackScrapeProtocol)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
@@ -444,6 +469,35 @@ func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	return res
 }
 
+func mergeSafeAuthorizationWithScrapeClass(authz *monitoringv1.SafeAuthorization, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.Authorization {
+	if authz == nil || reflect.ValueOf(*authz).IsZero() {
+		return mergeAuthorizationWithScrapeClass(nil, scrapeClass)
+	}
+
+	return mergeAuthorizationWithScrapeClass(&monitoringv1.Authorization{SafeAuthorization: *authz}, scrapeClass)
+}
+
+func mergeAuthorizationWithScrapeClass(authz *monitoringv1.Authorization, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.Authorization {
+	if authz == nil {
+		return scrapeClass.Authorization
+	}
+
+	if scrapeClass.Authorization == nil {
+		return authz
+	}
+
+	if authz.SafeAuthorization.Credentials == nil {
+		authz.SafeAuthorization.Credentials = scrapeClass.Authorization.SafeAuthorization.Credentials
+	}
+
+	if authz.Credentials == nil && authz.CredentialsFile == "" {
+		authz.Credentials = scrapeClass.Authorization.Credentials
+		authz.CredentialsFile = scrapeClass.Authorization.CredentialsFile
+	}
+
+	return authz
+}
+
 func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
 	if tlsConfig == nil || reflect.ValueOf(*tlsConfig).IsZero() {
 		return mergeTLSConfigWithScrapeClass(nil, scrapeClass)
@@ -489,6 +543,14 @@ func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetad
 		MinimumVersion: minimumVersion,
 		attachMetadata: attachMetadata,
 	}
+}
+
+func mergeFallbackScrapeProtocolWithScrapeClass(fallbackScrapeProtocol *monitoringv1.ScrapeProtocol, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.ScrapeProtocol {
+	if fallbackScrapeProtocol == nil {
+		fallbackScrapeProtocol = scrapeClass.FallbackScrapeProtocol
+	}
+
+	return fallbackScrapeProtocol
 }
 
 func (cg *ConfigGenerator) addBasicAuthToYaml(
@@ -704,15 +766,42 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	}
 
 	if safetls.CA.Secret != nil || safetls.CA.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
+		if cg.inlineTLSConfig {
+			b, err := store.GetSecretOrConfigMapKey(safetls.CA)
+			if err != nil {
+				cg.logger.Error("invalid CA reference", "err", err)
+			} else {
+				safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca", Value: b})
+			}
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
+		}
 	}
 
 	if safetls.Cert.Secret != nil || safetls.Cert.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
+		if cg.inlineTLSConfig {
+			b, err := store.GetSecretOrConfigMapKey(safetls.Cert)
+			if err != nil {
+				cg.logger.Error("invalid cert reference", "err", err)
+			} else {
+				safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert", Value: b})
+			}
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
+		}
 	}
 
 	if safetls.KeySecret != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
+		if cg.inlineTLSConfig {
+			b, err := store.GetSecretKey(*safetls.KeySecret)
+			if err != nil {
+				cg.logger.Error("invalid key reference", "err", err)
+			} else {
+				safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key", Value: string(b)})
+			}
+		} else {
+			safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
+		}
 	}
 
 	if ptr.Deref(safetls.ServerName, "") != "" {
@@ -1187,7 +1276,16 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	s := store.ForNamespace(m.Namespace)
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig))
+	roleSelectors := []string{kubernetesSDRolePod}
+	cfg = append(cfg,
+		cg.generateK8SSDConfig(
+			m.Spec.NamespaceSelector,
+			m.Namespace,
+			apiserverConfig,
+			s,
+			kubernetesSDRolePod,
+			attachMetaConfig,
+			cg.withK8SRoleSelectorConfig(m.Spec.Selector, m.Spec.SelectorMechanism, roleSelectors)))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1231,7 +1329,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, ep.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
 	relabelings := initRelabelings()
 
@@ -1241,41 +1339,45 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
-	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
-		})
-	}
-	// Set based label matching. We have to map the valid relations
-	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
-	for _, exp := range m.Spec.Selector.MatchExpressions {
-		switch exp.Operator {
-		case metav1.LabelSelectorOpIn:
+	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
+	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
+
+		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
 			})
-		case metav1.LabelSelectorOpNotIn:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
-			})
-		case metav1.LabelSelectorOpExists:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: "true"},
-			})
-		case metav1.LabelSelectorOpDoesNotExist:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: "true"},
-			})
+		}
+		// Set based label matching. We have to map the valid relations
+		// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+		for _, exp := range m.Spec.Selector.MatchExpressions {
+			switch exp.Operator {
+			case metav1.LabelSelectorOpIn:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "keep"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				})
+			case metav1.LabelSelectorOpNotIn:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "drop"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				})
+			case metav1.LabelSelectorOpExists:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "keep"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: "true"},
+				})
+			case metav1.LabelSelectorOpDoesNotExist:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "drop"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: "true"},
+				})
+			}
 		}
 	}
 
@@ -1389,7 +1491,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -1458,7 +1560,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1637,7 +1739,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.addBasicAuthToYaml(cfg, s, m.Spec.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, m.Spec.OAuth2)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, m.Spec.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(m.Spec.Authorization, scrapeClass))
 
 	metricRelabelings := []monitoringv1.RelabelConfig{}
 	metricRelabelings = append(metricRelabelings, scrapeClass.MetricRelabelings...)
@@ -1675,7 +1777,17 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	s := store.ForNamespace(m.Namespace)
 
 	role := cg.endpointRoleFlavor()
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig))
+	roleSelectors := []string{role, strings.ToLower(string(monitoringv1alpha1.KubernetesRoleService))}
+
+	cfg = append(cfg, cg.generateK8SSDConfig(
+		m.Spec.NamespaceSelector,
+		m.Namespace,
+		apiserverConfig,
+		s,
+		role,
+		attachMetaConfig,
+		cg.withK8SRoleSelectorConfig(m.Spec.Selector, m.Spec.SelectorMechanism, roleSelectors)),
+	)
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1725,47 +1837,50 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, store.ForNamespace(m.Namespace), ep.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, ep.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
 	relabelings := initRelabelings()
 
 	// Filter targets by services selected by the monitor.
 	// Exact label matches.
-	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
-		})
-	}
-	// Set based label matching. We have to map the valid relations
-	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
-	for _, exp := range m.Spec.Selector.MatchExpressions {
-		switch exp.Operator {
-		case metav1.LabelSelectorOpIn:
+	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
+	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
+		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
 			})
-		case metav1.LabelSelectorOpNotIn:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
-			})
-		case metav1.LabelSelectorOpExists:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: "true"},
-			})
-		case metav1.LabelSelectorOpDoesNotExist:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: "true"},
-			})
+		}
+		// Set based label matching. We have to map the valid relations
+		// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+		for _, exp := range m.Spec.Selector.MatchExpressions {
+			switch exp.Operator {
+			case metav1.LabelSelectorOpIn:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "keep"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				})
+			case metav1.LabelSelectorOpNotIn:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "drop"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				})
+			case metav1.LabelSelectorOpExists:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "keep"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: "true"},
+				})
+			case metav1.LabelSelectorOpDoesNotExist:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "drop"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: "true"},
+				})
+			}
 		}
 	}
 
@@ -1908,7 +2023,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -2056,6 +2171,21 @@ func (a *attachMetadataConfig) node() bool {
 	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
+// k8s sd config options.
+type k8sSDConfigOptions func(k8sSDConfig yaml.MapSlice) yaml.MapSlice
+
+func (cg *ConfigGenerator) withK8SRoleSelectorConfig(
+	selector metav1.LabelSelector,
+	selectorMechanism *monitoringv1.SelectorMechanism,
+	roles []string) k8sSDConfigOptions {
+	return func(k8sSDConfig yaml.MapSlice) yaml.MapSlice {
+		if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
+			return k8sSDConfig
+		}
+		return cg.generateRoleSelectorConfig(k8sSDConfig, roles, selector)
+	}
+}
+
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
 func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
@@ -2064,6 +2194,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	store assets.StoreGetter,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
+	opts ...k8sSDConfigOptions,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
@@ -2134,12 +2265,42 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		})
 	}
 
+	for _, opt := range opts {
+		k8sSDConfig = opt(k8sSDConfig)
+	}
+
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
 		Value: []yaml.MapSlice{
 			k8sSDConfig,
 		},
 	}
+}
+
+func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector metav1.LabelSelector) yaml.MapSlice {
+	selectors := make([]yaml.MapSlice, 0, len(roles))
+	labelSelector, err := metav1.LabelSelectorAsSelector(&selector)
+	if err != nil {
+		// The field must have been validated by the controller beforehand.
+		// If we fail here, it's a functional bug.
+		panic(fmt.Errorf("failed to convert label selector to selector: %w", err))
+	}
+
+	for _, role := range roles {
+		selectors = append(selectors, yaml.MapSlice{
+			{Key: "role", Value: role},
+			{Key: "label", Value: labelSelector.String()},
+		})
+	}
+
+	for i, item := range k8sSDConfig {
+		if item.Key == "selectors" {
+			k8sSDConfig[i].Value = append(k8sSDConfig[i].Value.([]yaml.MapSlice), selectors...)
+			return k8sSDConfig
+		}
+	}
+
+	return cg.AppendMapItem(k8sSDConfig, "selectors", selectors)
 }
 
 func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store assets.StoreGetter) []yaml.MapSlice {
@@ -2171,6 +2332,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		}
 
 		cfg = cg.addTLStoYaml(cfg, store, am.TLSConfig)
+
+		cfg = cg.addProxyConfigtoYaml(cfg, store, am.ProxyConfig)
 
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
 		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil))
@@ -2612,6 +2775,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.
 			cfg = cg.WithMinimumVersion("2.23.0").AppendMapItem(cfg, "metadata_config", metadataConfig)
 		}
 
+		if spec.RoundRobinDNS != nil {
+			cfg = cg.WithMinimumVersion("3.1.0").AppendMapItem(cfg, "round_robin_dns", spec.RoundRobinDNS)
+		}
+
 		cfgs = append(cfgs, cfg)
 	}
 
@@ -2712,7 +2879,15 @@ func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile 
 		return slice
 	}
 
-	return cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
+	return cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", logFilePath(queryLogFile))
+}
+
+func (cg *ConfigGenerator) appendScrapeFailureLogFile(slice yaml.MapSlice, scrapeFailureLogFile *string) yaml.MapSlice {
+	if scrapeFailureLogFile == nil {
+		return slice
+	}
+
+	return cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
 }
 
 func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
@@ -2750,7 +2925,6 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 			)
 		}
 	}
-
 	return slices
 }
 
@@ -2981,7 +3155,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, sc.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
@@ -2991,7 +3165,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, s, sc.Spec.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, sc.Spec.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(sc.Spec.Authorization, scrapeClass))
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, sc.Spec.OAuth2)
 
@@ -3587,7 +3761,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
-					Value: strings.ToLower(config.Role),
+					Value: string(config.Role),
 				},
 			}
 
@@ -4343,9 +4517,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			switch config.Service {
-			case monitoringv1alpha1.VPS:
+			case monitoringv1alpha1.OVHServiceVPS:
 				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
-			case monitoringv1alpha1.DedicatedServer:
+			case monitoringv1alpha1.OVHServiceDedicatedServer:
 				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
 			default:
 				cg.logger.Warn(fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Service)))
@@ -4565,6 +4739,12 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 			otlpConfig.TranslationStrategy)
 	}
 
+	if otlpConfig.KeepIdentifyingResourceAttributes != nil {
+		otlp = cg.WithMinimumVersion("3.1.0").AppendMapItem(otlp,
+			"keep_identifying_resource_attributes",
+			otlpConfig.KeepIdentifyingResourceAttributes)
+	}
+
 	if len(otlp) == 0 {
 		return cfg, nil
 	}
@@ -4644,6 +4824,17 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		}), nil
 }
 
+func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice, nameValidationScheme *monitoringv1.NameValidationSchemeOptions) yaml.MapSlice {
+	if nameValidationScheme == nil {
+		return cfg
+	}
+
+	// need to cast it to a string in order to use strings.ToLower() to render the value in the way prometheus expects it
+	nameValidationSchemeValue := string(*nameValidationScheme)
+
+	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", strings.ToLower(nameValidationSchemeValue))
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4714,12 +4905,10 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFallbackProtocol)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
-	if cpf.NameValidationScheme != nil {
-		cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", *cpf.NameValidationScheme)
-	}
+	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
+	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
 
 	return cfg
 }

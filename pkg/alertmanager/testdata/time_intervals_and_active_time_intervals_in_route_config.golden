@@ -1,0 +1,7 @@
+route:
+  active_time_intervals:
+  - weekend
+time_intervals:
+- name: weekend
+  time_intervals: []
+templates: []

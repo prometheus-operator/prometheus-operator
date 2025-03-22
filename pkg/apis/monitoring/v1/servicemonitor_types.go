@@ -83,6 +83,17 @@ type ServiceMonitorSpec struct {
 
 	// Label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
 	Selector metav1.LabelSelector `json:"selector"`
+
+	// Mechanism used to select the endpoints to scrape.
+	// By default, the selection process relies on relabel configurations to filter the discovered targets.
+	// Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+	// Which strategy is best for your use case needs to be carefully evaluated.
+	//
+	// It requires Prometheus >= v2.17.0.
+	//
+	// +optional
+	SelectorMechanism *SelectorMechanism `json:"selectorMechanism,omitempty"`
+
 	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the services.
 	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
@@ -108,7 +119,7 @@ type ServiceMonitorSpec struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
-	ScrapeFallbackProtocol *ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 
 	// `targetLimit` defines a limit on the number of scraped targets that will
 	// be accepted.
@@ -175,7 +186,7 @@ type ServiceMonitorList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors
-	Items []*ServiceMonitor `json:"items"`
+	Items []ServiceMonitor `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

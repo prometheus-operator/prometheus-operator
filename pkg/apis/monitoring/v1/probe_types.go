@@ -68,6 +68,7 @@ type ProbeSpec struct {
 	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	// If not specified, the Prometheus global scrape timeout is used.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -104,7 +105,7 @@ type ProbeSpec struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
-	ScrapeFallbackProtocol *ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
@@ -226,7 +227,7 @@ type ProbeList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Probes
-	Items []*Probe `json:"items"`
+	Items []Probe `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -40,13 +41,14 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	RulesDir                 = "/etc/prometheus/rules"
-	secretsDir               = "/etc/prometheus/secrets/"
-	configmapsDir            = "/etc/prometheus/configmaps/"
-	ConfigFilename           = "prometheus.yaml.gz"
-	ConfigEnvsubstFilename   = "prometheus.env.yaml"
-	DefaultPortName          = "web"
-	DefaultQueryLogDirectory = "/var/log/prometheus"
+	RulesDir               = "/etc/prometheus/rules"
+	secretsDir             = "/etc/prometheus/secrets/"
+	configmapsDir          = "/etc/prometheus/configmaps/"
+	ConfigFilename         = "prometheus.yaml.gz"
+	ConfigEnvsubstFilename = "prometheus.env.yaml"
+	DefaultPortName        = "web"
+	DefaultLogFileVolume   = "log-file"
+	DefaultLogDirectory    = "/var/log/prometheus"
 )
 
 var (
@@ -167,7 +169,6 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 	}
 }
 
-// TODO: Storage methods should be moved to server package.
 // It is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -178,18 +179,16 @@ func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-// TODO: QueryLogFile methods should be moved to server package.
-// They are still here because promcfg is using them.
-func UsesDefaultQueryLogVolume(queryLogFile string) bool {
-	return queryLogFile != "" && filepath.Dir(queryLogFile) == "."
+func UsesDefaultFileVolume(file string) bool {
+	return file != "" && filepath.Dir(file) == "."
 }
 
-func queryLogFilePath(queryLogFile string) string {
-	if !UsesDefaultQueryLogVolume(queryLogFile) {
-		return queryLogFile
+func logFilePath(logFile string) string {
+	if !UsesDefaultFileVolume(logFile) {
+		return logFile
 	}
 
-	return filepath.Join(DefaultQueryLogDirectory, queryLogFile)
+	return filepath.Join(DefaultLogDirectory, logFile)
 }
 
 // BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
@@ -285,6 +284,21 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 			Name:      name,
 			ReadOnly:  true,
 			MountPath: configmapsDir + c,
+		})
+	}
+
+	// scrape failure log file
+	if cpf.ScrapeFailureLogFile != nil && UsesDefaultFileVolume(*cpf.ScrapeFailureLogFile) {
+		volumes = append(volumes, v1.Volume{
+			Name: DefaultLogFileVolume,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      DefaultLogFileVolume,
+			ReadOnly:  false,
+			MountPath: DefaultLogDirectory,
 		})
 	}
 
@@ -438,4 +452,38 @@ func BuildWebconfig(
 	}
 
 	return webConfig.GetMountParameters()
+}
+
+// BuildStatefulSetService returns a governing service to be used for a statefulset.
+func BuildStatefulSetService(name string, selector map[string]string, p monitoringv1.PrometheusInterface, config Config) *v1.Service {
+	cpf := p.GetCommonPrometheusFields()
+	portName := DefaultPortName
+	if cpf.PortName != "" {
+		portName = cpf.PortName
+	}
+
+	svc := &v1.Service{
+		Spec: v1.ServiceSpec{
+			ClusterIP: v1.ClusterIPNone,
+			Ports: []v1.ServicePort{
+				{
+					Name:       portName,
+					Port:       9090,
+					TargetPort: intstr.FromString(portName),
+				},
+			},
+			Selector: selector,
+		},
+	}
+
+	operator.UpdateObject(
+		svc,
+		operator.WithName(name),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
+		operator.WithLabels(config.Labels),
+		operator.WithOwner(p),
+	)
+
+	return svc
 }

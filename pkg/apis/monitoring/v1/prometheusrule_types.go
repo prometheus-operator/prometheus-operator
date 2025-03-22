@@ -63,6 +63,13 @@ type RuleGroup struct {
 	// Name of the rule group.
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
+	// Labels to add or overwrite before storing the result for its rules.
+	// The labels defined at the rule level take precedence.
+	//
+	// It requires Prometheus >= 3.0.0.
+	// The field is ignored for Thanos Ruler.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 	// Interval determines how often rules in the group are evaluated.
 	// +optional
 	Interval *Duration `json:"interval,omitempty"`
@@ -120,7 +127,7 @@ type PrometheusRuleList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Rules
-	Items []*PrometheusRule `json:"items"`
+	Items []PrometheusRule `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

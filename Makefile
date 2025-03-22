@@ -7,9 +7,7 @@ ifeq ($(GOARCH),arm)
 else
 	ARCH=$(GOARCH)
 endif
-# TODO remove GODEBUG=gotypesalias=0
-# fixed: https://tip.golang.org/doc/go1.23#gotypespkggotypes
-GODEBUG := gotypesalias=0
+GODEBUG :=
 
 CONTAINER_CLI ?= docker
 
@@ -61,6 +59,8 @@ K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1BETA1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
+
+CERTS_DIR := test/e2e/tls_certs
 
 BUILD_DATE=$(shell date +"%Y%m%d-%T")
 # source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
@@ -114,15 +114,15 @@ build: operator prometheus-config-reloader admission-webhook k8s-gen
 
 .PHONY: operator
 operator:
-	$(GO_BUILD_RECIPE) -o $@ cmd/operator/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/operator/
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
-	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/
 
 .PHONY: admission-webhook
 admission-webhook:
-	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/
 
 
 DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go pkg/apis/monitoring/v1beta1/zz_generated.deepcopy.go
@@ -187,33 +187,24 @@ image-builder-version: .github/env
 
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
-image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
+image: operator-image prometheus-config-reloader-image admission-webhook-image
 
-.hack-operator-image: Dockerfile
-# Create empty target file, for the sole purpose of recording when this target
-# was last executed via the last-modification timestamp on the file. See
-# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+.PHONY: operator-image
+operator-image:
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
-	touch $@
 
-.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
-# Create empty target file, for the sole purpose of recording when this target
-# was last executed via the last-modification timestamp on the file. See
-# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+.PHONY: prometheus-config-reloader-image
+prometheus-config-reloader-image:
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
-	touch $@
 
-.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile
-# Create empty target file, for the sole purpose of recording when this target
-# was last executed via the last-modification timestamp on the file. See
-# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+.PHONY: admission-webhook-image
+admission-webhook-image:
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
-	touch $@
 
 .PHONY: update-go-deps
 update-go-deps:
 	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
-		go get -d $$m; \
+		go get -u $$m; \
 	done
 	(cd pkg/client && go get -u ./...)
 	(cd pkg/apis/monitoring && go get -u ./...)
@@ -226,9 +217,9 @@ update-go-deps:
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod -compat=1.18
-	cd pkg/client && go mod tidy -v -modfile=go.mod -compat=1.18
-	cd scripts && go mod tidy -v -modfile=go.mod -compat=1.18
+	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
+	cd pkg/client && go mod tidy -v -modfile=go.mod
+	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
 generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
@@ -247,9 +238,9 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 	echo "// Code generated using 'make generate-crds'. DO NOT EDIT." > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 	echo "{spec+: {versions+: $$($(GOJSONTOYAML_BINARY) -yamltojson < example/prometheus-operator-crd-full/monitoring.coreos.com_alertmanagerconfigs.yaml | jq '.spec.versions | map(select(.name == "v1beta1"))')}}" | $(JSONNETFMT_BINARY) - >> $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 
-.PHONY: generate-remote-write-certs
-generate-remote-write-certs:
-	mkdir -p test/e2e/remote_write_certs && \
+.PHONY: generate-tls-certs
+generate-tls-certs:
+	mkdir -p $(CERTS_DIR) && \
 	(cd scripts && GOOS=$(OS) GOARCH=$(GOARCH) go run -v ./certs/.)
 
 .PHONY: generate-docs
@@ -290,16 +281,16 @@ example/admission-webhook: scripts/generate/vendor scripts/generate/admission-we
 example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
-FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
+FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
 
-Documentation/operator.md: operator
+Documentation/platform/operator.md: operator
 	$(MDOX_BINARY) fmt $@
 
-Documentation/compatibility.md: pkg/operator/defaults.go
+Documentation/getting-started/compatibility.md: pkg/operator/defaults.go
 	$(MDOX_BINARY) fmt $@
 
-Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
-	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api.md"
+Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
+	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/api.md"
 
 ##############
 # Formatting #
@@ -371,8 +362,8 @@ test-unit-update-golden:
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
 
-test/e2e/remote_write_certs/ca.key test/e2e/remote_write_certs/ca.crt test/e2e/remote_write_certs/client.key test/e2e/remote_write_certs/client.crt test/e2e/remote_write_certs/bad_ca.key test/e2e/remote_write_certs/bad_ca.crt test/e2e/remote_write_certs/bad_client.key test/e2e/remote_write_certs/bad_client.crt:
-	$(MAKE) generate-remote-write-certs
+$(CERTS_DIR)/ca.key $(CERTS_DIR)/ca.crt $(CERTS_DIR)/client.key $(CERTS_DIR)/client.crt $(CERTS_DIR)/bad_ca.key $(CERTS_DIR)/bad_ca.crt $(CERTS_DIR)/bad_client.key $(CERTS_DIR)/bad_client.crt:
+	$(MAKE) generate-tls-certs
 
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
@@ -408,14 +399,14 @@ test-e2e-feature-gates:
 	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS= EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-images
-test-e2e-images: image
+test-e2e-images: image $(TOOLS_BIN_DIR)
 ifeq (podman, $(CONTAINER_CLI))
-	podman save --quiet -o tmp/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
-	podman save --quiet -o tmp/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
-	podman save --quiet -o tmp/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
-	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-operator.tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-config-reloader.tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/admission-webhook.tar
+	podman save --quiet -o $(TOOLS_BIN_DIR)/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o $(TOOLS_BIN_DIR)/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o $(TOOLS_BIN_DIR)/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
+	kind load image-archive -n $(KIND_CONTEXT) $(TOOLS_BIN_DIR)/prometheus-operator.tar
+	kind load image-archive -n $(KIND_CONTEXT) $(TOOLS_BIN_DIR)/prometheus-config-reloader.tar
+	kind load image-archive -n $(KIND_CONTEXT) $(TOOLS_BIN_DIR)/admission-webhook.tar
 else
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)

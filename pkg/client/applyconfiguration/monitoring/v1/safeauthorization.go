@@ -17,14 +17,14 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SafeAuthorizationApplyConfiguration represents a declarative configuration of the SafeAuthorization type for use
 // with apply.
 type SafeAuthorizationApplyConfiguration struct {
-	Type        *string               `json:"type,omitempty"`
-	Credentials *v1.SecretKeySelector `json:"credentials,omitempty"`
+	Type        *string                   `json:"type,omitempty"`
+	Credentials *corev1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
 // SafeAuthorizationApplyConfiguration constructs a declarative configuration of the SafeAuthorization type for use with
@@ -44,7 +44,7 @@ func (b *SafeAuthorizationApplyConfiguration) WithType(value string) *SafeAuthor
 // WithCredentials sets the Credentials field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Credentials field is set to the value of the last call.
-func (b *SafeAuthorizationApplyConfiguration) WithCredentials(value v1.SecretKeySelector) *SafeAuthorizationApplyConfiguration {
+func (b *SafeAuthorizationApplyConfiguration) WithCredentials(value corev1.SecretKeySelector) *SafeAuthorizationApplyConfiguration {
 	b.Credentials = &value
 	return b
 }

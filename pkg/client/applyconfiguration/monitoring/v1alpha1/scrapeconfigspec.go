@@ -55,7 +55,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ScrapeInterval                             *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                              *monitoringv1.Duration                   `json:"scrapeTimeout,omitempty"`
 	ScrapeProtocols                            []monitoringv1.ScrapeProtocol            `json:"scrapeProtocols,omitempty"`
-	ScrapeFallbackProtocol                     *monitoringv1.ScrapeProtocol             `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol                     *monitoringv1.ScrapeProtocol             `json:"fallbackScrapeProtocol,omitempty"`
 	HonorTimestamps                            *bool                                    `json:"honorTimestamps,omitempty"`
 	TrackTimestampsStaleness                   *bool                                    `json:"trackTimestampsStaleness,omitempty"`
 	HonorLabels                                *bool                                    `json:"honorLabels,omitempty"`
@@ -439,11 +439,11 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeProtocols(values ...monit
 	return b
 }
 
-// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *ScrapeConfigSpecApplyConfiguration {
-	b.ScrapeFallbackProtocol = &value
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ScrapeConfigSpecApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
 	return b
 }
 
@@ -585,7 +585,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uin
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ScrapeConfigSpecApplyConfiguration {
-	b.ScrapeClassicHistograms = &value
+	b.NativeHistogramConfigApplyConfiguration.ScrapeClassicHistograms = &value
 	return b
 }
 
@@ -593,7 +593,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClassicHistograms(value b
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
-	b.NativeHistogramBucketLimit = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
 
@@ -601,7 +601,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramBucketLimit(valu
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ScrapeConfigSpecApplyConfiguration {
-	b.NativeHistogramMinBucketFactor = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramMinBucketFactor = &value
 	return b
 }
 
@@ -630,7 +630,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithMetricRelabelConfigs(values ...
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithProxyURL(value string) *ScrapeConfigSpecApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -638,7 +638,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyURL(value string) *ScrapeC
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithNoProxy(value string) *ScrapeConfigSpecApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -646,7 +646,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNoProxy(value string) *ScrapeCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithProxyFromEnvironment(value bool) *ScrapeConfigSpecApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -655,11 +655,11 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyFromEnvironment(value bool
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *ScrapeConfigSpecApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }

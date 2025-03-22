@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	certDirectory  = "../test/e2e/remote_write_certs"
+	certDirectory  = "../test/e2e/tls_certs"
 	validityPeriod = 10 * 365 * 24 * time.Hour
 )
 

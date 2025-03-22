@@ -49,7 +49,6 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
-	ScrapeFallbackProtocol               *monitoringv1.ScrapeProtocol                            `json:"scrapeFallbackProtocol,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
 	EnableOTLPReceiver                   *bool                                                   `json:"enableOTLPReceiver,omitempty"`
@@ -77,6 +76,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
 	AdditionalScrapeConfigs              *corev1.SecretKeySelector                               `json:"additionalScrapeConfigs,omitempty"`
@@ -116,6 +116,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeClasses                        []ScrapeClassApplyConfiguration                         `json:"scrapeClasses,omitempty"`
 	ServiceDiscoveryRole                 *monitoringv1.ServiceDiscoveryRole                      `json:"serviceDiscoveryRole,omitempty"`
 	TSDB                                 *TSDBSpecApplyConfiguration                             `json:"tsdb,omitempty"`
+	ScrapeFailureLogFile                 *string                                                 `json:"scrapeFailureLogFile,omitempty"`
+	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
 }
 
@@ -310,14 +312,6 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeProtocols(values ..
 	for i := range values {
 		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
 	}
-	return b
-}
-
-// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *CommonPrometheusFieldsApplyConfiguration {
-	b.ScrapeFallbackProtocol = &value
 	return b
 }
 
@@ -570,6 +564,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithDNSConfig(value *PodDNSCo
 // If called multiple times, the ListenLocal field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithListenLocal(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.ListenLocal = &value
+	return b
+}
+
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableServiceLinks(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.EnableServiceLinks = &value
 	return b
 }
 
@@ -908,6 +910,22 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceDiscoveryRole(valu
 // If called multiple times, the TSDB field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithTSDB(value *TSDBSpecApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.TSDB = value
+	return b
+}
+
+// WithScrapeFailureLogFile sets the ScrapeFailureLogFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeFailureLogFile field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeFailureLogFile(value string) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeFailureLogFile = &value
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceName(value string) *CommonPrometheusFieldsApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }
 

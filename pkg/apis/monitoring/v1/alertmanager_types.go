@@ -15,6 +15,7 @@
 package v1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -152,6 +153,13 @@ type AlertmanagerSpec struct {
 	// VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,
 	// that are generated as a result of StorageSpec objects.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+	// The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+	// The default behavior is all PVCs are retained.
+	// This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+	// It requires enabling the StatefulSetAutoDeletePVC feature gate.
+	//
+	// +optional
+	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
 	// The external URL the Alertmanager instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Alertmanager is not
 	// served from root of a DNS name.
@@ -185,6 +193,17 @@ type AlertmanagerSpec struct {
 	//
 	// +optional
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+	// When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ServiceName *string `json:"serviceName,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
@@ -257,6 +276,11 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
+	// Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+	//
+	// It requires Alertmanager >= 0.24.0.
+	//+optional
+	ClusterTLS *ClusterTLSConfig `json:"clusterTLS,omitempty"`
 	// alertmanagerConfiguration specifies the configuration of Alertmanager.
 	//
 	// If defined, it takes precedence over the `configSecret` field.
@@ -278,6 +302,13 @@ type AlertmanagerSpec struct {
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet. The arguments are passed as-is to the
+	// Alertmanager container which may cause issues if they are invalid or not supported
+	// by the given Alertmanager version.
+	// +optional
+	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
@@ -495,4 +526,15 @@ type AlertmanagerList struct {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ClusterTLSConfig defines the mutual TLS configuration for the Alertmanager cluster TLS protocol.
+// +k8s:openapi-gen=true
+type ClusterTLSConfig struct {
+	// Server-side configuration for mutual TLS.
+	// +required
+	ServerTLS WebTLSConfig `json:"server"`
+	// Client-side configuration for mutual TLS.
+	// +required
+	ClientTLS SafeTLSConfig `json:"client"`
 }

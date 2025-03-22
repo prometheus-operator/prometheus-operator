@@ -27,6 +27,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -559,13 +561,27 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
+	// TODO(simonpasquier): the operator should take into account changes to
+	// the cluster TLS configuration to trigger a rollout of the pods (this
+	// configuration doesn't support live reload).
+	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
+	}
+
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
-	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if am.Spec.ServiceName != nil {
+		selectorLabels := makeSelectorLabels(am.Name)
+		if err := k8sutil.EnsureCustomGoverningService(ctx, am.Namespace, *am.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Create governing service if it doesn't exist.
+		if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	existingStatefulSet, err := c.getStatefulSetFromAlertmanagerKey(key)
@@ -1197,6 +1213,13 @@ func checkPagerDutyConfigs(
 			}
 		}
 
+		if config.URL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(config.URL)); err != nil {
+				return fmt.Errorf("failed to validate URL: %w ", err)
+			}
+
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
@@ -1268,8 +1291,12 @@ func checkDiscordConfigs(
 			return err
 		}
 
-		if _, err := store.GetSecretKey(ctx, namespace, config.APIURL); err != nil {
+		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
+		if err != nil {
 			return fmt.Errorf("failed to retrieve API URL: %w", err)
+		}
+		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			return fmt.Errorf("failed to validate API URL: %w", err)
 		}
 	}
 
@@ -1289,8 +1316,12 @@ func checkSlackConfigs(
 		}
 
 		if config.APIURL != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APIURL); err != nil {
+			url, err := store.GetSecretKey(ctx, namespace, *config.APIURL)
+			if err != nil {
 				return err
+			}
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("failed to validate API URL: %w", err)
 			}
 		}
 
@@ -1319,8 +1350,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("webhook 'url' %s invalid: %w", url, err)
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}
 
@@ -1462,6 +1493,18 @@ func checkPushoverConfigs(
 		}
 		if err := checkSecret(config.Token, "token"); err != nil {
 			return err
+		}
+
+		if config.Expire != "" {
+			if _, err := model.ParseDuration(config.Expire); err != nil {
+				return err
+			}
+		}
+
+		if config.Retry != "" {
+			if _, err := model.ParseDuration(config.Retry); err != nil {
+				return err
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1662,6 +1705,39 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
+	if err != nil {
+		return fmt.Errorf("failed to initialize the configuration: %w", err)
+	}
+
+	data, err := clusterTLSConfig.ClusterTLSConfiguration()
+	if err != nil {
+		return fmt.Errorf("failed to generate the configuration: %w", err)
+	}
+
+	s := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterTLSConfig.GetSecretName(),
+		},
+		Data: map[string][]byte{
+			clustertlsconfig.ConfigFileKey: data,
+		},
+	}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(a),
+	)
+
+	if err = k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
+		return fmt.Errorf("failed to reconcile secret: %w", err)
 	}
 
 	return nil

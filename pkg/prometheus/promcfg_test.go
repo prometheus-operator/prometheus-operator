@@ -125,11 +125,11 @@ func TestGlobalSettings(t *testing.T) {
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
 		ScrapeProtocols             []monitoringv1.ScrapeProtocol
-		ScrapeFallbackProtocol      *monitoringv1.ScrapeProtocol
 		ExternalLabels              map[string]string
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
 		QueryLogFile                string
+		ScrapeFailureLogFile        *string
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
 		SampleLimit                 *uint64
@@ -198,6 +198,30 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:             "query_log_file.golden",
 		},
 		{
+			Scenario:             "scrape_failure_log_file",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			Golden:               "scrape_failure_log_file.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_empty_path",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_empty_path.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_unsupported_version",
+			Version:              "v2.54.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_unsupported_version.golden",
+		},
+		{
 			Scenario:           "valid global limits",
 			Version:            "v2.45.0",
 			ScrapeInterval:     "30s",
@@ -244,7 +268,7 @@ func TestGlobalSettings(t *testing.T) {
 		},
 		{
 			Scenario:           "valid global config with new scrape protocol",
-			Version:            "v3.0.0-rc.0",
+			Version:            "v3.0.0",
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
@@ -264,22 +288,6 @@ func TestGlobalSettings(t *testing.T) {
 				monitoringv1.OpenMetricsText1_0_0,
 			},
 			Golden: "valid_global_config_with_unsupported_scrape_protocols.golden",
-		},
-		{
-			Scenario:               "valid global config with scrape fallback protocol",
-			Version:                "v3.0.0-rc.0",
-			ScrapeInterval:         "30s",
-			EvaluationInterval:     "30s",
-			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusText1_0_0),
-			Golden:                 "valid_global_config_with_scrape_fallback_protocol.golden",
-		},
-		{
-			Scenario:               "valid global config scrape protocols with unsupported version",
-			Version:                "v2.55.0",
-			ScrapeInterval:         "30s",
-			EvaluationInterval:     "30s",
-			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusProto),
-			Golden:                 "valid_global_config_with_unsupported_scrape_fallback_protocols.golden",
 		},
 		{
 			Scenario:           "valid global config without rule query offset if prometheus version less required",
@@ -309,7 +317,6 @@ func TestGlobalSettings(t *testing.T) {
 					ScrapeInterval:              tc.ScrapeInterval,
 					ScrapeTimeout:               tc.ScrapeTimeout,
 					ScrapeProtocols:             tc.ScrapeProtocols,
-					ScrapeFallbackProtocol:      tc.ScrapeFallbackProtocol,
 					ExternalLabels:              tc.ExternalLabels,
 					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
 					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
@@ -322,6 +329,7 @@ func TestGlobalSettings(t *testing.T) {
 					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
+					ScrapeFailureLogFile:        tc.ScrapeFailureLogFile,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				RuleQueryOffset:    tc.RuleQueryOffset,
@@ -2209,19 +2217,19 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		version                string
-		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		fallbackScrapeProtocol *monitoringv1.ScrapeProtocol
 		golden                 string
 	}{
 		{
-			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus old version",
+			name:                   "setting FallbackScrapeProtocol in ServiceMonitor with prometheus old version",
 			version:                "v2.55.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_OldVersion.golden",
 		},
 		{
-			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus new version",
+			name:                   "setting FallbackScrapeProtocol in ServiceMonitor with prometheus new version",
 			version:                "v3.0.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_NewVersion.golden",
 		},
 	} {
@@ -2240,7 +2248,7 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 						},
 						Spec: monitoringv1.ServiceMonitorSpec{
 							TargetLabels:           []string{"example", "env"},
-							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							Endpoints: []monitoringv1.Endpoint{
 								{
 									HonorTimestamps: ptr.To(false),
@@ -2337,19 +2345,19 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		version                string
-		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		fallbackScrapeProtocol *monitoringv1.ScrapeProtocol
 		golden                 string
 	}{
 		{
-			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus old version",
+			name:                   "setting FallbackScrapeProtocol in PodMonitor with prometheus old version",
 			version:                "v2.55.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_OldVersion.golden",
 		},
 		{
-			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus new version",
+			name:                   "setting FallbackScrapeProtocol in PodMonitor with prometheus new version",
 			version:                "v3.0.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_NewVersion.golden",
 		},
 	} {
@@ -2369,7 +2377,7 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 						},
 						Spec: monitoringv1.PodMonitorSpec{
 							PodTargetLabels:        []string{"example", "env"},
-							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
 									TrackTimestampsStaleness: ptr.To(false),
@@ -4307,6 +4315,15 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.54.0_MessageVersion2.golden",
 		},
+		{
+			version: "v3.1.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				RoundRobinDNS:  ptr.To(true),
+			},
+			golden: "RemoteWriteConfig_v3.1.0.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -5577,6 +5594,63 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 	}
 }
 
+func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
+	for _, tc := range []struct {
+		name                 string
+		p                    *monitoringv1.Prometheus
+		version              string
+		scrapeFailureLogFile *string
+		golden               string
+	}{
+		{
+			name:   "PrometheusAgent no setting scrape failure log file",
+			golden: "PrometheusAgent_no_scrapeFailureLogFile.golden",
+		},
+		{
+			name:                 "PrometheusAgent verison < v2.55.0",
+			version:              "v2.54.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_greater_than_or_equal_to_v2.55.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0 and scrapeFailureLogFile with empty path",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_empty_path_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.scrapeFailureLogFile != nil {
+				p.Spec.ScrapeFailureLogFile = tc.scrapeFailureLogFile
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateAgentConfiguration(
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 	p := defaultPrometheus()
 	cg := mustNewConfigGenerator(t, p)
@@ -5782,11 +5856,12 @@ func TestProbeSpecConfig(t *testing.T) {
 func TestScrapeConfigSpecConfig(t *testing.T) {
 	refreshInterval := monitoringv1.Duration("5m")
 	for _, tc := range []struct {
-		name      string
-		version   string
-		patchProm func(*monitoringv1.Prometheus)
-		scSpec    monitoringv1alpha1.ScrapeConfigSpec
-		golden    string
+		name            string
+		version         string
+		patchProm       func(*monitoringv1.Prometheus)
+		scSpec          monitoringv1alpha1.ScrapeConfigSpec
+		inlineTLSConfig bool
+		golden          string
 	}{
 		{
 			name:   "empty_scrape_config",
@@ -6033,6 +6108,53 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_Authorization.golden",
 		},
 		{
+			name: "inline_tlsconfig",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				TLSConfig: &monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "ca",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "cert",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "tls",
+						},
+						Key: "private-key",
+					},
+				},
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(false),
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca2",
+								},
+							},
+						},
+					},
+				},
+			},
+			inlineTLSConfig: true,
+			golden:          "ScrapeConfigSpecConfig_Inline_TLSConfig.golden",
+		},
+		{
 			name: "tlsconfig",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				TLSConfig: &monitoringv1.SafeTLSConfig{
@@ -6134,7 +6256,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "fallback_scrape_protocol",
 			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol.golden",
 		},
@@ -6142,7 +6264,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "fallback_scrape_protocol_with_unsupported_version",
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol_OldVersion.golden",
 		},
@@ -6376,6 +6498,64 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_False.golden",
 		},
+		{
+			name:    "config_oauth",
+			version: "v2.27.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth.golden",
+		},
+		{
+			name:    "config_oauth_unsupported",
+			version: "v2.26.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -6397,6 +6577,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			cg := mustNewConfigGenerator(t, p)
+			cg.inlineTLSConfig = tc.inlineTLSConfig
 
 			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -6431,6 +6612,36 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"scrape-key":  []byte("scrape-secret"),
 						"http-sd-key": []byte("http-sd-secret"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "tls",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"ca":          []byte("ca"),
+						"ca2":         []byte("ca2"),
+						"cert":        []byte("cert"),
+						"private-key": []byte("private-key"),
 					},
 				},
 			)
@@ -7557,15 +7768,6 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
-	sec := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "azure-client-secret",
-			Namespace: "default",
-		},
-		Data: map[string][]byte{
-			"clientSecret": []byte("my-secret"),
-		},
-	}
 	for _, tc := range []struct {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
@@ -7578,23 +7780,63 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To("OAuth"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
 						ClientSecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "azure-client-secret",
+								Name: "secret",
 							},
 							Key: "clientSecret",
 						},
 						ResourceGroup:   ptr.To("my-resource-group"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid.golden",
+		},
+		{
+			name: "azure_sd_config_valid_sdk_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						ResourceGroup:        ptr.To("my-resource-group"),
+						RefreshInterval:      ptr.To(monitoringv1.Duration("30s")),
+						Port:                 ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_SDKAuth.golden",
+		},
+		{
+			name: "azure_sd_config_valid_managedidendity_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_ManagedIdentityAuth.golden",
+		},
+		{
+			name: "azure_sd_config_with_subscription_id",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValidWithSubscriptionID.golden",
 		},
 		{
 			name: "azure_sd_config_invalid",
@@ -7613,6 +7855,124 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			expectedErr: true,
 		},
 		{
+			name: "azure_sd_config_with_http_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_http_config.golden",
+		},
+		{
+			name: "azure_sd_config_with_http_config_basic_auth_and_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "key",
+							},
+						},
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "password",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_basic_auth_and_TLS.golden",
+		},
+		{
+			name: "azure_sd_config_with_http_config_with_oauth2",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_with_oauth2.golden",
+		},
+		{
 			name: "azure_sd_config_empty",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{},
@@ -7621,6 +7981,49 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+						"clientSecret": []byte("my-secret"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"username": []byte("value"),
+						"password": []byte("value"),
+					},
+				},
+			)
+
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
 					ObjectMeta: metav1.ObjectMeta{
@@ -7639,7 +8042,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewTestStoreBuilder(sec),
+				store,
 				nil,
 				nil,
 				nil,
@@ -7670,11 +8073,39 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 						Project:         "devops-dev",
 						Zone:            "us-west-1",
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_GCESDConfigValid.golden",
+		},
+		{
+			name: "gce_sd_config_valid_all_options",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project:         "devops-dev",
+						Zone:            "us-west-1",
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+						Filter:          ptr.To("filter-expression"),
+						TagSeparator:    ptr.To("tag-value"),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValid_all_options.golden",
+		},
+		{
+			name: "gce_sd_config_valid_required_fields",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project: "devops-dev",
+						Zone:    "us-west-1",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValidRequiredFields.golden",
 		},
 		{
 			name: "gce_sd_config_empty",
@@ -7741,7 +8172,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:             "Instance",
+						Role:             monitoringv1alpha1.OpenStackRoleInstance,
 						Region:           "region-1",
 						IdentityEndpoint: ptr.To("http://identity.example.com:5000/v2.0"),
 						Username:         ptr.To("nova-user-1"),
@@ -7753,7 +8184,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 						},
 						DomainName:      ptr.To("devops-project-1"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
@@ -7764,7 +8195,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Role:   "Instance",
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
 						Region: "region-1",
 						ApplicationCredentialSecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -8789,13 +9220,13 @@ func TestAppendNameValidationScheme(t *testing.T) {
 	}{
 		{
 			name:                 "UTF8 nameValidationScheme withPrometheus Version 3",
-			version:              "v3.0.0-beta.0",
+			version:              "v3.0.0",
 			nameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 			expectedCfg:          "NameValidationSchemeUTF8WithPrometheusV3.golden",
 		},
 		{
 			name:                 "Legacy nameValidationScheme with Prometheus Version 3",
-			version:              "v3.0.0-beta.0",
+			version:              "v3.0.0",
 			nameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			expectedCfg:          "NameValidationSchemeLegacyWithPrometheusV3.golden",
 		},
@@ -8916,6 +9347,22 @@ func TestOTLPConfig(t *testing.T) {
 			},
 			nameValScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			golden:        "OTLPConfig_Config_translation_strategy_with_suffixes_and_name_validation_scheme.golden",
+		},
+		{
+			name:    "Config KeepIdentifyingResourceAttributes",
+			version: "v3.1.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				KeepIdentifyingResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
+		},
+		{
+			name:    "Config KeepIdentifyingResourceAttributes with old version",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				KeepIdentifyingResourceAttributes: ptr.To(false),
+			},
+			golden: "OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -10952,7 +11399,7 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 							},
 							Key: "ck",
 						},
-						Service:         monitoringv1alpha1.DedicatedServer,
+						Service:         monitoringv1alpha1.OVHServiceDedicatedServer,
 						Endpoint:        ptr.To("127.0.0.1"),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
@@ -11609,6 +12056,280 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 	}
 }
 
+func TestScrapeClassAuthorization(t *testing.T) {
+	const (
+		scrapeClassName = "test-attach-authz-scrape-class"
+
+		secretName      = "secret"
+		secretNamespace = "default"
+		secretKey       = "token"
+		secretValue     = "token"
+		authType        = "Bearer"
+	)
+
+	scn := ptr.To(scrapeClassName)
+
+	safeAuthz := &monitoringv1.SafeAuthorization{
+		Type: authType,
+		Credentials: &v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{Name: secretName},
+			Key:                  secretKey,
+		},
+	}
+
+	authzSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: secretNamespace,
+		},
+		Data: map[string][]byte{
+			secretKey: []byte(secretValue),
+		},
+	}
+
+	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	serviceMonitorWithUserConfiguredAuthz := defaultServiceMonitor()
+	serviceMonitorWithUserConfiguredAuthz.Spec.Endpoints[0].Authorization = safeAuthz
+
+	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	podMonitorWithUserConfiguredAuthz := defaultPodMonitor()
+	podMonitorWithUserConfiguredAuthz.Spec.PodMetricsEndpoints[0].Authorization = safeAuthz
+
+	probeWithNonDefaultScrapeClass := defaultProbe()
+	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	probeWithUserConfiguredAuthz := defaultProbe()
+	probeWithUserConfiguredAuthz.Spec.Authorization = safeAuthz
+
+	scrapeConfigWithNonDefaultScrapeClass := defaultScrapeConfig()
+	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	scrapeConfigWithUserConfiguredAuthz := defaultScrapeConfig()
+	scrapeConfigWithUserConfiguredAuthz.Spec.Authorization = safeAuthz
+
+	for _, tc := range []struct {
+		name            string
+		scrapeClasses   []monitoringv1.ScrapeClass
+		serviceMonitors map[string]*monitoringv1.ServiceMonitor
+		podMonitors     map[string]*monitoringv1.PodMonitor
+		probes          map[string]*monitoringv1.Probe
+		scrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+		storeBuilder    *assets.StoreBuilder
+		goldenFile      string
+	}{
+		{
+			name: "ServiceMonitor with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
+			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "ServiceMonitor with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "ServiceMonitor with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder:    assets.NewTestStoreBuilder(authzSecret),
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithUserConfiguredAuthz},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassUserDefinedAuthz.golden",
+		},
+		{
+			name: "PodMonitor with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/default",
+					},
+				},
+				{
+					Name: "not-default",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/non-default",
+					},
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
+			goldenFile:  "podMonitorObjectWithDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "PodMonitor with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "PodMonitor with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder: assets.NewTestStoreBuilder(authzSecret),
+			podMonitors:  map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithUserConfiguredAuthz},
+			goldenFile:   "podMonitorObjectWithNonDefaultScrapeClassUserDefinedAuthz.golden",
+		},
+		{
+			name: "Probe with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/default",
+					},
+				},
+				{
+					Name: "not-default",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/non-default",
+					},
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"probe": defaultProbe()},
+			goldenFile: "ProbeWithDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "Probe with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"probe": probeWithNonDefaultScrapeClass},
+			goldenFile: "ProbeWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "Probe with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder: assets.NewTestStoreBuilder(authzSecret),
+			probes:       map[string]*monitoringv1.Probe{"probe": probeWithUserConfiguredAuthz},
+			goldenFile:   "ProbeWithNonDefaultScrapeClassUserDefinedAuthz.golden",
+		},
+		{
+			name: "ScrapeConfig with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/default",
+					},
+				},
+				{
+					Name: "not-default",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/non-default",
+					},
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": defaultScrapeConfig()},
+			goldenFile:    "ScrapeConfigWithDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "ScrapeConfig with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithNonDefaultScrapeClass},
+			goldenFile:    "ScrapeConfigWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "ScrapeConfig with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder:  assets.NewTestStoreBuilder(authzSecret),
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithUserConfiguredAuthz},
+			goldenFile:    "ScrapeConfigWithNonDefaultScrapeClassUserDefinedAuthz.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+
+			p.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, p)
+
+			if tc.storeBuilder == nil {
+				tc.storeBuilder = &assets.StoreBuilder{}
+			}
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				tc.serviceMonitors,
+				tc.podMonitors,
+				tc.probes,
+				tc.scrapeConfigs,
+				tc.storeBuilder,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.goldenFile)
+		})
+	}
+}
+
 func TestScrapeClassAttachMetadata(t *testing.T) {
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
 	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attachmetadata-scrape-class")
@@ -11700,6 +12421,143 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 	}
 }
 
+func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
+	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	probeWithNonDefaultScrapeClass := defaultProbe()
+	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	scrapeConfigWithNonDefaultScrapeClass := defaultScrapeConfig()
+	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	for _, tc := range []struct {
+		name            string
+		scrapeClasses   []monitoringv1.ScrapeClass
+		serviceMonitors map[string]*monitoringv1.ServiceMonitor
+		podMonitors     map[string]*monitoringv1.PodMonitor
+		probes          map[string]*monitoringv1.Probe
+		scrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+		goldenFile      string
+	}{
+		{
+			name: "ServiceMonitor with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
+			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "ServiceMonitor with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "PodMonitor with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
+			goldenFile:  "podMonitorObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "PodMonitor with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "Probe with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"monitor": defaultProbe()},
+			goldenFile: "probeObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "Probe with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"monitor": probeWithNonDefaultScrapeClass},
+			goldenFile: "probeObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "ScrapeConfig with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": defaultScrapeConfig()},
+			goldenFile:    "scrapeConfigObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "ScrapeConfig with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithNonDefaultScrapeClass},
+			goldenFile:    "scrapeConfigObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+
+			p.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, p)
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				tc.serviceMonitors,
+				tc.podMonitors,
+				tc.probes,
+				tc.scrapeConfigs,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.goldenFile)
+		})
+	}
+}
+
 func TestGenerateAlertmanagerConfig(t *testing.T) {
 	for _, tc := range []struct {
 		alerting *monitoringv1.AlertingSpec
@@ -11721,6 +12579,33 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			golden: "AlertmanagerConfigOtherNamespace.golden",
+		},
+		{
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "foo",
+						Namespace: ptr.To("default"),
+						Port:      intstr.FromString("web"),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "AlertmanagerConfigProxyconfig.golden",
 		},
 		{
 			alerting: &monitoringv1.AlertingSpec{
@@ -11833,7 +12718,18 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				assets.NewTestStoreBuilder(),
+				assets.NewTestStoreBuilder(
+					&v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: "default",
+						},
+						Data: map[string][]byte{
+							"proxy-header": []byte("value"),
+							"token":        []byte("value"),
+						},
+					},
+				),
 				nil,
 				nil,
 				nil,
@@ -12049,5 +12945,309 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
 
+	}
+}
+
+func TestServiceMonitorSelectors(t *testing.T) {
+	for _, tc := range []struct {
+		name                 string
+		golden               string
+		serviceMonitor       *monitoringv1.ServiceMonitor
+		serviceDiscoveryRole monitoringv1.ServiceDiscoveryRole
+	}{
+		{
+			name:                 "ServiceMonitor with Match Label Selector",
+			golden:               "ServiceMonitorObjectWithMatchLabelSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointsRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:                 "ServiceMonitor with Match Expression Selector",
+			golden:               "ServiceMonitorObjectWithMatchExpressionSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointsRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group1"},
+							},
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:                 "ServiceMonitor with endpoint slice selector and match label selector",
+			golden:               "ServiceMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointSliceRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:                 "ServiceMonitor with selector and match expression selector",
+			golden:               "ServiceMonitorObjectWithSelectorAndMatchExpressionSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointSliceRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group2"},
+							},
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.ServiceDiscoveryRole = &tc.serviceDiscoveryRole
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{"monitor": tc.serviceMonitor},
+				nil,
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestPodMonitorSelectors(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		golden     string
+		podMonitor *monitoringv1.PodMonitor
+	}{
+		{
+			name:   "PodMonitor with Match Label Selector",
+			golden: "PodMonitorObjectWithMatchLabelSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with Match Expression Selector",
+			golden: "PodMonitorObjectWithMatchExpressionSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group1"},
+							},
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with endpoint slice selector and match label selector",
+			golden: "PodMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with selector and match expression selector",
+			golden: "PodMonitorObjectWithSelectorAndMatchExpressionSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group2"},
+							},
+							{
+								Key:      "groupb",
+								Operator: metav1.LabelSelectorOpDoesNotExist,
+							},
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				map[string]*monitoringv1.PodMonitor{"monitor": tc.podMonitor},
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
 	}
 }

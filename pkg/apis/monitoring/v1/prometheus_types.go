@@ -242,7 +242,7 @@ type CommonPrometheusFields struct {
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// Number of shards to distribute scraped targets onto.
+	// Number of shards to distribute the scraped targets onto.
 	//
 	// `spec.replicas` multiplied by `spec.shards` is the total number of Pods
 	// being created.
@@ -252,11 +252,11 @@ type CommonPrometheusFields struct {
 	// Note that scaling down shards will not reshard data onto the remaining
 	// instances, it must be manually moved. Increasing shards will not reshard
 	// data either but it will continue to be available from the same
-	// instances. To query globally, use Thanos sidecar and Thanos querier or
-	// remote write data to a central location.
-	// Alerting and recording rules
+	// instances. To query globally, use either
+	// * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+	// * Remote-write to send metrics to a central location.
 	//
-	// By default, the sharding is performed on:
+	// By default, the sharding of targets is performed on:
 	// * The `__address__` target's metadata label for PodMonitor,
 	// ServiceMonitor and ScrapeConfig resources.
 	// * The `__param_target__` label for Probe resources.
@@ -296,6 +296,7 @@ type CommonPrometheusFields struct {
 	// +kubebuilder:default:="30s"
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait until a scrape request times out.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// The protocols to negotiate during a scrape. It tells clients the
@@ -310,12 +311,6 @@ type CommonPrometheusFields struct {
 	// +listType=set
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
-
-	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-	//
-	// It requires Prometheus >= v3.0.0.
-	// +optional
-	ScrapeFallbackProtocol *ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
 
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
@@ -468,6 +463,10 @@ type CommonPrometheusFields struct {
 	// When true, the Prometheus server listens on the loopback address
 	// instead of the Pod IP's address.
 	ListenLocal bool `json:"listenLocal,omitempty"`
+
+	// Indicates whether information about services should be injected into pod's environment variables
+	// +optional
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 
 	// Containers allows injecting additional containers or modifying operator
 	// generated containers. This can be used to allow adding an authentication
@@ -862,6 +861,29 @@ type CommonPrometheusFields struct {
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
 
+	// File to which scrape failures are logged.
+	// Reloading the configuration will reopen the file.
+	//
+	// If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
+	// will mount the file into an emptyDir volume at `/var/log/prometheus`.
+	// If a full path is provided, e.g. '/var/log/prometheus/file.log', you
+	// must mount a volume in the specified directory and it must be writable.
+	// It requires Prometheus >= v2.55.0.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
+
+	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,
+	// or `prometheus-agent-operated` for PrometheusAgent resources.
+	// When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ServiceName *string `json:"serviceName,omitempty"`
+
 	// RuntimeConfig configures the values for the Prometheus process behavior
 	// +optional
 	Runtime *RuntimeConfig `json:"runtime,omitempty"`
@@ -963,7 +985,7 @@ type PrometheusList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses
-	Items []*Prometheus `json:"items"`
+	Items []Prometheus `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -990,6 +1012,16 @@ type PrometheusSpec struct {
 	Retention Duration `json:"retention,omitempty"`
 	// Maximum number of bytes used by the Prometheus data.
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
+
+	// ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+	//
+	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+	// however, the feature is not yet fully implemented in this PR. The limitation being:
+	// * Retention duration is not settable, for now, shards are retained forever.
+	//
+	// +optional
+	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
 
 	// When true, the Prometheus compaction is disabled.
 	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
@@ -1108,6 +1140,24 @@ type PrometheusSpec struct {
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+}
+
+type WhenScaledRetentionType string
+
+var (
+	RetainWhenScaledRetentionType WhenScaledRetentionType = "Retain"
+	DeleteWhenScaledRetentionType WhenScaledRetentionType = "Delete"
+)
+
+type ShardRetentionPolicy struct {
+	// Defines the retention policy when the Prometheus shards are scaled down.
+	// * `Delete`, the operator will delete the pods from the scaled-down shard(s).
+	// * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+	//
+	// If not defined, the operator assumes the `Delete` value.
+	// +kubebuilder:validation:Enum=Retain;Delete
+	// +optional
+	WhenScaled *WhenScaledRetentionType `json:"whenScaled,omitempty"`
 }
 
 type PrometheusTracingConfig struct {
@@ -1544,6 +1594,22 @@ type RemoteWriteSpec struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+
+	// When enabled:
+	//     - The remote-write mechanism will resolve the hostname via DNS.
+	//     - It will randomly select one of the resolved IP addresses and connect to it.
+	//
+	// When disabled (default behavior):
+	//     - The Go standard library will handle hostname resolution.
+	//     - It will attempt connections to each resolved IP address sequentially.
+	//
+	// Note: The connection timeout applies to the entire resolution and connection process.
+	//       If disabled, the timeout is distributed across all connection attempts.
+	//
+	// It requires Prometheus >= v3.1.0.
+	//
+	// +optional
+	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=V1.0;V2.0
@@ -1931,6 +1997,9 @@ type AlertmanagerEndpoints struct {
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
+	// ProxyConfig
+	ProxyConfig `json:",inline"`
+
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "V1" or "V2".
 	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
@@ -2083,6 +2152,10 @@ type Authorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *Authorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
@@ -2120,6 +2193,13 @@ type ScrapeClass struct {
 	// +optional
 	Default *bool `json:"default,omitempty"`
 
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
 	// TLSConfig defines the TLS settings to use for the scrape. When the
 	// scrape objects define their own CA, certificate and/or key, they take
 	// precedence over the corresponding scrape class fields.
@@ -2128,6 +2208,11 @@ type ScrapeClass struct {
 	//
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+
+	// Authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
+	// +optional
+	Authorization *Authorization `json:"authorization,omitempty"`
 
 	// Relabelings configures the relabeling rules to apply to all scrape targets.
 	//
@@ -2185,9 +2270,15 @@ type OTLPConfig struct {
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 
 	// Configures how the OTLP receiver endpoint translates the incoming metrics.
-	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
+
+	// Enables adding `service.name`, `service.namespace` and `service.instance.id`
+	// resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
+	//
+	// It requires Prometheus >= v3.1.0.
+	// +optional
+	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
 }

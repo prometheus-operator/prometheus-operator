@@ -24,13 +24,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) CreateOrUpdateRoleBinding(ctx context.Context, ns string, relativePath string) (FinalizerFn, error) {
-	return f.CreateOrUpdateRoleBindingForSubjectNamespace(ctx, ns, "", relativePath)
+func (f *Framework) createOrUpdateRoleBinding(ctx context.Context, ns string, cr *rbacv1.ClusterRole, relativePath string) (FinalizerFn, error) {
+	return f.createOrUpdateRoleBindingForSubjectNamespace(ctx, ns, "", cr, relativePath)
 }
 
-func (f *Framework) CreateOrUpdateRoleBindingForSubjectNamespace(ctx context.Context, ns, subjectNs string, source string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteRoleBinding(ctx, ns, source) }
-
+func (f *Framework) createOrUpdateRoleBindingForSubjectNamespace(ctx context.Context, ns, subjectNs string, cr *rbacv1.ClusterRole, source string) (FinalizerFn, error) {
 	roleBinding, err := f.parseRoleBindingYaml(source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse role binding manifest: %w", err)
@@ -41,19 +39,22 @@ func (f *Framework) CreateOrUpdateRoleBindingForSubjectNamespace(ctx context.Con
 			roleBinding.Subjects[i].Namespace = subjectNs
 		}
 	}
+	roleBinding.RoleRef.Name = cr.Name
+
+	finalizerFn := func() error { return f.deleteRoleBinding(ctx, ns, roleBinding.Name) }
 
 	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Get(ctx, roleBinding.Name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, fmt.Errorf("failed to get role binding: %w", err)
-	}
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("failed to create role binding: %w", err)
+			}
 
-	if apierrors.IsNotFound(err) {
-		_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(ctx, roleBinding, metav1.CreateOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("failed to create role binding: %w", err)
+			return finalizerFn, nil
 		}
 
-		return finalizerFn, nil
+		return nil, fmt.Errorf("failed to get role binding: %w", err)
 	}
 
 	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Update(ctx, roleBinding, metav1.UpdateOptions{})
@@ -64,13 +65,13 @@ func (f *Framework) CreateOrUpdateRoleBindingForSubjectNamespace(ctx context.Con
 	return finalizerFn, nil
 }
 
-func (f *Framework) DeleteRoleBinding(ctx context.Context, ns string, source string) error {
-	roleBinding, err := f.parseRoleBindingYaml(source)
-	if err != nil {
+func (f *Framework) deleteRoleBinding(ctx context.Context, ns, name string) error {
+	err := f.KubeClient.RbacV1().RoleBindings(ns).Delete(ctx, name, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 
-	return f.KubeClient.RbacV1().RoleBindings(ns).Delete(ctx, roleBinding.Name, metav1.DeleteOptions{})
+	return nil
 }
 
 func (f *Framework) parseRoleBindingYaml(source string) (*rbacv1.RoleBinding, error) {

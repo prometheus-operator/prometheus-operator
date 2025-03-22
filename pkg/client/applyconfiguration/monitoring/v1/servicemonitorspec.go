@@ -30,10 +30,11 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
 	Endpoints                               []EndpointApplyConfiguration            `json:"endpoints,omitempty"`
 	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
 	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
-	ScrapeFallbackProtocol                  *monitoringv1.ScrapeProtocol            `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
 	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
 	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
@@ -100,6 +101,14 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithSelector(value *metav1.LabelS
 	return b
 }
 
+// WithSelectorMechanism sets the SelectorMechanism field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SelectorMechanism field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithSelectorMechanism(value monitoringv1.SelectorMechanism) *ServiceMonitorSpecApplyConfiguration {
+	b.SelectorMechanism = &value
+	return b
+}
+
 // WithNamespaceSelector sets the NamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NamespaceSelector field is set to the value of the last call.
@@ -126,11 +135,11 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...mon
 	return b
 }
 
-// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
-	b.ScrapeFallbackProtocol = &value
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
 	return b
 }
 
@@ -170,7 +179,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value u
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ServiceMonitorSpecApplyConfiguration {
-	b.ScrapeClassicHistograms = &value
+	b.NativeHistogramConfigApplyConfiguration.ScrapeClassicHistograms = &value
 	return b
 }
 
@@ -178,7 +187,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
-	b.NativeHistogramBucketLimit = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
 
@@ -186,7 +195,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(va
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ServiceMonitorSpecApplyConfiguration {
-	b.NativeHistogramMinBucketFactor = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramMinBucketFactor = &value
 	return b
 }
 

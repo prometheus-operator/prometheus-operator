@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  webhook_configs:
+  - timeout: 1m
+templates: []

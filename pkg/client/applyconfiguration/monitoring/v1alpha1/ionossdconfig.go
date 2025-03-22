@@ -33,6 +33,7 @@ type IonosSDConfigApplyConfiguration struct {
 	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
 	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
 }
 
 // IonosSDConfigApplyConfiguration constructs a declarative configuration of the IonosSDConfig type for use with
@@ -77,7 +78,7 @@ func (b *IonosSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithProxyURL(value string) *IonosSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -85,7 +86,7 @@ func (b *IonosSDConfigApplyConfiguration) WithProxyURL(value string) *IonosSDCon
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithNoProxy(value string) *IonosSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -93,7 +94,7 @@ func (b *IonosSDConfigApplyConfiguration) WithNoProxy(value string) *IonosSDConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *IonosSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -102,11 +103,11 @@ func (b *IonosSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *IonosSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *IonosSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -132,5 +133,13 @@ func (b *IonosSDConfigApplyConfiguration) WithFollowRedirects(value bool) *Ionos
 // If called multiple times, the EnableHTTP2 field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *IonosSDConfigApplyConfiguration {
 	b.EnableHTTP2 = &value
+	return b
+}
+
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithOAuth2(value *monitoringv1.OAuth2ApplyConfiguration) *IonosSDConfigApplyConfiguration {
+	b.OAuth2 = value
 	return b
 }

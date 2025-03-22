@@ -23,7 +23,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -34,55 +33,10 @@ import (
 
 const (
 	defaultRetention                     = "24h"
-	defaultQueryLogVolume                = "query-log-file"
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
 )
-
-// TODO(ArthurSens): generalize it enough to be used by both server and agent.
-func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *v1.Service {
-	p = p.DeepCopy()
-
-	if p.Spec.PortName == "" {
-		p.Spec.PortName = prompkg.DefaultPortName
-	}
-
-	svc := &v1.Service{
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       p.Spec.PortName,
-					Port:       9090,
-					TargetPort: intstr.FromString(p.Spec.PortName),
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus",
-			},
-		},
-	}
-
-	operator.UpdateObject(
-		svc,
-		operator.WithName(governingServiceName),
-		operator.WithAnnotations(config.Annotations),
-		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
-		operator.WithLabels(config.Labels),
-		operator.WithOwner(p),
-	)
-
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
-
-	return svc
-}
 
 func makeStatefulSet(
 	name string,
@@ -379,7 +333,7 @@ func makeStatefulSetSpec(
 	}
 
 	spec := appsv1.StatefulSetSpec{
-		ServiceName: governingServiceName,
+		ServiceName: ptr.Deref(cpf.ServiceName, governingServiceName),
 		Replicas:    cpf.Replicas,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
@@ -414,6 +368,7 @@ func makeStatefulSetSpec(
 				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
+				EnableServiceLinks:            cpf.EnableServiceLinks,
 			},
 		},
 	}
@@ -509,7 +464,8 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 
 // appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
 func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volumeMounts []v1.VolumeMount, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
-	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok {
+	// not mount 2 emptyDir volumes at the same mountpath
+	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
 		volumes = append(volumes, volume)
 	}
 
@@ -533,7 +489,8 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 		})
 	}
 
-	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok {
+	// not mount 2 emptyDir volumes at the same mountpath
+	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
 		volumeMounts = append(volumeMounts, vmount)
 	}
 
@@ -726,24 +683,24 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 }
 
 func queryLogFileVolumeMount(queryLogFile string) (v1.VolumeMount, bool) {
-	if !prompkg.UsesDefaultQueryLogVolume(queryLogFile) {
+	if !prompkg.UsesDefaultFileVolume(queryLogFile) {
 		return v1.VolumeMount{}, false
 	}
 
 	return v1.VolumeMount{
-		Name:      defaultQueryLogVolume,
+		Name:      prompkg.DefaultLogFileVolume,
 		ReadOnly:  false,
-		MountPath: prompkg.DefaultQueryLogDirectory,
+		MountPath: prompkg.DefaultLogDirectory,
 	}, true
 }
 
 func queryLogFileVolume(queryLogFile string) (v1.Volume, bool) {
-	if !prompkg.UsesDefaultQueryLogVolume(queryLogFile) {
+	if !prompkg.UsesDefaultFileVolume(queryLogFile) {
 		return v1.Volume{}, false
 	}
 
 	return v1.Volume{
-		Name: defaultQueryLogVolume,
+		Name: prompkg.DefaultLogFileVolume,
 		VolumeSource: v1.VolumeSource{
 			EmptyDir: &v1.EmptyDirVolumeSource{},
 		},

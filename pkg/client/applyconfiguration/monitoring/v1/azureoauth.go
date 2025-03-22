@@ -17,15 +17,15 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // AzureOAuthApplyConfiguration represents a declarative configuration of the AzureOAuth type for use
 // with apply.
 type AzureOAuthApplyConfiguration struct {
-	ClientID     *string               `json:"clientId,omitempty"`
-	ClientSecret *v1.SecretKeySelector `json:"clientSecret,omitempty"`
-	TenantID     *string               `json:"tenantId,omitempty"`
+	ClientID     *string                   `json:"clientId,omitempty"`
+	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
+	TenantID     *string                   `json:"tenantId,omitempty"`
 }
 
 // AzureOAuthApplyConfiguration constructs a declarative configuration of the AzureOAuth type for use with
@@ -45,7 +45,7 @@ func (b *AzureOAuthApplyConfiguration) WithClientID(value string) *AzureOAuthApp
 // WithClientSecret sets the ClientSecret field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClientSecret field is set to the value of the last call.
-func (b *AzureOAuthApplyConfiguration) WithClientSecret(value v1.SecretKeySelector) *AzureOAuthApplyConfiguration {
+func (b *AzureOAuthApplyConfiguration) WithClientSecret(value corev1.SecretKeySelector) *AzureOAuthApplyConfiguration {
 	b.ClientSecret = &value
 	return b
 }

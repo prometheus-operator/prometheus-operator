@@ -179,9 +179,8 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
 	promVersion := operator.DefaultPrometheusVersion
-	// Because Prometheus 3 is supported from version 0.77.0 only
-	if os.Getenv("TEST_EXPERIMENTAL_PROMETHEUS") == "true" && f.operatorVersion.Minor >= 77 {
-		promVersion = operator.DefaultPrometheusExperimentalVersion
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		promVersion = operator.DefaultPrometheusV2
 	}
 	return &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
@@ -318,7 +317,7 @@ func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus)
 					Key: PrivateKey,
 				},
 				// Liveness/readiness probes don't work when using "RequireAndVerifyClientCert".
-				ClientAuthType: "VerifyClientCertIfGiven",
+				ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
 			},
 		},
 	}

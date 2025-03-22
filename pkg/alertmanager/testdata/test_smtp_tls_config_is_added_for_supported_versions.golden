@@ -1,0 +1,7 @@
+global:
+  smtp_tls_config:
+    ca_file: /var/kubernetes/secrets/tls/ca.txt
+    insecure_skip_verify: false
+    min_version: TLS12
+    max_version: TLS13
+templates: []
