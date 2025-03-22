@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"net/url"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -147,6 +148,11 @@ func (pc *ProxyConfig) Validate() error {
 		}
 	}
 
+	if c.ProxyURL != nil {
+		if _, err := url.Parse(*c.ProxyURL); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
