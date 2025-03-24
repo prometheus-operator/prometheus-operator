@@ -216,10 +216,11 @@ update-go-deps:
 
 .PHONY: tidy
 tidy:
-	go mod tidy -v
 	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
 	cd pkg/client && go mod tidy -v -modfile=go.mod
 	cd scripts && go mod tidy -v -modfile=go.mod
+	go work sync
+	go mod tidy -v
 
 .PHONY: generate
 generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
@@ -422,7 +423,7 @@ $(TOOLS_BIN_DIR):
 
 $(TOOLING): $(TOOLS_BIN_DIR)
 	@echo Installing tools from scripts/tools.go
-	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
+	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
 	@echo Downloading shellcheck
 	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
@@ -441,7 +442,7 @@ define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(TOOLS_BIN_DIR)/$(1)
 
 $(TOOLS_BIN_DIR)/$(1):
-	@GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly -modfile=scripts/go.mod k8s.io/code-generator/cmd/$(1)
+	@GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly k8s.io/code-generator/cmd/$(1)
 
 endef
 
