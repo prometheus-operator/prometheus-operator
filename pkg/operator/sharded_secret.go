@@ -24,6 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
@@ -116,7 +117,16 @@ func (s *ShardedSecret) secretNameAt(index int) string {
 
 // Hash implements the Hashable interface from github.com/mitchellh/hashstructure.
 func (s *ShardedSecret) Hash() (uint64, error) {
-	return uint64(len(s.secretShards)), nil
+	// Create a hash that incorporates both the number of shards and the actual content
+	hashSource := struct {
+		Data         map[string][]byte
+		SecretShards int
+	}{
+		Data:         s.data,
+		SecretShards: len(s.secretShards),
+	}
+
+	return hashstructure.Hash(hashSource, nil)
 }
 
 // Volume returns a v1.Volume object with all TLS assets ready to be mounted in a container.

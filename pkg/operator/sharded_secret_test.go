@@ -88,3 +88,62 @@ func TestShardedSecret(t *testing.T) {
 		})
 	}
 }
+
+func TestShardedSecretHash(t *testing.T) {
+	template := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "secret",
+		},
+	}
+
+	// Create first secret with data
+	s1 := &ShardedSecret{
+		template: template,
+		data: map[string][]byte{
+			"key1": []byte("value1"),
+		},
+	}
+	s1.shard() // populate secretShards
+
+	// Create second secret with same structure but different data
+	s2 := &ShardedSecret{
+		template: template,
+		data: map[string][]byte{
+			"key1": []byte("value2"), // different value
+		},
+	}
+	s2.shard() // populate secretShards
+
+	// Create third secret with same data as first one
+	s3 := &ShardedSecret{
+		template: template,
+		data: map[string][]byte{
+			"key1": []byte("value1"), // same as s1
+		},
+	}
+	s3.shard() // populate secretShards
+
+	// Hash should be different when data is different
+	hash1, err1 := s1.Hash()
+	if err1 != nil {
+		t.Fatalf("failed to hash s1: %v", err1)
+	}
+
+	hash2, err2 := s2.Hash()
+	if err2 != nil {
+		t.Fatalf("failed to hash s2: %v", err2)
+	}
+
+	hash3, err3 := s3.Hash()
+	if err3 != nil {
+		t.Fatalf("failed to hash s3: %v", err3)
+	}
+
+	if hash1 == hash2 {
+		t.Errorf("hashes should be different for different data: hash1=%d, hash2=%d", hash1, hash2)
+	}
+
+	if hash1 != hash3 {
+		t.Errorf("hashes should be the same for same data: hash1=%d, hash3=%d", hash1, hash3)
+	}
+}
