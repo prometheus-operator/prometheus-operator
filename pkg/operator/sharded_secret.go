@@ -18,15 +18,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mitchellh/hashstructure"
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-
-	"github.com/mitchellh/hashstructure"
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 // MaxSecretDataSizeBytes is the maximum data size that a single secret shard
