@@ -58,6 +58,9 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
+
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator/servicemonitorcontroller"
 )
 
 // checkPrerequisites verifies that the CRD is installed in the cluster and
@@ -584,7 +587,63 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
-	if po == nil && pao == nil && ao == nil && to == nil && kec == nil {
+	// Check if we can update the ServiceMonitor status subresource
+	serviceMonitorStatusSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		nil,
+		monitoringv1.SchemeGroupVersion,
+		monitoringv1.ServiceMonitorName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: monitoringv1.ServiceMonitorName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: fmt.Sprintf("%s/status", monitoringv1.ServiceMonitorName),
+			Verbs:    []string{"update"},
+		},
+	)
+	if err != nil {
+		logger.Error("failed to check ServiceMonitor status support", "err", err)
+		cancel()
+		return 1
+	}
+
+	// Initialize ServiceMonitor status controller
+	var smc *servicemonitorcontroller.StatusController
+	if serviceMonitorStatusSupported && (prometheusSupported || prometheusAgentSupported) {
+		// Get the client for the monitoring API
+		mclient, err := monitoringclient.NewForConfig(restConfig)
+		if err != nil {
+			logger.Error("instantiating monitoring client failed", "err", err)
+			cancel()
+			return 1
+		}
+
+		// Create the status controller using the existing operators
+		smc, err = servicemonitorcontroller.NewStatusControllerForOperators(
+			ctx,
+			logger,
+			mclient,
+			po,  // Prometheus operator
+			pao, // PrometheusAgent operator
+			r,
+		)
+		if err != nil {
+			logger.Error("instantiating servicemonitor status controller failed", "err", err)
+			// We don't exit here, just log the error and continue without the controller
+			logger.Info("continuing without ServiceMonitor status controller")
+		} else {
+			logger.Info("ServiceMonitor status controller initialized successfully")
+		}
+	}
+
+	if po == nil && pao == nil && ao == nil && to == nil && kec == nil && smc == nil {
 		logger.Error("no controller can be started, check the RBAC permissions of the service account")
 		cancel()
 		return 1
@@ -632,6 +691,9 @@ func run(fs *flag.FlagSet) int {
 	}
 	if kec != nil {
 		wg.Go(func() error { return kec.Run(ctx) })
+	}
+	if smc != nil {
+		wg.Go(func() error { return smc.Run(ctx, 1) })
 	}
 
 	term := make(chan os.Signal, 1)

@@ -178,8 +178,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.SecretOrConfigMapApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitor"):
 		return &monitoringv1.ServiceMonitorApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ServiceMonitorReference"):
+		return &monitoringv1.ServiceMonitorReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitorSpec"):
 		return &monitoringv1.ServiceMonitorSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ServiceMonitorStatus"):
+		return &monitoringv1.ServiceMonitorStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardRetentionPolicy"):
 		return &monitoringv1.ShardRetentionPolicyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardStatus"):

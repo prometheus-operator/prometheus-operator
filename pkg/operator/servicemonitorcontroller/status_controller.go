@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"slices"
 	"time"
 
@@ -77,6 +78,99 @@ func NewStatusController(
 		logger:         logger,
 		mclient:        mclient,
 		prometheusInfs: prometheusInfs,
+		promAgentInfs:  promAgentInfs,
+		serviceMonInfs: serviceMonInfs,
+		queue:          workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "servicemonitor-status"),
+		metrics: &statusControllerMetrics{
+			statusUpdates: prometheus.NewCounter(prometheus.CounterOpts{
+				Name: "prometheus_operator_servicemonitor_status_updates_total",
+				Help: "Total number of status updates for ServiceMonitor objects",
+			}),
+			statusUpdateFailures: prometheus.NewCounter(prometheus.CounterOpts{
+				Name: "prometheus_operator_servicemonitor_status_update_failures_total",
+				Help: "Total number of status update failures for ServiceMonitor objects",
+			}),
+		},
+	}
+
+	reg.MustRegister(c.metrics.statusUpdates, c.metrics.statusUpdateFailures)
+
+	c.setupEventHandlers()
+
+	return c, nil
+}
+
+// NewStatusControllerForOperators creates a new StatusController from existing operators.
+// This is the preferred way to create the controller as it directly accesses the
+// operators' informers rather than creating new ones.
+func NewStatusControllerForOperators(
+	ctx context.Context,
+	logger *slog.Logger,
+	mclient monitoringclient.Interface,
+	promOperator interface{},
+	promAgentOperator interface{},
+	reg prometheus.Registerer,
+) (*StatusController, error) {
+	logger = logger.With("controller", "servicemonitor-status")
+
+	if reg == nil {
+		reg = prometheus.NewRegistry()
+	}
+
+	// Extract informers from the Prometheus operator using reflection
+	var (
+		promInfs       *informers.ForResource
+		promAgentInfs  *informers.ForResource
+		serviceMonInfs *informers.ForResource
+	)
+
+	// Extract informers from Prometheus operator
+	if promOperator != nil {
+		// Access the operator's fields via reflection
+		promOpValue := reflect.ValueOf(promOperator).Elem()
+
+		// Try to get the ServiceMonitor informers
+		if f := promOpValue.FieldByName("smonInfs"); f.IsValid() {
+			serviceMonInfs = f.Interface().(*informers.ForResource)
+		}
+
+		// Try to get the Prometheus informers
+		if f := promOpValue.FieldByName("promInfs"); f.IsValid() {
+			promInfs = f.Interface().(*informers.ForResource)
+		}
+	}
+
+	// Extract informers from PrometheusAgent operator
+	if promAgentOperator != nil {
+		// Access the operator's fields via reflection
+		promAgentOpValue := reflect.ValueOf(promAgentOperator).Elem()
+
+		// Try to get the ServiceMonitor informers if not already set
+		if serviceMonInfs == nil {
+			if f := promAgentOpValue.FieldByName("smonInfs"); f.IsValid() {
+				serviceMonInfs = f.Interface().(*informers.ForResource)
+			}
+		}
+
+		// Try to get the PrometheusAgent informers
+		if f := promAgentOpValue.FieldByName("promInfs"); f.IsValid() {
+			promAgentInfs = f.Interface().(*informers.ForResource)
+		}
+	}
+
+	// Check if we have the required informers
+	if serviceMonInfs == nil {
+		return nil, fmt.Errorf("couldn't get ServiceMonitor informers from operators")
+	}
+
+	if promInfs == nil && promAgentInfs == nil {
+		return nil, fmt.Errorf("couldn't get either Prometheus or PrometheusAgent informers from operators")
+	}
+
+	c := &StatusController{
+		logger:         logger,
+		mclient:        mclient,
+		prometheusInfs: promInfs,
 		promAgentInfs:  promAgentInfs,
 		serviceMonInfs: serviceMonInfs,
 		queue:          workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "servicemonitor-status"),
