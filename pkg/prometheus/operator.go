@@ -132,7 +132,7 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 		}
 	}
 
-	return spec.ProxyConfig.Validate()
+	return spec.Validate()
 }
 
 // Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.
@@ -144,7 +144,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	}
 
 	var (
-		availableStatus    monitoringv1.ConditionStatus = monitoringv1.ConditionTrue
+		availableStatus    = monitoringv1.ConditionTrue
 		availableReason    string
 		availableCondition = monitoringv1.Condition{
 			Type: monitoringv1.Available,

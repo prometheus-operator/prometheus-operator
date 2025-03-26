@@ -156,18 +156,18 @@ func (f *Framework) WaitForPrometheusAgentDSReady(ctx context.Context, ns string
 			return false, nil
 		}
 
-		if dms.ObjectMeta.DeletionTimestamp != nil {
-			pollErr = fmt.Errorf("Prometheus Agent DaemonSet deletion in progress")
+		if dms.DeletionTimestamp != nil {
+			pollErr = fmt.Errorf("prometheus Agent DaemonSet deletion in progress")
 			return false, nil
 		}
 
 		if dms.Status.NumberUnavailable > 0 {
-			pollErr = fmt.Errorf("Prometheus Agent DaemonSet is not available")
+			pollErr = fmt.Errorf("prometheus Agent DaemonSet is not available")
 			return false, nil
 		}
 
 		if dms.Status.NumberReady == 0 {
-			pollErr = fmt.Errorf("Prometheus Agent DaemonSet is not ready")
+			pollErr = fmt.Errorf("prometheus Agent DaemonSet is not ready")
 			return false, nil
 		}
 
@@ -212,7 +212,7 @@ func (f *Framework) DeletePrometheusAgentDSAndWaitUntilGone(ctx context.Context,
 		dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
 		dms, _ := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
 		if dms.Status.NumberAvailable != 0 {
-			pollErr = fmt.Errorf("Prometheus Agent DaemonSet still exists after deleting")
+			pollErr = fmt.Errorf("prometheus Agent DaemonSet still exists after deleting")
 			return false, nil
 		}
 
