@@ -1222,8 +1222,83 @@ spec:
             - endpoints
             - selector
             type: object
+          status:
+            description: |-
+              Status of the ServiceMonitor, shows which Prometheus instances are using it
+              and the success or failure of reconciliations.
+            properties:
+              references:
+                description: References lists the Prometheus and PrometheusAgent instances that use this ServiceMonitor
+                  and the status of the reconciliation.
+                items:
+                  description: ServiceMonitorReference represents a reference from a Prometheus or PrometheusAgent
+                    to a ServiceMonitor, along with reconciliation status.
+                  properties:
+                    conditions:
+                      description: Conditions provides reconciliation status information.
+                      items:
+                        description: Condition contains details about the state of a resource.
+                        properties:
+                          lastTransitionTime:
+                            description: lastTransitionTime is the time of the last update to the current status property.
+                            format: date-time
+                            type: string
+                          message:
+                            description: Human-readable message indicating details for the condition's last transition.
+                            type: string
+                          observedGeneration:
+                            description: ObservedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                            format: int64
+                            type: integer
+                          reason:
+                            description: Reason for the condition's last transition.
+                            type: string
+                          status:
+                            description: Status of the condition.
+                            enum:
+                            - "True"
+                            - "Degraded"
+                            - "False"
+                            - "Unknown"
+                            type: string
+                          type:
+                            description: Type of the condition being reported.
+                            enum:
+                            - Available
+                            - Reconciled
+                            type: string
+                        required:
+                        - lastTransitionTime
+                        - status
+                        - type
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - type
+                      x-kubernetes-list-type: map
+                    name:
+                      description: Name of the referent Prometheus or PrometheusAgent.
+                      type: string
+                    namespace:
+                      description: Namespace of the referent Prometheus or PrometheusAgent.
+                      type: string
+                    resource:
+                      description: Resource type of the referent, either "prometheuses" or "prometheusagents"
+                      enum:
+                      - prometheuses
+                      - prometheusagents
+                      type: string
+                  required:
+                  - name
+                  - namespace
+                  - resource
+                  type: object
+                type: array
+            type: object
         required:
         - spec
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}

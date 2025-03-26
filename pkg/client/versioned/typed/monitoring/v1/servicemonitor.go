@@ -38,13 +38,14 @@ type ServiceMonitorsGetter interface {
 type ServiceMonitorInterface interface {
 	Create(ctx context.Context, serviceMonitor *monitoringv1.ServiceMonitor, opts metav1.CreateOptions) (*monitoringv1.ServiceMonitor, error)
 	Update(ctx context.Context, serviceMonitor *monitoringv1.ServiceMonitor, opts metav1.UpdateOptions) (*monitoringv1.ServiceMonitor, error)
+	UpdateStatus(ctx context.Context, serviceMonitor *monitoringv1.ServiceMonitor, opts metav1.UpdateOptions) (*monitoringv1.ServiceMonitor, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
 	Get(ctx context.Context, name string, opts metav1.GetOptions) (*monitoringv1.ServiceMonitor, error)
 	List(ctx context.Context, opts metav1.ListOptions) (*monitoringv1.ServiceMonitorList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *monitoringv1.ServiceMonitor, err error)
-	Apply(ctx context.Context, serviceMonitor *applyconfigurationmonitoringv1.ServiceMonitorApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.ServiceMonitor, err error)
+	Apply(ctx context.Context, serviceMonitor *applyconfigurationmonitoringv1.ServiceMonitorApplyConfiguration, opts metav1.ApplyOptions) (*monitoringv1.ServiceMonitor, error)
 	ServiceMonitorExpansion
 }
 
