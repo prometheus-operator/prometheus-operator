@@ -1149,6 +1149,11 @@ var (
 	DeleteWhenScaledRetentionType WhenScaledRetentionType = "Delete"
 )
 
+type RetainConfig struct {
+	// +required
+	RetentionPeriod Duration `json:"retentionPeriod"`
+}
+
 type ShardRetentionPolicy struct {
 	// Defines the retention policy when the Prometheus shards are scaled down.
 	// * `Delete`, the operator will delete the pods from the scaled-down shard(s).
@@ -1158,6 +1163,10 @@ type ShardRetentionPolicy struct {
 	// +kubebuilder:validation:Enum=Retain;Delete
 	// +optional
 	WhenScaled *WhenScaledRetentionType `json:"whenScaled,omitempty"`
+	// Defines the config for retention when the retention policy is set to `Retain`.
+	// This field is ineffective as of now.
+	// +optional
+	Retain *RetainConfig `json:"retain,omitempty"`
 }
 
 type PrometheusTracingConfig struct {
