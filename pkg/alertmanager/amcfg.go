@@ -684,6 +684,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var rocketchatConfigs []*rocketChatConfig
+	if l := len(in.RocketChatConfigs); l > 0 {
+		rocketchatConfigs = make([]*rocketChatConfig, l)
+		for i := range in.RocketChatConfigs {
+			receiver, err := cb.convertRocketChatConfig(ctx, in.RocketChatConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("RocketChatConfig[%d]: %w", i, err)
+			}
+			rocketchatConfigs[i] = receiver
+		}
+	}
+
 	var webexConfigs []*webexConfig
 	if l := len(in.WebexConfigs); l > 0 {
 		webexConfigs = make([]*webexConfig, l)
@@ -697,21 +709,56 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 	}
 
 	return &receiver{
-		Name:             makeNamespacedString(in.Name, crKey),
-		OpsgenieConfigs:  opsgenieConfigs,
-		PagerdutyConfigs: pagerdutyConfigs,
-		DiscordConfigs:   discordConfigs,
-		SlackConfigs:     slackConfigs,
-		WebhookConfigs:   webhookConfigs,
-		WeChatConfigs:    weChatConfigs,
-		EmailConfigs:     emailConfigs,
-		VictorOpsConfigs: victorOpsConfigs,
-		PushoverConfigs:  pushoverConfigs,
-		SNSConfigs:       snsConfigs,
-		TelegramConfigs:  telegramConfigs,
-		WebexConfigs:     webexConfigs,
-		MSTeamsConfigs:   msTeamsConfigs,
+		Name:              makeNamespacedString(in.Name, crKey),
+		OpsgenieConfigs:   opsgenieConfigs,
+		PagerdutyConfigs:  pagerdutyConfigs,
+		DiscordConfigs:    discordConfigs,
+		SlackConfigs:      slackConfigs,
+		WebhookConfigs:    webhookConfigs,
+		WeChatConfigs:     weChatConfigs,
+		EmailConfigs:      emailConfigs,
+		VictorOpsConfigs:  victorOpsConfigs,
+		PushoverConfigs:   pushoverConfigs,
+		SNSConfigs:        snsConfigs,
+		TelegramConfigs:   telegramConfigs,
+		WebexConfigs:      webexConfigs,
+		MSTeamsConfigs:    msTeamsConfigs,
+		RocketChatConfigs: rocketchatConfigs,
 	}, nil
+}
+
+func (cb *configBuilder) convertRocketChatConfig(ctx context.Context, in monitoringv1alpha1.RocketChatConfig, crKey types.NamespacedName) (*rocketChatConfig, error) {
+	out := &rocketChatConfig{
+		VSendResolved: in.SendResolved,
+	}
+
+	if in.Title != nil && *in.Title != "" {
+		out.Title = *in.Title
+	}
+
+	if in.Text != nil && *in.Text != "" {
+		out.Text = *in.Text
+	}
+
+	token, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.Token)
+	if err != nil {
+		return nil, err
+	}
+	out.Token = &token
+
+	tokenID, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.TokenID)
+	if err != nil {
+		return nil, err
+	}
+	out.TokenID = &tokenID
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
 }
 
 func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoringv1alpha1.WebhookConfig, crKey types.NamespacedName) (*webhookConfig, error) {
@@ -1789,6 +1836,30 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		msg := "'victorops_api_key' and 'victorops_api_key_file' are mutually exclusive - 'victorops_api_key' has taken precedence"
 		logger.Warn(msg)
 		gc.VictorOpsAPIKeyFile = ""
+	}
+
+	if gc.RocketChatToken != "" && gc.RocketChatTokenFile != "" {
+		msg := "'rocket_chat_token' and 'rocket_chat_token_file' are mutually exclusive - 'rocket_chat_token' has taken precedence"
+		logger.Warn(msg)
+		gc.RocketChatTokenFile = ""
+	}
+
+	if gc.RocketChatTokenID != "" && gc.RocketChatTokenIDFile != "" {
+		msg := "'rocket_chat_token_id' and 'rocket_chat_token_id_file' are mutually exclusive - 'rocket_chat_token_id' has taken precedence"
+		logger.Warn(msg)
+		gc.RocketChatTokenIDFile = ""
+	}
+
+	if gc.RocketChatTokenFile != "" && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'rocket_chat_token_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.RocketChatTokenFile = ""
+	}
+
+	if gc.RocketChatTokenIDFile != "" && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'rocket_chat_token_id_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.RocketChatTokenIDFile = ""
 	}
 
 	return nil
