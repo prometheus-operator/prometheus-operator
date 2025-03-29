@@ -27,7 +27,7 @@ import (
 func (f *Framework) createOrUpdateMutatingHook(ctx context.Context, certBytes []byte, namespace, source string) (FinalizerFn, error) {
 	hook, err := parseMutatingHookYaml(source)
 	if err != nil {
-		return nil, fmt.Errorf("Failed parsing mutating webhook: %w", err)
+		return nil, fmt.Errorf("failed parsing mutating webhook: %w", err)
 	}
 
 	hook.Webhooks[0].ClientConfig.Service.Namespace = namespace
@@ -46,7 +46,7 @@ func (f *Framework) createOrUpdateMutatingHook(ctx context.Context, certBytes []
 		}
 	} else {
 		// must set this field from existing MutatingWebhookConfiguration to prevent update fail
-		hook.ObjectMeta.ResourceVersion = h.ObjectMeta.ResourceVersion
+		hook.ResourceVersion = h.ResourceVersion
 
 		// MutatingWebhookConfiguration already exists -> Update
 		_, err = f.KubeClient.AdmissionregistrationV1().MutatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})
@@ -63,7 +63,7 @@ func (f *Framework) createOrUpdateMutatingHook(ctx context.Context, certBytes []
 func (f *Framework) createOrUpdateValidatingHook(ctx context.Context, certBytes []byte, namespace, source string) (FinalizerFn, error) {
 	hook, err := parseValidatingHookYaml(source)
 	if err != nil {
-		return nil, fmt.Errorf("Failed parsing validating webhook: %w", err)
+		return nil, fmt.Errorf("failed parsing validating webhook: %w", err)
 	}
 
 	hook.Webhooks[0].ClientConfig.Service.Namespace = namespace
@@ -82,7 +82,7 @@ func (f *Framework) createOrUpdateValidatingHook(ctx context.Context, certBytes 
 		}
 	} else {
 		// must set this field from existing ValidatingWebhookConfiguration to prevent update fail
-		hook.ObjectMeta.ResourceVersion = h.ObjectMeta.ResourceVersion
+		hook.ResourceVersion = h.ResourceVersion
 
 		// ValidatingWebhookConfiguration already exists -> Update
 		_, err = f.KubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(ctx, hook, metav1.UpdateOptions{})

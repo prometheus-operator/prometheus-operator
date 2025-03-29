@@ -54,7 +54,7 @@ func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, 
 		}
 	} else {
 		// must set these immutable fields from the existing service to prevent update fail
-		service.ObjectMeta.ResourceVersion = s.ObjectMeta.ResourceVersion
+		service.ResourceVersion = s.ResourceVersion
 		service.Spec.ClusterIP = s.Spec.ClusterIP
 		service.Spec.ClusterIPs = s.Spec.ClusterIPs
 		service.Spec.IPFamilies = s.Spec.IPFamilies

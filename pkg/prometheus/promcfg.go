@@ -486,8 +486,8 @@ func mergeAuthorizationWithScrapeClass(authz *monitoringv1.Authorization, scrape
 		return authz
 	}
 
-	if authz.SafeAuthorization.Credentials == nil {
-		authz.SafeAuthorization.Credentials = scrapeClass.Authorization.SafeAuthorization.Credentials
+	if authz.Credentials == nil {
+		authz.Credentials = scrapeClass.Authorization.Credentials
 	}
 
 	if authz.Credentials == nil && authz.CredentialsFile == "" {
@@ -515,15 +515,15 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 		return tlsConfig
 	}
 
-	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
+	if tlsConfig.CAFile == "" && tlsConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
 		tlsConfig.CAFile = scrapeClass.TLSConfig.CAFile
 	}
 
-	if tlsConfig.CertFile == "" && tlsConfig.SafeTLSConfig.Cert == (monitoringv1.SecretOrConfigMap{}) {
+	if tlsConfig.CertFile == "" && tlsConfig.Cert == (monitoringv1.SecretOrConfigMap{}) {
 		tlsConfig.CertFile = scrapeClass.TLSConfig.CertFile
 	}
 
-	if tlsConfig.KeyFile == "" && tlsConfig.SafeTLSConfig.KeySecret == nil {
+	if tlsConfig.KeyFile == "" && tlsConfig.KeySecret == nil {
 		tlsConfig.KeyFile = scrapeClass.TLSConfig.KeyFile
 	}
 

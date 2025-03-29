@@ -649,7 +649,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 		if loopErr != nil {
 			return false, loopErr
 		}
-		if 1 != len(pods.Items) {
+		if len(pods.Items) != 1 {
 			return false, nil
 		}
 		podIP := pods.Items[0].Status.PodIP

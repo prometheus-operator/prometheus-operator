@@ -8,7 +8,7 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20241111191808-71fefeed8910
 	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/bwplotka/mdox v0.9.1-0.20220713080221-769034ad8cfe
-	github.com/golangci/golangci-lint v1.64.7
+	github.com/golangci/golangci-lint/v2 v2.0.2
 	github.com/google/go-jsonnet v0.20.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.5.1
 	github.com/yeya24/promlinter v0.3.0
@@ -21,15 +21,15 @@ require (
 	4d63.com/gochecknoglobals v0.2.2 // indirect
 	github.com/4meepo/tagalign v1.4.2 // indirect
 	github.com/Abirdcfly/dupword v0.1.3 // indirect
-	github.com/Antonboom/errname v1.0.0 // indirect
-	github.com/Antonboom/nilnil v1.0.1 // indirect
-	github.com/Antonboom/testifylint v1.5.2 // indirect
-	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c // indirect
+	github.com/Antonboom/errname v1.1.0 // indirect
+	github.com/Antonboom/nilnil v1.1.0 // indirect
+	github.com/Antonboom/testifylint v1.6.0 // indirect
+	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/Crocmagnon/fatcontext v0.7.1 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.3.1 // indirect
 	github.com/Kunde21/markdownfmt/v2 v2.1.1-0.20210810103848-727f02f4c51c // indirect
-	github.com/Masterminds/semver/v3 v3.3.0 // indirect
+	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.1 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
@@ -46,28 +46,35 @@ require (
 	github.com/antchfx/xpath v1.1.10 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.2.0 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bep/godartsass v0.14.0 // indirect
 	github.com/bep/golibsass v1.1.0 // indirect
 	github.com/bkielbasa/cyclop v1.2.3 // indirect
 	github.com/blizzy78/varnamelen v0.8.0 // indirect
-	github.com/bombsimon/wsl/v4 v4.5.0 // indirect
-	github.com/breml/bidichk v0.3.2 // indirect
-	github.com/breml/errchkjson v0.4.0 // indirect
+	github.com/bombsimon/wsl/v4 v4.6.0 // indirect
+	github.com/breml/bidichk v0.3.3 // indirect
+	github.com/breml/errchkjson v0.4.1 // indirect
 	github.com/butuzov/ireturn v0.3.1 // indirect
 	github.com/butuzov/mirror v1.3.0 // indirect
-	github.com/catenacyber/perfsprint v0.8.2 // indirect
+	github.com/catenacyber/perfsprint v0.9.1 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
+	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
 	github.com/charmbracelet/glamour v0.5.0 // indirect
+	github.com/charmbracelet/lipgloss v1.1.0 // indirect
+	github.com/charmbracelet/x/ansi v0.8.0 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd // indirect
+	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
-	github.com/ckaznocha/intrange v0.3.0 // indirect
+	github.com/ckaznocha/intrange v0.3.1 // indirect
 	github.com/clbanning/mxj/v2 v2.5.6 // indirect
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
-	github.com/daixiang0/gci v0.13.5 // indirect
+	github.com/daixiang0/gci v0.13.6 // indirect
+	github.com/dave/dst v0.27.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
@@ -82,8 +89,8 @@ require (
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/ghostiam/protogetter v0.3.9 // indirect
-	github.com/go-critic/go-critic v0.12.0 // indirect
+	github.com/ghostiam/protogetter v0.3.12 // indirect
+	github.com/go-critic/go-critic v0.13.0 // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -110,6 +117,7 @@ require (
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.0 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
+	github.com/golangci/golines v0.0.0-20250217134842-442fd0091d95 // indirect
 	github.com/golangci/misspell v0.6.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
@@ -150,7 +158,7 @@ require (
 	github.com/ldez/usetesting v0.4.2 // indirect
 	github.com/leonklingele/grouper v1.1.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/macabu/inamedparam v0.1.3 // indirect
+	github.com/macabu/inamedparam v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
@@ -168,7 +176,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.9.0 // indirect
+	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/niklasfasching/go-org v1.6.5 // indirect
@@ -186,7 +194,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/quasilyte/go-ruleguard v0.4.3-0.20240823090925-0fe6f58b47b1 // indirect
+	github.com/quasilyte/go-ruleguard v0.4.4 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20210819130434-b3f0c404a727 // indirect
@@ -195,7 +203,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/ryancurrah/gomodguard v1.3.5 // indirect
+	github.com/ryancurrah/gomodguard v1.4.1 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.1.0 // indirect
@@ -203,10 +211,9 @@ require (
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.28.0 // indirect
 	github.com/securego/gosec/v2 v2.22.2 // indirect
-	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sivchari/containedctx v1.0.3 // indirect
-	github.com/sivchari/tenv v1.12.1 // indirect
 	github.com/sonatard/noctx v0.1.0 // indirect
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
@@ -225,7 +232,7 @@ require (
 	github.com/temoto/robotstxt v1.1.1 // indirect
 	github.com/tetafro/godot v1.5.0 // indirect
 	github.com/theckman/yacspin v0.8.0 // indirect
-	github.com/timakin/bodyclose v0.0.0-20241017074812-ed6a65f985e3 // indirect
+	github.com/timakin/bodyclose v0.0.0-20241222091800-1db5c5ca4d67 // indirect
 	github.com/timonwong/loggercheck v0.10.1 // indirect
 	github.com/tomarrell/wrapcheck/v2 v2.10.0 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
@@ -234,7 +241,8 @@ require (
 	github.com/uudashr/gocognit v1.2.0 // indirect
 	github.com/uudashr/iface v1.3.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	github.com/xen0n/gosmopolitan v1.2.2 // indirect
+	github.com/xen0n/gosmopolitan v1.3.0 // indirect
+	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
@@ -268,7 +276,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
 	mvdan.cc/gofumpt v0.7.0 // indirect
-	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
+	mvdan.cc/unparam v0.0.0-20250301125049-0df0534333a4 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

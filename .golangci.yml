@@ -1,47 +1,66 @@
+version: "2"
 run:
   timeout: 10m
-
 linters:
   enable:
-  - revive
-  - gci
-  - depguard
-  - godot
-  - testifylint
-  - unconvert
-  - recvcheck
-  - iface
-  - exptostd
-  - nilnesserr
-  - sloglint
-
-issues:
-  exclude-rules:
-  # Disable errcheck linter for test files.
-  - path: _test.go
-    linters:
-    - errcheck
-  # We *frequently* use the term 'new' in the context of properties
-  # (new and old properties),
-  # and we rarely use the 'new' built-in function.
-  # It's fine to ignore these cases.
-  - linters:
+    - depguard
+    - exptostd
+    - godot
+    - iface
+    - nilnesserr
+    - recvcheck
     - revive
-    text: 'redefines-builtin-id: redefinition of the built-in function new'
-
-linters-settings:
-  errcheck:
-    exclude-functions:
-      # Any error in HTTP handlers is handled by the server itself.
-      - (net/http.ResponseWriter).Write
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/prometheus-operator/prometheus-operator)
-  depguard:
+    - sloglint
+    - testifylint
+    - unconvert
+  settings:
+    depguard:
+      rules:
+        forbid-pkg-errors:
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: Should be replaced with standard lib errors or fmt.Errorf
+    errcheck:
+      exclude-functions:
+        # Any error in HTTP handlers is handled by the server itself.
+        - (net/http.ResponseWriter).Write
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      forbid-pkg-errors:
-        deny:
-        - pkg: "github.com/pkg/errors"
-          desc: Should be replaced with standard lib errors or fmt.Errorf
+      # Disable errcheck linter for test files.
+      - linters:
+          - errcheck
+          - staticcheck
+          - testifylint
+        path: _test.go
+      # We *frequently* use the term 'new' in the context of properties
+      # (new and old properties),
+      # and we rarely use the 'new' built-in function.
+      # It's fine to ignore these cases.
+      - linters:
+          - revive
+        text: 'redefines-builtin-id: redefinition of the built-in function new'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/prometheus-operator/prometheus-operator)
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

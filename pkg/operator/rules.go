@@ -95,7 +95,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 
 	errs := ValidateRule(promRuleSpec)
 	if len(errs) != 0 {
-		const m = "Invalid rule"
+		const m = "invalid rule"
 		logger.Debug(m, "content", content)
 		for _, err := range errs {
 			logger.Info(m, "err", err)

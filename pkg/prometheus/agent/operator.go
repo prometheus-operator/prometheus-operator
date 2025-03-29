@@ -37,7 +37,6 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
@@ -583,7 +582,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger.Info("sync prometheusagent")
 
-	if ptr.Deref(p.Spec.Mode, "") == v1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
+	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
@@ -595,7 +594,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
-	if ptr.Deref(p.Spec.Mode, "") == v1alpha1.DaemonSetPrometheusAgentMode {
+	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
 		opts = append(opts, prompkg.WithDaemonSet())
 	}
 
@@ -618,7 +617,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	switch ptr.Deref(p.Spec.Mode, "") {
-	case v1alpha1.DaemonSetPrometheusAgentMode:
+	case monitoringv1alpha1.DaemonSetPrometheusAgentMode:
 		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
 	default:
 		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
@@ -770,14 +769,14 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
 			logger.Debug("new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
 
 		logger.Debug("updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName],
+			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -907,8 +906,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
-	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
-		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	if p.Spec.Web != nil && p.Spec.Web.HTTPConfig != nil {
+		http2 = p.Spec.Web.HTTPConfig.HTTP2
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because

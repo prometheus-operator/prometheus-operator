@@ -94,7 +94,7 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 		l.Items = append(l.Items, runtime.RawExtension{Object: obj.DeepCopyObject()})
 	}
 
-	l.ListMeta.ResourceVersion = metaObj.GetResourceVersion()
+	l.ResourceVersion = metaObj.GetResourceVersion()
 	return &l, nil
 }
 

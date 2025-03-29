@@ -610,7 +610,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
@@ -746,8 +746,8 @@ func makeSelectorLabels(name string) map[string]string {
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
-	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
-		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	if a.Spec.Web != nil && a.Spec.Web.HTTPConfig != nil {
+		http2 = a.Spec.Web.HTTPConfig.HTTP2
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
