@@ -94,7 +94,7 @@ func testDenyServiceMonitor(t *testing.T) {
 	for _, denied := range deniedNamespaces {
 		echo := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "ehoserver",
+				Name: "echoserver",
 			},
 			Spec: appsv1.DeploymentSpec{
 				Replicas: proto.Int32(1),

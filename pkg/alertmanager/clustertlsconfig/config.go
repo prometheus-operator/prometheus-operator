@@ -15,9 +15,11 @@
 package clustertlsconfig
 
 import (
+	"errors"
 	"fmt"
 	"path"
 	"path/filepath"
+	"reflect"
 
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -28,20 +30,22 @@ import (
 )
 
 const (
-	cmdflag            = "cluster.tls-config"
+	cliFlag            = "cluster.tls-config"
 	volumeName         = "cluster-tls-config"
 	serverVolumePrefix = "cluster-tls-server-config-"
 	clientVolumePrefix = "cluster-tls-client-config-"
 	serverTLSCredDir   = "server_tls"
 	clientTLSCredDir   = "client_tls"
-	ConfigFileKey      = "cluster-tls-config.yaml"
+
+	// ConfigFileKey is the secret's key containing the YAML configuration.
+	ConfigFileKey = "cluster-tls-config.yaml"
 )
 
-// Config is the web configuration for prometheus and alertmanager instance.
+// Config is the Alertmanager cluster's mTLS configuration.
 //
-// Config can make a secret which holds the web config contents, as well as
-// volumes and volume mounts for referencing the secret and the
-// necessary TLS credentials.
+// Config can make a secret which holds the cluster configuration as well as
+// volumes and volume mounts for referencing the secret and the necessary TLS
+// credentials.
 type Config struct {
 	clusterTLSConfig    *monitoringv1.ClusterTLSConfig
 	serverTLSReferences *webconfig.TLSReferences
@@ -55,7 +59,10 @@ type Config struct {
 // The Secret where the cluster TLS config will be stored will be named `secretName`.
 // All volumes containing TLS credentials related to cluster TLS configuration will be prefixed with "cluster-tls-server-config-"
 // or "cluster-tls-client-config-" respectively, for server and client credentials.
-func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSConfig) (*Config, error) {
+func New(mountingDir string, a *monitoringv1.Alertmanager) (*Config, error) {
+	clusterTLSConfig := a.Spec.ClusterTLS
+	secretName := fmt.Sprintf("alertmanager-%s-cluster-tls-config", a.Name)
+
 	if clusterTLSConfig == nil {
 		return &Config{
 			mountingDir: mountingDir,
@@ -70,12 +77,15 @@ func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.C
 
 	serverTLSConfig := clusterTLSConfig.ServerTLS
 	if err := serverTLSConfig.Validate(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid server TLS configuration: %w", err)
 	}
 
 	clientTLSConfig := clusterTLSConfig.ClientTLS
 	if err := clientTLSConfig.Validate(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid client TLS configuration: %w", err)
+	}
+	if reflect.ValueOf(clientTLSConfig.Cert).IsZero() {
+		return nil, errors.New("invalid client TLS configuration: certificate is required")
 	}
 
 	serverTLSCreds = webconfig.NewTLSReferences(path.Join(mountingDir, serverTLSCredDir), serverTLSConfig.KeySecret, serverTLSConfig.Cert, serverTLSConfig.ClientCA)
@@ -101,24 +111,24 @@ func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.C
 func (c Config) GetMountParameters() (*monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
 	destinationPath := path.Join(c.mountingDir, ConfigFileKey)
 
-	var volumes []v1.Volume
-	var mounts []v1.VolumeMount
 	var arg *monitoringv1.Argument
-
 	// Only return an argument if the cluster TLS config and it's server component are defined.
 	if c.clusterTLSConfig != nil {
 		arg = c.makeArg(destinationPath)
 	}
+
+	var volumes []v1.Volume
 	cfgVolume := c.makeVolume()
 	volumes = append(volumes, cfgVolume)
 
+	var mounts []v1.VolumeMount
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
 
 	if c.serverTLSReferences != nil {
 		servertlsVolumes, servertlsMounts, err := c.serverTLSReferences.GetMountParameters(serverVolumePrefix)
 		if err != nil {
-			return &monitoringv1.Argument{}, nil, nil, err
+			return nil, nil, nil, err
 		}
 		volumes = append(volumes, servertlsVolumes...)
 		mounts = append(mounts, servertlsMounts...)
@@ -127,7 +137,7 @@ func (c Config) GetMountParameters() (*monitoringv1.Argument, []v1.Volume, []v1.
 	if c.clientTLSReferences != nil {
 		clienttlsVolumes, clienttlsMounts, err := c.clientTLSReferences.GetMountParameters(clientVolumePrefix)
 		if err != nil {
-			return &monitoringv1.Argument{}, nil, nil, err
+			return nil, nil, nil, err
 		}
 		volumes = append(volumes, clienttlsVolumes...)
 		mounts = append(mounts, clienttlsMounts...)
@@ -164,7 +174,7 @@ func (c Config) generateConfigFileContents() ([]byte, error) {
 // makeArg() returns an argument with the name "cluster.tls-config" with the filePath
 // as its value.
 func (c Config) makeArg(filePath string) *monitoringv1.Argument {
-	return &monitoringv1.Argument{Name: cmdflag, Value: filePath}
+	return &monitoringv1.Argument{Name: cliFlag, Value: filePath}
 }
 
 // makeVolume() creates a Volume with volumeName = "cluster-tls-config" which stores

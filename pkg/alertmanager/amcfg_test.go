@@ -34,7 +34,6 @@ import (
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -154,7 +153,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -193,7 +192,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -229,7 +228,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -265,7 +264,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -304,7 +303,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -340,7 +339,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -376,7 +375,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -415,7 +414,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -451,7 +450,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -485,7 +484,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},
@@ -516,7 +515,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
-						Routes: []v1.JSON{
+						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
 							},

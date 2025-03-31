@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
@@ -288,8 +289,16 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			secretName := "test-secret"
-			config, err := clustertlsconfig.New("/cluster_tls_certs_path_prefix", secretName, tt.clusterTLSConfig)
+			config, err := clustertlsconfig.New(
+				"/cluster_tls_certs_path_prefix",
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test",
+					},
+					Spec: monitoringv1.AlertmanagerSpec{
+						ClusterTLS: tt.clusterTLSConfig,
+					},
+				})
 			require.NoError(t, err)
 
 			data, err := config.ClusterTLSConfiguration()
@@ -316,7 +325,7 @@ func TestGetMountParameters(t *testing.T) {
 					Name: "cluster-tls-config",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
-							SecretName: "cluster-tls-config",
+							SecretName: "alertmanager-test-cluster-tls-config",
 						},
 					},
 				},
@@ -389,7 +398,7 @@ func TestGetMountParameters(t *testing.T) {
 					Name: "cluster-tls-config",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
-							SecretName: "cluster-tls-config",
+							SecretName: "alertmanager-test-cluster-tls-config",
 						},
 					},
 				},
@@ -499,7 +508,17 @@ func TestGetMountParameters(t *testing.T) {
 
 	for _, tt := range ts {
 		t.Run(tt.name, func(t *testing.T) {
-			tlsAssets, err := clustertlsconfig.New("/etc/prometheus/cluster_tls_config", "cluster-tls-config", tt.clusterTLSConfig)
+			tlsAssets, err := clustertlsconfig.New(
+				"/etc/prometheus/cluster_tls_config",
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test",
+					},
+					Spec: monitoringv1.AlertmanagerSpec{
+						ClusterTLS: tt.clusterTLSConfig,
+					},
+				},
+			)
 			require.NoError(t, err)
 
 			_, volumes, mounts, err := tlsAssets.GetMountParameters()

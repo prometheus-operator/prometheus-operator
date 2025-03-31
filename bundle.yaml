@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -10042,7 +10042,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -10116,6 +10116,28 @@ spec:
               Specification of the desired behavior of the Alertmanager cluster. More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
+              additionalArgs:
+                description: |-
+                  AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
+                  It is intended for e.g. activating hidden flags which are not supported by
+                  the dedicated configuration options yet. The arguments are passed as-is to the
+                  Alertmanager container which may cause issues if they are invalid or not supported
+                  by the given Alertmanager version.
+                items:
+                  description: Argument as part of the AdditionalArgs list.
+                  properties:
+                    name:
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
+                      type: string
+                    value:
+                      description: Argument value, e.g. 30s. Can be empty for name-only
+                        arguments (e.g. --storage.tsdb.no-lockfile)
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               additionalPeers:
                 description: AdditionalPeers allows injecting a set of additional
                   Alertmanagers to peer with to form a highly available cluster.
@@ -19175,7 +19197,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -20383,7 +20405,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -21558,7 +21580,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -32396,7 +32418,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -41436,6 +41458,21 @@ spec:
                   however, the feature is not yet fully implemented in this PR. The limitation being:
                   * Retention duration is not settable, for now, shards are retained forever.
                 properties:
+                  retain:
+                    description: |-
+                      Defines the config for retention when the retention policy is set to `Retain`.
+                      This field is ineffective as of now.
+                    properties:
+                      retentionPeriod:
+                        description: |-
+                          Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
+                          Supported units: y, w, d, h, m, s, ms
+                          Examples: `30s`, `1m`, `1h20m15s`, `15d`
+                        pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                        type: string
+                    required:
+                    - retentionPeriod
+                    type: object
                   whenScaled:
                     description: |-
                       Defines the retention policy when the Prometheus shards are scaled down.
@@ -45485,7 +45522,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -45645,7 +45682,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -58160,7 +58197,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -59390,7 +59427,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-    operator.prometheus.io/version: 0.80.1
+    operator.prometheus.io/version: 0.81.0
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -67544,7 +67581,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.1
+    app.kubernetes.io/version: 0.81.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -67561,7 +67598,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.1
+    app.kubernetes.io/version: 0.81.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -67669,7 +67706,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.1
+    app.kubernetes.io/version: 0.81.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -67685,19 +67722,19 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.80.1
+        app.kubernetes.io/version: 0.81.0
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.80.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.80.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.81.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -67731,7 +67768,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.1
+    app.kubernetes.io/version: 0.81.0
   name: prometheus-operator
   namespace: default
 ---
@@ -67741,7 +67778,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.80.1
+    app.kubernetes.io/version: 0.81.0
   name: prometheus-operator
   namespace: default
 spec:

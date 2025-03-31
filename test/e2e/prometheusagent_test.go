@@ -37,6 +37,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -74,7 +75,7 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
 		},
 	)
 	require.NoError(t, err)
@@ -204,7 +205,7 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
 		},
 	)
 	require.NoError(t, err)
@@ -276,7 +277,7 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
 		},
 	)
 	require.NoError(t, err)
@@ -341,7 +342,7 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
 		},
 	)
 	require.NoError(t, err)
@@ -371,7 +372,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
 		},
 	)
 	require.NoError(t, err)

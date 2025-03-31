@@ -9220,13 +9220,13 @@ func TestAppendNameValidationScheme(t *testing.T) {
 	}{
 		{
 			name:                 "UTF8 nameValidationScheme withPrometheus Version 3",
-			version:              "v3.0.0-beta.0",
+			version:              "v3.0.0",
 			nameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 			expectedCfg:          "NameValidationSchemeUTF8WithPrometheusV3.golden",
 		},
 		{
 			name:                 "Legacy nameValidationScheme with Prometheus Version 3",
-			version:              "v3.0.0-beta.0",
+			version:              "v3.0.0",
 			nameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			expectedCfg:          "NameValidationSchemeLegacyWithPrometheusV3.golden",
 		},
