@@ -17,6 +17,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -147,6 +148,11 @@ func (pc *ProxyConfig) Validate() error {
 		}
 	}
 
+	if pc.ProxyURL != nil {
+		if _, err := url.Parse(*pc.ProxyURL); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
