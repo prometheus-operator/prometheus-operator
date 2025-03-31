@@ -203,9 +203,10 @@ func IsAllowed(
 						resource += "/" + ra.Name
 					}
 
-					if ns == v1.NamespaceAll {
+					switch ns {
+					case v1.NamespaceAll:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for all namespaces", verb, resource, ra.Group)
-					} else {
+					default:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for namespace %q", verb, resource, ra.Group, ns)
 					}
 

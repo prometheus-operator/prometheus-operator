@@ -136,11 +136,11 @@ func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Conditi
 		condition.Reason = "StatefulSetNotFound"
 		condition.Status = monitoringv1.ConditionFalse
 	case ready < gObj.ExpectedReplicas():
-
-		if available == 0 {
+		switch available {
+		case 0:
 			condition.Reason = "NoPodReady"
 			condition.Status = monitoringv1.ConditionFalse
-		} else {
+		default:
 			condition.Reason = "SomePodsNotReady"
 			condition.Status = monitoringv1.ConditionDegraded
 		}
