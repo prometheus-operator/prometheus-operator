@@ -65,7 +65,7 @@ func (f *Framework) CreateOrUpdateCRD(ctx context.Context, crd *v1.CustomResourc
 		}
 	} else {
 		// must set this field from existing CRD to prevent update fail
-		crd.ObjectMeta.ResourceVersion = c.ObjectMeta.ResourceVersion
+		crd.ResourceVersion = c.ResourceVersion
 
 		// CRD already exists -> Update
 		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Update(ctx, crd, metav1.UpdateOptions{})
@@ -139,7 +139,7 @@ func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdN
 		return fmt.Errorf("create CRD: %s from manifest: %s: %w", crdName, assetPath, err)
 	}
 
-	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
+	crd.Name = crd.Spec.Names.Plural + "." + group
 	crd.Spec.Group = group
 
 	err = f.CreateOrUpdateCRD(ctx, crd)
