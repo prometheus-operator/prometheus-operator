@@ -1247,7 +1247,7 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	if rs.version.LT(semver.MustParse("2.20.0")) {
-		return fmt.Errorf("digital Ocean SD configuration is only supported for Prometheus version >= 2.20.0")
+		return fmt.Errorf("service discovery for Digital Ocean is only supported for Prometheus version >= 2.20.0")
 	}
 
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {
