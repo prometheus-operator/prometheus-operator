@@ -92,10 +92,10 @@ jobs:
       - name: go.mod
         run: make tidy && git diff --exit-code
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6.5.2
+        uses: golangci/golangci-lint-action@v7.0.0
         with:
-          version: v1.64.7
-          args: --timeout 10m0s --go '${{ env.golang-version }}'
+          version: v2.0.2
+          args: --timeout 10m0s
 
   check-metrics:
     runs-on: ubuntu-latest

@@ -445,7 +445,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 	if c.manageEndpointSlice {
 		// Tell the endpointslice mirroring controller that it shouldn't manage
 		// the endpoints object since this controller is in charge.
-		eps.ObjectMeta.Labels[discoveryv1.LabelSkipMirror] = "true"
+		eps.Labels[discoveryv1.LabelSkipMirror] = "true"
 	}
 
 	for i, na := range addresses {

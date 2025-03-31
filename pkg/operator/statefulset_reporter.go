@@ -136,8 +136,8 @@ func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Conditi
 		condition.Reason = "StatefulSetNotFound"
 		condition.Status = monitoringv1.ConditionFalse
 	case ready < gObj.ExpectedReplicas():
-		switch {
-		case available == 0:
+		switch available {
+		case 0:
 			condition.Reason = "NoPodReady"
 			condition.Status = monitoringv1.ConditionFalse
 		default:
@@ -185,7 +185,7 @@ func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, s
 	}
 	for _, p := range pods.Items {
 		var found bool
-		for _, owner := range p.ObjectMeta.OwnerReferences {
+		for _, owner := range p.OwnerReferences {
 			if owner.Kind == "StatefulSet" && owner.Name == sset.Name {
 				found = true
 				break
