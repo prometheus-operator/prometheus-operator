@@ -260,6 +260,7 @@ spec:
                             x-kubernetes-map-type: atomic
                           avatarURL:
                             minLength: 1
+                            pattern: ^http(s)?://.+$
                             type: string
                           content:
                             description: The template of the content's body.

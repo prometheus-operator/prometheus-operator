@@ -136,6 +136,7 @@
                           },
                           avatarURL: {
                             minLength: 1,
+                            pattern: '^http(s)?://.+$',
                             type: 'string',
                           },
                           content: {
