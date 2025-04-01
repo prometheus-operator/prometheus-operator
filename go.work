@@ -1,0 +1,8 @@
+go 1.24.0
+
+use (
+	.
+	./pkg/apis/monitoring
+	./pkg/client
+	./scripts
+)
