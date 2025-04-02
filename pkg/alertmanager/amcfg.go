@@ -744,7 +744,10 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 	}
 
 	if in.Timeout != nil && *in.Timeout != "" {
-		out.Timeout.Set(string(*in.Timeout))
+		err := out.Timeout.Set(string(*in.Timeout))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return out, nil
