@@ -25,7 +25,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
 - job_name: gce_app_bar
   scrape_interval: 5s
@@ -51,7 +52,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
 - job_name: gce_app_bar_custom_shard_relabeling
   scrape_interval: 5s
@@ -70,5 +72,6 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
