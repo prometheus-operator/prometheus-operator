@@ -22052,20 +22052,6 @@ string
 </tr>
 <tr>
 <td>
-<code>httpConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
-HTTPConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>HTTP client configuration.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>content</code><br/>
 <em>
 string
@@ -22085,17 +22071,35 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>The username of the message sender.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>avatarURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<p>The avatar url of the message sender.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -31135,7 +31139,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -31972,20 +31976,6 @@ string
 </tr>
 <tr>
 <td>
-<code>httpConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
-HTTPConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>HTTP client configuration.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>content</code><br/>
 <em>
 string
@@ -32005,17 +31995,35 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>The username of the message sender.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>avatarURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<p>The avatar url of the message sender.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP client configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -34959,7 +34967,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

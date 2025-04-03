@@ -135,8 +135,8 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                           avatarURL: {
-                            minLength: 1,
-                            pattern: '^http(s)?://.+$',
+                            description: 'The avatar url of the message sender.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           content: {
@@ -780,7 +780,6 @@
                           },
                           message: {
                             description: "The template of the message's body.",
-                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -789,10 +788,10 @@
                           },
                           title: {
                             description: "The template of the message's title.",
-                            minLength: 1,
                             type: 'string',
                           },
                           username: {
+                            description: 'The username of the message sender.',
                             minLength: 1,
                             type: 'string',
                           },

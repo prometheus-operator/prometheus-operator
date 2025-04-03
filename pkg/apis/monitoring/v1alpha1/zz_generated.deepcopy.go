@@ -446,11 +446,6 @@ func (in *DiscordConfig) DeepCopyInto(out *DiscordConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.HTTPConfig != nil {
-		in, out := &in.HTTPConfig, &out.HTTPConfig
-		*out = new(HTTPConfig)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.Content != nil {
 		in, out := &in.Content, &out.Content
 		*out = new(string)
@@ -463,8 +458,13 @@ func (in *DiscordConfig) DeepCopyInto(out *DiscordConfig) {
 	}
 	if in.AvatarURL != nil {
 		in, out := &in.AvatarURL, &out.AvatarURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
+	}
+	if in.HTTPConfig != nil {
+		in, out := &in.HTTPConfig, &out.HTTPConfig
+		*out = new(HTTPConfig)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
