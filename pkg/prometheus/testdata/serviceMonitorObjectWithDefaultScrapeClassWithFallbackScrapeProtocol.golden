@@ -78,7 +78,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
   fallback_scrape_protocol: OpenMetricsText1.0.0
   metric_relabel_configs:

@@ -76,7 +76,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
   fallback_scrape_protocol: OpenMetricsText1.0.0
 - job_name: podMonitor/default/defaultPodMonitor/0
@@ -131,7 +132,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
   fallback_scrape_protocol: OpenMetricsText1.0.0
 - job_name: probe/default/defaultProbe
@@ -175,7 +177,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
   metric_relabel_configs:
   - regex: noisy_labels.*

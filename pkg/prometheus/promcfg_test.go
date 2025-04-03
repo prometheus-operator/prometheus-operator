@@ -5930,8 +5930,8 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						Action:       "hashmod",
 					},
 					{
-						SourceLabels: []monitoringv1.LabelName{"__tmp_hash"},
-						Regex:        "$(SHARD)",
+						SourceLabels: []monitoringv1.LabelName{"__tmp_hash", "__tmp_disable_sharding"},
+						Regex:        "$(SHARD);|.+;.+",
 						Action:       "keep",
 					},
 				},
