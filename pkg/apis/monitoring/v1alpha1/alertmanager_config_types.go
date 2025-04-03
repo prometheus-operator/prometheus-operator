@@ -288,26 +288,24 @@ type DiscordConfig struct {
 	APIURL v1.SecretKeySelector `json:"apiURL"`
 	// The template of the message's title.
 	// +optional
-	// +kubebuilder:validation:MinLength=1
 	Title *string `json:"title,omitempty"`
 	// The template of the message's body.
 	// +optional
-	// +kubebuilder:validation:MinLength=1
 	Message *string `json:"message,omitempty"`
-	// HTTP client configuration.
-	// +optional
-	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// The template of the content's body.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	Content *string `json:"content,omitempty"`
+	// The username of the message sender.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	Username *string `json:"username,omitempty"`
+	// The avatar url of the message sender.
 	// +optional
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
-	AvatarURL *string `json:"avatarURL,omitempty"`
+	AvatarURL *URL `json:"avatarURL,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
 // SlackConfig configures notifications via Slack.

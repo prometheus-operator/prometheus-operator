@@ -769,7 +769,7 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 	}
 
 	if in.AvatarURL != nil && *in.AvatarURL != "" {
-		out.AvatarURL = *in.AvatarURL
+		out.AvatarURL = (string)(*in.AvatarURL)
 	}
 
 	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
