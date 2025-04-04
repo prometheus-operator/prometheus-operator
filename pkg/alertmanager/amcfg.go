@@ -748,9 +748,8 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 			timeout, err := model.ParseDuration(string(*in.Timeout))
 			if err != nil {
 				return nil, err
-			} else {
-				out.Timeout = &timeout
 			}
+			out.Timeout = &timeout
 		}
 	}
 
