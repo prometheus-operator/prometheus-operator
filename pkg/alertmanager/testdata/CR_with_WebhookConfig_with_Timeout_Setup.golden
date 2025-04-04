@@ -10,5 +10,5 @@ receivers:
 - name: mynamespace/myamc/test
   webhook_configs:
   - url: https://example.com/
-    timeout: "5s"
+    timeout: 5s
 templates: []
