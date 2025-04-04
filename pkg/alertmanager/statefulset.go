@@ -60,6 +60,8 @@ const (
 	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
 
 	alertmanagerStorageDir = "/alertmanager"
+
+	defaultTerminationGracePeriodSeconds = int64(120)
 )
 
 var (
@@ -772,7 +774,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				AutomountServiceAccountToken:  a.Spec.AutomountServiceAccountToken,
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,
-				TerminationGracePeriodSeconds: ptr.To(int64(120)),
+				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(a.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
 				InitContainers:                initContainers,
 				Containers:                    containers,
 				Volumes:                       volumes,

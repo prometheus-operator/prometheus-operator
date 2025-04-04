@@ -119,6 +119,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeFailureLogFile                 *string                                                 `json:"scrapeFailureLogFile,omitempty"`
 	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
+	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs a declarative configuration of the CommonPrometheusFields type for use with
@@ -934,5 +935,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceName(value string)
 // If called multiple times, the Runtime field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithRuntime(value *RuntimeConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.Runtime = value
+	return b
+}
+
+// WithTerminationGracePeriodSeconds sets the TerminationGracePeriodSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *CommonPrometheusFieldsApplyConfiguration {
+	b.TerminationGracePeriodSeconds = &value
 	return b
 }
