@@ -4871,6 +4871,29 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "invalid-terminationGracePeriodSeconds",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:                      &replicas,
+					Version:                       operator.DefaultPrometheusVersion,
+					ServiceAccountName:            "prometheus",
+					TerminationGracePeriodSeconds: ptr.To(int64(-100)),
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-terminationGracePeriodSeconds",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:                      &replicas,
+					Version:                       operator.DefaultPrometheusVersion,
+					ServiceAccountName:            "prometheus",
+					TerminationGracePeriodSeconds: ptr.To(int64(100)),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
