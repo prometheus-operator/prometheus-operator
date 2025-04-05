@@ -59,7 +59,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
   fallback_scrape_protocol: PrometheusText0.0.4
   metric_relabel_configs:
