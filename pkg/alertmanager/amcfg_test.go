@@ -2415,7 +2415,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with WebhookConfig with Timeout Setup Older Version",
-			amVersion: &version28,
+			amVersion: &version26,
 			kclient:   fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
