@@ -2447,7 +2447,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "CR_with_WebhookConfig_with_Timeout_Setu._Older_Versiongolden",
+			golden: "CR_with_WebhookConfig_with_Timeout_Setup_Older_Version.golden",
 		},
 	}
 
