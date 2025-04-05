@@ -743,6 +743,16 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		out.MaxAlerts = in.MaxAlerts
 	}
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
