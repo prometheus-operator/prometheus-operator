@@ -4492,7 +4492,6 @@ spec:
                         description: |-
                           RocketChatConfig configures notifications via RocketChat.
                           It requires Alertmanager >= 0.28.0.
-                          See https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config
                         properties:
                           actions:
                             description: Actions to include in the message.
@@ -4507,12 +4506,9 @@ spec:
                                 text:
                                   description: The button text.
                                   type: string
-                                type:
-                                  description: The type of action (only "button" is
-                                    supported).
-                                  type: string
                                 url:
                                   description: The URL the button links to.
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
@@ -4520,6 +4516,7 @@ spec:
                             description: |-
                               The API URL for RocketChat.
                               Defaults to https://open.rocket.chat/ if not specified.
+                            pattern: ^https?://.+$
                             type: string
                           channel:
                             description: The channel to send alerts to.
@@ -5249,9 +5246,11 @@ spec:
                             type: object
                           iconURL:
                             description: Icon URL for the message.
+                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: Image URL for the message.
+                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: Whether to enable link names.
@@ -5268,6 +5267,7 @@ spec:
                             type: string
                           thumbURL:
                             description: Thumbnail URL for the message.
+                            pattern: ^https?://.+$
                             type: string
                           title:
                             description: The message title.
@@ -5276,7 +5276,7 @@ spec:
                             description: The title link for the message.
                             type: string
                           token:
-                            description: The sender token. Either Token or TokenFile
+                            description: The sender token. Either `token` or `tokenFile`
                               is required.
                             properties:
                               key:
@@ -5302,11 +5302,11 @@ spec:
                             x-kubernetes-map-type: atomic
                           tokenFile:
                             description: The file containing the sender token. Either
-                              Token or TokenFile is required.
+                              `token` or `tokenFile` is required.
                             type: string
                           tokenID:
-                            description: The sender token ID. Either TokenID or TokenIDFile
-                              is required.
+                            description: The sender token ID. Either `tokenID` or
+                              `tokenIDFile` is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -5331,7 +5331,7 @@ spec:
                             x-kubernetes-map-type: atomic
                           tokenIDFile:
                             description: The file containing the sender token ID.
-                              Either TokenID or TokenIDFile is required.
+                              Either `tokenID` or `tokenIDFile` is required.
                             type: string
                         type: object
                       type: array
@@ -15184,7 +15184,7 @@ spec:
                       items:
                         description: |-
                           RocketChatConfig configures notifications via RocketChat.
-                          See https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config
+                          It requires Alertmanager >= 0.28.0.
                         properties:
                           actions:
                             description: Actions to include in the message.
@@ -15199,13 +15199,9 @@ spec:
                                 text:
                                   description: The button text.
                                   type: string
-                                type:
-                                  description: |-
-                                    The type of action (only "button" is supported).
-                                    This field is ignored in Alertmanager.
-                                  type: string
                                 url:
                                   description: The URL the button links to.
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
@@ -15213,6 +15209,7 @@ spec:
                             description: |-
                               The API URL for RocketChat.
                               Defaults to https://open.rocket.chat/ if not specified.
+                            pattern: ^https?://.+$
                             type: string
                           channel:
                             description: The channel to send alerts to.
@@ -15934,9 +15931,11 @@ spec:
                             type: object
                           iconURL:
                             description: Icon URL for the message.
+                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: Image URL for the message.
+                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: Whether to enable link names.
@@ -15952,6 +15951,7 @@ spec:
                             type: string
                           thumbURL:
                             description: Thumbnail URL for the message.
+                            pattern: ^https?://.+$
                             type: string
                           title:
                             description: The message title.

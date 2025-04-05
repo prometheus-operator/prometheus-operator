@@ -4050,7 +4050,7 @@
                     rocketchatConfigs: {
                       description: 'List of RocketChat configurations.\nIt requires Alertmanager >= 0.28.0.',
                       items: {
-                        description: 'RocketChatConfig configures notifications via RocketChat.\nSee https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config',
+                        description: 'RocketChatConfig configures notifications via RocketChat.\nIt requires Alertmanager >= 0.28.0.',
                         properties: {
                           actions: {
                             description: 'Actions to include in the message.',
@@ -4065,12 +4065,9 @@
                                   description: 'The button text.',
                                   type: 'string',
                                 },
-                                type: {
-                                  description: 'The type of action (only "button" is supported).\nThis field is ignored in Alertmanager.',
-                                  type: 'string',
-                                },
                                 url: {
                                   description: 'The URL the button links to.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
@@ -4080,6 +4077,7 @@
                           },
                           apiURL: {
                             description: 'The API URL for RocketChat.\nDefaults to https://open.rocket.chat/ if not specified.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           channel: {
@@ -4752,10 +4750,12 @@
                           },
                           iconURL: {
                             description: 'Icon URL for the message.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'Image URL for the message.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -4776,6 +4776,7 @@
                           },
                           thumbURL: {
                             description: 'Thumbnail URL for the message.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           title: {

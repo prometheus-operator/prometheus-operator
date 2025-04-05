@@ -29377,18 +29377,6 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 <tbody>
 <tr>
 <td>
-<code>type</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The type of action (only &ldquo;button&rdquo; is supported).</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>text</code><br/>
 <em>
 string
@@ -29403,7 +29391,9 @@ string
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -29432,8 +29422,7 @@ string
 </p>
 <div>
 <p>RocketChatConfig configures notifications via RocketChat.
-It requires Alertmanager &gt;= 0.28.0.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config">https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config</a></p>
+It requires Alertmanager &gt;= 0.28.0.</p>
 </div>
 <table>
 <thead>
@@ -29459,7 +29448,9 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -29491,7 +29482,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>The sender token. Either Token or TokenFile is required.</p>
+<p>The sender token. Either <code>token</code> or <code>tokenFile</code> is required.</p>
 </td>
 </tr>
 <tr>
@@ -29503,7 +29494,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The file containing the sender token. Either Token or TokenFile is required.</p>
+<p>The file containing the sender token. Either <code>token</code> or <code>tokenFile</code> is required.</p>
 </td>
 </tr>
 <tr>
@@ -29517,7 +29508,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>The sender token ID. Either TokenID or TokenIDFile is required.</p>
+<p>The sender token ID. Either <code>tokenID</code> or <code>tokenIDFile</code> is required.</p>
 </td>
 </tr>
 <tr>
@@ -29529,7 +29520,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The file containing the sender token ID. Either TokenID or TokenIDFile is required.</p>
+<p>The file containing the sender token ID. Either <code>tokenID</code> or <code>tokenIDFile</code> is required.</p>
 </td>
 </tr>
 <tr>
@@ -29560,7 +29551,9 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -29634,7 +29627,9 @@ bool
 <td>
 <code>imageURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -29646,7 +29641,9 @@ string
 <td>
 <code>thumbURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -31954,7 +31951,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -34601,19 +34598,6 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 <tbody>
 <tr>
 <td>
-<code>type</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The type of action (only &ldquo;button&rdquo; is supported).
-This field is ignored in Alertmanager.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>text</code><br/>
 <em>
 string
@@ -34628,7 +34612,9 @@ string
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34657,7 +34643,7 @@ string
 </p>
 <div>
 <p>RocketChatConfig configures notifications via RocketChat.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config">https://prometheus.io/docs/alerting/latest/configuration/#rocketchat_config</a></p>
+It requires Alertmanager &gt;= 0.28.0.</p>
 </div>
 <table>
 <thead>
@@ -34683,7 +34669,9 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34786,7 +34774,9 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34860,7 +34850,9 @@ bool
 <td>
 <code>imageURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34872,7 +34864,9 @@ string
 <td>
 <code>thumbURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -36151,7 +36145,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
