@@ -80,6 +80,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	HostAliases                        []HostAliasApplyConfiguration                   `json:"hostAliases,omitempty"`
 	AdditionalArgs                     []ArgumentApplyConfiguration                    `json:"additionalArgs,omitempty"`
 	Web                                *ThanosRulerWebSpecApplyConfiguration           `json:"web,omitempty"`
+	TerminationGracePeriodSeconds      *int64                                          `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerSpec type for use with
@@ -577,5 +578,13 @@ func (b *ThanosRulerSpecApplyConfiguration) WithAdditionalArgs(values ...*Argume
 // If called multiple times, the Web field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithWeb(value *ThanosRulerWebSpecApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
 	b.Web = value
+	return b
+}
+
+// WithTerminationGracePeriodSeconds sets the TerminationGracePeriodSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *ThanosRulerSpecApplyConfiguration {
+	b.TerminationGracePeriodSeconds = &value
 	return b
 }
