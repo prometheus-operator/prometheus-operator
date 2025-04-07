@@ -2635,7 +2635,7 @@ func testThanos(t *testing.T) {
 		"query",
 		"--log.level=debug",
 		"--query.replica-label=prometheus_replica",
-		fmt.Sprintf("--store=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
+		fmt.Sprintf("--endpoint=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
 	}
 	t.Log("setting up query with args: ", qryArgs)
 	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs

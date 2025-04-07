@@ -20,7 +20,7 @@ local service(name, namespace, labels, selector, ports) = {
     thanosRulerName: 'thanos-ruler',
     thanosSidecarName: 'thanos-sidecar',
     versions+:: {
-      thanos: 'v0.36.1',
+      thanos: 'v0.38.0',
     },
 
     imageRepos+:: {
@@ -181,8 +181,8 @@ local service(name, namespace, labels, selector, ports) = {
                   '--log.level=debug',
                   '--query.replica-label=prometheus_replica',
                   '--query.replica-label=thanos_ruler_replica',
-                  '--store=dnssrv+_grpc._tcp.thanos-sidecar.default.svc.cluster.local',
-                  '--store=dnssrv+_grpc._tcp.thanos-ruler.default.svc.cluster.local',
+                  '--endpoint=dnssrv+_grpc._tcp.thanos-sidecar.default.svc.cluster.local',
+                  '--endpoint=dnssrv+_grpc._tcp.thanos-ruler.default.svc.cluster.local',
                 ],
                 ports: [
                   {
