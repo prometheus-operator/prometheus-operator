@@ -8329,6 +8329,11 @@
                             description: 'Whether or not to notify about resolved alerts.',
                             type: 'boolean',
                           },
+                          timeout: {
+                            description: 'The maximum time to wait for a webhook request to complete, before failing the\nrequest and allowing it to be retried.\nIt requires Alertmanager >= v0.28.0.',
+                            pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
+                            type: 'string',
+                          },
                           url: {
                             description: 'The URL to send HTTP POST requests to. `urlSecret` takes precedence over\n`url`. One of `urlSecret` and `url` should be defined.',
                             type: 'string',
