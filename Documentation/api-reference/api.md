@@ -10086,6 +10086,19 @@ Duration
 <p>Defines how frequently metric metadata is sent to the remote storage.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>maxSamplesPerSend</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MaxSamplesPerSend is the maximum number of metadata samples per send.</p>
+<p>It requires Prometheus &gt;= v2.29.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
