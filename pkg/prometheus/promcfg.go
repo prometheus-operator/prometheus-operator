@@ -215,15 +215,16 @@ func (cg *ConfigGenerator) Version() semver.Version {
 // logger.
 func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:                 cg.logger.With(keyvals...),
-		version:                cg.version,
-		notCompatible:          cg.notCompatible,
-		prom:                   cg.prom,
-		useEndpointSlice:       cg.useEndpointSlice,
-		scrapeClasses:          cg.scrapeClasses,
-		defaultScrapeClassName: cg.defaultScrapeClassName,
-		daemonSet:              cg.daemonSet,
-		inlineTLSConfig:        cg.inlineTLSConfig,
+		logger:                     cg.logger.With(keyvals...),
+		version:                    cg.version,
+		notCompatible:              cg.notCompatible,
+		prom:                       cg.prom,
+		useEndpointSlice:           cg.useEndpointSlice,
+		scrapeClasses:              cg.scrapeClasses,
+		defaultScrapeClassName:     cg.defaultScrapeClassName,
+		daemonSet:                  cg.daemonSet,
+		prometheusTopologySharding: cg.prometheusTopologySharding,
+		inlineTLSConfig:            cg.inlineTLSConfig,
 	}
 }
 
@@ -236,15 +237,16 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 
 	if cg.version.LT(minVersion) {
 		return &ConfigGenerator{
-			logger:                 cg.logger.With("minimum_version", version),
-			version:                cg.version,
-			notCompatible:          true,
-			prom:                   cg.prom,
-			useEndpointSlice:       cg.useEndpointSlice,
-			scrapeClasses:          cg.scrapeClasses,
-			defaultScrapeClassName: cg.defaultScrapeClassName,
-			daemonSet:              cg.daemonSet,
-			inlineTLSConfig:        cg.inlineTLSConfig,
+			logger:                     cg.logger.With("minimum_version", version),
+			version:                    cg.version,
+			notCompatible:              true,
+			prom:                       cg.prom,
+			useEndpointSlice:           cg.useEndpointSlice,
+			scrapeClasses:              cg.scrapeClasses,
+			defaultScrapeClassName:     cg.defaultScrapeClassName,
+			daemonSet:                  cg.daemonSet,
+			prometheusTopologySharding: cg.prometheusTopologySharding,
+			inlineTLSConfig:            cg.inlineTLSConfig,
 		}
 	}
 
@@ -260,15 +262,16 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 	if cg.version.GTE(minVersion) {
 		return &ConfigGenerator{
-			logger:                 cg.logger.With("maximum_version", version),
-			version:                cg.version,
-			notCompatible:          true,
-			prom:                   cg.prom,
-			useEndpointSlice:       cg.useEndpointSlice,
-			scrapeClasses:          cg.scrapeClasses,
-			defaultScrapeClassName: cg.defaultScrapeClassName,
-			daemonSet:              cg.daemonSet,
-			inlineTLSConfig:        cg.inlineTLSConfig,
+			logger:                     cg.logger.With("maximum_version", version),
+			version:                    cg.version,
+			notCompatible:              true,
+			prom:                       cg.prom,
+			useEndpointSlice:           cg.useEndpointSlice,
+			scrapeClasses:              cg.scrapeClasses,
+			defaultScrapeClassName:     cg.defaultScrapeClassName,
+			daemonSet:                  cg.daemonSet,
+			prometheusTopologySharding: cg.prometheusTopologySharding,
+			inlineTLSConfig:            cg.inlineTLSConfig,
 		}
 	}
 
