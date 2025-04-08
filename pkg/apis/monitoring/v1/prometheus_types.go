@@ -1615,7 +1615,7 @@ type RemoteWriteSpec struct {
 	// Note: The connection timeout applies to the entire resolution and connection process.
 	//       If disabled, the timeout is distributed across all connection attempts.
 	//
-	// It requires Prometheus >= v3.1.0 or Thanos >=.
+	// It requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.
 	//
 	// +optional
 	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`

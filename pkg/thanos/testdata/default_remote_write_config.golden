@@ -1,0 +1,5 @@
+remote_write:
+- url: http://example.com
+  protobuf_message: io.prometheus.write.v2.Request
+  send_native_histograms: true
+  round_robin_dns: true
