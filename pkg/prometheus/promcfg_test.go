@@ -4324,6 +4324,26 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v3.1.0.golden",
 		},
+		{
+			version: "v2.28.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					MaxSamplesPerSend: ptr.To(int32(10)),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.28.0_MaxSamplesPerSendMetadataConfig.golden",
+		},
+		{
+			version: "v2.29.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					MaxSamplesPerSend: ptr.To(int32(10)),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.29.0_MaxSamplesPerSendMetadataConfig.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()

@@ -2774,6 +2774,9 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.
 			if spec.MetadataConfig.SendInterval != "" {
 				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
 			}
+			if spec.MetadataConfig.MaxSamplesPerSend != nil {
+				metadataConfig = cg.WithMinimumVersion("2.29.0").AppendMapItem(metadataConfig, "max_samples_per_send", *spec.MetadataConfig.MaxSamplesPerSend)
+			}
 
 			cfg = cg.WithMinimumVersion("2.23.0").AppendMapItem(cfg, "metadata_config", metadataConfig)
 		}

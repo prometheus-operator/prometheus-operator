@@ -2072,6 +2072,14 @@ type MetadataConfig struct {
 
 	// Defines how frequently metric metadata is sent to the remote storage.
 	SendInterval Duration `json:"sendInterval,omitempty"`
+
+	// MaxSamplesPerSend is the maximum number of metadata samples per send.
+	//
+	// It requires Prometheus >= v2.29.0.
+	//
+	// +optional
+	// +kubebuilder:validation:Minimum=-1
+	MaxSamplesPerSend *int32 `json:"maxSamplesPerSend,omitempty"`
 }
 
 type ShardStatus struct {

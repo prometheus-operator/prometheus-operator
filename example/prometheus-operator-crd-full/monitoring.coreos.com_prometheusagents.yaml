@@ -5367,6 +5367,14 @@ spec:
                       description: MetadataConfig configures the sending of series
                         metadata to the remote storage.
                       properties:
+                        maxSamplesPerSend:
+                          description: |-
+                            MaxSamplesPerSend is the maximum number of metadata samples per send.
+
+                            It requires Prometheus >= v2.29.0.
+                          format: int32
+                          minimum: -1
+                          type: integer
                         send:
                           description: Defines whether metric metadata is sent to
                             the remote storage or not.
