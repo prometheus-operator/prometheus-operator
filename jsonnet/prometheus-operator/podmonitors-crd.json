@@ -59,6 +59,10 @@
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                     "type": "string"
                   },
+                  "convertClassicHistogramsToNHCB": {
+                    "description": "Whether to convert all scraped classic histograms into a native histogram with custom buckets.\nIt requires Prometheus >= v3.0.0.",
+                    "type": "boolean"
+                  },
                   "fallbackScrapeProtocol": {
                     "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
                     "enum": [

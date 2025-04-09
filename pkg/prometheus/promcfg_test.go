@@ -4860,13 +4860,24 @@ func TestNativeHistogramConfig(t *testing.T) {
 		golden                string
 	}{
 		{
+			version: "v3.0.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfig.golden",
+		},
+		{
 			version: "v2.54.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfig.golden",
+			golden: "NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
@@ -4874,6 +4885,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
@@ -4883,6 +4895,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigWithMissALL.golden",
 		},
@@ -4892,6 +4905,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},

@@ -1193,6 +1193,19 @@ It requires Prometheus &gt;= v2.50.0.</p>
 </tr>
 <tr>
 <td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>keepDroppedTargets</code><br/>
 <em>
 uint64
@@ -1613,6 +1626,19 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>If the growth factor of one bucket to the next is smaller than this,
 buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -3978,6 +4004,19 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>If the growth factor of one bucket to the next is smaller than this,
 buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -10230,6 +10269,19 @@ buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
@@ -11220,6 +11272,19 @@ It requires Prometheus &gt;= v2.50.0.</p>
 </tr>
 <tr>
 <td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>keepDroppedTargets</code><br/>
 <em>
 uint64
@@ -11591,6 +11656,19 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>If the growth factor of one bucket to the next is smaller than this,
 buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -16290,6 +16368,19 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>If the growth factor of one bucket to the next is smaller than this,
 buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -21236,6 +21327,19 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>If the growth factor of one bucket to the next is smaller than this,
 buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -30625,6 +30729,19 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>If the growth factor of one bucket to the next is smaller than this,
 buckets will be merged to increase the factor sufficiently.
 It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
