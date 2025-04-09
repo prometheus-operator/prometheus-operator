@@ -1539,6 +1539,10 @@
                     },
                     "type": "array"
                   },
+                  "convertClassicHistogramsToNHCB": {
+                    "description": "Whether to convert all scraped classic histograms into a native histogram with custom buckets.\nIt requires Prometheus >= v3.0.0.",
+                    "type": "boolean"
+                  },
                   "digitalOceanSDConfigs": {
                     "description": "DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.",
                     "items": {

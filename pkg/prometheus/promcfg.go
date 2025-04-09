@@ -457,6 +457,10 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 		}
 	}
 
+	if nhc.ConvertClassicHistogramsToNHCB != nil {
+		cfg = cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", nhc.ConvertClassicHistogramsToNHCB)
+	}
+
 	return cfg
 }
 

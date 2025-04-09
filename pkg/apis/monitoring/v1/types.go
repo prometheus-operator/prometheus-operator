@@ -990,6 +990,12 @@ type NativeHistogramConfig struct {
 	//
 	// +optional
 	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
+
+	// Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+	// It requires Prometheus >= v3.0.0.
+	//
+	// +optional
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=RelabelConfig;RoleSelector

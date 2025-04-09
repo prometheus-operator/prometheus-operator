@@ -19277,6 +19277,11 @@ spec:
                   It requires Prometheus >= v2.28.0.
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
+              convertClassicHistogramsToNHCB:
+                description: |-
+                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  It requires Prometheus >= v3.0.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -20581,6 +20586,11 @@ spec:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              convertClassicHistogramsToNHCB:
+                description: |-
+                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  It requires Prometheus >= v3.0.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -47342,6 +47352,11 @@ spec:
                   - server
                   type: object
                 type: array
+              convertClassicHistogramsToNHCB:
+                description: |-
+                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  It requires Prometheus >= v3.0.0.
+                type: boolean
               digitalOceanSDConfigs:
                 description: DigitalOceanSDConfigs defines a list of DigitalOcean
                   service discovery configurations.
@@ -58294,6 +58309,11 @@ spec:
                   It requires Prometheus >= v2.28.0.
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
+              convertClassicHistogramsToNHCB:
+                description: |-
+                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  It requires Prometheus >= v3.0.0.
+                type: boolean
               endpoints:
                 description: |-
                   List of endpoints part of this ServiceMonitor.
