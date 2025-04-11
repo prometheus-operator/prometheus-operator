@@ -28,6 +28,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="smon"
+// +kubebuilder:subresource:status
 
 // The `ServiceMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of services.
 // Among other things, it allows to specify:
@@ -43,11 +44,42 @@ type ServiceMonitor struct {
 	// Specification of desired Service selection for target discovery by
 	// Prometheus.
 	Spec ServiceMonitorSpec `json:"spec"`
+	// Status of the ServiceMonitor, shows which Prometheus instances are using it
+	// and the success or failure of reconciliations.
+	// +optional
+	Status ServiceMonitorStatus `json:"status,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ServiceMonitorStatus represents the current state of a ServiceMonitor resource.
+// +k8s:openapi-gen=true
+type ServiceMonitorStatus struct {
+	// References lists the Prometheus and PrometheusAgent instances that use this ServiceMonitor
+	// and the status of the reconciliation.
+	// +optional
+	References []ServiceMonitorReference `json:"references,omitempty"`
+}
+
+// ServiceMonitorReference represents a reference from a Prometheus or PrometheusAgent
+// to a ServiceMonitor, along with reconciliation status.
+// +k8s:openapi-gen=true
+type ServiceMonitorReference struct {
+	// Resource type of the referent, either "prometheuses" or "prometheusagents"
+	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
+	Resource string `json:"resource"`
+	// Name of the referent Prometheus or PrometheusAgent.
+	Name string `json:"name"`
+	// Namespace of the referent Prometheus or PrometheusAgent.
+	Namespace string `json:"namespace"`
+	// Conditions provides reconciliation status information.
+	// +listType=map
+	// +listMapKey=type
+	// +optional
+	Conditions []Condition `json:"conditions,omitempty"`
 }
 
 // ServiceMonitorSpec defines the specification parameters for a ServiceMonitor.
