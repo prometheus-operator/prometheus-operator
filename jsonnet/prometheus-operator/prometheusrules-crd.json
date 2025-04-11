@@ -136,6 +136,8 @@
                             ],
                             "type": "object"
                           },
+                          "x-kubernetes-list-type": "map",
+                          "x-kubernetes-list-map-keys": ["alert"],
                           "type": "array"
                         }
                       },
