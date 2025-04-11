@@ -90,18 +90,18 @@ type ProxyConfig struct {
 	// that should be excluded from proxying. IP and domain names can
 	// contain port numbers.
 	//
-	// It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	NoProxy *string `json:"noProxy,omitempty"`
 	// Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 	//
-	// It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
 	// ProxyConnectHeader optionally specifies headers to send to
 	// proxies during CONNECT requests.
 	//
-	// It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	// +mapType:=atomic
 	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
@@ -828,13 +828,13 @@ type SafeTLSConfig struct {
 
 	// Minimum acceptable TLS version.
 	//
-	// It requires Prometheus >= v2.35.0.
+	// It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
 	// +optional
 	MinVersion *TLSVersion `json:"minVersion,omitempty"`
 
 	// Maximum acceptable TLS version.
 	//
-	// It requires Prometheus >= v2.41.0.
+	// It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
 	// +optional
 	MaxVersion *TLSVersion `json:"maxVersion,omitempty"`
 }

@@ -75,6 +75,8 @@ type ConfigGenerator struct {
 	daemonSet                  bool
 	prometheusTopologySharding bool
 	inlineTLSConfig            bool
+
+	bypassVersionCheck bool
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -104,6 +106,14 @@ func WithInlineTLSConfig() ConfigGeneratorOption {
 	}
 }
 
+// WithoutVersionCheck returns a [ConfigGenerator] which doesn't perform any
+// version check.
+func WithoutVersionCheck() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.bypassVersionCheck = true
+	}
+}
+
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(
 	logger *slog.Logger,
@@ -119,32 +129,38 @@ func NewConfigGenerator(
 		}))
 	}
 
-	cpf := p.GetCommonPrometheusFields()
+	cg := &ConfigGenerator{
+		logger: logger,
+		prom:   p,
+	}
 
+	if cg.prom == nil {
+		for _, opt := range opts {
+			opt(cg)
+		}
+		return cg, nil
+	}
+
+	cpf := p.GetCommonPrometheusFields()
 	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
+	cg.version = version
 
 	if version.Major != 2 && version.Major != 3 {
 		return nil, fmt.Errorf("unsupported Prometheus version %q", promVersion)
 	}
 
-	logger = logger.With("version", promVersion)
+	cg.logger = logger.With("version", promVersion)
 
 	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
-
-	cg := &ConfigGenerator{
-		logger:                 logger,
-		version:                version,
-		prom:                   p,
-		scrapeClasses:          scrapeClasses,
-		defaultScrapeClassName: defaultScrapeClassName,
-	}
+	cg.scrapeClasses = scrapeClasses
+	cg.defaultScrapeClassName = defaultScrapeClassName
 
 	for _, opt := range opts {
 		opt(cg)
@@ -225,6 +241,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		daemonSet:                  cg.daemonSet,
 		prometheusTopologySharding: cg.prometheusTopologySharding,
 		inlineTLSConfig:            cg.inlineTLSConfig,
+		bypassVersionCheck:         cg.bypassVersionCheck,
 	}
 }
 
@@ -233,9 +250,11 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 // given version.
 // The method panics if version isn't a valid SemVer value.
 func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
-	minVersion := semver.MustParse(version)
+	if cg.bypassVersionCheck {
+		return cg
+	}
 
-	if cg.version.LT(minVersion) {
+	if cg.version.LT(semver.MustParse(version)) {
 		return &ConfigGenerator{
 			logger:                     cg.logger.With("minimum_version", version),
 			version:                    cg.version,
@@ -247,6 +266,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			daemonSet:                  cg.daemonSet,
 			prometheusTopologySharding: cg.prometheusTopologySharding,
 			inlineTLSConfig:            cg.inlineTLSConfig,
+			bypassVersionCheck:         cg.bypassVersionCheck,
 		}
 	}
 
@@ -258,9 +278,11 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 // equal to the given version.
 // The method panics if version isn't a valid SemVer value.
 func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
-	minVersion := semver.MustParse(version)
+	if cg.bypassVersionCheck {
+		return cg
+	}
 
-	if cg.version.GTE(minVersion) {
+	if cg.version.GTE(semver.MustParse(version)) {
 		return &ConfigGenerator{
 			logger:                     cg.logger.With("maximum_version", version),
 			version:                    cg.version,
@@ -272,6 +294,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			daemonSet:                  cg.daemonSet,
 			prometheusTopologySharding: cg.prometheusTopologySharding,
 			inlineTLSConfig:            cg.inlineTLSConfig,
+			bypassVersionCheck:         cg.bypassVersionCheck,
 		}
 	}
 
@@ -949,7 +972,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(s))
+		cfg = append(cfg, cg.GenerateRemoteWriteConfig(cpf.RemoteWrite, s))
 	}
 
 	// Remote read config
@@ -2584,13 +2607,10 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	return "prometheus.WriteRequest"
 }
 
-func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.MapItem {
-	var (
-		cfgs = []yaml.MapSlice{}
-		cpf  = cg.prom.GetCommonPrometheusFields()
-	)
+func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapItem {
+	var cfgs []yaml.MapSlice
 
-	for i, spec := range cpf.RemoteWrite {
+	for i, spec := range rws {
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
 		}
@@ -2619,43 +2639,43 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.
 			cfg = cg.WithMinimumVersion("2.40.0").AppendMapItem(cfg, "send_native_histograms", spec.SendNativeHistograms)
 		}
 
-		if spec.WriteRelabelConfigs != nil {
-			relabelings := []yaml.MapSlice{}
-			for _, c := range spec.WriteRelabelConfigs {
-				relabeling := yaml.MapSlice{}
+		var relabelings []yaml.MapSlice
+		for _, c := range spec.WriteRelabelConfigs {
+			var relabeling yaml.MapSlice
 
-				if len(c.SourceLabels) > 0 {
-					relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
-				}
-
-				if c.Separator != nil {
-					relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: *c.Separator})
-				}
-
-				if c.TargetLabel != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
-				}
-
-				if c.Regex != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
-				}
-
-				if c.Modulus != uint64(0) {
-					relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
-				}
-
-				if c.Replacement != nil {
-					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
-				}
-
-				if c.Action != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
-				}
-				relabelings = append(relabelings, relabeling)
+			if len(c.SourceLabels) > 0 {
+				relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 			}
 
-			cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
+			if c.Separator != nil {
+				relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: *c.Separator})
+			}
 
+			if c.TargetLabel != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+			}
+
+			if c.Regex != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+			}
+
+			if c.Modulus != uint64(0) {
+				relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+			}
+
+			if c.Replacement != nil {
+				relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
+			}
+
+			if c.Action != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
+			}
+
+			relabelings = append(relabelings, relabeling)
+		}
+
+		if len(relabelings) > 0 {
+			cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
 		}
 
 		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
@@ -2707,9 +2727,12 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.
 			}
 
 			if spec.AzureAD.SDK != nil {
-				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(azureAd, "sdk", yaml.MapSlice{
-					{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
-				})
+				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(
+					azureAd,
+					"sdk",
+					yaml.MapSlice{
+						{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
+					})
 			}
 
 			if spec.AzureAD.Cloud != nil {
@@ -3061,7 +3084,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	// Remote write config
 	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(s))
+		cfg = append(cfg, cg.GenerateRemoteWriteConfig(cpf.RemoteWrite, s))
 	}
 
 	// OTLP config

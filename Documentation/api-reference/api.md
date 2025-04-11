@@ -4689,8 +4689,11 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;,
-and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds seconds minutes hours days weeks years).</p>
+<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
+must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds
+seconds minutes hours days weeks years).</p>
+<p>The field has no effect when remote-write is configured since the Ruler
+operates in stateless mode.</p>
 </td>
 </tr>
 <tr>
@@ -4948,6 +4951,22 @@ ThanosRulerWebSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the configuration of the ThanosRuler web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
+<p>When the list isn&rsquo;t empty, the ruler is configured with stateless mode.</p>
+<p>It requires Thanos &gt;= 0.24.0.</p>
 </td>
 </tr>
 </table>
@@ -5437,7 +5456,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -5450,7 +5469,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -5466,7 +5485,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -6869,7 +6888,7 @@ AzureOAuth
 <em>(Optional)</em>
 <p>OAuth defines the oauth config that is being used to authenticate.
 Cannot be set at the same time as <code>managedIdentity</code> or <code>sdk</code>.</p>
-<p>It requires Prometheus &gt;= v2.48.0.</p>
+<p>It requires Prometheus &gt;= v2.48.0 or Thanos &gt;= v0.31.0.</p>
 </td>
 </tr>
 <tr>
@@ -6886,7 +6905,7 @@ AzureSDK
 <p>SDK defines the Azure SDK config that is being used to authenticate.
 See <a href="https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication">https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication</a>
 Cannot be set at the same time as <code>oauth</code> or <code>managedIdentity</code>.</p>
-<p>It requires Prometheus &gt;= 2.52.0.</p>
+<p>It requires Prometheus &gt;= v2.52.0 or Thanos &gt;= v0.36.0.</p>
 </td>
 </tr>
 </tbody>
@@ -9920,7 +9939,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -9933,7 +9952,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -9949,7 +9968,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -10413,7 +10432,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -10426,7 +10445,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -10442,7 +10461,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14273,7 +14292,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -14286,7 +14305,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -14302,7 +14321,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14517,7 +14536,7 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>SampleAgeLimit drops samples older than the limit.
-It requires Prometheus &gt;= v2.50.0.</p>
+It requires Prometheus &gt;= v2.50.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14861,7 +14880,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -14874,7 +14893,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -14890,7 +14909,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -14946,7 +14965,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 <p>RemoteWriteSpec defines the configuration to write samples from Prometheus
@@ -14982,7 +15001,7 @@ string
 <em>(Optional)</em>
 <p>The name of the remote write queue, it must be unique if specified. The
 name is used in metrics and logging in order to differentiate queues.</p>
-<p>It requires Prometheus &gt;= v2.15.0.</p>
+<p>It requires Prometheus &gt;= v2.15.0 or Thanos &gt;= 0.24.0.</p>
 </td>
 </tr>
 <tr>
@@ -15003,7 +15022,7 @@ RemoteWriteMessageVersion
 configured to append the metadata of scraped metrics to the WAL.</p>
 <p>Before setting this field, consult with your remote storage provider
 what message version it supports.</p>
-<p>It requires Prometheus &gt;= v2.54.0.</p>
+<p>It requires Prometheus &gt;= v2.54.0 or Thanos &gt;= v0.37.0.</p>
 </td>
 </tr>
 <tr>
@@ -15018,7 +15037,7 @@ bool
 <p>Enables sending of exemplars over remote write. Note that
 exemplar-storage itself must be enabled using the <code>spec.enableFeatures</code>
 option for exemplars to be scraped in the first place.</p>
-<p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>It requires Prometheus &gt;= v2.27.0 or Thanos &gt;= v0.24.0.</p>
 </td>
 </tr>
 <tr>
@@ -15032,7 +15051,7 @@ bool
 <em>(Optional)</em>
 <p>Enables sending of native histograms, also known as sparse histograms
 over remote write.</p>
-<p>It requires Prometheus &gt;= v2.40.0.</p>
+<p>It requires Prometheus &gt;= v2.40.0 or Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -15060,7 +15079,7 @@ map[string]string
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each remote write request.
 Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.25.0.</p>
+<p>It requires Prometheus &gt;= v2.25.0 or Thanos &gt;= v0.24.0.</p>
 </td>
 </tr>
 <tr>
@@ -15089,7 +15108,7 @@ OAuth2
 <td>
 <em>(Optional)</em>
 <p>OAuth2 configuration for the URL.</p>
-<p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>It requires Prometheus &gt;= v2.27.0 or Thanos &gt;= v0.24.0.</p>
 <p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>basicAuth</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
@@ -15132,7 +15151,7 @@ Authorization
 <td>
 <em>(Optional)</em>
 <p>Authorization section for the URL.</p>
-<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
 <p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
@@ -15148,7 +15167,7 @@ Sigv4
 <td>
 <em>(Optional)</em>
 <p>Sigv4 allows to configures AWS&rsquo;s Signature Verification 4 for the URL.</p>
-<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
 <p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
@@ -15164,7 +15183,7 @@ AzureAD
 <td>
 <em>(Optional)</em>
 <p>AzureAD for the URL.</p>
-<p>It requires Prometheus &gt;= v2.45.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0 or Thanos &gt;= v0.31.0.</p>
 <p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>sigv4</code>.</p>
 </td>
 </tr>
@@ -15219,7 +15238,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -15232,7 +15251,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -15248,7 +15267,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -15261,7 +15280,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
-<p>It requires Prometheus &gt;= v2.26.0.</p>
+<p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
 </td>
 </tr>
 <tr>
@@ -15321,7 +15340,7 @@ bool
 - It will attempt connections to each resolved IP address sequentially.</p>
 <p>Note: The connection timeout applies to the entire resolution and connection process.
 If disabled, the timeout is distributed across all connection attempts.</p>
-<p>It requires Prometheus &gt;= v3.1.0.</p>
+<p>It requires Prometheus &gt;= v3.1.0 or Thanos &gt;= v0.38.0.</p>
 </td>
 </tr>
 </tbody>
@@ -15830,7 +15849,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Minimum acceptable TLS version.</p>
-<p>It requires Prometheus &gt;= v2.35.0.</p>
+<p>It requires Prometheus &gt;= v2.35.0 or Thanos &gt;= v0.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -15845,7 +15864,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Maximum acceptable TLS version.</p>
-<p>It requires Prometheus &gt;= v2.41.0.</p>
+<p>It requires Prometheus &gt;= v2.41.0 or Thanos &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -16819,7 +16838,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Minimum acceptable TLS version.</p>
-<p>It requires Prometheus &gt;= v2.35.0.</p>
+<p>It requires Prometheus &gt;= v2.35.0 or Thanos &gt;= v0.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -16834,7 +16853,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Maximum acceptable TLS version.</p>
-<p>It requires Prometheus &gt;= v2.41.0.</p>
+<p>It requires Prometheus &gt;= v2.41.0 or Thanos &gt;= v0.31.0.</p>
 </td>
 </tr>
 <tr>
@@ -17496,8 +17515,11 @@ Duration
 </em>
 </td>
 <td>
-<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;,
-and must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds seconds minutes hours days weeks years).</p>
+<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
+must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds
+seconds minutes hours days weeks years).</p>
+<p>The field has no effect when remote-write is configured since the Ruler
+operates in stateless mode.</p>
 </td>
 </tr>
 <tr>
@@ -17755,6 +17777,22 @@ ThanosRulerWebSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the configuration of the ThanosRuler web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWrite</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+[]RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the list of remote write configurations.</p>
+<p>When the list isn&rsquo;t empty, the ruler is configured with stateless mode.</p>
+<p>It requires Thanos &gt;= 0.24.0.</p>
 </td>
 </tr>
 </tbody>
@@ -21394,7 +21432,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -21407,7 +21445,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -21423,7 +21461,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -21784,7 +21822,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -21797,7 +21835,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -21813,7 +21851,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22124,7 +22162,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22137,7 +22175,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22153,7 +22191,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22412,7 +22450,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22425,7 +22463,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22441,7 +22479,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22648,7 +22686,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22661,7 +22699,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22677,7 +22715,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22982,7 +23020,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -22995,7 +23033,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23011,7 +23049,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23196,7 +23234,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23209,7 +23247,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23225,7 +23263,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23578,7 +23616,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23591,7 +23629,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23607,7 +23645,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23975,7 +24013,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -23988,7 +24026,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24004,7 +24042,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24134,7 +24172,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24147,7 +24185,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24163,7 +24201,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24304,7 +24342,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24317,7 +24355,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24333,7 +24371,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24554,7 +24592,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24567,7 +24605,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24583,7 +24621,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24927,7 +24965,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24940,7 +24978,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24956,7 +24994,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25091,7 +25129,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25104,7 +25142,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25120,7 +25158,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25383,7 +25421,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25396,7 +25434,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25412,7 +25450,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25575,7 +25613,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25588,7 +25626,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -25604,7 +25642,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -26136,7 +26174,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -26149,7 +26187,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -26165,7 +26203,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -28947,7 +28985,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -28960,7 +28998,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -28976,7 +29014,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -29964,7 +30002,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -29977,7 +30015,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -29993,7 +30031,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -30796,7 +30834,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -30809,7 +30847,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -30825,7 +30863,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -32872,7 +32910,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -32885,7 +32923,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -32901,7 +32939,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
 <tr>

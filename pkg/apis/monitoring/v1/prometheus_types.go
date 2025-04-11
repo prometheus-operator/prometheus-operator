@@ -1470,7 +1470,7 @@ type RemoteWriteSpec struct {
 	// The name of the remote write queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate queues.
 	//
-	// It requires Prometheus >= v2.15.0.
+	// It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
 	//
 	//+optional
 	Name *string `json:"name,omitempty"`
@@ -1486,7 +1486,7 @@ type RemoteWriteSpec struct {
 	// Before setting this field, consult with your remote storage provider
 	// what message version it supports.
 	//
-	// It requires Prometheus >= v2.54.0.
+	// It requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.
 	//
 	// +optional
 	MessageVersion *RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
@@ -1495,7 +1495,7 @@ type RemoteWriteSpec struct {
 	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
 	// option for exemplars to be scraped in the first place.
 	//
-	// It requires Prometheus >= v2.27.0.
+	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 	//
 	// +optional
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
@@ -1503,7 +1503,7 @@ type RemoteWriteSpec struct {
 	// Enables sending of native histograms, also known as sparse histograms
 	// over remote write.
 	//
-	// It requires Prometheus >= v2.40.0.
+	// It requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.
 	//
 	// +optional
 	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
@@ -1515,7 +1515,7 @@ type RemoteWriteSpec struct {
 	// Custom HTTP headers to be sent along with each remote write request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	//
-	// It requires Prometheus >= v2.25.0.
+	// It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
 	//
 	// +optional
 	Headers map[string]string `json:"headers,omitempty"`
@@ -1526,7 +1526,7 @@ type RemoteWriteSpec struct {
 
 	// OAuth2 configuration for the URL.
 	//
-	// It requires Prometheus >= v2.27.0.
+	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 	//
 	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
 	// +optional
@@ -1546,7 +1546,7 @@ type RemoteWriteSpec struct {
 
 	// Authorization section for the URL.
 	//
-	// It requires Prometheus >= v2.26.0.
+	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
 	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
 	//
@@ -1555,7 +1555,7 @@ type RemoteWriteSpec struct {
 
 	// Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
 	//
-	// It requires Prometheus >= v2.26.0.
+	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
 	//
@@ -1564,7 +1564,7 @@ type RemoteWriteSpec struct {
 
 	// AzureAD for the URL.
 	//
-	// It requires Prometheus >= v2.45.0.
+	// It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
 	//
@@ -1587,7 +1587,7 @@ type RemoteWriteSpec struct {
 
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	//
-	// It requires Prometheus >= v2.26.0.
+	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -1615,7 +1615,7 @@ type RemoteWriteSpec struct {
 	// Note: The connection timeout applies to the entire resolution and connection process.
 	//       If disabled, the timeout is distributed across all connection attempts.
 	//
-	// It requires Prometheus >= v3.1.0.
+	// It requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.
 	//
 	// +optional
 	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
@@ -1661,7 +1661,7 @@ type QueueConfig struct {
 	// in a breaking way.
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
 	// SampleAgeLimit drops samples older than the limit.
-	// It requires Prometheus >= v2.50.0.
+	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
 	//
 	// +optional
 	SampleAgeLimit *Duration `json:"sampleAgeLimit,omitempty"`
@@ -1701,7 +1701,7 @@ type AzureAD struct {
 	// OAuth defines the oauth config that is being used to authenticate.
 	// Cannot be set at the same time as `managedIdentity` or `sdk`.
 	//
-	// It requires Prometheus >= v2.48.0.
+	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
 	//
 	// +optional
 	OAuth *AzureOAuth `json:"oauth,omitempty"`
@@ -1709,7 +1709,7 @@ type AzureAD struct {
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
 	// Cannot be set at the same time as `oauth` or `managedIdentity`.
 	//
-	// It requires Prometheus >= 2.52.0.
+	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
 	// +optional
 	SDK *AzureSDK `json:"sdk,omitempty"`
 }
