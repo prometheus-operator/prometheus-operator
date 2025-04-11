@@ -760,22 +760,46 @@ func (f *Framework) GetHealthyTargets(ctx context.Context, ns, svcName string) (
 	return healthyTargets, nil
 }
 
-func (f *Framework) CheckPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) (bool, error) {
-	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "http", "/api/v1/query", map[string]string{"query": fmt.Sprintf(`ALERTS{alertname="%v",alertstate="firing"}`, alertName)})
+// GetPrometheusFiringAlerts returns a slice of alert labels matching the given alert name.
+func (f *Framework) GetPrometheusFiringAlerts(ctx context.Context, ns, svcName, alertName string) ([]map[string]string, error) {
+	response, err := f.PrometheusSVCGetRequest(
+		ctx,
+		ns,
+		svcName,
+		"http",
+		"/api/v1/query",
+		map[string]string{
+			"query": fmt.Sprintf(`ALERTS{alertname="%v",alertstate="firing"}`, alertName),
+		},
+	)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	q := PrometheusQueryAPIResponse{}
 	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&q); err != nil {
-		return false, err
+		return nil, err
 	}
 
-	if len(q.Data.Result) != 1 {
-		return false, fmt.Errorf("expected 1 query result but got %v", len(q.Data.Result))
+	alerts := make([]map[string]string, len(q.Data.Result))
+	for i, res := range q.Data.Result {
+		alerts[i] = res.Metric
 	}
 
-	return true, nil
+	return alerts, nil
+}
+
+func (f *Framework) CheckPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
+	alerts, err := f.GetPrometheusFiringAlerts(ctx, ns, svcName, alertName)
+	if err != nil {
+		return err
+	}
+
+	if len(alerts) != 1 {
+		return fmt.Errorf("expected 1 query result but got %v", len(alerts))
+	}
+
+	return nil
 }
 
 func (f *Framework) PrometheusQuery(ns, svcName, scheme, query string) ([]PrometheusQueryResult, error) {
@@ -799,10 +823,13 @@ func (f *Framework) PrometheusQuery(ns, svcName, scheme, query string) ([]Promet
 func (f *Framework) WaitForPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-		var firing bool
-		firing, loopError = f.CheckPrometheusFiringAlert(ctx, ns, svcName, alertName)
-		return firing, nil
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		loopError = f.CheckPrometheusFiringAlert(context.Background(), ns, svcName, alertName)
+		if loopError != nil {
+			return false, nil
+		}
+
+		return true, nil
 	})
 
 	if err != nil {

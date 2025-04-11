@@ -1536,9 +1536,13 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	for _, file := range ruleFiles {
 		var loopError error
 		err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-			var firing bool
-			firing, loopError = framework.CheckPrometheusFiringAlert(ctx, file.ns, pSVC.Name, file.alertName)
-			return !firing, nil
+			var alerts []map[string]string
+			alerts, loopError = framework.GetPrometheusFiringAlerts(ctx, file.ns, pSVC.Name, file.alertName)
+			if len(alerts) > 0 {
+				loopError = fmt.Errorf("%s: got %d alerts", file.alertName, len(alerts))
+				return false, nil
+			}
+			return true, nil
 		})
 
 		if err != nil {
@@ -2905,14 +2909,9 @@ func testOperatorNSScope(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		firing, err := framework.CheckPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
-		if err != nil && !strings.Contains(err.Error(), "expected 1 query result but got 0") {
-			t.Fatal(err)
-		}
-
-		if firing {
-			t.Fatalf("expected alert %q not to fire", secondAlertName)
-		}
+		alerts, err := framework.GetPrometheusFiringAlerts(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
+		require.NoError(t, err)
+		require.Len(t, alerts, 0)
 	})
 
 	t.Run("MultiNS", func(t *testing.T) {
@@ -2976,14 +2975,9 @@ func testOperatorNSScope(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		firing, err := framework.CheckPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
-		if err != nil && !strings.Contains(err.Error(), "expected 1 query result but got 0") {
-			t.Fatal(err)
-		}
-
-		if firing {
-			t.Fatalf("expected alert %q not to fire", secondAlertName)
-		}
+		alerts, err := framework.GetPrometheusFiringAlerts(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
+		require.NoError(t, err)
+		require.Len(t, alerts, 0)
 	})
 }
 

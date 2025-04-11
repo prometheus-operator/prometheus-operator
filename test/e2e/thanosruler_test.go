@@ -560,7 +560,7 @@ func testThanosRulerServiceName(t *testing.T) {
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
 }
 
-func ThanosRulerStateless(t *testing.T) {
+func testThanosRulerStateless(t *testing.T) {
 	const (
 		name       = "test"
 		group      = "thanos-ruler-query-config"
@@ -638,19 +638,6 @@ func ThanosRulerStateless(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the ALERTS metric is present in Prometheus.
-	var (
-		pollErr error
-		firing  bool
-	)
-	pollErr = wait.PollUntilContextTimeout(ctx, time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
-		firing, err = framework.CheckPrometheusFiringAlert(ctx, ns, promSVC.Name, testAlert)
-		if err != nil {
-			pollErr = fmt.Errorf("failed to check firing alert: %w", err)
-			return false, nil
-		}
-
-		return firing, nil
-	})
-	require.NoError(t, pollErr)
-	require.True(t, firing)
+	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, promSVC.Name, testAlert)
+	require.NoError(t, err)
 }
