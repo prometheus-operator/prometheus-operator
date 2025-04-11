@@ -760,6 +760,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations map[string]string
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
+		AlertmanagerClusterTLS  *monitoringv1.ClusterTLSConfig
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
@@ -768,6 +769,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations: a.Annotations,
 		AlertmanagerGeneration:  a.Generation,
 		AlertmanagerWebHTTP2:    http2,
+		AlertmanagerClusterTLS:  a.Spec.ClusterTLS,
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
