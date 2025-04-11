@@ -144,6 +144,9 @@ spec:
                         - expr
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - alert
+                      x-kubernetes-list-type: map
                   required:
                   - name
                   type: object
