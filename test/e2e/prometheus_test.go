@@ -2273,14 +2273,16 @@ func testShardingProvisioning(t *testing.T) {
 			expectedShardConfigSnippet: `
   - source_labels:
     - __tmp_hash
-    regex: 0
+    - __tmp_disable_sharding
+    regex: 0;|.+;.+
     action: keep`,
 		}, {
 			pod: "prometheus-test-shard-1-0",
 			expectedShardConfigSnippet: `
   - source_labels:
     - __tmp_hash
-    regex: 1
+    - __tmp_disable_sharding
+    regex: 1;|.+;.+
     action: keep`,
 		},
 	}
