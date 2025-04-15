@@ -5546,7 +5546,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^http(s)?://.+$
+                          pattern: ^(http|https|socks5)?://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -5773,7 +5773,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^http(s)?://.+$
+                      pattern: ^(http|https|socks5)?://.+$
                       type: string
                     queueConfig:
                       description: QueueConfig allows tuning of the remote write queue

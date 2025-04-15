@@ -1179,7 +1179,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "relabelings": {
@@ -5282,7 +5282,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -5503,7 +5503,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "readRecent": {
@@ -6071,7 +6071,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -6292,7 +6292,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "queueConfig": {

@@ -347,7 +347,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -575,7 +575,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -1074,7 +1074,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -1305,7 +1305,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -1719,7 +1719,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -1947,7 +1947,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -2439,7 +2439,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -2664,7 +2664,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -3106,7 +3106,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -3334,7 +3334,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -3637,7 +3637,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -4080,7 +4080,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -4301,7 +4301,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -4797,7 +4797,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -5022,7 +5022,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -5445,7 +5445,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -5666,7 +5666,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -6030,7 +6030,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -6258,7 +6258,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -6707,7 +6707,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -6928,7 +6928,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "role": {
@@ -7388,7 +7388,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -7609,7 +7609,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -8062,7 +8062,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -8290,7 +8290,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -8672,7 +8672,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -8900,7 +8900,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -9416,7 +9416,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -9637,7 +9637,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -9950,7 +9950,7 @@
                       },
                       "proxyUrl": {
                         "description": "`proxyURL` defines the HTTP proxy server to use.",
-                        "pattern": "^http(s)?://.+$",
+                        "pattern": "^(http|https|socks5)?://.+$",
                         "type": "string"
                       },
                       "scopes": {
@@ -10584,7 +10584,7 @@
                   },
                   "proxyUrl": {
                     "description": "`proxyURL` defines the HTTP proxy server to use.",
-                    "pattern": "^http(s)?://.+$",
+                    "pattern": "^(http|https|socks5)?://.+$",
                     "type": "string"
                   },
                   "puppetDBSDConfigs": {
@@ -10819,7 +10819,7 @@
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)?://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -11047,7 +11047,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "query": {
@@ -11392,7 +11392,7 @@
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
