@@ -199,6 +199,10 @@ kubectl get pods --all-namespaces | grep 'prom.*operator'
 
 Check the logs of the matching pods to see if they manage the same resource.
 
+If running multiple operators is desired, make sure to set the `--controller-id` flag for each operator instance to a different value. When `--controller-id` is set, the operator instance will only reconcile resources that have a `operator.prometheus.io/controller-id` annotation matching the value of `--controller-id` (eg: an operator with the flag `--controller-id=my-objects` will only reconcile objects that have `operator.prometheus.io/controller-id: my-objects` annotation on them). This allows multiple operator instances to run in the same cluster without conflicting over the same resources.
+
+If the `--controller-id` flag is not set, the operator will try to reconcile all resources, including those managed by other operator instances. This can lead to conflicts (such as pods stuck in terminating loop) and should be avoided.
+
 ### Configuring Prometheus/PrometheusAgent for Mimir and Grafana Cloud
 
 Mimir and Grafana Cloud can receive samples via Prometheus remote-write and are able to [deduplicate samples](https://grafana.com/docs/mimir/latest/configure/configure-high-availability-deduplication/) received from HA pairs of Prometheus/PrometheusAgent instances, provided that you configure proper labels.
