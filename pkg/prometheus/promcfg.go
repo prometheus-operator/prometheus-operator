@@ -1097,14 +1097,13 @@ func initRelabelings() []yaml.MapSlice {
 func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	promArgs := []monitoringv1.Argument{
-		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
-		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
 		{Name: "config.file", Value: path.Join(ConfOutDir, ConfigEnvsubstFilename)},
 	}
 
-	if cg.version.Major >= 3 {
-		// remove web.console.templates and web.console.libraries if prometheus version is 3.0.0 or greater
-		promArgs = promArgs[len(promArgs)-1:]
+	if cg.version.Major == 2 {
+		// Add web.console.templates and web.console.libraries only if Prometheus version is v2.x.
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
+			monitoringv1.Argument{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"})
 	}
 
 	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.HTTPReloadStrategyType {
