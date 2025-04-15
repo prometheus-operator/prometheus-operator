@@ -47,6 +47,8 @@ const (
 	defaultRetention          = "24h"
 	defaultEvaluationInterval = "15s"
 	defaultReplicaLabelName   = "thanos_ruler_replica"
+
+	defaultTerminationGracePeriodSeconds = int64(120)
 )
 
 var (
@@ -481,7 +483,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				NodeSelector:                  tr.Spec.NodeSelector,
 				PriorityClassName:             tr.Spec.PriorityClassName,
 				ServiceAccountName:            tr.Spec.ServiceAccountName,
-				TerminationGracePeriodSeconds: ptr.To(int64(120)),
+				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(tr.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
 				Containers:                    containers,
 				InitContainers:                tr.Spec.InitContainers,
 				Volumes:                       trVolumes,

@@ -9837,6 +9837,16 @@ spec:
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
                 format: int64
                 type: integer
+              terminationGracePeriodSeconds:
+                description: |-
+                  Optional duration in seconds the pod needs to terminate gracefully.
+                  Value must be non-negative integer. The value zero indicates stop immediately via
+                  the kill signal (no opportunity to shut down) which may lead to data corruption.
+
+                  Defaults to 600 seconds.
+                format: int64
+                minimum: 0
+                type: integer
               thanos:
                 description: Defines the configuration of the optional Thanos sidecar.
                 properties:

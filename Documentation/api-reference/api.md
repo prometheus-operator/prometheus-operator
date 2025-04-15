@@ -878,6 +878,21 @@ Alertmanager container which may cause issues if they are invalid or not support
 by the given Alertmanager version.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 120 seconds.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3251,6 +3266,21 @@ RuntimeConfig
 </tr>
 <tr>
 <td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -4969,6 +4999,21 @@ ThanosRulerWebSpec
 <p>It requires Thanos &gt;= 0.24.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 120 seconds.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -6467,6 +6512,21 @@ It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 Alertmanager container which may cause issues if they are invalid or not supported
 by the given Alertmanager version.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 120 seconds.</p>
 </td>
 </tr>
 </tbody>
@@ -8621,6 +8681,21 @@ RuntimeConfig
 <td>
 <em>(Optional)</em>
 <p>RuntimeConfig configures the values for the Prometheus process behavior</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 600 seconds.</p>
 </td>
 </tr>
 </tbody>
@@ -13586,6 +13661,21 @@ RuntimeConfig
 </tr>
 <tr>
 <td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -17795,6 +17885,21 @@ ThanosRulerWebSpec
 <p>It requires Thanos &gt;= 0.24.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 120 seconds.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus
@@ -20608,6 +20713,21 @@ RuntimeConfig
 <td>
 <em>(Optional)</em>
 <p>RuntimeConfig configures the values for the Prometheus process behavior</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 600 seconds.</p>
 </td>
 </tr>
 </table>
@@ -28833,6 +28953,21 @@ RuntimeConfig
 <td>
 <em>(Optional)</em>
 <p>RuntimeConfig configures the values for the Prometheus process behavior</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
+<p>Defaults to 600 seconds.</p>
 </td>
 </tr>
 </tbody>

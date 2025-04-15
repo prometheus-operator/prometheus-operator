@@ -309,6 +309,16 @@ type AlertmanagerSpec struct {
 	// by the given Alertmanager version.
 	// +optional
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+
+	// Optional duration in seconds the pod needs to terminate gracefully.
+	// Value must be non-negative integer. The value zero indicates stop immediately via
+	// the kill signal (no opportunity to shut down) which may lead to data corruption.
+	//
+	// Defaults to 120 seconds.
+	//
+	// +kubebuilder:validation:Minimum:=0
+	// +optional
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
