@@ -1436,7 +1436,7 @@ spec:
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
-                                pattern: ^http(s)?://.+$
+                                pattern: ^(http|https|socks5)?://.+$
                                 type: string
                               scopes:
                                 description: '`scopes` defines the OAuth2 scopes used
@@ -1668,7 +1668,7 @@ spec:
                           proxyUrl:
                             description: '`proxyURL` defines the HTTP proxy server
                               to use.'
-                            pattern: ^http(s)?://.+$
+                            pattern: ^(http|https|socks5)?://.+$
                             type: string
                           tlsConfig:
                             description: TLS configuration for the client.
