@@ -2340,9 +2340,7 @@ func TestPodTemplateConfig(t *testing.T) {
 }
 
 func TestPrometheusAdditionalArgsNoError(t *testing.T) {
-	expectedPrometheusArgs := []string{
-		"--web.console.templates=/etc/prometheus/consoles",
-		"--web.console.libraries=/etc/prometheus/console_libraries",
+	expectedPrometheusArgsV3 := []string{
 		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
 		"--web.enable-lifecycle",
 		"--web.route-prefix=/",
@@ -2353,6 +2351,9 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"--storage.tsdb.no-lockfile",
 	}
 
+	expectedPrometheusArgsV2 := append([]string{"--web.console.templates=/etc/prometheus/consoles",
+		"--web.console.libraries=/etc/prometheus/console_libraries"}, expectedPrometheusArgsV3...)
+
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
 	}
@@ -2360,7 +2361,7 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+	p := monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -2376,13 +2377,24 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 						Name: "storage.tsdb.no-lockfile",
 					},
 				},
+				Version: "v2.54.0",
 			},
 		},
-	})
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(p)
 	require.NoError(t, err)
 
 	ssetContainerArgs := sset.Spec.Template.Spec.Containers[0].Args
-	require.Equal(t, expectedPrometheusArgs, ssetContainerArgs, "expected Prometheus container args to match, want %s, got %s", expectedPrometheusArgs, ssetContainerArgs)
+	// web.console.templates and web.console.libraries should be present in prometheus versisons < 3
+	require.Equal(t, expectedPrometheusArgsV2, ssetContainerArgs, "expected Prometheus container args to match, want %s, got %s", expectedPrometheusArgsV2, ssetContainerArgs)
+
+	p.Spec.CommonPrometheusFields.Version = "v3.0.0"
+	sset, err = makeStatefulSetFromPrometheus(p)
+	require.NoError(t, err)
+	ssetContainerArgs = sset.Spec.Template.Spec.Containers[0].Args
+	// web.console.templates and web.console.libraries should not be present in prometheus versions >= 3
+	require.Equal(t, expectedPrometheusArgsV3, ssetContainerArgs, "expected Prometheus container args to match, want %s, got %s", expectedPrometheusArgsV3, ssetContainerArgs)
 }
 
 func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {

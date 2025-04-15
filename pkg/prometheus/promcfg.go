@@ -1102,6 +1102,11 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		{Name: "config.file", Value: path.Join(ConfOutDir, ConfigEnvsubstFilename)},
 	}
 
+	if cg.version.Major >= 3 {
+		// remove web.console.templates and web.console.libraries if prometheus version is 3.0.0 or greater
+		promArgs = promArgs[len(promArgs)-1:]
+	}
+
 	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.HTTPReloadStrategyType {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-lifecycle"})
 	}
