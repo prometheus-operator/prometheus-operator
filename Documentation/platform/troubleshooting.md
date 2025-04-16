@@ -207,12 +207,12 @@ If the `--controller-id` flag is not set, the operator will try to reconcile all
 
 The following table illustrates the behavior based on whether the `--controller-id` flag is set and whether the `operator.prometheus.io/controller-id` annotation is present on the resources:
 
-| `--controller-id` Set | Annotation on Resources Set | Behavior                                                               |
-|-----------------------|-----------------------------|------------------------------------------------------------------------|
-| Yes                   | Yes                         | Operator reconciles only resources with matching annotation values.    |
-| Yes                   | No                          | Operator does not reconcile resources without the matching annotation. |
-| No                    | Yes                         | Operator ignores resources with the annotation set.                    |
-| No                    | No                          | Operator reconciles all resources without any annotation restrictions. |
+| Operator started with with the `--controller-id` flag | Resource with the `operator.prometheus.io/controller-id` annotation | Behavior                                                                            |
+|-------------------------------------------------------|---------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Yes                                                   | Yes                                                                 | The operator reconciles the resource only if the annotation value matches the flag. |
+| Yes                                                   | No                                                                  | The operator does not reconcile the resource                                        |
+| No                                                    | Yes                                                                 | The operator does not reconcile the resource.                                       |
+| No                                                    | No                                                                  | The operator reconciles the resource.                                               |
 
 ### Configuring Prometheus/PrometheusAgent for Mimir and Grafana Cloud
 
