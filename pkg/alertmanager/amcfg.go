@@ -690,7 +690,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		for i := range in.MSTeamsV2Configs {
 			receiver, err := cb.convertMSTeamsV2Config(ctx, in.MSTeamsV2Configs[i], crKey)
 			if err != nil {
-				return nil, fmt.Errorf("MSTeamsConfig[%d]: %w", i, err)
+				return nil, fmt.Errorf("MSTeamsConfigV2[%d]: %w", i, err)
 			}
 			msTeamsV2Configs[i] = receiver
 		}
