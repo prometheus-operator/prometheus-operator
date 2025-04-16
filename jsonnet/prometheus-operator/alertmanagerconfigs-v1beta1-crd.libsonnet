@@ -376,7 +376,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -601,7 +601,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -1309,7 +1309,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -1534,7 +1534,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -2059,7 +2059,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -2284,7 +2284,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -2811,7 +2811,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -3036,7 +3036,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -3564,7 +3564,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -3789,7 +3789,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -4411,7 +4411,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -4636,7 +4636,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -5109,7 +5109,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -5334,7 +5334,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -5878,7 +5878,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -6103,7 +6103,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -6598,7 +6598,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -6823,7 +6823,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -7267,7 +7267,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -7492,7 +7492,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -7927,7 +7927,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -8152,7 +8152,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -8641,7 +8641,7 @@
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^(http|https|socks5)?://.+$',
+                                    pattern: '^(http|https|socks5)://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -8866,7 +8866,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^(http|https|socks5)?://.+$',
+                                pattern: '^(http|https|socks5)://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {

@@ -1429,7 +1429,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         relabelings:
                           description: Relabel configuration applied to the discovered
@@ -6249,7 +6249,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -6476,7 +6476,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     readRecent:
                       description: |-
@@ -7113,7 +7113,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -7340,7 +7340,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     queueConfig:
                       description: QueueConfig allows tuning of the remote write queue
