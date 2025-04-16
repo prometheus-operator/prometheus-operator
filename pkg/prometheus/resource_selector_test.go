@@ -2799,7 +2799,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "Kuma SD config with valid TLS Config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+				sc.KumaSDConfigs = monitoringv1alpha1.KumaSDConfigs{
 					{
 						Server: "http://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
@@ -2834,7 +2834,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "Kuma SD config with invalid TLS config with invalid CA data",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+				sc.KumaSDConfigs = monitoringv1alpha1.KumaSDConfigs{
 					{
 						Server: "http://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
@@ -2855,7 +2855,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "Kuma SD config with invalid server",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+				sc.KumaSDConfigs = monitoringv1alpha1.KumaSDConfigs{
 					{
 						Server: "aaaaaa",
 					},
@@ -2866,7 +2866,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "Kuma SD config with valid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+				sc.KumaSDConfigs = monitoringv1alpha1.KumaSDConfigs{
 					{
 						Server: "http://example.com",
 						ProxyConfig: monitoringv1.ProxyConfig{
@@ -2892,7 +2892,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "Kuma SD config with invalid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+				sc.KumaSDConfigs = monitoringv1alpha1.KumaSDConfigs{
 					{
 						Server: "http://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{

@@ -142,6 +142,8 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+type KumaSDConfigs []KumaSDConfig
+
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
@@ -189,7 +191,7 @@ type ScrapeConfigSpec struct {
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// KumaSDConfigs defines a list of Kuma service discovery configurations.
 	// +optional
-	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
+	KumaSDConfigs KumaSDConfigs `json:"kumaSDConfigs,omitempty"`
 	// EurekaSDConfigs defines a list of Eureka service discovery configurations.
 	// +optional
 	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
@@ -1322,7 +1324,7 @@ type ScalewaySDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// API URL to use when doing the server listing requests.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +optional
 	ApiURL *string `json:"apiURL,omitempty"`
 	// Zone is the availability zone of your targets (e.g. fr-par-1).

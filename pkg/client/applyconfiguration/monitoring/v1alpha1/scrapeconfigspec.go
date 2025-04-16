@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
@@ -38,7 +39,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	GCESDConfigs                               []GCESDConfigApplyConfiguration          `json:"gceSDConfigs,omitempty"`
 	OpenStackSDConfigs                         []OpenStackSDConfigApplyConfiguration    `json:"openstackSDConfigs,omitempty"`
 	DigitalOceanSDConfigs                      []DigitalOceanSDConfigApplyConfiguration `json:"digitalOceanSDConfigs,omitempty"`
-	KumaSDConfigs                              []KumaSDConfigApplyConfiguration         `json:"kumaSDConfigs,omitempty"`
+	KumaSDConfigs                              *monitoringv1alpha1.KumaSDConfigs        `json:"kumaSDConfigs,omitempty"`
 	EurekaSDConfigs                            []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
 	DockerSDConfigs                            []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
 	LinodeSDConfigs                            []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
@@ -236,16 +237,11 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDigitalOceanSDConfigs(values ..
 	return b
 }
 
-// WithKumaSDConfigs adds the given value to the KumaSDConfigs field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the KumaSDConfigs field.
-func (b *ScrapeConfigSpecApplyConfiguration) WithKumaSDConfigs(values ...*KumaSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithKumaSDConfigs")
-		}
-		b.KumaSDConfigs = append(b.KumaSDConfigs, *values[i])
-	}
+// WithKumaSDConfigs sets the KumaSDConfigs field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KumaSDConfigs field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithKumaSDConfigs(value monitoringv1alpha1.KumaSDConfigs) *ScrapeConfigSpecApplyConfiguration {
+	b.KumaSDConfigs = &value
 	return b
 }
 
