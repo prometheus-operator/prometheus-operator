@@ -201,7 +201,19 @@ Check the logs of the matching pods to see if they manage the same resource.
 
 If running multiple operators is desired, make sure to set the `--controller-id` flag for each operator instance to a different value. When `--controller-id` is set, the operator instance will only reconcile resources that have a `operator.prometheus.io/controller-id` annotation matching the value of `--controller-id` (eg: an operator with the flag `--controller-id=my-objects` will only reconcile objects that have `operator.prometheus.io/controller-id: my-objects` annotation on them). This allows multiple operator instances to run in the same cluster without conflicting over the same resources.
 
-If the `--controller-id` flag is not set, the operator will try to reconcile all resources, including those managed by other operator instances. This can lead to conflicts (such as pods stuck in terminating loop) and should be avoided.
+Note: it is the responsibility of the resource owner (the user applying the resource) to set the `operator.prometheus.io/controller-id` annotation on the resources. The operator will not set this annotation automatically.
+
+
+If the `--controller-id` flag is not set, the operator will try to reconcile all resources, except the ones that have the `operator.prometheus.io/controller-id` annotation set. This can lead to conflicts (such as pods stuck in terminating loop) and should be avoided.
+
+The following table illustrates the behavior based on whether the `--controller-id` flag is set and whether the `operator.prometheus.io/controller-id` annotation is present on the resources:
+
+| `--controller-id` Set | Annotation on Resources Set | Behavior                                                                 |
+|------------------------|----------------------------|--------------------------------------------------------------------------|
+| Yes                    | Yes                        | Operator reconciles only resources with matching annotation values.      |
+| Yes                    | No                         | Operator does not reconcile resources without the matching annotation.   |
+| No                     | Yes                        | Operator ignores resources with the annotation set.                      |
+| No                     | No                         | Operator reconciles all resources without any annotation restrictions.   |
 
 ### Configuring Prometheus/PrometheusAgent for Mimir and Grafana Cloud
 
