@@ -1391,10 +1391,6 @@ func (cb *configBuilder) convertMSTeamsV2Config(
 		out.WebhookURL = webHookURL
 	}
 
-	if in.WebhookURLFile != nil {
-		out.WebhookURLFile = *in.WebhookURLFile
-	}
-
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
 		return nil, err

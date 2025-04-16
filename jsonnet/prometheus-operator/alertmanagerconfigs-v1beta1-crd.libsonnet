@@ -1881,7 +1881,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -1970,7 +1970,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -2000,17 +2000,17 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
                                     description: '`proxyURL` defines the HTTP proxy server to use.',
-                                    pattern: '^http(s)?://.+$',
+                                    pattern: '^(http|https|socks5)?://.+$',
                                     type: 'string',
                                   },
                                   scopes: {
@@ -2155,7 +2155,7 @@
                                         'x-kubernetes-map-type': 'atomic',
                                       },
                                       maxVersion: {
-                                        description: 'Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.',
+                                        description: 'Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.',
                                         enum: [
                                           'TLS10',
                                           'TLS11',
@@ -2165,7 +2165,7 @@
                                         type: 'string',
                                       },
                                       minVersion: {
-                                        description: 'Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.',
+                                        description: 'Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.',
                                         enum: [
                                           'TLS10',
                                           'TLS11',
@@ -2221,12 +2221,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'boolean',
                               },
                               proxyURL: {
@@ -2235,7 +2235,7 @@
                               },
                               proxyUrl: {
                                 description: '`proxyURL` defines the HTTP proxy server to use.',
-                                pattern: '^http(s)?://.+$',
+                                pattern: '^(http|https|socks5)?://.+$',
                                 type: 'string',
                               },
                               tlsConfig: {
@@ -2373,7 +2373,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   maxVersion: {
-                                    description: 'Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.',
+                                    description: 'Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.',
                                     enum: [
                                       'TLS10',
                                       'TLS11',
@@ -2383,7 +2383,7 @@
                                     type: 'string',
                                   },
                                   minVersion: {
-                                    description: 'Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.',
+                                    description: 'Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.',
                                     enum: [
                                       'TLS10',
                                       'TLS11',
@@ -2408,14 +2408,16 @@
                           },
                           text: {
                             description: 'Message body template.',
+                            minLength: 1,
                             type: 'string',
                           },
                           title: {
                             description: 'Message title template.',
+                            minLength: 1,
                             type: 'string',
                           },
-                          webhookUrl: {
-                            description: 'MSTeams incoming webhook URL. It is mutually exclusive with `webhookUrlFile`.\nEither `webhookUrl` or `webhookUrlFile` are required.',
+                          webhookURL: {
+                            description: 'MSTeams incoming webhook URL.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2436,10 +2438,6 @@
                             ],
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
-                          },
-                          webhookUrlFile: {
-                            description: 'File to read the MSTeams webhook URL from.',
-                            type: 'string',
                           },
                         },
                         type: 'object',

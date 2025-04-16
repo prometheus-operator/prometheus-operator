@@ -25970,7 +25970,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>webhookUrl</code><br/>
+<code>webhookURL</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 Kubernetes core/v1.SecretKeySelector
@@ -25979,20 +25979,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>MSTeams incoming webhook URL. It is mutually exclusive with <code>webhookUrlFile</code>.
-Either <code>webhookUrl</code> or <code>webhookUrlFile</code> are required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>webhookUrlFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>File to read the MSTeams webhook URL from.</p>
+<p>MSTeams incoming webhook URL.</p>
 </td>
 </tr>
 <tr>
@@ -33506,7 +33493,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>webhookUrl</code><br/>
+<code>webhookURL</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 Kubernetes core/v1.SecretKeySelector
@@ -33515,20 +33502,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>MSTeams incoming webhook URL. It is mutually exclusive with <code>webhookUrlFile</code>.
-Either <code>webhookUrl</code> or <code>webhookUrlFile</code> are required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>webhookUrlFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>File to read the MSTeams webhook URL from.</p>
+<p>MSTeams incoming webhook URL.</p>
 </td>
 </tr>
 <tr>

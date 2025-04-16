@@ -1489,11 +1489,6 @@ func (in *MSTeamsV2Config) DeepCopyInto(out *MSTeamsV2Config) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.WebhookURLFile != nil {
-		in, out := &in.WebhookURLFile, &out.WebhookURLFile
-		*out = new(string)
-		**out = **in
-	}
 	if in.Title != nil {
 		in, out := &in.Title, &out.Title
 		*out = new(string)

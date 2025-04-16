@@ -986,17 +986,15 @@ type MSTeamsV2Config struct {
 	// Whether to notify about resolved alerts.
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
-	// MSTeams incoming webhook URL. It is mutually exclusive with `webhookUrlFile`.
-	// Either `webhookUrl` or `webhookUrlFile` are required.
+	// MSTeams incoming webhook URL.
 	// +optional
-	WebhookURL *v1.SecretKeySelector `json:"webhookUrl,omitempty"`
-	// File to read the MSTeams webhook URL from.
-	// +optional
-	WebhookURLFile *string `json:"webhookUrlFile,omitempty"`
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
 	// Message title template.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// Message body template.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.

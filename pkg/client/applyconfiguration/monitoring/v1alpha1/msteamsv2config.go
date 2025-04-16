@@ -23,12 +23,11 @@ import (
 // MSTeamsV2ConfigApplyConfiguration represents a declarative configuration of the MSTeamsV2Config type for use
 // with apply.
 type MSTeamsV2ConfigApplyConfiguration struct {
-	SendResolved   *bool                         `json:"sendResolved,omitempty"`
-	WebhookURL     *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
-	WebhookURLFile *string                       `json:"webhookUrlFile,omitempty"`
-	Title          *string                       `json:"title,omitempty"`
-	Text           *string                       `json:"text,omitempty"`
-	HTTPConfig     *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	SendResolved *bool                         `json:"sendResolved,omitempty"`
+	WebhookURL   *v1.SecretKeySelector         `json:"webhookURL,omitempty"`
+	Title        *string                       `json:"title,omitempty"`
+	Text         *string                       `json:"text,omitempty"`
+	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // MSTeamsV2ConfigApplyConfiguration constructs a declarative configuration of the MSTeamsV2Config type for use with
@@ -50,14 +49,6 @@ func (b *MSTeamsV2ConfigApplyConfiguration) WithSendResolved(value bool) *MSTeam
 // If called multiple times, the WebhookURL field is set to the value of the last call.
 func (b *MSTeamsV2ConfigApplyConfiguration) WithWebhookURL(value v1.SecretKeySelector) *MSTeamsV2ConfigApplyConfiguration {
 	b.WebhookURL = &value
-	return b
-}
-
-// WithWebhookURLFile sets the WebhookURLFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the WebhookURLFile field is set to the value of the last call.
-func (b *MSTeamsV2ConfigApplyConfiguration) WithWebhookURLFile(value string) *MSTeamsV2ConfigApplyConfiguration {
-	b.WebhookURLFile = &value
 	return b
 }
 
