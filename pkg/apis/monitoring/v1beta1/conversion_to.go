@@ -263,6 +263,9 @@ func convertDiscordConfigTo(in DiscordConfig) v1alpha1.DiscordConfig {
 		Title:        in.Title,
 		Message:      in.Message,
 		SendResolved: in.SendResolved,
+		Content:      in.Content,
+		Username:     in.Username,
+		AvatarURL:    (*v1alpha1.URL)(in.AvatarURL),
 	}
 }
 

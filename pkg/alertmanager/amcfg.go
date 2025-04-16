@@ -769,6 +769,18 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 		out.Message = *in.Message
 	}
 
+	if in.Content != nil && *in.Content != "" {
+		out.Content = *in.Content
+	}
+
+	if in.Username != nil && *in.Username != "" {
+		out.Username = *in.Username
+	}
+
+	if in.AvatarURL != nil && *in.AvatarURL != "" {
+		out.AvatarURL = (string)(*in.AvatarURL)
+	}
+
 	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
 	if err != nil {
 		return nil, err
