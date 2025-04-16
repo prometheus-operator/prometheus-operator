@@ -199,6 +199,21 @@ kubectl get pods --all-namespaces | grep 'prom.*operator'
 
 Check the logs of the matching pods to see if they manage the same resource.
 
+If running multiple operators is desired, make sure to set the `--controller-id` flag for each operator instance to a different value. When `--controller-id` is set, the operator instance will only reconcile resources that have a `operator.prometheus.io/controller-id` annotation matching the value of `--controller-id` (eg: an operator with the flag `--controller-id=my-objects` will only reconcile objects that have `operator.prometheus.io/controller-id: my-objects` annotation on them). This allows multiple operator instances to run in the same cluster without conflicting over the same resources.
+
+Note: it is the responsibility of the resource owner (the user applying the resource) to set the `operator.prometheus.io/controller-id` annotation on the resources. The operator will not set this annotation automatically.
+
+If the `--controller-id` flag is not set, the operator will try to reconcile all resources, except the ones that have the `operator.prometheus.io/controller-id` annotation set. This can lead to conflicts (such as pods stuck in terminating loop) and should be avoided.
+
+The following table illustrates the behavior based on whether the `--controller-id` flag is set and whether the `operator.prometheus.io/controller-id` annotation is present on the resources:
+
+| Operator started with with the `--controller-id` flag | Resource with the `operator.prometheus.io/controller-id` annotation | Behavior                                                                            |
+|-------------------------------------------------------|---------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Yes                                                   | Yes                                                                 | The operator reconciles the resource only if the annotation value matches the flag. |
+| Yes                                                   | No                                                                  | The operator does not reconcile the resource                                        |
+| No                                                    | Yes                                                                 | The operator does not reconcile the resource.                                       |
+| No                                                    | No                                                                  | The operator reconciles the resource.                                               |
+
 ### Configuring Prometheus/PrometheusAgent for Mimir and Grafana Cloud
 
 Mimir and Grafana Cloud can receive samples via Prometheus remote-write and are able to [deduplicate samples](https://grafana.com/docs/mimir/latest/configure/configure-high-availability-deduplication/) received from HA pairs of Prometheus/PrometheusAgent instances, provided that you configure proper labels.
