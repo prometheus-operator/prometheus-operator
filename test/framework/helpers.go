@@ -261,7 +261,7 @@ func getMetricValue(b []byte, metricName string) (float64, error) {
 		}
 
 		seriesLabels := labels.Labels{}
-		parser.Metric(&seriesLabels)
+		parser.Labels(&seriesLabels)
 
 		if seriesLabels.Get("__name__") != metricName {
 			continue
