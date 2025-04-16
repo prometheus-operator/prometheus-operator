@@ -83,7 +83,7 @@ type PrometheusRuleExcludeConfig struct {
 type ProxyConfig struct {
 	// `proxyURL` defines the HTTP proxy server to use.
 	//
-	// +kubebuilder:validation:Pattern:="^(http|https|socks5)?://.+$"
+	// +kubebuilder:validation:Pattern:="^(http|https|socks5)://.+$"
 	// +optional
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 	// `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

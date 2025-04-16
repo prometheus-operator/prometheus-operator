@@ -392,7 +392,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -627,7 +627,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: RefreshInterval configures the refresh interval
@@ -1170,7 +1170,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -1408,7 +1408,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: |-
@@ -1851,7 +1851,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -2084,7 +2084,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Refresh interval to re-read the instance list.
@@ -2605,7 +2605,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -2835,7 +2835,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Time after which the container is refreshed.
@@ -3302,7 +3302,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -3537,7 +3537,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: The time after which the service discovery data
@@ -3854,7 +3854,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: RefreshInterval configures the refresh interval
@@ -4330,7 +4330,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -4557,7 +4557,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Refresh interval to re-read the instance list.
@@ -5097,7 +5097,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -5327,7 +5327,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: The time after which the servers are refreshed.
@@ -5779,7 +5779,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -6006,7 +6006,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: |-
@@ -6391,7 +6391,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -6624,7 +6624,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Refresh interval to re-read the list of resources.
@@ -7118,7 +7118,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -7345,7 +7345,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     role:
                       description: |-
@@ -7832,7 +7832,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -8059,7 +8059,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: The time to wait between polling update requests.
@@ -8544,7 +8544,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -8779,7 +8779,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Refresh interval to re-read the list of instances.
@@ -9183,7 +9183,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -9416,7 +9416,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Time after which the linode instances are refreshed.
@@ -9978,7 +9978,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -10205,7 +10205,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: |-
@@ -10526,7 +10526,7 @@ spec:
                     type: boolean
                   proxyUrl:
                     description: '`proxyURL` defines the HTTP proxy server to use.'
-                    pattern: ^(http|https|socks5)?://.+$
+                    pattern: ^(http|https|socks5)://.+$
                     type: string
                   scopes:
                     description: '`scopes` defines the OAuth2 scopes used for the
@@ -11163,7 +11163,7 @@ spec:
                 type: boolean
               proxyUrl:
                 description: '`proxyURL` defines the HTTP proxy server to use.'
-                pattern: ^(http|https|socks5)?://.+$
+                pattern: ^(http|https|socks5)://.+$
                 type: string
               puppetDBSDConfigs:
                 description: PuppetDBSDConfigs defines a list of PuppetDB service
@@ -11434,7 +11434,7 @@ spec:
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
                             use.'
-                          pattern: ^(http|https|socks5)?://.+$
+                          pattern: ^(http|https|socks5)://.+$
                           type: string
                         scopes:
                           description: '`scopes` defines the OAuth2 scopes used for
@@ -11667,7 +11667,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     query:
                       description: |-
@@ -12035,7 +12035,7 @@ spec:
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
-                      pattern: ^(http|https|socks5)?://.+$
+                      pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
                       description: Refresh interval to re-read the list of instances.
