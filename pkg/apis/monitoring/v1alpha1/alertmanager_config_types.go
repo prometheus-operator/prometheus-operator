@@ -190,6 +190,9 @@ type Receiver struct {
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
+	// List of MSTeamsV2 configurations.
+	// It requires Alertmanager >= 0.28.0.
+	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -969,6 +972,29 @@ type MSTeamsConfig struct {
 	// +optional
 	Summary *string `json:"summary,omitempty"`
 	// Message body template.
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// MSTeamsV2Config configures notifications via Microsoft Teams using the new message format with adaptive cards as required by flows
+// See https://prometheus.io/docs/alerting/latest/configuration/#msteamsv2_config
+// It requires Alertmanager >= 0.28.0.
+type MSTeamsV2Config struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// MSTeams incoming webhook URL.
+	// +optional
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
+	// Message title template.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// Message body template.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
