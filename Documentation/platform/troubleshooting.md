@@ -90,6 +90,27 @@ kubectl -n monitoring port-forward svc/prometheus-operated 9090:9090
 
 If the command runs successfully, you should be able to access the [Prometheus server UI](http://localhost:9090/) via localhost. From there you can check the live configuration and the discovered targets.
 
+### Debugging why monitoring resource spec changes are not reconciled
+
+The Prometheus Operator will reject invalid resources and not reconcile them in the Prometheus configuration, for instance if the `ServiceMonitor` object has a references to a secret which doesn't exist in the cluster. When it happens the Operator emits a Kubernetes Event detailing the issue.
+
+To check for events related to rejected resources, you can use the following command:
+
+```sh
+kubectl get events --field-selector=involvedObject.name="<name of PodMonitor resource>" -n "<namespace where resource is deployed>"
+```
+Events are supported for the following resources:
+* `AlertmanagerConfig`
+* `PrometheusRule`
+* `ServiceMonitor`
+* `PodMonitor`
+* `Probe`
+* `ScrapeConfig`
+
+If you've deployed the Prometheus Operator using kube-prometheus manifests, the `PrometheusOperatorRejectedResources` alert should fire when invalid objects are detected.
+The alert can be found in [kube-prometheus-stack repository](https://github.com/prometheus-community/helm-charts/blob/db5b859d111c2c81534c5b716aff417f13b51d2b/charts/kube-prometheus-stack/templates/prometheus/rules-1.14/prometheus-operator.yaml#L226)
+
+
 #### It is in the configuration but not on the Service Discovery page
 
 ServiceMonitors pointing to Services that do not exist (e.g. nothing matching `.spec.selector`) will lead to this ServiceMonitor not being added to the Service Discovery page. Check if you can find any Service with the selector you configured.
