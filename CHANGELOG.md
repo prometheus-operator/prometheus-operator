@@ -1,6 +1,18 @@
-## Unreleased
+## 0.82.0 / 2025-04-17
 
+* [CHANGE] Add more API validations to the ScrapeConfig CRD. #7413
+* [CHANGE] Remove web console arguments if Prometheus version >= 3. #7457
+* [FEATURE] Add RemoteWrite support for ThanosRuler CRD. Note that when remote write is configured, Thanos Ruler runs in stateless mode. #7444
+* [FEATURE] Add `msTeamsV2Configs` receiver to AlertManagerConfig CRD. #7464
+* [FEATURE] Add `content`, `username` and `avatarURL` fields to `discordConfigs` receiver in AlertmanagerConfig CRD. #7307
+* [FEATURE] Add `convertClassicHistogramsToNHCB` field to `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` CRDs. #7448
+* [FEATURE] Add `timeout` field to `webhookConfigs` receiver in AlertManagerConfig CRD. #7310
+* [FEATURE] Add `additionalArgs` field to AlertManager CRD. #7385
+* [ENHANCEMENT] Add `maxSamplesPerSend` field to RemoteWrite Metadata Config. #7443
 * [ENHANCEMENT] Add the `terminationGracePeriodSeconds` to the Alertmanager, Prometheus, PrometheusAgent and ThanosRuler CRDs. #7439
+* [ENHANCEMENT] Validate `proxyURL` field in AlertManagerConfig CRD. #6876
+* [BUGFIX] Fix `nameValidationScheme` support for Prometheus and PrometheusAgent CRDs. #7414
+* [BUGFIX] Support `socks5` scheme in `proxyUrl` field for all CRDs. #7460 #7466
 
 ## 0.81.0 / 2025-03-11
 
