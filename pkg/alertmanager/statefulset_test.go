@@ -863,20 +863,14 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
+	a.Spec.ForceEnableClusterMode = false
+
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
-	containsEmptyClusterListenAddress := false
-
-	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=" {
-			containsEmptyClusterListenAddress = true
-		}
-	}
-
-	require.True(t, containsEmptyClusterListenAddress, "expected stateful set to contain arg '--cluster.listen-address='")
+	require.Contains(t, amArgs, "--cluster.listen-address=", "expected stateful set to contain '--cluster.listen-address='")
 }
 
 func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
@@ -1283,6 +1277,27 @@ func TestEnableFeatures(t *testing.T) {
 	}
 }
 
+func TestValidateAdditionalArgs(t *testing.T) {
+	additionalArgs := []monitoringv1.Argument{
+		{Name: "auto-gomemlimit.ratio", Value: "0.7"},
+	}
+	expectedArgs := []string{"--auto-gomemlimit.ratio=0.7"}
+
+	statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Replicas:       toPtr(int32(1)),
+			AdditionalArgs: additionalArgs,
+		},
+	}, defaultTestConfig, &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	actualArgs := statefulSpec.Template.Spec.Containers[0].Args
+
+	for _, expectedArg := range expectedArgs {
+		require.Contains(t, actualArgs, expectedArg, "Expected additional argument not found")
+	}
+}
+
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -1334,5 +1349,31 @@ func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 
 	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
 		t.Fatalf("expected persistentVolumeClaimDeletePolicy.WhenScaled to be %s but got %s", appsv1.DeletePersistentVolumeClaimRetentionPolicyType, sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenScaled)
+	}
+}
+
+func TestStatefulSetEnableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks    *bool
+		expectedEnableService *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableService: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableService: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableService: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec:       monitoringv1.AlertmanagerSpec{EnableServiceLinks: test.expectedEnableService},
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		require.NoError(t, err)
+
+		if test.expectedEnableService != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks not nil")
+			require.Equal(t, *test.expectedEnableService, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks is nil")
+		}
 	}
 }

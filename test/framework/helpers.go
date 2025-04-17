@@ -161,22 +161,19 @@ func podRunsImage(p v1.Pod, image string) bool {
 	return false
 }
 
-// ProxyGetPod expects resourceName as "[protocol:]podName[:portNameOrNumber]".
-// protocol is optional and the valid values are "http" and "https".
-// Without specifying protocol, "http" will be used.
-// podName is mandatory.
-// portNameOrNumber is optional.
-// Without specifying portNameOrNumber, default port will be used.
-func (f *Framework) ProxyGetPod(namespace, resourceName, path string) *rest.Request {
-	return f.KubeClient.
+// ProxyGetPod executes an HTTP(S) request against the default port of the pod
+// using the Proxy API.
+func (f *Framework) ProxyGetPod(ctx context.Context, scheme, namespace, pod, path string) ([]byte, error) {
+	b, err := f.KubeClient.
 		CoreV1().
-		RESTClient().
-		Get().
-		Namespace(namespace).
-		Resource("pods").
-		SubResource("proxy").
-		Name(resourceName).
-		Suffix(path)
+		Pods(namespace).
+		ProxyGet(scheme, pod, "", path, nil).
+		DoRaw(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
 // ProxyPostPod expects resourceName as "[protocol:]podName[:portNameOrNumber]".
@@ -199,38 +196,72 @@ func (f *Framework) ProxyPostPod(namespace, resourceName, path, body string) *re
 		SetHeader("Content-Type", "application/json")
 }
 
-// GetMetricVal get a particular metric value from a pod.
-// When portNumberOfName is "", default port will be used to access metrics endpoint.
-func (f *Framework) GetMetricVal(ctx context.Context, protocol, ns, podName, portNumberOrName, metricName string) (float64, error) {
-	resourceName := podName
-	if protocol == "" {
-		protocol = "http"
-	}
-	if portNumberOrName != "" {
-		resourceName = fmt.Sprintf("%s:%s:%s", protocol, podName, portNumberOrName)
-	}
-
-	request := f.ProxyGetPod(ns, resourceName, "/metrics")
-	resp, err := request.DoRaw(ctx)
+// GetMetricValueFromPod sends an HTTP(S) request to the /metrics endpoint of the pod
+// using the Proxy API, parses the response and returns the flot64 value of the
+// first series matching the metric name.
+// If protocol is empty, HTTP is used.
+// If portNumberOfName is empty, the default pod's port is used.
+func (f *Framework) GetMetricValueFromPod(ctx context.Context, protocol, ns, podName, portNumberOrName, metricName string) (float64, error) {
+	b, err := f.KubeClient.
+		CoreV1().
+		Pods(ns).
+		ProxyGet(protocol, podName, portNumberOrName, "/metrics", nil).
+		DoRaw(ctx)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error reading /metrics: %w", err)
 	}
 
-	parser := textparse.NewPromParser(resp, labels.NewSymbolTable())
+	return getMetricValue(b, metricName)
+}
+
+// GetMetricValueFromService sends an HTTP(S) request to the /metrics endpoint
+// of the service using the Proxy API, parses the response and returns the
+// flot64 value of the first series matching the metric name.
+// If protocol is empty, HTTP is used.
+// If portNumberOfName is empty, the default pod's port is used.
+func (f *Framework) EnsureMetricsFromService(ctx context.Context, protocol, ns, service, portNumberOrName string, metrics ...string) error {
+	if len(metrics) == 0 {
+		return fmt.Errorf("need to provide at least 1 metric to check")
+	}
+
+	b, err := f.KubeClient.
+		CoreV1().
+		Services(ns).
+		ProxyGet(protocol, service, portNumberOrName, "/metrics", nil).
+		DoRaw(ctx)
+	if err != nil {
+		return fmt.Errorf("error reading /metrics: %w", err)
+	}
+
+	for _, m := range metrics {
+		_, err = getMetricValue(b, m)
+		if err != nil {
+			return fmt.Errorf("metric %s: %w", m, err)
+		}
+	}
+
+	return nil
+}
+
+func getMetricValue(b []byte, metricName string) (float64, error) {
+	parser := textparse.NewPromParser(b, labels.NewSymbolTable())
+
 	for {
 		entry, err := parser.Next()
 		if err != nil {
 			return 0, err
 		}
+
 		if entry == textparse.EntryInvalid {
 			return 0, fmt.Errorf("invalid prometheus metric entry")
 		}
+
 		if entry != textparse.EntrySeries {
 			continue
 		}
 
 		seriesLabels := labels.Labels{}
-		parser.Metric(&seriesLabels)
+		parser.Labels(&seriesLabels)
 
 		if seriesLabels.Get("__name__") != metricName {
 			continue

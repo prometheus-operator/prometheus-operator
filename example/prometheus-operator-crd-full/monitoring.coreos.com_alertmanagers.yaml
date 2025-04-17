@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.1
+    controller-gen.kubebuilder.io/version: v0.17.2
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -77,6 +77,28 @@ spec:
               Specification of the desired behavior of the Alertmanager cluster. More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
+              additionalArgs:
+                description: |-
+                  AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
+                  It is intended for e.g. activating hidden flags which are not supported by
+                  the dedicated configuration options yet. The arguments are passed as-is to the
+                  Alertmanager container which may cause issues if they are invalid or not supported
+                  by the given Alertmanager version.
+                items:
+                  description: Argument as part of the AdditionalArgs list.
+                  properties:
+                    name:
+                      description: Name of the argument, e.g. "scrape.discovery-reload-interval".
+                      minLength: 1
+                      type: string
+                    value:
+                      description: Argument value, e.g. 30s. Can be empty for name-only
+                        arguments (e.g. --storage.tsdb.no-lockfile)
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               additionalPeers:
                 description: AdditionalPeers allows injecting a set of additional
                   Alertmanagers to peer with to form a highly available cluster.
@@ -1267,7 +1289,7 @@ spec:
                               that should be excluded from proxying. IP and domain names can
                               contain port numbers.
 
-                              It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                              It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                             type: string
                           oauth2:
                             description: OAuth2 client credentials used to fetch a
@@ -1367,7 +1389,7 @@ spec:
                                   that should be excluded from proxying. IP and domain names can
                                   contain port numbers.
 
-                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                                  It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                                 type: string
                               proxyConnectHeader:
                                 additionalProperties:
@@ -1401,19 +1423,19 @@ spec:
                                   ProxyConnectHeader optionally specifies headers to send to
                                   proxies during CONNECT requests.
 
-                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                                  It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
                                 description: |-
                                   Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 
-                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                                  It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                                 type: boolean
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
-                                pattern: ^http(s)?://.+$
+                                pattern: ^(http|https|socks5)://.+$
                                 type: string
                               scopes:
                                 description: '`scopes` defines the OAuth2 scopes used
@@ -1568,7 +1590,7 @@ spec:
                                     description: |-
                                       Maximum acceptable TLS version.
 
-                                      It requires Prometheus >= v2.41.0.
+                                      It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
                                     enum:
                                     - TLS10
                                     - TLS11
@@ -1579,7 +1601,7 @@ spec:
                                     description: |-
                                       Minimum acceptable TLS version.
 
-                                      It requires Prometheus >= v2.35.0.
+                                      It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
                                     enum:
                                     - TLS10
                                     - TLS11
@@ -1633,19 +1655,19 @@ spec:
                               ProxyConnectHeader optionally specifies headers to send to
                               proxies during CONNECT requests.
 
-                              It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                              It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                             type: object
                             x-kubernetes-map-type: atomic
                           proxyFromEnvironment:
                             description: |-
                               Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 
-                              It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                              It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                             type: boolean
                           proxyUrl:
                             description: '`proxyURL` defines the HTTP proxy server
                               to use.'
-                            pattern: ^http(s)?://.+$
+                            pattern: ^(http|https|socks5)://.+$
                             type: string
                           tlsConfig:
                             description: TLS configuration for the client.
@@ -1790,7 +1812,7 @@ spec:
                                 description: |-
                                   Maximum acceptable TLS version.
 
-                                  It requires Prometheus >= v2.41.0.
+                                  It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
                                 enum:
                                 - TLS10
                                 - TLS11
@@ -1801,7 +1823,7 @@ spec:
                                 description: |-
                                   Minimum acceptable TLS version.
 
-                                  It requires Prometheus >= v2.35.0.
+                                  It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
                                 enum:
                                 - TLS10
                                 - TLS11
@@ -2082,6 +2104,388 @@ spec:
                 description: Interval between pushpull attempts.
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
+              clusterTLS:
+                description: |-
+                  Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+
+                  It requires Alertmanager >= 0.24.0.
+                properties:
+                  client:
+                    description: Client-side configuration for mutual TLS.
+                    properties:
+                      ca:
+                        description: Certificate authority used when verifying server
+                          certificates.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      cert:
+                        description: Client certificate to present when doing client-authentication.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      insecureSkipVerify:
+                        description: Disable target certificate validation.
+                        type: boolean
+                      keySecret:
+                        description: Secret containing the client key file for the
+                          targets.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      maxVersion:
+                        description: |-
+                          Maximum acceptable TLS version.
+
+                          It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
+                        enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                        type: string
+                      minVersion:
+                        description: |-
+                          Minimum acceptable TLS version.
+
+                          It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
+                        enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                        type: string
+                      serverName:
+                        description: Used to verify the hostname for the targets.
+                        type: string
+                    type: object
+                  server:
+                    description: Server-side configuration for mutual TLS.
+                    properties:
+                      cert:
+                        description: |-
+                          Secret or ConfigMap containing the TLS certificate for the web server.
+
+                          Either `keySecret` or `keyFile` must be defined.
+
+                          It is mutually exclusive with `certFile`.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      certFile:
+                        description: |-
+                          Path to the TLS certificate file in the container for the web server.
+
+                          Either `keySecret` or `keyFile` must be defined.
+
+                          It is mutually exclusive with `cert`.
+                        type: string
+                      cipherSuites:
+                        description: |-
+                          List of supported cipher suites for TLS versions up to TLS 1.2.
+
+                          If not defined, the Go default cipher suites are used.
+                          Available cipher suites are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#pkg-constants
+                        items:
+                          type: string
+                        type: array
+                      client_ca:
+                        description: |-
+                          Secret or ConfigMap containing the CA certificate for client certificate
+                          authentication to the server.
+
+                          It is mutually exclusive with `clientCAFile`.
+                        properties:
+                          configMap:
+                            description: ConfigMap containing data to use for the
+                              targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: Secret containing data to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      clientAuthType:
+                        description: |-
+                          The server policy for client TLS authentication.
+
+                          For more detail on clientAuth options:
+                          https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        type: string
+                      clientCAFile:
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to
+                          the server.
+
+                          It is mutually exclusive with `client_ca`.
+                        type: string
+                      curvePreferences:
+                        description: |-
+                          Elliptic curves that will be used in an ECDHE handshake, in preference
+                          order.
+
+                          Available curves are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#CurveID
+                        items:
+                          type: string
+                        type: array
+                      keyFile:
+                        description: |-
+                          Path to the TLS private key file in the container for the web server.
+
+                          If defined, either `cert` or `certFile` must be defined.
+
+                          It is mutually exclusive with `keySecret`.
+                        type: string
+                      keySecret:
+                        description: |-
+                          Secret containing the TLS private key for the web server.
+
+                          Either `cert` or `certFile` must be defined.
+
+                          It is mutually exclusive with `keyFile`.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      maxVersion:
+                        description: Maximum TLS version that is acceptable.
+                        type: string
+                      minVersion:
+                        description: Minimum TLS version that is acceptable.
+                        type: string
+                      preferServerCipherSuites:
+                        description: |-
+                          Controls whether the server selects the client's most preferred cipher
+                          suite, or the server's most preferred cipher suite.
+
+                          If true then the server's preference, as expressed in
+                          the order of elements in cipherSuites, is used.
+                        type: boolean
+                    type: object
+                required:
+                - client
+                - server
+                type: object
               configMaps:
                 description: |-
                   ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
@@ -3602,6 +4006,10 @@ spec:
                 items:
                   type: string
                 type: array
+              enableServiceLinks:
+                description: Indicates whether information about services should be
+                  injected into pod's environment variables
+                type: boolean
               externalUrl:
                 description: |-
                   The external URL the Alertmanager instances will be available under. This is
@@ -5547,6 +5955,15 @@ spec:
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Prometheus Pods.
                 type: string
+              serviceName:
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+                  If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+                  When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
+                type: string
               sha:
                 description: |-
                   SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.
@@ -6281,6 +6698,16 @@ spec:
                   Version is ignored if Tag is set.
                   Deprecated: use 'image' instead. The image tag can be specified as part of the image URL.
                 type: string
+              terminationGracePeriodSeconds:
+                description: |-
+                  Optional duration in seconds the pod needs to terminate gracefully.
+                  Value must be non-negative integer. The value zero indicates stop immediately via
+                  the kill signal (no opportunity to shut down) which may lead to data corruption.
+
+                  Defaults to 120 seconds.
+                format: int64
+                minimum: 0
+                type: integer
               tolerations:
                 description: If specified, the pod's tolerations.
                 items:

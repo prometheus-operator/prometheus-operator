@@ -189,6 +189,9 @@ type Receiver struct {
 	// List of Jira configurations.
 	// It requires Alertmanager >= 0.28.0.
 	JiraConfigs []JiraConfig `json:"JiraConfigs,omitempty"`
+	// List of MSTeamsV2 configurations.
+	// It requires Alertmanager >= 0.28.0.
+	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -280,21 +283,28 @@ type DiscordConfig struct {
 	// Whether or not to notify about resolved alerts.
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
-
 	// The secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	// +required
 	APIURL v1.SecretKeySelector `json:"apiURL,omitempty"`
-
 	// The template of the message's title.
 	// +optional
 	Title *string `json:"title,omitempty"`
-
 	// The template of the message's body.
 	// +optional
 	Message *string `json:"message,omitempty"`
-
+	// The template of the content's body.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	Content *string `json:"content,omitempty"`
+	// The username of the message sender.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	Username *string `json:"username,omitempty"`
+	// The avatar url of the message sender.
+	// +optional
+	AvatarURL *URL `json:"avatarURL,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
@@ -492,6 +502,11 @@ type WebhookConfig struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	MaxAlerts int32 `json:"maxAlerts,omitempty"`
+	// The maximum time to wait for a webhook request to complete, before failing the
+	// request and allowing it to be retried.
+	// It requires Alertmanager >= v0.28.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // OpsGenieConfig configures notifications via OpsGenie.
@@ -1069,6 +1084,29 @@ type JiraConfig struct {
 	// +optional
 	Fields []JiraField `json:"fields,omitempty"`
 
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// MSTeamsV2Config configures notifications via Microsoft Teams using the new message format with adaptive cards as required by flows
+// See https://prometheus.io/docs/alerting/latest/configuration/#msteamsv2_config
+// It requires Alertmanager >= 0.28.0.
+type MSTeamsV2Config struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// MSTeams incoming webhook URL.
+	// +optional
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
+	// Message title template.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// Message body template.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

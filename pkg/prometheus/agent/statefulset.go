@@ -280,13 +280,14 @@ func makeStatefulSetSpec(
 		AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 		NodeSelector:                  cpf.NodeSelector,
 		PriorityClassName:             cpf.PriorityClassName,
-		TerminationGracePeriodSeconds: ptr.To(int64(600)),
+		TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 		Volumes:                       volumes,
 		Tolerations:                   cpf.Tolerations,
 		Affinity:                      cpf.Affinity,
 		TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 		HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 		HostNetwork:                   cpf.HostNetwork,
+		EnableServiceLinks:            cpf.EnableServiceLinks,
 	}
 
 	if cpf.HostNetwork {
@@ -298,7 +299,7 @@ func makeStatefulSetSpec(
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
+		ServiceName:         ptr.Deref(cpf.ServiceName, governingServiceName),
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{

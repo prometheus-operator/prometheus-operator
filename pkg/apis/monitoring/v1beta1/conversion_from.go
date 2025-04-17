@@ -280,6 +280,9 @@ func convertDiscordConfigFrom(in v1alpha1.DiscordConfig) DiscordConfig {
 		Title:        in.Title,
 		Message:      in.Message,
 		SendResolved: in.SendResolved,
+		Content:      in.Content,
+		Username:     in.Username,
+		AvatarURL:    (*URL)(in.AvatarURL),
 	}
 }
 
@@ -366,6 +369,7 @@ func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 		URLSecret:    convertSecretKeySelectorFrom(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
+		Timeout:      in.Timeout,
 	}
 }
 
@@ -497,6 +501,16 @@ func convertJiraConfigFrom(in v1alpha1.JiraConfig) JiraConfig {
 		ReopenDuration:    in.ReopenDuration,
 		Fields:            convertJiraFieldFrom(in.Fields),
 		HTTPConfig:        convertHTTPConfigFrom(in.HTTPConfig),
+  }
+}
+
+func convertMSTeamsV2ConfigFrom(in v1alpha1.MSTeamsV2Config) MSTeamsV2Config {
+	return MSTeamsV2Config{
+		SendResolved: in.SendResolved,
+		WebhookURL:   in.WebhookURL,
+		Title:        in.Title,
+		Text:         in.Text,
+		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 	}
 }
 
@@ -607,6 +621,14 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 				out.JiraConfigs,
 				convertJiraConfigFrom(in),
 			)
+		}
+
+		for _, in := range in.MSTeamsV2Configs {
+			out.MSTeamsV2Configs = append(
+				out.MSTeamsV2Configs,
+				convertMSTeamsV2ConfigFrom(in),
+
+      )
 		}
 
 		dst.Spec.Receivers = append(dst.Spec.Receivers, out)

@@ -70,6 +70,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureSDKApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfig"):
+		return &monitoringv1.ClusterTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Condition"):
@@ -156,6 +158,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RemoteReadSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RemoteWriteSpec"):
 		return &monitoringv1.RemoteWriteSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RetainConfig"):
+		return &monitoringv1.RetainConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Rule"):
 		return &monitoringv1.RuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RuleGroup"):
@@ -178,6 +182,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ServiceMonitorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitorSpec"):
 		return &monitoringv1.ServiceMonitorSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ShardRetentionPolicy"):
+		return &monitoringv1.ShardRetentionPolicyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardStatus"):
 		return &monitoringv1.ShardStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Sigv4"):
@@ -274,6 +280,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
 		return &monitoringv1alpha1.MSTeamsConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsV2Config"):
+		return &monitoringv1alpha1.MSTeamsV2ConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MuteTimeInterval"):
 		return &monitoringv1alpha1.MuteTimeIntervalApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("NamespaceDiscovery"):
@@ -364,6 +372,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.MatcherApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
 		return &monitoringv1beta1.MSTeamsConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsV2Config"):
+		return &monitoringv1beta1.MSTeamsV2ConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpsGenieConfig"):
 		return &monitoringv1beta1.OpsGenieConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpsGenieConfigResponder"):

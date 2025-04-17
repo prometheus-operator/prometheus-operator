@@ -53,7 +53,7 @@ import (
 )
 
 var (
-	certsDir = "../../test/e2e/remote_write_certs/"
+	certsDir = "../../test/e2e/tls_certs/"
 )
 
 func createMutualTLSSecret(t *testing.T, secretName, ns string) {
@@ -1536,9 +1536,13 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	for _, file := range ruleFiles {
 		var loopError error
 		err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-			var firing bool
-			firing, loopError = framework.CheckPrometheusFiringAlert(ctx, file.ns, pSVC.Name, file.alertName)
-			return !firing, nil
+			var alerts []map[string]string
+			alerts, loopError = framework.GetPrometheusFiringAlerts(ctx, file.ns, pSVC.Name, file.alertName)
+			if len(alerts) > 0 {
+				loopError = fmt.Errorf("%s: got %d alerts", file.alertName, len(alerts))
+				return false, nil
+			}
+			return true, nil
 		})
 
 		if err != nil {
@@ -2635,7 +2639,7 @@ func testThanos(t *testing.T) {
 		"query",
 		"--log.level=debug",
 		"--query.replica-label=prometheus_replica",
-		fmt.Sprintf("--store=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
+		fmt.Sprintf("--endpoint=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
 	}
 	t.Log("setting up query with args: ", qryArgs)
 	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs
@@ -2905,14 +2909,9 @@ func testOperatorNSScope(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		firing, err := framework.CheckPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
-		if err != nil && !strings.Contains(err.Error(), "expected 1 query result but got 0") {
-			t.Fatal(err)
-		}
-
-		if firing {
-			t.Fatalf("expected alert %q not to fire", secondAlertName)
-		}
+		alerts, err := framework.GetPrometheusFiringAlerts(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
+		require.NoError(t, err)
+		require.Len(t, alerts, 0)
 	})
 
 	t.Run("MultiNS", func(t *testing.T) {
@@ -2976,14 +2975,9 @@ func testOperatorNSScope(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		firing, err := framework.CheckPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
-		if err != nil && !strings.Contains(err.Error(), "expected 1 query result but got 0") {
-			t.Fatal(err)
-		}
-
-		if firing {
-			t.Fatalf("expected alert %q not to fire", secondAlertName)
-		}
+		alerts, err := framework.GetPrometheusFiringAlerts(context.Background(), p.Namespace, pSVC.Name, secondAlertName)
+		require.NoError(t, err)
+		require.Len(t, alerts, 0)
 	})
 }
 
@@ -3893,7 +3887,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 			}
 		}
 
-		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		reloadSuccessTimestamp, err := framework.GetMetricValueFromPod(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -3904,7 +3898,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 			return false, nil
 		}
 
-		thanosSidecarPrometheusUp, err := framework.GetMetricVal(context.Background(), "http", ns, podName, "10902", "thanos_sidecar_prometheus_up")
+		thanosSidecarPrometheusUp, err := framework.GetMetricValueFromPod(context.Background(), "http", ns, podName, "10902", "thanos_sidecar_prometheus_up")
 		if err != nil {
 			pollErr = err
 			return false, nil
@@ -4861,6 +4855,45 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "valid-retain-config",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+				},
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: &monitoringv1.RetainWhenScaledRetentionType,
+					Retain: &monitoringv1.RetainConfig{
+						RetentionPeriod: monitoringv1.Duration("3d"),
+					},
+				},
+			},
+		},
+		{
+			name: "invalid-terminationGracePeriodSeconds",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:                      &replicas,
+					Version:                       operator.DefaultPrometheusVersion,
+					ServiceAccountName:            "prometheus",
+					TerminationGracePeriodSeconds: ptr.To(int64(-100)),
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-terminationGracePeriodSeconds",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:                      &replicas,
+					Version:                       operator.DefaultPrometheusVersion,
+					ServiceAccountName:            "prometheus",
+					TerminationGracePeriodSeconds: ptr.To(int64(100)),
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -5349,6 +5382,65 @@ func testPrometheusServiceName(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
+}
+
+// testPrometheusRetentionPolicies tests the shard retention policies for Prometheus.
+// ShardRetentionPolicy requires the ShardRetention feature gate to be enabled,
+// therefore, it runs in the feature-gated test suite.
+func testPrometheusRetentionPolicies(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusShardRetentionPolicyFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name                 string
+		whenScaledDown       *monitoringv1.WhenScaledRetentionType
+		expectedRemainingSts int
+	}{
+		{
+			name:                 "delete",
+			whenScaledDown:       ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
+			expectedRemainingSts: 1,
+		},
+		{
+			name:                 "retain",
+			whenScaledDown:       ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+			expectedRemainingSts: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := framework.MakeBasicPrometheus(ns, tc.name, tc.name, 1)
+			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+				WhenScaled: tc.whenScaledDown,
+			}
+			p.Spec.Shards = ptr.To(int32(2))
+			_, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+			require.NoError(t, err, "failed to create Prometheus")
+
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, tc.name, ns, 1)
+			require.NoError(t, err, "failed to scale down Prometheus")
+			require.Equal(t, int32(1), p.Status.Shards, "expected scale of 1 shard")
+
+			podList, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{LabelSelector: p.Status.Selector})
+			require.NoError(t, err, "failed to list statefulsets")
+
+			require.Len(t, podList.Items, tc.expectedRemainingSts)
+		})
+	}
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {

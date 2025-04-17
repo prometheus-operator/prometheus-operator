@@ -486,6 +486,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithListenLocal(value bool) *Pro
 	return b
 }
 
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithEnableServiceLinks(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.EnableServiceLinks = &value
+	return b
+}
+
 // WithContainers adds the given value to the Containers field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Containers field.
@@ -845,5 +853,13 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithServiceName(value string) *P
 // If called multiple times, the Runtime field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithRuntime(value *v1.RuntimeConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.Runtime = value
+	return b
+}
+
+// WithTerminationGracePeriodSeconds sets the TerminationGracePeriodSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.TerminationGracePeriodSeconds = &value
 	return b
 }

@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
@@ -685,6 +684,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var msTeamsV2Configs []*msTeamsV2Config
+	if l := len(in.MSTeamsV2Configs); l > 0 {
+		msTeamsV2Configs = make([]*msTeamsV2Config, l)
+		for i := range in.MSTeamsV2Configs {
+			receiver, err := cb.convertMSTeamsV2Config(ctx, in.MSTeamsV2Configs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("MSTeamsConfigV2[%d]: %w", i, err)
+			}
+			msTeamsV2Configs[i] = receiver
+		}
+	}
+
 	var webexConfigs []*webexConfig
 	if l := len(in.WebexConfigs); l > 0 {
 		webexConfigs = make([]*webexConfig, l)
@@ -725,6 +736,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		WebexConfigs:     webexConfigs,
 		MSTeamsConfigs:   msTeamsConfigs,
 		JiraConfigs:      jiraConfigs,
+		MSTeamsV2Configs: msTeamsV2Configs,
 	}, nil
 }
 
@@ -757,6 +769,16 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		out.MaxAlerts = in.MaxAlerts
 	}
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
@@ -771,6 +793,18 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 
 	if in.Message != nil && *in.Message != "" {
 		out.Message = *in.Message
+	}
+
+	if in.Content != nil && *in.Content != "" {
+		out.Content = *in.Content
+	}
+
+	if in.Username != nil && *in.Username != "" {
+		out.Username = *in.Username
+	}
+
+	if in.AvatarURL != nil && *in.AvatarURL != "" {
+		out.AvatarURL = (string)(*in.AvatarURL)
 	}
 
 	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
@@ -1208,13 +1242,19 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 
 	{
 		if in.Retry != "" {
-			retry, _ := time.ParseDuration(in.Retry)
-			out.Retry = duration(retry)
+			retry, err := model.ParseDuration(in.Retry)
+			if err != nil {
+				return nil, fmt.Errorf("parse resolve retry: %w", err)
+			}
+			out.Retry = &retry
 		}
 
 		if in.Expire != "" {
-			expire, _ := time.ParseDuration(in.Expire)
-			out.Expire = duration(expire)
+			expire, err := model.ParseDuration(in.Expire)
+			if err != nil {
+				return nil, fmt.Errorf("parse resolve expire: %w", err)
+			}
+			out.Expire = &expire
 		}
 	}
 
@@ -1374,6 +1414,32 @@ func (cb *configBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 			return nil, fmt.Errorf("parse reopen duration: %w", err)
 		}
 		out.ReopenDuration = &reopenDuration
+  }
+  return out, nil
+}
+
+func (cb *configBuilder) convertMSTeamsV2Config(
+	ctx context.Context, in monitoringv1alpha1.MSTeamsV2Config, crKey types.NamespacedName,
+) (*msTeamsV2Config, error) {
+	out := &msTeamsV2Config{
+		SendResolved: in.SendResolved,
+	}
+
+	if in.Title != nil {
+		out.Title = *in.Title
+	}
+
+	if in.Text != nil {
+		out.Text = *in.Text
+	}
+
+	if in.WebhookURL != nil {
+		webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+		if err != nil {
+			return nil, err
+		}
+
+		out.WebhookURL = webHookURL
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

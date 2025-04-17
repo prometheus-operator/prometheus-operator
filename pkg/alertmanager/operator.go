@@ -27,6 +27,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -559,13 +561,27 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
+	// TODO(simonpasquier): the operator should take into account changes to
+	// the cluster TLS configuration to trigger a rollout of the pods (this
+	// configuration doesn't support live reload).
+	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
+	}
+
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
-	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if am.Spec.ServiceName != nil {
+		selectorLabels := makeSelectorLabels(am.Name)
+		if err := k8sutil.EnsureCustomGoverningService(ctx, am.Namespace, *am.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Create governing service if it doesn't exist.
+		if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	existingStatefulSet, err := c.getStatefulSetFromAlertmanagerKey(key)
@@ -594,7 +610,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
@@ -730,8 +746,8 @@ func makeSelectorLabels(name string) map[string]string {
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
-	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
-		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	if a.Spec.Web != nil && a.Spec.Web.HTTPConfig != nil {
+		http2 = a.Spec.Web.HTTPConfig.HTTP2
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
@@ -1170,6 +1186,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		}
 
 		err = checkJiraConfigs(ctx, receiver.JiraConfigs, amc.GetNamespace(), store, amVersion)
+    if err != nil {
+			return err
+		}
+
+		err = checkMSTeamsV2Configs(ctx, receiver.MSTeamsV2Configs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
 		}
@@ -1484,6 +1505,18 @@ func checkPushoverConfigs(
 			return err
 		}
 
+		if config.Expire != "" {
+			if _, err := model.ParseDuration(config.Expire); err != nil {
+				return err
+			}
+		}
+
+		if config.Retry != "" {
+			if _, err := model.ParseDuration(config.Retry); err != nil {
+				return err
+			}
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
@@ -1605,6 +1638,41 @@ func checkJiraConfigs(
 	return nil
 }
 
+
+func checkMSTeamsV2Configs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.MSTeamsV2Config,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+	}
+
+	for _, config := range configs {
+		if config.WebhookURL != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
+				return err
+			}
+		}
+
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
 	matchersV2Allowed := version.GTE(semver.MustParse("0.22.0"))
 
@@ -1710,6 +1778,39 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
+	if err != nil {
+		return fmt.Errorf("failed to initialize the configuration: %w", err)
+	}
+
+	data, err := clusterTLSConfig.ClusterTLSConfiguration()
+	if err != nil {
+		return fmt.Errorf("failed to generate the configuration: %w", err)
+	}
+
+	s := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterTLSConfig.GetSecretName(),
+		},
+		Data: map[string][]byte{
+			clustertlsconfig.ConfigFileKey: data,
+		},
+	}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(a),
+	)
+
+	if err = k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
+		return fmt.Errorf("failed to reconcile secret: %w", err)
 	}
 
 	return nil

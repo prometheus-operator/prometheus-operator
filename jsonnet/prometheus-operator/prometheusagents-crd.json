@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.17.1",
-      "operator.prometheus.io/version": "0.80.0"
+      "controller-gen.kubebuilder.io/version": "v0.17.2",
+      "operator.prometheus.io/version": "0.82.0"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -1137,7 +1137,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.",
+                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                             "enum": [
                               "TLS10",
                               "TLS11",
@@ -1147,7 +1147,7 @@
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.",
+                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                             "enum": [
                               "TLS10",
                               "TLS11",
@@ -2534,6 +2534,10 @@
                   },
                   "enableRemoteWriteReceiver": {
                     "description": "Enable Prometheus to be used as a receiver for the Prometheus remote\nwrite protocol.\n\nWARNING: This is not considered an efficient way of ingesting samples.\nUse it with caution for specific low-volume use cases.\nIt is not suitable for replacing the ingestion via scraping and turning\nPrometheus into a push-based metrics collection system.\nFor more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver\n\nIt requires Prometheus >= v2.33.0.",
+                    "type": "boolean"
+                  },
+                  "enableServiceLinks": {
+                    "description": "Indicates whether information about services should be injected into pod's environment variables",
                     "type": "boolean"
                   },
                   "enforcedBodySizeLimit": {
@@ -4330,7 +4334,7 @@
                       "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus\nto a remote endpoint.",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "Authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -4367,7 +4371,7 @@
                           "type": "object"
                         },
                         "azureAd": {
-                          "description": "AzureAD for the URL.\n\nIt requires Prometheus >= v2.45.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
+                          "description": "AzureAD for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
                           "properties": {
                             "cloud": {
                               "description": "The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
@@ -4392,7 +4396,7 @@
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0.",
+                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
                               "properties": {
                                 "clientId": {
                                   "description": "`clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.",
@@ -4437,7 +4441,7 @@
                               "type": "object"
                             },
                             "sdk": {
-                              "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= 2.52.0.",
+                              "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
                               "properties": {
                                 "tenantId": {
                                   "description": "`tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.",
@@ -4515,18 +4519,18 @@
                           "type": "boolean"
                         },
                         "followRedirects": {
-                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0.",
+                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
                         "headers": {
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0.",
+                          "description": "Custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.",
                           "type": "object"
                         },
                         "messageVersion": {
-                          "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0.",
+                          "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.",
                           "enum": [
                             "V1.0",
                             "V2.0"
@@ -4536,6 +4540,12 @@
                         "metadataConfig": {
                           "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
                           "properties": {
+                            "maxSamplesPerSend": {
+                              "description": "MaxSamplesPerSend is the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
+                              "format": "int32",
+                              "minimum": -1,
+                              "type": "integer"
+                            },
                             "send": {
                               "description": "Defines whether metric metadata is sent to the remote storage or not.",
                               "type": "boolean"
@@ -4549,15 +4559,15 @@
                           "type": "object"
                         },
                         "name": {
-                          "description": "The name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0.",
+                          "description": "The name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.",
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "OAuth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
+                          "description": "OAuth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
                           "properties": {
                             "clientId": {
                               "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -4642,7 +4652,7 @@
                               "type": "object"
                             },
                             "noProxy": {
-                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "string"
                             },
                             "proxyConnectHeader": {
@@ -4672,17 +4682,17 @@
                                 },
                                 "type": "array"
                               },
-                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
                             "proxyFromEnvironment": {
-                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "boolean"
                             },
                             "proxyUrl": {
                               "description": "`proxyURL` defines the HTTP proxy server to use.",
-                              "pattern": "^http(s)?://.+$",
+                              "pattern": "^(http|https|socks5)://.+$",
                               "type": "string"
                             },
                             "scopes": {
@@ -4827,7 +4837,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "maxVersion": {
-                                  "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.",
+                                  "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                   "enum": [
                                     "TLS10",
                                     "TLS11",
@@ -4837,7 +4847,7 @@
                                   "type": "string"
                                 },
                                 "minVersion": {
-                                  "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.",
+                                  "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                   "enum": [
                                     "TLS10",
                                     "TLS11",
@@ -4893,17 +4903,17 @@
                             },
                             "type": "array"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` defines the HTTP proxy server to use.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^(http|https|socks5)://.+$",
                           "type": "string"
                         },
                         "queueConfig": {
@@ -4949,7 +4959,7 @@
                               "type": "boolean"
                             },
                             "sampleAgeLimit": {
-                              "description": "SampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0.",
+                              "description": "SampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
@@ -4961,16 +4971,20 @@
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
+                        "roundRobinDNS": {
+                          "description": "When enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.",
+                          "type": "boolean"
+                        },
                         "sendExemplars": {
-                          "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0.",
+                          "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
                         "sendNativeHistograms": {
-                          "description": "Enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0.",
+                          "description": "Enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.",
                           "type": "boolean"
                         },
                         "sigv4": {
-                          "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "accessKey": {
                               "description": "AccessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",
@@ -5180,7 +5194,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "maxVersion": {
-                              "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.",
+                              "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -5190,7 +5204,7 @@
                               "type": "string"
                             },
                             "minVersion": {
-                              "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.",
+                              "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -5750,7 +5764,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "maxVersion": {
-                              "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.",
+                              "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -5760,7 +5774,7 @@
                               "type": "string"
                             },
                             "minVersion": {
-                              "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.",
+                              "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -6173,7 +6187,7 @@
                     "type": "string"
                   },
                   "shards": {
-                    "description": "Number of shards to distribute scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use Thanos sidecar and Thanos querier or\nremote write data to a central location.\nAlerting and recording rules\n\nBy default, the sharding is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).",
+                    "description": "Number of shards to distribute the scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use either\n* Thanos sidecar + querier for query federation and Thanos Ruler for rules.\n* Remote-write to send metrics to a central location.\n\nBy default, the sharding of targets is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).",
                     "format": "int32",
                     "type": "integer"
                   },
@@ -6720,6 +6734,12 @@
                     "format": "int64",
                     "type": "integer"
                   },
+                  "terminationGracePeriodSeconds": {
+                    "description": "Optional duration in seconds the pod needs to terminate gracefully.\nValue must be non-negative integer. The value zero indicates stop immediately via\nthe kill signal (no opportunity to shut down) which may lead to data corruption.\n\nDefaults to 600 seconds.",
+                    "format": "int64",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
                   "tolerations": {
                     "description": "Defines the Pods' tolerations if specified.",
                     "items": {
@@ -7051,7 +7071,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0.",
+                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                             "enum": [
                               "TLS10",
                               "TLS11",
@@ -7061,7 +7081,7 @@
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0.",
+                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                             "enum": [
                               "TLS10",
                               "TLS11",

@@ -18,11 +18,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,6 +37,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -43,6 +47,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
@@ -50,7 +55,10 @@ const (
 	resyncPeriod     = 5 * time.Minute
 	thanosRulerLabel = "thanos-ruler"
 	controllerName   = "thanos-controller"
+	rwConfigFile     = "remote-write.yaml"
 )
+
+var minRemoteWriteVersion = semver.MustParse("0.24.0")
 
 // Operator manages life cycle of Thanos deployments and
 // monitoring configurations.
@@ -468,6 +476,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(o.kclient.CoreV1(), o.kclient.CoreV1())
 
+	if err := o.createOrUpdateRulerConfigSecret(ctx, assetStore, tr); err != nil {
+		return fmt.Errorf("failed to synchronize ruler config secret: %w", err)
+	}
+
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), o.kclient, newTLSAssetSecret(tr, o.config))
 	if err != nil {
 		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
@@ -477,10 +489,17 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to synchronize web config secret: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
-	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if tr.Spec.ServiceName != nil {
+		selectorLabels := makeSelectorLabels(tr.Name)
+		if err := k8sutil.EnsureCustomGoverningService(ctx, tr.Namespace, *tr.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Create governing service if it doesn't exist.
+		if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	// Ensure we have a StatefulSet running Thanos deployed.
@@ -520,12 +539,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
 		return nil
 	}
 
-	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName])
+	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationName])
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 	sErr, ok := err.(*apierrors.StatusError)
@@ -793,4 +812,146 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 	)
 
 	return s
+}
+
+// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+// We should try to avoid removing such immutable fields whenever possible since doing
+// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+// The requirement to make a change here should be carefully evaluated.
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":       "thanos-ruler",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   name,
+		"thanos-ruler":                 name,
+	}
+}
+
+func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *assets.StoreBuilder, tr *monitoringv1.ThanosRuler) error {
+	sClient := o.kclient.CoreV1().Secrets(tr.GetNamespace())
+
+	s := &v1.Secret{
+		Data: map[string][]byte{},
+	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithName(rulerConfigSecretName(tr.Name)),
+		operator.WithAnnotations(o.config.Annotations),
+		operator.WithLabels(o.config.Labels),
+		operator.WithOwner(tr),
+	)
+
+	thanosVersion := operator.StringValOrDefault(ptr.Deref(tr.Spec.Version, ""), operator.DefaultThanosVersion)
+	version, err := semver.ParseTolerant(thanosVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Thanos Ruler version %q: %w", thanosVersion, err)
+	}
+
+	if len(tr.Spec.RemoteWrite) > 0 {
+		if version.LT(minRemoteWriteVersion) {
+			return fmt.Errorf("thanos remote-write configuration requires at least version %q: current version %q", minRemoteWriteVersion, version)
+		}
+
+		err = prompkg.AddRemoteWritesToStore(ctx, store, tr.Namespace, tr.Spec.RemoteWrite)
+		if err != nil {
+			return err
+		}
+	}
+
+	// resetFieldFn resets the value of a field in the RemoteWriteSpec struct
+	// if the field isn't supported by the current version.
+	// It also logs a warning message reporting the minimum version required.
+	resetFieldFn := func(minVersion string) func(string, any) {
+		return func(field string, v any) {
+			elem := reflect.ValueOf(v).Elem()
+			if elem.IsNil() {
+				return
+			}
+			o.logger.Warn(fmt.Sprintf("ignoring %q not supported by Thanos", field), "minimum_version", minVersion)
+			elem.Set(reflect.Zero(elem.Type()))
+		}
+	}
+
+	for _, rw := range tr.Spec.RemoteWrite {
+		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
+		if version.LT(semver.MustParse("0.38.0")) {
+			reset := resetFieldFn("0.38.0")
+			reset("roundRobinDNS", &rw.RoundRobinDNS) // requires >= 3.1.0
+		}
+
+		// Thanos v0.37.0 is equivalent to Prometheus v2.55.1.
+		if version.LT(semver.MustParse("0.37.0")) {
+			reset := resetFieldFn("0.37.0")
+			reset("messageVersion", &rw.MessageVersion) // requires >= 2.54.0
+		}
+
+		// Thanos v0.36.0 is equivalent to Prometheus v2.52.2.
+		if version.LT(semver.MustParse("0.36.0")) {
+			reset := resetFieldFn("0.36.0")
+			if rw.AzureAD != nil {
+				reset("azureAD.sdk", &rw.AzureAD.SDK) // requires >= v2.52.2
+			}
+		}
+
+		// Thanos v0.32.0 is equivalent to Prometheus v2.48.0.
+		if version.LT(semver.MustParse("0.32.0")) {
+			reset := resetFieldFn("0.32.0")
+			if rw.QueueConfig != nil {
+				reset("queueConfig.sampleAgeLimit", &rw.QueueConfig.SampleAgeLimit) // requires >= v2.50.0
+			}
+			reset("noProxy", &rw.NoProxy)                           // requires >= v2.48.0
+			reset("proxyFromEnvironment", &rw.ProxyFromEnvironment) // requires >= v2.48.0
+			reset("proxyConnectHeader", &rw.ProxyConnectHeader)     // requires >= v2.48.0
+		}
+
+		// Thanos v0.31.0 is equivalent to Prometheus v2.42.0.
+		if version.LT(semver.MustParse("0.31.0")) {
+			reset := resetFieldFn("0.31.0")
+			if rw.AzureAD != nil {
+				reset("azureAD.oauth", &rw.AzureAD.OAuth) // requires >= v2.48.0
+			}
+			reset("azureAD", &rw.AzureAD) // requires >= v2.45.0
+		}
+
+		// Thanos v0.30.0 is equivalent to Prometheus v2.40.7.
+		if version.LT(semver.MustParse("0.30.0")) {
+			reset := resetFieldFn("0.30.0")
+			if rw.TLSConfig != nil {
+				reset("tlsConfig.maxVersion", &rw.TLSConfig.MaxVersion) // requires >= v2.41.0
+			}
+			reset("sendNativeHistograms", &rw.SendNativeHistograms) // requires >= v2.40.0
+		}
+
+		// Thanos v0.28.0 is equivalent to Prometheus v2.38.0.
+		if version.LT(semver.MustParse("0.28.0")) {
+			reset := resetFieldFn("0.28.0")
+			if rw.TLSConfig != nil {
+				reset("tlsConfig.minVersion", &rw.TLSConfig.MinVersion) // >= requires v2.35.0
+			}
+		}
+
+		// Thanos v0.24.0 is equivalent to Prometheus v2.32.0.
+	}
+
+	cg, err := prompkg.NewConfigGenerator(o.logger, nil, prompkg.WithoutVersionCheck())
+	if err != nil {
+		return err
+	}
+
+	rwConfig, err := yaml.Marshal(
+		yaml.MapSlice{
+			cg.GenerateRemoteWriteConfig(tr.Spec.RemoteWrite, store.ForNamespace(tr.Namespace)),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to marshal remote-write configuration: %w", err)
+	}
+	s.Data[rwConfigFile] = rwConfig
+
+	if err = k8sutil.CreateOrUpdateSecret(ctx, sClient, s); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -22,7 +22,7 @@ The Prometheus Operator uses the official [Go client](https://github.com/kuberne
 The current version of the Prometheus operator uses the following Go client version:
 
 ```$ mdox-exec="go list -m  -f '{{ .Version }}' k8s.io/client-go"
-v0.32.1
+v0.32.3
 ```
 
 ## Prometheus
@@ -56,12 +56,14 @@ Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's e
 * v3.0.0
 * v3.0.1
 * v3.1.0
+* v3.2.0
+* v3.2.1
 ```
 
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
-* v3.1.0
+* v3.2.1
 ```
 
 ## Alertmanager
@@ -71,7 +73,7 @@ The Prometheus Operator is compatible with Alertmanager v0.15 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultAlertmanagerVersion"
-* v0.28.0
+* v0.28.1
 ```
 
 ## Thanos
@@ -81,5 +83,5 @@ The Prometheus Operator is compatible with Thanos v0.10 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultThanosVersion"
-* v0.37.2
+* v0.38.0
 ```

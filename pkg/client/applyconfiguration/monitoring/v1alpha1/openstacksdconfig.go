@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -25,7 +26,7 @@ import (
 // OpenStackSDConfigApplyConfiguration represents a declarative configuration of the OpenStackSDConfig type for use
 // with apply.
 type OpenStackSDConfigApplyConfiguration struct {
-	Role                        *string                                                         `json:"role,omitempty"`
+	Role                        *monitoringv1alpha1.OpenStackRole                               `json:"role,omitempty"`
 	Region                      *string                                                         `json:"region,omitempty"`
 	IdentityEndpoint            *string                                                         `json:"identityEndpoint,omitempty"`
 	Username                    *string                                                         `json:"username,omitempty"`
@@ -54,7 +55,7 @@ func OpenStackSDConfig() *OpenStackSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *OpenStackSDConfigApplyConfiguration) WithRole(value string) *OpenStackSDConfigApplyConfiguration {
+func (b *OpenStackSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.OpenStackRole) *OpenStackSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }

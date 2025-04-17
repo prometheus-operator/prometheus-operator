@@ -76,6 +76,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
 	AdditionalScrapeConfigs              *corev1.SecretKeySelector                               `json:"additionalScrapeConfigs,omitempty"`
@@ -118,6 +119,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeFailureLogFile                 *string                                                 `json:"scrapeFailureLogFile,omitempty"`
 	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
+	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs a declarative configuration of the CommonPrometheusFields type for use with
@@ -566,6 +568,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithListenLocal(value bool) *
 	return b
 }
 
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableServiceLinks(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.EnableServiceLinks = &value
+	return b
+}
+
 // WithContainers adds the given value to the Containers field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Containers field.
@@ -925,5 +935,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceName(value string)
 // If called multiple times, the Runtime field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithRuntime(value *RuntimeConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.Runtime = value
+	return b
+}
+
+// WithTerminationGracePeriodSeconds sets the TerminationGracePeriodSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *CommonPrometheusFieldsApplyConfiguration {
+	b.TerminationGracePeriodSeconds = &value
 	return b
 }

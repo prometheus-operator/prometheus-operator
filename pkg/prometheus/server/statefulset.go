@@ -333,7 +333,7 @@ func makeStatefulSetSpec(
 	}
 
 	spec := appsv1.StatefulSetSpec{
-		ServiceName: governingServiceName,
+		ServiceName: ptr.Deref(cpf.ServiceName, governingServiceName),
 		Replicas:    cpf.Replicas,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
@@ -351,23 +351,22 @@ func makeStatefulSetSpec(
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				ShareProcessNamespace:        prompkg.ShareProcessNamespace(p),
-				Containers:                   containers,
-				InitContainers:               initContainers,
-				SecurityContext:              cpf.SecurityContext,
-				ServiceAccountName:           cpf.ServiceAccountName,
-				AutomountServiceAccountToken: ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
-				NodeSelector:                 cpf.NodeSelector,
-				PriorityClassName:            cpf.PriorityClassName,
-				// Prometheus may take quite long to shut down to checkpoint existing data.
-				// Allow up to 10 minutes for clean termination.
-				TerminationGracePeriodSeconds: ptr.To(int64(600)),
+				ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
+				Containers:                    containers,
+				InitContainers:                initContainers,
+				SecurityContext:               cpf.SecurityContext,
+				ServiceAccountName:            cpf.ServiceAccountName,
+				AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
+				NodeSelector:                  cpf.NodeSelector,
+				PriorityClassName:             cpf.PriorityClassName,
+				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 				Volumes:                       volumes,
 				Tolerations:                   cpf.Tolerations,
 				Affinity:                      cpf.Affinity,
 				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
+				EnableServiceLinks:            cpf.EnableServiceLinks,
 			},
 		},
 	}

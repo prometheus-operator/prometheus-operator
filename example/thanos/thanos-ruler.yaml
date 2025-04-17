@@ -6,11 +6,11 @@ metadata:
   name: thanos-ruler
   namespace: default
 spec:
-  image: quay.io/thanos/thanos:v0.36.1
+  image: quay.io/thanos/thanos:v0.38.0
   queryConfig:
     key: query.yaml
     name: thanos-ruler
   ruleSelector:
     matchLabels:
       role: thanos-example
-  version: v0.36.1
+  version: v0.38.0

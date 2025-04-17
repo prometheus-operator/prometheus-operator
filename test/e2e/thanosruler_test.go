@@ -511,3 +511,133 @@ func testTRCheckStorageClass(t *testing.T) {
 		t.Fatalf("%v: %v", err, loopError)
 	}
 }
+
+func testThanosRulerServiceName(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	name := "test-servicename"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 9090,
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name":       "thanos-ruler",
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"app.kubernetes.io/instance":   name,
+				"thanos-ruler":                 name,
+			},
+		},
+	}
+
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	tr := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
+	tr.Spec.ServiceName = &svc.Name
+
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	require.NoError(t, err)
+
+	// Ensure that the default governing service was not created by the operator.
+	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
+	require.NoError(t, err)
+	require.Len(t, svcList.Items, 1)
+	require.Equal(t, svcList.Items[0].Name, svc.Name)
+}
+
+func testThanosRulerStateless(t *testing.T) {
+	const (
+		name       = "test"
+		group      = "thanos-ruler-query-config"
+		secretName = "thanos-ruler-query-config"
+		configKey  = "query.yaml"
+		testAlert  = "alert1"
+	)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ctx := context.Background()
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	// Create a Prometheus resource which will act as the query API endpoint +
+	// remote-write receiver for Thanos ruler.
+	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
+	prometheus.Spec.EnableRemoteWriteReceiver = true
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
+	// Ensure that the Promehteus resource selects no rule.
+	prometheus.Spec.RuleSelector = nil
+	require.NoError(t, err)
+
+	promSVC := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, promSVC)
+	require.NoError(t, err)
+
+	// Create the query config secret.
+	trQueryConfSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			configKey: []byte(fmt.Sprintf(`
+- scheme: http
+  static_configs:
+  - %s.%s.svc:%d
+`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, trQueryConfSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Create the Thanos ruler resource.
+	thanos := framework.MakeBasicThanosRuler(name, 1, "")
+	thanos.Spec.EvaluationInterval = "1s"
+	thanos.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{
+		{
+			URL: fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port),
+			// Ensure that samples are sent ASAP to the remote write receiver.
+			QueueConfig: &monitoringv1.QueueConfig{
+				MaxSamplesPerSend: 1,
+			},
+		},
+	}
+	thanos.Spec.QueryConfig = &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: secretName,
+		},
+		Key: configKey,
+	}
+
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, thanos)
+	require.NoError(t, err)
+
+	svc := framework.MakeThanosRulerService(thanos.Name, group, v1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc)
+	require.NoError(t, err)
+
+	// Create the always firing alerting rule and check that it is active.
+	_, err = framework.MakeAndCreateFiringRule(ctx, ns, "rule1", testAlert)
+	require.NoError(t, err)
+
+	err = framework.WaitForThanosFiringAlert(ctx, ns, svc.Name, testAlert)
+	require.NoError(t, err)
+
+	// Check that the ALERTS metric is present in Prometheus.
+	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, promSVC.Name, testAlert)
+	require.NoError(t, err)
+}

@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/url"
 	"path"
@@ -24,9 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -52,6 +49,13 @@ const (
 	DefaultPortName        = "web"
 	DefaultLogFileVolume   = "log-file"
 	DefaultLogDirectory    = "/var/log/prometheus"
+
+	// DefaultTerminationGracePeriodSeconds defines how long Kubernetes should
+	// wait before killing Prometheus on pod termination.
+	// Prometheus may take a significant time to shut down due to data
+	// checkpointing. By default, the operator allows up to 10 minutes for
+	// clean termination.
+	DefaultTerminationGracePeriodSeconds = int64(600)
 )
 
 var (
@@ -489,33 +493,4 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	)
 
 	return svc
-}
-
-// This function is responsible for the following:
-//
-// Verify that the service exists in the Prometheus/PrometheusAgent resource's namespace
-// If it does not exist, fail the reconciliation.
-//
-// If the ServiceName is specified and a service with the same name exists in the same namespace as the
-// Prometheus/PrometheusAgent resource, ensure that the custom governing service's selector matches the
-// Prometheus/PrometheusAgent statefulsets.
-// If it is not selected, fail the reconciliation
-// Warning: the function will panic if the resource's ServiceName is nil..
-func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
-	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
-	svc, err := svcClient.Get(ctx, serviceName, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get custom governing service %s/%s: %w", namespace, serviceName, err)
-	}
-
-	svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
-	if err != nil {
-		return fmt.Errorf("failed to parse the selector labels for custom governing service %s/%s: %w", namespace, serviceName, err)
-	}
-
-	if !svcSelector.Matches(labels.Set(selectorLabels)) {
-		return fmt.Errorf("custom governing service %s/%s with selector %q does not select Prometheus/PrometheusAgent pods with labels %q",
-			namespace, serviceName, svcSelector.String(), labels.Set(selectorLabels).String())
-	}
-	return nil
 }

@@ -780,14 +780,25 @@ type GCESDConfig struct {
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=Instance;Hypervisor;LoadBalancer
+type OpenStackRole string
+
+const (
+	OpenStackRoleInstance     OpenStackRole = "Instance"
+	OpenStackRoleHypervisor   OpenStackRole = "Hypervisor"
+	OpenStackRoleLoadBalancer OpenStackRole = "LoadBalancer"
+)
+
 // OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config
 // +k8s:openapi-gen=true
 type OpenStackSDConfig struct {
 	// The OpenStack role of entities that should be discovered.
-	// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor
+	//
+	// Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
+	//
 	// +required
-	Role string `json:"role"`
+	Role OpenStackRole `json:"role"`
 	// The OpenStack Region.
 	// +kubebuilder:validation:MinLength:=1
 	// +required

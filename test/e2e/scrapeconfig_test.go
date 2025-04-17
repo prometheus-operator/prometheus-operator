@@ -531,6 +531,8 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 
 // testScrapeConfigDNSSDConfig tests whether DNS SD based monitoring works as expected.
 func testScrapeConfigDNSSDConfig(t *testing.T) {
+	t.Skip("DNS service discovery tests are disabled until we find a replacement for node.demo.do.prometheus.io")
+
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
@@ -624,6 +626,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	})
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
+	})
+	t.Run("ScalewaySD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
 	})
 }
 
@@ -2700,7 +2705,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role: "hypervisor",
+					Role: monitoringv1alpha1.OpenStackRoleHypervisor,
 				},
 			},
 		},
@@ -2711,7 +2716,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
 				},
 			},
@@ -2723,7 +2728,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "instance",
+					Role:   monitoringv1alpha1.OpenStackRoleInstance,
 					Region: "default",
 				},
 			},
@@ -2735,7 +2740,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "default",
+					Role:   monitoringv1alpha1.OpenStackRole("default"),
 					Region: "default",
 				},
 			},
@@ -2747,7 +2752,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "",
+					Role:   monitoringv1alpha1.OpenStackRole(""),
 					Region: "default",
 				},
 			},
@@ -2759,7 +2764,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "",
 				},
 			},
@@ -2767,11 +2772,23 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Role Loadbalancer",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   monitoringv1alpha1.OpenStackRoleLoadBalancer,
+					Region: "default",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
 		name: "Valid Endpoint HTTP",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
 					IdentityEndpoint: ptr.To("http://example.com"),
 				},
@@ -2784,7 +2801,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
 					IdentityEndpoint: ptr.To("https://example.com"),
 				},
@@ -2797,7 +2814,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
 					IdentityEndpoint: ptr.To("ftp://example.com"),
 				},
@@ -2810,7 +2827,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:             "hypervisor",
+					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
 					IdentityEndpoint: ptr.To(""),
 				},
@@ -2823,7 +2840,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
 					Username: ptr.To("admin"),
 				},
@@ -2836,7 +2853,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
 					Username: ptr.To(""),
 				},
@@ -2849,7 +2866,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
 					UserID: ptr.To("ac3377633149401296f6c0d92d79dc16"),
 				},
@@ -2862,7 +2879,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
 					UserID: ptr.To(""),
 				},
@@ -2875,7 +2892,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
 					DomainID: ptr.To("e0353a670a9e496da891347c589539e9"),
 				},
@@ -2888,7 +2905,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:     "hypervisor",
+					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
 					DomainID: ptr.To(""),
 				},
@@ -2901,7 +2918,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
 					DomainName: ptr.To("default"),
 				},
@@ -2914,7 +2931,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
 					DomainName: ptr.To(""),
 				},
@@ -2927,7 +2944,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:        "hypervisor",
+					Role:        monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:      "default",
 					ProjectName: ptr.To("default"),
 				},
@@ -2940,7 +2957,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:        "hypervisor",
+					Role:        monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:      "default",
 					ProjectName: ptr.To(""),
 				},
@@ -2953,7 +2970,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:      "hypervisor",
+					Role:      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:    "default",
 					ProjectID: ptr.To("343d245e850143a096806dfaefa9afdc"),
 				},
@@ -2966,7 +2983,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:      "hypervisor",
+					Role:      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:    "default",
 					ProjectID: ptr.To(""),
 				},
@@ -2979,7 +2996,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                      "hypervisor",
+					Role:                      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                    "default",
 					ApplicationCredentialName: ptr.To("monitoring"),
 				},
@@ -2992,7 +3009,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                      "hypervisor",
+					Role:                      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                    "default",
 					ApplicationCredentialName: ptr.To(""),
 				},
@@ -3005,7 +3022,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                    "hypervisor",
+					Role:                    monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                  "default",
 					ApplicationCredentialID: ptr.To("aa809205ed614a0e854bac92c0768bb9"),
 				},
@@ -3018,7 +3035,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:                    "hypervisor",
+					Role:                    monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                  "default",
 					ApplicationCredentialID: ptr.To(""),
 				},
@@ -3031,7 +3048,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
 					AllTenants: ptr.To(true),
 				},
@@ -3044,7 +3061,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:       "hypervisor",
+					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
 					AllTenants: ptr.To(false),
 				},
@@ -3057,7 +3074,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:            "hypervisor",
+					Role:            monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:          "default",
 					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
 				},
@@ -3070,7 +3087,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:            "hypervisor",
+					Role:            monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:          "default",
 					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
 				},
@@ -3083,7 +3100,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
 					Port:   ptr.To(int32(8080)),
 				},
@@ -3096,7 +3113,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
 					Port:   ptr.To(int32(-1)),
 				},
@@ -3109,7 +3126,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:   "hypervisor",
+					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
 					Port:   ptr.To(int32(65537)),
 				},
@@ -3122,7 +3139,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To("public"),
 				},
@@ -3135,7 +3152,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To("admin"),
 				},
@@ -3148,7 +3165,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To("internal"),
 				},
@@ -3161,7 +3178,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To("private"),
 				},
@@ -3174,9 +3191,479 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
 				{
-					Role:         "hypervisor",
+					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var ScalewaySDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Project ID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Access Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Access Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Access Key",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Role - Instance",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Role - Baremetal",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      "Invalid Role",
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Api Url",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					ApiURL: ptr.To("https://api.scaleway.com"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Api Url",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					ApiURL: ptr.To("ftp://example.com"),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid NameFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					NameFilter: ptr.To("my-server"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid NameFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					NameFilter: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					TagsFilter: []string{"do"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Empty tag values in TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					TagsFilter: []string{""}, // empty tag
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Repeating tags in TagsFilter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					TagsFilter: []string{"do", "do"}, // repeating tags
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Zone: ptr.To("fr-par-1"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Zone: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number exceeding the maximum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: ptr.To(int32(-1)), // minimum Port number = 0;
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					SecretKey: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
 		},

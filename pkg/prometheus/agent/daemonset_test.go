@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -179,4 +180,33 @@ func TestDaemonSetLabelingAndAnnotations(t *testing.T) {
 	require.Equal(t, expectedDaemonSetLabels, dset.Labels)
 	require.Equal(t, expectedDaemonSetAnnotations, dset.Annotations)
 	require.Equal(t, expectedPodLabels, dset.Spec.Template.ObjectMeta.Labels)
+}
+
+func TestDaemonSetenableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks         *bool
+		expectedEnableServiceLinks *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnableServiceLinks: test.enableServiceLinks,
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		if test.expectedEnableServiceLinks != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be non-nil")
+			require.Equal(t, *test.expectedEnableServiceLinks, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be nil")
+		}
+	}
 }

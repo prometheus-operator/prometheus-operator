@@ -32,6 +32,7 @@ type PrometheusSpecApplyConfiguration struct {
 	SHA                                      *string                                         `json:"sha,omitempty"`
 	Retention                                *monitoringv1.Duration                          `json:"retention,omitempty"`
 	RetentionSize                            *monitoringv1.ByteSize                          `json:"retentionSize,omitempty"`
+	ShardRetentionPolicy                     *ShardRetentionPolicyApplyConfiguration         `json:"shardRetentionPolicy,omitempty"`
 	DisableCompaction                        *bool                                           `json:"disableCompaction,omitempty"`
 	Rules                                    *RulesApplyConfiguration                        `json:"rules,omitempty"`
 	PrometheusRulesExcludedFromEnforce       []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
@@ -497,6 +498,14 @@ func (b *PrometheusSpecApplyConfiguration) WithListenLocal(value bool) *Promethe
 	return b
 }
 
+// WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableServiceLinks field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithEnableServiceLinks(value bool) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.EnableServiceLinks = &value
+	return b
+}
+
 // WithContainers adds the given value to the Containers field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Containers field.
@@ -859,6 +868,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRuntime(value *RuntimeConfigApply
 	return b
 }
 
+// WithTerminationGracePeriodSeconds sets the TerminationGracePeriodSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.TerminationGracePeriodSeconds = &value
+	return b
+}
+
 // WithBaseImage sets the BaseImage field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BaseImage field is set to the value of the last call.
@@ -896,6 +913,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRetention(value monitoringv1.Dura
 // If called multiple times, the RetentionSize field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithRetentionSize(value monitoringv1.ByteSize) *PrometheusSpecApplyConfiguration {
 	b.RetentionSize = &value
+	return b
+}
+
+// WithShardRetentionPolicy sets the ShardRetentionPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ShardRetentionPolicy field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithShardRetentionPolicy(value *ShardRetentionPolicyApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.ShardRetentionPolicy = value
 	return b
 }
 

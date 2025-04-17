@@ -2340,9 +2340,7 @@ func TestPodTemplateConfig(t *testing.T) {
 }
 
 func TestPrometheusAdditionalArgsNoError(t *testing.T) {
-	expectedPrometheusArgs := []string{
-		"--web.console.templates=/etc/prometheus/consoles",
-		"--web.console.libraries=/etc/prometheus/console_libraries",
+	expectedPrometheusArgsV3 := []string{
 		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
 		"--web.enable-lifecycle",
 		"--web.route-prefix=/",
@@ -2353,36 +2351,71 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 		"--storage.tsdb.no-lockfile",
 	}
 
-	labels := map[string]string{
-		"testlabel": "testlabelvalue",
-	}
-	annotations := map[string]string{
-		"testannotation": "testannotationvalue",
+	expectedPrometheusArgsV2 := []string{
+		"--config.file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--web.console.templates=/etc/prometheus/consoles",
+		"--web.console.libraries=/etc/prometheus/console_libraries",
+		"--web.enable-lifecycle",
+		"--web.route-prefix=/",
+		"--storage.tsdb.retention.time=24h",
+		"--storage.tsdb.path=/prometheus",
+		"--web.config.file=/etc/prometheus/web_config/web-config.yaml",
+		"--scrape.discovery-reload-interval=30s",
+		"--storage.tsdb.no-lockfile",
 	}
 
-	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels:      labels,
-			Annotations: annotations,
+	argTests := []struct {
+		version      string
+		expectedArgs []string
+	}{
+		{
+			version:      "v2.54.0",
+			expectedArgs: expectedPrometheusArgsV2,
 		},
-		Spec: monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				AdditionalArgs: []monitoringv1.Argument{
-					{
-						Name:  "scrape.discovery-reload-interval",
-						Value: "30s",
-					},
-					{
-						Name: "storage.tsdb.no-lockfile",
+		{
+			version:      "v3.0.0",
+			expectedArgs: expectedPrometheusArgsV3,
+		},
+	}
+
+	for _, argTest := range argTests {
+		t.Run(argTest.version, func(t *testing.T) {
+
+			labels := map[string]string{
+				"testlabel": "testlabelvalue",
+			}
+			annotations := map[string]string{
+				"testannotation": "testannotationvalue",
+			}
+
+			p := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:      labels,
+					Annotations: annotations,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						AdditionalArgs: []monitoringv1.Argument{
+							{
+								Name:  "scrape.discovery-reload-interval",
+								Value: "30s",
+							},
+							{
+								Name: "storage.tsdb.no-lockfile",
+							},
+						},
+						Version: argTest.version,
 					},
 				},
-			},
-		},
-	})
-	require.NoError(t, err)
+			}
+			sset, err := makeStatefulSetFromPrometheus(p)
+			require.NoError(t, err)
+			ssetContainerArgs := sset.Spec.Template.Spec.Containers[0].Args
+			// web.console.templates and web.console.libraries should be present in prometheus versisons < 3
+			require.Equal(t, argTest.expectedArgs, ssetContainerArgs, "expected Prometheus container args to match, want %s, got %s", argTest.expectedArgs, ssetContainerArgs)
+		})
 
-	ssetContainerArgs := sset.Spec.Template.Spec.Containers[0].Args
-	require.Equal(t, expectedPrometheusArgs, ssetContainerArgs, "expected Prometheus container args to match, want %s, got %s", expectedPrometheusArgs, ssetContainerArgs)
+	}
 }
 
 func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
@@ -3178,5 +3211,34 @@ func TestDNSPolicyAndDNSConfig(t *testing.T) {
 				require.Nil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNSConfig to be nil")
 			}
 		})
+	}
+}
+
+func TestStatefulSetenableServiceLinks(t *testing.T) {
+	tests := []struct {
+		enableServiceLinks         *bool
+		expectedEnableServiceLinks *bool
+	}{
+		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
+		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					EnableServiceLinks: test.enableServiceLinks,
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		if test.expectedEnableServiceLinks != nil {
+			require.NotNil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be non-nil")
+			require.Equal(t, *test.expectedEnableServiceLinks, *sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to match")
+		} else {
+			require.Nil(t, sset.Spec.Template.Spec.EnableServiceLinks, "expected enableServiceLinks to be nil")
+		}
 	}
 }

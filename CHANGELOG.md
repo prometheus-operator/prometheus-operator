@@ -1,4 +1,34 @@
-# 0.80.0 / 2025-02-03
+## 0.82.0 / 2025-04-17
+
+* [CHANGE] Add more API validations to the ScrapeConfig CRD. #7413
+* [CHANGE] Remove web console arguments if Prometheus version >= 3. #7457
+* [FEATURE] Add RemoteWrite support for ThanosRuler CRD. Note that when remote write is configured, Thanos Ruler runs in stateless mode. #7444
+* [FEATURE] Add `msTeamsV2Configs` receiver to AlertManagerConfig CRD. #7464
+* [FEATURE] Add `content`, `username` and `avatarURL` fields to `discordConfigs` receiver in AlertmanagerConfig CRD. #7307
+* [FEATURE] Add `convertClassicHistogramsToNHCB` field to `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` CRDs. #7448
+* [FEATURE] Add `timeout` field to `webhookConfigs` receiver in AlertManagerConfig CRD. #7310
+* [FEATURE] Add `additionalArgs` field to AlertManager CRD. #7385
+* [ENHANCEMENT] Add `maxSamplesPerSend` field to RemoteWrite Metadata Config. #7443
+* [ENHANCEMENT] Add the `terminationGracePeriodSeconds` to the Alertmanager, Prometheus, PrometheusAgent and ThanosRuler CRDs. #7439
+* [ENHANCEMENT] Validate `proxyURL` field in AlertManagerConfig CRD. #6876
+* [BUGFIX] Fix `nameValidationScheme` support for Prometheus and PrometheusAgent CRDs. #7414
+* [BUGFIX] Support `socks5` scheme in `proxyUrl` field for all CRDs. #7460 #7466
+
+## 0.81.0 / 2025-03-11
+
+* [CHANGE] Remove the lower-case `hypervisor` and `instance` roles for the OpenStack Service Discovery from the ScrapeConfig CRD (users are required to use `Hypervisor` and `Instance` instead). #7370
+* [FEATURE] Add `serviceName` field to the ThanosRuler and Alertmanager CRDs. #7325
+* [FEATURE] Add `shardRetentionPolicy` field to the Prometheus CRD (it requires the `PrometheusShardRetentionPolicy` feature gate). #7274
+* [FEATURE] Add support for the cluster mTLS configuration to the Alertmanager CRD. #7149
+* [FEATURE] Add `LoadBalancer` role for the OpenStack Service Discovery to the ScrapeConfig CRD. #7356
+* [ENHANCEMENT] Add `enableServiceLinks` field to the Alertmanager, Prometheus, PrometheusAgent and ThanosRuler CRDs. #7384
+* [BUGFIX] Fix Alertmanager configuration with PushOver duration fields. #7249
+
+# 0.80.1 / 2025-02-19
+
+* [BUGFIX] Fix msteamsv2_configs to work with either `webhook_url` or `webhook_url_file`. #7352
+
+# 0.80.0 / 2025-02-04
 
 * [CHANGE] Add more API validations to the ScrapeConfig CRD. #7231 #7220 #7215 #7238 #7244 #7255
 * [FEATURE] Add `serviceName` field to the Prometheus and PrometheusAgent CRDs. #6687
