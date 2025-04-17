@@ -87,10 +87,12 @@ type ThanosRulerSpec struct {
 
 	// Thanos container image URL.
 	Image string `json:"image,omitempty"`
+
 	// Image pull policy for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.
 	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
 	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling thanos images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -116,9 +118,11 @@ type ThanosRulerSpec struct {
 	// If specified, the pod's scheduling constraints.
 	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
+
 	// If specified, the pod's tolerations.
 	// +optional
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+
 	// If specified, the pod's topology spread constraints.
 	// +optional
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
@@ -160,6 +164,7 @@ type ThanosRulerSpec struct {
 	// Storage spec to specify how storage shall be used.
 	// +optional
 	Storage *StorageSpec `json:"storage,omitempty"`
+
 	// Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
 	// be appended to other volumes that are generated as a result of StorageSpec objects.
 	// +optional
@@ -282,8 +287,13 @@ type ThanosRulerSpec struct {
 	// +kubebuilder:default:="15s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
-	// Time duration ThanosRuler shall retain data for. Default is '24h',
-	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
+	// Time duration ThanosRuler shall retain data for. Default is '24h', and
+	// must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds
+	// seconds minutes hours days weeks years).
+	//
+	// The field has no effect when remote-write is configured since the Ruler
+	// operates in stateless mode.
+	//
 	// +kubebuilder:default:="24h"
 	Retention Duration `json:"retention,omitempty"`
 
@@ -419,6 +429,25 @@ type ThanosRulerSpec struct {
 	// Defines the configuration of the ThanosRuler web server.
 	// +optional
 	Web *ThanosRulerWebSpec `json:"web,omitempty"`
+
+	// Defines the list of remote write configurations.
+	//
+	// When the list isn't empty, the ruler is configured with stateless mode.
+	//
+	// It requires Thanos >= 0.24.0.
+	//
+	// +optional
+	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
+
+	// Optional duration in seconds the pod needs to terminate gracefully.
+	// Value must be non-negative integer. The value zero indicates stop immediately via
+	// the kill signal (no opportunity to shut down) which may lead to data corruption.
+	//
+	// Defaults to 120 seconds.
+	//
+	// +kubebuilder:validation:Minimum:=0
+	// +optional
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.

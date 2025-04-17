@@ -1,3 +1,7 @@
+## Unreleased
+
+* [ENHANCEMENT] Add the `terminationGracePeriodSeconds` to the Alertmanager, Prometheus, PrometheusAgent and ThanosRuler CRDs. #7439
+
 ## 0.81.0 / 2025-03-11
 
 * [CHANGE] Remove the lower-case `hypervisor` and `instance` roles for the OpenStack Service Discovery from the ScrapeConfig CRD (users are required to use `Hypervisor` and `Instance` instead). #7370

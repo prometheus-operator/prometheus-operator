@@ -23,8 +23,9 @@ import (
 // MetadataConfigApplyConfiguration represents a declarative configuration of the MetadataConfig type for use
 // with apply.
 type MetadataConfigApplyConfiguration struct {
-	Send         *bool                  `json:"send,omitempty"`
-	SendInterval *monitoringv1.Duration `json:"sendInterval,omitempty"`
+	Send              *bool                  `json:"send,omitempty"`
+	SendInterval      *monitoringv1.Duration `json:"sendInterval,omitempty"`
+	MaxSamplesPerSend *int32                 `json:"maxSamplesPerSend,omitempty"`
 }
 
 // MetadataConfigApplyConfiguration constructs a declarative configuration of the MetadataConfig type for use with
@@ -46,5 +47,13 @@ func (b *MetadataConfigApplyConfiguration) WithSend(value bool) *MetadataConfigA
 // If called multiple times, the SendInterval field is set to the value of the last call.
 func (b *MetadataConfigApplyConfiguration) WithSendInterval(value monitoringv1.Duration) *MetadataConfigApplyConfiguration {
 	b.SendInterval = &value
+	return b
+}
+
+// WithMaxSamplesPerSend sets the MaxSamplesPerSend field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaxSamplesPerSend field is set to the value of the last call.
+func (b *MetadataConfigApplyConfiguration) WithMaxSamplesPerSend(value int32) *MetadataConfigApplyConfiguration {
+	b.MaxSamplesPerSend = &value
 	return b
 }

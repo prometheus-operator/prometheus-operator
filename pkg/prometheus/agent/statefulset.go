@@ -280,7 +280,7 @@ func makeStatefulSetSpec(
 		AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 		NodeSelector:                  cpf.NodeSelector,
 		PriorityClassName:             cpf.PriorityClassName,
-		TerminationGracePeriodSeconds: ptr.To(int64(600)),
+		TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 		Volumes:                       volumes,
 		Tolerations:                   cpf.Tolerations,
 		Affinity:                      cpf.Affinity,

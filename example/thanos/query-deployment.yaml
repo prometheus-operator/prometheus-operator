@@ -21,9 +21,9 @@ spec:
         - --log.level=debug
         - --query.replica-label=prometheus_replica
         - --query.replica-label=thanos_ruler_replica
-        - --store=dnssrv+_grpc._tcp.thanos-sidecar.default.svc.cluster.local
-        - --store=dnssrv+_grpc._tcp.thanos-ruler.default.svc.cluster.local
-        image: quay.io/thanos/thanos:v0.36.1
+        - --endpoint=dnssrv+_grpc._tcp.thanos-sidecar.default.svc.cluster.local
+        - --endpoint=dnssrv+_grpc._tcp.thanos-ruler.default.svc.cluster.local
+        image: quay.io/thanos/thanos:v0.38.0
         name: thanos-query
         ports:
         - containerPort: 10902

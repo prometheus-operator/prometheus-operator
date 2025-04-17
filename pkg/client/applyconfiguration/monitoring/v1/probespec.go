@@ -238,6 +238,14 @@ func (b *ProbeSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value r
 	return b
 }
 
+// WithConvertClassicHistogramsToNHCB sets the ConvertClassicHistogramsToNHCB field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ConvertClassicHistogramsToNHCB field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithConvertClassicHistogramsToNHCB(value bool) *ProbeSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.ConvertClassicHistogramsToNHCB = &value
+	return b
+}
+
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.

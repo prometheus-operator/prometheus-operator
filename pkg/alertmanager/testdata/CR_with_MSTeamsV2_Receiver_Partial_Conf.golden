@@ -1,0 +1,13 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  msteamsv2_configs:
+  - webhook_url: https://prod-108.westeurope.logic.azure.com:443/workflows/id
+templates: []
