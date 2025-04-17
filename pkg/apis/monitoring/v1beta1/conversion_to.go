@@ -494,7 +494,7 @@ func convertJiraConfigTo(in JiraConfig) v1alpha1.JiraConfig {
 		ReopenDuration:    in.ReopenDuration,
 		Fields:            convertJiraFieldTo(in.Fields),
 		HTTPConfig:        convertHTTPConfigTo(in.HTTPConfig),
-  }
+	}
 }
 
 func convertMSTeamsV2ConfigTo(in MSTeamsV2Config) v1alpha1.MSTeamsV2Config {
@@ -616,7 +616,7 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			)
 		}
 
-    for _, in := range in.MSTeamsV2Configs {
+		for _, in := range in.MSTeamsV2Configs {
 			out.MSTeamsV2Configs = append(
 				out.MSTeamsV2Configs,
 				convertMSTeamsV2ConfigTo(in),

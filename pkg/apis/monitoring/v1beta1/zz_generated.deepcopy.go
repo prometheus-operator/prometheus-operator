@@ -802,15 +802,13 @@ func (in *Receiver) DeepCopyInto(out *Receiver) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-
-  if in.JiraConfigs != nil {
+	if in.JiraConfigs != nil {
 		in, out := &in.JiraConfigs, &out.JiraConfigs
 		*out = make([]JiraConfig, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-
 	if in.MSTeamsV2Configs != nil {
 		in, out := &in.MSTeamsV2Configs, &out.MSTeamsV2Configs
 		*out = make([]MSTeamsV2Config, len(*in))
