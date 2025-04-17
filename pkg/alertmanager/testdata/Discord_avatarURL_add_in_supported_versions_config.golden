@@ -1,0 +1,7 @@
+receivers:
+- name: discord
+  discord_configs:
+  - webhook_url: http://example.com
+    message: test message
+    avatar_url: content
+templates: []

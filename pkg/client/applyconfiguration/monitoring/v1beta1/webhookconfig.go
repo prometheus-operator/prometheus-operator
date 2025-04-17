@@ -16,6 +16,10 @@
 
 package v1beta1
 
+import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // WebhookConfigApplyConfiguration represents a declarative configuration of the WebhookConfig type for use
 // with apply.
 type WebhookConfigApplyConfiguration struct {
@@ -24,6 +28,7 @@ type WebhookConfigApplyConfiguration struct {
 	URLSecret    *SecretKeySelectorApplyConfiguration `json:"urlSecret,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
 	MaxAlerts    *int32                               `json:"maxAlerts,omitempty"`
+	Timeout      *v1.Duration                         `json:"timeout,omitempty"`
 }
 
 // WebhookConfigApplyConfiguration constructs a declarative configuration of the WebhookConfig type for use with
@@ -69,5 +74,13 @@ func (b *WebhookConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyC
 // If called multiple times, the MaxAlerts field is set to the value of the last call.
 func (b *WebhookConfigApplyConfiguration) WithMaxAlerts(value int32) *WebhookConfigApplyConfiguration {
 	b.MaxAlerts = &value
+	return b
+}
+
+// WithTimeout sets the Timeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Timeout field is set to the value of the last call.
+func (b *WebhookConfigApplyConfiguration) WithTimeout(value v1.Duration) *WebhookConfigApplyConfiguration {
+	b.Timeout = &value
 	return b
 }

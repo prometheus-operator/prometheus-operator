@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +35,14 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 )
+
+func init() {
+	// For now, the operator only supports legacy label names.
+	// Eventually the operator should support UTF-8 label names too and the
+	// issue is tracked by
+	// https://github.com/prometheus-operator/prometheus-operator/issues/7362
+	model.NameValidationScheme = model.LegacyValidation
+}
 
 type RuleConfigurationFormat int
 
@@ -95,7 +104,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 
 	errs := ValidateRule(promRuleSpec)
 	if len(errs) != 0 {
-		const m = "Invalid rule"
+		const m = "invalid rule"
 		logger.Debug(m, "content", content)
 		for _, err := range errs {
 			logger.Info(m, "err", err)
@@ -185,7 +194,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
-	_, errs := rulefmt.Parse(content)
+	_, errs := rulefmt.Parse(content, false)
 	return errs
 }
 

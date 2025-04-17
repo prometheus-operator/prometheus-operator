@@ -38,8 +38,8 @@ const defaultGOMemlimitRatio = 0.0
 
 func main() {
 	var (
-		serverConfig  server.Config = server.DefaultConfig(":8443", true)
-		flagset                     = flag.CommandLine
+		serverConfig  = server.DefaultConfig(":8443", true)
+		flagset       = flag.CommandLine
 		logConfig     logging.Config
 		memlimitRatio float64
 	)

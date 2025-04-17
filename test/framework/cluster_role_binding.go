@@ -23,52 +23,48 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) createOrUpdateClusterRoleBinding(ctx context.Context, ns string, source string) (FinalizerFn, error) {
-	finalizerFn := func() error { return f.DeleteClusterRoleBinding(ctx, ns, source) }
+func (f *Framework) createOrUpdateClusterRoleBinding(ctx context.Context, ns string, cr *rbacv1.ClusterRole, source string) (FinalizerFn, error) {
 	clusterRoleBinding, err := parseClusterRoleBindingYaml(source)
 	if err != nil {
-		return finalizerFn, err
+		return nil, err
 	}
 
-	// Make sure to create a new cluster role binding for each namespace to
-	// prevent concurrent tests to delete each others bindings.
-	clusterRoleBinding.Name = ns + "-" + clusterRoleBinding.Name
-
+	clusterRoleBinding.Name = cr.Name
+	clusterRoleBinding.RoleRef.Name = cr.Name
 	clusterRoleBinding.Subjects[0].Namespace = ns
 
-	_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return finalizerFn, err
-	}
+	finalizerFn := func() error { return f.deleteClusterRoleBinding(ctx, clusterRoleBinding.Name) }
 
-	if apierrors.IsNotFound(err) {
-		// ClusterRoleBinding doesn't exists -> Create
+	_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{})
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return nil, err
+		}
+
 		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
 		if err != nil {
-			return finalizerFn, err
+			return nil, err
 		}
-	} else {
-		// ClusterRoleBinding already exists -> Update
-		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(ctx, clusterRoleBinding, metav1.UpdateOptions{})
-		if err != nil {
-			return finalizerFn, err
-		}
+
+		return finalizerFn, nil
 	}
 
-	return finalizerFn, err
+	// ClusterRoleBinding already exists -> Update
+	_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(ctx, clusterRoleBinding, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return finalizerFn, nil
 }
 
-func (f *Framework) DeleteClusterRoleBinding(ctx context.Context, ns string, source string) error {
-	clusterRoleBinding, err := parseClusterRoleYaml(source)
-	if err != nil {
+func (f *Framework) deleteClusterRoleBinding(ctx context.Context, crbName string) error {
+	err := f.KubeClient.RbacV1().ClusterRoleBindings().Delete(ctx, crbName, metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 
-	// Make sure to delete the specific cluster role binding for the namespace
-	// it was created preventing concurrent tests to delete each others bindings.
-	clusterRoleBinding.Name = ns + "-" + clusterRoleBinding.Name
-
-	return f.KubeClient.RbacV1().ClusterRoleBindings().Delete(ctx, clusterRoleBinding.Name, metav1.DeleteOptions{})
+	return nil
 }
 
 func parseClusterRoleBindingYaml(source string) (*rbacv1.ClusterRoleBinding, error) {

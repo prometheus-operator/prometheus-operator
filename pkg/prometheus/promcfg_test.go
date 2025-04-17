@@ -4324,6 +4324,26 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v3.1.0.golden",
 		},
+		{
+			version: "v2.28.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					MaxSamplesPerSend: ptr.To(int32(10)),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.28.0_MaxSamplesPerSendMetadataConfig.golden",
+		},
+		{
+			version: "v2.29.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					MaxSamplesPerSend: ptr.To(int32(10)),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.29.0_MaxSamplesPerSendMetadataConfig.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -4840,13 +4860,24 @@ func TestNativeHistogramConfig(t *testing.T) {
 		golden                string
 	}{
 		{
+			version: "v3.0.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfig.golden",
+		},
+		{
 			version: "v2.54.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfig.golden",
+			golden: "NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
@@ -4854,6 +4885,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
@@ -4863,6 +4895,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigWithMissALL.golden",
 		},
@@ -4872,6 +4905,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},
@@ -9220,13 +9254,13 @@ func TestAppendNameValidationScheme(t *testing.T) {
 	}{
 		{
 			name:                 "UTF8 nameValidationScheme withPrometheus Version 3",
-			version:              "v3.0.0-beta.0",
+			version:              "v3.0.0",
 			nameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 			expectedCfg:          "NameValidationSchemeUTF8WithPrometheusV3.golden",
 		},
 		{
 			name:                 "Legacy nameValidationScheme with Prometheus Version 3",
-			version:              "v3.0.0-beta.0",
+			version:              "v3.0.0",
 			nameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			expectedCfg:          "NameValidationSchemeLegacyWithPrometheusV3.golden",
 		},

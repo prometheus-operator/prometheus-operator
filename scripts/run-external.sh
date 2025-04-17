@@ -8,7 +8,7 @@ set -eu -o pipefail
 trap cleanup EXIT INT
 
 # globals
-declare CLUSTER=""
+declare CONTEXT=""
 declare SHOW_USAGE=false
 declare SKIP_OPERATOR_RUN_CHECK=false
 declare USE_DEFAULT_CONTEXT=false
@@ -71,21 +71,24 @@ update_crds() {
 	run kubectl wait --for=condition=Established crds --all --timeout=120s
 }
 
-init_cluster_context() {
-	header "Set Cluster"
+init_context() {
+	header "Set Context"
 	$USE_DEFAULT_CONTEXT && {
-		CLUSTER=$(kubectl config current-context)
+		CONTEXT=$(kubectl config current-context)
 	}
 
-	info "Using cluster - '$CLUSTER'"
+	info "Using context - '$CONTEXT'"
 	return 0
 }
 
 extract_certs() {
-	local cluster=".clusters[?(@.name == \"$CLUSTER\")].cluster"
-	local user=".users[?(@.name == \"$CLUSTER\")].user"
-
-	local ca key cert
+        local ca key cert context_cluster context_user
+  
+        context_cluster=$(kubectl config view --raw -o jsonpath="{.contexts[?(@.name == \"$CONTEXT\")].context.cluster}")
+        context_user=$(kubectl config view --raw -o jsonpath="{.contexts[?(@.name == \"$CONTEXT\")].context.user}")
+        
+        local cluster=".clusters[?(@.name == \"$context_cluster\")].cluster"
+        local user=".users[?(@.name == \"$context_user\")].user"
 
 	API_SERVER=$(kubectl config view -o jsonpath="{$cluster.server}")
 	ca=$(kubectl config view --raw -o jsonpath="{$cluster.certificate-authority-data}" | base64 -d)
@@ -124,7 +127,7 @@ extract_certs() {
 run_operator() {
 	header "Run Operator"
 
-	info "Running operator against cluster: $CLUSTER - $API_SERVER"
+	info "Running operator against context: $CONTEXT - $API_SERVER"
 	echo "──────────────────────────────────────────────────────────────────"
 
 	run ./operator \
@@ -138,14 +141,14 @@ run_operator() {
 }
 
 validate_args() {
-	if [[ -z "$CLUSTER" ]] && ! $USE_DEFAULT_CONTEXT; then
-		err "missing cluster name or --use-default-context"
+	if [[ -z "$CONTEXT" ]] && ! $USE_DEFAULT_CONTEXT; then
+		err "missing context name or --use-default-context"
 		return 1
 	fi
 
-	# ensure both cluster and use-default-context isn't set
-	if [[ -n "$CLUSTER" ]] && $USE_DEFAULT_CONTEXT; then
-		err "Cannot provide both cluster name '$CLUSTER' and --use-default-context"
+	# ensure both context and use-default-context isn't set
+	if [[ -n "$CONTEXT" ]] && $USE_DEFAULT_CONTEXT; then
+		err "Cannot provide both context name '$CONTEXT' and --use-default-context"
 		return 1
 	fi
 
@@ -183,7 +186,7 @@ show_usage() {
 	read -r -d '' help <<-EOF_HELP || true
 		Usage:
 		────────────────────────────────────────────
-		  ❯ $scr <cluster-name>
+		  ❯ $scr <context-name>
 		  ❯ $scr  -h|--help
 
 		Options:
@@ -192,15 +195,15 @@ show_usage() {
 		  --no-operator-run-check | -f: skips the check that ensures no prometheus-operator
 		                                is running in the cluster.
 		  --use-default-context | -c:   Runs operator using current context
-																		NOTE: cannot use both -c and <cluster-name>
+																		NOTE: cannot use both -c and <context-name>
 
 		⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻
 		💡 Tips
 		⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻
-		To get all cluster names in current context, run:
+		To get all context names in current config, run:
 		   ❯ kubectl config get-contexts -o name
 
-		To get current/default cluster names, run:
+		To get current/default context name, run:
 		   ❯ kubectl config current-context
 
 	EOF_HELP
@@ -228,7 +231,7 @@ parse_args() {
 			USE_DEFAULT_CONTEXT=true
 			;;
 		*)
-			CLUSTER="$1"
+			CONTEXT="$1"
 			shift
 			;;
 		esac
@@ -261,7 +264,7 @@ main() {
 	cd "$(git rev-parse --show-toplevel)"
 	mkdir -p tmp
 
-	init_cluster_context
+	init_context
 	extract_certs
 
 	ensure_operator_not_running

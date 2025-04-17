@@ -49,6 +49,13 @@ const (
 	DefaultPortName        = "web"
 	DefaultLogFileVolume   = "log-file"
 	DefaultLogDirectory    = "/var/log/prometheus"
+
+	// DefaultTerminationGracePeriodSeconds defines how long Kubernetes should
+	// wait before killing Prometheus on pod termination.
+	// Prometheus may take a significant time to shut down due to data
+	// checkpointing. By default, the operator allows up to 10 minutes for
+	// clean termination.
+	DefaultTerminationGracePeriodSeconds = int64(600)
 )
 
 var (

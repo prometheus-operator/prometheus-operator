@@ -101,11 +101,10 @@ func (fdw *fileDiagnosticWriter) StartCollection(name string) {
 func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 	// TestCtx is used among others for namespace names where '/' is forbidden
 	prefix := strings.TrimPrefix(
-		strings.Replace(
+		strings.ReplaceAll(
 			strings.ToLower(t.Name()),
 			"/",
 			"-",
-			-1,
 		),
 		"test",
 	)
@@ -271,6 +270,7 @@ func (ctx *TestCtx) ID() string {
 }
 
 func (ctx *TestCtx) Cleanup(t *testing.T) {
+	t.Helper()
 	var eg errgroup.Group
 
 	for i := len(ctx.cleanUpFns) - 1; i >= 0; i-- {

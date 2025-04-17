@@ -15,4 +15,4 @@ spec:
     matchLabels:
       app.kubernetes.io/name: prometheus
   thanos:
-    version: v0.36.1
+    version: v0.38.0

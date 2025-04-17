@@ -887,7 +887,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
 			logger.Debug("new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -895,7 +895,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger.Debug(
 			"updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName],
+			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -1061,8 +1061,8 @@ func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prom
 
 func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
-	if p.Spec.Web != nil && p.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
-		http2 = p.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	if p.Spec.Web != nil && p.Spec.Web.HTTPConfig != nil {
+		http2 = p.Spec.Web.HTTPConfig.HTTP2
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because

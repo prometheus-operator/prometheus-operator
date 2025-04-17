@@ -172,6 +172,11 @@ spec:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              convertClassicHistogramsToNHCB:
+                description: |-
+                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  It requires Prometheus >= v3.0.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -424,7 +429,7 @@ spec:
                       that should be excluded from proxying. IP and domain names can
                       contain port numbers.
 
-                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                      It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                     type: string
                   proxyConnectHeader:
                     additionalProperties:
@@ -457,18 +462,18 @@ spec:
                       ProxyConnectHeader optionally specifies headers to send to
                       proxies during CONNECT requests.
 
-                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                      It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                     type: object
                     x-kubernetes-map-type: atomic
                   proxyFromEnvironment:
                     description: |-
                       Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 
-                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                      It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                     type: boolean
                   proxyUrl:
                     description: '`proxyURL` defines the HTTP proxy server to use.'
-                    pattern: ^http(s)?://.+$
+                    pattern: ^(http|https|socks5)://.+$
                     type: string
                   scopes:
                     description: '`scopes` defines the OAuth2 scopes used for the
@@ -618,7 +623,7 @@ spec:
                         description: |-
                           Maximum acceptable TLS version.
 
-                          It requires Prometheus >= v2.41.0.
+                          It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
                         enum:
                         - TLS10
                         - TLS11
@@ -629,7 +634,7 @@ spec:
                         description: |-
                           Minimum acceptable TLS version.
 
-                          It requires Prometheus >= v2.35.0.
+                          It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
                         enum:
                         - TLS10
                         - TLS11
@@ -1143,7 +1148,7 @@ spec:
                     description: |-
                       Maximum acceptable TLS version.
 
-                      It requires Prometheus >= v2.41.0.
+                      It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
                     enum:
                     - TLS10
                     - TLS11
@@ -1154,7 +1159,7 @@ spec:
                     description: |-
                       Minimum acceptable TLS version.
 
-                      It requires Prometheus >= v2.35.0.
+                      It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
                     enum:
                     - TLS10
                     - TLS11

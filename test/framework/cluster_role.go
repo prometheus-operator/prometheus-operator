@@ -16,7 +16,9 @@ package framework
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/cespare/xxhash/v2"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,41 +48,21 @@ var (
 	}
 )
 
-func (f *Framework) CreateOrUpdateClusterRole(ctx context.Context, source string) (*rbacv1.ClusterRole, error) {
-	clusterRole, err := parseClusterRoleYaml(source)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = f.KubeClient.RbacV1().ClusterRoles().Get(ctx, clusterRole.Name, metav1.GetOptions{})
+func (f *Framework) CreateOrUpdateClusterRole(ctx context.Context, cr *rbacv1.ClusterRole) (*rbacv1.ClusterRole, error) {
+	_, err := f.KubeClient.RbacV1().ClusterRoles().Get(ctx, cr.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, err
-	}
-
-	if apierrors.IsNotFound(err) {
-		// ClusterRole doesn't exists -> Create
-		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// ClusterRole already exists -> Update
-		clusterRole, err = f.KubeClient.RbacV1().ClusterRoles().Update(ctx, clusterRole, metav1.UpdateOptions{})
-		if err != nil {
-			return nil, err
+		if apierrors.IsNotFound(err) {
+			// ClusterRole doesn't exists -> Create
+			return f.KubeClient.RbacV1().ClusterRoles().Create(ctx, cr, metav1.CreateOptions{})
 		}
 	}
 
-	return clusterRole, nil
+	// ClusterRole already exists -> Update
+	return f.KubeClient.RbacV1().ClusterRoles().Update(ctx, cr, metav1.UpdateOptions{})
 }
 
-func (f *Framework) DeleteClusterRole(ctx context.Context, source string) error {
-	clusterRole, err := parseClusterRoleYaml(source)
-	if err != nil {
-		return err
-	}
-
-	return f.KubeClient.RbacV1().ClusterRoles().Delete(ctx, clusterRole.Name, metav1.DeleteOptions{})
+func (f *Framework) DeleteClusterRole(ctx context.Context, name string) error {
+	return f.KubeClient.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
 func (f *Framework) UpdateClusterRole(ctx context.Context, clusterRole *rbacv1.ClusterRole) error {
@@ -91,7 +73,7 @@ func (f *Framework) UpdateClusterRole(ctx context.Context, clusterRole *rbacv1.C
 	return nil
 }
 
-func parseClusterRoleYaml(source string) (*rbacv1.ClusterRole, error) {
+func clusterRoleFromYaml(suffix, source string) (*rbacv1.ClusterRole, error) {
 	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
@@ -100,6 +82,18 @@ func parseClusterRoleYaml(source string) (*rbacv1.ClusterRole, error) {
 	clusterRole := rbacv1.ClusterRole{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&clusterRole); err != nil {
 		return nil, err
+	}
+
+	// Use a unique cluster role name to avoid parallel tests doing concurrent
+	// updates to the same resource.
+	if suffix != "" {
+		xxh := xxhash.New()
+		if _, err := xxh.Write([]byte(suffix)); err != nil {
+			// Write() never returns nil.
+			panic(fmt.Errorf("failed to write hash: %w", err))
+		}
+
+		clusterRole.Name = fmt.Sprintf("%s-%x", clusterRole.Name, xxh.Sum64())
 	}
 
 	return &clusterRole, nil

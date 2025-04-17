@@ -561,11 +561,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
+	// TODO(simonpasquier): the operator should take into account changes to
+	// the cluster TLS configuration to trigger a rollout of the pods (this
+	// configuration doesn't support live reload).
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
 	}
 
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
@@ -607,7 +610,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
@@ -743,8 +746,8 @@ func makeSelectorLabels(name string) map[string]string {
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
-	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
-		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	if a.Spec.Web != nil && a.Spec.Web.HTTPConfig != nil {
+		http2 = a.Spec.Web.HTTPConfig.HTTP2
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
@@ -757,7 +760,6 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations map[string]string
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
-		ALertmanagerClusterTLS  string
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
@@ -1182,6 +1184,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkMSTeamsV2Configs(ctx, receiver.MSTeamsV2Configs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1598,6 +1605,40 @@ func checkMSTeamsConfigs(
 	return nil
 }
 
+func checkMSTeamsV2Configs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.MSTeamsV2Config,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+	}
+
+	for _, config := range configs {
+		if config.WebhookURL != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
+				return err
+			}
+		}
+
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semver.Version) error {
 	matchersV2Allowed := version.GTE(semver.MustParse("0.22.0"))
 
@@ -1709,11 +1750,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	clusterTLSConfig, err := clustertlsconfig.New(
-		clusterTLSConfigDir,
-		clusterTLSConfigSecretName(a.Name),
-		a.Spec.ClusterTLS,
-	)
+	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
 	if err != nil {
 		return fmt.Errorf("failed to initialize the configuration: %w", err)
 	}

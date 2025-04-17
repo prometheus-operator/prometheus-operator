@@ -158,6 +158,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RemoteReadSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RemoteWriteSpec"):
 		return &monitoringv1.RemoteWriteSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RetainConfig"):
+		return &monitoringv1.RetainConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Rule"):
 		return &monitoringv1.RuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RuleGroup"):
@@ -274,6 +276,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
 		return &monitoringv1alpha1.MSTeamsConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsV2Config"):
+		return &monitoringv1alpha1.MSTeamsV2ConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MuteTimeInterval"):
 		return &monitoringv1alpha1.MuteTimeIntervalApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("NamespaceDiscovery"):
@@ -360,6 +364,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.MatcherApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
 		return &monitoringv1beta1.MSTeamsConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsV2Config"):
+		return &monitoringv1beta1.MSTeamsV2ConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpsGenieConfig"):
 		return &monitoringv1beta1.OpsGenieConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpsGenieConfigResponder"):

@@ -19,12 +19,12 @@ import (
 	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
-func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monv1.RemoteWriteSpec) error {
-	for i, remote := range remotes {
+// AddRemoteWritesToStore loads all secret/configmap references from remote-write configs into the store.
+func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	for i, remote := range rws {
 		if err := validateRemoteWriteSpec(remote); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
@@ -61,8 +61,9 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 	return nil
 }
 
-func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monv1.RemoteReadSpec) error {
-	for i, remote := range remotes {
+// AddRemoteReadsToStore loads all secret/configmap references from remote-read configs into the store.
+func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rrs []monitoringv1.RemoteReadSpec) error {
+	for i, remote := range rrs {
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
@@ -79,7 +80,7 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 
-		if err := remote.ProxyConfig.Validate(); err != nil {
+		if err := remote.Validate(); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 
@@ -91,7 +92,7 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 	return nil
 }
 
-func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, config *monv1.APIServerConfig) error {
+func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, config *monitoringv1.APIServerConfig) error {
 	if config == nil {
 		return nil
 	}
@@ -111,7 +112,7 @@ func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, 
 	return nil
 }
 
-func AddScrapeClassesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, scrapeClasses []monv1.ScrapeClass) error {
+func AddScrapeClassesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, scrapeClasses []monitoringv1.ScrapeClass) error {
 	for _, scrapeClass := range scrapeClasses {
 		if err := store.AddTLSConfig(ctx, namespace, scrapeClass.TLSConfig); err != nil {
 			return fmt.Errorf("scrape class %q: %w", scrapeClass.Name, err)

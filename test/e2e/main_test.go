@@ -38,7 +38,10 @@ var (
 	opImage                  *string
 )
 
-const testControllerID = "--controller-id=42"
+const (
+	testControllerID            = "--controller-id=42"
+	gitHubContentReleaseBaseURL = "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-%d.%d"
+)
 
 func skipPrometheusAllNSTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_PROMETHEUS_ALL_NS_TESTS") != "" {
@@ -113,7 +116,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	prevStableVersionURL := fmt.Sprintf("https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-%d.%d/VERSION", currentSemVer.Major, currentSemVer.Minor-1)
+	prevStableVersionURL := fmt.Sprintf(gitHubContentReleaseBaseURL, currentSemVer.Major, currentSemVer.Minor-1) + "/VERSION"
 	reader, err := operatorFramework.URLToIOReader(prevStableVersionURL)
 	if err != nil {
 		logger.Printf("failed to get previous version file content: %v\n", err)
@@ -126,16 +129,14 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	prometheusOperatorGithubBranchURL := "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator"
-
 	prevSemVer, err := semver.ParseTolerant(string(prevStableVersion))
 	if err != nil {
 		logger.Printf("failed to parse previous stable version: %v\n", err)
 		os.Exit(1)
 	}
-	prevStableOpImage := fmt.Sprintf("%s:v%s", "quay.io/prometheus-operator/prometheus-operator", strings.TrimSpace(string(prevStableVersion)))
-	prevExampleDir := fmt.Sprintf("%s/release-%d.%d/example", prometheusOperatorGithubBranchURL, prevSemVer.Major, prevSemVer.Minor)
-	prevResourcesDir := fmt.Sprintf("%s/release-%d.%d/test/framework/resources", prometheusOperatorGithubBranchURL, prevSemVer.Major, prevSemVer.Minor)
+	prevStableOpImage := fmt.Sprintf("quay.io/prometheus-operator/prometheus-operator:v%s", strings.TrimSpace(string(prevStableVersion)))
+	prevExampleDir := fmt.Sprintf(gitHubContentReleaseBaseURL, prevSemVer.Major, prevSemVer.Minor) + "/example"
+	prevResourcesDir := fmt.Sprintf(gitHubContentReleaseBaseURL, prevSemVer.Major, prevSemVer.Minor) + "/test/framework/resources"
 
 	if previousVersionFramework, err = operatorFramework.New(*kubeconfig, prevStableOpImage, prevExampleDir, prevResourcesDir, prevSemVer); err != nil {
 		logger.Printf("failed to setup previous version framework: %v\n", err)
@@ -326,6 +327,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerQueryConfig":                        testTRQueryConfig,
 		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 		"ThanosRulerServiceName":                        testThanosRulerServiceName,
+		"ThanosRulerStateless":                          testThanosRulerStateless,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)

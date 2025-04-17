@@ -81,6 +81,8 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
+	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
+	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -559,5 +561,26 @@ func (b *AlertmanagerSpecApplyConfiguration) WithEnableFeatures(values ...string
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}
+	return b
+}
+
+// WithAdditionalArgs adds the given value to the AdditionalArgs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AdditionalArgs field.
+func (b *AlertmanagerSpecApplyConfiguration) WithAdditionalArgs(values ...*ArgumentApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAdditionalArgs")
+		}
+		b.AdditionalArgs = append(b.AdditionalArgs, *values[i])
+	}
+	return b
+}
+
+// WithTerminationGracePeriodSeconds sets the TerminationGracePeriodSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *AlertmanagerSpecApplyConfiguration {
+	b.TerminationGracePeriodSeconds = &value
 	return b
 }

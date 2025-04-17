@@ -329,7 +329,7 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == nil || *rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && (rc.Replacement != nil && *rc.Replacement != relabel.DefaultRelabelConfig.Replacement) {
 		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
@@ -344,26 +344,26 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
-		if !(rc.Regex == "" || rc.Regex == relabel.DefaultRelabelConfig.Regex.String()) ||
-			!(rc.Modulus == uint64(0) ||
-				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
-			!(rc.Separator == nil ||
-				*rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
-			!(rc.Replacement == nil || *rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
+		if (rc.Regex != "" && rc.Regex != relabel.DefaultRelabelConfig.Regex.String()) ||
+			(rc.Modulus != uint64(0) &&
+				rc.Modulus != relabel.DefaultRelabelConfig.Modulus) ||
+			(rc.Separator != nil &&
+				*rc.Separator != relabel.DefaultRelabelConfig.Separator) ||
+			(rc.Replacement != nil && *rc.Replacement != relabel.DefaultRelabelConfig.Replacement) {
 			return fmt.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
 		}
 	}
 
 	if action == string(relabel.LabelDrop) || action == string(relabel.LabelKeep) {
 		if len(rc.SourceLabels) != 0 ||
-			!(rc.TargetLabel == "" ||
-				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
-			!(rc.Modulus == uint64(0) ||
-				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
-			!(rc.Separator == nil ||
-				*rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
-			!(rc.Replacement == nil ||
-				*rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
+			(rc.TargetLabel != "" &&
+				rc.TargetLabel != relabel.DefaultRelabelConfig.TargetLabel) ||
+			(rc.Modulus != uint64(0) &&
+				rc.Modulus != relabel.DefaultRelabelConfig.Modulus) ||
+			(rc.Separator != nil &&
+				*rc.Separator != relabel.DefaultRelabelConfig.Separator) ||
+			(rc.Replacement != nil &&
+				*rc.Replacement != relabel.DefaultRelabelConfig.Replacement) {
 			return fmt.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
 		}
 	}
@@ -1247,7 +1247,7 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	if rs.version.LT(semver.MustParse("2.20.0")) {
-		return fmt.Errorf("Digital Ocean SD configuration is only supported for Prometheus version >= 2.20.0")
+		return fmt.Errorf("service discovery for Digital Ocean is only supported for Prometheus version >= 2.20.0")
 	}
 
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {

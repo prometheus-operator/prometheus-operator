@@ -302,6 +302,23 @@ type AlertmanagerSpec struct {
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet. The arguments are passed as-is to the
+	// Alertmanager container which may cause issues if they are invalid or not supported
+	// by the given Alertmanager version.
+	// +optional
+	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+
+	// Optional duration in seconds the pod needs to terminate gracefully.
+	// Value must be non-negative integer. The value zero indicates stop immediately via
+	// the kill signal (no opportunity to shut down) which may lead to data corruption.
+	//
+	// Defaults to 120 seconds.
+	//
+	// +kubebuilder:validation:Minimum:=0
+	// +optional
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
