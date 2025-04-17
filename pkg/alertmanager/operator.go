@@ -1186,7 +1186,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		}
 
 		err = checkJiraConfigs(ctx, receiver.JiraConfigs, amc.GetNamespace(), store, amVersion)
-    if err != nil {
+		if err != nil {
 			return err
 		}
 
@@ -1637,7 +1637,6 @@ func checkJiraConfigs(
 
 	return nil
 }
-
 
 func checkMSTeamsV2Configs(
 	ctx context.Context,

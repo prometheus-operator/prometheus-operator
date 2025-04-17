@@ -1414,8 +1414,15 @@ func (cb *configBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 			return nil, fmt.Errorf("parse reopen duration: %w", err)
 		}
 		out.ReopenDuration = &reopenDuration
-  }
-  return out, nil
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
 }
 
 func (cb *configBuilder) convertMSTeamsV2Config(
