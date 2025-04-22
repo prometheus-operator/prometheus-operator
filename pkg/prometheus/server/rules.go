@@ -93,7 +93,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
-		currentConfigMapNames := []string{}
+		currentConfigMapNames := make([]string, 0, len(currentConfigMaps))
 		for _, cm := range currentConfigMaps {
 			currentConfigMapNames = append(currentConfigMapNames, cm.Name)
 		}
@@ -110,7 +110,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return nil, fmt.Errorf("failed to make rules ConfigMaps: %w", err)
 	}
 
-	newConfigMapNames := []string{}
+	newConfigMapNames := make([]string, 0, len(newConfigMaps))
 	for _, cm := range newConfigMaps {
 		newConfigMapNames = append(newConfigMapNames, cm.Name)
 	}
@@ -209,7 +209,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 		buckets[currBucketIndex][filename] = ruleFiles[filename]
 	}
 
-	ruleFileConfigMaps := []v1.ConfigMap{}
+	ruleFileConfigMaps := make([]v1.ConfigMap, 0, len(buckets))
 	for i, bucket := range buckets {
 		cm := v1.ConfigMap{
 			Data: bucket,
