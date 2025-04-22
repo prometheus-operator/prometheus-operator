@@ -276,6 +276,8 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
+	// Defines the limits command line flags when starting Alertmanager.
+	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
 	// Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.
@@ -442,6 +444,23 @@ type AlertmanagerWebSpec struct {
 	// `--web.timeout` flag.
 	// +optional
 	Timeout *uint32 `json:"timeout,omitempty"`
+}
+
+// AlertmanagerLimitsSpec defines the limits command line flags when starting Alertmanager.
+// +k8s:openapi-gen=true
+type AlertmanagerLimitsSpec struct {
+	// The maximum number active and pending silences. This corresponds to the
+	// Alertmanager's `--silences.max-silences` flag.
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	MaxSilences *uint32 `json:"maxSilences,omitempty"`
+	// The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's
+	// `--silences.max-per-silence-bytes` flag.
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	MaxPerSilenceBytes *ByteSize `json:"maxPerSilenceBytes,omitempty"`
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.

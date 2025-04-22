@@ -801,6 +801,19 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>limits</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">
+AlertmanagerLimitsSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -5717,6 +5730,54 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerLimitsSpec defines the limits command line flags when starting Alertmanager.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxSilences</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The maximum number active and pending silences. This corresponds to the
+Alertmanager&rsquo;s <code>--silences.max-silences</code> flag.
+It requires Alertmanager &gt;= v0.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxPerSilenceBytes</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager&rsquo;s
+<code>--silences.max-per-silence-bytes</code> flag.
+It requires Alertmanager &gt;= v0.28.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec
 </h3>
 <p>
@@ -6437,6 +6498,19 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>limits</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">
+AlertmanagerLimitsSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -7102,7 +7176,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.

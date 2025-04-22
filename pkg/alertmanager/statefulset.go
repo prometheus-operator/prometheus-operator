@@ -21,6 +21,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/alecthomas/units"
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -275,6 +276,16 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	if version.GTE(semver.MustParse("0.17.0")) && web != nil && web.Timeout != nil {
 		amArgs = append(amArgs, monitoringv1.Argument{Name: "web.timeout", Value: fmt.Sprintf("%d", *web.Timeout)})
+	}
+
+	limits := a.Spec.Limits
+	if version.GTE(semver.MustParse("0.28.0")) && limits != nil && limits.MaxSilences != nil {
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-silences", Value: fmt.Sprintf("%d", *limits.MaxSilences)})
+	}
+
+	if version.GTE(semver.MustParse("0.28.0")) && limits != nil && !limits.MaxPerSilenceBytes.IsEmpty() {
+		vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
 	}
 
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {

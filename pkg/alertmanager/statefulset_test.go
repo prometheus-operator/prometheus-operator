@@ -514,6 +514,102 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 	}
 }
 
+func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
+	tt := []struct {
+		scenario             string
+		version              string
+		limits               *monitoringv1.AlertmanagerLimitsSpec
+		expectMaxSilencesArg bool
+	}{
+		{
+			scenario:             "no maxSilences by default",
+			version:              operator.DefaultAlertmanagerVersion,
+			limits:               nil,
+			expectMaxSilencesArg: false,
+		}, {
+			scenario: "no maxSilencesfor old version",
+			version:  "0.27.9",
+			limits: &monitoringv1.AlertmanagerLimitsSpec{
+				MaxSilences: toPtr(uint32(50)),
+			},
+			expectMaxSilencesArg: false,
+		}, {
+			scenario: "maxSilencesfor arg set if specified",
+			version:  operator.DefaultAlertmanagerVersion,
+			limits: &monitoringv1.AlertmanagerLimitsSpec{
+				MaxSilences: toPtr(uint32(50)),
+			},
+			expectMaxSilencesArg: true,
+		},
+	}
+
+	for _, ts := range tt {
+		ts := ts
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = toPtr(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Limits = ts.limits
+
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			args := ss.Template.Spec.Containers[0].Args
+			got := slices.ContainsFunc(args, containsString("--silences.max-silences"))
+			require.Equal(t, ts.expectMaxSilencesArg, got, "expected alertmanager args %v silences.max-silences to be %v but is %v", args, ts.expectMaxSilencesArg, got)
+		})
+	}
+}
+
+func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
+	tt := []struct {
+		scenario                    string
+		version                     string
+		limits                      *monitoringv1.AlertmanagerLimitsSpec
+		expectMaxPerSilenceBytesArg bool
+	}{
+		{
+			scenario:                    "no maxPerSilenceBytes by default",
+			version:                     operator.DefaultAlertmanagerVersion,
+			limits:                      nil,
+			expectMaxPerSilenceBytesArg: false,
+		}, {
+			scenario: "no maxPerSilenceBytes old version",
+			version:  "0.27.9",
+			limits: &monitoringv1.AlertmanagerLimitsSpec{
+				MaxPerSilenceBytes: toPtr(monitoringv1.ByteSize("5MB")),
+			},
+			expectMaxPerSilenceBytesArg: false,
+		}, {
+			scenario: "maxPerSilenceBytes arg set if specified",
+			version:  operator.DefaultAlertmanagerVersion,
+			limits: &monitoringv1.AlertmanagerLimitsSpec{
+				MaxPerSilenceBytes: toPtr(monitoringv1.ByteSize("5MB")),
+			},
+			expectMaxPerSilenceBytesArg: true,
+		},
+	}
+
+	for _, ts := range tt {
+		ts := ts
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = toPtr(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Limits = ts.limits
+
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			args := ss.Template.Spec.Containers[0].Args
+			got := slices.ContainsFunc(args, containsString("--silences.max-per-silence-bytes=5242880"))
+			require.Equal(t, ts.expectMaxPerSilenceBytesArg, got, "expected alertmanager args %v silences.max-silences to be %v but is %v", args, ts.expectMaxPerSilenceBytesArg, got)
+		})
+	}
+}
+
 func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 	replicas := int32(1)
 	a := monitoringv1.Alertmanager{
