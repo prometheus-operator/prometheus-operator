@@ -4918,6 +4918,7 @@
                       "maxSilences": {
                         "description": "The maximum number active and pending silences. This corresponds to the\nAlertmanager's `--silences.max-silences` flag.\nIt requires Alertmanager >= v0.28.0.",
                         "format": "int32",
+                        "minimum": 0,
                         "type": "integer"
                       }
                     },

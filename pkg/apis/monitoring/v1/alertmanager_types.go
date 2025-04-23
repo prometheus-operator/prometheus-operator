@@ -453,8 +453,9 @@ type AlertmanagerLimitsSpec struct {
 	// Alertmanager's `--silences.max-silences` flag.
 	// It requires Alertmanager >= v0.28.0.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	MaxSilences *uint32 `json:"maxSilences,omitempty"`
+	MaxSilences *int32 `json:"maxSilences,omitempty"`
 	// The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's
 	// `--silences.max-per-silence-bytes` flag.
 	// It requires Alertmanager >= v0.28.0.

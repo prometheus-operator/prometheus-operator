@@ -23,7 +23,7 @@ import (
 // AlertmanagerLimitsSpecApplyConfiguration represents a declarative configuration of the AlertmanagerLimitsSpec type for use
 // with apply.
 type AlertmanagerLimitsSpecApplyConfiguration struct {
-	MaxSilences        *uint32                `json:"maxSilences,omitempty"`
+	MaxSilences        *int32                 `json:"maxSilences,omitempty"`
 	MaxPerSilenceBytes *monitoringv1.ByteSize `json:"maxPerSilenceBytes,omitempty"`
 }
 
@@ -36,7 +36,7 @@ func AlertmanagerLimitsSpec() *AlertmanagerLimitsSpecApplyConfiguration {
 // WithMaxSilences sets the MaxSilences field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxSilences field is set to the value of the last call.
-func (b *AlertmanagerLimitsSpecApplyConfiguration) WithMaxSilences(value uint32) *AlertmanagerLimitsSpecApplyConfiguration {
+func (b *AlertmanagerLimitsSpecApplyConfiguration) WithMaxSilences(value int32) *AlertmanagerLimitsSpecApplyConfiguration {
 	b.MaxSilences = &value
 	return b
 }

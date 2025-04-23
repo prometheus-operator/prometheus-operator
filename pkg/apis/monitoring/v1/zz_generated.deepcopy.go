@@ -259,7 +259,7 @@ func (in *AlertmanagerLimitsSpec) DeepCopyInto(out *AlertmanagerLimitsSpec) {
 	*out = *in
 	if in.MaxSilences != nil {
 		in, out := &in.MaxSilences, &out.MaxSilences
-		*out = new(uint32)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.MaxPerSilenceBytes != nil {

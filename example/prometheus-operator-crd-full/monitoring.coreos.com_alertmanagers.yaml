@@ -5531,6 +5531,7 @@ spec:
                       Alertmanager's `--silences.max-silences` flag.
                       It requires Alertmanager >= v0.28.0.
                     format: int32
+                    minimum: 0
                     type: integer
                 type: object
               listenLocal:

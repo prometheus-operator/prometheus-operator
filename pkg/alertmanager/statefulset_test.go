@@ -530,14 +530,14 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 			scenario: "no maxSilencesfor old version",
 			version:  "0.27.9",
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxSilences: toPtr(uint32(50)),
+				MaxSilences: toPtr(int32(50)),
 			},
 			expectMaxSilencesArg: false,
 		}, {
 			scenario: "maxSilencesfor arg set if specified",
 			version:  operator.DefaultAlertmanagerVersion,
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxSilences: toPtr(uint32(50)),
+				MaxSilences: toPtr(int32(50)),
 			},
 			expectMaxSilencesArg: true,
 		},

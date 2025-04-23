@@ -5750,7 +5750,7 @@ string
 <td>
 <code>maxSilences</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
