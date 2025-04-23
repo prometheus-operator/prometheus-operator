@@ -479,6 +479,10 @@ type GlobalSMTPConfig struct {
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
 	RequireTLS *bool `json:"requireTLS,omitempty"`
+
+	// he default TLS configuration for SMTP receivers
+	// +optional
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

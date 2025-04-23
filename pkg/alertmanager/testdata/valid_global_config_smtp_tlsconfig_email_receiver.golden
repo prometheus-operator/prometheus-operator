@@ -1,15 +1,4 @@
 global:
-  resolve_timeout: 30s
-  http_config:
-    oauth2:
-      client_id: clientID
-      client_secret: clientSecret
-      scopes:
-      - any
-      token_url: https://test.com
-      endpoint_params:
-        some: value
-    follow_redirects: true
   smtp_from: from
   smtp_hello: smtp.example.org
   smtp_smarthost: smtp.example.org:587
@@ -31,4 +20,14 @@ route:
 receivers:
 - name: mynamespace/global-config/null
 - name: mynamespace/global-config/myreceiver
+  email_configs:
+  - send_resolved: true
+    to: b
+    from: a
+    smarthost: abc:1234
+    auth_username: foo
+    tls_config:
+      insecure_skip_verify: true
+      min_version: TLS12
+      max_version: TLS13
 templates: []

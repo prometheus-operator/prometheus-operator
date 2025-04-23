@@ -73,6 +73,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	version26, err := semver.ParseTolerant("v0.26.0")
 	require.NoError(t, err)
 
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
@@ -86,7 +89,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		golden          string
 	}{
 		{
-			name: "valid global config",
+			name:      "valid global config",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
 					From: ptr.To("from"),
@@ -110,6 +114,11 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						Key: "secret",
 					},
 					RequireTLS: ptr.To(true),
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						MinVersion:         ptr.To(monitoringv1.TLSVersion12),
+						MaxVersion:         ptr.To(monitoringv1.TLSVersion13),
+					},
 				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringv1.HTTPConfig{
@@ -721,6 +730,86 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Type: "OnNamespace",
 			},
 			wantErr: true,
+		},
+		{
+			name:      "valid global config SMTP tlsconfig email receiver",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					From: ptr.To("from"),
+					SmartHost: &monitoringv1.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					Hello:        ptr.To("smtp.example.org"),
+					AuthUsername: ptr.To("dev@smtp.example.org"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "password",
+					},
+					AuthIdentity: ptr.To("dev@smtp.example.org"),
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "secret",
+					},
+					RequireTLS: ptr.To(true),
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						MinVersion:         ptr.To(monitoringv1.TLSVersion12),
+						MaxVersion:         ptr.To(monitoringv1.TLSVersion13),
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+							/*
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost:    "abc",
+										From:         "a",
+										AuthUsername: "foo",
+									},
+								},
+							*/
+						},
+						{
+							Name: "myreceiver",
+							EmailConfigs: []monitoringv1alpha1.EmailConfig{
+								{
+									SendResolved: ptr.To(true),
+									Smarthost:    "abc:1234",
+									From:         "a",
+									To:           "b",
+									AuthUsername: "foo",
+								},
+							},
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_smtp_tlsconfig_email_receiver.golden",
 		},
 	}
 	for _, tt := range tests {

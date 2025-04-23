@@ -1129,7 +1129,11 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		out.Headers = headers
 	}
 
-	if in.TLSConfig != nil {
+	if in.TLSConfig == nil {
+		if cb.cfg.Global != nil && cb.cfg.Global.SMTPTLSConfig != nil {
+			out.TLSConfig = cb.cfg.Global.SMTPTLSConfig
+		}
+	} else {
 		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
@@ -1568,6 +1572,10 @@ func (cb *configBuilder) convertSMTPConfig(ctx context.Context, out *globalConfi
 		out.SMTPSmarthost.Port = in.SmartHost.Port
 	}
 
+	if in.TLSConfig != nil {
+		out.SMTPTLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
+	}
+
 	if in.AuthPassword != nil {
 		authPassword, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthPassword)
 		if err != nil {
@@ -1705,6 +1713,14 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 
 	if in.KeySecret != nil {
 		out.KeyFile = path.Join(tlsAssetsDir, s.TLSAsset(in.KeySecret))
+	}
+
+	if in.MinVersion != nil {
+		out.MinVersion = string(*in.MinVersion)
+	}
+
+	if in.MaxVersion != nil {
+		out.MaxVersion = string(*in.MaxVersion)
 	}
 
 	return &out
