@@ -773,15 +773,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					Receivers: []monitoringv1alpha1.Receiver{
 						{
 							Name: "null",
-							/*
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										Smarthost:    "abc",
-										From:         "a",
-										AuthUsername: "foo",
-									},
-								},
-							*/
 						},
 						{
 							Name: "myreceiver",
