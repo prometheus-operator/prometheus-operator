@@ -39,6 +39,10 @@ const (
 // +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"
 type ByteSize string
 
+func (bs *ByteSize) IsEmpty() bool {
+	return bs == nil || *bs == ""
+}
+
 // Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
 // Supported units: y, w, d, h, m, s, ms
 // Examples: `30s`, `1m`, `1h20m15s`, `15d`

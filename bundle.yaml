@@ -16317,6 +16317,25 @@ spec:
                   - name
                   type: object
                 type: array
+              limits:
+                description: Defines the limits command line flags when starting Alertmanager.
+                properties:
+                  maxPerSilenceBytes:
+                    description: |-
+                      The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's
+                      `--silences.max-per-silence-bytes` flag.
+                      It requires Alertmanager >= v0.28.0.
+                    pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
+                    type: string
+                  maxSilences:
+                    description: |-
+                      The maximum number active and pending silences. This corresponds to the
+                      Alertmanager's `--silences.max-silences` flag.
+                      It requires Alertmanager >= v0.28.0.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                type: object
               listenLocal:
                 description: |-
                   ListenLocal makes the Alertmanager server listen on loopback, so that it
