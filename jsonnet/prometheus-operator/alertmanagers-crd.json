@@ -1782,7 +1782,7 @@
                                 "type": "object"
                               },
                               "tlsConfig": {
-                                "description": "he default TLS configuration for SMTP receivers",
+                                "description": "The default TLS configuration for SMTP receivers",
                                 "properties": {
                                   "ca": {
                                     "description": "Certificate authority used when verifying server certificates.",

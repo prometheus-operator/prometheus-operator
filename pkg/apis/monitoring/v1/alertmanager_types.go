@@ -480,7 +480,7 @@ type GlobalSMTPConfig struct {
 	// +optional
 	RequireTLS *bool `json:"requireTLS,omitempty"`
 
-	// he default TLS configuration for SMTP receivers
+	// The default TLS configuration for SMTP receivers
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }

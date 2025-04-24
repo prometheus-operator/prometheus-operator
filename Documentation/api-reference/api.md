@@ -9897,7 +9897,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>he default TLS configuration for SMTP receivers</p>
+<p>The default TLS configuration for SMTP receivers</p>
 </td>
 </tr>
 </tbody>
