@@ -38,13 +38,6 @@ linters:
           - staticcheck
           - testifylint
         path: _test.go
-      # We *frequently* use the term 'new' in the context of properties
-      # (new and old properties),
-      # and we rarely use the 'new' built-in function.
-      # It's fine to ignore these cases.
-      - linters:
-          - revive
-        text: 'redefines-builtin-id: redefinition of the built-in function new'
     paths:
       - third_party$
       - builtin$
