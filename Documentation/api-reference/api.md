@@ -9006,8 +9006,7 @@ Kubernetes core/v1.NodeInclusionPolicy
 when calculating pod topology spread skew. Options are:
 - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations.
 - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.</p>
-<p>If this value is nil, the behavior is equivalent to the Honor policy.
-This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+<p>If this value is nil, the behavior is equivalent to the Honor policy.</p>
 </td>
 </tr>
 <tr>
@@ -9026,8 +9025,7 @@ pod topology spread skew. Options are:
 - Honor: nodes without taints, along with tainted nodes for which the incoming pod
 has a toleration, are included.
 - Ignore: node taints are ignored. All nodes are included.</p>
-<p>If this value is nil, the behavior is equivalent to the Ignore policy.
-This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+<p>If this value is nil, the behavior is equivalent to the Ignore policy.</p>
 </td>
 </tr>
 <tr>
@@ -18538,8 +18536,7 @@ Kubernetes core/v1.NodeInclusionPolicy
 when calculating pod topology spread skew. Options are:
 - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations.
 - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.</p>
-<p>If this value is nil, the behavior is equivalent to the Honor policy.
-This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+<p>If this value is nil, the behavior is equivalent to the Honor policy.</p>
 </td>
 </tr>
 <tr>
@@ -18558,8 +18555,7 @@ pod topology spread skew. Options are:
 - Honor: nodes without taints, along with tainted nodes for which the incoming pod
 has a toleration, are included.
 - Ignore: node taints are ignored. All nodes are included.</p>
-<p>If this value is nil, the behavior is equivalent to the Ignore policy.
-This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.</p>
+<p>If this value is nil, the behavior is equivalent to the Ignore policy.</p>
 </td>
 </tr>
 <tr>
