@@ -279,13 +279,16 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	limits := a.Spec.Limits
-	if version.GTE(semver.MustParse("0.28.0")) && limits != nil && limits.MaxSilences != nil {
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-silences", Value: fmt.Sprintf("%d", *limits.MaxSilences)})
-	}
+	if version.GTE(semver.MustParse("0.28.0")) && limits != nil {
+		if limits.MaxSilences != nil {
+			amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-silences", Value: fmt.Sprintf("%d", *limits.MaxSilences)})
+		}
 
-	if version.GTE(semver.MustParse("0.28.0")) && limits != nil && !limits.MaxPerSilenceBytes.IsEmpty() {
-		vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
+		if !limits.MaxPerSilenceBytes.IsEmpty() {
+			vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
+			amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
+		}
+
 	}
 
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
