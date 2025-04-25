@@ -790,7 +790,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 			},
 		)
-		cb := newConfigBuilder(
+		cb := NewConfigBuilder(
 			newNopLogger(t),
 			*tt.amVersion,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
@@ -2564,16 +2564,16 @@ func TestGenerateConfig(t *testing.T) {
 				tc.amVersion = &version
 			}
 
-			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
+			cb := NewConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
 			if tc.expectedError {
-				require.Error(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
 				return
 			}
-			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
 
-			cfgBytes, err := cb.marshalJSON()
+			cfgBytes, err := cb.MarshalJSON()
 			require.NoError(t, err)
 
 			// Verify the generated yaml is as expected
@@ -4890,7 +4890,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 			v, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 			require.NoError(t, err)
 
-			cb := newConfigBuilder(
+			cb := NewConfigBuilder(
 				newNopLogger(t),
 				v,
 				nil,
