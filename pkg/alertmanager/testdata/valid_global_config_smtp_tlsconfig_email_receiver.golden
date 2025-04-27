@@ -26,8 +26,4 @@ receivers:
     from: a
     smarthost: abc:1234
     auth_username: foo
-    tls_config:
-      insecure_skip_verify: true
-      min_version: TLS12
-      max_version: TLS13
 templates: []

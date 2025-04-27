@@ -1129,11 +1129,7 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		out.Headers = headers
 	}
 
-	if in.TLSConfig == nil {
-		if cb.cfg.Global != nil && cb.cfg.Global.SMTPTLSConfig != nil {
-			out.TLSConfig = cb.cfg.Global.SMTPTLSConfig
-		}
-	} else {
+	if in.TLSConfig != nil {
 		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
