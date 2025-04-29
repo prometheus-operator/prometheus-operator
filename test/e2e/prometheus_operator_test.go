@@ -21,39 +21,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// testServerTLS verifies that the Prometheus operator web server is working
-// with HTTPS.
-func testServerTLS(t *testing.T, namespace string) {
-	skipPrometheusTests(t)
-
-	ctx := context.Background()
-	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
-	require.NoError(t, err)
-
-	operatorService := framework.KubeClient.CoreV1().Services(namespace)
-	request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", nil)
-	_, err = request.DoRaw(ctx)
-	require.NoError(t, err)
-}
-
-// testPrometheusOperatorMetrics verifies that the Prometheus operator exposes
-// the expected metrics.
-func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
-	skipPrometheusTests(t)
-
-	ctx := context.Background()
-	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
-	require.NoError(t, err)
-
-	// Explicitly check the client-go metrics to validate the registration
-	// workaround we have in place due to
-	// https://github.com/kubernetes-sigs/controller-runtime/issues/3054
-	err = framework.EnsureMetricsFromService(
-		ctx,
-		"https",
-		namespace,
-		prometheusOperatorServiceName,
-		"https",
+var (
+	operatorInitMetrics = []string{
+		"prometheus_operator_kubernetes_client_http_requests_total",
+		"prometheus_operator_kubernetes_client_http_request_duration_seconds_count",
+		"prometheus_operator_kubernetes_client_http_request_duration_seconds_sum",
+		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_count",
+		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_sum",
+	}
+	operatorAllMetrics = []string{
 		"prometheus_operator_kubernetes_client_http_requests_total",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_count",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_sum",
@@ -83,6 +59,61 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		"prometheus_operator_triggered_total",
 		"prometheus_operator_watch_operations_failed_total",
 		"prometheus_operator_watch_operations_total",
+	}
+)
+
+// testServerTLS verifies that the Prometheus operator web server is working
+// with HTTPS.
+func testServerTLS(t *testing.T, namespace string) {
+	skipPrometheusTests(t)
+
+	ctx := context.Background()
+	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
+	require.NoError(t, err)
+
+	operatorService := framework.KubeClient.CoreV1().Services(namespace)
+	request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", nil)
+	_, err = request.DoRaw(ctx)
+	require.NoError(t, err)
+}
+
+// testPrometheusOperatorInitMetrics verifies that the Prometheus operator exposes
+// the expected metrics at initialization.
+func testPrometheusOperatorInitMetrics(t *testing.T, namespace string) {
+	skipPrometheusTests(t)
+
+	ctx := context.Background()
+	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
+	require.NoError(t, err)
+
+	// Explicitly check the client-go metrics to validate the registration
+	// workaround we have in place due to
+	// https://github.com/kubernetes-sigs/controller-runtime/issues/3054
+	err = framework.EnsureMetricsFromService(
+		ctx,
+		"https",
+		namespace,
+		prometheusOperatorServiceName,
+		"https",
+		operatorInitMetrics...,
+	)
+	require.NoError(t, err)
+}
+
+func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
+	skipPrometheusTests(t)
+
+	ctx := context.Background()
+	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
+	require.NoError(t, err)
+
+	err = framework.EnsureMetricsFromService(
+		ctx,
+		"https",
+		namespace,
+		prometheusOperatorServiceName,
+		"https",
+		operatorAllMetrics...,
 	)
 	require.NoError(t, err)
 }
