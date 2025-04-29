@@ -29,7 +29,7 @@ var (
 		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_count",
 		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_sum",
 	}
-	operatorAllMetrics = []string{
+	operatorMetrics = []string{
 		"prometheus_operator_kubernetes_client_http_requests_total",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_count",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_sum",
@@ -40,7 +40,6 @@ var (
 		"prometheus_operator_kubelet_managed_resource",
 		"prometheus_operator_list_operations_failed_total",
 		"prometheus_operator_list_operations_total",
-		"prometheus_operator_managed_resources",
 		"prometheus_operator_node_address_lookup_errors_total",
 		"prometheus_operator_node_syncs_failed_total",
 		"prometheus_operator_node_syncs_total",
@@ -51,14 +50,17 @@ var (
 		"prometheus_operator_reconcile_errors_total",
 		"prometheus_operator_reconcile_operations_total",
 		"prometheus_operator_reconcile_sts_delete_create_total",
-		"prometheus_operator_spec_replicas",
-		"prometheus_operator_spec_shards",
 		"prometheus_operator_status_update_errors_total",
 		"prometheus_operator_status_update_operations_total",
 		"prometheus_operator_syncs",
 		"prometheus_operator_triggered_total",
 		"prometheus_operator_watch_operations_failed_total",
 		"prometheus_operator_watch_operations_total",
+	}
+	operatorOperationalMetrics = []string{
+		"prometheus_operator_managed_resources",
+		"prometheus_operator_spec_replicas",
+		"prometheus_operator_spec_shards",
 	}
 )
 
@@ -77,30 +79,9 @@ func testServerTLS(t *testing.T, namespace string) {
 	require.NoError(t, err)
 }
 
-// testPrometheusOperatorInitMetrics verifies that the Prometheus operator exposes
-// the expected metrics at initialization.
-func testPrometheusOperatorInitMetrics(t *testing.T, namespace string) {
-	skipPrometheusTests(t)
-
-	ctx := context.Background()
-	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
-	require.NoError(t, err)
-
-	// Explicitly check the client-go metrics to validate the registration
-	// workaround we have in place due to
-	// https://github.com/kubernetes-sigs/controller-runtime/issues/3054
-	err = framework.EnsureMetricsFromService(
-		ctx,
-		"https",
-		namespace,
-		prometheusOperatorServiceName,
-		"https",
-		operatorInitMetrics...,
-	)
-	require.NoError(t, err)
-}
-
-func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
+// testPrometheusOperatorMetrics verifies that the Prometheus operator exposes
+// the expected metrics.
+func testPrometheusOperatorMetrics(t *testing.T, namespace string, metricNames []string) {
 	skipPrometheusTests(t)
 
 	ctx := context.Background()
@@ -113,7 +94,7 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		namespace,
 		prometheusOperatorServiceName,
 		"https",
-		operatorAllMetrics...,
+		metricNames...,
 	)
 	require.NoError(t, err)
 }

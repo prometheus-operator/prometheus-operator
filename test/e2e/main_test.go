@@ -185,7 +185,7 @@ func TestAllNS(t *testing.T) {
 	})
 	t.Run("TestPrometheusOperatorMetricsInit", func(t *testing.T) {
 		t.Helper()
-		testPrometheusOperatorInitMetrics(t, ns)
+		testPrometheusOperatorMetrics(t, ns, operatorInitMetrics)
 	})
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
@@ -201,7 +201,7 @@ func TestAllNS(t *testing.T) {
 
 	t.Run("TestPrometheusOperatorMetricsAll", func(t *testing.T) {
 		t.Helper()
-		testPrometheusOperatorMetrics(t, ns)
+		testPrometheusOperatorMetrics(t, ns, operatorMetrics)
 	})
 
 	// Check if Prometheus Operator ever restarted.
