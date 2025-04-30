@@ -227,7 +227,7 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 3. Route traffic to your application
 
-   You configure Ambassador to expose your application using [annotations](https://github.com/datawire/ambassador-docs/blob/a1e225b5f20346d1fb7e350a0b9aeb4101d56eae/reference/core/annotations.md#annotations) on the Kubernetes service of the application like the one below.
+   You configure Ambassador to expose your application using [annotations](https://github.com/datawire/ambassador-docs/blob/rel/1.1.1/reference/core/annotations.md#annotations) on the Kubernetes service of the application like the one below.
 
    ```yaml
    ---
