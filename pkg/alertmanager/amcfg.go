@@ -202,6 +202,8 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 
 // ConfigBuilder knows how to build an Alertmanager configuration from a raw
 // configuration and/or AlertmanagerConfig objects.
+// The API is public because it's used by Grafana Alloy (https://github.com/grafana/alloy).
+// Note that the project makes no API stability guarantees.
 type ConfigBuilder struct {
 	cfg       *alertmanagerConfig
 	logger    *slog.Logger
