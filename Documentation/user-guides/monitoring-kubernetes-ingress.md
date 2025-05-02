@@ -19,12 +19,12 @@ This documentation is for an alpha feature.
 
 ## Deploy and Expose an Application on Kubernetes
 
-First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://getambassador.io/user-guide/getting-started#3-creating-your-first-service) provided by the Ambassador team.
+First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://github.com/datawire/tour) provided by the Ambassador team.
 
 We can quickly deploy this application using `kubectl`:
 
 ```sh
-kubectl apply -f https://getambassador.io/yaml/tour/tour.yaml
+kubectl apply -f https://raw.githubusercontent.com/datawire/tour/refs/heads/master/k8s/tour.yaml
 ```
 
 Check the application's status and wait for it to start running:
@@ -40,16 +40,176 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 1. Deploy Ambassador to your cluster with `kubectl`:
 
+   ```yaml
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        service: ambassador-admin
+      name: ambassador-admin
+    spec:
+      type: NodePort
+      ports:
+      - name: ambassador-admin
+        port: 8877
+        targetPort: 8877
+      selector:
+        service: ambassador
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRole
+    metadata:
+      name: ambassador
+    rules:
+    - apiGroups: [""]
+      resources: [ "endpoints", "namespaces", "secrets", "services" ]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [ "getambassador.io" ]
+      resources: [ "*" ]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [ "getambassador.io" ]
+      resources: [ "mappings/status" ]
+      verbs: ["update"]
+    - apiGroups: [ "apiextensions.k8s.io" ]
+      resources: [ "customresourcedefinitions" ]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [ "networking.internal.knative.dev" ]
+      resources: [ "clusteringresses", "ingresses" ]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [ "networking.internal.knative.dev" ]
+      resources: [ "ingresses/status", "clusteringresses/status" ]
+      verbs: ["update"]
+    - apiGroups: [ "extensions", "networking.k8s.io" ]
+      resources: [ "ingresses" ]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [ "extensions", "networking.k8s.io" ]
+      resources: [ "ingresses/status" ]
+      verbs: ["update"]
+    ---
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: ambassador
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRoleBinding
+    metadata:
+      name: ambassador
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: ambassador
+    subjects:
+    - kind: ServiceAccount
+      name: ambassador
+      namespace: default
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ambassador
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          service: ambassador
+      template:
+        metadata:
+          annotations:
+            consul.hashicorp.com/connect-inject: 'false'
+            sidecar.istio.io/inject: 'false'
+          labels:
+            service: ambassador
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - podAffinityTerm:
+                  labelSelector:
+                    matchLabels:
+                      service: ambassador
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
+          containers:
+          - env:
+            - name: AMBASSADOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            image: quay.io/datawire/ambassador:1.1.1
+            livenessProbe:
+              httpGet:
+                path: /ambassador/v0/check_alive
+                port: 8877
+              initialDelaySeconds: 30
+              periodSeconds: 3
+            name: ambassador
+            ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 8443
+              name: https
+            - containerPort: 8877
+              name: admin
+            readinessProbe:
+              httpGet:
+                path: /ambassador/v0/check_ready
+                port: 8877
+              initialDelaySeconds: 30
+              periodSeconds: 3
+            resources:
+              limits:
+                cpu: 1
+                memory: 400Mi
+              requests:
+                cpu: 200m
+                memory: 100Mi
+            volumeMounts:
+            - mountPath: /tmp/ambassador-pod-info
+              name: ambassador-pod-info
+          restartPolicy: Always
+          securityContext:
+            runAsUser: 8888
+          serviceAccountName: ambassador
+          volumes:
+          - downwardAPI:
+              items:
+              - fieldRef:
+                  fieldPath: metadata.labels
+                path: labels
+            name: ambassador-pod-info
+
+   ```
+
    ```sh
-   kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-rbac.yaml
+   kubectl apply -f ambassador-rbac.yaml
    ```
 
    Ambassador is now running in your cluster and is ready to start routing traffic to your application.
 
 2. Expose Ambassador to the internet.
 
+   ```yaml
+   ---
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: ambassador
+     labels:
+       app.kubernetes.io/component: ambassador-service
+   spec:
+     type: LoadBalancer
+     externalTrafficPolicy: Local
+     ports:
+      - port: 80
+        targetPort: 8080
+     selector:
+       service: ambassador
+   ```
+
    ```sh
-   kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-service.yaml
+   kubectl apply -f ambassador-service.yaml
    ```
 
    This will create a `LoadBalancer` service in Kubernetes which will automatically create a cloud load balancer if you are running in cloud-managed Kubernetes.
@@ -67,7 +227,7 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 3. Route traffic to your application
 
-   You configure Ambassador to expose your application using [annotations](https://getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
+   You configure Ambassador to expose your application using [annotations](https://github.com/datawire/ambassador-docs/blob/rel/1.1.1/reference/core/annotations.md#annotations) on the Kubernetes service of the application like the one below.
 
    ```yaml
    ---
