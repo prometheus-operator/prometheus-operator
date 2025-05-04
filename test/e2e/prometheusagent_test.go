@@ -63,7 +63,7 @@ func testCreatePrometheusAgent(t *testing.T) {
 }
 
 func testCreatePrometheusAgentDaemonSet(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -330,7 +330,7 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 }
 
 func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -626,6 +626,40 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
 
+}
+
+func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+
+	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
+
+	_, err = framework.PatchPrometheusAgentAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+		},
+	)
+	require.Error(t, err)
+	require.Contains(t, "a similar StatefulSet Prometheus Agent has already exists", err.Error())
 }
 
 type Target struct {
