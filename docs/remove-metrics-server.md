@@ -1,6 +1,6 @@
 # ⚠️ Remove `metrics-server` Before Using `kube-prometheus`
 
-Before setting up `kube-prometheus`, ensure that the `metrics-server` is **removed** from your Kubernetes cluster to avoid conflicts.
+Before installing `kube-prometheus`, in order to prevent conflicts you should ensure that the `metrics-server` is **removed** from your Kubernetes cluster.
 
 ## Why Remove `metrics-server`?
 
