@@ -17,3 +17,6 @@ __pycache__
 tmp
 stripped-down-crds.yaml
 
+minikube-linux-amd64
+go1.24.0.linux-amd64.tar.gz
+prometheus-operator
