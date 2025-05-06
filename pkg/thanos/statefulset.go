@@ -220,7 +220,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 		"remote-write-config",
 	)
-	if version.GTE(minRemoteWriteVersion) {
+	if version.GTE(minRemoteWriteVersion) && len(tr.Spec.RemoteWrite) > 0 {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "remote-write.config-file", Value: fullPath})
 	}
 
