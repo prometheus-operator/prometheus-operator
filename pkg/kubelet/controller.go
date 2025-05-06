@@ -410,7 +410,7 @@ func (c *Controller) sync(ctx context.Context) {
 
 func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpoints")
-
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
@@ -421,6 +421,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 				"app.kubernetes.io/managed-by": "prometheus-operator",
 			}),
 		},
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		Subsets: []v1.EndpointSubset{
 			{
 				Addresses: make([]v1.EndpointAddress, len(addresses)),

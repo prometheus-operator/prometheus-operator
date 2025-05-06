@@ -263,6 +263,7 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 	return ret, err
 }
 
+//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
