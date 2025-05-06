@@ -1,4 +1,4 @@
-## Unreleased
+## 0.82.1 / 2025-05-06
 
 * [BUGFIX] Fix ThanosRuler when no remote-write configuration is defined. #7498
 
