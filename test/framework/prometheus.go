@@ -417,7 +417,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
 				{
-					Name:       "http-query",
+					Name:       "web",
 					Port:       10902,
 					TargetPort: intstr.FromString("http"),
 				},
