@@ -1570,6 +1570,10 @@ func (cb *ConfigBuilder) convertSMTPConfig(ctx context.Context, out *globalConfi
 		out.SMTPSmarthost.Port = in.SmartHost.Port
 	}
 
+	if in.TLSConfig != nil {
+		out.SMTPTLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
+	}
+
 	if in.AuthPassword != nil {
 		authPassword, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthPassword)
 		if err != nil {
@@ -1707,6 +1711,14 @@ func (cb *ConfigBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 
 	if in.KeySecret != nil {
 		out.KeyFile = path.Join(tlsAssetsDir, s.TLSAsset(in.KeySecret))
+	}
+
+	if in.MinVersion != nil {
+		out.MinVersion = string(*in.MinVersion)
+	}
+
+	if in.MaxVersion != nil {
+		out.MaxVersion = string(*in.MaxVersion)
 	}
 
 	return &out
