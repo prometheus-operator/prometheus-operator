@@ -6755,6 +6755,20 @@ WebHTTPConfig
 </tr>
 <tr>
 <td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>getConcurrency</code><br/>
 <em>
 uint32
@@ -7171,6 +7185,52 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <p><code>password</code> specifies a key of a Secret containing the password for
 authentication.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
+</p>
+<div>
+<p>BasicAuthUsers defines the basic auth users for prometheus server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretReference">
+SecretReference
+</a>
+</em>
+</td>
+<td>
+<p>Defines the secret containing the list of users (keys) with their hashed passwords (values).
+The secret must contain a key for the service account.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountPasswordRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretKeySelector">
+SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Defines the secret&rsquo;s key holding the password used by the service account to query the web server.
+The service account must exist in the users secret.</p>
 </td>
 </tr>
 </tbody>
@@ -14412,6 +14472,20 @@ WebHTTPConfig
 </tr>
 <tr>
 <td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>pageTitle</code><br/>
 <em>
 string
@@ -16229,6 +16303,46 @@ Supported values are:
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.SecretKeySelector">SecretKeySelector
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretReference">
+SecretReference
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key of the secret to select from.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>
@@ -16269,6 +16383,34 @@ Kubernetes core/v1.ConfigMapKeySelector
 </td>
 <td>
 <p>ConfigMap containing data to use for the targets.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.SecretReference">SecretReference
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers</a>, <a href="#monitoring.coreos.com/v1.SecretKeySelector">SecretKeySelector</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the secret in the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 </tbody>
@@ -18131,6 +18273,20 @@ WebHTTPConfig
 <p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosSpec">ThanosSpec
@@ -18756,6 +18912,20 @@ WebHTTPConfig
 </td>
 <td>
 <p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
 </td>
 </tr>
 </tbody>
