@@ -53,7 +53,8 @@ const (
 	defaultPrometheusExternalLabelName = "prometheus"
 	defaultReplicaExternalLabelName    = "prometheus_replica"
 
-	hashLabelNameForSharding = "__tmp_hash"
+	hashLabelNameForSharding          = "__tmp_hash"
+	hashLabelNameForDisablingSharding = "__tmp_disable_sharding"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -2138,8 +2139,8 @@ func appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32
 			{Key: "modulus", Value: shards},
 			{Key: "action", Value: "hashmod"},
 		}, yaml.MapSlice{
-			{Key: "source_labels", Value: []string{hashLabelNameForSharding}},
-			{Key: "regex", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
+			{Key: "source_labels", Value: []string{hashLabelNameForSharding, hashLabelNameForDisablingSharding}},
+			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.ShardEnvVar)},
 			{Key: "action", Value: "keep"},
 		})
 }

@@ -2033,7 +2033,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -2051,6 +2050,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -7513,7 +7515,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -7531,6 +7532,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -12489,7 +12493,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -12507,6 +12510,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -19545,7 +19551,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -19563,6 +19568,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -27907,7 +27915,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -27925,6 +27932,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
