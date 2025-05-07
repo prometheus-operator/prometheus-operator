@@ -1,3 +1,7 @@
+## 0.82.1 / 2025-05-06
+
+* [BUGFIX] Fix ThanosRuler when no remote-write configuration is defined. #7498
+
 ## 0.82.0 / 2025-04-17
 
 * [CHANGE] Add more API validations to the ScrapeConfig CRD. #7413
