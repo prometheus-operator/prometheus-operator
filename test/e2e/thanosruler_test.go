@@ -29,6 +29,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testThanosRulerCreateDeleteCluster(t *testing.T) {
@@ -398,14 +399,20 @@ func testTRQueryConfig(t *testing.T) {
 	defer testCtx.Cleanup(t)
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	// Create a Prometheus resource because Thanos ruler needs a query API.
-	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	// Create a Thanos querier which is used
+	// - by the Thanos Ruler as a query API endpoint.
+	// - by the test to query metrics from the Thanos Ruler.
+	querier, err := testFramework.MakeThanosQuerier(
+		fmt.Sprintf("dnssrv+_grpc._tcp.thanos-ruler-operated.%s.svc.cluster.local", ns),
+	)
 	require.NoError(t, err)
 
-	promSVC := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
-	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, promSVC)
+	err = framework.CreateDeployment(context.Background(), ns, querier)
+	require.NoError(t, err)
+
+	querierSvc := framework.MakeThanosQuerierService(querier.Name)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, querierSvc)
 	require.NoError(t, err)
 
 	// Create Secret with query config,
@@ -418,7 +425,7 @@ func testTRQueryConfig(t *testing.T) {
 - scheme: http
   static_configs:
   - %s.%s.svc:%d
-`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
+`, querierSvc.Name, ns, querierSvc.Spec.Ports[0].Port)),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trQueryConfSecret, metav1.CreateOptions{})
@@ -442,13 +449,16 @@ func testTRQueryConfig(t *testing.T) {
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
 	require.NoError(t, err)
 
-	// Create firing rule
+	// Create an always firing rule.
 	_, err = framework.MakeAndCreateFiringRule(context.Background(), ns, "rule1", testAlert)
 	require.NoError(t, err)
 
-	if err := framework.WaitForThanosFiringAlert(context.Background(), ns, svc.Name, testAlert); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.WaitForThanosFiringAlert(context.Background(), ns, svc.Name, testAlert)
+	require.NoError(t, err)
+
+	// Check that the ALERTS metric is present via Thanos querier.
+	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, querierSvc.Name, testAlert)
+	require.NoError(t, err)
 }
 
 func testTRCheckStorageClass(t *testing.T) {

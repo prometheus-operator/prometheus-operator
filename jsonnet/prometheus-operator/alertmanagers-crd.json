@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.17.3",
-      "operator.prometheus.io/version": "0.82.0"
+      "operator.prometheus.io/version": "0.82.1"
     },
     "name": "alertmanagers.monitoring.coreos.com"
   },
@@ -5067,6 +5067,23 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "limits": {
+                    "description": "Defines the limits command line flags when starting Alertmanager.",
+                    "properties": {
+                      "maxPerSilenceBytes": {
+                        "description": "The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's\n`--silences.max-per-silence-bytes` flag.\nIt requires Alertmanager >= v0.28.0.",
+                        "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
+                        "type": "string"
+                      },
+                      "maxSilences": {
+                        "description": "The maximum number active and pending silences. This corresponds to the\nAlertmanager's `--silences.max-silences` flag.\nIt requires Alertmanager >= v0.28.0.",
+                        "format": "int32",
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "type": "object"
                   },
                   "listenLocal": {
                     "description": "ListenLocal makes the Alertmanager server listen on loopback, so that it\ndoes not bind against the Pod IP. Note this is only for the Alertmanager\nUI, not the gossip communication.",
