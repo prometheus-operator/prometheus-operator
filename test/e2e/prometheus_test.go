@@ -2598,6 +2598,8 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	}
 }
 
+// testThanos deploys a Prometheus resource with 2 replicas ans Thanos sidecar
+// and verifies that it can be queried by a Thanos Querier.
 func testThanos(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
@@ -2605,56 +2607,37 @@ func testThanos(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	version := operator.DefaultThanosVersion
-
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	prom.Spec.Replicas = proto.Int32(2)
 	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
-		Version: &version,
+		Version: ptr.To(operator.DefaultThanosVersion),
 	}
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
-		t.Fatal("Creating prometheus failed: ", err)
-	}
+	prom, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
 
 	promSvc := framework.MakePrometheusService(prom.Name, "test-group", v1.ServiceTypeClusterIP)
-	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), promSvc, metav1.CreateOptions{}); err != nil {
-		t.Fatal("Creating prometheus service failed: ", err)
-	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), promSvc, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	svcMon := framework.MakeBasicServiceMonitor("test-group")
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), svcMon, metav1.CreateOptions{}); err != nil {
-		t.Fatal("Creating ServiceMonitor failed: ", err)
-	}
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), svcMon, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	qryDep, err := testFramework.MakeDeployment("../../example/thanos/query-deployment.yaml")
-	if err != nil {
-		t.Fatal("Making thanos query deployment failed: ", err)
-	}
-	// override image
-	qryImage := "quay.io/thanos/thanos:" + version
-	t.Log("setting up query with image: ", qryImage)
-	qryDep.Spec.Template.Spec.Containers[0].Image = qryImage
-	// override args
-	qryArgs := []string{
-		"query",
-		"--log.level=debug",
-		"--query.replica-label=prometheus_replica",
-		fmt.Sprintf("--endpoint=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
-	}
-	t.Log("setting up query with args: ", qryArgs)
-	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs
-	if err := framework.CreateDeployment(context.Background(), ns, qryDep); err != nil {
-		t.Fatal("Creating Thanos query deployment failed: ", err)
-	}
+	querier, err := testFramework.MakeThanosQuerier(
+		fmt.Sprintf("dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
+	)
+	require.NoError(t, err)
 
-	qrySvc := framework.MakeThanosQuerierService(qryDep.Name)
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, qrySvc); err != nil {
-		t.Fatal("Creating Thanos query service failed: ", err)
-	}
+	err = framework.CreateDeployment(context.Background(), ns, querier)
+	require.NoError(t, err)
+
+	qrySvc := framework.MakeThanosQuerierService(querier.Name)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, qrySvc)
+	require.NoError(t, err)
 
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
-		request := proxyGet("http", qrySvc.Name, "http-query", "/api/v1/query", map[string]string{
+		request := proxyGet("http", qrySvc.Name, "web", "/api/v1/query", map[string]string{
 			"query": "prometheus_build_info",
 			"dedup": "false",
 		})
@@ -2686,9 +2669,7 @@ func testThanos(t *testing.T) {
 		}
 		return true, nil
 	})
-	if err != nil {
-		t.Fatal("Failed to get correct result from Thanos query: ", err)
-	}
+	require.NoError(t, err)
 }
 
 func testPromGetAuthSecret(t *testing.T) {
