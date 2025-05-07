@@ -41,7 +41,8 @@ func init() {
 	// Eventually the operator should support UTF-8 label names too and the
 	// issue is tracked by
 	// https://github.com/prometheus-operator/prometheus-operator/issues/7362
-	model.NameValidationScheme = model.LegacyValidation //nolint:staticcheck
+	// nolint:staticcheck
+	model.NameValidationScheme = model.LegacyValidation
 }
 
 type RuleConfigurationFormat int
