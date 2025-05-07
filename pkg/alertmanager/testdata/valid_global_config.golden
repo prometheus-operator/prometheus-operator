@@ -18,6 +18,10 @@ global:
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
+  smtp_tls_config:
+    insecure_skip_verify: true
+    min_version: TLS12
+    max_version: TLS13
 route:
   receiver: mynamespace/global-config/null
   routes:

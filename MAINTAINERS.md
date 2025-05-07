@@ -28,6 +28,7 @@ Full list of triage people is displayed below:
 | Noah Kantrowitz | `@coderanger`      | [@coderanger](https://github.com/coderanger)           | Geomagical/IKEA |
 | João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
 | Hélia Barroso   | `@Hélia Barroso`   | [@heliapb](https://github.com/heliapb)                 | Five9           |
+| Dong Jiang      | `@dongjiang`       | [@dongjiang1989](https://github.com/dongjiang1989)     | iFlytek         |
 
 ## Emeritus maintainers
 

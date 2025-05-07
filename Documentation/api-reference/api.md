@@ -801,6 +801,19 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>limits</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">
+AlertmanagerLimitsSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -2020,7 +2033,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -2038,6 +2050,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -5717,6 +5732,54 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerLimitsSpec defines the limits command line flags when starting Alertmanager.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxSilences</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The maximum number active and pending silences. This corresponds to the
+Alertmanager&rsquo;s <code>--silences.max-silences</code> flag.
+It requires Alertmanager &gt;= v0.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxPerSilenceBytes</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager&rsquo;s
+<code>--silences.max-per-silence-bytes</code> flag.
+It requires Alertmanager &gt;= v0.28.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec
 </h3>
 <p>
@@ -6437,6 +6500,19 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>limits</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">
+AlertmanagerLimitsSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -7102,7 +7178,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
@@ -7439,7 +7515,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -7457,6 +7532,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -9884,6 +9962,20 @@ bool
 <em>(Optional)</em>
 <p>The default SMTP TLS requirement.
 Note that Go does not support unencrypted connections to remote SMTP endpoints.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default TLS configuration for SMTP receivers</p>
 </td>
 </tr>
 </tbody>
@@ -12415,7 +12507,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -12433,6 +12524,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -15851,7 +15945,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -19471,7 +19565,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -19489,6 +19582,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>
@@ -28075,7 +28171,6 @@ int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Number of shards to distribute the scraped targets onto.</p>
 <p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
 being created.</p>
@@ -28093,6 +28188,9 @@ ServiceMonitor and ScrapeConfig resources.
 <p>Users can define their own sharding implementation by setting the
 <code>__tmp_hash</code> label during the target discovery with relabeling
 configuration (either in the monitoring resources or via scrape class).</p>
+<p>You can also disable sharding on a specific target by setting the
+<code>__tmp_disable_sharding</code> label with relabeling configuration. When
+the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
 </td>
 </tr>
 <tr>

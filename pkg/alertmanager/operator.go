@@ -861,7 +861,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 	var (
 		additionalData map[string][]byte
-		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
+		cfgBuilder     = NewConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
 	)
 
 	if am.Spec.AlertmanagerConfiguration != nil {
@@ -897,17 +897,17 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return fmt.Errorf("failed to retrieve configuration from secret: %w", err)
 		}
 
-		err = cfgBuilder.initializeFromRawConfiguration(amRawConfiguration)
+		err = cfgBuilder.InitializeFromRawConfiguration(amRawConfiguration)
 		if err != nil {
 			return fmt.Errorf("failed to initialize from secret: %w", err)
 		}
 	}
 
-	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs); err != nil {
+	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs); err != nil {
 		return fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
 	}
 
-	generatedConfig, err := cfgBuilder.marshalJSON()
+	generatedConfig, err := cfgBuilder.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf("failed to marshal configuration: %w", err)
 	}

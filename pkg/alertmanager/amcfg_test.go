@@ -114,6 +114,11 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						Key: "secret",
 					},
 					RequireTLS: ptr.To(true),
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						MinVersion:         ptr.To(monitoringv1.TLSVersion12),
+						MaxVersion:         ptr.To(monitoringv1.TLSVersion13),
+					},
 				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringv1.HTTPConfig{
@@ -759,6 +764,77 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "valid global config SMTP tlsconfig email receiver",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					From: ptr.To("from"),
+					SmartHost: &monitoringv1.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					Hello:        ptr.To("smtp.example.org"),
+					AuthUsername: ptr.To("dev@smtp.example.org"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "password",
+					},
+					AuthIdentity: ptr.To("dev@smtp.example.org"),
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "secret",
+					},
+					RequireTLS: ptr.To(true),
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						MinVersion:         ptr.To(monitoringv1.TLSVersion12),
+						MaxVersion:         ptr.To(monitoringv1.TLSVersion13),
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+							EmailConfigs: []monitoringv1alpha1.EmailConfig{
+								{
+									SendResolved: ptr.To(true),
+									Smarthost:    "abc:1234",
+									From:         "a",
+									To:           "b",
+									AuthUsername: "foo",
+								},
+							},
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_smtp_tlsconfig_email_receiver.golden",
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
@@ -827,7 +903,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 			},
 		)
-		cb := newConfigBuilder(
+		cb := NewConfigBuilder(
 			newNopLogger(t),
 			*tt.amVersion,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
@@ -2601,16 +2677,16 @@ func TestGenerateConfig(t *testing.T) {
 				tc.amVersion = &version
 			}
 
-			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
+			cb := NewConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
 			if tc.expectedError {
-				require.Error(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
 				return
 			}
-			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
 
-			cfgBytes, err := cb.marshalJSON()
+			cfgBytes, err := cb.MarshalJSON()
 			require.NoError(t, err)
 
 			// Verify the generated yaml is as expected
@@ -4997,7 +5073,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 			v, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 			require.NoError(t, err)
 
-			cb := newConfigBuilder(
+			cb := NewConfigBuilder(
 				newNopLogger(t),
 				v,
 				nil,

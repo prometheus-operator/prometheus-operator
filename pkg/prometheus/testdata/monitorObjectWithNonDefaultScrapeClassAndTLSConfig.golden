@@ -80,7 +80,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
 - job_name: podMonitor/default/defaultPodMonitor/0
   honor_labels: false
@@ -138,7 +139,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
 - job_name: probe/default/defaultProbe
   honor_timestamps: true
@@ -180,7 +182,8 @@ scrape_configs:
     action: hashmod
   - source_labels:
     - __tmp_hash
-    regex: $(SHARD)
+    - __tmp_disable_sharding
+    regex: $(SHARD);|.+;.+
     action: keep
   tls_config:
     ca_file: /etc/prometheus/secrets/ca.crt
