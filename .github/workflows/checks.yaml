@@ -29,6 +29,13 @@ jobs:
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
+    - uses: actions/cache@v4
+      with:
+        path: |
+          .mdoxcache
+        key: ${{ runner.os }}-mdoxcache-${{ hashFiles('**/*.md') }}
+        restore-keys: |
+          ${{ runner.os }}-mdoxcache-
     - run: make --always-make format generate && git diff --exit-code
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -59,10 +66,16 @@ jobs:
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
+    - uses: actions/cache@v4
+      with:
+        path: |
+          .mdoxcache
+        key: ${{ runner.os }}-mdoxcache-${{ hashFiles('**/*.md') }}
+        restore-keys: |
+          ${{ runner.os }}-mdoxcache-
     - run: make check-docs
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
   comment-docs-failure:
     if: ${{ failure() }}
     permissions:

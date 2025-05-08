@@ -16,4 +16,5 @@ __pycache__
 .vscode/
 tmp
 stripped-down-crds.yaml
+.mdoxcache
 

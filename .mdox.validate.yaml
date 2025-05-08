@@ -1,7 +1,12 @@
 version: 1
 timeout: "1m"
-
+random_delay: "1s"
 explicitLocalValidators: true
+host_max_conns: 2
+cache:
+  type: "sqlite"
+  # 168h is 7 days. the default cache validity (5 days).
+  validity: "168h"
 
 validators:
   # Skip localhost examples.
