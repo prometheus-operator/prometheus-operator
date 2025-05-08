@@ -1382,7 +1382,7 @@ func (cb *ConfigBuilder) convertMSTeamsConfig(
 	return out, nil
 }
 
-func (cb *configBuilder) convertJiraConfig(ctx context.Context, in monitoringv1alpha1.JiraConfig, crKey types.NamespacedName) (*jiraConfig, error) {
+func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1alpha1.JiraConfig, crKey types.NamespacedName) (*jiraConfig, error) {
 	out := &jiraConfig{
 		VSendResolved:     in.SendResolved,
 		Project:           in.Project,
@@ -1427,7 +1427,7 @@ func (cb *configBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 	return out, nil
 }
 
-func (cb *configBuilder) convertMSTeamsV2Config(
+func (cb *ConfigBuilder) convertMSTeamsV2Config(
 	ctx context.Context, in monitoringv1alpha1.MSTeamsV2Config, crKey types.NamespacedName,
 ) (*msTeamsV2Config, error) {
 	out := &msTeamsV2Config{
