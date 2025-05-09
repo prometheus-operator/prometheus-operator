@@ -38,7 +38,8 @@ import (
 )
 
 const (
-	governingServiceName = "alertmanager-operated"
+	// WARNING: Do not use directly - users might specify a different service name!
+	defaultOperatedServiceName = "alertmanager-operated"
 
 	defaultRetention = "120h"
 	defaultPortName  = "web"
@@ -68,6 +69,10 @@ var (
 	minReplicas         int32 = 1
 	probeTimeoutSeconds int32 = 3
 )
+
+func getServiceName(a *monitoringv1.Alertmanager) string {
+	return ptr.Deref(a.Spec.ServiceName, defaultOperatedServiceName)
+}
 
 func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
@@ -204,7 +209,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 	operator.UpdateObject(
 		svc,
-		operator.WithName(governingServiceName),
+		operator.WithName(defaultOperatedServiceName),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(map[string]string{"operated-alertmanager": "true"}),
 		operator.WithLabels(config.Labels),
@@ -382,10 +387,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	var clusterPeerDomain string
 	if config.ClusterDomain != "" {
-		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", governingServiceName, a.Namespace, config.ClusterDomain)
+		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", getServiceName(a), a.Namespace, config.ClusterDomain)
 	} else {
 		// The default DNS search path is .svc.<cluster domain>
-		clusterPeerDomain = governingServiceName
+		clusterPeerDomain = getServiceName(a)
 	}
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, monitoringv1.Argument{
@@ -753,7 +758,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	spec := appsv1.StatefulSetSpec{
-		ServiceName:     ptr.Deref(a.Spec.ServiceName, governingServiceName),
+		ServiceName:     getServiceName(a),
 		Replicas:        a.Spec.Replicas,
 		MinReadySeconds: minReadySeconds,
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
