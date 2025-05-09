@@ -1,3 +1,7 @@
+## 0.82.2 / 2025-05-09
+
+* [BUGFIX] Fix Alertmanager peer discovery for Alertmanager when using custom service name. #7512
+
 ## 0.82.1 / 2025-05-06
 
 * [BUGFIX] Fix ThanosRuler when no remote-write configuration is defined. #7498
