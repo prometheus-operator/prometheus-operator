@@ -1,4 +1,4 @@
-## 0.82.2 / 2025-05-09
+## 0.82.2 / 2025-05-12
 
 * [BUGFIX] Fix Alertmanager peer discovery for Alertmanager when using custom service name. #7512
 * [BUGFIX] Fix parsing `role` field in openstackSDConfigs in ScrapeConfig CRD. #7516
