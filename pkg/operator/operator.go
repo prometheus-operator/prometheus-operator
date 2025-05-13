@@ -396,6 +396,7 @@ func (m *Metrics) NewInstrumentedListerWatcher(lw cache.ListerWatcher) cache.Lis
 // List implements the cache.ListerWatcher interface.
 func (i *instrumentedListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
 	i.listTotal.Inc()
+	//nolint:staticcheck // Ignore SA1019 the function is deprecated.
 	ret, err := i.next.List(options)
 	if err != nil {
 		i.listFailed.Inc()
@@ -406,6 +407,7 @@ func (i *instrumentedListerWatcher) List(options metav1.ListOptions) (runtime.Ob
 // Watch implements the cache.ListerWatcher interface.
 func (i *instrumentedListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	i.watchTotal.Inc()
+	//nolint:staticcheck // Ignore SA1019 the function is deprecated.
 	ret, err := i.next.Watch(options)
 	if err != nil {
 		i.watchFailed.Inc()
