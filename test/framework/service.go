@@ -104,6 +104,7 @@ func (f *Framework) DeleteServiceAndWaitUntilGone(ctx context.Context, namespace
 	return nil
 }
 
+//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
 func (f *Framework) getEndpoints(ctx context.Context, namespace, serviceName string) (*v1.Endpoints, error) {
 	endpoints, err := f.KubeClient.CoreV1().Endpoints(namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {

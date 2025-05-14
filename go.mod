@@ -1,8 +1,8 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.24
+go 1.24.0
 
-toolchain go1.24.1
+toolchain go1.24.3
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.2
@@ -35,14 +35,14 @@ require (
 	golang.org/x/sync v0.14.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.32.4
-	k8s.io/apiextensions-apiserver v0.32.4
-	k8s.io/apimachinery v0.32.4
-	k8s.io/apiserver v0.32.4
-	k8s.io/client-go v0.32.4
-	k8s.io/component-base v0.32.4
+	k8s.io/api v0.33.0
+	k8s.io/apiextensions-apiserver v0.33.0
+	k8s.io/apimachinery v0.33.0
+	k8s.io/apiserver v0.33.0
+	k8s.io/client-go v0.33.0
+	k8s.io/component-base v0.33.0
 	k8s.io/klog/v2 v2.130.1
-	k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e
+	k8s.io/utils v0.0.0-20250502105355-0f33e8f1c979
 	sigs.k8s.io/controller-runtime v0.20.4
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -53,7 +53,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.8.0 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/mdlayher/socket v0.4.1 // indirect
 	github.com/mdlayher/vsock v1.2.1 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
@@ -92,8 +92,6 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/strfmt v0.23.0 // indirect
 	github.com/go-openapi/validate v0.24.0 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
