@@ -1,6 +1,9 @@
 version: "2"
 run:
+  go: "1.24"
   timeout: 10m
+  modules-download-mode: readonly
+  allow-parallel-runners: true
 linters:
   enable:
     - depguard
@@ -25,7 +28,7 @@ linters:
         # Any error in HTTP handlers is handled by the server itself.
         - (net/http.ResponseWriter).Write
   exclusions:
-    generated: lax
+    generated: strict
     presets:
       - comments
       - common-false-positives
@@ -39,8 +42,7 @@ linters:
           - testifylint
         path: _test.go
     paths:
-      - third_party$
-      - builtin$
+      - zz_generated.*\.go$
       - examples$
 formatters:
   enable:
@@ -52,8 +54,7 @@ formatters:
         - default
         - prefix(github.com/prometheus-operator/prometheus-operator)
   exclusions:
-    generated: lax
+    generated: strict
     paths:
-      - third_party$
-      - builtin$
+      - zz_generated.*\.go$
       - examples$
