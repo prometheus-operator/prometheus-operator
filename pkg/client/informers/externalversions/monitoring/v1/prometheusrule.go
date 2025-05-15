@@ -60,13 +60,25 @@ func NewFilteredPrometheusRuleInformer(client versioned.Interface, namespace str
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().PrometheusRules(namespace).List(context.TODO(), options)
+				return client.MonitoringV1().PrometheusRules(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().PrometheusRules(namespace).Watch(context.TODO(), options)
+				return client.MonitoringV1().PrometheusRules(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MonitoringV1().PrometheusRules(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MonitoringV1().PrometheusRules(namespace).Watch(ctx, options)
 			},
 		},
 		&apismonitoringv1.PrometheusRule{},
