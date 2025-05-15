@@ -57,6 +57,7 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 		l = metav1.List{}
 	)
 
+	//nolint:staticcheck // Ignore SA1019 the function is deprecated.
 	list, err := w.next.List(options)
 	if err != nil {
 		w.logger.Error("error listing", "err", err)
@@ -98,8 +99,8 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 	return &l, nil
 }
 
-// Watch.
 func (w *denylistListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+	//nolint:staticcheck // Ignore SA1019 the function is deprecated.
 	nextWatch, err := w.next.Watch(options)
 	if err != nil {
 		return nil, err

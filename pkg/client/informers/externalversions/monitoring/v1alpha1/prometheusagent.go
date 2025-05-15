@@ -60,13 +60,25 @@ func NewFilteredPrometheusAgentInformer(client versioned.Interface, namespace st
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1alpha1().PrometheusAgents(namespace).List(context.TODO(), options)
+				return client.MonitoringV1alpha1().PrometheusAgents(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1alpha1().PrometheusAgents(namespace).Watch(context.TODO(), options)
+				return client.MonitoringV1alpha1().PrometheusAgents(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MonitoringV1alpha1().PrometheusAgents(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MonitoringV1alpha1().PrometheusAgents(namespace).Watch(ctx, options)
 			},
 		},
 		&apismonitoringv1alpha1.PrometheusAgent{},

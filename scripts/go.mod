@@ -1,6 +1,8 @@
 module github.com/prometheus-operator/prometheus-operator/tooling
 
-go 1.24
+go 1.24.0
+
+toolchain go1.24.2
 
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20241111191808-71fefeed8910
@@ -10,8 +12,8 @@ require (
 	github.com/google/go-jsonnet v0.21.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.5.1
 	github.com/yeya24/promlinter v0.3.0
-	k8s.io/code-generator v0.32.2
-	sigs.k8s.io/controller-tools v0.17.3
+	k8s.io/code-generator v0.33.0
+	sigs.k8s.io/controller-tools v0.18.0
 )
 
 require (
@@ -120,9 +122,8 @@ require (
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e // indirect
-	github.com/google/gnostic-models v0.6.8 // indirect
+	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
@@ -189,9 +190,9 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polyfloyd/go-errorlint v1.8.0 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
+	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.55.0 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.4 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.22 // indirect
@@ -269,16 +270,17 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.6.1 // indirect
-	k8s.io/api v0.32.2 // indirect
-	k8s.io/apiextensions-apiserver v0.32.2 // indirect
-	k8s.io/apimachinery v0.32.2 // indirect
-	k8s.io/gengo/v2 v2.0.0-20250106234829-0359904fc2a6 // indirect
+	k8s.io/api v0.33.0 // indirect
+	k8s.io/apiextensions-apiserver v0.33.0 // indirect
+	k8s.io/apimachinery v0.33.0 // indirect
+	k8s.io/gengo/v2 v2.0.0-20250207200755-1244d31929d7 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
+	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
 	mvdan.cc/gofumpt v0.8.0 // indirect
 	mvdan.cc/unparam v0.0.0-20250301125049-0df0534333a4 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
+	sigs.k8s.io/randfill v1.0.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
