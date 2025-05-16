@@ -92,6 +92,8 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		operatorMetrics...,
 	)
 
+	require.NoError(t, err)
+
 	name := "test"
 
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
@@ -109,6 +111,8 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		"https",
 		append(operatorMetrics, operatorOperationalMetrics...)...,
 	)
+
+	require.NoError(t, err)
 
 	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
 		t.Fatal(err)
