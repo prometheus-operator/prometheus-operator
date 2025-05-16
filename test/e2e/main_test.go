@@ -183,9 +183,9 @@ func TestAllNS(t *testing.T) {
 	t.Run("TestServerTLS", func(t *testing.T) {
 		testServerTLS(t, ns)
 	})
-	t.Run("TestPrometheusOperatorMetricsInit", func(t *testing.T) {
+	t.Run("TestPrometheusOperatorMetrics", func(t *testing.T) {
 		t.Helper()
-		testPrometheusOperatorMetrics(t, ns, operatorInitMetrics)
+		testPrometheusOperatorMetrics(t, ns)
 	})
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
@@ -198,11 +198,6 @@ func TestAllNS(t *testing.T) {
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
 	t.Run("multipleOperators", testMultipleOperators(testCtx))
-
-	t.Run("TestPrometheusOperatorMetricsAll", func(t *testing.T) {
-		t.Helper()
-		testPrometheusOperatorMetrics(t, ns, operatorMetrics)
-	})
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{

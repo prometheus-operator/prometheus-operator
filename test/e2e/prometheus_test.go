@@ -790,11 +790,6 @@ func testPromCreateDeleteCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Run("testPrometheusOperatorOperationalMetrics", func(t *testing.T) {
-		t.Helper()
-		testPrometheusOperatorMetrics(t, ns, operatorOperationalMetrics)
-	})
-
 	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
 		t.Fatal(err)
 	}

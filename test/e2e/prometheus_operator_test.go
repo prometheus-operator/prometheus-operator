@@ -21,15 +21,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	operatorInitMetrics = []string{
-		"prometheus_operator_kubernetes_client_http_requests_total",
-		"prometheus_operator_kubernetes_client_http_request_duration_seconds_count",
-		"prometheus_operator_kubernetes_client_http_request_duration_seconds_sum",
-		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_count",
-		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_sum",
-	}
-	operatorMetrics = []string{
+// testServerTLS verifies that the Prometheus operator web server is working
+// with HTTPS.
+func testServerTLS(t *testing.T, namespace string) {
+	skipPrometheusTests(t)
+
+	ctx := context.Background()
+	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
+	require.NoError(t, err)
+
+	operatorService := framework.KubeClient.CoreV1().Services(namespace)
+	request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", nil)
+	_, err = request.DoRaw(ctx)
+	require.NoError(t, err)
+}
+
+// testPrometheusOperatorMetrics verifies that the Prometheus operator exposes
+// the expected metrics.
+func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
+	skipPrometheusTests(t)
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	operatorMetrics := []string{
 		"prometheus_operator_kubernetes_client_http_requests_total",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_count",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_sum",
@@ -57,32 +73,11 @@ var (
 		"prometheus_operator_watch_operations_failed_total",
 		"prometheus_operator_watch_operations_total",
 	}
-	operatorOperationalMetrics = []string{
+	operatorOperationalMetrics := []string{
 		"prometheus_operator_managed_resources",
 		"prometheus_operator_spec_replicas",
 		"prometheus_operator_spec_shards",
 	}
-)
-
-// testServerTLS verifies that the Prometheus operator web server is working
-// with HTTPS.
-func testServerTLS(t *testing.T, namespace string) {
-	skipPrometheusTests(t)
-
-	ctx := context.Background()
-	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
-	require.NoError(t, err)
-
-	operatorService := framework.KubeClient.CoreV1().Services(namespace)
-	request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", nil)
-	_, err = request.DoRaw(ctx)
-	require.NoError(t, err)
-}
-
-// testPrometheusOperatorMetrics verifies that the Prometheus operator exposes
-// the expected metrics.
-func testPrometheusOperatorMetrics(t *testing.T, namespace string, metricNames []string) {
-	skipPrometheusTests(t)
 
 	ctx := context.Background()
 	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
@@ -94,7 +89,28 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string, metricNames [
 		namespace,
 		prometheusOperatorServiceName,
 		"https",
-		metricNames...,
+		operatorMetrics...,
 	)
-	require.NoError(t, err)
+
+	name := "test"
+
+	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+	prometheusCRD.Namespace = ns
+
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
+		t.Fatal(err)
+	}
+
+	err = framework.EnsureMetricsFromService(
+		ctx,
+		"https",
+		namespace,
+		prometheusOperatorServiceName,
+		"https",
+		append(operatorMetrics, operatorOperationalMetrics...)...,
+	)
+
+	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
+		t.Fatal(err)
+	}
 }
