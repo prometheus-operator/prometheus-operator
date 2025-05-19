@@ -4787,6 +4787,12 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 			otlpConfig.KeepIdentifyingResourceAttributes)
 	}
 
+	if otlpConfig.ConvertHistogramsToNHCB != nil {
+		otlp = cg.WithMinimumVersion("3.4.0").AppendMapItem(otlp,
+			"convert_histograms_to_nhcb",
+			otlpConfig.ConvertHistogramsToNHCB)
+	}
+
 	if len(otlp) == 0 {
 		return cfg, nil
 	}

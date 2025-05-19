@@ -2313,4 +2313,9 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.1.0.
 	// +optional
 	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
+
+	// Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
+	// It requires Prometheus >= v3.4.0.
+	// +optional
+	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
 }

@@ -9391,7 +9391,7 @@ func TestOTLPConfig(t *testing.T) {
 			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
 		},
 		{
-			name:    "Config KeepIdentifyingResourceAttributes with old version",
+			name:    "Config ConvertHistogramsToNHCB old version",
 			version: "v3.0.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
 				KeepIdentifyingResourceAttributes: ptr.To(false),
@@ -9413,6 +9413,22 @@ func TestOTLPConfig(t *testing.T) {
 				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
 			},
 			expectedErr: true,
+		},
+		{
+			name:    "Config ConvertHistogramsToNHCB",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				ConvertHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_convert_histograms_to_nhcb.golden",
+		},
+		{
+			name:    "Config ConvertHistogramsToNHCB with old version",
+			version: "v3.3.1",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				ConvertHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
 		},
 	}
 	for _, tc := range testCases {

@@ -4758,6 +4758,11 @@ spec:
                   Settings related to the OTLP receiver feature.
                   It requires Prometheus >= v2.55.0.
                 properties:
+                  convertHistogramsToNHCB:
+                    description: |-
+                      Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
+                      It requires Prometheus >= v3.4.0.
+                    type: boolean
                   keepIdentifyingResourceAttributes:
                     description: |-
                       Enables adding `service.name`, `service.namespace` and `service.instance.id`
