@@ -5520,7 +5520,7 @@ spec:
 
                   It requires Prometheus >= v3.4.0.
                 enum:
-                - Allow-UTF-8
+                - AllowUTF8
                 - Underscores
                 - Dots
                 - Values

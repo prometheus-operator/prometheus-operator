@@ -10382,7 +10382,7 @@ characters with their unicode value, surrounded by underscores.</p>
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;Allow-UTF-8&#34;</p></td>
+<tbody><tr><td><p>&#34;AllowUTF8&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Dots&#34;</p></td>
 <td></td>

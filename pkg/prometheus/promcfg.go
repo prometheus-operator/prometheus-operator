@@ -4878,10 +4878,13 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 		return cfg
 	}
 
-	// need to cast it to a string in order to use strings.ToLower() to render the value in the way prometheus expects it
-	nameEscapingSchemeValue := string(*nameEscapingScheme)
+	nameEscapingSchemeValue := nameEscapingScheme.ToString()
+	if nameEscapingSchemeValue != "" {
+		return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", nameEscapingSchemeValue)
 
-	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", strings.ToLower(nameEscapingSchemeValue))
+	}
+
+	return cfg
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {

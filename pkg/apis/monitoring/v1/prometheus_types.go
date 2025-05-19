@@ -937,15 +937,33 @@ const (
 //   - `ValuesNameEscapingScheme` for Prepend the name with `U__` and replace all invalid
 //     characters with their unicode value, surrounded by underscores.
 //
-// +kubebuilder:validation:Enum=Allow-UTF-8;Underscores;Dots;Values
+// +kubebuilder:validation:Enum=AllowUTF8;Underscores;Dots;Values
 type NameEscapingSchemeOptions string
 
 const (
-	AllowUTF8NameEscapingScheme   NameEscapingSchemeOptions = "Allow-UTF-8"
+	AllowUTF8NameEscapingScheme   NameEscapingSchemeOptions = "AllowUTF8"
 	UnderscoresNameEscapingScheme NameEscapingSchemeOptions = "Underscores"
 	DotsNameEscapingScheme        NameEscapingSchemeOptions = "Dots"
 	ValuesNameEscapingScheme      NameEscapingSchemeOptions = "Values"
 )
+
+func (s *NameEscapingSchemeOptions) ToString() string {
+	if s == nil {
+		return ""
+	}
+	orderMap := map[NameEscapingSchemeOptions]string{
+		AllowUTF8NameEscapingScheme:   "allow-utf-8",
+		UnderscoresNameEscapingScheme: "underscores",
+		DotsNameEscapingScheme:        "dots",
+		ValuesNameEscapingScheme:      "values",
+	}
+
+	if v, ok := orderMap[*s]; ok {
+		return v
+	}
+
+	return ""
+}
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
 type ReloadStrategyType string
