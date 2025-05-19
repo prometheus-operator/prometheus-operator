@@ -17,8 +17,6 @@ package k8sutil
 import (
 	"context"
 	"log/slog"
-	"math"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -41,12 +39,7 @@ func TestLoadSecretRef(t *testing.T) {
 	}
 
 	sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets("ns")
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		// slog level math.MaxInt means no logging
-		// We would like to use the slog buil-in No-op level once it is available
-		// More: https://github.com/golang/go/issues/62005
-		Level: slog.Level(math.MaxInt),
-	}))
+	logger := slog.New(slog.DiscardHandler)
 
 	for _, tc := range []struct {
 		name     string
