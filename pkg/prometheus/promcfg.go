@@ -4878,9 +4878,16 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 		return cfg
 	}
 
-	nameEscapingSchemeValue := nameEscapingScheme.ToString()
-	if nameEscapingSchemeValue != "" {
-		return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", nameEscapingSchemeValue)
+	// conversion to prometheus values.
+	nameMap := map[monitoringv1.NameEscapingSchemeOptions]string{
+		monitoringv1.AllowUTF8NameEscapingScheme:   "allow-utf-8",
+		monitoringv1.UnderscoresNameEscapingScheme: "underscores",
+		monitoringv1.DotsNameEscapingScheme:        "dots",
+		monitoringv1.ValuesNameEscapingScheme:      "values",
+	}
+
+	if v, ok := nameMap[*nameEscapingScheme]; ok {
+		return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", v)
 
 	}
 

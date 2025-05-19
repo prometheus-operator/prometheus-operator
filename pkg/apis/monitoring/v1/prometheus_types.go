@@ -947,24 +947,6 @@ const (
 	ValuesNameEscapingScheme      NameEscapingSchemeOptions = "Values"
 )
 
-func (s *NameEscapingSchemeOptions) ToString() string {
-	if s == nil {
-		return ""
-	}
-	orderMap := map[NameEscapingSchemeOptions]string{
-		AllowUTF8NameEscapingScheme:   "allow-utf-8",
-		UnderscoresNameEscapingScheme: "underscores",
-		DotsNameEscapingScheme:        "dots",
-		ValuesNameEscapingScheme:      "values",
-	}
-
-	if v, ok := orderMap[*s]; ok {
-		return v
-	}
-
-	return ""
-}
-
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
 type ReloadStrategyType string
 
