@@ -10712,6 +10712,19 @@ resource attributes to the <code>target_info</code> metric, on top of converting
 <p>It requires Prometheus &gt;= v3.1.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>convertHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
+It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference
