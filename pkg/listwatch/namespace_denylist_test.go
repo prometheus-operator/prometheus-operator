@@ -16,8 +16,6 @@ package listwatch
 
 import (
 	"log/slog"
-	"math"
-	"os"
 	"reflect"
 	"testing"
 
@@ -78,12 +76,7 @@ func namespaces(ns ...string) map[string]struct{} {
 }
 
 func TestDenylistList(t *testing.T) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		// slog level math.MaxInt means no logging
-		// We would like to use the slog buil-in No-op level once it is available
-		// More: https://github.com/golang/go/issues/62005
-		Level: slog.Level(math.MaxInt),
-	}))
+	logger := slog.New(slog.DiscardHandler)
 
 	cases := []struct {
 		name           string
@@ -209,12 +202,7 @@ func TestDenylistList(t *testing.T) {
 }
 
 func TestDenylistWatch(t *testing.T) {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		// slog level math.MaxInt means no logging
-		// We would like to use the slog buil-in No-op level once it is available
-		// More: https://github.com/golang/go/issues/62005
-		Level: slog.Level(math.MaxInt),
-	}))
+	logger := slog.New(slog.DiscardHandler)
 
 	cases := []struct {
 		name           string
