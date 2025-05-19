@@ -9307,6 +9307,64 @@ func TestAppendNameValidationScheme(t *testing.T) {
 		})
 	}
 }
+
+func TestAppendNameEscapingScheme(t *testing.T) {
+	testCases := []struct {
+		name               string
+		version            string
+		nameEscapingScheme *monitoringv1.NameEscapingSchemeOptions
+		expectedCfg        string
+	}{
+		{
+			name:               "AllowUTF8 nameEscapingScheme withPrometheus Version 3",
+			version:            "v3.4.0",
+			nameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
+			expectedCfg:        "NameEscapingSchemeUTF8WithPrometheusV3.golden",
+		},
+		{
+			name:               "Underscores nameEscapingScheme with Prometheus Version 3",
+			version:            "v3.4.0",
+			nameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+			expectedCfg:        "NameEscapingSchemeUnderscoresWithPrometheusV3.golden",
+		},
+		{
+			name:               "Underscores nameEscapingScheme with Prometheus Version 3",
+			version:            "v2.55.0",
+			nameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+			expectedCfg:        "NameEscapingSchemeUnderscoresWithPrometheusLowerThanV3.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.nameEscapingScheme != nil {
+				p.Spec.CommonPrometheusFields.NameEscapingScheme = tc.nameEscapingScheme
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
 func TestOTLPConfig(t *testing.T) {
 	testCases := []struct {
 		otlpConfig    *monitoringv1.OTLPConfig
