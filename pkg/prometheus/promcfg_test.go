@@ -9399,6 +9399,22 @@ func TestOTLPConfig(t *testing.T) {
 			golden: "OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
 		},
 		{
+			name:    "Config NoTranslation translation strategy",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
+			},
+			golden: "OTLPConfig_Config_translation_strategy_with_notranslation.golden",
+		},
+		{
+			name:    "Config NoTranslation translation strategye unsupported version",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
+			},
+			expectedErr: true,
+		},
+		{
 			name:    "Config ConvertHistogramsToNHCB",
 			version: "v3.4.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
