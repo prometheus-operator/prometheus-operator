@@ -2278,12 +2278,15 @@ type ScrapeClass struct {
 // Supported values are:
 // * `NoUTF8EscapingWithSuffixes`
 // * `UnderscoreEscapingWithSuffixes`
-// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes
+// * `NoTranslation`
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;NoTranslation
 type TranslationStrategyOption string
 
 const (
 	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
 	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+	// It requires Prometheus >= v3.4.0.
+	NoTranslation TranslationStrategyOption = "NoTranslation"
 )
 
 // OTLPConfig is the configuration for writing to the OTLP endpoint.

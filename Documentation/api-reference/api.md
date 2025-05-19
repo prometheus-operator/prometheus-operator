@@ -18697,7 +18697,8 @@ AdditionalLabelSelectors
 <p>TranslationStrategyOption represents a translation strategy option for the OTLP endpoint.
 Supported values are:
 * <code>NoUTF8EscapingWithSuffixes</code>
-* <code>UnderscoreEscapingWithSuffixes</code></p>
+* <code>UnderscoreEscapingWithSuffixes</code>
+* <code>NoTranslation</code></p>
 </div>
 <table>
 <thead>
@@ -18706,7 +18707,10 @@ Supported values are:
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;NoUTF8EscapingWithSuffixes&#34;</p></td>
+<tbody><tr><td><p>&#34;NoTranslation&#34;</p></td>
+<td><p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr><tr><td><p>&#34;NoUTF8EscapingWithSuffixes&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;UnderscoreEscapingWithSuffixes&#34;</p></td>
 <td></td>

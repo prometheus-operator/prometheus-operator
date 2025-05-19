@@ -4722,7 +4722,8 @@
                         "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\n\nIt requires Prometheus >= v3.0.0.",
                         "enum": [
                           "NoUTF8EscapingWithSuffixes",
-                          "UnderscoreEscapingWithSuffixes"
+                          "UnderscoreEscapingWithSuffixes",
+                          "NoTranslation"
                         ],
                         "type": "string"
                       }

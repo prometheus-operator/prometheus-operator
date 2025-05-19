@@ -5553,6 +5553,7 @@ spec:
                     enum:
                     - NoUTF8EscapingWithSuffixes
                     - UnderscoreEscapingWithSuffixes
+                    - NoTranslation
                     type: string
                 type: object
               overrideHonorLabels:
