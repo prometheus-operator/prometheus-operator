@@ -96,6 +96,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	EnforcedKeepDroppedTargets           *uint64                                                 `json:"enforcedKeepDroppedTargets,omitempty"`
 	EnforcedBodySizeLimit                *monitoringv1.ByteSize                                  `json:"enforcedBodySizeLimit,omitempty"`
 	NameValidationScheme                 *monitoringv1.NameValidationSchemeOptions               `json:"nameValidationScheme,omitempty"`
+	NameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions                 `json:"nameEscapingScheme,omitempty"`
 	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
@@ -729,6 +730,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedBodySizeLimit(val
 // If called multiple times, the NameValidationScheme field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *CommonPrometheusFieldsApplyConfiguration {
 	b.NameValidationScheme = &value
+	return b
+}
+
+// WithNameEscapingScheme sets the NameEscapingScheme field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NameEscapingScheme field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithNameEscapingScheme(value monitoringv1.NameEscapingSchemeOptions) *CommonPrometheusFieldsApplyConfiguration {
+	b.NameEscapingScheme = &value
 	return b
 }
 

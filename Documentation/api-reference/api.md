@@ -2921,6 +2921,22 @@ NameValidationSchemeOptions
 </tr>
 <tr>
 <td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the character escaping scheme that will be requested when scraping
+for metric and label names that do not conform to the legacy Prometheus
+character set.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -8403,6 +8419,22 @@ NameValidationSchemeOptions
 </tr>
 <tr>
 <td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the character escaping scheme that will be requested when scraping
+for metric and label names that do not conform to the legacy Prometheus
+character set.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -10324,16 +10356,50 @@ int32
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.NameEscapingSchemeOptions">NameEscapingSchemeOptions
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>Specifies the character escaping scheme that will be requested when scraping
+for metric and label names that do not conform to the legacy Prometheus
+character set.</p>
+<p>Supported values are:
+- <code>AllowUTF8NameEscapingScheme</code> for Full UTF-8 support, no escaping needed.
+- <code>UnderscoresNameEscapingScheme</code> for Escape all legacy-invalid characters to underscores.
+- <code>DotsNameEscapingScheme</code> for Escapes dots to <code>_dot_</code>, underscores to <code>__</code>, and all other
+legacy-invalid characters to underscores.
+- <code>ValuesNameEscapingScheme</code> for Prepend the name with <code>U__</code> and replace all invalid
+characters with their unicode value, surrounded by underscores.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Allow-UTF-8&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Dots&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Underscores&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Values&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
 (<code>string</code> alias)</h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>Specifies the validation scheme for metric and label names.
-Supported values are:
-* <code>UTF8NameValidationScheme</code> for UTF-8 support.
-* <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
+<p>Supported values are:
+- <code>UTF8NameValidationScheme</code> for UTF-8 support.
+- <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
 <p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if enabled).</p>
 </div>
 <table>
@@ -13389,6 +13455,22 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the character escaping scheme that will be requested when scraping
+for metric and label names that do not conform to the legacy Prometheus
+character set.</p>
 </td>
 </tr>
 <tr>
@@ -20445,6 +20527,22 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the character escaping scheme that will be requested when scraping
+for metric and label names that do not conform to the legacy Prometheus
+character set.</p>
 </td>
 </tr>
 <tr>
@@ -28809,6 +28907,22 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the character escaping scheme that will be requested when scraping
+for metric and label names that do not conform to the legacy Prometheus
+character set.</p>
 </td>
 </tr>
 <tr>

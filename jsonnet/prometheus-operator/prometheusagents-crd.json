@@ -4035,6 +4035,16 @@
                     ],
                     "type": "string"
                   },
+                  "nameEscapingScheme": {
+                    "description": "Specifies the character escaping scheme that will be requested when scraping\nfor metric and label names that do not conform to the legacy Prometheus\ncharacter set.",
+                    "enum": [
+                      "Allow-UTF-8",
+                      "Underscores",
+                      "Dots",
+                      "Values"
+                    ],
+                    "type": "string"
+                  },
                   "nameValidationScheme": {
                     "description": "Specifies the validation scheme for metric and label names.",
                     "enum": [
