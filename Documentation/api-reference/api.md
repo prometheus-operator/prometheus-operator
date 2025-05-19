@@ -2933,6 +2933,7 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>
@@ -8431,6 +8432,7 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>
@@ -13471,6 +13473,7 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>
@@ -20543,6 +20546,7 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>
@@ -28923,6 +28927,7 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>

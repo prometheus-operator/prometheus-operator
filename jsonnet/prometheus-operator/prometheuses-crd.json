@@ -4687,7 +4687,7 @@
                     "type": "integer"
                   },
                   "nameEscapingScheme": {
-                    "description": "Specifies the character escaping scheme that will be requested when scraping\nfor metric and label names that do not conform to the legacy Prometheus\ncharacter set.",
+                    "description": "Specifies the character escaping scheme that will be requested when scraping\nfor metric and label names that do not conform to the legacy Prometheus\ncharacter set.\n\nIt requires Prometheus >= v3.4.0.",
                     "enum": [
                       "Allow-UTF-8",
                       "Underscores",

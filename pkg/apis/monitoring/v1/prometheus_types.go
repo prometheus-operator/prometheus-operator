@@ -699,6 +699,9 @@ type CommonPrometheusFields struct {
 	// Specifies the character escaping scheme that will be requested when scraping
 	// for metric and label names that do not conform to the legacy Prometheus
 	// character set.
+	//
+	// It requires Prometheus >= v3.4.0.
+	//
 	// +optional
 	NameEscapingScheme *NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
 
