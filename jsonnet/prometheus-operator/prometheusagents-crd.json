@@ -2463,6 +2463,10 @@
                     },
                     "type": "array"
                   },
+                  "convertClassicHistogramsToNHCB": {
+                    "description": "Whether to convert all scraped classic histograms into a native histogram with custom buckets.\n\nIt requires Prometheus >= v3.4.0.",
+                    "type": "boolean"
+                  },
                   "dnsConfig": {
                     "description": "Defines the DNS configuration for the pods.",
                     "properties": {
@@ -4035,6 +4039,16 @@
                     ],
                     "type": "string"
                   },
+                  "nameEscapingScheme": {
+                    "description": "Specifies the character escaping scheme that will be requested when scraping\nfor metric and label names that do not conform to the legacy Prometheus\ncharacter set.\n\nIt requires Prometheus >= v3.4.0.",
+                    "enum": [
+                      "AllowUTF8",
+                      "Underscores",
+                      "Dots",
+                      "Values"
+                    ],
+                    "type": "string"
+                  },
                   "nameValidationScheme": {
                     "description": "Specifies the validation scheme for metric and label names.",
                     "enum": [
@@ -4075,7 +4089,8 @@
                         "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\n\nIt requires Prometheus >= v3.0.0.",
                         "enum": [
                           "NoUTF8EscapingWithSuffixes",
-                          "UnderscoreEscapingWithSuffixes"
+                          "UnderscoreEscapingWithSuffixes",
+                          "NoTranslation"
                         ],
                         "type": "string"
                       }

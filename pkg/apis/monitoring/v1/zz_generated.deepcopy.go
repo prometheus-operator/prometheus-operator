@@ -1013,6 +1013,16 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(NameValidationSchemeOptions)
 		**out = **in
 	}
+	if in.NameEscapingScheme != nil {
+		in, out := &in.NameEscapingScheme, &out.NameEscapingScheme
+		*out = new(NameEscapingSchemeOptions)
+		**out = **in
+	}
+	if in.ConvertClassicHistogramsToNHCB != nil {
+		in, out := &in.ConvertClassicHistogramsToNHCB, &out.ConvertClassicHistogramsToNHCB
+		*out = new(bool)
+		**out = **in
+	}
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
 		*out = new(uint32)

@@ -20,7 +20,6 @@ import (
 	"log/slog"
 	"math"
 	"net/url"
-	"os"
 	"path"
 	"reflect"
 	"regexp"
@@ -122,12 +121,7 @@ func NewConfigGenerator(
 	opts ...ConfigGeneratorOption,
 ) (*ConfigGenerator, error) {
 	if logger == nil {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			// slog level math.MaxInt means no logging
-			// We would like to use the slog buil-in No-op level once it is available
-			// More: https://github.com/golang/go/issues/62005
-			Level: slog.Level(math.MaxInt),
-		}))
+		logger = slog.New(slog.DiscardHandler)
 	}
 
 	cg := &ConfigGenerator{
@@ -4763,6 +4757,10 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("nameValidationScheme %q is not compatible with OTLP translation strategy %q", monitoringv1.LegacyNameValidationScheme, monitoringv1.NoUTF8EscapingWithSuffixes)
 	}
 
+	if cg.version.LT(semver.MustParse("3.4.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoTranslation {
+		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
+	}
+
 	otlp := yaml.MapSlice{}
 
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {
@@ -4879,6 +4877,36 @@ func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice, nameVal
 	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", strings.ToLower(nameValidationSchemeValue))
 }
 
+func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscapingScheme *monitoringv1.NameEscapingSchemeOptions) yaml.MapSlice {
+	if nameEscapingScheme == nil {
+		return cfg
+	}
+
+	// conversion to prometheus values.
+	nameMap := map[monitoringv1.NameEscapingSchemeOptions]string{
+		monitoringv1.AllowUTF8NameEscapingScheme:   "allow-utf-8",
+		monitoringv1.UnderscoresNameEscapingScheme: "underscores",
+		monitoringv1.DotsNameEscapingScheme:        "dots",
+		monitoringv1.ValuesNameEscapingScheme:      "values",
+	}
+
+	if v, ok := nameMap[*nameEscapingScheme]; ok {
+		return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", v)
+	}
+
+	return cfg
+}
+
+func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ConvertClassicHistogramsToNHCB == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", *cpf.ConvertClassicHistogramsToNHCB)
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4953,6 +4981,8 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendScrapeLimits(cfg)
 	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
+	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
+	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 
 	return cfg
 }
