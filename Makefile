@@ -49,7 +49,8 @@ PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
-TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
+GOLANGCIKUBEAPILINTER_SO=$(TOOLS_BIN_DIR)/kube-api-linter.so
+TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_SO)
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
@@ -424,6 +425,8 @@ $(TOOLING): $(TOOLS_BIN_DIR)
 	@echo Installing tools from scripts/tools.go
 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
+	@echo Building golangci-lint plugins
+	@GOBIN=$(TOOLS_BIN_DIR) go build -buildmode=plugin -modfile=scripts/go.mod -o $(GOLANGCIKUBEAPILINTER_SO) sigs.k8s.io/kube-api-linter/pkg/plugin
 	@echo Downloading shellcheck
 	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
