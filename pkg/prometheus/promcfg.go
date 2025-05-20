@@ -4892,10 +4892,19 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 
 	if v, ok := nameMap[*nameEscapingScheme]; ok {
 		return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", v)
-
 	}
 
 	return cfg
+}
+
+func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ConvertClassicHistogramsToNHCB == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", *cpf.ConvertClassicHistogramsToNHCB)
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
@@ -4973,6 +4982,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
+	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 
 	return cfg
 }

@@ -9365,6 +9365,63 @@ func TestAppendNameEscapingScheme(t *testing.T) {
 	}
 }
 
+func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
+	testCases := []struct {
+		name                           string
+		version                        string
+		convertClassicHistogramsToNHCB *bool
+		expectedCfg                    string
+	}{
+		{
+			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 3.4",
+			version:                        "v3.4.0",
+			convertClassicHistogramsToNHCB: ptr.To(true),
+			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusV3.golden",
+		},
+		{
+			name:                           "ConvertClassicHistogramsToNHCB false with Prometheus Version 3.4",
+			version:                        "v3.4.0",
+			convertClassicHistogramsToNHCB: ptr.To(false),
+			expectedCfg:                    "ConvertClassicHistogramsToNHCBFalseWithPrometheusV3.golden",
+		},
+		{
+			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 2",
+			version:                        "v2.55.0",
+			convertClassicHistogramsToNHCB: ptr.To(true),
+			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusLowerThanV3.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.convertClassicHistogramsToNHCB != nil {
+				p.Spec.CommonPrometheusFields.ConvertClassicHistogramsToNHCB = tc.convertClassicHistogramsToNHCB
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
 func TestOTLPConfig(t *testing.T) {
 	testCases := []struct {
 		otlpConfig    *monitoringv1.OTLPConfig

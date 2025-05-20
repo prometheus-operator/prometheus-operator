@@ -2463,6 +2463,10 @@
                     },
                     "type": "array"
                   },
+                  "convertClassicHistogramsToNHCB": {
+                    "description": "Whether to convert all scraped classic histograms into a native histogram with custom buckets.\n\nIt requires Prometheus >= v3.4.0.",
+                    "type": "boolean"
+                  },
                   "dnsConfig": {
                     "description": "Defines the DNS configuration for the pods.",
                     "properties": {

@@ -705,6 +705,13 @@ type CommonPrometheusFields struct {
 	// +optional
 	NameEscapingScheme *NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
 
+	// Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+	//
+	// It requires Prometheus >= v3.4.0.
+	//
+	// +optional
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)

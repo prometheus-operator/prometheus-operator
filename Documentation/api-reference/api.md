@@ -2938,6 +2938,19 @@ character set.</p>
 </tr>
 <tr>
 <td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -8437,6 +8450,19 @@ character set.</p>
 </tr>
 <tr>
 <td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -13486,6 +13512,19 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -20563,6 +20602,19 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -28944,6 +28996,19 @@ NameEscapingSchemeOptions
 <p>Specifies the character escaping scheme that will be requested when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>convertClassicHistogramsToNHCB</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
