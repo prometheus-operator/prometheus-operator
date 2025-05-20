@@ -2,10 +2,10 @@
 
 * **Owners:**
   * [simonpasquier](https://github.com/simonpasquier)
-
+* **Status:**
+  * `Implemented`
 * **Related Tickets:**
   * [#3335](https://github.com/prometheus-operator/prometheus-operator/issues/3335)
-
 * **Other docs:**
   * N/A
 

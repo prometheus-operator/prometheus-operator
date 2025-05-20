@@ -2,6 +2,8 @@
 
 - Owners:
   - [AshwinSriram11](https://github.com/AshwinSriram11)
+* Status:
+  * `Implemented`
 - Related Tickets:
   - [#3553](https://github.com/prometheus-operator/prometheus-operator/issues/3553#issuecomment-726733177)
   - [#6046](https://github.com/prometheus-operator/prometheus-operator/issues/6046)
