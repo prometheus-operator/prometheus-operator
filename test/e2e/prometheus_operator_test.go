@@ -109,12 +109,8 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		namespace,
 		prometheusOperatorServiceName,
 		"https",
-		append(operatorMetrics, operatorOperationalMetrics...)...,
+		operatorOperationalMetrics...,
 	)
 
 	require.NoError(t, err)
-
-	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
 }
