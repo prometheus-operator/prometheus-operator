@@ -1,4 +1,4 @@
-# Status subresource for Prometheus operator CRDs
+# Status subresource for Prometheus operator Workload CRDs
 
 * **Owners:**
   * [simonpasquier](https://github.com/simonpasquier)
@@ -9,7 +9,7 @@
 * **Other docs:**
   * N/A
 
-This proposal describes how we will extend the Prometheus operator Custom
+This proposal describes how we will extend the Prometheus operator workload Custom
 Resource Definitions (CRDs) with a Status subresource field.
 
 ## Why
