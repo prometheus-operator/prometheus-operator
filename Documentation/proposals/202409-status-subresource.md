@@ -16,7 +16,7 @@ Resource Definitions (CRDs) with a Status subresource field.
 
 Core Kubernetes resources differentiate between the desired state of an object
 (the `spec` field) and the current status of the object (the `status` field)
-([details][https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status)).
+[details](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status).
 Before this proposal, the current status of the objects was never reflected by
 the Prometheus operator which makes it harder for external actors to know if
 the underlying resource is available or not.
