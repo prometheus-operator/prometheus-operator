@@ -3583,6 +3583,12 @@ spec:
                   - name
                   type: object
                 type: array
+              convertClassicHistogramsToNHCB:
+                description: |-
+                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+
+                  It requires Prometheus >= v3.4.0.
+                type: boolean
               disableCompaction:
                 description: |-
                   When true, the Prometheus compaction is disabled.
