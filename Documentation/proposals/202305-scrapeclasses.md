@@ -3,7 +3,8 @@
 * **Owners:**
   * `nicolastakashi`
   * `eronwright`
-
+* **Status:**
+  * `Implemented`
 * **Related Tickets:**
   * https://github.com/prometheus-operator/prometheus-operator/issues/4121
   * https://github.com/prometheus-operator/prometheus-operator/issues/3922

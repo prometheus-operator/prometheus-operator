@@ -2,6 +2,8 @@
 
 * Owners:
   * [mviswanathsai](https://github.com/mviswanathsai)
+* Status:
+  * `Accepted`
 * Related Tickets:
   * [Graduate The `ScrapeConfig` CRD To `v1beta1`](https://github.com/prometheus-operator/prometheus-operator/issues/6697)
 * Other docs:

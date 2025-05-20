@@ -2,6 +2,8 @@
 
 * Owners:
   * [xiu](https://github.com/xiu)
+* Status:
+  * `Implemented`
 * Related Tickets:
   * [#2787](https://github.com/prometheus-operator/prometheus-operator/issues/2787)
   * [#3447](https://github.com/prometheus-operator/prometheus-operator/issues/3447)

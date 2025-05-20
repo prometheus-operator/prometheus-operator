@@ -2,6 +2,8 @@
 
 - Owners:
   - [@superbrothers](https://github.com/superbrothers)
+* Status:
+  * `Accepted`
 - Related Tickets:
   - [#6508](https://github.com/prometheus-operator/prometheus-operator/issues/6508)
 - Other docs:

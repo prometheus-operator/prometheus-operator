@@ -143,10 +143,10 @@ The process is adopted from the Thanos community.
 
 * **Owners:**
   * `<@author: single champion for the moment of writing>`
-
+* **Status:**
+  * `<Accepted/Rejected/Implemented>`
 * **Related Tickets:**
   * `<JIRA, GH Issues>`
-
 * **Other docs:**
   * `<Links…>`
 
