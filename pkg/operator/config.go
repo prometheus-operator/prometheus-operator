@@ -102,6 +102,10 @@ func DefaultConfig(cpu, memory string) Config {
 				description: "Enables shard retention policy for Prometheus",
 				enabled:     false,
 			},
+			StatusForConfigurationResourcesFeature: FeatureGate{
+				description: "Updates the status subresource for configuration resources",
+				enabled:     false,
+			},
 		},
 	}
 }

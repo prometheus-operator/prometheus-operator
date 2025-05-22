@@ -92,6 +92,7 @@ type Operator struct {
 	canReadStorageClass           bool
 	disableUnmanagedConfiguration bool
 	retentionPoliciesEnabled      bool
+	configResourcesStatusEnabled  bool
 
 	eventRecorder record.EventRecorder
 }
@@ -168,9 +169,10 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID:             c.ControllerID,
-		eventRecorder:            c.EventRecorderFactory(client, controllerName),
-		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		controllerID:                 c.ControllerID,
+		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range opts {
 		opt(o)
