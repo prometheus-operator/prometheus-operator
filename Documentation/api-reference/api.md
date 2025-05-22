@@ -4155,6 +4155,22 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">
+ServiceMonitorStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Most recent observed status of the ServiceMonitor. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosRuler">ThanosRuler
@@ -8841,7 +8857,7 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorBinding">ServiceMonitorBinding</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus</a>)
 </p>
 <div>
 <p>Condition represents the state of the resources associated with the
@@ -16448,6 +16464,71 @@ Kubernetes core/v1.ConfigMapKeySelector
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ServiceMonitorBinding">ServiceMonitorBinding
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus</a>)
+</p>
+<div>
+<p>ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>resource</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The type of resource being referenced (e.g. Prometheus or PrometheusAgent).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the referenced object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The namespace of the referenced object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Condition">
+[]Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The current state of the service monitor when bound to the referenced Prometheus object.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec
 </h3>
 <p>
@@ -16777,6 +16858,40 @@ ByteSize
 <p>When defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
+</p>
+<div>
+<p>ServiceMonitorStatus is the most recent observed status of the ServiceMonitor. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>bindings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceMonitorBinding">
+[]ServiceMonitorBinding
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The list of resources that the service monitor is bound to.</p>
 </td>
 </tr>
 </tbody>
