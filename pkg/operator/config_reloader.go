@@ -179,6 +179,13 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	}
 }
 
+// EnableProbes sets the livenessProbe and readinessProbe options for the config-reloader container.
+func EnableProbes(enableProbes bool) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.config.EnableProbes = enableProbes
+	}
+}
+
 // DaemonSet sets the options that work for DaemonSet mode.
 // Currently we set SHARD env equal to 0, eventhough DaemonSet doesn't use this env.
 // TODO: Remove SHARD env for DaemonSet mode.

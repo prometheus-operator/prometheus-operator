@@ -146,6 +146,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	watchedDirectories := []string{"directory1", "directory2"}
 	shard := int32(1)
 	expectedImagePullPolicy := v1.PullAlways
+	expectedEnableProbes := true
 	var container = CreateConfigReloader(
 		containerName,
 		ReloaderConfig(reloaderConfig),
@@ -164,6 +165,7 @@ func TestCreateConfigReloader(t *testing.T) {
 		WebConfigFile(webConfigFile),
 		Shard(shard),
 		ImagePullPolicy(expectedImagePullPolicy),
+		EnableProbes(expectedEnableProbes),
 	)
 
 	if container.Name != "config-reloader" {
@@ -210,12 +212,18 @@ func TestCreateConfigReloader(t *testing.T) {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
 
-	if container.LivenessProbe != nil {
+	/*if container.LivenessProbe != nil {
 		t.Errorf("expected no LivenessProbe but got %v", container.LivenessProbe)
 	}
 
 	if container.ReadinessProbe != nil {
 		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
+	}*/
+	if container.LivenessProbe == nil {
+		t.Errorf("expected LivenessProbe but got %v", container.LivenessProbe)
+	}
+	if container.ReadinessProbe == nil {
+		t.Errorf("expected ReadinessProbe but got %v", container.ReadinessProbe)
 	}
 }
 
