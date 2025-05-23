@@ -2698,6 +2698,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		}
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	if in.MetricNameValidationScheme != nil {
+		in, out := &in.MetricNameValidationScheme, &out.MetricNameValidationScheme
+		*out = new(string)
+		**out = **in
+	}
 	if in.ScrapeClassName != nil {
 		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)

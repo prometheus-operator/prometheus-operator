@@ -9595,6 +9595,11 @@ spec:
                       type: object
                   type: object
                 type: array
+              metricNameValidationScheme:
+                description: Specifies the validation scheme for metric and label
+                  names.
+                minLength: 1
+                type: string
               metricRelabelings:
                 description: MetricRelabelConfigs to apply to samples before ingestion.
                 items:

@@ -21849,6 +21849,18 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>metricNameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClass</code><br/>
 <em>
 string
@@ -31430,6 +31442,18 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricNameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
