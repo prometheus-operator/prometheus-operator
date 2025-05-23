@@ -1,0 +1,21 @@
+processor:
+  # RE2 regular expressions describing types that should be excluded from the generated documentation.
+  ignoreTypes:
+    - "(Elasticsearch|Kibana|ApmServer)List$"
+    - "(Elasticsearch|Kibana|ApmServer)Health$"
+    - "(Elasticsearch|Kibana|ApmServer|Reconciler)Status$"
+    - "ElasticsearchSettings$"
+    - "Associa(ted|tor|tionStatus|tionConf)$"
+  # RE2 regular expressions describing type fields that should be excluded from the generated documentation.
+  ignoreFields:
+    - "status$"
+    - "TypeMeta$"
+
+render:
+  # Version of Kubernetes to use when generating links to Kubernetes API documentation.
+  kubernetesVersion: 1.22
+  # Generate better link for known types
+  knownTypes:
+    - name: SecretObjectReference
+      package: sigs.k8s.io/gateway-api/apis/v1beta1
+      link: https://gateway-api.sigs.k8s.io/references/spec/#gateway.networking.k8s.io/v1beta1.SecretObjectReference
