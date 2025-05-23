@@ -335,6 +335,10 @@ type ScrapeConfigSpec struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// Specifies the validation scheme for metric and label names.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MetricNameValidationScheme *string `json:"metricNameValidationScheme,omitempty"`
 	// The scrape class to apply.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
