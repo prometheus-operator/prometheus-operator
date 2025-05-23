@@ -780,7 +780,7 @@ type GCESDConfig struct {
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=Instance;Hypervisor;LoadBalancer
+// +kubebuilder:validation:Enum=Instance;instance;Hypervisor;hypervisor;LoadBalancer;loadbalancer
 type OpenStackRole string
 
 const (
