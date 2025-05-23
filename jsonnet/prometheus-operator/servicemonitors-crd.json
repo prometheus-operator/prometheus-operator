@@ -1114,10 +1114,12 @@
                         },
                         "name": {
                           "description": "The name of the referenced object.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "namespace": {
                           "description": "The namespace of the referenced object.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "resource": {

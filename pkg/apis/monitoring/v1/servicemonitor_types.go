@@ -205,9 +205,11 @@ type ServiceMonitorBinding struct {
 	// +required
 	Resource string `json:"resource"`
 	// The name of the referenced object.
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
 	// The namespace of the referenced object.
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Namespace string `json:"namespace"`
 	// The current state of the service monitor when bound to the referenced Prometheus object.
