@@ -336,12 +336,11 @@ type ScrapeConfigSpec struct {
 	// +optional
 	v1.ProxyConfig `json:",inline"`
 	// Specifies the validation scheme for metric and label names.
-	// Enter "utf8" for full UTF-8 support, or "legacy" for letters, numbers, colons, and underscores.
-	// Default to utf8.
+	// Enter "UTF8" for full UTF-8 support, or "Legacy" for letters, numbers, colons, and underscores.
+	// Blank value will be utf8.
 	//
 	// It requires Prometheus >= v3.0.0.
 	//
-	// +kubebuilder:validation:MinLength=1
 	// +optional
 	MetricNameValidationScheme *v1.NameValidationSchemeOptions `json:"metricNameValidationScheme,omitempty"`
 	// The scrape class to apply.
