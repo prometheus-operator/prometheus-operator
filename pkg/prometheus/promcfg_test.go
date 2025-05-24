@@ -6590,6 +6590,38 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
 		},
+		{
+			name:    "config_MetricNameValidationScheme_utf8",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
+			},
+			golden: "MetricNameValidationScheme_utf8.golden",
+		},
+		{
+			name:    "config_MetricNameValidationScheme_legacy",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			},
+			golden: "MetricNameValidationScheme_legacy.golden",
+		},
+		{
+			name:    "config_MetricNameValidationScheme_blank",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: nil,
+			},
+			golden: "MetricNameValidationScheme_blank.golden",
+		},
+		{
+			name:    "config_MetricNameValidationScheme_unsupported",
+			version: "v2.54.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: nil,
+			},
+			golden: "MetricNameValidationScheme_unsupported.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

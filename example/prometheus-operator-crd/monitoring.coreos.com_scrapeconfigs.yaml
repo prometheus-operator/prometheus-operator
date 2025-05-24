@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.82.2
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -9597,9 +9596,15 @@ spec:
                   type: object
                 type: array
               metricNameValidationScheme:
-                description: Specifies the validation scheme for metric and label
-                  names.
-                minLength: 1
+                description: |-
+                  Specifies the validation scheme for metric and label names.
+                  Enter "utf8" for full UTF-8 support, or "legacy" for letters, numbers, colons, and underscores.
+                  Default to utf8.
+
+                  It requires Prometheus >= v2.55.0.
+                enum:
+                - UTF8
+                - Legacy
                 type: string
               metricRelabelings:
                 description: MetricRelabelConfigs to apply to samples before ingestion.

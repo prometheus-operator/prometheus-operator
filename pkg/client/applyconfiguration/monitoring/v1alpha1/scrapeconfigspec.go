@@ -76,8 +76,8 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
-	MetricNameValidationScheme                 *string `json:"metricNameValidationScheme,omitempty"`
-	ScrapeClassName                            *string `json:"scrapeClass,omitempty"`
+	MetricNameValidationScheme                 *monitoringv1.NameValidationSchemeOptions `json:"metricNameValidationScheme,omitempty"`
+	ScrapeClassName                            *string                                   `json:"scrapeClass,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs a declarative configuration of the ScrapeConfigSpec type for use with
@@ -676,7 +676,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[
 // WithMetricNameValidationScheme sets the MetricNameValidationScheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MetricNameValidationScheme field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithMetricNameValidationScheme(value string) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithMetricNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
 	b.MetricNameValidationScheme = &value
 	return b
 }
