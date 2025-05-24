@@ -416,7 +416,7 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 // AddMetricNameValidationScheme adds the metric_name_validation_scheme field into scrape configurations.
 // For backwards compatibility with Prometheus <2.55.0 we don't set
 // metric_name_validation_scheme.
-func (cg *ConfigGenerator) AddMetricNameValidationScheme(cfg yaml.MapSlice, metricNameValidationScheme *bool) yaml.MapSlice {
+func (cg *ConfigGenerator) AddMetricNameValidationScheme(cfg yaml.MapSlice, metricNameValidationScheme *string) yaml.MapSlice {
 	// Fast path.
 	if metricNameValidationScheme == nil {
 		return cfg
