@@ -10,4 +10,4 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-  metric_name_escaping_scheme: allow-utf8
+  metric_name_escaping_scheme: allow-utf-8
