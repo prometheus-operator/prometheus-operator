@@ -6592,7 +6592,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		},
 		{
 			name:    "config_MetricNameValidationScheme_utf8",
-			version: "v2.55.0",
+			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricNameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 			},
@@ -6600,7 +6600,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		},
 		{
 			name:    "config_MetricNameValidationScheme_legacy",
-			version: "v2.55.0",
+			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricNameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			},
@@ -6608,7 +6608,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		},
 		{
 			name:    "config_MetricNameValidationScheme_blank",
-			version: "v2.55.0",
+			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricNameValidationScheme: nil,
 			},
@@ -6616,7 +6616,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		},
 		{
 			name:    "config_MetricNameValidationScheme_unsupported",
-			version: "v2.54.0",
+			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricNameValidationScheme: nil,
 			},
