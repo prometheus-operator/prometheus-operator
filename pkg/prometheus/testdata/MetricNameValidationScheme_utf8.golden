@@ -6,8 +6,8 @@ global:
   evaluation_interval: 30s
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
-  metric_name_validation_scheme: utf8
   relabel_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  metric_name_validation_scheme: utf8
