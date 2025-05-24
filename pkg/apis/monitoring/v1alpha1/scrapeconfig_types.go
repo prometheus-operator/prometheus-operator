@@ -339,7 +339,7 @@ type ScrapeConfigSpec struct {
 	// Enter "utf8" for full UTF-8 support, or "legacy" for letters, numbers, colons, and underscores.
 	// Default to utf8.
 	//
-	// It requires Prometheus >= v2.55.0.
+	// It requires Prometheus >= v3.0.0.
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +optional

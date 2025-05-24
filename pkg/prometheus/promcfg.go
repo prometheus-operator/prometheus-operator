@@ -422,7 +422,10 @@ func (cg *ConfigGenerator) AddMetricNameValidationScheme(cfg yaml.MapSlice, metr
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("2.55.0").AppendMapItem(cfg, "metric_name_validation_scheme", *metricNameValidationScheme)
+	// need to cast it to a string in order to use strings.ToLower() to render the value in the way prometheus expects it
+	metricNameValidationSchemeValue := string(*metricNameValidationScheme)
+
+	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", strings.ToLower(metricNameValidationSchemeValue))
 }
 
 // addScrapeProtocols adds the scrape_protocols field into the configuration.
