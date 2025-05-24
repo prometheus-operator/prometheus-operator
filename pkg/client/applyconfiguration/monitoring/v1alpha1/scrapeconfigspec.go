@@ -77,6 +77,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
 	MetricNameValidationScheme                 *monitoringv1.NameValidationSchemeOptions `json:"metricNameValidationScheme,omitempty"`
+	MetricNameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions   `json:"metricNameEscapingScheme,omitempty"`
 	ScrapeClassName                            *string                                   `json:"scrapeClass,omitempty"`
 }
 
@@ -678,6 +679,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[
 // If called multiple times, the MetricNameValidationScheme field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithMetricNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
 	b.MetricNameValidationScheme = &value
+	return b
+}
+
+// WithMetricNameEscapingScheme sets the MetricNameEscapingScheme field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MetricNameEscapingScheme field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithMetricNameEscapingScheme(value monitoringv1.NameEscapingSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
+	b.MetricNameEscapingScheme = &value
 	return b
 }
 

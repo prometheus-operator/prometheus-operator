@@ -413,21 +413,6 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
-// AddMetricNameValidationScheme adds the metric_name_validation_scheme field into scrape configurations.
-// For backwards compatibility with Prometheus <2.55.0 we don't set
-// metric_name_validation_scheme.
-func (cg *ConfigGenerator) AddMetricNameValidationScheme(cfg yaml.MapSlice, metricNameValidationScheme *monitoringv1.NameValidationSchemeOptions) yaml.MapSlice {
-	// Fast path.
-	if metricNameValidationScheme == nil {
-		return cfg
-	}
-
-	// need to cast it to a string in order to use strings.ToLower() to render the value in the way prometheus expects it
-	metricNameValidationSchemeValue := string(*metricNameValidationScheme)
-
-	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", strings.ToLower(metricNameValidationSchemeValue))
-}
-
 // addScrapeProtocols adds the scrape_protocols field into the configuration.
 func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if len(scrapeProtocols) == 0 {
@@ -4754,7 +4739,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	if sc.Spec.MetricNameValidationScheme != nil {
-		cfg = cg.AddMetricNameValidationScheme(cfg, sc.Spec.MetricNameValidationScheme)
+		cfg = cg.appendNameValidationScheme(cfg, sc.Spec.MetricNameValidationScheme)
+	}
+
+	if sc.Spec.MetricNameEscapingScheme != nil {
+		cfg = cg.appendNameEscapingScheme(cfg, sc.Spec.MetricNameEscapingScheme)
 	}
 
 	return cfg, nil

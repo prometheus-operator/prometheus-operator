@@ -9595,6 +9595,17 @@ spec:
                       type: object
                   type: object
                 type: array
+              metricNameEscapingScheme:
+                description: |-
+                  Metric name escaping mode to request through content negotiation.
+
+                  It requires Prometheus >= v3.4.0.
+                enum:
+                - AllowUTF8
+                - Underscores
+                - Dots
+                - Values
+                type: string
               metricNameValidationScheme:
                 description: |-
                   Specifies the validation scheme for metric and label names.
