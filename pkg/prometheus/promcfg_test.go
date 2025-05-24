@@ -6590,6 +6590,86 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
 		},
+		{
+			name:    "config_MetricNameValidationScheme_utf8",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
+			},
+			golden: "MetricNameValidationScheme_utf8.golden",
+		},
+		{
+			name:    "config_MetricNameValidationScheme_legacy",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			},
+			golden: "MetricNameValidationScheme_legacy.golden",
+		},
+		{
+			name:    "config_MetricNameValidationScheme_blank",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: nil,
+			},
+			golden: "MetricNameValidationScheme_blank.golden",
+		},
+		{
+			name:    "config_MetricNameValidationScheme_unsupported",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameValidationScheme: nil,
+			},
+			golden: "MetricNameValidationScheme_unsupported.golden",
+		},
+		{
+			name:    "config_MetricNameEscapingScheme_AllowUTF8",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
+			},
+			golden: "MetricNameEscapingScheme_AllowUTF8.golden",
+		},
+		{
+			name:    "config_MetricNameEscapingScheme_Underscores",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+			},
+			golden: "MetricNameEscapingScheme_Underscores.golden",
+		},
+		{
+			name:    "config_MetricNameEscapingScheme_Dots",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameEscapingScheme: ptr.To(monitoringv1.DotsNameEscapingScheme),
+			},
+			golden: "MetricNameEscapingScheme_Dots.golden",
+		},
+		{
+			name:    "config_MetricNameEscapingScheme_Values",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
+			},
+			golden: "MetricNameEscapingScheme_Values.golden",
+		},
+		{
+			name:    "config_MetricNameEscapingScheme_Blank",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameEscapingScheme: nil,
+			},
+			golden: "MetricNameEscapingScheme_Blank.golden",
+		},
+		{
+			name:    "config_MetricNameEscapingScheme_Unsupported",
+			version: "v3.3.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				MetricNameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
+			},
+			golden: "MetricNameEscapingScheme_Unsupported.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

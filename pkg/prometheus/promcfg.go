@@ -4738,6 +4738,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
+	if sc.Spec.MetricNameValidationScheme != nil {
+		cfg = cg.appendNameValidationScheme(cfg, sc.Spec.MetricNameValidationScheme)
+	}
+
+	if sc.Spec.MetricNameEscapingScheme != nil {
+		cfg = cg.appendNameEscapingScheme(cfg, sc.Spec.MetricNameEscapingScheme)
+	}
+
 	return cfg, nil
 }
 

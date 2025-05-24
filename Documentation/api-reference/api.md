@@ -10387,7 +10387,7 @@ int32
 <h3 id="monitoring.coreos.com/v1.NameEscapingSchemeOptions">NameEscapingSchemeOptions
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>Specifies the character escaping scheme that will be requested when scraping
@@ -10421,7 +10421,7 @@ characters with their unicode value, surrounded by underscores.</p>
 <h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>Specifies the validation scheme for metric and label names.</p>
@@ -21849,6 +21849,38 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>metricNameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.
+Enter &ldquo;UTF8&rdquo; for full UTF-8 support, or &ldquo;Legacy&rdquo; for letters, numbers, colons, and underscores.
+Blank value will be utf8.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricNameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metric name escaping mode to request through content negotiation.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClass</code><br/>
 <em>
 string
@@ -31430,6 +31462,38 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricNameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.
+Enter &ldquo;UTF8&rdquo; for full UTF-8 support, or &ldquo;Legacy&rdquo; for letters, numbers, colons, and underscores.
+Blank value will be utf8.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metricNameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metric name escaping mode to request through content negotiation.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>
