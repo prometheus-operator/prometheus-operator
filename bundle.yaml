@@ -25392,7 +25392,8 @@ spec:
                 type: array
               convertClassicHistogramsToNHCB:
                 description: |-
-                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  Whether to convert all scraped classic histograms into a native
+                  histogram with custom buckets.
 
                   It requires Prometheus >= v3.4.0.
                 type: boolean
@@ -27307,8 +27308,10 @@ spec:
                 - Values
                 type: string
               nameValidationScheme:
-                description: Specifies the validation scheme for metric and label
-                  names.
+                description: |-
+                  Specifies the validation scheme for metric and label names.
+
+                  It requires Prometheus >= v2.55.0.
                 enum:
                 - UTF8
                 - Legacy
@@ -37017,7 +37020,8 @@ spec:
                 type: array
               convertClassicHistogramsToNHCB:
                 description: |-
-                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  Whether to convert all scraped classic histograms into a native
+                  histogram with custom buckets.
 
                   It requires Prometheus >= v3.4.0.
                 type: boolean
@@ -38965,8 +38969,10 @@ spec:
                 - Values
                 type: string
               nameValidationScheme:
-                description: Specifies the validation scheme for metric and label
-                  names.
+                description: |-
+                  Specifies the validation scheme for metric and label names.
+
+                  It requires Prometheus >= v2.55.0.
                 enum:
                 - UTF8
                 - Legacy
