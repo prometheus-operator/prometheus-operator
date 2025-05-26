@@ -3098,7 +3098,7 @@
                     "type": "array"
                   },
                   "convertClassicHistogramsToNHCB": {
-                    "description": "Whether to convert all scraped classic histograms into a native histogram with custom buckets.\n\nIt requires Prometheus >= v3.4.0.",
+                    "description": "Whether to convert all scraped classic histograms into a native\nhistogram with custom buckets.\n\nIt requires Prometheus >= v3.4.0.",
                     "type": "boolean"
                   },
                   "disableCompaction": {
@@ -4701,7 +4701,7 @@
                     "type": "string"
                   },
                   "nameValidationScheme": {
-                    "description": "Specifies the validation scheme for metric and label names.",
+                    "description": "Specifies the validation scheme for metric and label names.\n\nIt requires Prometheus >= v2.55.0.",
                     "enum": [
                       "UTF8",
                       "Legacy"

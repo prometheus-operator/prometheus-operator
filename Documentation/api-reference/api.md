@@ -2917,6 +2917,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -2945,7 +2946,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -8429,6 +8431,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -8457,7 +8460,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -10390,16 +10394,18 @@ int32
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>Specifies the character escaping scheme that will be requested when scraping
+<p>Specifies the character escaping scheme that will be applied when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
-<p>Supported values are:
-- <code>AllowUTF8NameEscapingScheme</code> for Full UTF-8 support, no escaping needed.
-- <code>UnderscoresNameEscapingScheme</code> for Escape all legacy-invalid characters to underscores.
-- <code>DotsNameEscapingScheme</code> for Escapes dots to <code>_dot_</code>, underscores to <code>__</code>, and all other
-legacy-invalid characters to underscores.
-- <code>ValuesNameEscapingScheme</code> for Prepend the name with <code>U__</code> and replace all invalid
-characters with their unicode value, surrounded by underscores.</p>
+<p>Supported values are:</p>
+<ul>
+<li><code>AllowUTF8</code>, full UTF-8 support, no escaping needed.</li>
+<li><code>Underscores</code>, legacy-invalid characters are escaped to underscores.</li>
+<li><code>Dots</code>, dot characters are escaped to <code>_dot_</code>, underscores to <code>__</code>, and
+all other legacy-invalid characters to underscores.</li>
+<li><code>Values</code>, the string is prefixed by <code>U__</code> and all invalid characters are
+escaped to their unicode value, surrounded by underscores.</li>
+</ul>
 </div>
 <table>
 <thead>
@@ -10428,7 +10434,9 @@ characters with their unicode value, surrounded by underscores.</p>
 <p>Supported values are:
 - <code>UTF8NameValidationScheme</code> for UTF-8 support.
 - <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
-<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if enabled).</p>
+<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the
+OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if
+enabled).</p>
 </div>
 <table>
 <thead>
@@ -13496,6 +13504,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -13524,7 +13533,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -20586,6 +20596,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -20614,7 +20625,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -28980,6 +28992,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -29008,7 +29021,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
