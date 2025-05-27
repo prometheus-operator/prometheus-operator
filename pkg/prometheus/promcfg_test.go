@@ -6607,18 +6607,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "NameValidationScheme_legacy.golden",
 		},
 		{
-			name:    "config_NameValidationScheme_blank",
-			version: "v3.0.0",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				NameValidationScheme: nil,
-			},
-			golden: "NameValidationScheme_blank.golden",
-		},
-		{
 			name:    "config_NameValidationScheme_unsupported",
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				NameValidationScheme: nil,
+				NameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 			},
 			golden: "NameValidationScheme_unsupported.golden",
 		},
@@ -6653,14 +6645,6 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
 			},
 			golden: "NameEscapingScheme_Values.golden",
-		},
-		{
-			name:    "config_NameEscapingScheme_Blank",
-			version: "v3.4.0",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				NameEscapingScheme: nil,
-			},
-			golden: "NameEscapingScheme_Blank.golden",
 		},
 		{
 			name:    "config_NameEscapingScheme_Unsupported",
