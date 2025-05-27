@@ -3,22 +3,35 @@
 * **Owners:**
   * [yp969803](https://github.com/yp969803)
 * **Status:**
-  * `In-Progress`
+  * `Accepted`
 * **Related Tickets:**
   * [#3385](https://github.com/prometheus-operator/prometheus-operator/issues/3335)
 * **Other docs:**
-  * NA
+  * https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+  * https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
+  * [workload status subresource proposal](202409-status-subresource.md)
 
 > This proposal describes how we will extend the Prometheus operator configuration Custom
 > Resource Definitions (CRDs) with a Status subresource field.
 
 ## Why
 
-This will enhance observability by allowing users to verify whether their configurations have been successfully applied to Workload.
+This will allow users to verify whether their configurations have been successfully applied to the corresponding workload resources.
+
+Mapping between configuration resources and their associated workloads
+
+| Configuration Resource | Workload Resource              |
+|------------------------|--------------------------------|
+| ServiceMonitor         | Prometheus and PrometheusAgent |
+| PodMonitor             | Prometheus and PrometheusAgent |
+| Probes                 | Prometheus and PrometheusAgent |
+| ScrapeConfig           | Prometheus and PrometheusAgent |
+| PrometheusRule         | Prometheus and ThanosRuler     |
+| AlertmanagerConfig     | Alertmanager                   |
 
 ## Pitfalls of the current solution
 
-Prometheus operator allows users to define their observability workloads through "workload" resources like `Prometheus`, `PrometheusAgent`, `AlertManager`. The configuration of these workloads can be done dynamically by orchestrating "configuration" resources like `ServiceMonitor`, `PodMonitor`, `ScrapeConfig`, etc which in turn are used to generate the configuration for the workloads that the Prometheus-Operator manages.
+Prometheus operator allows users to define their observability workloads through "workload" resources like `Prometheus`, `PrometheusAgent`, `AlertManager`. The configuration of these workloads can be done dynamically by orchestrating "configuration" resources like `ServiceMonitor`, `PodMonitor`, `ScrapeConfig`, etc.
 
 Currently, the status subresource is only implemented for workload resources. The absence of the status subresource for configuration resources makes it difficult to determine the source of the generated configuration of the workload resources. Additionally, there is no straightforward way to observe the reconciliation status of configuration resources. While Kubernetes events are available when a configuration is rejected by a workload, they are not sufficient for ongoing visibility or troubleshooting.
 
@@ -31,14 +44,10 @@ Currently, the status subresource is only implemented for workload resources. Th
   * `Probes`
   * `PrometheusRule`
   * `AlertmanagerConfig`
-* Information about number of Up/Down targets in status subresource for PodMonitor, ServiceMonitor, Probes and ScrapeConfig.
-* Define how the operator would reconcile the status subresource.
-* Feature gate to help the user to enable/disable the feature.
-
-### Audience
-
-* Users of Prometheus-Operator
-* Maintainers and Contributors of Prometheus-Operator
+* Provide information about the targets being scraped and their status for scrape resources (`PodMonitor`, `ServiceMonitor`, `Probes` and `ScrapeConfig`).
+* Reporting in status section when a configuration resource is considered invalid during reconciliation. Examples include:
+  * The Prometheus or Alertmanager version does not support a specific feature.
+  * Invalid configmap/secret key reference.
 
 ## Non-Goals
 
@@ -46,11 +55,21 @@ Currently, the status subresource is only implemented for workload resources. Th
 * No information about the fired alerts in the status subresource of PrometheusRule (too heavy for the operator to query the prometheus pod for the alerts information. Prometheus may have a significant number of alerts, and fetching them repeatedly increases significant load in the operator).
 * The status subresource is not intended to provide realtime information of the targets.
 
+### Audience
+
+* Users of Prometheus-Operator
+* Maintainers and Contributors of Prometheus-Operator
+
 ## How
+
+Challenges that influenced the API design :
+
+* A single config resource can be selected by different workload resources.
+* The config resource might not live in the same namespace as the workload.
 
 ### CRDs
 
-#### `ServiceMonitor`
+#### `ServiceMonitor`/`PodMonitor`/`Probes`/`ScrapeConfig`
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -74,9 +93,14 @@ spec:
       scheme: http
   status:
     bindings:
-      - resource: prometheus
+      - group: monitoring.coreos.com
+        resource: prometheuses
         name: prometheus-main
         namespace: monitoring
+        totalScrapedTargets: 3
+        totalUpTargets: 2
+        totalDownTargets: 1
+        lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
           - type: Reconciled
             status: "True"
@@ -84,19 +108,7 @@ spec:
             lastTransitionTime: "2025-05-20T12:34:56Z"
             reason: ReconcileSucceeded
             message: "Successfully reconciled with Prometheus"
-        pods:
-          - name: prometheus-main-0
-            namespace: monitoring
-            endpoint: http://10.42.0.10:9090
-            totalScrapedTargets: 3
-            totalUpTargets: 2
-            totalDownTargets: 1
-            lastCheckedTime: "2025-05-20T12:34:56Z"
 ```
-
-CRDs of podMonitor, scrapeCOnfig and Probes looks similar to above.
-
-The operator sends the GET request at regular interval to the config-reloader sidecar with the serviceMonitor selector labels as the request body, the sidecar container after receiving the request sends the /api/v1/targets request to prometheus-container, from the response it gets from the prometheus, it modifies the response based on the labels and send the response to the operator. The sidecar will remove information from the response which can be used by attackers.
 
 #### `PrometheusRule`
 
@@ -124,7 +136,8 @@ spec:
             description: "Pod {{ $labels.pod }} is using more than 0.5 cores for 5 minutes."
   status:
     bindings:
-      - resource: prometheus
+      - group: monitoring.coreos.com
+        resource: prometheuses
         name: prometheus-main
         namespace: monitoring
         conditions:
@@ -154,7 +167,8 @@ spec:
           sendResolved: true
   status:
     bindings:
-      - resource: alertmanager
+      - group: monitoring.coreos.com
+        resource: alertmanagers
         name: alertmanager-main
         namespace: monitoring
         conditions:
@@ -166,6 +180,14 @@ spec:
             message: "Successfully reconciled with Prometheus"
 ```
 
+### Working
+
+#### How to get targets information in scrape resources ?
+
+The operator sends the GET request at regular interval to the config-reloader sidecar with the serviceMonitor selector labels as the request body, the sidecar container after receiving the request sends the /api/v1/targets request to prometheus-container, from the response it gets from the prometheus, it modifies the response based on the labels and send the response to the operator. The sidecar will remove critical informations from the response which can be used by attackers.
+
+#### How to clear refrences in status section if the workload is deleted ?
+
 Finalizers are used during the deletion of the config-resource and workload-resource to clear the refrences in the status-subresource.
 
 ## Alternatives
@@ -173,6 +195,41 @@ Finalizers are used during the deletion of the config-resource and workload-reso
 #### Dedicated CRD Approach for Configuration-Workload Mapping
 
 A potential solution to mapping a configuration resource to a workload resource is the introduction of a Custom Resource Definition (CRD). This new CRD would act as an intermediary, maintaining a clear association between configurations and workloads.
+
+The Secrets Store CSI Driver handles the Secrets Provider pod status in a similar way.
+
+```yaml
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClassPodStatus
+metadata:
+  creationTimestamp: "2021-01-21T19:20:11Z"
+  generation: 1
+  labels:
+    internal.secrets-store.csi.k8s.io/node-name: kind-control-plane
+    manager: secrets-store-csi
+    operation: Update
+    time: "2021-01-21T19:20:11Z"
+  name: nginx-secrets-store-inline-crd-dev-azure-spc
+  namespace: dev
+  ownerReferences:
+  - apiVersion: v1
+    kind: Pod
+    name: nginx-secrets-store-inline-crd
+    uid: 10f3e31c-d20b-4e46-921a-39e4cace6db2
+  resourceVersion: "1638459"
+  selfLink: /apis/secrets-store.csi.x-k8s.io/v1/namespaces/dev/secretproviderclasspodstatuses/nginx-secrets-store-inline-crd
+  uid: 1d078ad7-c363-4147-a7e1-234d4b9e0d53
+status:
+  mounted: true
+  objects:
+  - id: secret/secret1
+    version: c55925c29c6743dcb9bb4bf091be03b0
+  - id: secret/secret2
+    version: 7521273d0e6e427dbda34e033558027a
+  podName: nginx-secrets-store-inline-crd
+  secretProviderClassName: azure-spc
+  targetPath: /var/lib/kubelet/pods/10f3e31c-d20b-4e46-921a-39e4cace6db2/volumes/kubernetes.io~csi/secrets-store-inline/mount
+```
 
 It comes with the following drawbacks:
 - Introducing a new CRD means extra operational complexity.
