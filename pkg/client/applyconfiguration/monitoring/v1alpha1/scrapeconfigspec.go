@@ -76,8 +76,8 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
-	MetricNameValidationScheme                 *monitoringv1.NameValidationSchemeOptions `json:"metricNameValidationScheme,omitempty"`
-	MetricNameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions   `json:"metricNameEscapingScheme,omitempty"`
+	NameValidationScheme                       *monitoringv1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+	NameEscapingScheme                         *monitoringv1.NameEscapingSchemeOptions   `json:"nameEscapingScheme,omitempty"`
 	ScrapeClassName                            *string                                   `json:"scrapeClass,omitempty"`
 }
 
@@ -674,19 +674,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[
 	return b
 }
 
-// WithMetricNameValidationScheme sets the MetricNameValidationScheme field in the declarative configuration to the given value
+// WithNameValidationScheme sets the NameValidationScheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the MetricNameValidationScheme field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithMetricNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
-	b.MetricNameValidationScheme = &value
+// If called multiple times, the NameValidationScheme field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
+	b.NameValidationScheme = &value
 	return b
 }
 
-// WithMetricNameEscapingScheme sets the MetricNameEscapingScheme field in the declarative configuration to the given value
+// WithNameEscapingScheme sets the NameEscapingScheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the MetricNameEscapingScheme field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithMetricNameEscapingScheme(value monitoringv1.NameEscapingSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
-	b.MetricNameEscapingScheme = &value
+// If called multiple times, the NameEscapingScheme field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithNameEscapingScheme(value monitoringv1.NameEscapingSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
+	b.NameEscapingScheme = &value
 	return b
 }
 

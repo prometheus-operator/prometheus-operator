@@ -342,13 +342,13 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v3.0.0.
 	//
 	// +optional
-	MetricNameValidationScheme *v1.NameValidationSchemeOptions `json:"metricNameValidationScheme,omitempty"`
+	NameValidationScheme *v1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
 	// Metric name escaping mode to request through content negotiation.
 	//
 	// It requires Prometheus >= v3.4.0.
 	//
 	// +optional
-	MetricNameEscapingScheme *v1.NameEscapingSchemeOptions `json:"metricNameEscapingScheme,omitempty"`
+	NameEscapingScheme *v1.NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
 	// The scrape class to apply.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

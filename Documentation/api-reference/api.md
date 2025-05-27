@@ -21849,7 +21849,7 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>metricNameValidationScheme</code><br/>
+<code>nameValidationScheme</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
 NameValidationSchemeOptions
@@ -21866,7 +21866,7 @@ Blank value will be utf8.</p>
 </tr>
 <tr>
 <td>
-<code>metricNameEscapingScheme</code><br/>
+<code>nameEscapingScheme</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
 NameEscapingSchemeOptions
@@ -31466,7 +31466,7 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>metricNameValidationScheme</code><br/>
+<code>nameValidationScheme</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
 NameValidationSchemeOptions
@@ -31483,7 +31483,7 @@ Blank value will be utf8.</p>
 </tr>
 <tr>
 <td>
-<code>metricNameEscapingScheme</code><br/>
+<code>nameEscapingScheme</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
 NameEscapingSchemeOptions

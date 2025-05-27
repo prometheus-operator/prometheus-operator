@@ -9596,28 +9596,6 @@ spec:
                       type: object
                   type: object
                 type: array
-              metricNameEscapingScheme:
-                description: |-
-                  Metric name escaping mode to request through content negotiation.
-
-                  It requires Prometheus >= v3.4.0.
-                enum:
-                - AllowUTF8
-                - Underscores
-                - Dots
-                - Values
-                type: string
-              metricNameValidationScheme:
-                description: |-
-                  Specifies the validation scheme for metric and label names.
-                  Enter "UTF8" for full UTF-8 support, or "Legacy" for letters, numbers, colons, and underscores.
-                  Blank value will be utf8.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - UTF8
-                - Legacy
-                type: string
               metricRelabelings:
                 description: MetricRelabelConfigs to apply to samples before ingestion.
                 items:
@@ -9709,6 +9687,28 @@ spec:
                 description: MetricsPath HTTP path to scrape for metrics. If empty,
                   Prometheus uses the default value (e.g. /metrics).
                 minLength: 1
+                type: string
+              nameEscapingScheme:
+                description: |-
+                  Metric name escaping mode to request through content negotiation.
+
+                  It requires Prometheus >= v3.4.0.
+                enum:
+                - AllowUTF8
+                - Underscores
+                - Dots
+                - Values
+                type: string
+              nameValidationScheme:
+                description: |-
+                  Specifies the validation scheme for metric and label names.
+                  Enter "UTF8" for full UTF-8 support, or "Legacy" for letters, numbers, colons, and underscores.
+                  Blank value will be utf8.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - UTF8
+                - Legacy
                 type: string
               nativeHistogramBucketLimit:
                 description: |-
