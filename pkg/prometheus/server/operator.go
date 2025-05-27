@@ -531,7 +531,7 @@ func (c *Operator) Run(ctx context.Context) error {
 			c.RefreshStatusFor(obj.(*monitoringv1.ServiceMonitor))
 		})
 	}
-	
+
 	c.addHandlers()
 
 	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
