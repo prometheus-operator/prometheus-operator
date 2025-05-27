@@ -6591,84 +6591,84 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
 		},
 		{
-			name:    "config_MetricNameValidationScheme_utf8",
+			name:    "config_NameValidationScheme_utf8",
 			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
+				NameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 			},
-			golden: "MetricNameValidationScheme_utf8.golden",
+			golden: "NameValidationScheme_utf8.golden",
 		},
 		{
-			name:    "config_MetricNameValidationScheme_legacy",
+			name:    "config_NameValidationScheme_legacy",
 			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+				NameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			},
-			golden: "MetricNameValidationScheme_legacy.golden",
+			golden: "NameValidationScheme_legacy.golden",
 		},
 		{
-			name:    "config_MetricNameValidationScheme_blank",
+			name:    "config_NameValidationScheme_blank",
 			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameValidationScheme: nil,
+				NameValidationScheme: nil,
 			},
-			golden: "MetricNameValidationScheme_blank.golden",
+			golden: "NameValidationScheme_blank.golden",
 		},
 		{
-			name:    "config_MetricNameValidationScheme_unsupported",
+			name:    "config_NameValidationScheme_unsupported",
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameValidationScheme: nil,
+				NameValidationScheme: nil,
 			},
-			golden: "MetricNameValidationScheme_unsupported.golden",
+			golden: "NameValidationScheme_unsupported.golden",
 		},
 		{
-			name:    "config_MetricNameEscapingScheme_AllowUTF8",
+			name:    "config_NameEscapingScheme_AllowUTF8",
 			version: "v3.4.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
+				NameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
 			},
-			golden: "MetricNameEscapingScheme_AllowUTF8.golden",
+			golden: "NameEscapingScheme_AllowUTF8.golden",
 		},
 		{
-			name:    "config_MetricNameEscapingScheme_Underscores",
+			name:    "config_NameEscapingScheme_Underscores",
 			version: "v3.4.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+				NameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
 			},
-			golden: "MetricNameEscapingScheme_Underscores.golden",
+			golden: "NameEscapingScheme_Underscores.golden",
 		},
 		{
-			name:    "config_MetricNameEscapingScheme_Dots",
+			name:    "config_NameEscapingScheme_Dots",
 			version: "v3.4.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameEscapingScheme: ptr.To(monitoringv1.DotsNameEscapingScheme),
+				NameEscapingScheme: ptr.To(monitoringv1.DotsNameEscapingScheme),
 			},
-			golden: "MetricNameEscapingScheme_Dots.golden",
+			golden: "NameEscapingScheme_Dots.golden",
 		},
 		{
-			name:    "config_MetricNameEscapingScheme_Values",
+			name:    "config_NameEscapingScheme_Values",
 			version: "v3.4.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
+				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
 			},
-			golden: "MetricNameEscapingScheme_Values.golden",
+			golden: "NameEscapingScheme_Values.golden",
 		},
 		{
-			name:    "config_MetricNameEscapingScheme_Blank",
+			name:    "config_NameEscapingScheme_Blank",
 			version: "v3.4.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameEscapingScheme: nil,
+				NameEscapingScheme: nil,
 			},
-			golden: "MetricNameEscapingScheme_Blank.golden",
+			golden: "NameEscapingScheme_Blank.golden",
 		},
 		{
-			name:    "config_MetricNameEscapingScheme_Unsupported",
+			name:    "config_NameEscapingScheme_Unsupported",
 			version: "v3.3.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricNameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
+				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
 			},
-			golden: "MetricNameEscapingScheme_Unsupported.golden",
+			golden: "NameEscapingScheme_Unsupported.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
