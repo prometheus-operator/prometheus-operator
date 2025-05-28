@@ -9159,6 +9159,24 @@
                     "minLength": 1,
                     "type": "string"
                   },
+                  "nameEscapingScheme": {
+                    "description": "Metric name escaping mode to request through content negotiation.\n\nIt requires Prometheus >= v3.4.0.",
+                    "enum": [
+                      "AllowUTF8",
+                      "Underscores",
+                      "Dots",
+                      "Values"
+                    ],
+                    "type": "string"
+                  },
+                  "nameValidationScheme": {
+                    "description": "Specifies the validation scheme for metric and label names.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "UTF8",
+                      "Legacy"
+                    ],
+                    "type": "string"
+                  },
                   "nativeHistogramBucketLimit": {
                     "description": "If there are more than this many buckets in a native histogram,\nbuckets will be merged to stay within the limit.\nIt requires Prometheus >= v2.45.0.",
                     "format": "int64",
