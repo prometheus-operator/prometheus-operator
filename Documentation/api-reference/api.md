@@ -21256,8 +21256,8 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 <td>
 <code>kumaSDConfigs</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">
-[]KumaSDConfig
+<a href="#monitoring.coreos.com/v1alpha1.KumaSDConfigs">
+KumaSDConfigs
 </a>
 </em>
 </td>
@@ -25502,9 +25502,6 @@ SafeTLSConfig
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig
 </h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
-</p>
 <div>
 <p>KumaSDConfig allow retrieving scrape targets from Kuma&rsquo;s control plane.
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config</a></p>
@@ -25707,6 +25704,13 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.KumaSDConfigs">KumaSDConfigs
+(<code>[]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1.KumaSDConfig</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig
 </h3>
 <p>
@@ -30873,8 +30877,8 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 <td>
 <code>kumaSDConfigs</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">
-[]KumaSDConfig
+<a href="#monitoring.coreos.com/v1alpha1.KumaSDConfigs">
+KumaSDConfigs
 </a>
 </em>
 </td>
