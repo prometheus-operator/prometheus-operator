@@ -298,7 +298,7 @@ spec:
 
 ### High CPU usage by the Prometheus Operator
 
-There cenarios that can cause a high cpu usage by the Prometheus Operator. For instance with the metrics bellow we can get the rate of reconciliations:
+There cenarios that can cause a high CPU usage by the Prometheus Operator. For instance with the metrics bellow we can get the rate of reconciliations:
 
 ```shell
 (sum by(controller,triggered_by) (rate(prometheus_operator_triggered_total[5m]))
@@ -307,22 +307,4 @@ sum by(controller) (rate(prometheus_operator_reconcile_operations_total[5m])))
 
 If this show as being `triggered_by="Secret"`, a solution is to limit the operator to watch only secrets with matching labels using the `--secret-field-selector` argument. Also can use the namespace selectors to limit the amount of namespaces watched by the operator.
 
-There are other cases reported cause by high amount of external services discovered with `additionalScrapeConfigs`. To check the activity of service discovery and target updates you can use the following metrics:
-
-
-```shell
-rate(prometheus_sd_kubernetes_events_total[5m])
-rate(prometheus_sd_received_updates_total[5m])
-rate(prometheus_sd_updates_total[5m])
-sum by(scrape_job) (rate(prometheus_target_scrape_pool_sync_total[5m]))
-```
-
-A fix for this high cpu issue is to use the `--discovery.reload.interval`that can be added as:
-
-```yaml
-kind: Prometheus
-spec:
-  additionalArgs:
-  - name: scrape.discovery-reload-interval
-    value: 30s
-```
+Annother reported issue has to do with high amount of Service/Endpoint/ServiceMonitor, where issues with high CPU and memory were also encountered. A solution was to reduce the number of ServiceMonitors, to target multiple Service/Endpoints.
