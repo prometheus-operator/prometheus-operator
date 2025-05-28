@@ -21858,9 +21858,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names.
-Enter &ldquo;UTF8&rdquo; for full UTF-8 support, or &ldquo;Legacy&rdquo; for letters, numbers, colons, and underscores.
-Blank value will be utf8.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
@@ -31475,9 +31473,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names.
-Enter &ldquo;UTF8&rdquo; for full UTF-8 support, or &ldquo;Legacy&rdquo; for letters, numbers, colons, and underscores.
-Blank value will be utf8.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
