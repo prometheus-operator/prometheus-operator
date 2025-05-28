@@ -298,13 +298,13 @@ spec:
 
 ### High CPU usage by the Prometheus Operator
 
-There cenarios that can cause a high CPU usage by the Prometheus Operator. For instance with the metrics bellow we can get the rate of reconciliations:
+Some scenarios can cause high CPU usage by the Prometheus Operator. For instance, with the metrics below, we can get the rate of reconciliations:
 
 ```shell
 (sum by(controller,triggered_by) (rate(prometheus_operator_triggered_total[5m]))
 sum by(controller) (rate(prometheus_operator_reconcile_operations_total[5m])))
 ```
 
-If this show as being `triggered_by="Secret"`, a solution is to limit the operator to watch only secrets with matching labels using the `--secret-field-selector` argument. Also can use the namespace selectors to limit the amount of namespaces watched by the operator.
+If this shows as being `triggered_by="Secret"`, a solution is to limit the operator to watch only secrets with matching labels using the `--secret-field-selector` argument. Also, you can use the namespace selectors to limit the number of namespaces watched by the operator.
 
 Annother reported issue has to do with high amount of Service/Endpoint/ServiceMonitor, where issues with high CPU and memory were also encountered. A solution was to reduce the number of ServiceMonitors, to target multiple Service/Endpoints.
