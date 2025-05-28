@@ -54,6 +54,7 @@ Currently, the status subresource is only implemented for workload resources. Th
 * The status subresource is intended to offer only a summary (e.g., counts of up/down targets) of the scrape status.
 * No information about the fired alerts in the status subresource of PrometheusRule (too heavy for the operator to query the prometheus pod for the alerts information. Prometheus may have a significant number of alerts, and fetching them repeatedly increases significant load in the operator).
 * The status subresource is not intended to provide realtime information of the targets.
+* Configuration resources like ServiceMonitor or PodMonitor do not expose status information that explains why they are not being selected by Prometheus or why their targets are not being scraped
 
 ### Audience
 
@@ -91,6 +92,13 @@ spec:
       path: /metrics
       interval: 30s
       scheme: http
+      basicAuth:
+        username:
+          name: my-secret
+          key: basic-auth-username
+        password:
+          name: my-secret
+          key: basic-auth-password
   status:
     bindings:
       - group: monitoring.coreos.com
@@ -104,10 +112,20 @@ spec:
         conditions:
           - type: Reconciled
             status: "True"
-            observedGeneration: 1
+            observedGeneration: 3
             lastTransitionTime: "2025-05-20T12:34:56Z"
-            reason: ReconcileSucceeded
-            message: "Successfully reconciled with Prometheus"
+          - type: Reconciled
+            status: "False"
+            observedGeneration: 2
+            lastTransitionTime: "2024-02-08T23:52:22Z"
+            reason: InvalidResource
+            message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
+          - type: Reconciled
+            status: "False"
+            observedGeneration: 1
+            lastTransitionTime: "2024-02-08T23:52:22Z"
+            reason: InvalidSecret
+            message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'."
 ```
 
 #### `PrometheusRule`
@@ -145,8 +163,6 @@ spec:
             status: "True"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
-            reason: ReconcileSucceeded
-            message: "Successfully reconciled with Prometheus"
 ```
 
 #### `AlertManagerConfig`
@@ -176,8 +192,6 @@ spec:
             status: "True"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
-            reason: ReconcileSucceeded
-            message: "Successfully reconciled with Prometheus"
 ```
 
 ### Working
