@@ -307,4 +307,4 @@ sum by(controller) (rate(prometheus_operator_reconcile_operations_total[5m])))
 
 If this shows as being `triggered_by="Secret"`, a solution is to limit the operator to watch only secrets with matching labels using the `--secret-field-selector` argument. Also, you can use the namespace selectors to limit the number of namespaces watched by the operator.
 
-Annother reported issue has to do with high amount of Service/Endpoint/ServiceMonitor, where issues with high CPU and memory were also encountered. A solution was to reduce the number of ServiceMonitors, to target multiple Service/Endpoints.
+Another reported issue has to do with a high amount of Service/Endpoint/ServiceMonitor, where issues with high CPU and memory were also encountered. A solution was to reduce the number of ServiceMonitors, to target multiple Services/Endpoints.
