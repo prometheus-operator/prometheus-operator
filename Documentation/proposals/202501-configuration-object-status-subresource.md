@@ -48,6 +48,7 @@ Currently, the status subresource is only implemented for workload resources. Th
 * Reporting in status section when a configuration resource is considered invalid during reconciliation. Examples include:
   * The Prometheus or Alertmanager version does not support a specific feature.
   * Invalid configmap/secret key reference.
+  * Invalid PrometheusRule.
 
 ## Non-Goals
 
@@ -118,13 +119,13 @@ spec:
             status: "False"
             observedGeneration: 2
             lastTransitionTime: "2024-02-08T23:52:22Z"
-            reason: InvalidResource
+            reason: InvalidConfiguration
             message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
           - type: Reconciled
             status: "False"
             observedGeneration: 1
             lastTransitionTime: "2024-02-08T23:52:22Z"
-            reason: InvalidSecret
+            reason: InvalidConfiguration
             message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'."
 ```
 
@@ -145,7 +146,7 @@ spec:
       interval: 30s
       rules:
         - alert: HighPodCPUUsage
-          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m])) by (pod) > 0.5
+          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m)) by (pod) > 0.5
           for: 5m
           labels:
             severity: warning
@@ -160,9 +161,11 @@ spec:
         namespace: monitoring
         conditions:
           - type: Reconciled
-            status: "True"
+            status: "False"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
+            reason: InvalidConfiguration
+            message: "rule 0, alert: 'HighPodCPUUsage', parse error: expected type vector in aggregation expression, got scalar"
 ```
 
 #### `AlertManagerConfig`
