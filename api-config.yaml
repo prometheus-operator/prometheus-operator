@@ -8,7 +8,6 @@ processor:
     - "Associa(ted|tor|tionStatus|tionConf)$"
   # RE2 regular expressions describing type fields that should be excluded from the generated documentation.
   ignoreFields:
-    - "status$"
     - "TypeMeta$"
 
 render:

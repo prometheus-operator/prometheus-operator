@@ -111,6 +111,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[AlertmanagerSpec](#alertmanagerspec)_ | Specification of the desired behavior of the Alertmanager cluster. More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
+| `status` _[AlertmanagerStatus](#alertmanagerstatus)_ | Most recent observed status of the Alertmanager cluster. Read-only.<br />More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
 
 
 #### AlertmanagerAPIVersion
@@ -325,6 +326,28 @@ _Appears in:_
 | `terminationGracePeriodSeconds` _integer_ | Optional duration in seconds the pod needs to terminate gracefully.<br />Value must be non-negative integer. The value zero indicates stop immediately via<br />the kill signal (no opportunity to shut down) which may lead to data corruption.<br />Defaults to 120 seconds. |  | Minimum: 0 <br /> |
 
 
+#### AlertmanagerStatus
+
+
+
+AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
+More info:
+https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+
+
+_Appears in:_
+- [Alertmanager](#alertmanager)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `paused` _boolean_ | Represents whether any actions on the underlying managed objects are<br />being performed. Only delete actions will be performed. |  |  |
+| `replicas` _integer_ | Total number of non-terminated pods targeted by this Alertmanager<br />object (their labels match the selector). |  |  |
+| `updatedReplicas` _integer_ | Total number of non-terminated pods targeted by this Alertmanager<br />object that have the desired version spec. |  |  |
+| `availableReplicas` _integer_ | Total number of available pods (ready for at least minReadySeconds)<br />targeted by this Alertmanager cluster. |  |  |
+| `unavailableReplicas` _integer_ | Total number of unavailable pods targeted by this Alertmanager object. |  |  |
+| `selector` _string_ | The selector used to match the pods targeted by this Alertmanager object. |  |  |
+| `conditions` _[Condition](#condition) array_ | The current state of the Alertmanager object. |  |  |
 
 
 #### AlertmanagerWebSpec
@@ -692,12 +715,31 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `type` _[ConditionType](#conditiontype)_ | Type of the condition being reported. |  | MinLength: 1 <br /> |
+| `status` _[ConditionStatus](#conditionstatus)_ | Status of the condition. |  | MinLength: 1 <br /> |
 | `lastTransitionTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta)_ | lastTransitionTime is the time of the last update to the current status property. |  |  |
 | `reason` _string_ | Reason for the condition's last transition. |  |  |
 | `message` _string_ | Human-readable message indicating details for the condition's last transition. |  |  |
 | `observedGeneration` _integer_ | ObservedGeneration represents the .metadata.generation that the<br />condition was set based upon. For instance, if `.metadata.generation` is<br />currently 12, but the `.status.conditions[].observedGeneration` is 9, the<br />condition is out of date with respect to the current state of the<br />instance. |  |  |
 
 
+#### ConditionStatus
+
+_Underlying type:_ _string_
+
+
+
+_Validation:_
+- MinLength: 1
+
+_Appears in:_
+- [Condition](#condition)
+
+| Field | Description |
+| --- | --- |
+| `True` |  |
+| `Degraded` |  |
+| `False` |  |
+| `Unknown` |  |
 
 
 #### ConditionType
@@ -866,6 +908,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `metadata` _[EmbeddedObjectMetadata](#embeddedobjectmetadata)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[PersistentVolumeClaimSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#persistentvolumeclaimspec-v1-core)_ | Defines the desired characteristics of a volume requested by a pod author.<br />More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims |  |  |
+| `status` _[PersistentVolumeClaimStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#persistentvolumeclaimstatus-v1-core)_ | Deprecated: this field is never set. |  |  |
 
 
 #### EnableFeature
@@ -1607,6 +1650,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[PrometheusSpec](#prometheusspec)_ | Specification of the desired behavior of the Prometheus cluster. More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
+| `status` _[PrometheusStatus](#prometheusstatus)_ | Most recent observed status of the Prometheus cluster. Read-only.<br />More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
 
 
 
@@ -1805,6 +1849,31 @@ _Appears in:_
 | `enableAdminAPI` _boolean_ | Enables access to the Prometheus web admin API.<br />WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,<br />shutdown Prometheus, and more. Enabling this should be done with care and the<br />user is advised to add additional authentication authorization via a proxy to<br />ensure only clients authorized to perform these actions can do so.<br />For more information:<br />https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis |  |  |
 
 
+#### PrometheusStatus
+
+
+
+PrometheusStatus is the most recent observed status of the Prometheus cluster.
+More info:
+https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+
+
+_Appears in:_
+- [Prometheus](#prometheus)
+- [PrometheusAgent](#prometheusagent)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `paused` _boolean_ | Represents whether any actions on the underlying managed objects are<br />being performed. Only delete actions will be performed. |  |  |
+| `replicas` _integer_ | Total number of non-terminated pods targeted by this Prometheus deployment<br />(their labels match the selector). |  |  |
+| `updatedReplicas` _integer_ | Total number of non-terminated pods targeted by this Prometheus deployment<br />that have the desired version spec. |  |  |
+| `availableReplicas` _integer_ | Total number of available pods (ready for at least minReadySeconds)<br />targeted by this Prometheus deployment. |  |  |
+| `unavailableReplicas` _integer_ | Total number of unavailable pods targeted by this Prometheus deployment. |  |  |
+| `conditions` _[Condition](#condition) array_ | The current state of the Prometheus deployment. |  |  |
+| `shardStatuses` _[ShardStatus](#shardstatus) array_ | The list has one entry per shard. Each entry provides a summary of the shard status. |  |  |
+| `shards` _integer_ | Shards is the most recently observed number of shards. |  |  |
+| `selector` _string_ | The selector used to match the pods targeted by this Prometheus resource. |  |  |
 
 
 #### PrometheusTracingConfig
@@ -2644,6 +2713,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[ThanosRulerSpec](#thanosrulerspec)_ | Specification of the desired behavior of the ThanosRuler cluster. More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
+| `status` _[ThanosRulerStatus](#thanosrulerstatus)_ | Most recent observed status of the ThanosRuler cluster. Read-only.<br />More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
 
 
 
@@ -2721,6 +2791,27 @@ _Appears in:_
 | `terminationGracePeriodSeconds` _integer_ | Optional duration in seconds the pod needs to terminate gracefully.<br />Value must be non-negative integer. The value zero indicates stop immediately via<br />the kill signal (no opportunity to shut down) which may lead to data corruption.<br />Defaults to 120 seconds. |  | Minimum: 0 <br /> |
 
 
+#### ThanosRulerStatus
+
+
+
+ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
+More info:
+https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+
+
+_Appears in:_
+- [ThanosRuler](#thanosruler)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `paused` _boolean_ | Represents whether any actions on the underlying managed objects are<br />being performed. Only delete actions will be performed. |  |  |
+| `replicas` _integer_ | Total number of non-terminated pods targeted by this ThanosRuler deployment<br />(their labels match the selector). |  |  |
+| `updatedReplicas` _integer_ | Total number of non-terminated pods targeted by this ThanosRuler deployment<br />that have the desired version spec. |  |  |
+| `availableReplicas` _integer_ | Total number of available pods (ready for at least minReadySeconds)<br />targeted by this ThanosRuler deployment. |  |  |
+| `unavailableReplicas` _integer_ | Total number of unavailable pods targeted by this ThanosRuler deployment. |  |  |
+| `conditions` _[Condition](#condition) array_ | The current state of the ThanosRuler object. |  |  |
 
 
 #### ThanosRulerWebSpec
@@ -3064,7 +3155,7 @@ _Appears in:_
 | `tagSeparator` _string_ | The string by which Consul tags are joined into the tag label.<br />If unset, Prometheus uses its default value. |  | MinLength: 1 <br /> |
 | `nodeMeta` _object (keys:string, values:string)_ | Node metadata key/value pairs to filter nodes for a given service.<br />Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead. |  |  |
 | `filter` _string_ | Filter expression used to filter the catalog results.<br />See https://www.consul.io/api-docs/catalog#list-services<br />It requires Prometheus >= 3.0.0. |  | MinLength: 1 <br /> |
-| `allowStale` _boolean_ | Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.<br />If unset, Prometheus uses its default value. |  |  |
+| `allowStale` _boolean_ | Allow stale Consul results (see https://www.consul.io/api/features/consistency.html ). Will reduce load on Consul.<br />If unset, Prometheus uses its default value. |  |  |
 | `refreshInterval` _[Duration](#duration)_ | The time after which the provided names are refreshed.<br />On large setup it might be a good idea to increase this value because the catalog will change all the time.<br />If unset, Prometheus uses its default value. |  | Pattern: `^(0\|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$` <br /> |
 | `basicAuth` _[BasicAuth](#basicauth)_ | Optional BasicAuth information to authenticate against the Consul Server.<br />More info: https://prometheus.io/docs/operating/configuration/#endpoints<br />Cannot be set at the same time as `authorization`, or `oauth2`. |  |  |
 | `authorization` _[SafeAuthorization](#safeauthorization)_ | Optional Authorization header configuration to authenticate against the Consul Server.<br />Cannot be set at the same time as `basicAuth`, or `oauth2`. |  |  |
@@ -4100,6 +4191,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[PrometheusAgentSpec](#prometheusagentspec)_ | Specification of the desired behavior of the Prometheus agent. More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
+| `status` _[PrometheusStatus](#prometheusstatus)_ | Most recent observed status of the Prometheus cluster. Read-only.<br />More info:<br />https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status |  |  |
 
 
 
