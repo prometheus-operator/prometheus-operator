@@ -75,6 +75,7 @@ The current [PrometheusAgent CRD](https://prometheus-operator.dev/docs/platform/
 We will add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`, with `StatefulSet` being the default. If the DaemonSet mode is activated (`mode: DaemonSet`), all the unrelated fields listed above will not be accepted. In the MVP, we will simply fail the reconciliation if any of those fields are set. We will prevent users to directly switch from a live StatefulSet setup to DaemonSet, because that might break their workload if they forget to unset the unsupported fields.
 
 #### 6.1.1 CEL Validation rules
+
 To prevent users from accidentally providing invalid configurations, we will implement validation rules using [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/).
 
 These CEL rules will:
@@ -83,7 +84,6 @@ These CEL rules will:
 - Prevent using ServiceMonitorSelector in DaemonSet mode
 - Prevent using VolumeClaimTemplates in DaemonSet mode
 - Require PodMonitorSelector in DaemonSet mode
-
 
 ### 6.2. Node detecting:
 
