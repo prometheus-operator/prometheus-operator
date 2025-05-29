@@ -11,8 +11,7 @@
   * https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
   * [workload status subresource proposal](202409-status-subresource.md)
 
-> This proposal describes how we will extend the Prometheus operator configuration Custom
-> Resource Definitions (CRDs) with a Status subresource field.
+> This proposal outlines the implementation of a Status subresource field extension to the Prometheus operator config based resource Custom Resource Definitions(CRDs).
 
 ## Why
 
@@ -48,13 +47,15 @@ Currently, the status subresource is only implemented for workload resources. Th
 * Reporting in status section when a configuration resource is considered invalid during reconciliation. Examples include:
   * The Prometheus or Alertmanager version does not support a specific feature.
   * Invalid configmap/secret key reference.
+  * Invalid PrometheusRule.
 
 ## Non-Goals
 
 * The status subresource is intended to offer only a summary (e.g., counts of up/down targets) of the scrape status.
 * No information about the fired alerts in the status subresource of PrometheusRule (too heavy for the operator to query the prometheus pod for the alerts information. Prometheus may have a significant number of alerts, and fetching them repeatedly increases significant load in the operator).
 * The status subresource is not intended to provide realtime information of the targets.
-* Configuration resources like ServiceMonitor or PodMonitor do not expose status information that explains why they are not being selected by Prometheus or why their targets are not being scraped
+* Configuration resources won't expose status information that explains why they are not being selected by Prometheus or why their targets are not being scraped.
+* [poctl](https://github.com/prometheus-operator/poctl) also provides some insights into configuration resources, not planning to reimplement the stuffs again in status subresource.
 
 ### Audience
 
@@ -65,8 +66,8 @@ Currently, the status subresource is only implemented for workload resources. Th
 
 Challenges that influenced the API design :
 
-* A single config resource can be selected by different workload resources.
-* The config resource might not live in the same namespace as the workload.
+* A single config resource can be selected by multiple workload resources.
+* The config resource might not be in the same namespace as the workload resource.
 
 ### CRDs
 
@@ -118,13 +119,13 @@ spec:
             status: "False"
             observedGeneration: 2
             lastTransitionTime: "2024-02-08T23:52:22Z"
-            reason: InvalidResource
+            reason: InvalidConfiguration
             message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
           - type: Reconciled
             status: "False"
             observedGeneration: 1
             lastTransitionTime: "2024-02-08T23:52:22Z"
-            reason: InvalidSecret
+            reason: InvalidConfiguration
             message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'."
 ```
 
@@ -145,7 +146,7 @@ spec:
       interval: 30s
       rules:
         - alert: HighPodCPUUsage
-          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m])) by (pod) > 0.5
+          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m)) by (pod) > 0.5
           for: 5m
           labels:
             severity: warning
@@ -160,9 +161,11 @@ spec:
         namespace: monitoring
         conditions:
           - type: Reconciled
-            status: "True"
+            status: "False"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
+            reason: InvalidConfiguration
+            message: "rule 0, alert: 'HighPodCPUUsage', parse error: expected type vector in aggregation expression, got scalar"
 ```
 
 #### `AlertManagerConfig`
@@ -246,17 +249,17 @@ status:
 ```
 
 It comes with the following drawbacks:
-- Introducing a new CRD means extra operational complexity.
-- It requires installation, maintenance, and versioning, which could increase the administrative burden.
+* Introducing a new CRD could lead to additional operational complexity.
+* It requires installation, maintenance and versioning, which could increase the administrative burden.
 
 #### Storing Information in the Workload Resource
 
 Another approach is to store configuration mappings directly within the workload resource.
 
 It comes with the following drawbacks:
-- Workload resources could reference a high number of configuration resources.
-- Storing all these mappings within a single workload resource could lead to excessive API payload sizes.
-- Configuration resources won’t have a direct view of where their configurations are being used.
+* Workload resources could reference a high number of configuration resources.
+* Storing all these mappings within a single workload resource could lead to excessive API payload sizes.
+* Configuration resources won’t have a direct view of where their configurations are being used.
 
 ## Action Plan
 
