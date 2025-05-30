@@ -68,6 +68,11 @@ type globalConfig struct {
 	VictorOpsAPIKeyFile  string          `yaml:"victorops_api_key_file,omitempty" json:"victorops_api_key_file,omitempty"`
 	TelegramAPIURL       *config.URL     `yaml:"telegram_api_url,omitempty" json:"telegram_api_url,omitempty"`
 	WebexAPIURL          *config.URL     `yaml:"webex_api_url,omitempty" json:"webex_api_url,omitempty"`
+	RocketChatAPIURL      *config.URL     `yaml:"rocketchat_api_url,omitempty" json:"rocketchat_api_url,omitempty"`
+	RocketChatToken       string          `yaml:"rocketchat_token,omitempty" json:"rocketchat_token,omitempty"`
+	RocketChatTokenFile   string          `yaml:"rocketchat_token_file,omitempty" json:"rocketchat_token_file,omitempty"`
+	RocketChatTokenID     string          `yaml:"rocketchat_token_id,omitempty" json:"rocketchat_token_id,omitempty"`
+	RocketChatTokenIDFile string          `yaml:"rocketchat_token_id_file,omitempty" json:"rocketchat_token_id_file,omitempty"`
 }
 
 type route struct {
@@ -457,26 +462,27 @@ type rocketchatAttachmentAction struct {
 }
 
 type rocketChatConfig struct {
-	HTTPConfig  *httpClientConfig `yaml:"http_config,omitempty"`
-	APIURL      string            `yaml:"api_url,omitempty"`
-	TokenID     *string           `yaml:"token_id,omitempty"`
-	TokenIDFile string            `yaml:"token_id_file,omitempty"`
-	Token       *string           `yaml:"token,omitempty"`
-	TokenFile   string            `yaml:"token_file,omitempty"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	TokenID       *string           `yaml:"token_id,omitempty" json:"token_id,omitempty"`
+	TokenIDFile   string            `yaml:"token_id_file,omitempty" json:"token_id_file,omitempty"`
+	Token         *string           `yaml:"token,omitempty" json:"token,omitempty"`
+	TokenFile     string            `yaml:"token_file,omitempty" json:"token_file,omitempty"`
 	// RocketChat channel override, (like #other-channel or @username).
-	Channel     string                        `yaml:"channel,omitempty"`
-	Color       string                        `yaml:"color,omitempty"`
-	Title       string                        `yaml:"title,omitempty"`
-	TitleLink   string                        `yaml:"title_link,omitempty"`
-	Text        string                        `yaml:"text,omitempty"`
-	Fields      []*rocketchatAttachmentField  `yaml:"fields,omitempty"`
-	ShortFields bool                          `yaml:"short_fields"`
-	Emoji       string                        `yaml:"emoji,omitempty"`
-	IconURL     string                        `yaml:"icon_url,omitempty"`
-	ImageURL    string                        `yaml:"image_url,omitempty"`
-	ThumbURL    string                        `yaml:"thumb_url,omitempty"`
-	LinkNames   bool                          `yaml:"link_names"`
-	Actions     []*rocketchatAttachmentAction `yaml:"actions,omitempty"`
+	Channel     string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
+	Color       string                        `yaml:"color,omitempty" json:"color,omitempty"`
+	Title       string                        `yaml:"title,omitempty" json:"title,omitempty"`
+	TitleLink   string                        `yaml:"title_link,omitempty" json:"title_link,omitempty"`
+	Text        string                        `yaml:"text,omitempty" json:"text,omitempty"`
+	Fields      []*rocketchatAttachmentField  `yaml:"fields,omitempty" json:"fields,omitempty"`
+	ShortFields bool                          `yaml:"short_fields" json:"short_fields"`
+	Emoji       string                        `yaml:"emoji,omitempty" json:"emoji,omitempty"`
+	IconURL     string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
+	ImageURL    string                        `yaml:"image_url,omitempty" json:"image_url,omitempty"`
+	ThumbURL    string                        `yaml:"thumb_url,omitempty" json:"thumb_url,omitempty"`
+	LinkNames   bool                          `yaml:"link_names" json:"link_names"`
+	Actions     []*rocketchatAttachmentAction `yaml:"actions,omitempty" json:"actions,omitempty"`
 }
 
 type timeInterval config.TimeInterval
