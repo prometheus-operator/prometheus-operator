@@ -15030,7 +15030,7 @@ spec:
                 description: |-
                   An optional list of references to secrets in the same namespace
                   to use for pulling prometheus and alertmanager images from registries
-                  see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+                  see https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
                 items:
                   description: |-
                     LocalObjectReference contains enough information to let you locate the
@@ -16587,7 +16587,7 @@ spec:
                       Annotations is an unstructured key value map stored with a resource that may be
                       set by external tools to store and retrieve arbitrary metadata. They are not
                       queryable and should be preserved when modifying objects.
-                      More info: http://kubernetes.io/docs/user-guide/annotations
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                     type: object
                   labels:
                     additionalProperties:
@@ -16596,7 +16596,7 @@ spec:
                       Map of string keys and values that can be used to organize and categorize
                       (scope and select) objects. May match selectors of replication controllers
                       and services.
-                      More info: http://kubernetes.io/docs/user-guide/labels
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                     type: object
                   name:
                     description: |-
@@ -16605,7 +16605,7 @@ spec:
                       automatically. Name is primarily intended for creation idempotence and configuration
                       definition.
                       Cannot be updated.
-                      More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                     type: string
                 type: object
               portName:
@@ -17276,7 +17276,7 @@ spec:
                               Annotations is an unstructured key value map stored with a resource that may be
                               set by external tools to store and retrieve arbitrary metadata. They are not
                               queryable and should be preserved when modifying objects.
-                              More info: http://kubernetes.io/docs/user-guide/annotations
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                             type: object
                           labels:
                             additionalProperties:
@@ -17285,7 +17285,7 @@ spec:
                               Map of string keys and values that can be used to organize and categorize
                               (scope and select) objects. May match selectors of replication controllers
                               and services.
-                              More info: http://kubernetes.io/docs/user-guide/labels
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                             type: object
                           name:
                             description: |-
@@ -17294,7 +17294,7 @@ spec:
                               automatically. Name is primarily intended for creation idempotence and configuration
                               definition.
                               Cannot be updated.
-                              More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                             type: string
                         type: object
                       spec:
@@ -25707,7 +25707,7 @@ spec:
                   Use the host's network namespace if true.
 
                   Make sure to understand the security implications if you want to enable
-                  it (https://kubernetes.io/docs/concepts/configuration/overview/).
+                  it (https://kubernetes.io/docs/concepts/configuration/overview/ ).
 
                   When hostNetwork is enabled, this will set the DNS policy to
                   `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
@@ -27421,7 +27421,7 @@ spec:
                       Annotations is an unstructured key value map stored with a resource that may be
                       set by external tools to store and retrieve arbitrary metadata. They are not
                       queryable and should be preserved when modifying objects.
-                      More info: http://kubernetes.io/docs/user-guide/annotations
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                     type: object
                   labels:
                     additionalProperties:
@@ -27430,7 +27430,7 @@ spec:
                       Map of string keys and values that can be used to organize and categorize
                       (scope and select) objects. May match selectors of replication controllers
                       and services.
-                      More info: http://kubernetes.io/docs/user-guide/labels
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                     type: object
                   name:
                     description: |-
@@ -27439,7 +27439,7 @@ spec:
                       automatically. Name is primarily intended for creation idempotence and configuration
                       definition.
                       Cannot be updated.
-                      More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                     type: string
                 type: object
               podMonitorNamespaceSelector:
@@ -30250,7 +30250,7 @@ spec:
                               Annotations is an unstructured key value map stored with a resource that may be
                               set by external tools to store and retrieve arbitrary metadata. They are not
                               queryable and should be preserved when modifying objects.
-                              More info: http://kubernetes.io/docs/user-guide/annotations
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                             type: object
                           labels:
                             additionalProperties:
@@ -30259,7 +30259,7 @@ spec:
                               Map of string keys and values that can be used to organize and categorize
                               (scope and select) objects. May match selectors of replication controllers
                               and services.
-                              More info: http://kubernetes.io/docs/user-guide/labels
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                             type: object
                           name:
                             description: |-
@@ -30268,7 +30268,7 @@ spec:
                               automatically. Name is primarily intended for creation idempotence and configuration
                               definition.
                               Cannot be updated.
-                              More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                             type: string
                         type: object
                       spec:
@@ -37377,7 +37377,7 @@ spec:
                   Use the host's network namespace if true.
 
                   Make sure to understand the security implications if you want to enable
-                  it (https://kubernetes.io/docs/concepts/configuration/overview/).
+                  it (https://kubernetes.io/docs/concepts/configuration/overview/ ).
 
                   When hostNetwork is enabled, this will set the DNS policy to
                   `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
@@ -39082,7 +39082,7 @@ spec:
                       Annotations is an unstructured key value map stored with a resource that may be
                       set by external tools to store and retrieve arbitrary metadata. They are not
                       queryable and should be preserved when modifying objects.
-                      More info: http://kubernetes.io/docs/user-guide/annotations
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                     type: object
                   labels:
                     additionalProperties:
@@ -39091,7 +39091,7 @@ spec:
                       Map of string keys and values that can be used to organize and categorize
                       (scope and select) objects. May match selectors of replication controllers
                       and services.
-                      More info: http://kubernetes.io/docs/user-guide/labels
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                     type: object
                   name:
                     description: |-
@@ -39100,7 +39100,7 @@ spec:
                       automatically. Name is primarily intended for creation idempotence and configuration
                       definition.
                       Cannot be updated.
-                      More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                     type: string
                 type: object
               podMonitorNamespaceSelector:
@@ -42889,7 +42889,7 @@ spec:
                               Annotations is an unstructured key value map stored with a resource that may be
                               set by external tools to store and retrieve arbitrary metadata. They are not
                               queryable and should be preserved when modifying objects.
-                              More info: http://kubernetes.io/docs/user-guide/annotations
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                             type: object
                           labels:
                             additionalProperties:
@@ -42898,7 +42898,7 @@ spec:
                               Map of string keys and values that can be used to organize and categorize
                               (scope and select) objects. May match selectors of replication controllers
                               and services.
-                              More info: http://kubernetes.io/docs/user-guide/labels
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                             type: object
                           name:
                             description: |-
@@ -42907,7 +42907,7 @@ spec:
                               automatically. Name is primarily intended for creation idempotence and configuration
                               definition.
                               Cannot be updated.
-                              More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                             type: string
                         type: object
                       spec:
@@ -64968,7 +64968,7 @@ spec:
                       Annotations is an unstructured key value map stored with a resource that may be
                       set by external tools to store and retrieve arbitrary metadata. They are not
                       queryable and should be preserved when modifying objects.
-                      More info: http://kubernetes.io/docs/user-guide/annotations
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                     type: object
                   labels:
                     additionalProperties:
@@ -64977,7 +64977,7 @@ spec:
                       Map of string keys and values that can be used to organize and categorize
                       (scope and select) objects. May match selectors of replication controllers
                       and services.
-                      More info: http://kubernetes.io/docs/user-guide/labels
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                     type: object
                   name:
                     description: |-
@@ -64986,7 +64986,7 @@ spec:
                       automatically. Name is primarily intended for creation idempotence and configuration
                       definition.
                       Cannot be updated.
-                      More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                     type: string
                 type: object
               portName:
@@ -66900,7 +66900,7 @@ spec:
                               Annotations is an unstructured key value map stored with a resource that may be
                               set by external tools to store and retrieve arbitrary metadata. They are not
                               queryable and should be preserved when modifying objects.
-                              More info: http://kubernetes.io/docs/user-guide/annotations
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                             type: object
                           labels:
                             additionalProperties:
@@ -66909,7 +66909,7 @@ spec:
                               Map of string keys and values that can be used to organize and categorize
                               (scope and select) objects. May match selectors of replication controllers
                               and services.
-                              More info: http://kubernetes.io/docs/user-guide/labels
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                             type: object
                           name:
                             description: |-
@@ -66918,7 +66918,7 @@ spec:
                               automatically. Name is primarily intended for creation idempotence and configuration
                               definition.
                               Cannot be updated.
-                              More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                             type: string
                         type: object
                       spec:
