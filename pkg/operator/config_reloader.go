@@ -337,6 +337,7 @@ func (cr *ConfigReloader) addProbes(c v1.Container) v1.Container {
 
 	c.LivenessProbe = &v1.Probe{ProbeHandler: handler}
 	c.ReadinessProbe = &v1.Probe{ProbeHandler: handler}
+	c.StartupProbe = &v1.Probe{ProbeHandler: handler}
 
 	return c
 }
