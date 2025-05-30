@@ -3,7 +3,7 @@ kind: PodDisruptionBudget
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.82.2
+    app.kubernetes.io/version: 0.83.0
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:

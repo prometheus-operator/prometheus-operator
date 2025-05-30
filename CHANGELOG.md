@@ -1,3 +1,13 @@
+## 0.83.0 / 2025-05-30
+
+* [FEATURE] Add `limits` option for Alertmanager silences. #7478
+* [FEATURE] Add `NoTranslation` as a `translationStrategy` option to OTLP config. #7539
+* [FEATURE] Add `nameEscapingScheme` field to Prometheus CRDs. #7538
+* [FEATURE] Add `convertHistogramsToNHCB` field to OTLPConfig. #7533
+* [FEATURE] Add `convert_classic_histograms_to_nhcb` option to Prometheus global config. #7543
+* [FEATURE] Add new `MetricNameEscapingScheme` and `MetricNameValidationScheme` parameters to ScrapeConfig. #7555
+* [ENHANCEMENT] Do not insert sharding relabeling in scrapeConfigs if already present.  #7421
+
 ## 0.82.2 / 2025-05-12
 
 * [BUGFIX] Fix Alertmanager peer discovery for Alertmanager when using custom service name. #7512

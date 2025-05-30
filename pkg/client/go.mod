@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.82.2
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.83.0
 	k8s.io/api v0.33.1
 	k8s.io/apiextensions-apiserver v0.33.1
 	k8s.io/apimachinery v0.33.1
