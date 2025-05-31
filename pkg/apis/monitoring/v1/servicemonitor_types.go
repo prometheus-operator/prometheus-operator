@@ -200,6 +200,11 @@ type ServiceMonitorStatus struct {
 // ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.
 // +k8s:openapi-gen=true
 type ServiceMonitorBinding struct {
+	// The group of the referenced resource.
+	// +kubebuilder:validation:Enum=monitoring.coreos.com
+    // +kubebuilder:default=monitoring.coreos.com
+	// +required
+	Group  string `json:"group"`
 	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
 	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
 	// +required

@@ -60548,6 +60548,12 @@ spec:
                         - type
                         type: object
                       type: array
+                    group:
+                      default: monitoring.coreos.com
+                      description: The group of the referenced resource.
+                      enum:
+                      - monitoring.coreos.com
+                      type: string
                     name:
                       description: The name of the referenced object.
                       minLength: 1
@@ -60564,6 +60570,7 @@ spec:
                       - prometheusagents
                       type: string
                   required:
+                  - group
                   - name
                   - namespace
                   - resource

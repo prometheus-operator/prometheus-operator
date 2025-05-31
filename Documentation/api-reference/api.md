@@ -16482,6 +16482,17 @@ Kubernetes core/v1.ConfigMapKeySelector
 <tbody>
 <tr>
 <td>
+<code>group</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The group of the referenced resource.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>resource</code><br/>
 <em>
 string
