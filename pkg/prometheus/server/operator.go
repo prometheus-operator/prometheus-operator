@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -53,6 +54,7 @@ import (
 const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
+	FinalizerName  = "monitoring.coreos.com/finalizer"
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -759,6 +761,18 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
+
+	if c.configResourcesStatusEnabled {
+		// Add finalizer to the Prometheus resource if it doesn't have one.
+		finalizers := p.GetFinalizers()
+		if !slices.Contains(finalizers, FinalizerName) {
+			finalizers = append(finalizers, FinalizerName)
+			p.SetFinalizers(finalizers)
+			if _, err := c.mclient.MonitoringV1().Prometheuses(p.Namespace).Update(ctx, p, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return fmt.Errorf("adding finalizer %q to Prometheus %q failed: %w", FinalizerName, p.Name, err)
+			}
+		}
+	}
 
 	// Check if the Prometheus instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {

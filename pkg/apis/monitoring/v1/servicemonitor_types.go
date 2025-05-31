@@ -202,9 +202,9 @@ type ServiceMonitorStatus struct {
 type ServiceMonitorBinding struct {
 	// The group of the referenced resource.
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
-    // +kubebuilder:default=monitoring.coreos.com
+	// +kubebuilder:default=monitoring.coreos.com
 	// +required
-	Group  string `json:"group"`
+	Group string `json:"group"`
 	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
 	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
 	// +required
