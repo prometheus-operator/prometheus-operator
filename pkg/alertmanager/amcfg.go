@@ -723,21 +723,21 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 	}
 
 	return &receiver{
-		Name:             makeNamespacedString(in.Name, crKey),
-		OpsgenieConfigs:  opsgenieConfigs,
-		PagerdutyConfigs: pagerdutyConfigs,
-		DiscordConfigs:   discordConfigs,
-		SlackConfigs:     slackConfigs,
-		WebhookConfigs:   webhookConfigs,
-		WeChatConfigs:    weChatConfigs,
-		EmailConfigs:     emailConfigs,
-		VictorOpsConfigs: victorOpsConfigs,
-		PushoverConfigs:  pushoverConfigs,
-		SNSConfigs:       snsConfigs,
-		TelegramConfigs:  telegramConfigs,
-		WebexConfigs:     webexConfigs,
-		MSTeamsConfigs:   msTeamsConfigs,
-		MSTeamsV2Configs: msTeamsV2Configs,
+		Name:              makeNamespacedString(in.Name, crKey),
+		OpsgenieConfigs:   opsgenieConfigs,
+		PagerdutyConfigs:  pagerdutyConfigs,
+		DiscordConfigs:    discordConfigs,
+		SlackConfigs:      slackConfigs,
+		WebhookConfigs:    webhookConfigs,
+		WeChatConfigs:     weChatConfigs,
+		EmailConfigs:      emailConfigs,
+		VictorOpsConfigs:  victorOpsConfigs,
+		PushoverConfigs:   pushoverConfigs,
+		SNSConfigs:        snsConfigs,
+		TelegramConfigs:   telegramConfigs,
+		WebexConfigs:      webexConfigs,
+		MSTeamsConfigs:    msTeamsConfigs,
+		MSTeamsV2Configs:  msTeamsV2Configs,
 		RocketChatConfigs: rocketchatConfigs,
 	}, nil
 }
@@ -1942,7 +1942,7 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		msg := "'rocket_chat_token_id_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		gc.RocketChatTokenIDFile = ""
-	}	
+	}
 
 	return nil
 }
