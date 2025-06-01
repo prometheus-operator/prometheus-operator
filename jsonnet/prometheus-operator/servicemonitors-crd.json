@@ -1160,7 +1160,10 @@
           }
         },
         "served": true,
-        "storage": true
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
       }
     ]
   }

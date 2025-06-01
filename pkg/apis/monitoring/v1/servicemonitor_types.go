@@ -28,6 +28,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="smon"
+// +kubebuilder:subresource:status
 
 // The `ServiceMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of services.
 // Among other things, it allows to specify:
@@ -194,7 +195,7 @@ type ServiceMonitorStatus struct {
 	// +patchMergeKey=name
 	// +patchMergeStrategy=merge
 	// +optional
-	Bindings []ServiceMonitorBinding `json:"bindings,omitempty"`
+	Bindings []*ServiceMonitorBinding `json:"bindings,omitempty"`
 }
 
 // ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.
@@ -204,7 +205,7 @@ type ServiceMonitorBinding struct {
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	// +kubebuilder:default=monitoring.coreos.com
 	// +required
-	Group string `json:"group"`
+	Group *string `json:"group"`
 	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
 	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
 	// +required

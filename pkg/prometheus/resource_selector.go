@@ -38,6 +38,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -78,7 +79,7 @@ func NewResourceSelector(l *slog.Logger, p monitoringv1.PrometheusInterface, sto
 // SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn, mclient monitoringclient.Interface, resource string, configResourceStatusEnabled bool) (map[string]*monitoringv1.ServiceMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -137,6 +138,11 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
+			if configResourceStatusEnabled {
+				if err := updateServiceMonitorStatus(ctx, objMeta, resource, mclient, sm, monitoringv1.Reconciled, monitoringv1.ConditionFalse, "InvalidConfiguration", fmt.Sprint(err)); err != nil {
+					rs.l.Error("failed to update ServiceMonitor status", "namespace", sm.GetNamespace(), "name", sm.GetName(), "err", err)
+				}
+			}
 		}
 
 		_, err = metav1.LabelSelectorAsSelector(&sm.Spec.Selector)
@@ -220,6 +226,11 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		}
 
 		res[namespaceAndName] = sm
+		if configResourceStatusEnabled {
+			if err := updateServiceMonitorStatus(ctx, objMeta, resource, mclient, sm, monitoringv1.Reconciled, monitoringv1.ConditionTrue, "", ""); err != nil {
+				rs.l.Error("failed to update ServiceMonitor status", "namespace", sm.GetNamespace(), "name", sm.GetName(), "err", err)
+			}
+		}
 	}
 
 	smKeys := []string{}
@@ -234,6 +245,37 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	}
 
 	return res, nil
+}
+
+func updateServiceMonitorStatus(ctx context.Context, objMeta metav1.Object, resource string, mclient monitoringclient.Interface, sm *monitoringv1.ServiceMonitor, conditionType monitoringv1.ConditionType, status monitoringv1.ConditionStatus, reason string, message string) error {
+	found := false
+	bindings := sm.Status.Bindings
+	condition := monitoringv1.Condition{
+		Type:               conditionType,
+		Status:             status,
+		ObservedGeneration: sm.Generation,
+		LastTransitionTime: metav1.Now(),
+		Message:            message,
+		Reason:             reason,
+	}
+	for _, binding := range bindings {
+		if binding.Namespace == objMeta.GetNamespace() && binding.Name == objMeta.GetName() && binding.Resource == resource {
+			found = true
+			binding.Conditions = append(binding.Conditions, condition)
+			break
+		}
+	}
+	if !found {
+		bindings = append(bindings, &monitoringv1.ServiceMonitorBinding{
+			Resource:   resource,
+			Name:       objMeta.GetName(),
+			Namespace:  objMeta.GetNamespace(),
+			Conditions: []monitoringv1.Condition{condition},
+		})
+	}
+	sm.Status.Bindings = bindings
+	_, err := mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
+	return err
 }
 
 func (rs *ResourceSelector) ValidateRelabelConfigs(rcs []monitoringv1.RelabelConfig) error {

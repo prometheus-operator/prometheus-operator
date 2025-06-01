@@ -94,7 +94,8 @@ type Operator struct {
 
 	statusReporter prompkg.StatusReporter
 
-	daemonSetFeatureGateEnabled bool
+	daemonSetFeatureGateEnabled  bool
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -156,10 +157,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                c.Annotations,
 			Labels:                     c.Labels,
 		},
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
-		controllerID:    c.ControllerID,
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		metrics:                      operator.NewMetrics(r),
+		reconciliations:              &operator.ReconciliationTracker{},
+		controllerID:                 c.ControllerID,
+		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -840,7 +842,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
+	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1alpha1.PrometheusAgentName, c.configResourcesStatusEnabled)
 	if err != nil {
 		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
 	}

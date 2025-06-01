@@ -16,10 +16,14 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // ServiceMonitorStatusApplyConfiguration represents a declarative configuration of the ServiceMonitorStatus type for use
 // with apply.
 type ServiceMonitorStatusApplyConfiguration struct {
-	Bindings []ServiceMonitorBindingApplyConfiguration `json:"bindings,omitempty"`
+	Bindings []*monitoringv1.ServiceMonitorBinding `json:"bindings,omitempty"`
 }
 
 // ServiceMonitorStatusApplyConfiguration constructs a declarative configuration of the ServiceMonitorStatus type for use with
@@ -31,7 +35,7 @@ func ServiceMonitorStatus() *ServiceMonitorStatusApplyConfiguration {
 // WithBindings adds the given value to the Bindings field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Bindings field.
-func (b *ServiceMonitorStatusApplyConfiguration) WithBindings(values ...*ServiceMonitorBindingApplyConfiguration) *ServiceMonitorStatusApplyConfiguration {
+func (b *ServiceMonitorStatusApplyConfiguration) WithBindings(values ...**monitoringv1.ServiceMonitorBinding) *ServiceMonitorStatusApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithBindings")

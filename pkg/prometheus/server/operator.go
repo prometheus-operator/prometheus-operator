@@ -527,13 +527,6 @@ func (c *Operator) Run(ctx context.Context) error {
 		c.RefreshStatusFor(obj.(*monitoringv1.Prometheus))
 	})
 
-	if c.configResourcesStatusEnabled {
-		// Refresh the status of the existing Configutation objects.
-		_ = c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
-			c.RefreshStatusFor(obj.(*monitoringv1.ServiceMonitor))
-		})
-	}
-
 	c.addHandlers()
 
 	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
@@ -1162,7 +1155,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
+	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1.PrometheusName, c.configResourcesStatusEnabled)
 	if err != nil {
 		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
 	}
