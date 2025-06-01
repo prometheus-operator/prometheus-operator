@@ -1320,6 +1320,10 @@ func checkRocketChatConfigs(
 	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
+	if len(configs) == 0 {
+		return nil
+	}
+	
 	if amVersion.LT(semver.MustParse("0.28.0")) {
 		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
 	}
