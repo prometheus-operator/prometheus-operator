@@ -7,6 +7,7 @@ on:
       - 'release-*'
       - 'master'
       - 'main'
+      - 'reusable_e2e'
     tags:
       - 'v*'
 # To cancel running workflow when new commits pushed in a pull request
