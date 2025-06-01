@@ -1,9 +1,12 @@
-name: Setup E2E Environment
+
+name: E2E Setup
 description: Common setup for E2E tests
+
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Import environment variables from file
       run: |
@@ -32,7 +35,7 @@ runs:
         config: ./test/e2e/kind-conf.yaml
         cluster_name: e2e
 
-    - name: Wait for cluster to finish bootstraping
+    - name: Wait for cluster to finish bootstrapping
       run: |
         echo "Waiting for all nodes to be ready..."
         kubectl wait --for=condition=Ready nodes --all --timeout=120s

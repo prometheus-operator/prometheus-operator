@@ -37,7 +37,11 @@ jobs:
           - suite: operatorUpgrade
             target: test-e2e-operator-upgrade
     steps:
-    - uses: ./.github/actions/setup-e2e
+    - uses: actions/checkout@v4
+
+    - name: Setup E2E environment
+      uses: ./.github/actions/setup-e2e  # composite action with your setup steps
+
     - name: Run tests
       env:
         E2E_DIAGNOSTIC_DIRECTORY: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
