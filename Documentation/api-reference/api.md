@@ -4758,6 +4758,21 @@ Duration
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default rule group query_offset duration to use
+It requires Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -17832,6 +17847,21 @@ Duration
 </td>
 <td>
 <p>Interval between consecutive evaluations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default rule group query_offset duration to use
+It requires Thanos &gt;= v0.38.0.</p>
 </td>
 </tr>
 <tr>

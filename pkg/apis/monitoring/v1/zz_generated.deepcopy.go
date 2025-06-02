@@ -3626,6 +3626,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		*out = make([]PrometheusRuleExcludeConfig, len(*in))
 		copy(*out, *in)
 	}
+	if in.RuleQueryOffset != nil {
+		in, out := &in.RuleQueryOffset, &out.RuleQueryOffset
+		*out = new(Duration)
+		**out = **in
+	}
 	if in.Containers != nil {
 		in, out := &in.Containers, &out.Containers
 		*out = make([]corev1.Container, len(*in))

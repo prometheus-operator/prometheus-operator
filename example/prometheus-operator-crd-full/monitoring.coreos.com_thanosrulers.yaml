@@ -5763,6 +5763,12 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              ruleQueryOffset:
+                description: |-
+                  The default rule group query_offset duration to use
+                  It requires Thanos >= v0.38.0.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               ruleSelector:
                 description: |-
                   PrometheusRule objects to be selected for rule evaluation. An empty
