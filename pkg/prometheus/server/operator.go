@@ -769,6 +769,20 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Check if the Prometheus instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
+		if c.configResourcesStatusEnabled {
+			// If the Prometheus instance is marked for deletion, we remove the finalizer.
+			finalizers := p.GetFinalizers()
+			finalizers = slices.DeleteFunc(finalizers, func(f string) bool {
+				return f == finalizerName
+			})
+			p.SetFinalizers(finalizers)
+			if _, err := c.mclient.MonitoringV1().Prometheuses(p.Namespace).Update(ctx, p, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return fmt.Errorf("removing finalizer %q from Prometheus %q failed: %w", finalizerName, p.Name, err)
+			}
+
+			c.reconciliations.ForgetObject(key)
+			return nil
+		}
 		return nil
 	}
 
