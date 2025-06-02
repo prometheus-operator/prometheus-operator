@@ -71,6 +71,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	// Compare Spec
 	specEqual := reflect.DeepEqual(oldSpec, curSpec)
 
+	// TODO(yp969803): also deleteTimestamp and generation ?
 	// Compare Metadata fields
 	labelsEqual := reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels())
 	annotationsEqual := reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations())

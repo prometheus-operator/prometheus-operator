@@ -261,7 +261,7 @@ func updateServiceMonitorStatus(ctx context.Context, objMeta metav1.Object, reso
 	for _, binding := range bindings {
 		if binding.Namespace == objMeta.GetNamespace() && binding.Name == objMeta.GetName() && binding.Resource == resource {
 			found = true
-			binding.Conditions = append(binding.Conditions, condition)
+			binding.Conditions = append([]monitoringv1.Condition{condition}, binding.Conditions...)
 			break
 		}
 	}
