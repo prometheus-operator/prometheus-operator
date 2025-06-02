@@ -4767,7 +4767,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default rule group query_offset duration to use
+<p>The default rule group&rsquo;s query offset duration to use.
 It requires Thanos &gt;= v0.38.0.</p>
 </td>
 </tr>
@@ -17860,7 +17860,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default rule group query_offset duration to use
+<p>The default rule group&rsquo;s query offset duration to use.
 It requires Thanos &gt;= v0.38.0.</p>
 </td>
 </tr>

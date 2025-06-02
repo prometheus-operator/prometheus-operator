@@ -287,7 +287,7 @@ type ThanosRulerSpec struct {
 	// +kubebuilder:default:="15s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
-	// The default rule group query_offset duration to use
+	// The default rule group's query offset duration to use.
 	// It requires Thanos >= v0.38.0.
 	// +optional
 	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
