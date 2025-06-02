@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -57,10 +58,27 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	if old.(metav1.Object).GetResourceVersion() == cur.(metav1.Object).GetResourceVersion() {
+	oldSpec := getSpec(old)
+	curSpec := getSpec(cur)
+
+	oldMeta, ok1 := old.(metav1.Object)
+	curMeta, ok2 := cur.(metav1.Object)
+
+	if !ok1 || !ok2 {
+		// cannot compare metadata if casting fails
 		return
 	}
+	// Compare Spec
+	specEqual := reflect.DeepEqual(oldSpec, curSpec)
 
+	// Compare Metadata fields
+	labelsEqual := reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels())
+	annotationsEqual := reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations())
+	finalizersEqual := reflect.DeepEqual(oldMeta.GetFinalizers(), curMeta.GetFinalizers())
+
+	if specEqual && labelsEqual && annotationsEqual && finalizersEqual {
+		return
+	}
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
 		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
 		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
@@ -74,4 +92,16 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
 		e.enqueueFunc(o.GetNamespace())
 	}
+}
+
+func getSpec(obj interface{}) interface{} {
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	specField := v.FieldByName("Spec")
+	if !specField.IsValid() {
+		return nil
+	}
+	return specField.Interface()
 }
