@@ -58,8 +58,6 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	oldSpec := getSpec(old)
-	curSpec := getSpec(cur)
 
 	oldMeta, ok1 := old.(metav1.Object)
 	curMeta, ok2 := cur.(metav1.Object)
@@ -68,16 +66,14 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		// cannot compare metadata if casting fails
 		return
 	}
-	// Compare Spec
-	specEqual := reflect.DeepEqual(oldSpec, curSpec)
 
-	// TODO(yp969803): also deleteTimestamp and generation ?
 	// Compare Metadata fields
 	labelsEqual := reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels())
 	annotationsEqual := reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations())
 	finalizersEqual := reflect.DeepEqual(oldMeta.GetFinalizers(), curMeta.GetFinalizers())
+	generationEqual := reflect.DeepEqual(oldMeta.GetGeneration(), curMeta.GetGeneration())
 
-	if specEqual && labelsEqual && annotationsEqual && finalizersEqual {
+	if generationEqual && labelsEqual && annotationsEqual && finalizersEqual {
 		return
 	}
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
@@ -93,16 +89,4 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
 		e.enqueueFunc(o.GetNamespace())
 	}
-}
-
-func getSpec(obj interface{}) interface{} {
-	v := reflect.ValueOf(obj)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	specField := v.FieldByName("Spec")
-	if !specField.IsValid() {
-		return nil
-	}
-	return specField.Interface()
 }
