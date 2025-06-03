@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -31,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -760,8 +762,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		finalizers := p.GetFinalizers()
 		if !slices.Contains(finalizers, finalizerName) {
 			finalizers = append(finalizers, finalizerName)
-			p.SetFinalizers(finalizers)
-			if _, err := c.mclient.MonitoringV1().Prometheuses(p.Namespace).Update(ctx, p, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			patchData := map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"finalizers": finalizers,
+				},
+			}
+			patchBytes, err := json.Marshal(patchData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal patch: %w", err)
+			}
+			if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
 				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
 			}
 		}
@@ -775,9 +785,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			finalizers = slices.DeleteFunc(finalizers, func(f string) bool {
 				return f == finalizerName
 			})
-			p.SetFinalizers(finalizers)
-			if _, err := c.mclient.MonitoringV1().Prometheuses(p.Namespace).Update(ctx, p, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return fmt.Errorf("failed to remove %q finalizer: %w", finalizerName, err)
+			patchData := map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"finalizers": finalizers,
+				},
+			}
+			patchBytes, err := json.Marshal(patchData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal patch: %w", err)
+			}
+			if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
 			}
 
 			c.reconciliations.ForgetObject(key)
