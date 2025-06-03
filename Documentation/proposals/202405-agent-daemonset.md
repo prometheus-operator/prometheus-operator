@@ -78,16 +78,18 @@ We will add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`,
 
 To prevent users from accidentally providing invalid configurations, we will implement validation rules using [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/).
 
-These CEL rules will:
-- Prevent setting replicas when in DaemonSet mode
-- Prevent setting storage configuration in DaemonSet mode
-- Prevent using ServiceMonitorSelector in DaemonSet mode
-- Prevent using VolumeClaimTemplates in DaemonSet mode
+These CEL rules will affect the DaemonSet mode and prevent:
+- Setting replicas 
+- Setting storage configuration 
+- Using ServiceMonitorSelector 
+- Setting shards 
+- Setting persistentVolumeClaimRetentionPolicy 
+- Using serviceMonitorNamespaceSelector 
+- Setting serviceName 
+
+Additionally, it enforces the following rules:
 - Require PodMonitorSelector in DaemonSet mode
-- Prevent setting shards when in DaemonSet mode
-- Prevent setting persistentVolumeClaimRetentionPolicy in DaemonSet mode
-- Prevent using serviceMonitorNamespaceSelector in DaemonSet mode
-- Prevent setting serviceName in DaemonSet mode
+- Using VolumeClaimTemplates in DaemonSet mode
 
 This is implemented by adding `x-kubernetes-validations` like:
 
@@ -95,6 +97,26 @@ This is implemented by adding `x-kubernetes-validations` like:
 x-kubernetes-validations:
   - rule: "self.mode == 'DaemonSet' ? !has(self.replicas) : true"
     message: "replicas field is not allowed when mode is 'DaemonSet'"
+```
+
+#### 6.1.2 Runtime Validation Logic as Fallback 
+
+CEL validation will provide immediate feedback during `kubectl apply` but we will need runtime validation logic in the controller as a fallback mechanism. This fallback will be integrated directly in the `PrometheusAgent` reconciler loop.
+
+This is mainly because :
+1. CEL validation will require Kubernetes version 1.25+ and hence not all users might have CEL supported clusters.
+2. This will provide an in-depth defense mechamnism against misconfigurations.
+3. More detailed error response in case the first layer of defense fails.
+
+```go
+if spec.Mode == "DaemonSet" {
+	if spec.Replicas != nil {
+		return fmt.Errorf("replicas is not allowed when using DaemonSet mode")
+	}
+	if spec.Storage != nil {
+		return fmt.Errorf("storage configuration is not supported in DaemonSet mode")
+	}
+}
 ```
 
 ### 6.2. Node detecting:
