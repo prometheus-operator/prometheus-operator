@@ -54,7 +54,7 @@ import (
 const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
-	finalizerName  = "monitoring.coreos.com/config-res-status-cleanup"
+	finalizerName  = "monitoring.coreos.com/status-cleanup"
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -762,7 +762,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			finalizers = append(finalizers, finalizerName)
 			p.SetFinalizers(finalizers)
 			if _, err := c.mclient.MonitoringV1().Prometheuses(p.Namespace).Update(ctx, p, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return fmt.Errorf("adding finalizer %q to Prometheus %q failed: %w", finalizerName, p.Name, err)
+				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
 			}
 		}
 	}
@@ -777,7 +777,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			})
 			p.SetFinalizers(finalizers)
 			if _, err := c.mclient.MonitoringV1().Prometheuses(p.Namespace).Update(ctx, p, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return fmt.Errorf("removing finalizer %q from Prometheus %q failed: %w", finalizerName, p.Name, err)
+				return fmt.Errorf("failed to remove %q finalizer: %w", finalizerName, err)
 			}
 
 			c.reconciliations.ForgetObject(key)
