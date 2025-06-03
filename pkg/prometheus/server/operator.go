@@ -772,7 +772,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Check if the Prometheus instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		if c.configResourcesStatusEnabled {
-			err := c.rmPrometheusRefFromSMonStatus(ctx, p, assetStore)
+			err := c.rmPrometheusRef(ctx, p, assetStore)
 			if err == nil {
 				// If the Prometheus instance is marked for deletion, we remove the finalizer.
 				finalizers := p.GetFinalizers()
@@ -1001,8 +1001,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// rmPrometheusRefFromSMonStatus removes the Prometheus reference from the ServiceMonitor status subresource.
-func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitoringv1.Prometheus, store *assets.StoreBuilder) error {
+// rmPrometheusRef removes the Prometheus reference from the config resources status subresource.
+func (c *Operator) rmPrometheusRef(ctx context.Context, p *monitoringv1.Prometheus, store *assets.StoreBuilder) error {
 	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
 		return err
@@ -1012,30 +1012,31 @@ func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitor
 		return err
 	}
 	for _, sm := range smonSelections.Invalid {
-		bindings := sm.Object.Status.Bindings
-		filtered := make([]*monitoringv1.ServiceMonitorBinding, 0, len(bindings))
-		for _, binding := range bindings {
-			if !(binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == monitoringv1.PrometheusName) {
-				filtered = append(filtered, binding)
-			}
-		}
-		sm.Object.Status.Bindings = filtered
-		if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Object.Namespace).UpdateStatus(ctx, sm.Object, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.Object.GetName(), err)
+		err := c.rmPrometheusRefFromSMonStatus(ctx, p, sm.Object)
+		if err != nil {
+			return err
 		}
 	}
 	for _, sm := range smonSelections.Valid {
-		bindings := sm.Status.Bindings
-		filtered := make([]*monitoringv1.ServiceMonitorBinding, 0, len(bindings))
-		for _, binding := range bindings {
-			if !(binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == monitoringv1.PrometheusName) {
-				filtered = append(filtered, binding)
-			}
+		err := c.rmPrometheusRefFromSMonStatus(ctx, p, sm)
+		if err != nil {
+			return err
 		}
-		sm.Status.Bindings = filtered
-		if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.GetName(), err)
+	}
+	return nil
+}
+
+func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitoringv1.Prometheus, sm *monitoringv1.ServiceMonitor) error {
+	bindings := sm.Status.Bindings
+	filtered := make([]*monitoringv1.ServiceMonitorBinding, 0, len(bindings))
+	for _, binding := range bindings {
+		if binding.Name != p.GetName() || binding.Namespace != p.GetNamespace() || binding.Resource != monitoringv1.PrometheusName {
+			filtered = append(filtered, binding)
 		}
+	}
+	sm.Status.Bindings = filtered
+	if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+		return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.GetName(), err)
 	}
 	return nil
 }
