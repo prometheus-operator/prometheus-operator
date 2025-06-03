@@ -84,6 +84,10 @@ These CEL rules will:
 - Prevent using ServiceMonitorSelector in DaemonSet mode
 - Prevent using VolumeClaimTemplates in DaemonSet mode
 - Require PodMonitorSelector in DaemonSet mode
+- Prevent setting shards when in DaemonSet mode
+- Prevent setting persistentVolumeClaimRetentionPolicy in DaemonSet mode
+- Prevent using serviceMonitorNamespaceSelector in DaemonSet mode
+- Prevent setting serviceName in DaemonSet mode
 
 This is implemented by adding `x-kubernetes-validations` like:
 
