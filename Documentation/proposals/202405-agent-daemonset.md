@@ -85,6 +85,14 @@ These CEL rules will:
 - Prevent using VolumeClaimTemplates in DaemonSet mode
 - Require PodMonitorSelector in DaemonSet mode
 
+This is implemented by adding `x-kubernetes-validations` like:
+
+```yaml
+x-kubernetes-validations:
+  - rule: "self.mode == 'DaemonSet' ? !has(self.replicas) : true"
+    message: "replicas field is not allowed when mode is 'DaemonSet'"
+```
+
 ### 6.2. Node detecting:
 
 As pointed out in [Danny from GMP’s talk](https://www.youtube.com/watch?v=yk2aaAyxgKw), to make Prometheus Agent DaemonSet know which node it’s on, we can use [Kubernetes’ downward API](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/). In `config-reloader` container, we can mount the node name as an environment variable like this:
