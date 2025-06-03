@@ -34,7 +34,6 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -1140,11 +1139,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 			tc.updateSpec(&sm.Spec)
 
-			mclient, _ := monitoringclient.NewForConfig(nil)
 			sms, err := rs.SelectServiceMonitors(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
 				appendFn(sm)
 				return nil
-			}, mclient, monitoringv1.PrometheusName, false)
+			})
 
 			require.NoError(t, err)
 			if tc.selected {
