@@ -842,7 +842,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1alpha1.PrometheusAgentName, c.configResourcesStatusEnabled)
+	smonSelections, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1alpha1.PrometheusAgentName, c.configResourcesStatusEnabled)
 	if err != nil {
 		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
 	}
@@ -885,7 +885,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
-		smons,
+		smonSelections.Valid,
 		pmons,
 		bmons,
 		scrapeConfigs,

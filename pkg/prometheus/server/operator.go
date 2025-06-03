@@ -999,21 +999,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 // rmPrometheusRefFromSMonStatus removes the Prometheus reference from the ServiceMonitor status subresource.
 func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitoringv1.Prometheus, store *assets.StoreBuilder) error {
 	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
-	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1.PrometheusName, c.configResourcesStatusEnabled)
+	smonSelections, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1.PrometheusName, c.configResourcesStatusEnabled)
 	if err != nil {
 		return err
 	}
-	for _, sm := range smons {
-		bindings := sm.Status.Bindings
+	for _, sm := range smonSelections.Invalid {
+		bindings := sm.Object.Status.Bindings
 		filtered := make([]*monitoringv1.ServiceMonitorBinding, 0, len(bindings))
 		for _, binding := range bindings {
 			if !(binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == monitoringv1.PrometheusName) {
 				filtered = append(filtered, binding)
 			}
 		}
-		sm.Status.Bindings = filtered
-		if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.GetName(), err)
+		sm.Object.Status.Bindings = filtered
+		if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Object.Namespace).UpdateStatus(ctx, sm.Object, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.Object.GetName(), err)
 		}
 	}
 	return nil
@@ -1196,7 +1196,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1.PrometheusName, c.configResourcesStatusEnabled)
+	smonSelections, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace, c.mclient, monitoringv1.PrometheusName, c.configResourcesStatusEnabled)
 	if err != nil {
 		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
 	}
@@ -1266,7 +1266,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateServerConfiguration(
 		p,
-		smons,
+		smonSelections.Valid,
 		pmons,
 		bmons,
 		scrapeConfigs,
