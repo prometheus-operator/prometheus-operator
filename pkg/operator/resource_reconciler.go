@@ -94,6 +94,8 @@ type ResourceReconciler struct {
 	g errgroup.Group
 
 	controllerID string
+
+	configResourcesStatusEnabled bool
 }
 
 var (
@@ -113,6 +115,7 @@ func NewResourceReconciler(
 	kind string,
 	reg prometheus.Registerer,
 	controllerID string,
+	configResourcesStatusEnabled bool,
 ) *ResourceReconciler {
 	reconcileTotal := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_reconcile_operations_total",
@@ -157,13 +160,14 @@ func NewResourceReconciler(
 		syncer:       syncer,
 		getter:       getter,
 
-		reconcileTotal:    reconcileTotal,
-		reconcileErrors:   reconcileErrors,
-		reconcileDuration: reconcileDuration,
-		statusTotal:       statusTotal,
-		statusErrors:      statusErrors,
-		metrics:           metrics,
-		controllerID:      controllerID,
+		reconcileTotal:               reconcileTotal,
+		reconcileErrors:              reconcileErrors,
+		reconcileDuration:            reconcileDuration,
+		statusTotal:                  statusTotal,
+		statusErrors:                 statusErrors,
+		metrics:                      metrics,
+		controllerID:                 controllerID,
+		configResourcesStatusEnabled: configResourcesStatusEnabled,
 
 		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname}),
 		statusQ:    workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname + "_status"}),
@@ -336,6 +340,10 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
+	if !rr.configResourcesStatusEnabled && rr.DeletionInProgress(mCur) {
+		return
+	}
+
 	if !rr.hasStateChanged(mOld, mCur) {
 		return
 	}
@@ -403,6 +411,10 @@ func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
 	rr.logger.Debug("update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
+	if !rr.configResourcesStatusEnabled && rr.DeletionInProgress(cur) {
+		return
+	}
+
 	if !rr.hasObjectChanged(old, cur) {
 		return
 	}
@@ -428,6 +440,10 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 
 func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 	rr.logger.Debug("update handler", "resource", "daemonset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	if !rr.configResourcesStatusEnabled && rr.DeletionInProgress(cur) {
+		return
+	}
 
 	if !rr.hasObjectChanged(old, cur) {
 		return

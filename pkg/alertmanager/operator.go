@@ -104,6 +104,8 @@ type Operator struct {
 	canReadStorageClass bool
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -161,6 +163,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -178,6 +181,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		monitoringv1.AlertmanagersKind,
 		r,
 		o.controllerID,
+		o.configResourcesStatusEnabled,
 	)
 
 	return o, nil

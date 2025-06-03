@@ -89,6 +89,8 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 // Config defines the operator's parameters for the Thanos controller.
@@ -151,6 +153,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -202,6 +205,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		monitoringv1.ThanosRulerKind,
 		r,
 		o.controllerID,
+		o.configResourcesStatusEnabled,
 	)
 
 	o.ruleInfs, err = informers.NewInformersForResource(

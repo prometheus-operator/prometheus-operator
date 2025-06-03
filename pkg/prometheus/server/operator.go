@@ -214,6 +214,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		monitoringv1.PrometheusesKind,
 		r,
 		o.controllerID,
+		o.configResourcesStatusEnabled,
 	)
 
 	o.smonInfs, err = informers.NewInformersForResource(
