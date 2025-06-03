@@ -16,9 +16,11 @@ package thanos
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -32,6 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -56,6 +59,7 @@ const (
 	thanosRulerLabel = "thanos-ruler"
 	controllerName   = "thanos-controller"
 	rwConfigFile     = "remote-write.yaml"
+	finalizerName    = "monitoring.coreos.com/status-cleanup"
 )
 
 var minRemoteWriteVersion = semver.MustParse("0.24.0")
@@ -457,17 +461,59 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set ThanosRuler type information: %w", err)
 	}
 
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
+
+	if o.configResourcesStatusEnabled {
+		// Add finalizer to the thanos resource if it doesn't have one.
+		finalizers := tr.GetFinalizers()
+		if !slices.Contains(finalizers, finalizerName) {
+			finalizers = append(finalizers, finalizerName)
+			patchData := map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"finalizers": finalizers,
+				},
+			}
+			patchBytes, err := json.Marshal(patchData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal patch: %w", err)
+			}
+			if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
+			}
+		}
+	}
+
 	// Check if the Thanos instance is marked for deletion.
 	if o.rr.DeletionInProgress(tr) {
+		if o.configResourcesStatusEnabled {
+			// If the Thanos instance is marked for deletion, we remove the finalizer.
+			finalizers := tr.GetFinalizers()
+			finalizers = slices.DeleteFunc(finalizers, func(f string) bool {
+				return f == finalizerName
+			})
+			patchData := map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"finalizers": finalizers,
+				},
+			}
+			patchBytes, err := json.Marshal(patchData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal patch: %w", err)
+			}
+			if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
+			}
+
+			o.reconciliations.ForgetObject(key)
+			return nil
+		}
 		return nil
 	}
 
 	if tr.Spec.Paused {
 		return nil
 	}
-
-	logger := o.logger.With("key", key)
-	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
