@@ -3345,13 +3345,9 @@ func (in *ServiceMonitorStatus) DeepCopyInto(out *ServiceMonitorStatus) {
 	*out = *in
 	if in.Bindings != nil {
 		in, out := &in.Bindings, &out.Bindings
-		*out = make([]*ServiceMonitorBinding, len(*in))
+		*out = make([]ServiceMonitorBinding, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(ServiceMonitorBinding)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }

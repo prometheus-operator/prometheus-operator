@@ -1028,7 +1028,7 @@ func (c *Operator) rmPrometheusRef(ctx context.Context, p *monitoringv1.Promethe
 
 func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitoringv1.Prometheus, sm *monitoringv1.ServiceMonitor) error {
 	bindings := sm.Status.Bindings
-	filtered := make([]*monitoringv1.ServiceMonitorBinding, 0, len(bindings))
+	filtered := make([]monitoringv1.ServiceMonitorBinding, 0, len(bindings))
 	for _, binding := range bindings {
 		if binding.Name != p.GetName() || binding.Namespace != p.GetNamespace() || binding.Resource != monitoringv1.PrometheusName {
 			filtered = append(filtered, binding)
@@ -1078,6 +1078,7 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 		Message:            message,
 		Reason:             reason,
 	}
+
 	for _, binding := range bindings {
 		if binding.Namespace == p.GetNamespace() && binding.Name == p.GetName() && binding.Resource == monitoringv1.PrometheusName {
 			found = true
@@ -1085,8 +1086,9 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 			break
 		}
 	}
+	
 	if !found {
-		bindings = append(bindings, &monitoringv1.ServiceMonitorBinding{
+		bindings = append(bindings, monitoringv1.ServiceMonitorBinding{
 			Resource:   monitoringv1.PrometheusName,
 			Name:       p.GetName(),
 			Namespace:  p.GetNamespace(),

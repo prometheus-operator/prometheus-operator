@@ -190,12 +190,10 @@ type ServiceMonitorSpec struct {
 // +k8s:openapi-gen=true
 type ServiceMonitorStatus struct {
 	// The list of resources that the service monitor is bound to.
-	// +patchMergeKey=resource
-	// +patchMergeKey=namespace
-	// +patchMergeKey=name
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=name
 	// +optional
-	Bindings []*ServiceMonitorBinding `json:"bindings,omitempty"`
+	Bindings []ServiceMonitorBinding `json:"bindings,omitempty"`
 }
 
 // ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.
@@ -219,8 +217,8 @@ type ServiceMonitorBinding struct {
 	// +required
 	Namespace string `json:"namespace"`
 	// The current state of the service monitor when bound to the referenced Prometheus object.
-	// +patchMergeKey=type
-	// +patchMergeStrategy=merge
+	// +listType=map
+	// +listMapKey=type
 	// +optional
 	Conditions []Condition `json:"conditions,omitempty"`
 }

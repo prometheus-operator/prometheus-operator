@@ -1282,6 +1282,9 @@ spec:
                         - type
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - type
+                      x-kubernetes-list-type: map
                     group:
                       default: monitoring.coreos.com
                       description: The group of the referenced resource.
@@ -1310,6 +1313,9 @@ spec:
                   - resource
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
             type: object
         required:
         - spec
