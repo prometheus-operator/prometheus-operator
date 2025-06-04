@@ -181,6 +181,8 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchFieldSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
 
+	fs.BoolVar(&cfg.EnableThanosHTTPPort, "enable-thanos-http-port", false, "Whether to enable Thanos HTTP Port")
+
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
