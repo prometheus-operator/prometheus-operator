@@ -16,12 +16,14 @@ package k8sutil
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
@@ -54,6 +56,8 @@ import (
 
 // KubeConfigEnv (optionally) specify the location of kubeconfig file.
 const KubeConfigEnv = "KUBECONFIG"
+
+const statusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
@@ -598,4 +602,31 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 			namespace, serviceName, svcSelector.String(), labels.Set(selectorLabels).String())
 	}
 	return nil
+}
+
+func AddStatusCleanupFinalizer(finalizers []string) ([]byte, error) {
+	if !slices.Contains(finalizers, statusCleanupFinalizerName) {
+		finalizers = append(finalizers, statusCleanupFinalizerName)
+		patchData := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"finalizers": finalizers,
+			},
+		}
+		patchBytes, err := json.Marshal(patchData)
+		return patchBytes, err
+	}
+	return nil, nil
+}
+
+func DeleteStatusCleanupFinalizer(finalizers []string) ([]byte, error) {
+	finalizers = slices.DeleteFunc(finalizers, func(f string) bool {
+		return f == statusCleanupFinalizerName
+	})
+	patchData := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"finalizers": finalizers,
+		},
+	}
+	patchBytes, err := json.Marshal(patchData)
+	return patchBytes, err
 }

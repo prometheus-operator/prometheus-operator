@@ -17,12 +17,10 @@ package alertmanager
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"path"
-	"slices"
 	"strings"
 	"time"
 
@@ -62,7 +60,6 @@ import (
 const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "alertmanager-controller"
-	finalizerName  = "monitoring.coreos.com/status-cleanup"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -540,21 +537,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if c.configResourcesStatusEnabled && !c.rr.DeletionInProgress(am) {
-		// Add finalizer to the Prometheus resource if it doesn't have one.
+		// Add finalizer to the Alertmanager resource if it doesn't have one.
 		finalizers := am.GetFinalizers()
-		if !slices.Contains(finalizers, finalizerName) {
-			finalizers = append(finalizers, finalizerName)
-			patchData := map[string]interface{}{
-				"metadata": map[string]interface{}{
-					"finalizers": finalizers,
-				},
-			}
-			patchBytes, err := json.Marshal(patchData)
-			if err != nil {
-				return fmt.Errorf("failed to marshal patch: %w", err)
-			}
+		patchBytes, err := k8sutil.AddStatusCleanupFinalizer(finalizers)
+		if err != nil {
+			return fmt.Errorf("failed to marshal patch: %w", err)
+		}
+		if patchBytes != nil {
 			if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
+				return fmt.Errorf("failed to add statusCleanup finalizer: %w", err)
 			}
 		}
 	}
@@ -564,20 +555,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if c.configResourcesStatusEnabled {
 			// If the Alertmanger instance is marked for deletion, we remove the finalizer.
 			finalizers := am.GetFinalizers()
-			finalizers = slices.DeleteFunc(finalizers, func(f string) bool {
-				return f == finalizerName
-			})
-			patchData := map[string]interface{}{
-				"metadata": map[string]interface{}{
-					"finalizers": finalizers,
-				},
-			}
-			patchBytes, err := json.Marshal(patchData)
+			patchBytes, err := k8sutil.DeleteStatusCleanupFinalizer(finalizers)
 			if err != nil {
 				return fmt.Errorf("failed to marshal patch: %w", err)
 			}
-			if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return fmt.Errorf("failed to add %q finalizer: %w", finalizerName, err)
+			if patchBytes != nil {
+				if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+					return fmt.Errorf("failed to remove statusCleanup finalizer: %w", err)
+				}
 			}
 
 			c.reconciliations.ForgetObject(key)
