@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -662,6 +663,112 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestAddStatusCleanupFinalizer(t *testing.T) {
+	tests := []struct {
+		name       string
+		finalizers []string
+		want       []string
+		wantNil    bool
+	}{
+		{
+			name:       "add finalizer to empty list",
+			finalizers: []string{},
+			want:       []string{statusCleanupFinalizerName},
+			wantNil:    false,
+		},
+		{
+			name:       "finalizer already present",
+			finalizers: []string{statusCleanupFinalizerName},
+			want:       nil,
+			wantNil:    true,
+		},
+		{
+			name:       "finalizer not in list",
+			finalizers: []string{"some.other/finalizer"},
+			want:       []string{"some.other/finalizer", statusCleanupFinalizerName},
+			wantNil:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotBytes, err := AddStatusCleanupFinalizer(tt.finalizers)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if tt.wantNil {
+				if gotBytes != nil {
+					t.Errorf("expected nil patch, got: %s", gotBytes)
+				}
+			} else {
+				var result map[string]interface{}
+				if err := json.Unmarshal(gotBytes, &result); err != nil {
+					t.Fatalf("failed to unmarshal patch: %v", err)
+				}
+
+				gotFinalizers := result["metadata"].(map[string]interface{})["finalizers"].([]interface{})
+				gotStrs := make([]string, len(gotFinalizers))
+				for i, f := range gotFinalizers {
+					gotStrs[i] = f.(string)
+				}
+
+				if !reflect.DeepEqual(tt.want, gotStrs) {
+					t.Errorf("finalizers mismatch, got %v, want %v", gotStrs, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestDeleteStatusCleanupFinalizer(t *testing.T) {
+	tests := []struct {
+		name       string
+		finalizers []string
+		want       []string
+	}{
+		{
+			name:       "remove from list",
+			finalizers: []string{"a/b", statusCleanupFinalizerName, "x/y"},
+			want:       []string{"a/b", "x/y"},
+		},
+		{
+			name:       "remove when only present",
+			finalizers: []string{statusCleanupFinalizerName},
+			want:       []string{},
+		},
+		{
+			name:       "finalizer not present",
+			finalizers: []string{"x/y"},
+			want:       []string{"x/y"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotBytes, err := DeleteStatusCleanupFinalizer(tt.finalizers)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			var result map[string]interface{}
+			if err := json.Unmarshal(gotBytes, &result); err != nil {
+				t.Fatalf("failed to unmarshal patch: %v", err)
+			}
+
+			gotFinalizers := result["metadata"].(map[string]interface{})["finalizers"].([]interface{})
+			gotStrs := make([]string, len(gotFinalizers))
+			for i, f := range gotFinalizers {
+				gotStrs[i] = f.(string)
+			}
+
+			if !reflect.DeepEqual(tt.want, gotStrs) {
+				t.Errorf("finalizers mismatch, got %v, want %v", gotStrs, tt.want)
 			}
 		})
 	}
