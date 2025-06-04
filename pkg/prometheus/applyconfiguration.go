@@ -80,22 +80,29 @@ func ApplyConfigurationFromServiceMonitor(sm *monitoringv1.ServiceMonitor) *moni
 
 func serviceMonitorStatusApplyConfigurationFromServiceMonitorStatus(status *monitoringv1.ServiceMonitorStatus) *monitoringv1ac.ServiceMonitorStatusApplyConfiguration {
 	smsac := monitoringv1ac.ServiceMonitorStatus()
+
 	for _, binding := range status.Bindings {
-		bg := monitoringv1ac.ServiceMonitorBinding().WithGroup(*binding.Group).WithName(binding.Name).WithNamespace(binding.Namespace).WithResource(binding.Resource)
+		bg := monitoringv1ac.ServiceMonitorBinding().
+			WithGroup(binding.Group).
+			WithName(binding.Name).
+			WithNamespace(binding.Namespace).
+			WithResource(binding.Resource)
+
+		var conditions []*monitoringv1ac.ConditionApplyConfiguration
 		for _, condition := range binding.Conditions {
-			bg.WithConditions(
-				monitoringv1ac.Condition().
-					WithType(condition.Type).
-					WithStatus(condition.Status).
-					WithLastTransitionTime(condition.LastTransitionTime).
-					WithReason(condition.Reason).
-					WithMessage(condition.Message).
-					WithObservedGeneration(condition.ObservedGeneration),
+			conditions = append(conditions, monitoringv1ac.Condition().
+				WithType(condition.Type).
+				WithStatus(condition.Status).
+				WithLastTransitionTime(condition.LastTransitionTime).
+				WithReason(condition.Reason).
+				WithMessage(condition.Message).
+				WithObservedGeneration(condition.ObservedGeneration),
 			)
 		}
-		smsac.WithBindings(
-			bg,
-		)
+
+		bg.WithConditions(conditions...)
+		smsac.WithBindings(bg)
 	}
+
 	return smsac
 }

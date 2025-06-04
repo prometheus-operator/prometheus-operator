@@ -1287,7 +1287,6 @@ spec:
                       - type
                       x-kubernetes-list-type: map
                     group:
-                      default: monitoring.coreos.com
                       description: The group of the referenced resource.
                       enum:
                       - monitoring.coreos.com

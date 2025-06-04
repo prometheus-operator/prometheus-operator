@@ -1086,12 +1086,13 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 			break
 		}
 	}
-	
+
 	if !found {
 		bindings = append(bindings, monitoringv1.ServiceMonitorBinding{
 			Resource:   monitoringv1.PrometheusName,
 			Name:       p.GetName(),
 			Namespace:  p.GetNamespace(),
+			Group:      monitoringv1.GroupName,
 			Conditions: []monitoringv1.Condition{condition},
 		})
 	}
