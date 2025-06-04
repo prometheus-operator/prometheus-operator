@@ -1035,7 +1035,7 @@ func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitor
 		}
 	}
 	sm.Status.Bindings = filtered
-	if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+	if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.GetName(), err)
 	}
 	return nil
@@ -1094,7 +1094,7 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 		})
 	}
 	sm.Status.Bindings = bindings
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
+	_, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 	return err
 }
 
