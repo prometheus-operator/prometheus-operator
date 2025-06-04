@@ -1035,8 +1035,14 @@ func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitor
 		}
 	}
 	sm.Status.Bindings = filtered
-	if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		return fmt.Errorf("failed to update ServiceMonitor %q status: %w", sm.GetName(), err)
+	if len(sm.Status.Bindings) != 0 {
+		if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+			return fmt.Errorf("failed to remove prometheus referemce from ServiceMonitor %q status: %w", sm.GetName(), err)
+		}
+	} else {
+		if _, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return fmt.Errorf("failed to remove prometheus referemce from ServiceMonitor %q status: %w", sm.GetName(), err)
+		}
 	}
 	return nil
 }
