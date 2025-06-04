@@ -539,7 +539,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set Alertmanager type information: %w", err)
 	}
 
-	if c.configResourcesStatusEnabled {
+	if c.configResourcesStatusEnabled && !c.rr.DeletionInProgress(am) {
 		// Add finalizer to the Prometheus resource if it doesn't have one.
 		finalizers := am.GetFinalizers()
 		if !slices.Contains(finalizers, finalizerName) {

@@ -464,7 +464,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	logger := o.logger.With("key", key)
 	logger.Info("sync thanos-ruler")
 
-	if o.configResourcesStatusEnabled {
+	if o.configResourcesStatusEnabled && !o.rr.DeletionInProgress(tr) {
 		// Add finalizer to the thanos resource if it doesn't have one.
 		finalizers := tr.GetFinalizers()
 		if !slices.Contains(finalizers, finalizerName) {

@@ -577,7 +577,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 
-	if c.configResourcesStatusEnabled {
+	if c.configResourcesStatusEnabled && !c.rr.DeletionInProgress(p) {
 		// Add finalizer to the Prometheus resource if it doesn't have one.
 		finalizers := p.GetFinalizers()
 		if !slices.Contains(finalizers, finalizerName) {
