@@ -60,6 +60,10 @@ func TestCreateConfigReloaderEnableProbes(t *testing.T) {
 	if container.ReadinessProbe == nil {
 		t.Errorf("expected ReadinessProbe but got none")
 	}
+
+	if container.StartupProbe == nil {
+		t.Errorf("expected StartupProbe but got none")
+	}
 }
 
 func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
@@ -87,6 +91,10 @@ func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
 
 	if container.ReadinessProbe != nil {
 		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
+	}
+
+	if container.StartupProbe != nil {
+		t.Errorf("expected no StartupProbe but got %v", container.StartupProbe)
 	}
 }
 
@@ -133,6 +141,10 @@ func TestCreateInitConfigReloader(t *testing.T) {
 
 	if container.ReadinessProbe != nil {
 		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
+	}
+
+	if container.StartupProbe != nil {
+		t.Errorf("expected no StartupProbe but got %v", container.StartupProbe)
 	}
 }
 
@@ -216,6 +228,10 @@ func TestCreateConfigReloader(t *testing.T) {
 
 	if container.ReadinessProbe != nil {
 		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
+	}
+
+	if container.StartupProbe != nil {
+		t.Errorf("expected no StartupProbe but got %v", container.StartupProbe)
 	}
 }
 

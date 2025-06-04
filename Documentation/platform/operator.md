@@ -52,7 +52,7 @@ Usage of ./operator:
   -disable-unmanaged-prometheus-configuration
     	Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.
   -enable-config-reloader-probes
-    	Enable liveness and readiness for the config-reloader container. Default: false
+    	Enable liveness, readiness, and startup probes for the config-reloader container. Default: false
   -feature-gates value
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
