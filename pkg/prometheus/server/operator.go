@@ -1069,7 +1069,6 @@ func (c *Operator) updateConfigResStatus(ctx context.Context, p *monitoringv1.Pr
 
 func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoringv1.Prometheus, sm *monitoringv1.ServiceMonitor, status monitoringv1.ConditionStatus, conditionType monitoringv1.ConditionType, reason string, message string) error {
 	found := false
-	bindings := sm.Status.Bindings
 	condition := monitoringv1.Condition{
 		Type:               conditionType,
 		Status:             status,
@@ -1079,8 +1078,11 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 		Reason:             reason,
 	}
 
-	for _, binding := range bindings {
-		if binding.Namespace == p.GetNamespace() && binding.Name == p.GetName() && binding.Resource == monitoringv1.PrometheusName {
+	for i := range sm.Status.Bindings {
+		binding := &sm.Status.Bindings[i]
+		if binding.Namespace == p.GetNamespace() &&
+			binding.Name == p.GetName() &&
+			binding.Resource == monitoringv1.PrometheusName {
 			found = true
 			binding.Conditions = append([]monitoringv1.Condition{condition}, binding.Conditions...)
 			break
@@ -1088,7 +1090,7 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 	}
 
 	if !found {
-		bindings = append(bindings, monitoringv1.ServiceMonitorBinding{
+		sm.Status.Bindings = append(sm.Status.Bindings, monitoringv1.ServiceMonitorBinding{
 			Resource:   monitoringv1.PrometheusName,
 			Name:       p.GetName(),
 			Namespace:  p.GetNamespace(),
@@ -1096,7 +1098,6 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 			Conditions: []monitoringv1.Condition{condition},
 		})
 	}
-	sm.Status.Bindings = bindings
 	_, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 	return err
 }
