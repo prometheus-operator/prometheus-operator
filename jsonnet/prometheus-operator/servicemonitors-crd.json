@@ -1110,11 +1110,7 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array",
-                          "x-kubernetes-list-map-keys": [
-                            "type"
-                          ],
-                          "x-kubernetes-list-type": "map"
+                          "type": "array"
                         },
                         "group": {
                           "description": "The group of the referenced resource.",
@@ -1150,11 +1146,7 @@
                       ],
                       "type": "object"
                     },
-                    "type": "array",
-                    "x-kubernetes-list-map-keys": [
-                      "name"
-                    ],
-                    "x-kubernetes-list-type": "map"
+                    "type": "array"
                   }
                 },
                 "type": "object"
