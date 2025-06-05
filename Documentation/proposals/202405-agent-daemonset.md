@@ -72,24 +72,18 @@ The current [PrometheusAgent CRD](https://prometheus-operator.dev/docs/platform/
 * Shard
 * Storage
 
-We will add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`, with `StatefulSet` being the default. If the DaemonSet mode is activated (`mode: DaemonSet`), all the unrelated fields listed above will not be accepted. In the MVP, we will simply fail the reconciliation if any of those fields are set. We will prevent users to directly switch from a live StatefulSet setup to DaemonSet, because that might break their workload if they forget to unset the unsupported fields.
+We will add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`, with `StatefulSet` being the default. If the DaemonSet mode is activated (`mode: DaemonSet`), all the unrelated fields listed above will not be accepted. In the MVP, we will simply fail the reconciliation if any of those fields are set. We will prevent users to directly switch from a live StatefulSet setup to DaemonSet, because that might break their workload if they forget to unset the unsupported fields. Following up, we will leverage validation rules with [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/). Only then, we will allow switching from a live StatefulSet setup to DaemonSet. We already have an issue for CEL [here](https://github.com/prometheus-operator/prometheus-operator/issues/5079).
 
 #### 6.1.1 CEL Validation rules
 
-To prevent users from accidentally providing invalid configurations, we will implement validation rules using [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/).
+When `mode:DaemonSet`, the following CEL rules will be applied:
 
-These CEL rules will affect the DaemonSet mode and prevent:
-- Setting replicas 
-- Setting storage configuration 
-- Using ServiceMonitorSelector 
-- Setting shards 
-- Setting persistentVolumeClaimRetentionPolicy 
-- Using serviceMonitorNamespaceSelector 
-- Setting serviceName 
-
-Additionally, it enforces the following rules:
-- Require PodMonitorSelector in DaemonSet mode
-- Using VolumeClaimTemplates in DaemonSet mode
+- `replicas` 
+- `storage`  
+- `serviceMonitorSelector` 
+- `shards` 
+- `persistentVolumeClaimRetentionPolicy` 
+- `serviceMonitorNamespaceSelector` 
 
 This is implemented by adding `x-kubernetes-validations` like:
 
