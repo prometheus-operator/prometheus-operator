@@ -23,6 +23,7 @@ import (
 	_ "github.com/ahmetb/gen-crd-api-reference-docs"
 	_ "github.com/brancz/gojsontoyaml"
 	_ "github.com/bwplotka/mdox"
+	_ "github.com/elastic/crd-ref-docs"
 	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 	_ "github.com/google/go-jsonnet/cmd/jsonnet"
 	_ "github.com/google/go-jsonnet/cmd/jsonnetfmt"
