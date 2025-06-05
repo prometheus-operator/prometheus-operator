@@ -460,38 +460,15 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	logger := o.logger.With("key", key)
 	logger.Info("sync thanos-ruler")
 
-	if o.configResourcesStatusEnabled && !o.rr.DeletionInProgress(tr) {
-		// Add finalizer to the thanos resource if it doesn't have one.
-		finalizers := tr.GetFinalizers()
-		patchBytes, err := k8sutil.AddStatusCleanupFinalizer(finalizers)
-		if err != nil {
-			return fmt.Errorf("failed to marshal patch: %w", err)
-		}
-		if patchBytes != nil {
-			if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return fmt.Errorf("failed to add statusCleanup finalizer: %w", err)
-			}
-		}
+	if !o.configResourcesStatusEnabled && o.rr.DeletionInProgress(tr) {
+		return nil
 	}
 
-	// Check if the Thanos instance is marked for deletion.
-	if o.rr.DeletionInProgress(tr) {
-		if o.configResourcesStatusEnabled {
-			// If the Thanos instance is marked for deletion, we remove the finalizer.
-			finalizers := tr.GetFinalizers()
-			patchBytes, err := k8sutil.DeleteStatusCleanupFinalizer(finalizers)
-			if err != nil {
-				return fmt.Errorf("failed to marshal patch: %w", err)
-			}
-			if patchBytes != nil {
-				if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-					return fmt.Errorf("failed to remove statusCleanup finalizer: %w", err)
-				}
-			}
-
-			o.reconciliations.ForgetObject(key)
-			return nil
-		}
+	finalizersChanged, err := o.syncFinalizers(ctx, tr, key)
+	if err != nil {
+		return err
+	}
+	if finalizersChanged {
 		return nil
 	}
 
@@ -605,6 +582,44 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+// add or remove finalizers for the ThanosRuler resource.
+func (o *Operator) syncFinalizers(ctx context.Context, tr *monitoringv1.ThanosRuler, key string) (bool, error) {
+	if o.configResourcesStatusEnabled {
+		var finalizersChanged bool
+		if !o.rr.DeletionInProgress(tr) {
+			// Add finalizer to the ThanosRuler resource if it doesn't have one.
+			finalizers := tr.GetFinalizers()
+			patchBytes, err := k8sutil.AddStatusCleanupFinalizer(finalizers)
+			if err != nil {
+				return false, fmt.Errorf("failed to marshal patch: %w", err)
+			}
+			if patchBytes != nil {
+				if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+					return false, fmt.Errorf("failed to add statusCleanup finalizer: %w", err)
+				}
+				finalizersChanged = true
+			}
+		} else {
+			// If the ThanosRuler instance is marked for deletion, we remove the finalizer.
+			finalizers := tr.GetFinalizers()
+			patchBytes, err := k8sutil.DeleteStatusCleanupFinalizer(finalizers)
+			if err != nil {
+				return false, fmt.Errorf("failed to marshal patch: %w", err)
+			}
+			if patchBytes != nil {
+				if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+					return false, fmt.Errorf("failed to remove statusCleanup finalizer: %w", err)
+				}
+				finalizersChanged = true
+			}
+
+			o.reconciliations.ForgetObject(key)
+		}
+		return finalizersChanged, nil
+	}
+	return false, nil
 }
 
 // getThanosRulerFromKey returns a copy of the ThanosRuler object identified by key.

@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +37,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/ptr"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 // Syncer knows how to synchronize statefulset-based or daemonset-based resources.
