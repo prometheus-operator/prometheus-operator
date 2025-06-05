@@ -206,7 +206,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		monitoringv1.ThanosRulerKind,
 		r,
 		o.controllerID,
-		o.configResourcesStatusEnabled,
 	)
 
 	o.ruleInfs, err = informers.NewInformersForResource(

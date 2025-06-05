@@ -182,7 +182,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		monitoringv1.AlertmanagersKind,
 		r,
 		o.controllerID,
-		o.configResourcesStatusEnabled,
 	)
 
 	return o, nil

@@ -630,3 +630,7 @@ func DeleteStatusCleanupFinalizer(finalizers []string) ([]byte, error) {
 	patchBytes, err := json.Marshal(patchData)
 	return patchBytes, err
 }
+
+func IsStatusCleanupFinalizerPresent(finalizers []string) bool {
+	return slices.Contains(finalizers, statusCleanupFinalizerName)
+}

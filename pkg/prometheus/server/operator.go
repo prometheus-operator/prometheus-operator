@@ -211,7 +211,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		monitoringv1.PrometheusesKind,
 		r,
 		o.controllerID,
-		o.configResourcesStatusEnabled,
 	)
 
 	o.smonInfs, err = informers.NewInformersForResource(
@@ -1027,6 +1026,9 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
 
+	if p == nil || c.rr.DeletionInProgress(p) {
+		return nil
+	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus status: %w", err)

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
@@ -94,8 +95,6 @@ type ResourceReconciler struct {
 	g errgroup.Group
 
 	controllerID string
-
-	configResourcesStatusEnabled bool
 }
 
 var (
@@ -115,7 +114,6 @@ func NewResourceReconciler(
 	kind string,
 	reg prometheus.Registerer,
 	controllerID string,
-	configResourcesStatusEnabled bool,
 ) *ResourceReconciler {
 	reconcileTotal := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_reconcile_operations_total",
@@ -160,14 +158,13 @@ func NewResourceReconciler(
 		syncer:       syncer,
 		getter:       getter,
 
-		reconcileTotal:               reconcileTotal,
-		reconcileErrors:              reconcileErrors,
-		reconcileDuration:            reconcileDuration,
-		statusTotal:                  statusTotal,
-		statusErrors:                 statusErrors,
-		metrics:                      metrics,
-		controllerID:                 controllerID,
-		configResourcesStatusEnabled: configResourcesStatusEnabled,
+		reconcileTotal:    reconcileTotal,
+		reconcileErrors:   reconcileErrors,
+		reconcileDuration: reconcileDuration,
+		statusTotal:       statusTotal,
+		statusErrors:      statusErrors,
+		metrics:           metrics,
+		controllerID:      controllerID,
 
 		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname}),
 		statusQ:    workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname + "_status"}),
@@ -340,7 +337,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if !rr.configResourcesStatusEnabled && rr.DeletionInProgress(mCur) {
+	if !k8sutil.IsStatusCleanupFinalizerPresent(mCur.GetFinalizers()) && rr.DeletionInProgress(mCur) {
 		return
 	}
 
@@ -411,7 +408,7 @@ func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
 	rr.logger.Debug("update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	if !rr.configResourcesStatusEnabled && rr.DeletionInProgress(cur) {
+	if !k8sutil.IsStatusCleanupFinalizerPresent(cur.GetFinalizers()) && rr.DeletionInProgress(cur) {
 		return
 	}
 
@@ -441,7 +438,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 	rr.logger.Debug("update handler", "resource", "daemonset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	if !rr.configResourcesStatusEnabled && rr.DeletionInProgress(cur) {
+	if !k8sutil.IsStatusCleanupFinalizerPresent(cur.GetFinalizers()) && rr.DeletionInProgress(cur) {
 		return
 	}
 
