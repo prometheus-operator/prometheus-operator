@@ -640,3 +640,203 @@ type TargetsResponse struct {
 		ActiveTargets []Target `json:"activeTargets"`
 	} `json:"data"`
 }
+
+// testPrometheusAgentDaemonSetModeBasic tests basic DaemonSet mode functionality
+func testPrometheusAgentDaemonSetModeBasic(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ctx := context.Background()
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	// Enable the DaemonSet feature gate
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	// Create PrometheusAgent in DaemonSet mode
+	prometheusAgent := &monitoringv1alpha1.PrometheusAgent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-daemonset-mode",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: operator.DefaultPrometheusVersion,
+			},
+		},
+	}
+
+	prometheusAgent, err = framework.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, prometheusAgent, metav1.CreateOptions{})
+	require.NoError(t, err, "Failed to create PrometheusAgent in DaemonSet mode")
+
+	// Wait for DaemonSet to be created (this should fail initially)
+	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
+		daemonSets, err := framework.KubeClient.AppsV1().DaemonSets(ns).List(ctx, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=prometheus-agent,app.kubernetes.io/instance=%s", prometheusAgent.Name),
+		})
+		if err != nil {
+			return false, err
+		}
+
+		if len(daemonSets.Items) == 0 {
+			t.Logf("Waiting for DaemonSet to be created...")
+			return false, nil
+		}
+
+		t.Logf("✅ DaemonSet created successfully")
+		return true, nil
+	})
+	require.NoError(t, err, "DaemonSet should be created for PrometheusAgent in DaemonSet mode")
+
+	// Verify no StatefulSet is created
+	statefulSets, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app.kubernetes.io/name=prometheus-agent,app.kubernetes.io/instance=%s", prometheusAgent.Name),
+	})
+	require.NoError(t, err)
+	require.Len(t, statefulSets.Items, 0, "No StatefulSet should be created in DaemonSet mode")
+}
+
+// testPrometheusAgentDaemonSetIgnoreReplicas tests that replicas field is ignored in DaemonSet mode
+func testPrometheusAgentDaemonSetIgnoreReplicas(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ctx := context.Background()
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	// Enable the DaemonSet feature gate
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	// Create PrometheusAgent in DaemonSet mode WITH replicas (should be ignored)
+	prometheusAgent := &monitoringv1alpha1.PrometheusAgent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-daemonset-replicas",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version:  operator.DefaultPrometheusVersion,
+				Replicas: ptr.To(int32(5)), // This should be ignored in DaemonSet mode
+			},
+		},
+	}
+
+	prometheusAgent, err = framework.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, prometheusAgent, metav1.CreateOptions{})
+	require.NoError(t, err, "PrometheusAgent with replicas should be created but replicas should be ignored")
+
+	// Wait for DaemonSet to be created (replicas should be ignored)
+	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
+		daemonSets, err := framework.KubeClient.AppsV1().DaemonSets(ns).List(ctx, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=prometheus-agent,app.kubernetes.io/instance=%s", prometheusAgent.Name),
+		})
+		if err != nil {
+			return false, err
+		}
+
+		if len(daemonSets.Items) == 0 {
+			return false, nil
+		}
+
+		t.Logf("✅ DaemonSet created without replicas field")
+		return true, nil
+	})
+	require.NoError(t, err, "DaemonSet should be created and replicas should be ignored")
+}
+
+// testPrometheusAgentDaemonSetIgnoreStorage tests that storage field is ignored in DaemonSet mode
+func testPrometheusAgentDaemonSetIgnoreStorage(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ctx := context.Background()
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	// Enable the DaemonSet feature gate
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	// Create PrometheusAgent in DaemonSet mode WITH storage (should be ignored)
+	prometheusAgent := &monitoringv1alpha1.PrometheusAgent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-daemonset-storage",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: operator.DefaultPrometheusVersion,
+				Storage: &monitoringv1.StorageSpec{
+					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						Spec: v1.PersistentVolumeClaimSpec{
+							Resources: v1.VolumeResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceStorage: resource.MustParse("10Gi"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	prometheusAgent, err = framework.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, prometheusAgent, metav1.CreateOptions{})
+	require.NoError(t, err, "PrometheusAgent with storage should be created but storage should be ignored")
+
+	// Wait for DaemonSet to be created and verify no PVCs
+	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
+		daemonSets, err := framework.KubeClient.AppsV1().DaemonSets(ns).List(ctx, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/name=prometheus-agent,app.kubernetes.io/instance=%s", prometheusAgent.Name),
+		})
+		if err != nil {
+			return false, err
+		}
+
+		if len(daemonSets.Items) == 0 {
+			return false, nil
+		}
+
+		// Verify no PVCs are created for DaemonSet mode
+		pvcs, err := framework.KubeClient.CoreV1().PersistentVolumeClaims(ns).List(ctx, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app.kubernetes.io/instance=%s", prometheusAgent.Name),
+		})
+		if err != nil {
+			return false, err
+		}
+
+		require.Len(t, pvcs.Items, 0, "No PVCs should be created in DaemonSet mode")
+		t.Logf("✅ DaemonSet created and no PVCs exist (storage ignored)")
+		return true, nil
+	})
+	require.NoError(t, err, "DaemonSet should be created and storage should be ignored")
+}
