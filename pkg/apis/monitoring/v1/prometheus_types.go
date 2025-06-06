@@ -693,6 +693,9 @@ type CommonPrometheusFields struct {
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// Specifies the validation scheme for metric and label names.
+	//
+	// It requires Prometheus >= v2.55.0.
+	//
 	// +optional
 	NameValidationScheme *NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
 
@@ -705,7 +708,8 @@ type CommonPrometheusFields struct {
 	// +optional
 	NameEscapingScheme *NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
 
-	// Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+	// Whether to convert all scraped classic histograms into a native
+	// histogram with custom buckets.
 	//
 	// It requires Prometheus >= v3.4.0.
 	//
@@ -764,7 +768,7 @@ type CommonPrometheusFields struct {
 	// Use the host's network namespace if true.
 	//
 	// Make sure to understand the security implications if you want to enable
-	// it (https://kubernetes.io/docs/concepts/configuration/overview/).
+	// it (https://kubernetes.io/docs/concepts/configuration/overview/ ).
 	//
 	// When hostNetwork is enabled, this will set the DNS policy to
 	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
@@ -923,7 +927,10 @@ type CommonPrometheusFields struct {
 //   - `UTF8NameValidationScheme` for UTF-8 support.
 //   - `LegacyNameValidationScheme` for letters, numbers, colons, and underscores.
 //
-// Note that `LegacyNameValidationScheme` cannot be used along with the OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if enabled).
+// Note that `LegacyNameValidationScheme` cannot be used along with the
+// OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if
+// enabled).
+//
 // +kubebuilder:validation:Enum=UTF8;Legacy
 type NameValidationSchemeOptions string
 
@@ -932,17 +939,18 @@ const (
 	LegacyNameValidationScheme NameValidationSchemeOptions = "Legacy"
 )
 
-// Specifies the character escaping scheme that will be requested when scraping
+// Specifies the character escaping scheme that will be applied when scraping
 // for metric and label names that do not conform to the legacy Prometheus
 // character set.
 //
 // Supported values are:
-//   - `AllowUTF8NameEscapingScheme` for Full UTF-8 support, no escaping needed.
-//   - `UnderscoresNameEscapingScheme` for Escape all legacy-invalid characters to underscores.
-//   - `DotsNameEscapingScheme` for Escapes dots to `_dot_`, underscores to `__`, and all other
-//     legacy-invalid characters to underscores.
-//   - `ValuesNameEscapingScheme` for Prepend the name with `U__` and replace all invalid
-//     characters with their unicode value, surrounded by underscores.
+//
+//   - `AllowUTF8`, full UTF-8 support, no escaping needed.
+//   - `Underscores`, legacy-invalid characters are escaped to underscores.
+//   - `Dots`, dot characters are escaped to `_dot_`, underscores to `__`, and
+//     all other legacy-invalid characters to underscores.
+//   - `Values`, the string is prefixed by `U__` and all invalid characters are
+//     escaped to their unicode value, surrounded by underscores.
 //
 // +kubebuilder:validation:Enum=AllowUTF8;Underscores;Dots;Values
 type NameEscapingSchemeOptions string

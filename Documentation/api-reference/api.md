@@ -208,7 +208,7 @@ Deprecated: use &lsquo;image&rsquo; instead.</p>
 <td>
 <p>An optional list of references to secrets in the same namespace
 to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+see <a href="https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/</a></p>
 </td>
 </tr>
 <tr>
@@ -2917,6 +2917,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -2945,7 +2946,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -3041,7 +3043,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -4756,6 +4758,21 @@ Duration
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default rule group&rsquo;s query offset duration to use.
+It requires Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -5937,7 +5954,7 @@ Deprecated: use &lsquo;image&rsquo; instead.</p>
 <td>
 <p>An optional list of references to secrets in the same namespace
 to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+see <a href="https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/</a></p>
 </td>
 </tr>
 <tr>
@@ -8429,6 +8446,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -8457,7 +8475,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -8553,7 +8572,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -9265,7 +9284,7 @@ some resources may allow a client to request the generation of an appropriate na
 automatically. Name is primarily intended for creation idempotence and configuration
 definition.
 Cannot be updated.
-More info: <a href="http://kubernetes.io/docs/user-guide/identifiers#names">http://kubernetes.io/docs/user-guide/identifiers#names</a></p>
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/names/">https://kubernetes.io/docs/concepts/overview/working-with-objects/names/</a></p>
 </td>
 </tr>
 <tr>
@@ -9280,7 +9299,7 @@ map[string]string
 <p>Map of string keys and values that can be used to organize and categorize
 (scope and select) objects. May match selectors of replication controllers
 and services.
-More info: <a href="http://kubernetes.io/docs/user-guide/labels">http://kubernetes.io/docs/user-guide/labels</a></p>
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/</a></p>
 </td>
 </tr>
 <tr>
@@ -9295,7 +9314,7 @@ map[string]string
 <p>Annotations is an unstructured key value map stored with a resource that may be
 set by external tools to store and retrieve arbitrary metadata. They are not
 queryable and should be preserved when modifying objects.
-More info: <a href="http://kubernetes.io/docs/user-guide/annotations">http://kubernetes.io/docs/user-guide/annotations</a></p>
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/">https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/</a></p>
 </td>
 </tr>
 </tbody>
@@ -10387,19 +10406,21 @@ int32
 <h3 id="monitoring.coreos.com/v1.NameEscapingSchemeOptions">NameEscapingSchemeOptions
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>Specifies the character escaping scheme that will be requested when scraping
+<p>Specifies the character escaping scheme that will be applied when scraping
 for metric and label names that do not conform to the legacy Prometheus
 character set.</p>
-<p>Supported values are:
-- <code>AllowUTF8NameEscapingScheme</code> for Full UTF-8 support, no escaping needed.
-- <code>UnderscoresNameEscapingScheme</code> for Escape all legacy-invalid characters to underscores.
-- <code>DotsNameEscapingScheme</code> for Escapes dots to <code>_dot_</code>, underscores to <code>__</code>, and all other
-legacy-invalid characters to underscores.
-- <code>ValuesNameEscapingScheme</code> for Prepend the name with <code>U__</code> and replace all invalid
-characters with their unicode value, surrounded by underscores.</p>
+<p>Supported values are:</p>
+<ul>
+<li><code>AllowUTF8</code>, full UTF-8 support, no escaping needed.</li>
+<li><code>Underscores</code>, legacy-invalid characters are escaped to underscores.</li>
+<li><code>Dots</code>, dot characters are escaped to <code>_dot_</code>, underscores to <code>__</code>, and
+all other legacy-invalid characters to underscores.</li>
+<li><code>Values</code>, the string is prefixed by <code>U__</code> and all invalid characters are
+escaped to their unicode value, surrounded by underscores.</li>
+</ul>
 </div>
 <table>
 <thead>
@@ -10421,14 +10442,16 @@ characters with their unicode value, surrounded by underscores.</p>
 <h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>Specifies the validation scheme for metric and label names.</p>
 <p>Supported values are:
 - <code>UTF8NameValidationScheme</code> for UTF-8 support.
 - <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
-<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if enabled).</p>
+<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the
+OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if
+enabled).</p>
 </div>
 <table>
 <thead>
@@ -13496,6 +13519,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -13524,7 +13548,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -13620,7 +13645,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -17826,6 +17851,21 @@ Duration
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default rule group&rsquo;s query offset duration to use.
+It requires Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -20586,6 +20626,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -20614,7 +20655,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -20710,7 +20752,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -21845,6 +21887,36 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metric name escaping mode to request through content negotiation.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>
@@ -28980,6 +29052,7 @@ NameValidationSchemeOptions
 <td>
 <em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -29008,7 +29081,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.</p>
+<p>Whether to convert all scraped classic histograms into a native
+histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
@@ -29104,7 +29178,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -31430,6 +31504,36 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameEscapingScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameEscapingSchemeOptions">
+NameEscapingSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metric name escaping mode to request through content negotiation.</p>
+<p>It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
 <tr>

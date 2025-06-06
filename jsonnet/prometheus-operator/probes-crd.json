@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.82.2"
+      "operator.prometheus.io/version": "0.83.0"
     },
     "name": "probes.monitoring.coreos.com"
   },

@@ -335,6 +335,18 @@ type ScrapeConfigSpec struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// Specifies the validation scheme for metric and label names.
+	//
+	// It requires Prometheus >= v3.0.0.
+	//
+	// +optional
+	NameValidationScheme *v1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+	// Metric name escaping mode to request through content negotiation.
+	//
+	// It requires Prometheus >= v3.4.0.
+	//
+	// +optional
+	NameEscapingScheme *v1.NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
 	// The scrape class to apply.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.82.2"
+      "operator.prometheus.io/version": "0.83.0"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -9157,6 +9157,24 @@
                   "metricsPath": {
                     "description": "MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).",
                     "minLength": 1,
+                    "type": "string"
+                  },
+                  "nameEscapingScheme": {
+                    "description": "Metric name escaping mode to request through content negotiation.\n\nIt requires Prometheus >= v3.4.0.",
+                    "enum": [
+                      "AllowUTF8",
+                      "Underscores",
+                      "Dots",
+                      "Values"
+                    ],
+                    "type": "string"
+                  },
+                  "nameValidationScheme": {
+                    "description": "Specifies the validation scheme for metric and label names.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "UTF8",
+                      "Legacy"
+                    ],
                     "type": "string"
                   },
                   "nativeHistogramBucketLimit": {

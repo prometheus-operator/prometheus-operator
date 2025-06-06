@@ -9687,6 +9687,26 @@ spec:
                   Prometheus uses the default value (e.g. /metrics).
                 minLength: 1
                 type: string
+              nameEscapingScheme:
+                description: |-
+                  Metric name escaping mode to request through content negotiation.
+
+                  It requires Prometheus >= v3.4.0.
+                enum:
+                - AllowUTF8
+                - Underscores
+                - Dots
+                - Values
+                type: string
+              nameValidationScheme:
+                description: |-
+                  Specifies the validation scheme for metric and label names.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - UTF8
+                - Legacy
+                type: string
               nativeHistogramBucketLimit:
                 description: |-
                   If there are more than this many buckets in a native histogram,

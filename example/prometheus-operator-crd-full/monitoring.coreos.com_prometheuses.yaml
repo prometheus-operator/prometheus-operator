@@ -3584,7 +3584,8 @@ spec:
                 type: array
               convertClassicHistogramsToNHCB:
                 description: |-
-                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  Whether to convert all scraped classic histograms into a native
+                  histogram with custom buckets.
 
                   It requires Prometheus >= v3.4.0.
                 type: boolean
@@ -3940,7 +3941,7 @@ spec:
                   Use the host's network namespace if true.
 
                   Make sure to understand the security implications if you want to enable
-                  it (https://kubernetes.io/docs/concepts/configuration/overview/).
+                  it (https://kubernetes.io/docs/concepts/configuration/overview/ ).
 
                   When hostNetwork is enabled, this will set the DNS policy to
                   `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
@@ -5532,8 +5533,10 @@ spec:
                 - Values
                 type: string
               nameValidationScheme:
-                description: Specifies the validation scheme for metric and label
-                  names.
+                description: |-
+                  Specifies the validation scheme for metric and label names.
+
+                  It requires Prometheus >= v2.55.0.
                 enum:
                 - UTF8
                 - Legacy
@@ -5643,7 +5646,7 @@ spec:
                       Annotations is an unstructured key value map stored with a resource that may be
                       set by external tools to store and retrieve arbitrary metadata. They are not
                       queryable and should be preserved when modifying objects.
-                      More info: http://kubernetes.io/docs/user-guide/annotations
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                     type: object
                   labels:
                     additionalProperties:
@@ -5652,7 +5655,7 @@ spec:
                       Map of string keys and values that can be used to organize and categorize
                       (scope and select) objects. May match selectors of replication controllers
                       and services.
-                      More info: http://kubernetes.io/docs/user-guide/labels
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                     type: object
                   name:
                     description: |-
@@ -5661,7 +5664,7 @@ spec:
                       automatically. Name is primarily intended for creation idempotence and configuration
                       definition.
                       Cannot be updated.
-                      More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                     type: string
                 type: object
               podMonitorNamespaceSelector:
@@ -9450,7 +9453,7 @@ spec:
                               Annotations is an unstructured key value map stored with a resource that may be
                               set by external tools to store and retrieve arbitrary metadata. They are not
                               queryable and should be preserved when modifying objects.
-                              More info: http://kubernetes.io/docs/user-guide/annotations
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
                             type: object
                           labels:
                             additionalProperties:
@@ -9459,7 +9462,7 @@ spec:
                               Map of string keys and values that can be used to organize and categorize
                               (scope and select) objects. May match selectors of replication controllers
                               and services.
-                              More info: http://kubernetes.io/docs/user-guide/labels
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
                             type: object
                           name:
                             description: |-
@@ -9468,7 +9471,7 @@ spec:
                               automatically. Name is primarily intended for creation idempotence and configuration
                               definition.
                               Cannot be updated.
-                              More info: http://kubernetes.io/docs/user-guide/identifiers#names
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
                             type: string
                         type: object
                       spec:

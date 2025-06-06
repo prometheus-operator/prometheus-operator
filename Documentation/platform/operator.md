@@ -52,13 +52,14 @@ Usage of ./operator:
   -disable-unmanaged-prometheus-configuration
     	Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.
   -enable-config-reloader-probes
-    	Enable liveness and readiness for the config-reloader container. Default: false
+    	Enable liveness, readiness, and startup probes for the config-reloader container. Default: false
   -feature-gates value
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
     	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
+    	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-endpoints
@@ -82,7 +83,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.82.2")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.83.0")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
