@@ -713,6 +713,22 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			}
 
 			if sync {
+				if err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
+					sm := obj.(*monitoringv1.ServiceMonitor)
+					if sm.Namespace != old.Namespace {
+						return
+					}
+					ctx := context.Background()
+					if err2 := c.rmPrometheusRefFromSMonStatus(ctx, p, sm); err2 != nil {
+						c.logger.Error("removing Prometheus reference from ServiceMonitor status failed", "err", err2, "name", sm.Name, "namespace", sm.Namespace)
+					}
+				}); err != nil {
+					c.logger.Error(
+						"listing all ServiceMonitor from cache failed",
+						"err", err,
+					)
+				}
+
 				c.rr.EnqueueForReconciliation(p)
 				return
 			}
