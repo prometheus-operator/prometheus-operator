@@ -339,7 +339,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if !k8sutil.IsStatusCleanupFinalizerPresent(mCur.GetFinalizers()) && rr.DeletionInProgress(mCur) {
+	if !k8sutil.IsFinalizerPresent(mCur.GetFinalizers(), k8sutil.StatusCleanupFinalizerName) && rr.DeletionInProgress(mCur) {
 		return
 	}
 
@@ -410,7 +410,7 @@ func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
 	rr.logger.Debug("update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	if !k8sutil.IsStatusCleanupFinalizerPresent(cur.GetFinalizers()) && rr.DeletionInProgress(cur) {
+	if !k8sutil.IsFinalizerPresent(cur.GetFinalizers(), k8sutil.StatusCleanupFinalizerName) && rr.DeletionInProgress(cur) {
 		return
 	}
 
@@ -440,7 +440,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 	rr.logger.Debug("update handler", "resource", "daemonset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	if !k8sutil.IsStatusCleanupFinalizerPresent(cur.GetFinalizers()) && rr.DeletionInProgress(cur) {
+	if !k8sutil.IsFinalizerPresent(cur.GetFinalizers(), k8sutil.StatusCleanupFinalizerName) && rr.DeletionInProgress(cur) {
 		return
 	}
 

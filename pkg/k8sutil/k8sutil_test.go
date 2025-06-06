@@ -17,6 +17,7 @@ package k8sutil
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -557,218 +558,97 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 	}
 }
 
-func TestEnsureCustomGoverningService(t *testing.T) {
-	name := "test-k8sutil"
-	serviceName := "test-svc"
-	ns := "test-ns"
-	testcases := []struct {
-		name           string
-		service        v1.Service
-		selectorLabels map[string]string
-		expectedErr    bool
+func TestFinalizerAddPatch(t *testing.T) {
+	tests := []struct {
+		name          string
+		finalizers    []string
+		finalizerName string
+		expectedPatch []map[string]interface{}
+		expectEmpty   bool
 	}{
 		{
-			name: "custom service selects k8sutil",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      serviceName,
-					Namespace: ns,
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"k8sutil":                      name,
-						"app.kubernetes.io/name":       "k8sutil",
-						"app.kubernetes.io/instance":   name,
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
+			name:          "empty finalizers",
+			finalizers:    []string{},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectedPatch: []map[string]interface{}{
+				{"op": "add", "path": "/metadata/finalizers", "value": []string{"cleanup.kubernetes.io/finalizer"}},
 			},
-			selectorLabels: map[string]string{
-				"k8sutil":                      name,
-				"app.kubernetes.io/name":       "k8sutil",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: false,
 		},
 		{
-			name: "custom service does not select k8sutil",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
-					Namespace: ns,
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"k8sutil":                      "different-name",
-						"app.kubernetes.io/name":       "k8sutil",
-						"app.kubernetes.io/instance":   "different-name",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
+			name:          "finalizer not present",
+			finalizers:    []string{"a", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectedPatch: []map[string]interface{}{
+				{"op": "add", "path": "/metadata/finalizers/-", "value": "cleanup.kubernetes.io/finalizer"},
 			},
-			selectorLabels: map[string]string{
-				"k8sutil":                      name,
-				"app.kubernetes.io/name":       "k8sutil",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
 		},
 		{
-			name: "custom service selects k8sutil but in different ns",
-			service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
-					Namespace: "wrong-ns",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"k8sutil":                      name,
-						"app.kubernetes.io/name":       "k8sutil",
-						"app.kubernetes.io/instance":   name,
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-					},
-				},
-			},
-			selectorLabels: map[string]string{
-				"k8sutil":                      name,
-				"app.kubernetes.io/name":       "k8sutil",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
-		},
-		{
-			name: "custom svc doesn't exist",
-			selectorLabels: map[string]string{
-				"k8sutil":                      name,
-				"app.kubernetes.io/name":       "k8sutil",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-			expectedErr: true,
+			name:          "finalizer already present",
+			finalizers:    []string{"a", "cleanup.kubernetes.io/finalizer", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectEmpty:   true,
 		},
 	}
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			p := makeBarebonesPrometheus(name, ns)
-			p.Spec.ServiceName = &serviceName
 
-			clientSet := fake.NewSimpleClientset(&tc.service)
-			svcClient := clientSet.CoreV1().Services(ns)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patch, err := FinalizerAddPatch(tt.finalizers, tt.finalizerName)
+			require.NoError(t, err)
 
-			err := EnsureCustomGoverningService(context.Background(), p.Namespace, *p.Spec.ServiceName, svcClient, tc.selectorLabels)
-			if tc.expectedErr {
-				require.Error(t, err)
+			if tt.expectEmpty {
+				require.Empty(t, patch)
 			} else {
+				expectedBytes, err := json.Marshal(tt.expectedPatch)
 				require.NoError(t, err)
+				require.JSONEq(t, string(expectedBytes), string(patch))
 			}
 		})
 	}
 }
 
-func TestAddStatusCleanupFinalizer(t *testing.T) {
+func TestFinalizerDeletePatch(t *testing.T) {
 	tests := []struct {
-		name       string
-		finalizers []string
-		want       []string
-		wantNil    bool
+		name          string
+		finalizers    []string
+		finalizerName string
+		expectPatch   bool
+		expectedIndex int
 	}{
 		{
-			name:       "add finalizer to empty list",
-			finalizers: []string{},
-			want:       []string{statusCleanupFinalizerName},
-			wantNil:    false,
+			name:          "finalizer present at index 1",
+			finalizers:    []string{"a", "cleanup.kubernetes.io/finalizer", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectPatch:   true,
+			expectedIndex: 1,
 		},
 		{
-			name:       "finalizer already present",
-			finalizers: []string{statusCleanupFinalizerName},
-			want:       nil,
-			wantNil:    true,
+			name:          "finalizer not present",
+			finalizers:    []string{"a", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectPatch:   false,
 		},
 		{
-			name:       "finalizer not in list",
-			finalizers: []string{"some.other/finalizer"},
-			want:       []string{"some.other/finalizer", statusCleanupFinalizerName},
-			wantNil:    false,
+			name:          "empty finalizers",
+			finalizers:    []string{},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectPatch:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotBytes, err := AddStatusCleanupFinalizer(tt.finalizers)
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
+			patch, err := FinalizerDeletePatch(tt.finalizers, tt.finalizerName)
+			require.NoError(t, err)
 
-			if tt.wantNil {
-				if gotBytes != nil {
-					t.Errorf("expected nil patch, got: %s", gotBytes)
+			if tt.expectPatch {
+				expected := []map[string]interface{}{
+					{"op": "remove", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex)},
 				}
+				expectedBytes, err := json.Marshal(expected)
+				require.NoError(t, err)
+				require.JSONEq(t, string(expectedBytes), string(patch))
 			} else {
-				var result map[string]interface{}
-				if err := json.Unmarshal(gotBytes, &result); err != nil {
-					t.Fatalf("failed to unmarshal patch: %v", err)
-				}
-
-				gotFinalizers := result["metadata"].(map[string]interface{})["finalizers"].([]interface{})
-				gotStrs := make([]string, len(gotFinalizers))
-				for i, f := range gotFinalizers {
-					gotStrs[i] = f.(string)
-				}
-
-				if !reflect.DeepEqual(tt.want, gotStrs) {
-					t.Errorf("finalizers mismatch, got %v, want %v", gotStrs, tt.want)
-				}
-			}
-		})
-	}
-}
-
-func TestDeleteStatusCleanupFinalizer(t *testing.T) {
-	tests := []struct {
-		name       string
-		finalizers []string
-		want       []string
-	}{
-		{
-			name:       "remove from list",
-			finalizers: []string{"a/b", statusCleanupFinalizerName, "x/y"},
-			want:       []string{"a/b", "x/y"},
-		},
-		{
-			name:       "remove when only present",
-			finalizers: []string{statusCleanupFinalizerName},
-			want:       []string{},
-		},
-		{
-			name:       "finalizer not present",
-			finalizers: []string{"x/y"},
-			want:       []string{"x/y"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotBytes, err := DeleteStatusCleanupFinalizer(tt.finalizers)
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-
-			var result map[string]interface{}
-			if err := json.Unmarshal(gotBytes, &result); err != nil {
-				t.Fatalf("failed to unmarshal patch: %v", err)
-			}
-
-			gotFinalizers := result["metadata"].(map[string]interface{})["finalizers"].([]interface{})
-			gotStrs := make([]string, len(gotFinalizers))
-			for i, f := range gotFinalizers {
-				gotStrs[i] = f.(string)
-			}
-
-			if !reflect.DeepEqual(tt.want, gotStrs) {
-				t.Errorf("finalizers mismatch, got %v, want %v", gotStrs, tt.want)
+				require.Empty(t, patch)
 			}
 		})
 	}

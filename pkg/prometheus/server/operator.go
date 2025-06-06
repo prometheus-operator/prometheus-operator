@@ -973,41 +973,43 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 // add or remove finalizers for the Prometheus resource.
+// Returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
 func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1.Prometheus, key string) (bool, error) {
-	if c.configResourcesStatusEnabled {
-		var finalizersChanged bool
-		if !c.rr.DeletionInProgress(p) {
-			// Add finalizer to the Prometheus resource if it doesn't have one.
-			finalizers := p.GetFinalizers()
-			patchBytes, err := k8sutil.AddStatusCleanupFinalizer(finalizers)
-			if err != nil {
-				return false, fmt.Errorf("failed to marshal patch: %w", err)
+	if !c.configResourcesStatusEnabled {
+		return false, nil
+	}
+	finalizersChanged := false
+	if !c.rr.DeletionInProgress(p) {
+		// Add finalizer to the Prometheus resource if it doesn't have one.
+		finalizers := p.GetFinalizers()
+		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+		if err != nil {
+			return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+		}
+		if len(patchBytes) > 0 {
+			if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return finalizersChanged, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 			}
-			if patchBytes != nil {
-				if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-					return false, fmt.Errorf("failed to add statusCleanup finalizer: %w", err)
-				}
-				finalizersChanged = true
-			}
-		} else {
-			// If the Prometheus instance is marked for deletion, we remove the finalizer.
-			finalizers := p.GetFinalizers()
-			patchBytes, err := k8sutil.DeleteStatusCleanupFinalizer(finalizers)
-			if err != nil {
-				return false, fmt.Errorf("failed to marshal patch: %w", err)
-			}
-			if patchBytes != nil {
-				if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.MergePatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-					return false, fmt.Errorf("failed to remove statusCleanup finalizer: %w", err)
-				}
-				finalizersChanged = true
-			}
-
-			c.reconciliations.ForgetObject(key)
+			finalizersChanged = true
 		}
 		return finalizersChanged, nil
 	}
-	return false, nil
+	// If the Prometheus instance is marked for deletion, we remove the finalizer.
+	finalizers := p.GetFinalizers()
+	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+	if err != nil {
+		return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+	}
+	if len(patchBytes) > 0 {
+		if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return finalizersChanged, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		}
+		finalizersChanged = true
+	}
+
+	c.reconciliations.ForgetObject(key)
+
+	return finalizersChanged, nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.

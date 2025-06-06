@@ -57,7 +57,7 @@ import (
 // KubeConfigEnv (optionally) specify the location of kubeconfig file.
 const KubeConfigEnv = "KUBECONFIG"
 
-const statusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
+const StatusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
@@ -604,33 +604,48 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 	return nil
 }
 
-func AddStatusCleanupFinalizer(finalizers []string) ([]byte, error) {
-	if !slices.Contains(finalizers, statusCleanupFinalizerName) {
-		finalizers = append(finalizers, statusCleanupFinalizerName)
-		patchData := map[string]interface{}{
-			"metadata": map[string]interface{}{
-				"finalizers": finalizers,
+// AddFinalizerPatch generates the JSON patch payload which adds the finalizer to the object's metadata.
+// If the finalizer is already present, it returns empty []byte slice.
+func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error) {
+	if slices.Contains(finalizers, finalizerName) {
+		return []byte{}, nil
+	} else if len(finalizers) == 0 {
+		patch := []map[string]interface{}{
+			{
+				"op":    "add",
+				"path":  "/metadata/finalizers",
+				"value": []string{finalizerName},
 			},
 		}
-		patchBytes, err := json.Marshal(patchData)
-		return patchBytes, err
+		return json.Marshal(patch)
 	}
-	return nil, nil
-}
-
-func DeleteStatusCleanupFinalizer(finalizers []string) ([]byte, error) {
-	finalizers = slices.DeleteFunc(finalizers, func(f string) bool {
-		return f == statusCleanupFinalizerName
-	})
-	patchData := map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"finalizers": finalizers,
+	patch := []map[string]interface{}{
+		{
+			"op":    "add",
+			"path":  "/metadata/finalizers/-",
+			"value": finalizerName,
 		},
 	}
-	patchBytes, err := json.Marshal(patchData)
-	return patchBytes, err
+	return json.Marshal(patch)
 }
 
-func IsStatusCleanupFinalizerPresent(finalizers []string) bool {
-	return slices.Contains(finalizers, statusCleanupFinalizerName)
+// FinalizerDeletePatch generates the JSON patch payload which delete the finalizer to the object's metadata.
+// If the finalizer is not present, it returns empty []byte slice.
+func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
+	for i, f := range finalizers {
+		if f == finalizerName {
+			patch := []map[string]interface{}{
+				{
+					"op":   "remove",
+					"path": fmt.Sprintf("/metadata/finalizers/%d", i),
+				},
+			}
+			return json.Marshal(patch)
+		}
+	}
+	return []byte{}, nil
+}
+
+func IsFinalizerPresent(finalizers []string, finalizerName string) bool {
+	return slices.Contains(finalizers, finalizerName)
 }
