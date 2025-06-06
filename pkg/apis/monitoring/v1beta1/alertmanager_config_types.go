@@ -1007,6 +1007,7 @@ type RocketChatConfig struct {
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
 	// The channel to send alerts to.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Channel *string `json:"channel,omitempty"`
 	// The sender token. Either Token or TokenFile is required.
@@ -1024,24 +1025,30 @@ type RocketChatConfig struct {
 	// +optional
 	TokenIDFile *string `json:"tokenIDFile,omitempty"`
 	// The message color.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Color *string `json:"color,omitempty"`
 	// If provided, the avatar will be displayed as an emoji.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Emoji *string `json:"emoji,omitempty"`
 	// Icon URL for the message.
 	// +optional
 	IconURL *URL `json:"iconURL,omitempty"`
 	// The main message text.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// The message title.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// The title link for the message.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TitleLink *string `json:"titleLink,omitempty"`
 	// Additional fields for the message.
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// Whether to use short fields.
@@ -1057,6 +1064,7 @@ type RocketChatConfig struct {
 	// +optional
 	LinkNames *bool `json:"linkNames,omitempty"`
 	// Actions to include in the message.
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
 	// HTTP client configuration.
@@ -1067,9 +1075,11 @@ type RocketChatConfig struct {
 // RocketChatFieldConfig defines a field for RocketChat messages.
 type RocketChatFieldConfig struct {
 	// The field title.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// The field value.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Value *string `json:"value,omitempty"`
 	// Whether the field is displayed in a compact form.
@@ -1080,12 +1090,14 @@ type RocketChatFieldConfig struct {
 // RocketChatActionConfig defines actions for RocketChat messages.
 type RocketChatActionConfig struct {
 	// The button text.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// The URL the button links to.
 	// +optional
 	URL *URL `json:"url,omitempty"`
 	// The message to send when the button is clicked.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Msg *string `json:"msg,omitempty"`
 }

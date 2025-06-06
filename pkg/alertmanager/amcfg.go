@@ -747,14 +747,6 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		VSendResolved: in.SendResolved,
 	}
 
-	if in.Title != nil && *in.Title != "" {
-		out.Title = *in.Title
-	}
-
-	if in.Text != nil && *in.Text != "" {
-		out.Text = *in.Text
-	}
-
 	token, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.Token)
 	if err != nil {
 		return nil, err
