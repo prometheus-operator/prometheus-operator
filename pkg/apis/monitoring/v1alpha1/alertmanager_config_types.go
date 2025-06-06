@@ -1051,6 +1051,7 @@ type RocketChatConfig struct {
 	// +optional
 	TitleLink *string `json:"titleLink,omitempty"`
 	// Additional fields for the message.
+        // +kubebuilder:validation:MinItems=1
 	// +optional
 	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// Whether to use short fields.
