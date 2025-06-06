@@ -1016,7 +1016,7 @@ type RocketChatConfig struct {
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
 	// The channel to send alerts to.
-        // +kubebuilder:validation:MinLength=1
+    // +kubebuilder:validation:MinLength=1
 	// +optional
 	Channel *string `json:"channel,omitempty"`
 	// The sender token. Either `token` or `tokenFile` is required.
