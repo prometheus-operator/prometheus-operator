@@ -713,23 +713,6 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			}
 
 			if sync {
-				if err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
-					sm := obj.(*monitoringv1.ServiceMonitor)
-					if sm.Namespace != old.Name {
-						return
-					}
-					ctx := context.Background()
-					// Remove the Prometheus reference from the ServiceMonitor status as the namespace selector has changed.
-					if err2 := c.rmPrometheusRefFromSMonStatus(ctx, p, sm); err2 != nil {
-						c.logger.Error("removing Prometheus reference from ServiceMonitor status failed", "err", err2, "name", sm.Name, "namespace", sm.Namespace)
-					}
-				}); err != nil {
-					c.logger.Error(
-						"listing all ServiceMonitor from cache failed",
-						"err", err,
-					)
-				}
-
 				c.rr.EnqueueForReconciliation(p)
 				return
 			}
@@ -811,6 +794,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
+	}
+
+	if c.configResourcesStatusEnabled {
+		invalidsmons, err := c.smonContainingInvalidBinding(ctx, p, assetStore)
+		if err != nil {
+			return fmt.Errorf("checking ServiceMonitors for invalid binding failed: %w", err)
+		}
+		for _, sm := range invalidsmons {
+			err = c.rmPrometheusRefFromSMonStatus(ctx, p, sm)
+			if err != nil {
+				return fmt.Errorf("removing Prometheus reference from ServiceMonitor %q status failed: %w", sm.Name, err)
+			}
+		}
 	}
 
 	if p.Spec.Paused {
@@ -1062,6 +1058,36 @@ func (c *Operator) rmPrometheusRefFromSMonStatus(ctx context.Context, p *monitor
 		}
 	}
 	return nil
+}
+
+func (c *Operator) smonContainingInvalidBinding(ctx context.Context, p *monitoringv1.Prometheus, store *assets.StoreBuilder) ([]*monitoringv1.ServiceMonitor, error) {
+	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	if err != nil {
+		return nil, err
+	}
+	smonSelections, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
+	validBindingSmons := map[string]bool{}
+
+	invalidBindingSmons := make([]*monitoringv1.ServiceMonitor, 0)
+	for _, smv := range smonSelections.Valid {
+		validBindingSmons[fmt.Sprintf("%s/%s", smv.GetNamespace(), smv.GetName())] = true
+	}
+	for _, smi := range smonSelections.Invalid {
+		validBindingSmons[fmt.Sprintf("%s/%s", smi.Object.GetNamespace(), smi.Object.GetName())] = true
+	}
+	err = c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		smon := obj.(*monitoringv1.ServiceMonitor)
+		for _, bg := range smon.Status.Bindings {
+			if bg.Resource == monitoringv1.PrometheusName &&
+				bg.Name == p.GetName() &&
+				bg.Namespace == p.GetNamespace() {
+				if !validBindingSmons[fmt.Sprintf("%s/%s", smon.GetNamespace(), smon.GetName())] {
+					invalidBindingSmons = append(invalidBindingSmons, smon)
+				}
+			}
+		}
+	})
+	return invalidBindingSmons, err
 }
 
 func (c *Operator) updateConfigResStatus(ctx context.Context, p *monitoringv1.Prometheus, store *assets.StoreBuilder) error {
