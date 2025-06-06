@@ -1032,6 +1032,7 @@ type RocketChatConfig struct {
 	// +optional
 	TokenIDFile *string `json:"tokenIDFile,omitempty"`
 	// The message color.
+        // +kubebuilder:validation:MinLength=1
 	// +optional
 	Color *string `json:"color,omitempty"`
 	// If provided, the avatar will be displayed as an emoji.
