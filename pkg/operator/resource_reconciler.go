@@ -336,9 +336,9 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if rr.DeletionInProgress(mCur) {
-		return
-	}
+	// if rr.DeletionInProgress(mCur) {
+	// 	return
+	// }
 
 	if !rr.hasStateChanged(mOld, mCur) {
 		return
@@ -407,9 +407,9 @@ func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
 	rr.logger.Debug("update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	if rr.DeletionInProgress(cur) {
-		return
-	}
+	// if rr.DeletionInProgress(cur) {
+	// 	return
+	// }
 
 	if !rr.hasObjectChanged(old, cur) {
 		return
@@ -437,9 +437,9 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 	rr.logger.Debug("update handler", "resource", "daemonset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	if rr.DeletionInProgress(cur) {
-		return
-	}
+	// if rr.DeletionInProgress(cur) {
+	// 	return
+	// }
 
 	if !rr.hasObjectChanged(old, cur) {
 		return
