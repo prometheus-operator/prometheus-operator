@@ -1067,6 +1067,7 @@ type RocketChatConfig struct {
 	// +optional
 	LinkNames *bool `json:"linkNames,omitempty"`
 	// Actions to include in the message.
+        // +kubebuilder:validation:MinItems=1
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
 	// HTTP client configuration.
