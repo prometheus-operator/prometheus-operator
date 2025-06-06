@@ -715,10 +715,11 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 			if sync {
 				if err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
 					sm := obj.(*monitoringv1.ServiceMonitor)
-					if sm.Namespace != old.Namespace {
+					if sm.Namespace != old.Name {
 						return
 					}
 					ctx := context.Background()
+					// Remove the Prometheus reference from the ServiceMonitor status as the namespace selector has changed.
 					if err2 := c.rmPrometheusRefFromSMonStatus(ctx, p, sm); err2 != nil {
 						c.logger.Error("removing Prometheus reference from ServiceMonitor status failed", "err", err2, "name", sm.Name, "namespace", sm.Namespace)
 					}
@@ -1100,12 +1101,20 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 		Reason:             reason,
 	}
 
+	isUpdate := false
 	for i := range sm.Status.Bindings {
 		binding := &sm.Status.Bindings[i]
 		if binding.Namespace == p.GetNamespace() &&
 			binding.Name == p.GetName() &&
 			binding.Resource == monitoringv1.PrometheusName {
 			found = true
+			for _, cond := range binding.Conditions {
+				if cond.ObservedGeneration == sm.Generation {
+					return nil
+				}
+			}
+
+			isUpdate = true
 			binding.Conditions = append([]monitoringv1.Condition{condition}, binding.Conditions...)
 			break
 		}
@@ -1119,9 +1128,13 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, p *monitoring
 			Group:      monitoringv1.GroupName,
 			Conditions: []monitoringv1.Condition{condition},
 		})
+		isUpdate = true
 	}
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	return err
+	if isUpdate {
+		_, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromServiceMonitor(sm), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+		return err
+	}
+	return nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
