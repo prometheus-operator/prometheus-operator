@@ -4755,10 +4755,12 @@
                               properties: {
                                 msg: {
                                   description: 'The message to send when the button is clicked.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 text: {
                                   description: 'The button text.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 url: {
@@ -4769,6 +4771,7 @@
                               },
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
                           },
                           apiURL: {
@@ -4778,14 +4781,17 @@
                           },
                           channel: {
                             description: 'The channel to send alerts to.',
+                            minLength: 1,
                             type: 'string',
                           },
                           color: {
                             description: 'The message color.',
+                            minLength: 1,
                             type: 'string',
                           },
                           emoji: {
                             description: 'If provided, the avatar will be displayed as an emoji.',
+                            minLength: 1,
                             type: 'string',
                           },
                           fields: {
@@ -4799,15 +4805,18 @@
                                 },
                                 title: {
                                   description: 'The field title.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 value: {
                                   description: 'The field value.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
                           },
                           httpConfig: {
@@ -5468,6 +5477,7 @@
                           },
                           text: {
                             description: 'The main message text.',
+                            minLength: 1,
                             type: 'string',
                           },
                           thumbURL: {
@@ -5477,10 +5487,12 @@
                           },
                           title: {
                             description: 'The message title.',
+                            minLength: 1,
                             type: 'string',
                           },
                           titleLink: {
                             description: 'The title link for the message.',
+                            minLength: 1,
                             type: 'string',
                           },
                           token: {

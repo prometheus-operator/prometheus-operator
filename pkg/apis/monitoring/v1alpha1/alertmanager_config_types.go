@@ -1016,7 +1016,7 @@ type RocketChatConfig struct {
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
 	// The channel to send alerts to.
-    // +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Channel *string `json:"channel,omitempty"`
 	// The sender token. Either `token` or `tokenFile` is required.
@@ -1032,7 +1032,7 @@ type RocketChatConfig struct {
 	// +optional
 	TokenIDFile *string `json:"tokenIDFile,omitempty"`
 	// The message color.
-    // +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Color *string `json:"color,omitempty"`
 	// If provided, the avatar will be displayed as an emoji.
@@ -1055,7 +1055,7 @@ type RocketChatConfig struct {
 	// +optional
 	TitleLink *string `json:"titleLink,omitempty"`
 	// Additional fields for the message.
-    // +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// Whether to use short fields.
@@ -1071,7 +1071,7 @@ type RocketChatConfig struct {
 	// +optional
 	LinkNames *bool `json:"linkNames,omitempty"`
 	// Actions to include in the message.
-    // +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
 	// HTTP client configuration.
