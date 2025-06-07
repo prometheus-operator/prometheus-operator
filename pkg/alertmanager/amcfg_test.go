@@ -65,6 +65,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 	})
 
+	version21, err := semver.ParseTolerant("v0.21.0")
+	require.NoError(t, err)
+
 	version24, err := semver.ParseTolerant("v0.24.0")
 	require.NoError(t, err)
 
@@ -799,6 +802,93 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Type: "OnNamespace",
 			},
 			golden: "valid_global_config_smtp_tlsconfig_email_receiver.golden",
+		},
+		{
+			name:      "valid global config with amVersion21 ",
+			amVersion: &version21,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					From: ptr.To("from"),
+					SmartHost: &monitoringv1.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					Hello:        ptr.To("smtp.example.org"),
+					AuthUsername: ptr.To("dev@smtp.example.org"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "password",
+					},
+					AuthIdentity: ptr.To("dev@smtp.example.org"),
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "secret",
+					},
+					RequireTLS: ptr.To(true),
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						MinVersion:         ptr.To(monitoringv1.TLSVersion12),
+						MaxVersion:         ptr.To(monitoringv1.TLSVersion13),
+					},
+				},
+				ResolveTimeout: "30s",
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-id",
+								},
+								Key: "test",
+							},
+						},
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+						TokenURL: "https://test.com",
+						Scopes:   []string{"any"},
+						EndpointParams: map[string]string{
+							"some": "value",
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_amVersion21.golden",
 		},
 	}
 	for _, tt := range tests {

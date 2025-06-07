@@ -470,6 +470,8 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 }
 
 func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
+	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
+
 	if in == nil {
 		return nil
 	}
@@ -483,6 +485,15 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		// prefer matchers to deprecated config
 		if matcher.MatchType != "" {
 			matchers = append(matchers, matcher.String())
+			continue
+		}
+
+		if matchersV2Allowed {
+			if matcher.Regex {
+				matchers = append(matchers, inhibitRuleRegexToV2(matcher.Name, matcher.Value))
+			} else {
+				matchers = append(matchers, inhibitRuleToV2(matcher.Name, matcher.Value))
+			}
 			continue
 		}
 
