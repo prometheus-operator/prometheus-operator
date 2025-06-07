@@ -1515,8 +1515,8 @@ route:
     - namespace="%s"
     continue: true
   - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-    match:
-      service: webapp
+    matchers:
+    - service="webapp"
     matchers:
     - namespace="%s"
     continue: true
@@ -1525,20 +1525,20 @@ route:
       group_by:
       - env
       - instance
-      match:
-        job: db
+      matchers:
+      - job="db"
       routes:
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-        match:
-          alertname: TargetDown
+        matchers:
+        - alertname="TargetDown"
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
         match_re:
           severity: critical|warning
         mute_time_intervals:
         - %s/e2e-test-amconfig-sub-routes/test
   - receiver: "null"
-    match:
-      alertname: DeadMansSwitch
+    matchers:
+    - alertname="DeadMansSwitch"
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
@@ -1660,8 +1660,8 @@ route:
   - job
   routes:
   - receiver: "null"
-    match:
-      alertname: DeadMansSwitch
+    matchers:
+    - alertname="DeadMansSwitch"
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
@@ -1922,8 +1922,8 @@ route:
   receiver: %[1]s
   routes:
   - receiver: %[1]s
-    match:
-      mykey: myvalue-1
+    matchers:
+    - mykey="myvalue-1"
 inhibit_rules:
 - target_matchers:
   - mykey="myvalue-2"
@@ -2618,14 +2618,14 @@ route:
   - job
   routes:
   - receiver: %s/amcfg-v1alpha1/webhook
-    match:
-      test: test
+    matchers:
+    - test="test"
     matchers:
     - namespace="%s"
     continue: true
   - receiver: "null"
-    match:
-      alertname: DeadMansSwitch
+    matchers:
+    - alertname="DeadMansSwitch"
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
@@ -2669,12 +2669,12 @@ route:
   - job
   routes:
   - receiver: %s/amcfg-v1alpha1/webhook
-    match:
-      test: test
+    matchers:
+    - test="test"
     continue: true
   - receiver: "null"
-    match:
-      alertname: DeadMansSwitch
+    matchers:
+    - alertname="DeadMansSwitch"
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
