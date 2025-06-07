@@ -34,6 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -104,6 +105,8 @@ type Operator struct {
 	canReadStorageClass bool
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -161,6 +164,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -531,11 +535,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set Alertmanager type information: %w", err)
 	}
 
-	// Check if the Alertmanager instance is marked for deletion.
-	if c.rr.DeletionInProgress(am) {
-		return nil
-	}
-
 	if am.Spec.Paused {
 		return nil
 	}
@@ -544,6 +543,18 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logDeprecatedFields(logger, am)
 
 	logger.Info("sync alertmanager")
+
+	if !c.configResourcesStatusEnabled && c.rr.DeletionInProgress(am) {
+		return nil
+	}
+
+	finalizersChanged, err := c.syncFinalizers(ctx, am, key)
+	if err != nil {
+		return err
+	}
+	if finalizersChanged {
+		return nil
+	}
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
@@ -650,6 +661,46 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+// add or remove finalizers for the Alertmanager resource.
+// Returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
+func (c *Operator) syncFinalizers(ctx context.Context, am *monitoringv1.Alertmanager, key string) (bool, error) {
+	if !c.configResourcesStatusEnabled {
+		return false, nil
+	}
+	finalizersChanged := false
+	if !c.rr.DeletionInProgress(am) {
+		// Add finalizer to the Alertmanger resource if it doesn't have one.
+		finalizers := am.GetFinalizers()
+		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+		if err != nil {
+			return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+		}
+		if len(patchBytes) > 0 {
+			if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return finalizersChanged, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+			}
+			finalizersChanged = true
+		}
+		return finalizersChanged, nil
+	}
+	// If the Alertmanager instance is marked for deletion, we remove the finalizer.
+	finalizers := am.GetFinalizers()
+	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+	if err != nil {
+		return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+	}
+	if len(patchBytes) > 0 {
+		if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return finalizersChanged, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		}
+		finalizersChanged = true
+	}
+
+	c.reconciliations.ForgetObject(key)
+
+	return finalizersChanged, nil
 }
 
 // getAlertmanagerFromKey returns a copy of the Alertmanager object identified by key.

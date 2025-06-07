@@ -16,6 +16,8 @@ package k8sutil
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -553,6 +555,102 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 	for i, opt := range monitoringDNSConfig.Options {
 		require.Equal(t, opt.Name, spec.DNSConfig.Options[i].Name, "expected option names to match")
 		require.Equal(t, opt.Value, spec.DNSConfig.Options[i].Value, "expected option values to match")
+	}
+}
+
+func TestFinalizerAddPatch(t *testing.T) {
+	tests := []struct {
+		name          string
+		finalizers    []string
+		finalizerName string
+		expectedPatch []map[string]interface{}
+		expectEmpty   bool
+	}{
+		{
+			name:          "empty finalizers",
+			finalizers:    []string{},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectedPatch: []map[string]interface{}{
+				{"op": "add", "path": "/metadata/finalizers", "value": []string{"cleanup.kubernetes.io/finalizer"}},
+			},
+		},
+		{
+			name:          "finalizer not present",
+			finalizers:    []string{"a", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectedPatch: []map[string]interface{}{
+				{"op": "add", "path": "/metadata/finalizers/-", "value": "cleanup.kubernetes.io/finalizer"},
+			},
+		},
+		{
+			name:          "finalizer already present",
+			finalizers:    []string{"a", "cleanup.kubernetes.io/finalizer", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectEmpty:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patch, err := FinalizerAddPatch(tt.finalizers, tt.finalizerName)
+			require.NoError(t, err)
+
+			if tt.expectEmpty {
+				require.Empty(t, patch)
+			} else {
+				expectedBytes, err := json.Marshal(tt.expectedPatch)
+				require.NoError(t, err)
+				require.JSONEq(t, string(expectedBytes), string(patch))
+			}
+		})
+	}
+}
+
+func TestFinalizerDeletePatch(t *testing.T) {
+	tests := []struct {
+		name          string
+		finalizers    []string
+		finalizerName string
+		expectPatch   bool
+		expectedIndex int
+	}{
+		{
+			name:          "finalizer present at index 1",
+			finalizers:    []string{"a", "cleanup.kubernetes.io/finalizer", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectPatch:   true,
+			expectedIndex: 1,
+		},
+		{
+			name:          "finalizer not present",
+			finalizers:    []string{"a", "b"},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectPatch:   false,
+		},
+		{
+			name:          "empty finalizers",
+			finalizers:    []string{},
+			finalizerName: "cleanup.kubernetes.io/finalizer",
+			expectPatch:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patch, err := FinalizerDeletePatch(tt.finalizers, tt.finalizerName)
+			require.NoError(t, err)
+
+			if tt.expectPatch {
+				expected := []map[string]interface{}{
+					{"op": "remove", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex)},
+				}
+				expectedBytes, err := json.Marshal(expected)
+				require.NoError(t, err)
+				require.JSONEq(t, string(expectedBytes), string(patch))
+			} else {
+				require.Empty(t, patch)
+			}
+		})
 	}
 }
 

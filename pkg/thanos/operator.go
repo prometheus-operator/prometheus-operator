@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -89,6 +90,8 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 // Config defines the operator's parameters for the Thanos controller.
@@ -151,6 +154,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -453,17 +457,24 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set ThanosRuler type information: %w", err)
 	}
 
-	// Check if the Thanos instance is marked for deletion.
-	if o.rr.DeletionInProgress(tr) {
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
+
+	if !o.configResourcesStatusEnabled && o.rr.DeletionInProgress(tr) {
+		return nil
+	}
+
+	finalizersChanged, err := o.syncFinalizers(ctx, tr, key)
+	if err != nil {
+		return err
+	}
+	if finalizersChanged {
 		return nil
 	}
 
 	if tr.Spec.Paused {
 		return nil
 	}
-
-	logger := o.logger.With("key", key)
-	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
@@ -571,6 +582,45 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+// add or remove finalizers for the ThanosRuler resource.
+// Returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
+func (o *Operator) syncFinalizers(ctx context.Context, tr *monitoringv1.ThanosRuler, key string) (bool, error) {
+	if !o.configResourcesStatusEnabled {
+		return false, nil
+	}
+	finalizersChanged := false
+	if !o.rr.DeletionInProgress(tr) {
+		// Add finalizer to the ThanosRuler resource if it doesn't have one.
+		finalizers := tr.GetFinalizers()
+		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+		if err != nil {
+			return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+		}
+		if len(patchBytes) > 0 {
+			if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+				return finalizersChanged, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+			}
+			finalizersChanged = true
+		}
+		return finalizersChanged, nil
+	}
+	// If the ThanosRuler instance is marked for deletion, we remove the finalizer.
+	finalizers := tr.GetFinalizers()
+	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+	if err != nil {
+		return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+	}
+	if len(patchBytes) > 0 {
+		if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return finalizersChanged, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		}
+		finalizersChanged = true
+	}
+
+	o.reconciliations.ForgetObject(key)
+	return finalizersChanged, nil
 }
 
 // getThanosRulerFromKey returns a copy of the ThanosRuler object identified by key.
