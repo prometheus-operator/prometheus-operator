@@ -1516,9 +1516,8 @@ route:
     continue: true
   - receiver: %s/e2e-test-amconfig-sub-routes/e2e
     matchers:
-    - service="webapp"
-    matchers:
     - namespace="%s"
+    - service="webapp"
     continue: true
     routes:
     - receiver: %s/e2e-test-amconfig-sub-routes/e2e
@@ -2619,9 +2618,8 @@ route:
   routes:
   - receiver: %s/amcfg-v1alpha1/webhook
     matchers:
-    - test="test"
-    matchers:
     - namespace="%s"
+    - test="test"
     continue: true
   - receiver: "null"
     matchers:
