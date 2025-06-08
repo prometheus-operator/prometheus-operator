@@ -486,6 +486,23 @@ func (c *Operator) addHandlers() {
 		c.enqueueForPrometheusNamespace,
 	))
 
+	// The controller needs to watch the configMaps and secrets refrenced by the ConfigResources
+	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		"ConfigMap",
+		c.enqueueForMonitorNamespace,
+	))
+
+	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		"Secret",
+		c.enqueueForMonitorNamespace,
+	))
+
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
 	// trigger a configuration change.
