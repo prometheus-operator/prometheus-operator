@@ -666,21 +666,7 @@ func testPrometheusAgentDaemonSetInvalidReplicas(t *testing.T) {
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
-
-	var loopError error
-	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
-		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			loopError = fmt.Errorf("failed to get object: %w", err)
-			return false, nil
-		}
-
-		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
-			return true, nil
-		}
-		return false, nil
-	})
-	require.NoError(t, err, "%v: %v", err, loopError)
+	require.Contains(t, err.Error(), "replicas cannot be set when mode is DaemonSet")
 }
 
 func testPrometheusAgentDaemonSetInvalidStorage(t *testing.T) {
@@ -719,19 +705,5 @@ func testPrometheusAgentDaemonSetInvalidStorage(t *testing.T) {
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
-
-	var loopError error
-	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
-		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			loopError = fmt.Errorf("failed to get object: %w", err)
-			return false, nil
-		}
-
-		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
-			return true, nil
-		}
-		return false, nil
-	})
-	require.NoError(t, err, "%v: %v", err, loopError)
+	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
 }
