@@ -420,8 +420,8 @@ func TestGatedFeatures(t *testing.T) {
 		"PromAgentReconcileDaemonSetResourceDelete": testPromAgentReconcileDaemonSetResourceDelete,
 		"PrometheusAgentDaemonSetSelectPodMonitor":  testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":               testPrometheusRetentionPolicies,
-		"PrometheusAgentDaemonSetInvalidReplicas":    testPrometheusAgentDaemonSetInvalidReplicas,
-		"PrometheusAgentDaemonSetInvalidStorage":     testPrometheusAgentDaemonSetInvalidStorage,
+		"PrometheusAgentDaemonSetInvalidReplicas":   testPrometheusAgentDaemonSetInvalidReplicas,
+		"PrometheusAgentDaemonSetInvalidStorage":    testPrometheusAgentDaemonSetInvalidStorage,
 	}
 
 	for name, f := range testFuncs {

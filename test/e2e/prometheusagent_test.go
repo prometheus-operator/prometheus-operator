@@ -642,96 +642,96 @@ type TargetsResponse struct {
 }
 
 func testPrometheusAgentDaemonSetInvalidReplicas(t *testing.T) {
-    t.Parallel()
-    ctx := context.Background()
-    testCtx := framework.NewTestCtx(t)
-    defer testCtx.Cleanup(t)
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
-    ns := framework.CreateNamespace(ctx, t, testCtx)
-    framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-    _, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-        ctx, testFramework.PrometheusOperatorOpts{
-            Namespace:           ns,
-            AllowedNamespaces:   []string{ns},
-            EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-        },
-    )
-    require.NoError(t, err)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
 
-    name := "test-invalid-replicas"
-    p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	name := "test-invalid-replicas"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-    // no replicas should be set in Daemonsets
-    p.Spec.Replicas = ptr.To(int32(3))
+	// no replicas should be set in Daemonsets
+	p.Spec.Replicas = ptr.To(int32(3))
 
-    _, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
-    require.Error(t, err)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
 
-    var loopError error
-    err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
-        current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
-        if err != nil {
-            loopError = fmt.Errorf("failed to get object: %w", err)
-            return false, nil
-        }
+	var loopError error
+	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			loopError = fmt.Errorf("failed to get object: %w", err)
+			return false, nil
+		}
 
-        if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
-            return true, nil
-        }
-        return false, nil
-    })
-    require.NoError(t, err, "%v: %v", err, loopError)
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
+			return true, nil
+		}
+		return false, nil
+	})
+	require.NoError(t, err, "%v: %v", err, loopError)
 }
 
 func testPrometheusAgentDaemonSetInvalidStorage(t *testing.T) {
-    t.Parallel()
-    ctx := context.Background()
-    testCtx := framework.NewTestCtx(t)
-    defer testCtx.Cleanup(t)
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
 
-    ns := framework.CreateNamespace(ctx, t, testCtx)
-    framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-    _, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-        ctx, testFramework.PrometheusOperatorOpts{
-            Namespace:           ns,
-            AllowedNamespaces:   []string{ns},
-            EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-        },
-    )
-    require.NoError(t, err)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
 
-    name := "test-invalid-storage"
-    p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	name := "test-invalid-storage"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-    // storage should not be set in Daemonsets
-    p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
-        VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-            Spec: v1.PersistentVolumeClaimSpec{
-                StorageClassName: ptr.To("standard"),
-                Resources: v1.VolumeResourceRequirements{
-                    Requests: v1.ResourceList{
-                        v1.ResourceStorage: resource.MustParse("200Mi"),
-                    },
-                },
-            },
-        },
-    }
+	// storage should not be set in Daemonsets
+	p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+			Spec: v1.PersistentVolumeClaimSpec{
+				StorageClassName: ptr.To("standard"),
+				Resources: v1.VolumeResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	}
 
-    _, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
-    require.Error(t, err) 
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
 
-    var loopError error
-    err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
-        current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
-        if err != nil {
-            loopError = fmt.Errorf("failed to get object: %w", err)
-            return false, nil
-        }
+	var loopError error
+	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			loopError = fmt.Errorf("failed to get object: %w", err)
+			return false, nil
+		}
 
-        if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
-            return true, nil
-        }
-        return false, nil
-    })
-    require.NoError(t, err, "%v: %v", err, loopError)
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
+			return true, nil
+		}
+		return false, nil
+	})
+	require.NoError(t, err, "%v: %v", err, loopError)
 }
