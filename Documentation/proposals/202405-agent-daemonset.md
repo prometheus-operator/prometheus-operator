@@ -2,6 +2,7 @@
 
 * Owners:
   * [haanhvu](https://github.com/haanhvu)
+  * [slashexx](https://github.com/slashexx)
 * Status:
   * `Accepted`
 * Related Tickets:
@@ -80,10 +81,8 @@ When `mode:DaemonSet`, the following CEL rules will be applied:
 
 - `replicas` 
 - `storage`  
-- `serviceMonitorSelector` 
 - `shards` 
 - `persistentVolumeClaimRetentionPolicy` 
-- `serviceMonitorNamespaceSelector` 
 
 This is implemented by adding `x-kubernetes-validations` like:
 
