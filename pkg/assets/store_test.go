@@ -1170,3 +1170,51 @@ func TestAddAzureOAuth(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateObjStore(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+	)
+	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+	// Add the secret to the store by fetching it
+	sel := v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "secret",
+		},
+		Key: "key1",
+	}
+	val, err := store.GetSecretKey(context.Background(), "ns1", sel)
+	require.NoError(t, err)
+	require.Equal(t, "val1", val)
+
+	// Update the secret object
+	updatedSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "secret",
+			Namespace: "ns1",
+		},
+		Data: map[string][]byte{
+			"key1": []byte("val2"),
+		},
+	}
+	err = store.UpdateObjStore(updatedSecret)
+	require.NoError(t, err)
+
+	// Now, getting the key should return the updated value
+	val, err = store.GetSecretKey(context.Background(), "ns1", sel)
+	require.NoError(t, err)
+	require.Equal(t, "val2", val)
+
+	// Test updating with nil object
+	err = store.UpdateObjStore(nil)
+	require.Error(t, err)
+}

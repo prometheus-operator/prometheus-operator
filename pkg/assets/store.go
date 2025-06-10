@@ -388,3 +388,15 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 
 	return k.toString()
 }
+
+func (s *StoreBuilder) UpdateObjStore(obj interface{}) error {
+	if obj == nil {
+		return errors.New("object cannot be nil")
+	}
+
+	if err := s.objStore.Update(obj); err != nil {
+		return fmt.Errorf("failed to update object in store: %w", err)
+	}
+
+	return nil
+}
