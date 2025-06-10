@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.82.2
+    app.kubernetes.io/version: 0.83.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -20,19 +20,19 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.82.2
+        app.kubernetes.io/version: 0.83.0
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.82.2
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.83.0
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.82.2
+        image: quay.io/prometheus-operator/prometheus-operator:v0.83.0
         name: prometheus-operator
         ports:
         - containerPort: 8080

@@ -63,6 +63,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	LogFormat                          *string                                         `json:"logFormat,omitempty"`
 	PortName                           *string                                         `json:"portName,omitempty"`
 	EvaluationInterval                 *monitoringv1.Duration                          `json:"evaluationInterval,omitempty"`
+	RuleQueryOffset                    *monitoringv1.Duration                          `json:"ruleQueryOffset,omitempty"`
 	Retention                          *monitoringv1.Duration                          `json:"retention,omitempty"`
 	Containers                         []corev1.Container                              `json:"containers,omitempty"`
 	InitContainers                     []corev1.Container                              `json:"initContainers,omitempty"`
@@ -421,6 +422,14 @@ func (b *ThanosRulerSpecApplyConfiguration) WithPortName(value string) *ThanosRu
 // If called multiple times, the EvaluationInterval field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithEvaluationInterval(value monitoringv1.Duration) *ThanosRulerSpecApplyConfiguration {
 	b.EvaluationInterval = &value
+	return b
+}
+
+// WithRuleQueryOffset sets the RuleQueryOffset field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RuleQueryOffset field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithRuleQueryOffset(value monitoringv1.Duration) *ThanosRulerSpecApplyConfiguration {
+	b.RuleQueryOffset = &value
 	return b
 }
 

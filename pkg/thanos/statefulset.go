@@ -162,6 +162,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		{Name: "tsdb.retention", Value: string(tr.Spec.Retention)},
 	}
 
+	if version.GTE(semver.MustParse("0.38.0")) && tr.Spec.RuleQueryOffset != nil && len(*tr.Spec.RuleQueryOffset) > 0 {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "rule-query-offset", Value: string(*tr.Spec.RuleQueryOffset)})
+	}
+
 	trEnvVars := []v1.EnvVar{
 		{
 			Name: "POD_NAME",
