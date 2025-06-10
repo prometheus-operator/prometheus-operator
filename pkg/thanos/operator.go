@@ -590,37 +590,42 @@ func (o *Operator) syncFinalizers(ctx context.Context, tr *monitoringv1.ThanosRu
 	if !o.configResourcesStatusEnabled {
 		return false, nil
 	}
-	finalizersChanged := false
+
+	// The resource isn't being deleted, add the finalizer if missing.
 	if !o.rr.DeletionInProgress(tr) {
 		// Add finalizer to the ThanosRuler resource if it doesn't have one.
 		finalizers := tr.GetFinalizers()
 		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
 		if err != nil {
-			return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+			return false, fmt.Errorf("failed to marshal patch: %w", err)
 		}
-		if len(patchBytes) > 0 {
-			if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return finalizersChanged, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-			}
-			finalizersChanged = true
+
+		if len(patchBytes) == 0 {
+			return false, nil
 		}
-		return finalizersChanged, nil
+
+		if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		}
+		return true, nil
 	}
 	// If the ThanosRuler instance is marked for deletion, we remove the finalizer.
 	finalizers := tr.GetFinalizers()
 	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
 	if err != nil {
-		return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
-	}
-	if len(patchBytes) > 0 {
-		if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return finalizersChanged, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-		}
-		finalizersChanged = true
+		return false, fmt.Errorf("failed to marshal patch: %w", err)
 	}
 
+	if len(patchBytes) == 0 {
+		o.reconciliations.ForgetObject(key)
+		return false, nil
+	}
+
+	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+	}
 	o.reconciliations.ForgetObject(key)
-	return finalizersChanged, nil
+	return true, nil
 }
 
 // getThanosRulerFromKey returns a copy of the ThanosRuler object identified by key.

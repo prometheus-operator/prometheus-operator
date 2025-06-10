@@ -609,7 +609,8 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error) {
 	if slices.Contains(finalizers, finalizerName) {
 		return []byte{}, nil
-	} else if len(finalizers) == 0 {
+	}
+	if len(finalizers) == 0 {
 		patch := []map[string]interface{}{
 			{
 				"op":    "add",

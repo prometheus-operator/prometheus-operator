@@ -669,38 +669,40 @@ func (c *Operator) syncFinalizers(ctx context.Context, am *monitoringv1.Alertman
 	if !c.configResourcesStatusEnabled {
 		return false, nil
 	}
-	finalizersChanged := false
+
+	// The resource isn't being deleted, add the finalizer if missing.
 	if !c.rr.DeletionInProgress(am) {
 		// Add finalizer to the Alertmanger resource if it doesn't have one.
 		finalizers := am.GetFinalizers()
 		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
 		if err != nil {
-			return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+			return false, fmt.Errorf("failed to marshal patch: %w", err)
 		}
-		if len(patchBytes) > 0 {
-			if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-				return finalizersChanged, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-			}
-			finalizersChanged = true
+		if len(patchBytes) == 0 {
+			return false, nil
 		}
-		return finalizersChanged, nil
+		if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		}
+		return true, nil
 	}
 	// If the Alertmanager instance is marked for deletion, we remove the finalizer.
 	finalizers := am.GetFinalizers()
 	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
 	if err != nil {
-		return finalizersChanged, fmt.Errorf("failed to marshal patch: %w", err)
+		return false, fmt.Errorf("failed to marshal patch: %w", err)
 	}
-	if len(patchBytes) > 0 {
-		if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return finalizersChanged, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-		}
-		finalizersChanged = true
+	if len(patchBytes) == 0 {
+		c.reconciliations.ForgetObject(key)
+		return false, nil
+	}
+
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
+		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 
 	c.reconciliations.ForgetObject(key)
-
-	return finalizersChanged, nil
+	return true, nil
 }
 
 // getAlertmanagerFromKey returns a copy of the Alertmanager object identified by key.
