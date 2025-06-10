@@ -54,6 +54,17 @@ type ResourceSelector struct {
 	eventRecorder record.EventRecorder
 }
 
+type ServiceMonitorSelection struct {
+	Valid   map[string]*monitoringv1.ServiceMonitor
+	Invalid []RejectedServiceMonitor
+}
+
+type RejectedServiceMonitor struct {
+	Object *monitoringv1.ServiceMonitor
+	Reason string
+	Err    error
+}
+
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
 func NewResourceSelector(l *slog.Logger, p monitoringv1.PrometheusInterface, store *assets.StoreBuilder, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics, eventRecorder record.EventRecorder) (*ResourceSelector, error) {
@@ -78,7 +89,7 @@ func NewResourceSelector(l *slog.Logger, p monitoringv1.PrometheusInterface, sto
 // SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (*ServiceMonitorSelection, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
 	namespaces := []string{}
@@ -126,6 +137,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 
 	var rejected int
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
+	invalidSms := make([]RejectedServiceMonitor, 0, len(serviceMonitors))
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
 		rejectFn := func(sm *monitoringv1.ServiceMonitor, err error) {
@@ -137,6 +149,11 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
+			invalidSms = append(invalidSms, RejectedServiceMonitor{
+				Object: sm,
+				Reason: "InvalidConfiguration",
+				Err:    err,
+			})
 		}
 
 		_, err = metav1.LabelSelectorAsSelector(&sm.Spec.Selector)
@@ -233,7 +250,10 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		rs.metrics.SetRejectedResources(pKey, monitoringv1.ServiceMonitorsKind, rejected)
 	}
 
-	return res, nil
+	return &ServiceMonitorSelection{
+		Valid:   res,
+		Invalid: invalidSms,
+	}, nil
 }
 
 func (rs *ResourceSelector) ValidateRelabelConfigs(rcs []monitoringv1.RelabelConfig) error {
