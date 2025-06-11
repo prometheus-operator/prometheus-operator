@@ -389,7 +389,9 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 	return k.toString()
 }
 
-func (s *StoreBuilder) UpdateObjStore(obj interface{}) error {
+// UpdateObject updates the object in the underlying store.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
+func (s *StoreBuilder) UpdateObject(obj interface{}) error {
 	if obj == nil {
 		return errors.New("object cannot be nil")
 	}
