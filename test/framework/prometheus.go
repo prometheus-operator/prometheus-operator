@@ -437,7 +437,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 	}
 
 	fmt.Println(result.Name, "finalizers:", result.GetFinalizers())
-	result, err = f.WaitForPrometheusReady(ctx, result, 10*time.Minute)
+	result, err = f.WaitForPrometheusReady(ctx, result, 5*time.Minute)
 	if err != nil {
 		return nil, fmt.Errorf("waiting for %d Prometheus instances timed out (%v): %v", ptr.Deref(p.Spec.Replicas, 1), p.Name, err)
 	}
