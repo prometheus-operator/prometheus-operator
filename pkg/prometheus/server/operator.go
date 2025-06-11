@@ -758,10 +758,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// _, err = c.syncFinalizers(ctx, p, key)
-	// if err != nil {
-	// 	return err
-	// }
+	_, err = c.syncFinalizers(ctx, p, key)
+	if err != nil {
+		return err
+	}
 	// if finalizersChanged {
 	// 	return nil
 	// }
