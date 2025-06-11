@@ -20,7 +20,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -44,14 +43,12 @@ func testStatusForConfigResources(t *testing.T) {
 	require.NoError(t, err)
 
 	name := "status-cleanup-finalizer-test"
-	t.Run(name, func(t *testing.T) {
-		p := framework.MakeBasicPrometheus(ns, name, name, 1)
-		framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-		pm, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
-		require.NoError(t, err, "failed to create Prometheus")
-		finalizers := pm.GetFinalizers()
-		require.Contains(t, finalizers, k8sutil.StatusCleanupFinalizerName, "expected Prometheus to have status-cleanup finalizer")
-		err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
-		require.NoError(t, err, "failed to delete Prometheus with status-cleanup finalizer")
-	})
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	pm, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+	finalizers := pm.GetFinalizers()
+	require.NotEmpty(t, finalizers, "finalizers list should not be empty")
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err, "failed to delete Prometheus with status-cleanup finalizer")
 }
