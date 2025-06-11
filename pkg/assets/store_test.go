@@ -1171,7 +1171,7 @@ func TestAddAzureOAuth(t *testing.T) {
 	}
 }
 
-func TestUpdateObjStore(t *testing.T) {
+func TestUpdateObject(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1206,7 +1206,7 @@ func TestUpdateObjStore(t *testing.T) {
 			"key1": []byte("val2"),
 		},
 	}
-	err = store.UpdateObjStore(updatedSecret)
+	err = store.UpdateObject(updatedSecret)
 	require.NoError(t, err)
 
 	// Now, getting the key should return the updated value
@@ -1215,6 +1215,6 @@ func TestUpdateObjStore(t *testing.T) {
 	require.Equal(t, "val2", val)
 
 	// Test updating with nil object
-	err = store.UpdateObjStore(nil)
+	err = store.UpdateObject(nil)
 	require.Error(t, err)
 }
