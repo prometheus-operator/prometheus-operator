@@ -37,7 +37,7 @@ func testStatusForConfigResources(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
 		},
 	)
 	require.NoError(t, err)

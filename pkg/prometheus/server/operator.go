@@ -758,13 +758,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
-	if err != nil {
-		return err
-	}
-	if finalizersChanged {
-		return nil
-	}
+	// _, err = c.syncFinalizers(ctx, p, key)
+	// if err != nil {
+	// 	return err
+	// }
+	// if finalizersChanged {
+	// 	return nil
+	// }
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
