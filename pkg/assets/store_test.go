@@ -1218,3 +1218,85 @@ func TestUpdateObject(t *testing.T) {
 	err = store.UpdateObject(nil)
 	require.Error(t, err)
 }
+func TestDeleteObject(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cm",
+				Namespace: "ns1",
+			},
+			Data: map[string]string{
+				"cmKey": "cmVal",
+			},
+		},
+	)
+	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+	// Add secret and configmap to the store by fetching them
+	secretSel := v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "secret",
+		},
+		Key: "key1",
+	}
+	val, err := store.GetSecretKey(context.Background(), "ns1", secretSel)
+	require.NoError(t, err)
+	require.Equal(t, "val1", val)
+
+	cmSel := v1.ConfigMapKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "cm",
+		},
+		Key: "cmKey",
+	}
+	_, err = store.GetConfigMapKey(context.Background(), "ns1", cmSel)
+	require.NoError(t, err)
+
+	// Try deleting the secret object
+	secretObj := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "secret",
+			Namespace: "ns1",
+		},
+	}
+	err = store.DeleteObject(secretObj)
+	require.NoError(t, err)
+
+	// Also delete the secret from the fake clientset to simulate full removal
+	err = c.CoreV1().Secrets("ns1").Delete(context.Background(), "secret", metav1.DeleteOptions{})
+	require.NoError(t, err)
+
+	// Now, getting the key should fail since the secret is deleted from the store
+	val, err = store.GetSecretKey(context.Background(), "ns1", secretSel)
+	require.Error(t, err)
+
+	// Try deleting the configmap object (should not error even if it doesn't exist in the client)
+	cmObj := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cm",
+			Namespace: "ns1",
+		},
+	}
+	err = store.DeleteObject(cmObj)
+	require.NoError(t, err)
+
+	err = c.CoreV1().ConfigMaps("ns1").Delete(context.Background(), "cm", metav1.DeleteOptions{})
+	require.NoError(t, err)
+
+	// Now, getting the key should fail since the configmap is deleted from the store
+	_, err = store.GetConfigMapKey(context.Background(), "ns1", cmSel)
+	require.Error(t, err)
+
+	// Test deleting with nil object
+	err = store.DeleteObject(nil)
+	require.Error(t, err)
+}
