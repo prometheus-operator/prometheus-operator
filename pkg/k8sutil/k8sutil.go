@@ -605,7 +605,7 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 }
 
 // AddFinalizerPatch generates the JSON patch payload which adds the finalizer to the object's metadata.
-// If the finalizer is already present, it returns empty []byte slice.
+// If the finalizer is already present, it returns an empty []byte slice.
 func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error) {
 	if slices.Contains(finalizers, finalizerName) {
 		return []byte{}, nil
@@ -630,8 +630,8 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 	return json.Marshal(patch)
 }
 
-// FinalizerDeletePatch generates the JSON patch payload which delete the finalizer to the object's metadata.
-// If the finalizer is not present, it returns empty []byte slice.
+// FinalizerDeletePatch generates the JSON patch payload which deletes the finalizer from the object's metadata.
+// If the finalizer is not present, it returns an empty []byte slice.
 func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
 	for i, f := range finalizers {
 		if f == finalizerName {

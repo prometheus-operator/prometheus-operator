@@ -763,6 +763,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 	if finalizersChanged {
+		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
@@ -973,8 +974,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// add or remove finalizers for the Prometheus resource.
-// Returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
+// syncFinalizers adds or removes the finalizer for the Prometheus resource.
+// It returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
 func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1.Prometheus, key string) (bool, error) {
 	if !c.configResourcesStatusEnabled {
 		return false, nil
