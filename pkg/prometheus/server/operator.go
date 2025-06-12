@@ -763,6 +763,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 	if finalizersChanged {
+		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
 
@@ -994,7 +995,7 @@ func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1.Prometheu
 		if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
-		c.logger.Info("added finalizer to Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
+		c.logger.Debug("added finalizer to Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
 		return true, nil
 	}
 
@@ -1012,7 +1013,7 @@ func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1.Prometheu
 	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
-	c.logger.Info("removed finalizer from Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
+	c.logger.Debug("removed finalizer from Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
 	c.reconciliations.ForgetObject(key)
 
 	return true, nil

@@ -469,6 +469,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 	if finalizersChanged {
+		o.rr.EnqueueForReconciliation(tr)
 		return nil
 	}
 
@@ -607,6 +608,7 @@ func (o *Operator) syncFinalizers(ctx context.Context, tr *monitoringv1.ThanosRu
 		if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
+		o.logger.Debug("added finalizer to ThanosRuler", "name", tr.Name, "namespace", tr.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
 		return true, nil
 	}
 	// If the ThanosRuler instance is marked for deletion, we remove the finalizer.
@@ -624,6 +626,8 @@ func (o *Operator) syncFinalizers(ctx context.Context, tr *monitoringv1.ThanosRu
 	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).Patch(ctx, tr.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
+	o.logger.Debug("removed finalizer from ThanosRuler", "name", tr.Name, "namespace", tr.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
+
 	o.reconciliations.ForgetObject(key)
 	return true, nil
 }

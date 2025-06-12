@@ -553,6 +553,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 	if finalizersChanged {
+		c.rr.EnqueueForReconciliation(am)
 		return nil
 	}
 
@@ -684,6 +685,8 @@ func (c *Operator) syncFinalizers(ctx context.Context, am *monitoringv1.Alertman
 		if _, err = c.mclient.MonitoringV1().Alertmanagers(am.Namespace).Patch(ctx, am.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
+
+		c.logger.Debug("added finalizer to Alertmanager", "name", am.Name, "namespace", am.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
 		return true, nil
 	}
 	// If the Alertmanager instance is marked for deletion, we remove the finalizer.
@@ -701,6 +704,7 @@ func (c *Operator) syncFinalizers(ctx context.Context, am *monitoringv1.Alertman
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 
+	c.logger.Debug("removed finalizer from Alertmanager", "name", am.Name, "namespace", am.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
 	c.reconciliations.ForgetObject(key)
 	return true, nil
 }
