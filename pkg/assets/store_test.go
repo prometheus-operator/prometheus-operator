@@ -1277,7 +1277,7 @@ func TestDeleteObject(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now, getting the key should fail since the secret is deleted from the store
-	val, err = store.GetSecretKey(context.Background(), "ns1", secretSel)
+	_, err = store.GetSecretKey(context.Background(), "ns1", secretSel)
 	require.Error(t, err)
 
 	// Try deleting the configmap object (should not error even if it doesn't exist in the client)
