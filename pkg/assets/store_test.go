@@ -1301,3 +1301,166 @@ func TestDeleteObject(t *testing.T) {
 	err = store.DeleteObject(nil)
 	require.Error(t, err)
 }
+
+func TestGetObject(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cm",
+				Namespace: "ns1",
+			},
+			Data: map[string]string{
+				"cmKey": "cmVal",
+			},
+		},
+	)
+	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+	// Add secret and configmap to the store by fetching them
+	secretSel := v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "secret",
+		},
+		Key: "key1",
+	}
+	_, err := store.GetSecretKey(context.Background(), "ns1", secretSel)
+	require.NoError(t, err)
+
+	cmSel := v1.ConfigMapKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "cm",
+		},
+		Key: "cmKey",
+	}
+	_, err = store.GetConfigMapKey(context.Background(), "ns1", cmSel)
+	require.NoError(t, err)
+
+	// Test getting the secret object
+	secretObj := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "secret",
+			Namespace: "ns1",
+		},
+	}
+	obj, err := store.GetObject(secretObj)
+	require.NoError(t, err)
+	secret, ok := obj.(*v1.Secret)
+	require.True(t, ok)
+	require.Equal(t, "secret", secret.Name)
+	require.Equal(t, "ns1", secret.Namespace)
+	require.Equal(t, []byte("val1"), secret.Data["key1"])
+
+	// Test getting the configmap object
+	cmObj := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cm",
+			Namespace: "ns1",
+		},
+	}
+	obj, err = store.GetObject(cmObj)
+	require.NoError(t, err)
+	cm, ok := obj.(*v1.ConfigMap)
+	require.True(t, ok)
+	require.Equal(t, "cm", cm.Name)
+	require.Equal(t, "ns1", cm.Namespace)
+	require.Equal(t, "cmVal", cm.Data["cmKey"])
+
+	// Test getting an object that does not exist
+	nonExistentSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "notfound",
+			Namespace: "ns1",
+		},
+	}
+	_, err = store.GetObject(nonExistentSecret)
+	require.Error(t, err)
+
+	// Test getting with nil object
+	_, err = store.GetObject(nil)
+	require.Error(t, err)
+}
+
+func TestAddObject(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cm",
+				Namespace: "ns1",
+			},
+			Data: map[string]string{
+				"cmKey": "cmVal",
+			},
+		},
+	)
+	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+	// Add a secret object
+	secretObj := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "secret2",
+			Namespace: "ns1",
+		},
+		Data: map[string][]byte{
+			"key2": []byte("val2"),
+		},
+	}
+	err := store.AddObject(secretObj)
+	require.NoError(t, err)
+
+	// Now, GetObject should return the same object
+	obj, err := store.GetObject(secretObj)
+	require.NoError(t, err)
+	secret, ok := obj.(*v1.Secret)
+	require.True(t, ok)
+	require.Equal(t, "secret2", secret.Name)
+	require.Equal(t, "ns1", secret.Namespace)
+	require.Equal(t, []byte("val2"), secret.Data["key2"])
+
+	// Add a configmap object
+	cmObj := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cm2",
+			Namespace: "ns1",
+		},
+		Data: map[string]string{
+			"cmKey2": "cmVal2",
+		},
+	}
+	err = store.AddObject(cmObj)
+	require.NoError(t, err)
+
+	obj, err = store.GetObject(cmObj)
+	require.NoError(t, err)
+	cm, ok := obj.(*v1.ConfigMap)
+	require.True(t, ok)
+	require.Equal(t, "cm2", cm.Name)
+	require.Equal(t, "ns1", cm.Namespace)
+	require.Equal(t, "cmVal2", cm.Data["cmKey2"])
+
+	// Try adding nil object
+	err = store.AddObject(nil)
+	require.Error(t, err)
+
+	// Try adding unsupported type
+	type Dummy struct{}
+	err = store.AddObject(&Dummy{})
+	require.Error(t, err)
+}
