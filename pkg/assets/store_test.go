@@ -1218,6 +1218,7 @@ func TestUpdateObject(t *testing.T) {
 	err = store.UpdateObject(nil)
 	require.Error(t, err)
 }
+
 func TestDeleteObject(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
