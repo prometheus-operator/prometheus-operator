@@ -1528,8 +1528,8 @@ route:
       - job="db"
       routes:
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-        matchers:
-        - alertname="TargetDown"
+        match:
+          alertname: TargetDown
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
         match_re:
           severity: critical|warning
