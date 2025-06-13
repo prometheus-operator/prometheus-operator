@@ -1536,8 +1536,8 @@ route:
         mute_time_intervals:
         - %s/e2e-test-amconfig-sub-routes/test
   - receiver: "null"
-    matchers:
-    - alertname="DeadMansSwitch"
+    match:
+      alertname: DeadMansSwitch
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
@@ -2671,8 +2671,8 @@ route:
     - test="test"
     continue: true
   - receiver: "null"
-    matchers:
-    - alertname="DeadMansSwitch"
+    match:
+      alertname: DeadMansSwitch
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h

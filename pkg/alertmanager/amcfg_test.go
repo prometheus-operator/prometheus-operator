@@ -62,6 +62,11 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Value: "myvalue",
 				Regex: false,
 			},
+			{
+				Name:  "mykey1",
+				Value: "myvalue1",
+				Regex: false,
+			},
 		},
 	})
 
