@@ -1659,8 +1659,8 @@ route:
   - job
   routes:
   - receiver: "null"
-    matchers:
-    - alertname="DeadMansSwitch"
+    match:
+      alertname: DeadMansSwitch
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
@@ -2618,12 +2618,12 @@ route:
   routes:
   - receiver: %s/amcfg-v1alpha1/webhook
     matchers:
-    - namespace="%s"
     - test="test"
+    - namespace="%s"
     continue: true
   - receiver: "null"
-    matchers:
-    - alertname="DeadMansSwitch"
+    match:
+      alertname: DeadMansSwitch
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
