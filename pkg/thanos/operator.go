@@ -89,6 +89,8 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 // Config defines the operator's parameters for the Thanos controller.
@@ -151,6 +153,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -453,7 +456,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set ThanosRuler type information: %w", err)
 	}
 
-	// Check if the Thanos instance is marked for deletion.
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
+
 	if o.rr.DeletionInProgress(tr) {
 		return nil
 	}
@@ -461,9 +466,6 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	if tr.Spec.Paused {
 		return nil
 	}
-
-	logger := o.logger.With("key", key)
-	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err

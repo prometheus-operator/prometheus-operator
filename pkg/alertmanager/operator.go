@@ -104,6 +104,8 @@ type Operator struct {
 	canReadStorageClass bool
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -161,6 +163,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -531,11 +534,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set Alertmanager type information: %w", err)
 	}
 
-	// Check if the Alertmanager instance is marked for deletion.
-	if c.rr.DeletionInProgress(am) {
-		return nil
-	}
-
 	if am.Spec.Paused {
 		return nil
 	}
@@ -544,6 +542,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logDeprecatedFields(logger, am)
 
 	logger.Info("sync alertmanager")
+
+	if c.rr.DeletionInProgress(am) {
+		return nil
+	}
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err

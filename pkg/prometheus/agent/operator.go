@@ -94,7 +94,8 @@ type Operator struct {
 
 	statusReporter prompkg.StatusReporter
 
-	daemonSetFeatureGateEnabled bool
+	daemonSetFeatureGateEnabled  bool
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -156,10 +157,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                c.Annotations,
 			Labels:                     c.Labels,
 		},
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
-		controllerID:    c.ControllerID,
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		metrics:                      operator.NewMetrics(r),
+		reconciliations:              &operator.ReconciliationTracker{},
+		controllerID:                 c.ControllerID,
+		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -570,7 +572,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 
-	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
@@ -955,7 +956,9 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
-
+	if p == nil || c.rr.DeletionInProgress(p) {
+		return nil
+	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus agent status: %w", err)
