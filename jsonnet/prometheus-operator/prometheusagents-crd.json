@@ -8856,7 +8856,17 @@
                     "type": "object"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-kubernetes-validations": [
+                  {
+                    "message": "replicas cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.replicas))"
+                  },
+                  {
+                    "message": "storage cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.storage))"
+                  }
+                ]
               },
               "status": {
                 "description": "Most recent observed status of the Prometheus cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
