@@ -1626,6 +1626,7 @@ templates: []
 		require.NoError(t, err)
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
+			fmt.Println(lastErr)
 			return false, nil
 		}
 
