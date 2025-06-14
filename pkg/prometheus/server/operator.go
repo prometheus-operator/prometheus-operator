@@ -754,10 +754,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	if !c.configResourcesStatusEnabled && c.rr.DeletionInProgress(p) {
-		return nil
-	}
-
 	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
 	if err != nil {
 		return err
@@ -765,6 +761,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if finalizersChanged {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
+		return nil
+	}
+
+	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
 

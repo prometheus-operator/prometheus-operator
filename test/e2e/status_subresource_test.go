@@ -24,8 +24,8 @@ import (
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
-// testStatusForConfigResources tests the adding/removing of status-cleanup finalizer for Prometheus when StatusForConfigurationResourcesFeature is enable.
-func testStatusForConfigResources(t *testing.T) {
+// testFinalizerWhenStatusForConfigResourcesEnabled tests the adding/removing of status-cleanup finalizer for Prometheus when StatusForConfigurationResourcesFeature is enabled.
+func testFinalizerWhenStatusForConfigResourcesEnabled(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)

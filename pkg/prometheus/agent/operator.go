@@ -29,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -573,16 +572,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 
-	if !c.configResourcesStatusEnabled && c.rr.DeletionInProgress(p) {
-		return nil
-	}
-
-	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
-	if err != nil {
-		return err
-	}
-	if finalizersChanged {
-		c.rr.EnqueueForReconciliation(p)
+	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
 
@@ -639,54 +629,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return err
-}
-
-// add or remove finalizers for the PrometheusAgent resource.
-// Returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
-func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, key string) (bool, error) {
-	if !c.configResourcesStatusEnabled {
-		return false, nil
-	}
-
-	// The resource isn't being deleted, add the finalizer if missing.
-	if !c.rr.DeletionInProgress(p) {
-		// Add finalizer to the PrometheusAgent resource if it doesn't have one.
-		finalizers := p.GetFinalizers()
-		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
-		if err != nil {
-			return false, fmt.Errorf("failed to marshal patch: %w", err)
-		}
-
-		if len(patchBytes) == 0 {
-			return false, nil
-		}
-
-		if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-		}
-		c.logger.Debug("added finalizer to PrometheusAgent resource", "name", p.Name, "namespace", p.Namespace)
-		return true, nil
-	}
-
-	// If the PrometheusAgent instance is marked for deletion, we remove the finalizer.
-	finalizers := p.GetFinalizers()
-	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
-	if err != nil {
-		return false, fmt.Errorf("failed to marshal patch: %w", err)
-	}
-
-	if len(patchBytes) == 0 {
-		c.reconciliations.ForgetObject(key)
-		return false, nil
-	}
-
-	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-	}
-	c.logger.Debug("removed finalizer from PrometheusAgent resource", "name", p.Name, "namespace", p.Namespace)
-
-	c.reconciliations.ForgetObject(key)
-	return true, nil
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
