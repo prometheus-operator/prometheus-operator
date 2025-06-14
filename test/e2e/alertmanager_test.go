@@ -1516,8 +1516,8 @@ route:
     continue: true
   - receiver: %s/e2e-test-amconfig-sub-routes/e2e
     matchers:
-    - namespace="%s"
     - service="webapp"
+    - namespace="%s"
     continue: true
     routes:
     - receiver: %s/e2e-test-amconfig-sub-routes/e2e
@@ -1528,11 +1528,11 @@ route:
       - job="db"
       routes:
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-        match:
-          alertname: TargetDown
+        matchers:
+        - alertname="TargetDown"
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-        match_re:
-          severity: critical|warning
+        matchers:
+        - severity=~"critical|warning"
         mute_time_intervals:
         - %s/e2e-test-amconfig-sub-routes/test
   - receiver: "null"
@@ -1626,7 +1626,6 @@ templates: []
 		require.NoError(t, err)
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
-			fmt.Println(lastErr)
 			return false, nil
 		}
 
