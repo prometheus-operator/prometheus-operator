@@ -207,6 +207,10 @@ The operator sends the GET request at regular interval to the config-reloader si
 
 Finalizers are used during the deletion of the config-resource and workload-resource to clear the refrences in the status-subresource.
 
+#### How to remove invalid bindings from config-resources status ?
+
+A dedicated goroutine runs continuously to monitor config and workload resources for any invalid bindings.
+
 ## Alternatives
 
 #### Dedicated CRD Approach for Configuration-Workload Mapping
