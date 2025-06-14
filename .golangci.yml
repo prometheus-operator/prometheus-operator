@@ -10,6 +10,8 @@ linters:
     - exptostd
     - godot
     - iface
+    # linter for Kube API conventions
+    - kubeapilinter
     - nilnesserr
     - recvcheck
     - revive
@@ -17,6 +19,14 @@ linters:
     - testifylint
     - unconvert
   settings:
+    custom:
+      kubeapilinter:
+        path: "./tmp/bin/kube-api-linter.so"
+        original-url: sigs.k8s.io/kube-api-linter
+        description: KAL is the Kube-API-Linter and lints Kube like APIs based on API conventions and best practices.
+        settings:
+          linters: {}
+          lintersConfig: {}
     depguard:
       rules:
         forbid-pkg-errors:
@@ -41,6 +51,10 @@ linters:
           - staticcheck
           - testifylint
         path: _test.go
+      # KAL should only run on API folders.
+      - linters:
+          - kubeapilinter
+        path-except: 'pkg/apis/*'
     paths:
       - zz_generated.*\.go$
       - examples$
