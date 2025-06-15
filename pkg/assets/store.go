@@ -389,6 +389,8 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 	return k.toString()
 }
 
+// HasObject checks if the object exists in the underlying store.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 func (s *StoreBuilder) HasObject(obj interface{}) (bool, error) {
 	if obj == nil {
 		return false, errors.New("object cannot be nil")
@@ -409,7 +411,6 @@ func (s *StoreBuilder) HasObject(obj interface{}) (bool, error) {
 
 // AddObject adds an object to the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-
 func (s *StoreBuilder) AddObject(obj interface{}) error {
 	if obj == nil {
 		return errors.New("object cannot be nil")
