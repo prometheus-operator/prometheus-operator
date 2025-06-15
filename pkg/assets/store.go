@@ -389,6 +389,24 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 	return k.toString()
 }
 
+func (s *StoreBuilder) HasObject(obj interface{}) (bool, error) {
+	if obj == nil {
+		return false, errors.New("object cannot be nil")
+	}
+
+	key, err := assetKeyFunc(obj)
+	if err != nil {
+		return false, fmt.Errorf("failed to get key for object: %w", err)
+	}
+
+	_, exists, err := s.objStore.GetByKey(key)
+	if err != nil {
+		return false, fmt.Errorf("failed to check object in store: %w", err)
+	}
+
+	return exists, nil
+}
+
 // AddObject adds an object to the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 
