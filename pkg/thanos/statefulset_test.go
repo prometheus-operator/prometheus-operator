@@ -1058,3 +1058,57 @@ func TestStatefulSetenableServiceLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestRuleQueryOffset(t *testing.T) {
+	ruleQueryOffset := monitoringv1.Duration("5m")
+
+	tt := []struct {
+		scenario        string
+		version         string
+		ruleQueryOffset *monitoringv1.Duration
+		shouldHaveArg   bool
+	}{{
+		scenario:        "version >= 0.38.0 with rule query offset",
+		version:         "0.38.0",
+		ruleQueryOffset: &ruleQueryOffset,
+		shouldHaveArg:   true,
+	}, {
+		scenario:        "version < 0.38.0 with rule query offset",
+		version:         "0.37.0",
+		ruleQueryOffset: &ruleQueryOffset,
+		shouldHaveArg:   false,
+	}, {
+		scenario:        "version >= 0.38.0 without rule query offset",
+		version:         "0.38.0",
+		ruleQueryOffset: nil,
+		shouldHaveArg:   false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:         &version,
+					RuleQueryOffset: ts.ruleQueryOffset,
+					QueryEndpoints:  emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--rule-query-offset=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}

@@ -208,7 +208,7 @@ Deprecated: use &lsquo;image&rsquo; instead.</p>
 <td>
 <p>An optional list of references to secrets in the same namespace
 to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+see <a href="https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/</a></p>
 </td>
 </tr>
 <tr>
@@ -3043,7 +3043,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -4758,6 +4758,21 @@ Duration
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default rule group&rsquo;s query offset duration to use.
+It requires Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -5939,7 +5954,7 @@ Deprecated: use &lsquo;image&rsquo; instead.</p>
 <td>
 <p>An optional list of references to secrets in the same namespace
 to use for pulling prometheus and alertmanager images from registries
-see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
+see <a href="https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/</a></p>
 </td>
 </tr>
 <tr>
@@ -8557,7 +8572,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -9269,7 +9284,7 @@ some resources may allow a client to request the generation of an appropriate na
 automatically. Name is primarily intended for creation idempotence and configuration
 definition.
 Cannot be updated.
-More info: <a href="http://kubernetes.io/docs/user-guide/identifiers#names">http://kubernetes.io/docs/user-guide/identifiers#names</a></p>
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/names/">https://kubernetes.io/docs/concepts/overview/working-with-objects/names/</a></p>
 </td>
 </tr>
 <tr>
@@ -9284,7 +9299,7 @@ map[string]string
 <p>Map of string keys and values that can be used to organize and categorize
 (scope and select) objects. May match selectors of replication controllers
 and services.
-More info: <a href="http://kubernetes.io/docs/user-guide/labels">http://kubernetes.io/docs/user-guide/labels</a></p>
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/</a></p>
 </td>
 </tr>
 <tr>
@@ -9299,7 +9314,7 @@ map[string]string
 <p>Annotations is an unstructured key value map stored with a resource that may be
 set by external tools to store and retrieve arbitrary metadata. They are not
 queryable and should be preserved when modifying objects.
-More info: <a href="http://kubernetes.io/docs/user-guide/annotations">http://kubernetes.io/docs/user-guide/annotations</a></p>
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/">https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/</a></p>
 </td>
 </tr>
 </tbody>
@@ -13630,7 +13645,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -17836,6 +17851,21 @@ Duration
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default rule group&rsquo;s query offset duration to use.
+It requires Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -20722,7 +20752,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
@@ -29148,7 +29178,7 @@ bool
 <td>
 <p>Use the host&rsquo;s network namespace if true.</p>
 <p>Make sure to understand the security implications if you want to enable
-it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a> ).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
 <code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
 to a different value).</p>
