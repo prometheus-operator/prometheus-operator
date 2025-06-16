@@ -17,7 +17,7 @@ The Prometheus Operator includes comprehensive OpenTelemetry support for observa
 
 OpenTelemetry integration is available in all Prometheus Operator components:
 - `prometheus-operator` (main operator)
-- `admission-webhook` 
+- `admission-webhook`
 - `prometheus-config-reloader`
 
 The integration uses [autoexport](https://pkg.go.dev/go.opentelemetry.io/contrib/exporters/autoexport) which automatically configures exporters based on environment variables, making it easy to integrate with various observability backends.
@@ -27,19 +27,22 @@ The integration uses [autoexport](https://pkg.go.dev/go.opentelemetry.io/contrib
 The Prometheus Operator includes comprehensive OpenTelemetry instrumentation out of the box:
 
 ### HTTP Server Instrumentation
+
 All HTTP servers are automatically instrumented with [otelhttp](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp):
 - Prometheus Operator main server (metrics, health endpoints)
 - Admission webhook HTTP server
 - Prometheus config reloader HTTP server
 
 ### Kubernetes Client Instrumentation
+
 All Kubernetes API interactions are automatically traced:
 - All controller operations (Prometheus, Alertmanager, ThanosRuler)
 - API server discovery and configuration checks
 - Secret, ConfigMap, and CRD operations
 - RBAC verification calls
 
-### HTTP Client Instrumentation  
+### HTTP Client Instrumentation
+
 External HTTP clients are instrumented:
 - Prometheus config reloader HTTP client (for reloading Prometheus configuration)
 
@@ -51,7 +54,7 @@ OpenTelemetry is configured entirely through environment variables following the
 
 ### Basic Configuration
 
-To enable OpenTelemetry, set the appropriate exporter environment variables as suggested in the [OpenTelemetry documentation](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/) and in the [OTLP Exporter Configuration documentation](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).  
+To enable OpenTelemetry, set the appropriate exporter environment variables as suggested in the [OpenTelemetry documentation](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/) and in the [OTLP Exporter Configuration documentation](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).
 
 Generally, you only need to set:
 
@@ -60,9 +63,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ```
 
-
 We use the [autoexport](https://pkg.go.dev/go.opentelemetry.io/contrib/exporters/autoexport) package to automatically configure exporters based on environment variables.
-
 
 ### Resource Attributes
 
