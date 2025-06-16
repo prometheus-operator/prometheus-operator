@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -57,10 +58,24 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	if old.(metav1.Object).GetResourceVersion() == cur.(metav1.Object).GetResourceVersion() {
+
+	oldMeta, ok1 := old.(metav1.Object)
+	curMeta, ok2 := cur.(metav1.Object)
+
+	if !ok1 || !ok2 {
+		// cannot compare metadata if casting fails
 		return
 	}
 
+	// Compare Metadata fields
+	labelsEqual := reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels())
+	annotationsEqual := reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations())
+	finalizersEqual := reflect.DeepEqual(oldMeta.GetFinalizers(), curMeta.GetFinalizers())
+	generationEqual := reflect.DeepEqual(oldMeta.GetGeneration(), curMeta.GetGeneration())
+
+	if generationEqual && labelsEqual && annotationsEqual && finalizersEqual {
+		return
+	}
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
 		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
 		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
