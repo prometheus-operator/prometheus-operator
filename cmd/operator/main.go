@@ -45,6 +45,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
+	"github.com/prometheus-operator/prometheus-operator/internal/telemetry"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -228,6 +229,20 @@ func run(fs *flag.FlagSet) int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
+
+	// Initialize OpenTelemetry
+	otelTelemetry, err := telemetry.Setup(ctx, "prometheus-operator", version.Version, logger)
+	if err != nil {
+		logger.Error("failed to initialize OpenTelemetry", "err", err)
+		cancel()
+		return 1
+	}
+	defer func() {
+		if err := otelTelemetry.Shutdown(ctx); err != nil {
+			logger.Error("failed to shutdown OpenTelemetry", "err", err)
+		}
+	}()
+
 	r := metrics.NewRegistry("prometheus_operator")
 
 	k8sutil.MustRegisterClientGoMetrics(r)

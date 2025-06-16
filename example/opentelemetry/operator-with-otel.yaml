@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-operator
+  namespace: prometheus-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-operator
+  template:
+    metadata:
+      labels:
+        app: prometheus-operator
+    spec:
+      serviceAccount: prometheus-operator
+      containers:
+      - name: prometheus-operator
+        image: quay.io/prometheus-operator/prometheus-operator:latest
+        args:
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:latest
+        - --config-reloader-cpu-request=10m
+        - --config-reloader-cpu-limit=10m
+        - --config-reloader-memory-request=50Mi
+        - --config-reloader-memory-limit=50Mi
+        env:
+        # Enable OpenTelemetry tracing with console output (for development)
+        - name: OTEL_TRACES_EXPORTER
+          value: "console"
+        # Enable OpenTelemetry metrics with console output (for development)  
+        - name: OTEL_METRICS_EXPORTER
+          value: "console"
+        # Set service name
+        - name: OTEL_SERVICE_NAME
+          value: "prometheus-operator"
+        # Optional: Add resource attributes
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "deployment.environment=development,k8s.cluster.name=my-cluster"
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65534
+          seccompProfile:
+            type: RuntimeDefault

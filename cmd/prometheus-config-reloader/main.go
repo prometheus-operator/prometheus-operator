@@ -38,6 +38,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
+	"github.com/prometheus-operator/prometheus-operator/internal/telemetry"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
@@ -149,12 +150,24 @@ func main() {
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, *memlimitRatio)
 
-	r := metrics.NewRegistry("prometheus_config_reloader")
-
 	var (
 		g           run.Group
 		ctx, cancel = context.WithCancel(context.Background())
 	)
+
+	// Initialize OpenTelemetry
+	otelTelemetry, err := telemetry.Setup(ctx, "prometheus-config-reloader", version.Version, logger)
+	if err != nil {
+		logger.Error("failed to initialize OpenTelemetry", "err", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := otelTelemetry.Shutdown(ctx); err != nil {
+			logger.Error("failed to shutdown OpenTelemetry", "err", err)
+		}
+	}()
+
+	r := metrics.NewRegistry("prometheus_config_reloader")
 
 	{
 		opts := reloader.Options{
