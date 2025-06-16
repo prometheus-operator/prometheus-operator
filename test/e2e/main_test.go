@@ -414,12 +414,14 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"CreatePrometheusAgentDaemonSet":            testCreatePrometheusAgentDaemonSet,
-		"PromAgentDaemonSetResourceUpdate":          testPromAgentDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceUpdate": testPromAgentReconcileDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceDelete": testPromAgentReconcileDaemonSetResourceDelete,
-		"PrometheusAgentDaemonSetSelectPodMonitor":  testPrometheusAgentDaemonSetSelectPodMonitor,
-		"PrometheusRetentionPolicies":               testPrometheusRetentionPolicies,
+		"CreatePrometheusAgentDaemonSet":                    testCreatePrometheusAgentDaemonSet,
+		"PromAgentDaemonSetResourceUpdate":                  testPromAgentDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceUpdate":         testPromAgentReconcileDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceDelete":         testPromAgentReconcileDaemonSetResourceDelete,
+		"PrometheusAgentDaemonSetSelectPodMonitor":          testPrometheusAgentDaemonSetSelectPodMonitor,
+		"PrometheusAgentDaemonSetInvalidShards":             testPrometheusAgentDaemonSetInvalidShards,
+		"PrometheusAgentDaemonSetInvalidPVCRetentionPolicy": testPrometheusAgentDaemonSetInvalidPVCRetentionPolicy,
+		"PrometheusRetentionPolicies":                       testPrometheusRetentionPolicies,
 	}
 
 	for name, f := range testFuncs {
