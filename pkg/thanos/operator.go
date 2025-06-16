@@ -616,7 +616,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return err
 	}
 
-	if o.rr.DeletionInProgress(tr) {
+	if tr == nil || o.rr.DeletionInProgress(tr) {
 		return nil
 	}
 
