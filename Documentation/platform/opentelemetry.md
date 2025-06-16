@@ -28,70 +28,18 @@ OpenTelemetry is configured entirely through environment variables following the
 
 ### Basic Configuration
 
-To enable OpenTelemetry, set the appropriate exporter environment variables:
+To enable OpenTelemetry, set the appropriate exporter environment variables as suggested in the [OpenTelemetry documentation](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/) and in the [OTLP Exporter Configuration documentation](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/).  
 
-```yaml
-env:
-  # Enable tracing with OTLP exporter
-  - name: OTEL_TRACES_EXPORTER
-    value: "otlp"
-  - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-    value: "http://jaeger:14268/api/traces"
-  
-  # Enable metrics with OTLP exporter
-  - name: OTEL_METRICS_EXPORTER
-    value: "otlp"
-  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-    value: "http://otel-collector:4318/v1/metrics"
-  
-  # Service identification
-  - name: OTEL_SERVICE_NAME
-    value: "prometheus-operator"
-  - name: OTEL_SERVICE_VERSION
-    value: "v0.83.0"
+Generally, you only need to set:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 ```
 
-### Supported Exporters
 
-#### Tracing Exporters
+We use the [autoexport](https://pkg.go.dev/go.opentelemetry.io/contrib/exporters/autoexport) package to automatically configure exporters based on environment variables.
 
-Set `OTEL_TRACES_EXPORTER` to one of:
-- `otlp` - OTLP over HTTP or gRPC
-- `console` - Console output (for debugging)
-- `none` - Disable tracing (default)
-
-#### Metrics Exporters
-
-Set `OTEL_METRICS_EXPORTER` to one of:
-- `otlp` - OTLP over HTTP or gRPC
-- `prometheus` - Prometheus exposition format
-- `console` - Console output (for debugging)  
-- `none` - Disable metrics (default)
-
-### OTLP Configuration
-
-When using OTLP exporters, configure the endpoints and authentication:
-
-```yaml
-env:
-  # Tracing
-  - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-    value: "https://otlp.example.com:4318/v1/traces"
-  - name: OTEL_EXPORTER_OTLP_TRACES_HEADERS
-    value: "authorization=Bearer token123"
-  
-  # Metrics  
-  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-    value: "https://otlp.example.com:4318/v1/metrics"
-  - name: OTEL_EXPORTER_OTLP_METRICS_HEADERS
-    value: "authorization=Bearer token123"
-  
-  # Or configure both at once
-  - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: "https://otlp.example.com:4318"
-  - name: OTEL_EXPORTER_OTLP_HEADERS
-    value: "authorization=Bearer token123"
-```
 
 ### Resource Attributes
 
@@ -104,30 +52,6 @@ env:
 ```
 
 ## Example Deployment Configurations
-
-### With Jaeger
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: prometheus-operator
-spec:
-  template:
-    spec:
-      containers:
-      - name: prometheus-operator
-        image: quay.io/prometheus-operator/prometheus-operator:latest
-        env:
-        - name: OTEL_TRACES_EXPORTER
-          value: "otlp"
-        - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-          value: "http://jaeger-collector:14268/api/traces"
-        - name: OTEL_SERVICE_NAME
-          value: "prometheus-operator"
-        - name: OTEL_RESOURCE_ATTRIBUTES
-          value: "deployment.environment=production"
-```
 
 ### With OpenTelemetry Collector
 
@@ -143,12 +67,10 @@ spec:
       - name: prometheus-operator
         image: quay.io/prometheus-operator/prometheus-operator:latest
         env:
-        - name: OTEL_TRACES_EXPORTER
-          value: "otlp"
-        - name: OTEL_METRICS_EXPORTER
-          value: "otlp"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector:4318"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "http/protobuf"  
         - name: OTEL_SERVICE_NAME
           value: "prometheus-operator"
 ```
@@ -169,49 +91,10 @@ env:
 
 ## Disabling OpenTelemetry
 
-OpenTelemetry is disabled by default. To explicitly disable it:
+To disable OpenTelemetry, you can set the `OTEL_SDK_DISABLED` environment variable to `true` in your deployment configuration:
 
 ```yaml
 env:
 - name: OTEL_SDK_DISABLED
   value: "true"
 ```
-
-Or ensure no exporter environment variables are set (exporters default to "none").
-
-## Environment Variables Reference
-
-### Core Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OTEL_SDK_DISABLED` | Disable the OpenTelemetry SDK | `false` |
-| `OTEL_SERVICE_NAME` | Service name | Component name |
-| `OTEL_SERVICE_VERSION` | Service version | Build version |
-| `OTEL_RESOURCE_ATTRIBUTES` | Additional resource attributes | - |
-
-### Tracing Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OTEL_TRACES_EXPORTER` | Trace exporter (`otlp`, `console`, `none`) | `none` |
-| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | OTLP traces endpoint | - |
-| `OTEL_EXPORTER_OTLP_TRACES_HEADERS` | OTLP traces headers | - |
-
-### Metrics Variables  
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OTEL_METRICS_EXPORTER` | Metrics exporter (`otlp`, `prometheus`, `console`, `none`) | `none` |
-| `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` | OTLP metrics endpoint | - |
-| `OTEL_EXPORTER_OTLP_METRICS_HEADERS` | OTLP metrics headers | - |
-
-### General OTLP Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP endpoint (for both traces and metrics) | - |
-| `OTEL_EXPORTER_OTLP_HEADERS` | OTLP headers (for both traces and metrics) | - |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | OTLP protocol (`grpc`, `http/protobuf`) | `http/protobuf` |
-
-For a complete list of environment variables, see the [OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/).
