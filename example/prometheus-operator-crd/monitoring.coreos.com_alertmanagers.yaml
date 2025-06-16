@@ -1033,6 +1033,7 @@ spec:
                       The default value is `OnNamespace`.
                     enum:
                     - OnNamespace
+                    - OnNamespaceInOtherNamespaces
                     - None
                     type: string
                 type: object
