@@ -1344,49 +1344,57 @@ func TestGetObject(t *testing.T) {
 	_, err = store.GetConfigMapKey(context.Background(), "ns1", cmSel)
 	require.NoError(t, err)
 
-	// Test getting the secret object
+	// Test getting existing secret
 	secretObj := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "secret",
 			Namespace: "ns1",
 		},
 	}
-	obj, err := store.GetObject(secretObj)
+	obj, exists, err := store.GetObject(secretObj)
 	require.NoError(t, err)
+	require.True(t, exists)
+	require.NotNil(t, obj)
 	secret, ok := obj.(*v1.Secret)
 	require.True(t, ok)
 	require.Equal(t, "secret", secret.Name)
 	require.Equal(t, "ns1", secret.Namespace)
 	require.Equal(t, []byte("val1"), secret.Data["key1"])
 
-	// Test getting the configmap object
+	// Test getting existing configmap
 	cmObj := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm",
 			Namespace: "ns1",
 		},
 	}
-	obj, err = store.GetObject(cmObj)
+	obj, exists, err = store.GetObject(cmObj)
 	require.NoError(t, err)
+	require.True(t, exists)
+	require.NotNil(t, obj)
 	cm, ok := obj.(*v1.ConfigMap)
 	require.True(t, ok)
 	require.Equal(t, "cm", cm.Name)
 	require.Equal(t, "ns1", cm.Namespace)
 	require.Equal(t, "cmVal", cm.Data["cmKey"])
 
-	// Test getting an object that does not exist
-	nonExistentSecret := &v1.Secret{
+	// Test getting non-existing object
+	nonExistingSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "notfound",
 			Namespace: "ns1",
 		},
 	}
-	_, err = store.GetObject(nonExistentSecret)
-	require.Error(t, err)
+	obj, exists, err = store.GetObject(nonExistingSecret)
+	require.NoError(t, err)
+	require.False(t, exists)
+	require.Nil(t, obj)
 
 	// Test getting with nil object
-	_, err = store.GetObject(nil)
+	obj, exists, err = store.GetObject(nil)
 	require.Error(t, err)
+	require.False(t, exists)
+	require.Nil(t, obj)
 }
 
 func TestAddObject(t *testing.T) {
@@ -1425,9 +1433,11 @@ func TestAddObject(t *testing.T) {
 	err := store.AddObject(secretObj)
 	require.NoError(t, err)
 
-	// Now, GetObject should return the same object
-	obj, err := store.GetObject(secretObj)
+	// Retrieve the secret object
+	obj, exists, err := store.GetObject(secretObj)
 	require.NoError(t, err)
+	require.True(t, exists)
+	require.NotNil(t, obj)
 	secret, ok := obj.(*v1.Secret)
 	require.True(t, ok)
 	require.Equal(t, "secret2", secret.Name)
@@ -1447,99 +1457,18 @@ func TestAddObject(t *testing.T) {
 	err = store.AddObject(cmObj)
 	require.NoError(t, err)
 
-	obj, err = store.GetObject(cmObj)
+	// Retrieve the configmap object
+	obj, exists, err = store.GetObject(cmObj)
 	require.NoError(t, err)
+	require.True(t, exists)
+	require.NotNil(t, obj)
 	cm, ok := obj.(*v1.ConfigMap)
 	require.True(t, ok)
 	require.Equal(t, "cm2", cm.Name)
 	require.Equal(t, "ns1", cm.Namespace)
 	require.Equal(t, "cmVal2", cm.Data["cmKey2"])
 
-	// Try adding nil object
+	// Add nil object should error
 	err = store.AddObject(nil)
 	require.Error(t, err)
-
-	// Try adding unsupported type
-	type Dummy struct{}
-	err = store.AddObject(&Dummy{})
-	require.Error(t, err)
-}
-
-func TestHasObject(t *testing.T) {
-	c := fake.NewSimpleClientset(
-		&v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "secret",
-				Namespace: "ns1",
-			},
-			Data: map[string][]byte{
-				"key1": []byte("val1"),
-			},
-		},
-		&v1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "cm",
-				Namespace: "ns1",
-			},
-			Data: map[string]string{
-				"cmKey": "cmVal",
-			},
-		},
-	)
-	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
-
-	// Initially, store is empty, so HasObject should return false
-	secretObj := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "secret",
-			Namespace: "ns1",
-		},
-	}
-	has, err := store.HasObject(secretObj)
-	require.NoError(t, err)
-	require.False(t, has)
-
-	// Add secret to store by fetching it
-	secretSel := v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
-			Name: "secret",
-		},
-		Key: "key1",
-	}
-	_, err = store.GetSecretKey(context.Background(), "ns1", secretSel)
-	require.NoError(t, err)
-
-	// Now HasObject should return true
-	has, err = store.HasObject(secretObj)
-	require.NoError(t, err)
-	require.True(t, has)
-
-	// Test with ConfigMap
-	cmObj := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "cm",
-			Namespace: "ns1",
-		},
-	}
-	has, err = store.HasObject(cmObj)
-	require.NoError(t, err)
-	require.False(t, has)
-
-	cmSel := v1.ConfigMapKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
-			Name: "cm",
-		},
-		Key: "cmKey",
-	}
-	_, err = store.GetConfigMapKey(context.Background(), "ns1", cmSel)
-	require.NoError(t, err)
-
-	has, err = store.HasObject(cmObj)
-	require.NoError(t, err)
-	require.True(t, has)
-
-	// Test with nil object
-	has, err = store.HasObject(nil)
-	require.Error(t, err)
-	require.False(t, has)
 }

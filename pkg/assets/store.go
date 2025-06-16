@@ -389,26 +389,6 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 	return k.toString()
 }
 
-// HasObject checks if the object exists in the underlying store.
-// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-func (s *StoreBuilder) HasObject(obj interface{}) (bool, error) {
-	if obj == nil {
-		return false, errors.New("object cannot be nil")
-	}
-
-	key, err := assetKeyFunc(obj)
-	if err != nil {
-		return false, fmt.Errorf("failed to get key for object: %w", err)
-	}
-
-	_, exists, err := s.objStore.GetByKey(key)
-	if err != nil {
-		return false, fmt.Errorf("failed to check object in store: %w", err)
-	}
-
-	return exists, nil
-}
-
 // AddObject adds an object to the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 func (s *StoreBuilder) AddObject(obj interface{}) error {
@@ -425,26 +405,21 @@ func (s *StoreBuilder) AddObject(obj interface{}) error {
 
 // GetObject retrieves an object from the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-func (s *StoreBuilder) GetObject(obj interface{}) (interface{}, error) {
+func (s *StoreBuilder) GetObject(obj interface{}) (interface{}, bool, error) {
 	if obj == nil {
-		return nil, errors.New("object cannot be nil")
+		return nil, false, errors.New("object cannot be nil")
 	}
 
-	key, err := assetKeyFunc(obj)
+	item, exists, err := s.objStore.Get(obj)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get key for object: %w", err)
-	}
-
-	item, exists, err := s.objStore.GetByKey(key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get object from store: %w", err)
+		return nil, false, fmt.Errorf("failed to get object from store: %w", err)
 	}
 
 	if !exists {
-		return nil, fmt.Errorf("object with key %s not found in store", key)
+		return nil, exists, nil
 	}
 
-	return item, nil
+	return item, exists, nil
 }
 
 // UpdateObject updates the object in the underlying store.
@@ -461,7 +436,7 @@ func (s *StoreBuilder) UpdateObject(obj interface{}) error {
 	return nil
 }
 
-// DeleteObject updates the object in the underlying store.
+// DeleteObject deletes the object in the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 func (s *StoreBuilder) DeleteObject(obj interface{}) error {
 	if obj == nil {
@@ -473,4 +448,11 @@ func (s *StoreBuilder) DeleteObject(obj interface{}) error {
 	}
 
 	return nil
+}
+
+// GetSecretClient returns the store's secret client.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
+// Example usage - Update asset store on a watch event requires the secret client to fetch the latest secrets.
+func (s *StoreBuilder) GetSecretClient() corev1client.SecretsGetter {
+	return s.sClient
 }
