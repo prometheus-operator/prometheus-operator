@@ -18,10 +18,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 
 	"go.opentelemetry.io/contrib/exporters/autoexport"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/noop"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -30,6 +34,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 	"go.opentelemetry.io/otel/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
+	"k8s.io/client-go/rest"
 )
 
 // Telemetry holds the telemetry providers and shutdown functions.
@@ -127,4 +132,88 @@ func Setup(ctx context.Context, serviceName, serviceVersion string, logger *slog
 	}
 
 	return tel, nil
+}
+
+// WrapHTTPHandler wraps an HTTP handler with OpenTelemetry instrumentation.
+// It adds automatic tracing and metrics for HTTP requests.
+func WrapHTTPHandler(handler http.Handler, operation string) http.Handler {
+	return otelhttp.NewHandler(handler, operation)
+}
+
+// WrapHTTPMux wraps an HTTP mux with OpenTelemetry instrumentation.
+// It adds automatic tracing and metrics for all routes in the mux.
+func WrapHTTPMux(mux *http.ServeMux) http.Handler {
+	return otelhttp.NewHandler(mux, "http-server")
+}
+
+// WrapRoundTripper wraps a Kubernetes client's RoundTripper with OpenTelemetry instrumentation.
+// This provides automatic tracing for all Kubernetes API calls.
+func WrapRoundTripper(rt http.RoundTripper, name string) http.RoundTripper {
+	return otelhttp.NewTransport(rt)
+}
+
+// InstrumentKubernetesConfig adds OpenTelemetry instrumentation to a Kubernetes rest.Config.
+// This will trace all API calls made using clients created from this config.
+func InstrumentKubernetesConfig(config *rest.Config, serviceName string) {
+	// Wrap the existing transport with OTEL instrumentation
+	config.Wrap(func(rt http.RoundTripper) http.RoundTripper {
+		return WrapRoundTripper(rt, serviceName+"-k8s-client")
+	})
+}
+
+// InstrumentedRoundTripper is an http.RoundTripper that provides
+// OpenTelemetry instrumentation for HTTP requests made by the Kubernetes client.
+type InstrumentedRoundTripper struct {
+	http.RoundTripper
+}
+
+// RoundTrip executes a single HTTP transaction and provides tracing and metrics.
+func (t *InstrumentedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	_, span := otel.Tracer("k8s.io/client-go").Start(req.Context(), "RoundTrip",
+		trace.WithAttributes(attribute.String("http.method", req.Method), attribute.String("http.url", req.URL.String())))
+	defer span.End()
+
+	// Record additional span attributes from the request
+	span.SetAttributes(attribute.String("k8s.resource", req.URL.Path))
+
+	resp, err := t.RoundTripper.RoundTrip(req)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "HTTP request failed")
+		return nil, err
+	}
+
+	// Record response status code
+	span.SetAttributes(attribute.Int("http.status_code", resp.StatusCode))
+
+	return resp, nil
+}
+
+// StartSpan starts a new tracing span with the given name and returns the span and a context
+// containing the span. The span should be ended by calling span.End().
+func StartSpan(ctx context.Context, tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return tracer.Start(ctx, spanName, opts...)
+}
+
+// RecordError records an error in the given span and sets the span status to error.
+func RecordError(span trace.Span, err error, msg string) {
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, msg)
+	}
+}
+
+// AddSpanAttributes adds attributes to the given span.
+func AddSpanAttributes(span trace.Span, attrs ...attribute.KeyValue) {
+	span.SetAttributes(attrs...)
+}
+
+// GetTracer returns a tracer for the given name.
+func GetTracer(name string) trace.Tracer {
+	return otel.Tracer(name)
+}
+
+// GetMeter returns a meter for the given name.
+func GetMeter(name string) metric.Meter {
+	return otel.Meter(name)
 }

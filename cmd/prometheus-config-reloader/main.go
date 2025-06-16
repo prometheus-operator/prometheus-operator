@@ -187,6 +187,8 @@ func main() {
 		default:
 			opts.ReloadURL = *reloadURL
 			opts.HTTPClient = createHTTPClient(reloadTimeout)
+			// Wrap HTTP client with OpenTelemetry instrumentation
+			opts.HTTPClient.Transport = telemetry.WrapRoundTripper(opts.HTTPClient.Transport, "prometheus-config-reloader-http-client")
 		}
 
 		rel := reloader.New(
@@ -203,13 +205,19 @@ func main() {
 	}
 
 	if *listenAddress != "" && *watchInterval != 0 {
-		http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
-		http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"status":"up"}`))
 		})
 
-		srv := &http.Server{}
+		// Wrap with OpenTelemetry HTTP instrumentation
+		instrumentedHandler := telemetry.WrapHTTPMux(mux)
+
+		srv := &http.Server{
+			Handler: instrumentedHandler,
+		}
 
 		g.Add(func() error {
 			logger.Info("Starting web server for metrics", "listen", *listenAddress)

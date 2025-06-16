@@ -96,7 +96,10 @@ func main() {
 		w.Write([]byte(`{"status":"up"}`))
 	})
 
-	srv, err := server.NewServer(logger, &serverConfig, mux)
+	// Wrap the mux with OpenTelemetry HTTP instrumentation
+	instrumentedHandler := telemetry.WrapHTTPMux(mux)
+
+	srv, err := server.NewServer(logger, &serverConfig, instrumentedHandler)
 	if err != nil {
 		logger.Error("failed to create web server", "err", err)
 		os.Exit(1)

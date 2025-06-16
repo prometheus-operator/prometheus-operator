@@ -11,7 +11,7 @@ draft: false
 description: Configure OpenTelemetry tracing and metrics for Prometheus Operator
 ---
 
-The Prometheus Operator supports OpenTelemetry for observability through tracing and metrics. This integration uses the OpenTelemetry autoexport functionality, which allows configuration through standard environment variables.
+The Prometheus Operator includes comprehensive OpenTelemetry support for observability through tracing and metrics. The integration provides automatic instrumentation for HTTP servers, Kubernetes clients, and external HTTP clients using industry-standard OpenTelemetry libraries including [otelhttp](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp).
 
 ## Overview
 
@@ -21,6 +21,29 @@ OpenTelemetry integration is available in all Prometheus Operator components:
 - `prometheus-config-reloader`
 
 The integration uses [autoexport](https://pkg.go.dev/go.opentelemetry.io/contrib/exporters/autoexport) which automatically configures exporters based on environment variables, making it easy to integrate with various observability backends.
+
+## What is Instrumented
+
+The Prometheus Operator includes comprehensive OpenTelemetry instrumentation out of the box:
+
+### HTTP Server Instrumentation
+All HTTP servers are automatically instrumented with [otelhttp](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp):
+- Prometheus Operator main server (metrics, health endpoints)
+- Admission webhook HTTP server
+- Prometheus config reloader HTTP server
+
+### Kubernetes Client Instrumentation
+All Kubernetes API interactions are automatically traced:
+- All controller operations (Prometheus, Alertmanager, ThanosRuler)
+- API server discovery and configuration checks
+- Secret, ConfigMap, and CRD operations
+- RBAC verification calls
+
+### HTTP Client Instrumentation  
+External HTTP clients are instrumented:
+- Prometheus config reloader HTTP client (for reloading Prometheus configuration)
+
+This provides comprehensive observability across all operator components and their interactions with Kubernetes and external services.
 
 ## Configuration
 

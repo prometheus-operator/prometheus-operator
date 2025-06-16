@@ -259,6 +259,9 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
+	// Instrument Kubernetes client with OpenTelemetry for automatic tracing
+	telemetry.InstrumentKubernetesConfig(restConfig, "prometheus-operator")
+
 	kclient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		logger.Error("failed to create Kubernetes client", "err", err)
@@ -622,7 +625,10 @@ func run(fs *flag.FlagSet) int {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	srv, err := server.NewServer(logger, &serverConfig, mux)
+	// Wrap the mux with OpenTelemetry HTTP instrumentation
+	instrumentedHandler := telemetry.WrapHTTPMux(mux)
+
+	srv, err := server.NewServer(logger, &serverConfig, instrumentedHandler)
 	if err != nil {
 		logger.Error("failed to create web server", "err", err)
 		cancel()
