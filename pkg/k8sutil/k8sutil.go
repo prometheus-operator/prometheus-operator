@@ -631,7 +631,7 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 }
 
 // FinalizerDeletePatch generates the JSON patch payload which deletes the finalizer from the object's metadata.
-// If the finalizer is not present, it returns an empty []byte slice.
+// If the finalizer is not present, it returns nil.
 func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
 	for i, f := range finalizers {
 		if f == finalizerName {
@@ -644,7 +644,7 @@ func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, er
 			return json.Marshal(patch)
 		}
 	}
-	return []byte{}, nil
+	return nil, nil
 }
 
 func IsFinalizerPresent(finalizers []string, finalizerName string) bool {

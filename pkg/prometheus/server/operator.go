@@ -1051,7 +1051,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
 
-	if p == nil || c.rr.DeletionInProgress(p) {
+	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)

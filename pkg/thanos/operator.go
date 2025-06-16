@@ -456,9 +456,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set ThanosRuler type information: %w", err)
 	}
 
-	logger := o.logger.With("key", key)
-	logger.Info("sync thanos-ruler")
-
+	// Check if the Thanos instance is marked for deletion.
 	if o.rr.DeletionInProgress(tr) {
 		return nil
 	}
@@ -466,6 +464,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	if tr.Spec.Paused {
 		return nil
 	}
+
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
@@ -615,7 +616,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return err
 	}
 
-	if tr == nil || o.rr.DeletionInProgress(tr) {
+	if o.rr.DeletionInProgress(tr) {
 		return nil
 	}
 

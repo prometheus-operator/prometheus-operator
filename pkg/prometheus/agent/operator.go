@@ -572,6 +572,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 
+	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
@@ -956,7 +957,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
-	if p == nil || c.rr.DeletionInProgress(p) {
+	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
