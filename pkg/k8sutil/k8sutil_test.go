@@ -559,6 +559,7 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 }
 
 func TestFinalizerAddPatch(t *testing.T) {
+	finalizerName := "cleanup.kubernetes.io/finalizer"
 	tests := []struct {
 		name          string
 		finalizers    []string
@@ -569,23 +570,23 @@ func TestFinalizerAddPatch(t *testing.T) {
 		{
 			name:          "empty finalizers",
 			finalizers:    []string{},
-			finalizerName: "cleanup.kubernetes.io/finalizer",
+			finalizerName: finalizerName,
 			expectedPatch: []map[string]interface{}{
-				{"op": "add", "path": "/metadata/finalizers", "value": []string{"cleanup.kubernetes.io/finalizer"}},
+				{"op": "add", "path": "/metadata/finalizers", "value": []string{finalizerName}},
 			},
 		},
 		{
 			name:          "finalizer not present",
 			finalizers:    []string{"a", "b"},
-			finalizerName: "cleanup.kubernetes.io/finalizer",
+			finalizerName: finalizerName,
 			expectedPatch: []map[string]interface{}{
-				{"op": "add", "path": "/metadata/finalizers/-", "value": "cleanup.kubernetes.io/finalizer"},
+				{"op": "add", "path": "/metadata/finalizers/-", "value": finalizerName},
 			},
 		},
 		{
 			name:          "finalizer already present",
-			finalizers:    []string{"a", "cleanup.kubernetes.io/finalizer", "b"},
-			finalizerName: "cleanup.kubernetes.io/finalizer",
+			finalizers:    []string{"a", finalizerName, "b"},
+			finalizerName: finalizerName,
 			expectEmpty:   true,
 		},
 	}
@@ -607,6 +608,7 @@ func TestFinalizerAddPatch(t *testing.T) {
 }
 
 func TestFinalizerDeletePatch(t *testing.T) {
+	finalizerName := "cleanup.kubernetes.io/finalizer"
 	tests := []struct {
 		name          string
 		finalizers    []string
@@ -616,21 +618,21 @@ func TestFinalizerDeletePatch(t *testing.T) {
 	}{
 		{
 			name:          "finalizer present at index 1",
-			finalizers:    []string{"a", "cleanup.kubernetes.io/finalizer", "b"},
-			finalizerName: "cleanup.kubernetes.io/finalizer",
+			finalizers:    []string{"a", finalizerName, "b"},
+			finalizerName: finalizerName,
 			expectPatch:   true,
 			expectedIndex: 1,
 		},
 		{
 			name:          "finalizer not present",
 			finalizers:    []string{"a", "b"},
-			finalizerName: "cleanup.kubernetes.io/finalizer",
+			finalizerName: finalizerName,
 			expectPatch:   false,
 		},
 		{
 			name:          "empty finalizers",
 			finalizers:    []string{},
-			finalizerName: "cleanup.kubernetes.io/finalizer",
+			finalizerName: finalizerName,
 			expectPatch:   false,
 		},
 	}
