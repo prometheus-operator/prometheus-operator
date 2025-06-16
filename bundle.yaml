@@ -11834,6 +11834,7 @@ spec:
                       The default value is `OnNamespace`.
                     enum:
                     - OnNamespace
+                    - OnNamespaceExceptForAlertmanagerNamespace
                     - None
                     type: string
                 type: object
