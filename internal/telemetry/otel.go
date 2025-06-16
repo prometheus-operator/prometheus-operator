@@ -149,7 +149,9 @@ func WrapHTTPMux(mux *http.ServeMux) http.Handler {
 // WrapRoundTripper wraps a Kubernetes client's RoundTripper with OpenTelemetry instrumentation.
 // This provides automatic tracing for all Kubernetes API calls.
 func WrapRoundTripper(rt http.RoundTripper, name string) http.RoundTripper {
-	return otelhttp.NewTransport(rt)
+	return otelhttp.NewTransport(rt, otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+		return fmt.Sprintf("%s %s", name, operation)
+	}))
 }
 
 // InstrumentKubernetesConfig adds OpenTelemetry instrumentation to a Kubernetes rest.Config.
