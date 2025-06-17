@@ -978,7 +978,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, conf); err != nil {
 		span.RecordError(err)
-		return fmt.Errorf("couldnt gzip config: %w", err)
+		return fmt.Errorf("couldn't gzip config: %w", err)
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
