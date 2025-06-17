@@ -614,19 +614,23 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
+		span.RecordError(err)
 		return err
 	}
 
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
@@ -635,6 +639,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
 	default:
 		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
+			span.RecordError(err)
 			return err
 		}
 
@@ -645,6 +650,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
+	ctx, span := c.tracer.Start(ctx, "syncDaemonSet", trace.WithAttributes(attribute.String("component", "prometheus-agent"), attribute.String("namespace", p.Namespace)))
+	defer span.End()
+
 	logger := c.logger.With("key", key)
 
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
@@ -653,6 +661,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 	if _, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key)); err != nil {
 		notFound = apierrors.IsNotFound(err)
 		if !notFound {
+			span.RecordError(err)
 			return fmt.Errorf("retrieving daemonset failed: %w", err)
 		}
 	}
@@ -663,12 +672,14 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		cg,
 		tlsAssets)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("making daemonset failed: %w", err)
 	}
 
 	if notFound {
 		logger.Debug("creating daemonset")
 		if _, err := dsetClient.Create(ctx, dset, metav1.CreateOptions{}); err != nil {
+			span.RecordError(err)
 			return fmt.Errorf("creating daemonset failed: %w", err)
 		}
 
@@ -690,12 +701,14 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := dsetClient.Delete(ctx, dset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			span.RecordError(err)
 			return fmt.Errorf("failed to delete DaemonSet to avoid forbidden action: %w", err)
 		}
 		return nil
 	}
 
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("updating DaemonSet failed: %w", err)
 	}
 
@@ -959,12 +972,16 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
+	ctx, span := c.tracer.Start(ctx, "UpdateStatus", trace.WithAttributes(attribute.String("component", "prometheus-agent")))
+	defer span.End()
+
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
 		return nil
 	}
 	if err != nil {
+		span.RecordError(err)
 		return err
 	}
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
@@ -972,6 +989,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to get prometheus agent status: %w", err)
 	}
 	p.Status = *pStatus
@@ -979,6 +997,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	selectorLabels := makeSelectorLabels(p.Name)
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
 	if err != nil {
+		span.RecordError(err)
 		return fmt.Errorf("failed to create selector for prometheus agent scale status: %w", err)
 	}
 	p.Status.Selector = selector.String()
@@ -988,6 +1007,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		c.logger.Info("failed to apply prometheus status subresource, trying again without scale fields", "err", err)
 		// Try again, but this time does not update scale subresource.
 		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+			span.RecordError(err)
 			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
 		}
 	}

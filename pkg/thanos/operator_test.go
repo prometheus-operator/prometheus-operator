@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gotest.tools/v3/golden"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -67,7 +68,10 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cs := fake.NewClientset()
-			o := &Operator{kclient: cs}
+			o := &Operator{
+				kclient: cs,
+				tracer:  tracenoop.NewTracerProvider().Tracer("test"),
+			}
 			tr := &monitoringv1.ThanosRuler{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",

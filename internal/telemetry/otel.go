@@ -43,7 +43,7 @@ var (
 	// Example: /api/v1/namespaces/default/secrets/my-secret -> groups: ["/api/v1", "default", "secrets", "my-secret"]
 	// This should NOT match collection URLs like /api/v1/namespaces/default/secrets
 	namespacedResourcePathRegex = regexp.MustCompile(`^(/api/v[^/]+|/apis/[^/]+/v[^/]+)/namespaces/([^/]+)/([^/]+)/([^/]+)(?:/.*)?$`)
-	
+
 	// namespacedCollectionPathRegex matches Kubernetes API paths for namespaced resource collections
 	// Example: /api/v1/namespaces/default/pods -> groups: ["/api/v1", "default", "pods"]
 	namespacedCollectionPathRegex = regexp.MustCompile(`^(/api/v[^/]+|/apis/[^/]+/v[^/]+)/namespaces/([^/]+)/([^/]+)$`)
