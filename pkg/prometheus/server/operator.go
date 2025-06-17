@@ -1287,7 +1287,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("component", "prometheus"), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	var fields monitoringv1.WebConfigFileFields
@@ -1320,7 +1320,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 }
 
 func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateThanosConfigSecret", trace.WithAttributes(attribute.String("component", "prometheus"), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateThanosConfigSecret", trace.WithAttributes(attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	secret, err := buildPrometheusHTTPClientConfigSecret(p)
