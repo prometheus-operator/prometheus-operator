@@ -36,7 +36,7 @@ import (
 const labelThanosRulerName = "thanos-ruler-name"
 
 func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
-	ctx, span := o.tracer.Start(ctx, "createOrUpdateRuleConfigMaps", trace.WithAttributes(attribute.String("component", "thanos-ruler"), attribute.String("namespace", t.Namespace)))
+	ctx, span := o.tracer.Start(ctx, "createOrUpdateRuleConfigMaps", trace.WithAttributes(attribute.String("namespace", t.Namespace)))
 	defer span.End()
 
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)

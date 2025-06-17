@@ -732,7 +732,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("component", "prometheus")))
+	ctx, span := c.tracer.Start(ctx, "Sync")
 	defer span.End()
 
 	err := c.sync(ctx, key)
@@ -865,7 +865,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Reconcile StatefulSets
 	ctx, ssetSpan := c.tracer.Start(ctx, "reconcileStatefulSets", trace.WithAttributes(
-		attribute.String("component", "prometheus"),
 		attribute.String("namespace", p.Namespace),
 		attribute.Int("statefulset_shard_count", len(expected))))
 	defer ssetSpan.End()
@@ -1025,7 +1024,7 @@ func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "UpdateStatus", trace.WithAttributes(attribute.String("component", "prometheus")))
+	ctx, span := c.tracer.Start(ctx, "UpdateStatus")
 	defer span.End()
 
 	pobj, err := c.promInfs.Get(key)
@@ -1159,7 +1158,7 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateConfigurationSecret", trace.WithAttributes(attribute.String("component", "prometheus"), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateConfigurationSecret", trace.WithAttributes(attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	// If no service or pod monitor selectors are configured, the user wants to

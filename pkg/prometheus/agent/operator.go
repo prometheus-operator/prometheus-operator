@@ -548,7 +548,7 @@ func (c *Operator) addHandlers() {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("component", "prometheus-agent")))
+	ctx, span := c.tracer.Start(ctx, "Sync")
 	defer span.End()
 
 	err := c.sync(ctx, key)
@@ -650,7 +650,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
-	ctx, span := c.tracer.Start(ctx, "syncDaemonSet", trace.WithAttributes(attribute.String("component", "prometheus-agent"), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "syncDaemonSet", trace.WithAttributes(attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	logger := c.logger.With("key", key)
@@ -972,7 +972,7 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "UpdateStatus", trace.WithAttributes(attribute.String("component", "prometheus-agent")))
+	ctx, span := c.tracer.Start(ctx, "UpdateStatus")
 	defer span.End()
 
 	pobj, err := c.promInfs.Get(key)
@@ -1016,7 +1016,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("component", "prometheus-agent"), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	var fields monitoringv1.WebConfigFileFields

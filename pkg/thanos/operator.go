@@ -436,7 +436,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (o *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := o.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("component", "thanos-ruler")))
+	ctx, span := o.tracer.Start(ctx, "Sync")
 	defer span.End()
 
 	err := o.sync(ctx, key)
@@ -635,7 +635,7 @@ func (o *Operator) getStatefulSetFromThanosRulerKey(key string) (*appsv1.Statefu
 
 // UpdateStatus implements the operator.Syncer interface.
 func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
-	ctx, span := o.tracer.Start(ctx, "UpdateStatus", trace.WithAttributes(attribute.String("component", "thanos-ruler")))
+	ctx, span := o.tracer.Start(ctx, "UpdateStatus")
 	defer span.End()
 
 	tr, err := o.getThanosRulerFromKey(key)
@@ -779,7 +779,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monitoringv1.ThanosRuler) error {
-	ctx, span := o.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("component", "thanos-ruler"), attribute.String("namespace", tr.Namespace)))
+	ctx, span := o.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("namespace", tr.Namespace)))
 	defer span.End()
 
 	var fields monitoringv1.WebConfigFileFields
@@ -867,7 +867,7 @@ func makeSelectorLabels(name string) map[string]string {
 }
 
 func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *assets.StoreBuilder, tr *monitoringv1.ThanosRuler) error {
-	ctx, span := o.tracer.Start(ctx, "createOrUpdateRulerConfigSecret", trace.WithAttributes(attribute.String("component", "thanos-ruler"), attribute.String("namespace", tr.Namespace)))
+	ctx, span := o.tracer.Start(ctx, "createOrUpdateRulerConfigSecret", trace.WithAttributes(attribute.String("namespace", tr.Namespace)))
 	defer span.End()
 
 	sClient := o.kclient.CoreV1().Secrets(tr.GetNamespace())

@@ -34,7 +34,7 @@ import (
 )
 
 func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateRuleConfigMaps", trace.WithAttributes(attribute.String("component", "prometheus"), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateRuleConfigMaps", trace.WithAttributes(attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)

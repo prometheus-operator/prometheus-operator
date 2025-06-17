@@ -513,7 +513,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("component", "alertmanager")))
+	ctx, span := c.tracer.Start(ctx, "Sync")
 	defer span.End()
 
 	err := c.sync(ctx, key)
@@ -716,7 +716,7 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "UpdateStatus", trace.WithAttributes(attribute.String("component", "alertmanager")))
+	ctx, span := c.tracer.Start(ctx, "UpdateStatus")
 	defer span.End()
 
 	a, err := c.getAlertmanagerFromKey(key)
@@ -956,7 +956,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateGeneratedConfigSecret", trace.WithAttributes(attribute.String("component", "alertmanager"), attribute.String("namespace", am.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateGeneratedConfigSecret", trace.WithAttributes(attribute.String("namespace", am.Namespace)))
 	defer span.End()
 
 	generatedConfigSecret := &v1.Secret{
@@ -1760,7 +1760,7 @@ func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("component", "alertmanager"), attribute.String("namespace", a.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("namespace", a.Namespace)))
 	defer span.End()
 
 	var fields monitoringv1.WebConfigFileFields
@@ -1795,7 +1795,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateClusterTLSConfigSecret", trace.WithAttributes(attribute.String("component", "alertmanager"), attribute.String("namespace", a.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateClusterTLSConfigSecret", trace.WithAttributes(attribute.String("namespace", a.Namespace)))
 	defer span.End()
 
 	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
