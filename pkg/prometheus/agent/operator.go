@@ -152,7 +152,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
-		tracer:   telemetry.GetTracer("prometheus-operator"),
+		tracer:   telemetry.GetTracer("prometheus-agent-operator"),
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
 			ReloaderConfig:             c.ReloaderConfig,
@@ -548,15 +548,12 @@ func (c *Operator) addHandlers() {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := telemetry.StartSpan(ctx, c.tracer, "reconcile-prometheus-agent-resource")
+	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("resource_key", key)))
 	defer span.End()
-
-	// Add key as span attribute for better observability
-	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
 
 	err := c.sync(ctx, key)
 	if err != nil {
-		telemetry.RecordError(span, err, "failed to reconcile prometheus agent resource")
+		span.RecordError(err)
 	}
 	c.reconciliations.SetStatus(key, err)
 
@@ -564,6 +561,9 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
+	ctx, span := c.tracer.Start(ctx, "sync")
+	defer span.End()
+
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -996,6 +996,9 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("prometheus_agent", p.Name), attribute.String("namespace", p.Namespace)))
+	defer span.End()
+
 	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
 		fields = p.Spec.Web.WebConfigFileFields

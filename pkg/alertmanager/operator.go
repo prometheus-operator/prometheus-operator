@@ -150,7 +150,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
 		logger: logger,
-		tracer: telemetry.GetTracer("prometheus-operator"),
+		tracer: telemetry.GetTracer("alertmanager-operator"),
 
 		accessor: operator.NewAccessor(logger),
 
@@ -513,15 +513,12 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := telemetry.StartSpan(ctx, c.tracer, "reconcile-alertmanager-resource")
+	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("resource_key", key)))
 	defer span.End()
-
-	// Add key as span attribute for better observability
-	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
 
 	err := c.sync(ctx, key)
 	if err != nil {
-		telemetry.RecordError(span, err, "failed to reconcile alertmanager resource")
+		span.RecordError(err)
 	}
 	c.reconciliations.SetStatus(key, err)
 
@@ -529,6 +526,9 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
+	ctx, span := c.tracer.Start(ctx, "sync")
+	defer span.End()
+
 	aobj, err := c.alrtInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -936,6 +936,9 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateGeneratedConfigSecret", trace.WithAttributes(attribute.String("alertmanager", am.Name), attribute.String("namespace", am.Namespace)))
+	defer span.End()
+
 	generatedConfigSecret := &v1.Secret{
 		Data: map[string][]byte{},
 	}
@@ -1735,6 +1738,9 @@ func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("alertmanager", a.Name), attribute.String("namespace", a.Namespace)))
+	defer span.End()
+
 	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
 		fields = a.Spec.Web.WebConfigFileFields
@@ -1765,6 +1771,9 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateClusterTLSConfigSecret", trace.WithAttributes(attribute.String("alertmanager", a.Name), attribute.String("namespace", a.Namespace)))
+	defer span.End()
+
 	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
 	if err != nil {
 		return fmt.Errorf("failed to initialize the configuration: %w", err)

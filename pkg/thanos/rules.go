@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -34,6 +36,9 @@ import (
 const labelThanosRulerName = "thanos-ruler-name"
 
 func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
+	ctx, span := o.tracer.Start(ctx, "createOrUpdateRuleConfigMaps", trace.WithAttributes(attribute.String("thanos_ruler", t.Name), attribute.String("namespace", t.Namespace)))
+	defer span.End()
+
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
 
 	namespaces, err := o.selectRuleNamespaces(t)

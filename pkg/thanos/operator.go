@@ -144,7 +144,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient:        mdClient,
 		mclient:         mclient,
 		logger:          logger,
-		tracer:          telemetry.GetTracer("prometheus-operator"),
+		tracer:          telemetry.GetTracer("thanos-ruler-operator"),
 		accessor:        operator.NewAccessor(logger),
 		metrics:         operator.NewMetrics(r),
 		eventRecorder:   c.EventRecorderFactory(client, controllerName),
@@ -436,15 +436,12 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (o *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := telemetry.StartSpan(ctx, o.tracer, "reconcile-thanos-ruler-resource")
+	ctx, span := o.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("resource_key", key)))
 	defer span.End()
-
-	// Add key as span attribute for better observability
-	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
 
 	err := o.sync(ctx, key)
 	if err != nil {
-		telemetry.RecordError(span, err, "failed to reconcile thanos ruler resource")
+		span.RecordError(err)
 	}
 	o.reconciliations.SetStatus(key, err)
 
@@ -452,6 +449,9 @@ func (o *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (o *Operator) sync(ctx context.Context, key string) error {
+	ctx, span := o.tracer.Start(ctx, "sync")
+	defer span.End()
+
 	trobj, err := o.thanosRulerInfs.Get(key)
 	if apierrors.IsNotFound(err) {
 		o.reconciliations.ForgetObject(key)
@@ -760,6 +760,9 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monitoringv1.ThanosRuler) error {
+	ctx, span := o.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("thanos_ruler", tr.Name), attribute.String("namespace", tr.Namespace)))
+	defer span.End()
+
 	var fields monitoringv1.WebConfigFileFields
 	if tr.Spec.Web != nil {
 		fields = tr.Spec.Web.WebConfigFileFields
@@ -843,6 +846,9 @@ func makeSelectorLabels(name string) map[string]string {
 }
 
 func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *assets.StoreBuilder, tr *monitoringv1.ThanosRuler) error {
+	ctx, span := o.tracer.Start(ctx, "createOrUpdateRulerConfigSecret", trace.WithAttributes(attribute.String("thanos_ruler", tr.Name), attribute.String("namespace", tr.Namespace)))
+	defer span.End()
+
 	sClient := o.kclient.CoreV1().Secrets(tr.GetNamespace())
 
 	s := &v1.Secret{

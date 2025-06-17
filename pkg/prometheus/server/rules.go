@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -32,6 +34,9 @@ import (
 )
 
 func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateRuleConfigMaps", trace.WithAttributes(attribute.String("prometheus", p.Name), attribute.String("namespace", p.Namespace)))
+	defer span.End()
+
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
 	namespaces, err := c.selectRuleNamespaces(p)

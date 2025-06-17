@@ -161,7 +161,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
-		tracer:   telemetry.GetTracer("prometheus-operator"),
+		tracer:   telemetry.GetTracer("prometheus-server-operator"),
 		accessor: operator.NewAccessor(logger),
 
 		config: prompkg.Config{
@@ -732,15 +732,12 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := telemetry.StartSpan(ctx, c.tracer, "reconcile-prometheus-resource")
+	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("resource_key", key)))
 	defer span.End()
-
-	// Add key as span attribute for better observability
-	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
 
 	err := c.sync(ctx, key)
 	if err != nil {
-		telemetry.RecordError(span, err, "failed to reconcile prometheus resource")
+		span.RecordError(err)
 	}
 	c.reconciliations.SetStatus(key, err)
 
@@ -748,6 +745,9 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
+	ctx, span := c.tracer.Start(ctx, "sync")
+	defer span.End()
+
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -784,19 +784,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger.Info("sync prometheus")
 
-	// Trace rule configuration creation
-	ctx, rulesSpan := telemetry.StartSpan(ctx, c.tracer, "create-prometheus-rule-config")
-	telemetry.AddSpanAttributes(rulesSpan,
-		attribute.String("prometheus.name", p.Name),
-		attribute.String("prometheus.namespace", p.Namespace),
-	)
+	// Create rule configuration maps
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
 	if err != nil {
-		telemetry.RecordError(rulesSpan, err, "failed to create prometheus rule configuration")
-		rulesSpan.End()
 		return err
 	}
-	rulesSpan.End()
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
@@ -809,18 +801,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	// Trace configuration secret creation
-	ctx, configSpan := telemetry.StartSpan(ctx, c.tracer, "create-prometheus-config-secret")
-	telemetry.AddSpanAttributes(configSpan,
-		attribute.String("prometheus.name", p.Name),
-		attribute.String("prometheus.namespace", p.Namespace),
-	)
+	// Create configuration secret
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, ruleConfigMapNames, assetStore); err != nil {
-		telemetry.RecordError(configSpan, err, "failed to create prometheus config secret")
-		configSpan.End()
 		return fmt.Errorf("creating config failed: %w", err)
 	}
-	configSpan.End()
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
@@ -869,14 +853,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 
-	// Trace StatefulSet reconciliation
-	// Trace StatefulSet reconciliation
-	ctx, ssetSpan := telemetry.StartSpan(ctx, c.tracer, "reconcile-prometheus-statefulsets")
-	telemetry.AddSpanAttributes(ssetSpan,
-		attribute.String("prometheus.name", p.Name),
-		attribute.String("prometheus.namespace", p.Namespace),
-		attribute.Int("statefulset.shard_count", len(expected)),
-	)
+	// Reconcile StatefulSets
+	ctx, ssetSpan := c.tracer.Start(ctx, "reconcileStatefulSets", trace.WithAttributes(
+		attribute.String("prometheus", p.Name),
+		attribute.String("namespace", p.Namespace),
+		attribute.Int("statefulset_shard_count", len(expected))))
 	defer ssetSpan.End()
 
 	for shard, ssetName := range expected {
@@ -1028,6 +1009,9 @@ func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
+	ctx, span := c.tracer.Start(ctx, "UpdateStatus", trace.WithAttributes(attribute.String("resource_key", key)))
+	defer span.End()
+
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -1155,6 +1139,9 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateConfigurationSecret", trace.WithAttributes(attribute.String("prometheus", p.Name), attribute.String("namespace", p.Namespace)))
+	defer span.End()
+
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -1281,6 +1268,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("prometheus", p.Name), attribute.String("namespace", p.Namespace)))
+	defer span.End()
+
 	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
 		fields = p.Spec.Web.WebConfigFileFields
@@ -1311,6 +1301,9 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 }
 
 func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateThanosConfigSecret", trace.WithAttributes(attribute.String("prometheus", p.Name), attribute.String("namespace", p.Namespace)))
+	defer span.End()
+
 	secret, err := buildPrometheusHTTPClientConfigSecret(p)
 	if err != nil {
 		return fmt.Errorf("failed to build Thanos HTTP client config secret: :%w", err)
