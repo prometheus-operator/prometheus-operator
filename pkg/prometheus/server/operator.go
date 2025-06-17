@@ -161,7 +161,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
-		tracer:   telemetry.GetTracer("prometheus-server-operator"),
+		tracer:   telemetry.GetComponentTracer("prometheus-server-operator", "prometheus-server-operator"),
 		accessor: operator.NewAccessor(logger),
 
 		config: prompkg.Config{

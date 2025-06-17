@@ -144,7 +144,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient:        mdClient,
 		mclient:         mclient,
 		logger:          logger,
-		tracer:          telemetry.GetTracer("thanos-ruler-operator"),
+		tracer:          telemetry.GetComponentTracer("thanos-ruler-operator", "thanos-ruler-operator"),
 		accessor:        operator.NewAccessor(logger),
 		metrics:         operator.NewMetrics(r),
 		eventRecorder:   c.EventRecorderFactory(client, controllerName),

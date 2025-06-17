@@ -152,7 +152,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
-		tracer:   telemetry.GetTracer("prometheus-agent-operator"),
+		tracer:   telemetry.GetComponentTracer("prometheus-agent-operator", "prometheus-agent-operator"),
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
 			ReloaderConfig:             c.ReloaderConfig,

@@ -150,7 +150,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
 		logger: logger,
-		tracer: telemetry.GetTracer("alertmanager-operator"),
+		tracer: telemetry.GetComponentTracer("alertmanager-operator", "alertmanager-operator"),
 
 		accessor: operator.NewAccessor(logger),
 

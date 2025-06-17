@@ -34,6 +34,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/embedded"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"k8s.io/client-go/rest"
 )
@@ -234,4 +235,28 @@ func GetTracer(name string) trace.Tracer {
 // GetMeter returns a meter for the given name.
 func GetMeter(name string) metric.Meter {
 	return otel.Meter(name)
+}
+
+// GetComponentTracer returns a tracer that automatically adds a component attribute to all spans.
+// This is a convenience function that wraps the regular tracer to add consistent component labeling.
+func GetComponentTracer(name string, component string) trace.Tracer {
+	return &componentTracer{
+		tracer:    otel.Tracer(name),
+		component: component,
+	}
+}
+
+// componentTracer wraps a regular tracer to automatically add component attributes
+type componentTracer struct {
+	embedded.Tracer // Embed to implement the interface
+	tracer    trace.Tracer
+	component string
+}
+
+// Start creates a span with the component attribute automatically added
+func (ct *componentTracer) Start(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	// Add component attribute to the existing options
+	componentAttr := trace.WithAttributes(attribute.String("component", ct.component))
+	allOpts := append(opts, componentAttr)
+	return ct.tracer.Start(ctx, spanName, allOpts...)
 }
