@@ -11,13 +11,13 @@
   * https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
   * [workload status subresource proposal](202409-status-subresource.md)
 
-> This proposal outlines the implementation of a Status subresource field extension to the Prometheus operator config based resource Custom Resource Definitions(CRDs).
+> This proposal outlines the implementation of a Status subresource field extension to the Prometheus operator's configuration-based Custom Resource Definitions (CRDs).
 
 ## Why
 
-This will allow users to verify whether their configurations have been successfully applied to the corresponding workload resources.
+The solution will allow users to verify whether their configurations have been successfully applied to the corresponding workload resources.
 
-Mapping between configuration resources and their associated workloads
+Mapping between configuration resources and their associated workload resources:
 
 | Configuration Resource | Workload Resource              |
 |------------------------|--------------------------------|
@@ -44,18 +44,19 @@ Currently, the status subresource is only implemented for workload resources. Th
   * `PrometheusRule`
   * `AlertmanagerConfig`
 * Provide information about the targets being scraped and their status for scrape resources (`PodMonitor`, `ServiceMonitor`, `Probes` and `ScrapeConfig`).
-* Reporting in status section when a configuration resource is considered invalid during reconciliation. Examples include:
-  * The Prometheus or Alertmanager version does not support a specific feature.
+* Report when a configuration resource is considered invalid during reconciliation. For example:
+  * Feature not being supported by the version of the workload.
   * Invalid configmap/secret key reference.
-  * Invalid PrometheusRule.
+  * Invalid PromQL expression in PrometheusRule resources.
 
 ## Non-Goals
 
-* The status subresource is intended to offer only a summary (e.g., counts of up/down targets) of the scrape status.
-* No information about the fired alerts in the status subresource of PrometheusRule (too heavy for the operator to query the prometheus pod for the alerts information. Prometheus may have a significant number of alerts, and fetching them repeatedly increases significant load in the operator).
+* The solution does not aim to expose the full live configuration or runtime status of Prometheus. For example:
+  * It will not include per-target scrape status, only summary information (e.g., number of targets up/down).
+  * It will not surface fired alerts from PrometheusRule resources, as querying Prometheus for this data can be expensive and places undue load on both Prometheus and the operator.
 * The status subresource is not intended to provide realtime information of the targets.
 * Configuration resources won't expose status information that explains why they are not being selected by Prometheus or why their targets are not being scraped.
-* [poctl](https://github.com/prometheus-operator/poctl) also provides some insights into configuration resources, not planning to reimplement the stuffs again in status subresource.
+* The solution doesn't attempt to replace [poctl](https://github.com/prometheus-operator/poctl) which provides some insights into configuration resources.
 
 ### Audience
 
@@ -68,6 +69,7 @@ Challenges that influenced the API design :
 
 * A single config resource can be selected by multiple workload resources.
 * The config resource might not be in the same namespace as the workload resource.
+* Which workload selects which configuration resources can vary over time depending on the workload resource's label selectors and on the configuration resource's labels.
 
 ### CRDs
 
@@ -106,10 +108,10 @@ spec:
         resource: prometheuses
         name: prometheus-main
         namespace: monitoring
-        totalScrapedTargets: 3
-        totalUpTargets: 2
-        totalDownTargets: 1
-        lastCheckedTime: "2025-05-20T12:34:56Z"
+        targets: 
+          up: 2
+          down: 1
+          lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
           - type: Reconciled
             status: "True"
@@ -205,11 +207,11 @@ The operator sends the GET request at regular interval to the config-reloader si
 
 #### How to clear refrences in status section if the workload is deleted ?
 
-Finalizers are used during the deletion of the config-resource and workload-resource to clear the refrences in the status-subresource.
+When a workload resource is created, we add a finalizer to it to ensure proper cleanup before deletion. If a user later requests deletion of the resource, Kubernetes does not immediately remove it; instead, it sets a deletionTimestamp on the resource. This triggers an update event, which the controller receives and processes. The controller checks if the deletionTimestamp is set to determine if the resource is in the process of being deleted. If so, the controller proceeds to clean up associated references from relevant configuration resources (e.g., ServiceMonitors, PrometheusRules). Once the cleanup is complete, the controller removes the finalizer from the workload resource, allowing Kubernetes to complete the deletion process.
 
 #### How to remove invalid bindings from config-resources status ?
 
-A dedicated goroutine runs continuously to monitor config and workload resources for any invalid bindings.
+A dedicated goroutine runs continuously to monitor configuration resources for any invalid bindings.
 
 ## Alternatives
 
