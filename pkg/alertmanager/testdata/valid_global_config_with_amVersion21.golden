@@ -22,14 +22,4 @@ global:
     insecure_skip_verify: true
     min_version: TLS12
     max_version: TLS13
-route:
-  receiver: mynamespace/global-config/null
-  routes:
-  - receiver: mynamespace/global-config/myreceiver
-    matchers:
-    - mykey="myvalue"
-    - mykey1="myvalue1"
-receivers:
-- name: mynamespace/global-config/null
-- name: mynamespace/global-config/myreceiver
 templates: []

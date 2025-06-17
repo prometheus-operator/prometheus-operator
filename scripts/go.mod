@@ -10,9 +10,9 @@ require (
 	github.com/bwplotka/mdox v0.9.1-0.20220713080221-769034ad8cfe
 	github.com/golangci/golangci-lint/v2 v2.1.6
 	github.com/google/go-jsonnet v0.21.0
-	github.com/jsonnet-bundler/jsonnet-bundler v0.5.1
+	github.com/jsonnet-bundler/jsonnet-bundler v0.6.0
 	github.com/yeya24/promlinter v0.3.0
-	k8s.io/code-generator v0.33.0
+	k8s.io/code-generator v0.33.1
 	sigs.k8s.io/controller-tools v0.18.0
 )
 
@@ -80,6 +80,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/efficientgo/tools/core v0.0.0-20210609125236-d73259166f20 // indirect
 	github.com/efficientgo/tools/extkingpin v0.0.0-20210609125236-d73259166f20 // indirect
+	github.com/elliotchance/orderedmap/v2 v2.2.0 // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
@@ -272,7 +273,7 @@ require (
 	honnef.co/go/tools v0.6.1 // indirect
 	k8s.io/api v0.33.0 // indirect
 	k8s.io/apiextensions-apiserver v0.33.0 // indirect
-	k8s.io/apimachinery v0.33.0 // indirect
+	k8s.io/apimachinery v0.33.1 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250207200755-1244d31929d7 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
