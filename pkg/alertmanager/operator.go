@@ -28,6 +28,8 @@ import (
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -41,6 +43,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/telemetry"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
@@ -83,7 +86,9 @@ type Operator struct {
 
 	controllerID string
 
-	logger   *slog.Logger
+	logger *slog.Logger
+	tracer trace.Tracer
+
 	accessor *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
@@ -144,7 +149,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mclient:    mclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
-		logger:   logger,
+		logger: logger,
+		tracer: telemetry.GetTracer("prometheus-operator"),
+
 		accessor: operator.NewAccessor(logger),
 
 		metrics:         operator.NewMetrics(r),
@@ -506,11 +513,19 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
+	ctx, span := telemetry.StartSpan(ctx, c.tracer, "reconcile-alertmanager-resource")
+	defer span.End()
+
+	// Add key as span attribute for better observability
+	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
+
 	err := c.sync(ctx, key)
+	if err != nil {
+		telemetry.RecordError(span, err, "failed to reconcile alertmanager resource")
+	}
 	c.reconciliations.SetStatus(key, err)
 
 	return err
-
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {

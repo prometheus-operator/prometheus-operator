@@ -142,16 +142,25 @@ func WrapHTTPHandler(handler http.Handler, operation string) http.Handler {
 
 // WrapHTTPMux wraps an HTTP mux with OpenTelemetry instrumentation.
 // It adds automatic tracing and metrics for all routes in the mux.
+// Operation names will be in the format "METHOD /path" for better observability.
 func WrapHTTPMux(mux *http.ServeMux) http.Handler {
-	return otelhttp.NewHandler(mux, "http-server")
+	return otelhttp.NewHandler(mux, "",
+		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+			return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+		}),
+	)
 }
 
 // WrapRoundTripper wraps a Kubernetes client's RoundTripper with OpenTelemetry instrumentation.
-// This provides automatic tracing for all Kubernetes API calls.
+// This provides automatic tracing for all Kubernetes API calls with meaningful operation names.
 func WrapRoundTripper(rt http.RoundTripper, name string) http.RoundTripper {
-	return otelhttp.NewTransport(rt, otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
-		return fmt.Sprintf("%s %s", name, operation)
-	}))
+	return otelhttp.NewTransport(rt,
+		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+			// Create meaningful span names for Kubernetes API calls
+			// Examples: "GET /api/v1/prometheuses", "PUT /api/v1/namespaces/default/statefulsets/prometheus-test"
+			return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+		}),
+	)
 }
 
 // InstrumentKubernetesConfig adds OpenTelemetry instrumentation to a Kubernetes rest.Config.
@@ -159,36 +168,8 @@ func WrapRoundTripper(rt http.RoundTripper, name string) http.RoundTripper {
 func InstrumentKubernetesConfig(config *rest.Config, serviceName string) {
 	// Wrap the existing transport with OTEL instrumentation
 	config.Wrap(func(rt http.RoundTripper) http.RoundTripper {
-		return WrapRoundTripper(rt, serviceName+"-k8s-client")
+		return WrapRoundTripper(rt, serviceName)
 	})
-}
-
-// InstrumentedRoundTripper is an http.RoundTripper that provides
-// OpenTelemetry instrumentation for HTTP requests made by the Kubernetes client.
-type InstrumentedRoundTripper struct {
-	http.RoundTripper
-}
-
-// RoundTrip executes a single HTTP transaction and provides tracing and metrics.
-func (t *InstrumentedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	_, span := otel.Tracer("k8s.io/client-go").Start(req.Context(), "RoundTrip",
-		trace.WithAttributes(attribute.String("http.method", req.Method), attribute.String("http.url", req.URL.String())))
-	defer span.End()
-
-	// Record additional span attributes from the request
-	span.SetAttributes(attribute.String("k8s.resource", req.URL.Path))
-
-	resp, err := t.RoundTripper.RoundTrip(req)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "HTTP request failed")
-		return nil, err
-	}
-
-	// Record response status code
-	span.SetAttributes(attribute.Int("http.status_code", resp.StatusCode))
-
-	return resp, nil
 }
 
 // StartSpan starts a new tracing span with the given name and returns the span and a context

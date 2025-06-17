@@ -25,6 +25,8 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -39,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/telemetry"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
@@ -67,7 +70,9 @@ type Operator struct {
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
-	logger   *slog.Logger
+	logger *slog.Logger
+	tracer trace.Tracer
+
 	accessor *operator.Accessor
 
 	controllerID string
@@ -139,6 +144,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient:        mdClient,
 		mclient:         mclient,
 		logger:          logger,
+		tracer:          telemetry.GetTracer("prometheus-operator"),
 		accessor:        operator.NewAccessor(logger),
 		metrics:         operator.NewMetrics(r),
 		eventRecorder:   c.EventRecorderFactory(client, controllerName),
@@ -430,7 +436,16 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 // Sync implements the operator.Syncer interface.
 func (o *Operator) Sync(ctx context.Context, key string) error {
+	ctx, span := telemetry.StartSpan(ctx, o.tracer, "reconcile-thanos-ruler-resource")
+	defer span.End()
+
+	// Add key as span attribute for better observability
+	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
+
 	err := o.sync(ctx, key)
+	if err != nil {
+		telemetry.RecordError(span, err, "failed to reconcile thanos ruler resource")
+	}
 	o.reconciliations.SetStatus(key, err)
 
 	return err

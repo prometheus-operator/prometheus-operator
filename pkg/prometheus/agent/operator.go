@@ -23,6 +23,8 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,6 +38,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/telemetry"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -61,6 +64,7 @@ type Operator struct {
 	mclient  monitoringclient.Interface
 
 	logger *slog.Logger
+	tracer trace.Tracer
 
 	accessor *operator.Accessor
 
@@ -148,6 +152,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
+		tracer:   telemetry.GetTracer("prometheus-operator"),
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
 			ReloaderConfig:             c.ReloaderConfig,
@@ -543,7 +548,16 @@ func (c *Operator) addHandlers() {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
+	ctx, span := telemetry.StartSpan(ctx, c.tracer, "reconcile-prometheus-agent-resource")
+	defer span.End()
+
+	// Add key as span attribute for better observability
+	telemetry.AddSpanAttributes(span, attribute.String("resource.key", key))
+
 	err := c.sync(ctx, key)
+	if err != nil {
+		telemetry.RecordError(span, err, "failed to reconcile prometheus agent resource")
+	}
 	c.reconciliations.SetStatus(key, err)
 
 	return err
