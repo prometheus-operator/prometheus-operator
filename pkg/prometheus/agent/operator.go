@@ -548,7 +548,7 @@ func (c *Operator) addHandlers() {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("resource_key", key)))
+	ctx, span := c.tracer.Start(ctx, "Sync", trace.WithAttributes(attribute.String("component", "prometheus-agent")))
 	defer span.End()
 
 	err := c.sync(ctx, key)
@@ -996,7 +996,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
-	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("prometheus_agent", p.Name), attribute.String("namespace", p.Namespace)))
+	ctx, span := c.tracer.Start(ctx, "createOrUpdateWebConfigSecret", trace.WithAttributes(attribute.String("component", "prometheus-agent"), attribute.String("namespace", p.Namespace)))
 	defer span.End()
 
 	var fields monitoringv1.WebConfigFileFields

@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"regexp"
 
 	"go.opentelemetry.io/contrib/exporters/autoexport"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -35,6 +36,22 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"k8s.io/client-go/rest"
+)
+
+var (
+	// namespacedResourcePathRegex matches Kubernetes API paths for namespaced resources with specific names
+	// Example: /api/v1/namespaces/default/secrets/my-secret -> groups: ["/api/v1", "default", "secrets", "my-secret"]
+	// This should NOT match collection URLs like /api/v1/namespaces/default/secrets
+	namespacedResourcePathRegex = regexp.MustCompile(`^(/api/v[^/]+|/apis/[^/]+/v[^/]+)/namespaces/([^/]+)/([^/]+)/([^/]+)(?:/.*)?$`)
+	
+	// namespacedCollectionPathRegex matches Kubernetes API paths for namespaced resource collections
+	// Example: /api/v1/namespaces/default/pods -> groups: ["/api/v1", "default", "pods"]
+	namespacedCollectionPathRegex = regexp.MustCompile(`^(/api/v[^/]+|/apis/[^/]+/v[^/]+)/namespaces/([^/]+)/([^/]+)$`)
+
+	// clusterResourcePathRegex matches Kubernetes API paths for cluster-scoped resources with specific names
+	// Example: /api/v1/nodes/my-node -> groups: ["/api/v1", "nodes", "my-node"]
+	// This should NOT match collection URLs like /api/v1/nodes or namespace-related paths
+	clusterResourcePathRegex = regexp.MustCompile(`^(/api/v[^/]+|/apis/[^/]+/v[^/]+)/([^/]+)/([^/]+)(?:/.*)?$`)
 )
 
 // Telemetry holds the telemetry providers and shutdown functions.
@@ -156,9 +173,27 @@ func WrapHTTPMux(mux *http.ServeMux) http.Handler {
 func WrapRoundTripper(rt http.RoundTripper, name string) http.RoundTripper {
 	return otelhttp.NewTransport(rt,
 		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
-			// Create meaningful span names for Kubernetes API calls
-			// Examples: "GET /api/v1/prometheuses", "PUT /api/v1/namespaces/default/statefulsets/prometheus-test"
-			return fmt.Sprintf("%s %s", r.Method, r.URL.Path)
+			// Create low-cardinality span names by using placeholders for resource instances
+			// Examples: "GET /api/v1/prometheuses", "PUT /api/v1/namespaces/{namespace}/statefulsets/{name}"
+			path := r.URL.Path
+
+			// Replace specific namespace and resource names with placeholders to reduce cardinality
+			// Pattern: /api/v1/namespaces/{namespace}/resources/{name}
+			if matches := namespacedResourcePathRegex.FindStringSubmatch(path); len(matches) >= 5 {
+				// matches[1] = api version part, matches[2] = namespace, matches[3] = resource type, matches[4] = resource name
+				path = fmt.Sprintf("%s/namespaces/{namespace}/%s/{name}", matches[1], matches[3])
+			} else if matches := namespacedCollectionPathRegex.FindStringSubmatch(path); len(matches) >= 4 {
+				// matches[1] = api version part, matches[2] = namespace, matches[3] = resource type
+				path = fmt.Sprintf("%s/namespaces/{namespace}/%s", matches[1], matches[3])
+			} else if matches := clusterResourcePathRegex.FindStringSubmatch(path); len(matches) >= 4 {
+				// matches[1] = api version part, matches[2] = resource type, matches[3] = resource name
+				// Exclude namespace-related paths which should be handled by the first regex
+				if matches[2] != "namespaces" {
+					path = fmt.Sprintf("%s/%s/{name}", matches[1], matches[2])
+				}
+			}
+
+			return fmt.Sprintf("%s %s", r.Method, path)
 		}),
 	)
 }
