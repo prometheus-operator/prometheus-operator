@@ -123,6 +123,47 @@ spec:
     path: "/path/to/prom/db"
 ```
 
+Using a hostPath volume requires ensuring that the container has the appropriate permissions to access and modify files at the specified path on the host machine, example:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: my-example-prometheus-name
+  labels:
+    prometheus: example
+spec:
+  replicas: 1
+  storage:
+    volumeClaimTemplate:
+      spec:
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: my-example-prometheus
+        resources:
+          requests:
+            storage: 50Gi
+  securityContext:
+    fsGroup: 65534
+    runAsNonRoot: true
+    runAsUser: 65534
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv-name
+  labels:
+    app.kubernetes.io/name: my-example-prometheus
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/data
+```
+
 ### Disabling Default StorageClasses
 
 To manually provision volumes (as of Kubernetes 1.6.0), you may need to disable
