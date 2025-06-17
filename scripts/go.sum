@@ -1853,8 +1853,8 @@ sigs.k8s.io/controller-tools v0.18.0 h1:rGxGZCZTV2wJreeRgqVoWab/mfcumTMmSwKzoM9x
 sigs.k8s.io/controller-tools v0.18.0/go.mod h1:gLKoiGBriyNh+x1rWtUQnakUYEujErjXs9pf+x/8n1U=
 sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 h1:/Rv+M11QRah1itp8VhT6HoVx1Ray9eB4DBr+K+/sCJ8=
 sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3/go.mod h1:18nIHnGi6636UCz6m8i4DhaJ65T6EruyzmoQqI2BVDo=
-sigs.k8s.io/kube-api-linter v0.0.0-20250516124914-6df69a12c92c h1:sybeA6NAACfxBiZLdY9iRNAT9jVs25TwBnLnqG+TyTs=
-sigs.k8s.io/kube-api-linter v0.0.0-20250516124914-6df69a12c92c/go.mod h1:tnzp9Oj2Qi0qPg5t5tbDrUixTlZLjPpEjzk1kxO/2EE=
+sigs.k8s.io/kube-api-linter v0.0.0-20250613105907-bce00ef0e9a6 h1:eZo4OYjRVnVUso+0aUv2ttTW1BdcSHZcIHpLsMbRddk=
+sigs.k8s.io/kube-api-linter v0.0.0-20250613105907-bce00ef0e9a6/go.mod h1:eLCPJVcvhVcNkLOGu2IFzkF5ZpdNjrm+azKaxS+x4IQ=
 sigs.k8s.io/randfill v0.0.0-20250304075658-069ef1bbf016/go.mod h1:XeLlZ/jmk4i1HRopwe7/aU3H5n1zNUcX6TM94b3QxOY=
 sigs.k8s.io/randfill v1.0.0 h1:JfjMILfT8A6RbawdsK2JXGBR5AQVfd+9TbzrlneTyrU=
 sigs.k8s.io/randfill v1.0.0/go.mod h1:XeLlZ/jmk4i1HRopwe7/aU3H5n1zNUcX6TM94b3QxOY=

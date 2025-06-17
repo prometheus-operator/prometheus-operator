@@ -54,10 +54,12 @@ linters:
       # KAL should only run on API folders.
       - linters:
           - kubeapilinter
-        path-except: 'pkg/apis/*'
+        text: (nomaps|integers|commentstart|jsontags|optionalorrequired)
     paths:
       - zz_generated.*\.go$
       - examples$
+    paths-except:
+      - (.+)pkg/apis/monitoring/(.+)\.go$
 formatters:
   enable:
     - gci
