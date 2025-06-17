@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -254,7 +255,10 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 				},
 				Spec: tc.spec,
 			}
-			o := Operator{kclient: fake.NewClientset()}
+			o := Operator{
+				kclient: fake.NewClientset(),
+				tracer:  tracenoop.NewTracerProvider().Tracer("test"),
+			}
 			err := o.createOrUpdateThanosConfigSecret(ctx, p)
 			require.NoError(t, err)
 
