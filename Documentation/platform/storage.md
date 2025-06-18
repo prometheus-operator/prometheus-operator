@@ -123,15 +123,15 @@ spec:
     path: "/path/to/prom/db"
 ```
 
+### Using hostPath volumes
+
 Using a hostPath volume requires ensuring that the container has the appropriate permissions to access and modify files at the specified path on the host machine, example:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-  name: my-example-prometheus-name
-  labels:
-    prometheus: example
+  name: example
 spec:
   replicas: 1
   storage:
@@ -139,7 +139,7 @@ spec:
       spec:
         selector:
           matchLabels:
-            app.kubernetes.io/name: my-example-prometheus
+            app.kubernetes.io/name: example
         resources:
           requests:
             storage: 50Gi
@@ -153,7 +153,7 @@ kind: PersistentVolume
 metadata:
   name: my-pv-name
   labels:
-    app.kubernetes.io/name: my-example-prometheus
+    app.kubernetes.io/name: example
 spec:
   capacity:
     storage: 50Gi
