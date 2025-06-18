@@ -117,18 +117,28 @@ spec:
             status: "True"
             observedGeneration: 3
             lastTransitionTime: "2025-05-20T12:34:56Z"
-          - type: Reconciled
-            status: "False"
-            observedGeneration: 2
-            lastTransitionTime: "2024-02-08T23:52:22Z"
-            reason: InvalidConfiguration
-            message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
-          - type: Reconciled
-            status: "False"
-            observedGeneration: 1
-            lastTransitionTime: "2024-02-08T23:52:22Z"
-            reason: InvalidConfiguration
-            message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'."
+```
+
+some other example conditions which can take place,
+
+```yaml
+conditions:
+  - type: Reconciled
+    status: "False"
+    observedGeneration: 2
+    lastTransitionTime: "2024-02-08T23:52:22Z"
+    reason: InvalidConfiguration
+    message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
+```
+
+```yaml
+conditions:
+  - type: Reconciled
+    status: "False"
+    observedGeneration: 1
+    lastTransitionTime: "2024-02-08T23:52:22Z"
+    reason: InvalidConfiguration
+    message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'."
 ```
 
 #### `PrometheusRule`
