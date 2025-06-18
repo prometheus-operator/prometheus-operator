@@ -1227,8 +1227,97 @@ spec:
             - endpoints
             - selector
             type: object
+          status:
+            description: |-
+              Most recent observed status of the ServiceMonitor. Read-only.
+              More info:
+              https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+            properties:
+              bindings:
+                description: The list of resources that the service monitor is bound
+                  to.
+                items:
+                  description: ServiceMonitorBinding is a binding of a ServiceMonitor
+                    to a resource.
+                  properties:
+                    conditions:
+                      description: The current state of the service monitor when bound
+                        to the referenced Prometheus object.
+                      items:
+                        description: |-
+                          Condition represents the state of the resources associated with the
+                          Prometheus, Alertmanager or ThanosRuler resource.
+                        properties:
+                          lastTransitionTime:
+                            description: lastTransitionTime is the time of the last
+                              update to the current status property.
+                            format: date-time
+                            type: string
+                          message:
+                            description: Human-readable message indicating details
+                              for the condition's last transition.
+                            type: string
+                          observedGeneration:
+                            description: |-
+                              ObservedGeneration represents the .metadata.generation that the
+                              condition was set based upon. For instance, if `.metadata.generation` is
+                              currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+                              condition is out of date with respect to the current state of the
+                              instance.
+                            format: int64
+                            type: integer
+                          reason:
+                            description: Reason for the condition's last transition.
+                            type: string
+                          status:
+                            description: Status of the condition.
+                            minLength: 1
+                            type: string
+                          type:
+                            description: Type of the condition being reported.
+                            minLength: 1
+                            type: string
+                        required:
+                        - lastTransitionTime
+                        - status
+                        - type
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - type
+                      x-kubernetes-list-type: map
+                    group:
+                      description: The group of the referenced resource.
+                      enum:
+                      - monitoring.coreos.com
+                      type: string
+                    name:
+                      description: The name of the referenced object.
+                      minLength: 1
+                      type: string
+                    namespace:
+                      description: The namespace of the referenced object.
+                      minLength: 1
+                      type: string
+                    resource:
+                      description: The type of resource being referenced (e.g. Prometheus
+                        or PrometheusAgent).
+                      enum:
+                      - prometheuses
+                      - prometheusagents
+                      type: string
+                  required:
+                  - group
+                  - name
+                  - namespace
+                  - resource
+                  type: object
+                type: array
+            type: object
         required:
         - spec
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
