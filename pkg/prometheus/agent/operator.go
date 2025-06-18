@@ -943,31 +943,21 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 	return fmt.Sprintf("%d", hash), nil
 }
 
-// getPrometheusFromKey returns a copy of the Prometheus object identified by key.
-// If the object is not found, it returns a nil pointer.
-func (c *Operator) getPrometheusFromKey(key string) (*monitoringv1alpha1.PrometheusAgent, error) {
-	obj, err := c.promInfs.Get(key)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			c.logger.Info("Prometheus not found", "key", key)
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to retrieve Prometheus from informer: %w", err)
-	}
-
-	return obj.(*monitoringv1alpha1.PrometheusAgent).DeepCopy(), nil
-}
-
 // UpdateStatus updates the status subresource of the object identified by the given
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	p, err := c.getPrometheusFromKey(key)
+	pobj, err := c.promInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
-
-	if p == nil || c.rr.DeletionInProgress(p) {
+	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
+	p = p.DeepCopy()
+	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
