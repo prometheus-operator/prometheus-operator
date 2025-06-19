@@ -794,7 +794,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, ruleConfigMapNames, assetStore); err != nil {
+	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
@@ -1168,13 +1168,13 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
 	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
 		p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
-		c.logger.Debug("neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
+		logger.Debug("neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
 		// make an empty secret
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
@@ -1195,7 +1195,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
-	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
 		return err
 	}
@@ -1254,15 +1254,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalScrapeConfigs)
+	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
 	}
-	additionalAlertRelabelConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalAlertRelabelConfigs)
+	additionalAlertRelabelConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalAlertRelabelConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional alert relabel configs from Secret failed: %w", err)
 	}
-	additionalAlertManagerConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalAlertManagerConfigs)
+	additionalAlertManagerConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalAlertManagerConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional alert manager configs from Secret failed: %w", err)
 	}
@@ -1290,7 +1290,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return fmt.Errorf("creating compressed secret failed: %w", err)
 	}
 
-	c.logger.Debug("updating Prometheus configuration secret")
+	logger.Debug("updating Prometheus configuration secret")
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
