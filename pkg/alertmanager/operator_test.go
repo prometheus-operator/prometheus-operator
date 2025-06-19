@@ -166,6 +166,142 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			equal: false,
 		},
+		{
+			name: "different ClusterTLSConfig",
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					ClusterTLS: &monitoringv1.ClusterTLSConfig{
+						ServerTLS: monitoringv1.WebTLSConfig{
+							ClientCA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret",
+									},
+									Key: "ca.crt",
+								},
+							},
+						},
+						ClientTLS: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret",
+									},
+									Key: "ca.crt",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret",
+									},
+									Key: "tls.crt",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls-secret",
+								},
+								Key: "tls.key",
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+				},
+			},
+			equal: false,
+		},
+		{
+			name: "different values within ClusterTLSConfig",
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					ClusterTLS: &monitoringv1.ClusterTLSConfig{
+						ServerTLS: monitoringv1.WebTLSConfig{
+							ClientCA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret-1",
+									},
+									Key: "ca.crt",
+								},
+							},
+						},
+						ClientTLS: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret-1",
+									},
+									Key: "ca.crt",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret-1",
+									},
+									Key: "tls.crt",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls-secret-1",
+								},
+								Key: "tls.key",
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					ClusterTLS: &monitoringv1.ClusterTLSConfig{
+						ServerTLS: monitoringv1.WebTLSConfig{
+							ClientCA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret-2",
+									},
+									Key: "ca.crt",
+								},
+							},
+						},
+						ClientTLS: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret-2",
+									},
+									Key: "ca.crt",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls-secret-2",
+									},
+									Key: "tls.crt",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls-secret-2",
+								},
+								Key: "tls.key",
+							},
+						},
+					},
+				},
+			},
+			equal: false,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a1Hash, err := createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
