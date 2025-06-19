@@ -16,31 +16,34 @@ package operator
 
 import (
 	"fmt"
-	"log/slog"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 // GetObjectFromKey retrieves an object from the informer cache using the provided key.
-func GetObjectFromKey[T interface {
-	DeepCopy() T
-}](infs *informers.ForResource, key string, logger *slog.Logger) (T, error) {
+// Returns nil,nil if the object is not found, or an error if there is a problem retrieving it.
+func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string) (T, error) {
 	obj, err := infs.Get(key)
 	var zero T
+
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Info("Object not found", "key", key)
 			return zero, nil
 		}
 		return zero, fmt.Errorf("failed to retrieve object from informer: %w", err)
 	}
 
-	typed, ok := any(obj).(T)
+	copy, ok := obj.DeepCopyObject().(T)
 	if !ok {
-		return zero, fmt.Errorf("unexpected type %T", obj)
+		return zero, fmt.Errorf("object %T is not of type %T", copy, zero)
 	}
 
-	return typed.DeepCopy(), nil
+	if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+		return zero, err
+	}
+	return copy, nil
 }

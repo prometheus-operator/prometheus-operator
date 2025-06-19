@@ -1039,12 +1039,17 @@ func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key, c.logger)
+	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
 	if err != nil {
 		return err
 	}
 
-	if p == nil || c.rr.DeletionInProgress(p) {
+	if p == nil {
+		c.logger.Info("Prometheus object not found, skipping status update", "key", key)
+		return nil
+	}
+
+	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
