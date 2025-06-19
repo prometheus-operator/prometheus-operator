@@ -5426,6 +5426,111 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 	}
 }
 
+// testPrometheusReconciliationOnSecretChanges ensures that the operator
+// reconciles the configureation whenever a secret referenced by a service
+// monitor gets added/deleted in another namespace than the workload.
+func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)  // where Prometheus is deployed.
+	ns2 := framework.CreateNamespace(ctx, t, testCtx) // where the service monitor is deployed.
+	name := "test-secret-changes"
+
+	// Deploy the example application + service.
+	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
+	require.NoError(t, err)
+
+	framework.CreateDeployment(context.Background(), ns2, simple)
+	require.NoError(t, err)
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Selector: simple.Spec.Template.ObjectMeta.Labels,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 8080,
+				},
+			},
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Services(ns2).Create(ctx, svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints[0].Interval = monitoringv1.Duration("1s")
+	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: v1.SecretKeySelector{
+			Key: "user",
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "auth",
+			},
+		},
+		Password: v1.SecretKeySelector{
+			Key: "pass",
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "auth",
+			},
+		},
+	}
+
+	sm, err = framework.MonClientV1.ServiceMonitors(ns2).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBACGlobal(ctx, t, testCtx, ns)
+	require.NoError(t, err)
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"kubernetes.io/metadata.name": ns2,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// There should be no target because the service monitor references a
+	// secret which doesn't exist so it won't be selected.
+	targets, err := framework.GetActiveTargets(ctx, ns, "prometheus-operated")
+	require.NoError(t, err)
+	require.Empty(t, targets)
+
+	// Create the secret and wait for the target to be discovered.
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "auth",
+			Namespace: ns2,
+		},
+		StringData: map[string]string{
+			"user": "user",
+			"pass": "pass",
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+
+	_, err = framework.KubeClient.CoreV1().Secrets(ns2).Create(ctx, secret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	err = framework.WaitForHealthyTargets(ctx, ns, "prometheus-operated", 1)
+	require.NoError(t, err)
+
+	err = framework.KubeClient.CoreV1().Secrets(ns2).Delete(ctx, secret.Name, metav1.DeleteOptions{})
+	require.NoError(t, err)
+
+	err = framework.WaitForActiveTargets(ctx, ns, "prometheus-operated", 0)
+	require.NoError(t, err)
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))
