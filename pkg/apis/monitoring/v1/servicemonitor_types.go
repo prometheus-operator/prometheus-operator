@@ -190,39 +190,13 @@ type ServiceMonitorSpec struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ServiceMonitorStatus struct {
-	// The list of resources that the service monitor is bound to.
+	// The list of workload resources(Prometheus or PrometheusAgent) the service monitor is link to.
 	// +patchMergeKey=resource
 	// +patchMergeKey=namespace
 	// +patchMergeKey=name
 	// +patchMergeStrategy=merge
 	// +optional
-	Bindings []ServiceMonitorBinding `json:"bindings,omitempty"`
-}
-
-// ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.
-// +k8s:openapi-gen=true
-type ServiceMonitorBinding struct {
-	// The group of the referenced resource.
-	// +kubebuilder:validation:Enum=monitoring.coreos.com
-	// +required
-	Group string `json:"group"`
-	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
-	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
-	// +required
-	Resource string `json:"resource"`
-	// The name of the referenced object.
-	// +kubebuilder:validation:MinLength=1
-	// +required
-	Name string `json:"name"`
-	// The namespace of the referenced object.
-	// +kubebuilder:validation:MinLength=1
-	// +required
-	Namespace string `json:"namespace"`
-	// The current state of the service monitor when bound to the referenced Prometheus object.
-	// +listType=map
-	// +listMapKey=type
-	// +optional
-	Conditions []Condition `json:"conditions,omitempty"`
+	References []WorkloadResourceReference `json:"references,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

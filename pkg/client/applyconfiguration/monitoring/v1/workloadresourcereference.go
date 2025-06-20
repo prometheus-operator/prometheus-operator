@@ -16,26 +16,26 @@
 
 package v1
 
-// ServiceMonitorBindingApplyConfiguration represents a declarative configuration of the ServiceMonitorBinding type for use
+// WorkloadResourceReferenceApplyConfiguration represents a declarative configuration of the WorkloadResourceReference type for use
 // with apply.
-type ServiceMonitorBindingApplyConfiguration struct {
-	Group      *string                       `json:"group,omitempty"`
-	Resource   *string                       `json:"resource,omitempty"`
-	Name       *string                       `json:"name,omitempty"`
-	Namespace  *string                       `json:"namespace,omitempty"`
-	Conditions []ConditionApplyConfiguration `json:"conditions,omitempty"`
+type WorkloadResourceReferenceApplyConfiguration struct {
+	Group      *string                                `json:"group,omitempty"`
+	Resource   *string                                `json:"resource,omitempty"`
+	Name       *string                                `json:"name,omitempty"`
+	Namespace  *string                                `json:"namespace,omitempty"`
+	Conditions []ConfigResConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// ServiceMonitorBindingApplyConfiguration constructs a declarative configuration of the ServiceMonitorBinding type for use with
+// WorkloadResourceReferenceApplyConfiguration constructs a declarative configuration of the WorkloadResourceReference type for use with
 // apply.
-func ServiceMonitorBinding() *ServiceMonitorBindingApplyConfiguration {
-	return &ServiceMonitorBindingApplyConfiguration{}
+func WorkloadResourceReference() *WorkloadResourceReferenceApplyConfiguration {
+	return &WorkloadResourceReferenceApplyConfiguration{}
 }
 
 // WithGroup sets the Group field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Group field is set to the value of the last call.
-func (b *ServiceMonitorBindingApplyConfiguration) WithGroup(value string) *ServiceMonitorBindingApplyConfiguration {
+func (b *WorkloadResourceReferenceApplyConfiguration) WithGroup(value string) *WorkloadResourceReferenceApplyConfiguration {
 	b.Group = &value
 	return b
 }
@@ -43,7 +43,7 @@ func (b *ServiceMonitorBindingApplyConfiguration) WithGroup(value string) *Servi
 // WithResource sets the Resource field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Resource field is set to the value of the last call.
-func (b *ServiceMonitorBindingApplyConfiguration) WithResource(value string) *ServiceMonitorBindingApplyConfiguration {
+func (b *WorkloadResourceReferenceApplyConfiguration) WithResource(value string) *WorkloadResourceReferenceApplyConfiguration {
 	b.Resource = &value
 	return b
 }
@@ -51,7 +51,7 @@ func (b *ServiceMonitorBindingApplyConfiguration) WithResource(value string) *Se
 // WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
-func (b *ServiceMonitorBindingApplyConfiguration) WithName(value string) *ServiceMonitorBindingApplyConfiguration {
+func (b *WorkloadResourceReferenceApplyConfiguration) WithName(value string) *WorkloadResourceReferenceApplyConfiguration {
 	b.Name = &value
 	return b
 }
@@ -59,7 +59,7 @@ func (b *ServiceMonitorBindingApplyConfiguration) WithName(value string) *Servic
 // WithNamespace sets the Namespace field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespace field is set to the value of the last call.
-func (b *ServiceMonitorBindingApplyConfiguration) WithNamespace(value string) *ServiceMonitorBindingApplyConfiguration {
+func (b *WorkloadResourceReferenceApplyConfiguration) WithNamespace(value string) *WorkloadResourceReferenceApplyConfiguration {
 	b.Namespace = &value
 	return b
 }
@@ -67,7 +67,7 @@ func (b *ServiceMonitorBindingApplyConfiguration) WithNamespace(value string) *S
 // WithConditions adds the given value to the Conditions field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Conditions field.
-func (b *ServiceMonitorBindingApplyConfiguration) WithConditions(values ...*ConditionApplyConfiguration) *ServiceMonitorBindingApplyConfiguration {
+func (b *WorkloadResourceReferenceApplyConfiguration) WithConditions(values ...*ConfigResConditionApplyConfiguration) *WorkloadResourceReferenceApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithConditions")

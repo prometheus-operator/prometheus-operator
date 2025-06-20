@@ -19,7 +19,7 @@ package v1
 // ServiceMonitorStatusApplyConfiguration represents a declarative configuration of the ServiceMonitorStatus type for use
 // with apply.
 type ServiceMonitorStatusApplyConfiguration struct {
-	Bindings []ServiceMonitorBindingApplyConfiguration `json:"bindings,omitempty"`
+	References []WorkloadResourceReferenceApplyConfiguration `json:"references,omitempty"`
 }
 
 // ServiceMonitorStatusApplyConfiguration constructs a declarative configuration of the ServiceMonitorStatus type for use with
@@ -28,15 +28,15 @@ func ServiceMonitorStatus() *ServiceMonitorStatusApplyConfiguration {
 	return &ServiceMonitorStatusApplyConfiguration{}
 }
 
-// WithBindings adds the given value to the Bindings field in the declarative configuration
+// WithReferences adds the given value to the References field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Bindings field.
-func (b *ServiceMonitorStatusApplyConfiguration) WithBindings(values ...*ServiceMonitorBindingApplyConfiguration) *ServiceMonitorStatusApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the References field.
+func (b *ServiceMonitorStatusApplyConfiguration) WithReferences(values ...*WorkloadResourceReferenceApplyConfiguration) *ServiceMonitorStatusApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
-			panic("nil value passed to WithBindings")
+			panic("nil value passed to WithReferences")
 		}
-		b.Bindings = append(b.Bindings, *values[i])
+		b.References = append(b.References, *values[i])
 	}
 	return b
 }

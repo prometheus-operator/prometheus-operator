@@ -8876,7 +8876,7 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorBinding">ServiceMonitorBinding</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus</a>, <a href="#monitoring.coreos.com/v1.PrometheusStatus">PrometheusStatus</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus</a>)
 </p>
 <div>
 <p>Condition represents the state of the resources associated with the
@@ -8973,7 +8973,7 @@ instance.</p>
 <h3 id="monitoring.coreos.com/v1.ConditionStatus">ConditionStatus
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>, <a href="#monitoring.coreos.com/v1.ConfigResCondition">ConfigResCondition</a>)
 </p>
 <div>
 </div>
@@ -8997,7 +8997,7 @@ instance.</p>
 <h3 id="monitoring.coreos.com/v1.ConditionType">ConditionType
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>, <a href="#monitoring.coreos.com/v1.ConfigResCondition">ConfigResCondition</a>)
 </p>
 <div>
 </div>
@@ -9026,6 +9026,102 @@ The possible status values for this condition type are:
 - Unknown: the operator couldn&rsquo;t determine the condition status.</p>
 </td>
 </tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ConfigResCondition">ConfigResCondition
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WorkloadResourceReference">WorkloadResourceReference</a>)
+</p>
+<div>
+<p>ConfigResCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConditionType">
+ConditionType
+</a>
+</em>
+</td>
+<td>
+<p>Type of the condition being reported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConditionStatus">
+ConditionStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the condition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastTransitionTime</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>lastTransitionTime is the time of the last update to the current status property.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Reason for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Human-readable message indicating details for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>observedGeneration</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>ObservedGeneration represents the .metadata.generation that the
+condition was set based upon. For instance, if <code>.metadata.generation</code> is
+currently 12, but the <code>.status.conditions[].observedGeneration</code> is 9, the
+condition is out of date with respect to the current state of the
+instance.</p>
+</td>
+</tr>
+</tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.CoreV1TopologySpreadConstraint">CoreV1TopologySpreadConstraint
 </h3>
@@ -16489,82 +16585,6 @@ Kubernetes core/v1.ConfigMapKeySelector
 <td></td>
 </tr></tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.ServiceMonitorBinding">ServiceMonitorBinding
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus</a>)
-</p>
-<div>
-<p>ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>group</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The group of the referenced resource.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>resource</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The type of resource being referenced (e.g. Prometheus or PrometheusAgent).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The name of the referenced object.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespace</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>The namespace of the referenced object.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>conditions</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Condition">
-[]Condition
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The current state of the service monitor when bound to the referenced Prometheus object.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec
 </h3>
 <p>
@@ -16918,16 +16938,16 @@ More info:
 <tbody>
 <tr>
 <td>
-<code>bindings</code><br/>
+<code>references</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ServiceMonitorBinding">
-[]ServiceMonitorBinding
+<a href="#monitoring.coreos.com/v1.WorkloadResourceReference">
+[]WorkloadResourceReference
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>The list of resources that the service monitor is bound to.</p>
+<p>The list of workload resources(Prometheus or PrometheusAgent) the service monitor is link to.</p>
 </td>
 </tr>
 </tbody>
@@ -19390,6 +19410,82 @@ order.</p>
 </p>
 <div>
 </div>
+<h3 id="monitoring.coreos.com/v1.WorkloadResourceReference">WorkloadResourceReference
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus</a>)
+</p>
+<div>
+<p>WorkloadResourceReference is a link of workload resource wuth configuration resource.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>group</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The group of the referenced resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resource</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The type of resource being referenced (e.g. Prometheus or PrometheusAgent).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the referenced object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The namespace of the referenced object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResCondition">
+[]ConfigResCondition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The current state of the service monitor when bound to the referenced Prometheus object.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <hr/>
 <h2 id="monitoring.coreos.com/v1alpha1">monitoring.coreos.com/v1alpha1</h2>
 Resource Types:

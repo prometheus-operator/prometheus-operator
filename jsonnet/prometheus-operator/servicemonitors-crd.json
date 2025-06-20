@@ -1064,15 +1064,15 @@
               "status": {
                 "description": "Most recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
-                  "bindings": {
-                    "description": "The list of resources that the service monitor is bound to.",
+                  "references": {
+                    "description": "The list of workload resources(Prometheus or PrometheusAgent) the service monitor is link to.",
                     "items": {
-                      "description": "ServiceMonitorBinding is a binding of a ServiceMonitor to a resource.",
+                      "description": "WorkloadResourceReference is a link of workload resource wuth configuration resource.",
                       "properties": {
                         "conditions": {
                           "description": "The current state of the service monitor when bound to the referenced Prometheus object.",
                           "items": {
-                            "description": "Condition represents the state of the resources associated with the\nPrometheus, Alertmanager or ThanosRuler resource.",
+                            "description": "ConfigResCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.",
                             "properties": {
                               "lastTransitionTime": {
                                 "description": "lastTransitionTime is the time of the last update to the current status property.",
