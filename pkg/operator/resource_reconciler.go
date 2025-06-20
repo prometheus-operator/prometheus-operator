@@ -338,7 +338,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if !k8sutil.IsFinalizerPresent(mCur.GetFinalizers(), k8sutil.StatusCleanupFinalizerName) && rr.DeletionInProgress(mCur) {
+	if !rr.shouldUpdate(mCur) {
 		return
 	}
 
@@ -613,4 +613,11 @@ func (rr *ResourceReconciler) isManagedByController(obj metav1.Object) bool {
 	}
 
 	return true
+}
+
+// ShouldUpdate returns true if:
+//   - It contains the status cleanup finalizer, meaning finalization logic must run before deletion, or
+//   - It is not marked for deletion.
+func (rr *ResourceReconciler) shouldUpdate(cur metav1.Object) bool {
+	return k8sutil.IsFinalizerPresent(cur.GetFinalizers(), k8sutil.StatusCleanupFinalizerName) || !rr.DeletionInProgress(cur)
 }
