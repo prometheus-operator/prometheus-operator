@@ -1119,7 +1119,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := assets.NewStoreBuilder(assets.NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {
@@ -1397,7 +1397,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := assets.NewStoreBuilder(assets.NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 			err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
 
 			if !tc.ok {

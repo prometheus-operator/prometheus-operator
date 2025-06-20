@@ -118,7 +118,7 @@ func TestGetSecretKey(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			sel := v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
@@ -228,7 +228,7 @@ func TestAddBasicAuth(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			basicAuth := &monitoringv1.BasicAuth{
 				Username: v1.SecretKeySelector{
@@ -324,7 +324,7 @@ func TestProxyCongfig(t *testing.T) {
 	} {
 
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			proxyConfig := monitoringv1.ProxyConfig{
 				ProxyConnectHeader: map[string][]v1.SecretKeySelector{
@@ -804,7 +804,7 @@ func TestAddTLSConfig(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			err := store.AddSafeTLSConfig(context.Background(), tc.ns, &tc.tlsConfig.SafeTLSConfig)
 			if tc.err {
@@ -889,7 +889,7 @@ func TestAddAuthorization(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			sel := &monitoringv1.Authorization{
 				SafeAuthorization: monitoringv1.SafeAuthorization{
@@ -938,7 +938,7 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 	)
 
 	t.Run("", func(t *testing.T) {
-		store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+		store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 		sel := &monitoringv1.Authorization{
 			SafeAuthorization: monitoringv1.SafeAuthorization{
@@ -1040,7 +1040,7 @@ func TestAddSigV4(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			sigV4 := monitoringv1.Sigv4{}
 			if tc.accessKey != "" {
@@ -1142,7 +1142,7 @@ func TestAddAzureOAuth(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 			azureAD := monitoringv1.AzureAD{}
 			azureOAuth := monitoringv1.AzureOAuth{}
@@ -1183,7 +1183,7 @@ func TestUpdateObject(t *testing.T) {
 			},
 		},
 	)
-	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+	store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 	// Add the secret to the store by fetching it
 	sel := v1.SecretKeySelector{
@@ -1240,7 +1240,7 @@ func TestDeleteObject(t *testing.T) {
 			},
 		},
 	)
-	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+	store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 	// Add secret and configmap to the store by fetching them
 	secretSel := v1.SecretKeySelector{
@@ -1323,7 +1323,7 @@ func TestGetObject(t *testing.T) {
 			},
 		},
 	)
-	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+	store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 	// Add secret and configmap to the store by fetching them
 	secretSel := v1.SecretKeySelector{
@@ -1418,7 +1418,7 @@ func TestAddObject(t *testing.T) {
 			},
 		},
 	)
-	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+	store := NewStoreBuilder(NewDataAPIClient(c.CoreV1(), c.CoreV1()))
 
 	// Add a secret object
 	secretObj := &v1.Secret{

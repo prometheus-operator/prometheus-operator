@@ -477,7 +477,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStoreBuilder(o.kclient.CoreV1(), o.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(assets.NewDataAPIClient(o.kclient.CoreV1(), o.kclient.CoreV1()))
 
 	if err := o.createOrUpdateRulerConfigSecret(ctx, assetStore, tr); err != nil {
 		return fmt.Errorf("failed to synchronize ruler config secret: %w", err)

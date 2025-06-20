@@ -783,7 +783,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(assets.NewDataAPIClient(c.kclient.CoreV1(), c.kclient.CoreV1()))
 
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {

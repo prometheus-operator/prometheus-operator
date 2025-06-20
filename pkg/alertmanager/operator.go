@@ -552,7 +552,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(assets.NewDataAPIClient(c.kclient.CoreV1(), c.kclient.CoreV1()))
 
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)

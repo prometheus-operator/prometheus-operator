@@ -27,6 +27,31 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
+type DataGetter interface {
+	GetConfigMap(ctx context.Context, namespace, name string) (*v1.ConfigMap, error)
+	GetSecret(ctx context.Context, namespace, name string) (*v1.Secret, error)
+}
+
+type DataAPIClient struct {
+	cmClient corev1client.ConfigMapsGetter
+	sClient  corev1client.SecretsGetter
+}
+
+func NewDataAPIClient(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *DataAPIClient {
+	return &DataAPIClient{
+		cmClient: cmClient,
+		sClient:  sClient,
+	}
+}
+
+func (dac *DataAPIClient) GetConfigMap(ctx context.Context, namespace, name string) (*v1.ConfigMap, error) {
+	return dac.cmClient.ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (dac *DataAPIClient) GetSecret(ctx context.Context, namespace, name string) (*v1.Secret, error) {
+	return dac.sClient.Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
 // StoreBuilder is a store that fetches and caches TLS materials, bearer tokens
 // and auth credentials from configmaps and secrets.
 //
@@ -36,9 +61,8 @@ import (
 //
 // StoreBuilder doesn't support concurrent access.
 type StoreBuilder struct {
-	cmClient corev1client.ConfigMapsGetter
-	sClient  corev1client.SecretsGetter
-	objStore cache.Store
+	dataGetter DataGetter
+	objStore   cache.Store
 
 	tlsAssetKeys map[tlsAssetKey]struct{}
 }
@@ -60,10 +84,9 @@ func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
 }
 
 // NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
-func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
+func NewStoreBuilder(dataGetter DataGetter) *StoreBuilder {
 	return &StoreBuilder{
-		cmClient:     cmClient,
-		sClient:      sClient,
+		dataGetter:   dataGetter,
 		tlsAssetKeys: make(map[tlsAssetKey]struct{}),
 		objStore:     cache.NewStore(assetKeyFunc),
 	}
@@ -248,7 +271,7 @@ func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, se
 	}
 
 	if !exists {
-		cm, err := s.cmClient.ConfigMaps(namespace).Get(ctx, sel.Name, metav1.GetOptions{})
+		cm, err := s.dataGetter.GetConfigMap(ctx, namespace, sel.Name)
 		if err != nil {
 			return "", fmt.Errorf("unable to get configmap %q: %w", sel.Name, err)
 		}
@@ -283,7 +306,7 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel v
 	}
 
 	if !exists {
-		secret, err := s.sClient.Secrets(namespace).Get(ctx, sel.Name, metav1.GetOptions{})
+		secret, err := s.dataGetter.GetSecret(ctx, namespace, sel.Name)
 		if err != nil {
 			return "", fmt.Errorf("unable to get secret %q: %w", sel.Name, err)
 		}
@@ -454,5 +477,10 @@ func (s *StoreBuilder) DeleteObject(obj interface{}) error {
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 // Example usage - Update asset store on a watch event requires the secret client to fetch the latest secrets.
 func (s *StoreBuilder) GetSecretClient() corev1client.SecretsGetter {
-	return s.sClient
+	switch v := s.dataGetter.(type) {
+	case *DataAPIClient:
+		return v.sClient
+	default:
+		return nil
+	}
 }
