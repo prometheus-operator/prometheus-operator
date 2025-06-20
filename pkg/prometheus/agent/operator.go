@@ -552,25 +552,19 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
-	pobj, err := c.promInfs.Get(key)
-
-	if apierrors.IsNotFound(err) {
-		c.reconciliations.ForgetObject(key)
-		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
-	}
+	p, err := operator.GetObjectFromKey[*monitoringv1alpha1.PrometheusAgent](c.promInfs, key)
 
 	if err != nil {
 		return err
 	}
 
-	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
-	p = p.DeepCopy()
-	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
-		return fmt.Errorf("failed to set Prometheus type information: %w", err)
-	}
-
 	logger := c.logger.With("key", key)
+	logger.Info("sync prometheusagent")
+
+	if p == nil {
+		logger.Info("object not found")
+		return nil
+	}
 
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
@@ -581,8 +575,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger.Info("the resource is paused, not reconciling")
 		return nil
 	}
-
-	logger.Info("sync prometheusagent")
 
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
@@ -947,16 +939,17 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	pobj, err := c.promInfs.Get(key)
+	p, err := operator.GetObjectFromKey[*monitoringv1alpha1.PrometheusAgent](c.promInfs, key)
 
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
 	if err != nil {
 		return err
 	}
-	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
-	p = p.DeepCopy()
+
+	if p == nil {
+		c.logger.Info(("no PrometheusAgent object found for key"), "key", key)
+		return nil
+	}
+	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}

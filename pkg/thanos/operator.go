@@ -440,20 +440,18 @@ func (o *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (o *Operator) sync(ctx context.Context, key string) error {
-	trobj, err := o.thanosRulerInfs.Get(key)
-	if apierrors.IsNotFound(err) {
-		o.reconciliations.ForgetObject(key)
-		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
-	}
+	tr, err := operator.GetObjectFromKey[*monitoringv1.ThanosRuler](o.thanosRulerInfs, key)
+
 	if err != nil {
 		return err
 	}
 
-	tr := trobj.(*monitoringv1.ThanosRuler)
-	tr = tr.DeepCopy()
-	if err := k8sutil.AddTypeInformationToObject(tr); err != nil {
-		return fmt.Errorf("failed to set ThanosRuler type information: %w", err)
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
+
+	if tr == nil {
+		logger.Info("Object not found")
+		return nil
 	}
 
 	// Check if the Thanos instance is marked for deletion.
@@ -464,9 +462,6 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	if tr.Spec.Paused {
 		return nil
 	}
-
-	logger := o.logger.With("key", key)
-	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
@@ -576,21 +571,6 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// getThanosRulerFromKey returns a copy of the ThanosRuler object identified by key.
-// If the object is not found, it returns a nil pointer.
-func (o *Operator) getThanosRulerFromKey(key string) (*monitoringv1.ThanosRuler, error) {
-	obj, err := o.thanosRulerInfs.Get(key)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			o.logger.Info("ThanosRuler not found", "key", key)
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to retrieve ThanosRuler from informer: %w", err)
-	}
-
-	return obj.(*monitoringv1.ThanosRuler).DeepCopy(), nil
-}
-
 // getStatefulSetFromThanosRulerKey returns a copy of the StatefulSet object
 // corresponding to the ThanosRuler object identified by key.
 // If the object is not found, it returns a nil pointer without error.
@@ -611,12 +591,17 @@ func (o *Operator) getStatefulSetFromThanosRulerKey(key string) (*appsv1.Statefu
 
 // UpdateStatus implements the operator.Syncer interface.
 func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
-	tr, err := o.getThanosRulerFromKey(key)
+	tr, err := operator.GetObjectFromKey[*monitoringv1.ThanosRuler](o.thanosRulerInfs, key)
 	if err != nil {
 		return err
 	}
 
-	if tr == nil || o.rr.DeletionInProgress(tr) {
+	if tr == nil {
+		o.logger.Info("ThanosRuler object not found, skipping status update", "key", key)
+		return nil
+	}
+
+	if o.rr.DeletionInProgress(tr) {
 		return nil
 	}
 

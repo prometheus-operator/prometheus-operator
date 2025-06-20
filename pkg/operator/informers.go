@@ -37,13 +37,10 @@ func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string)
 		return zero, fmt.Errorf("failed to retrieve object from informer: %w", err)
 	}
 
-	copy, ok := obj.DeepCopyObject().(T)
-	if !ok {
-		return zero, fmt.Errorf("object %T is not of type %T", copy, zero)
-	}
+	obj = obj.DeepCopyObject()
 
 	if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
 		return zero, err
 	}
-	return copy, nil
+	return obj.(T), nil
 }
