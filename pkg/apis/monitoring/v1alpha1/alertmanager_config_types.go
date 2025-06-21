@@ -1019,18 +1019,12 @@ type RocketChatConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Channel *string `json:"channel,omitempty"`
-	// The sender token. Either `token` or `tokenFile` is required.
-	// +optional
+	// The sender token.
+	// +required
 	Token v1.SecretKeySelector `json:"token,omitempty"`
-	// The file containing the sender token. Either `token` or `tokenFile` is required.
-	// +optional
-	TokenFile *string `json:"tokenFile,omitempty"`
-	// The sender token ID. Either `tokenID` or `tokenIDFile` is required.
-	// +optional
+	// The sender token ID.
+	// +required
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
-	// The file containing the sender token ID. Either `tokenID` or `tokenIDFile` is required.
-	// +optional
-	TokenIDFile *string `json:"tokenIDFile,omitempty"`
 	// The message color.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
