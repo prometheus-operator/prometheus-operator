@@ -390,6 +390,20 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+
+	// The default Telegram API URL.
+	// Default value will be "https://api.telegram.org"
+	// +optional
+	TelegramAPIURL *string `json:"telegramApiUrl,omitempty"`
+
+	// The default Webex API URL.
+	// Default value will be "https://webexapis.com/v1/messages"
+	// +optional
+	WebexAPIURL *string `json:"webexApiUrl,omitempty"`
+
+	// The default Webex API URL.
+	// +optional
+	JiraAPIURL *string `json:"jiraApiUrl,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
