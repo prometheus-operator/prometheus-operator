@@ -712,4 +712,3 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
 }
-
