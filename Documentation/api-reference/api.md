@@ -18951,6 +18951,8 @@ Supported values are:
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
+<p>GlobalSMTPCWeChatGlobalConfigonfig configures global WeChat parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
 </div>
 <table>
 <thead>
