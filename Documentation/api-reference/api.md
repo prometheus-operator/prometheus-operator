@@ -5777,6 +5777,58 @@ string
 <p>The default Pagerduty URL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>telegramApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Telegram API URL.
+Default value will be &ldquo;<a href="https://api.telegram.org&quot;">https://api.telegram.org&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webexApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Webex API URL.
+Default value will be &ldquo;<a href="https://webexapis.com/v1/messages&quot;">https://webexapis.com/v1/messages&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jiraApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Webex API URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>wechatConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WeChatGlobalConfig">
+WeChatGlobalConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default WeChat Config</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -18892,6 +18944,64 @@ Supported values are:
 </tr><tr><td><p>&#34;UnderscoreEscapingWithSuffixes&#34;</p></td>
 <td></td>
 </tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.WeChatGlobalConfig">WeChatGlobalConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalSMTPCWeChatGlobalConfigonfig configures global WeChat parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WeChat API URL
+The default value is &ldquo;<a href="https://qyapi.weixin.qq.com/cgi-bin/&quot;">https://qyapi.weixin.qq.com/cgi-bin/&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WeChat API Secret</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiCorpId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WeChat API Corporate ID</p>
+</td>
+</tr>
+</tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
