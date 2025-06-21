@@ -31,6 +31,9 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	OpsGenieAPIURL *corev1.SecretKeySelector           `json:"opsGenieApiUrl,omitempty"`
 	OpsGenieAPIKey *corev1.SecretKeySelector           `json:"opsGenieApiKey,omitempty"`
 	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
+	TelegramAPIURL *string                             `json:"telegramApiUrl,omitempty"`
+	WebexAPIURL    *string                             `json:"webexApiUrl,omitempty"`
+	JiraAPIURL     *string                             `json:"jiraApiUrl,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -92,5 +95,29 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithOpsGenieAPIKey(value co
 // If called multiple times, the PagerdutyURL field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithPagerdutyURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.PagerdutyURL = &value
+	return b
+}
+
+// WithTelegramAPIURL sets the TelegramAPIURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TelegramAPIURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithTelegramAPIURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.TelegramAPIURL = &value
+	return b
+}
+
+// WithWebexAPIURL sets the WebexAPIURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebexAPIURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexAPIURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.WebexAPIURL = &value
+	return b
+}
+
+// WithJiraAPIURL sets the JiraAPIURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the JiraAPIURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraAPIURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.JiraAPIURL = &value
 	return b
 }

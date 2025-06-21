@@ -12629,6 +12629,9 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      jiraApiUrl:
+                        description: The default Webex API URL.
+                        type: string
                       opsGenieApiKey:
                         description: The default OpsGenie API Key.
                         properties:
@@ -12966,6 +12969,16 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      telegramApiUrl:
+                        description: |-
+                          The default Telegram API URL.
+                          Default value will be "https://api.telegram.org"
+                        type: string
+                      webexApiUrl:
+                        description: |-
+                          The default Webex API URL.
+                          Default value will be "https://webexapis.com/v1/messages"
+                        type: string
                     type: object
                   name:
                     description: |-

@@ -5777,6 +5777,44 @@ string
 <p>The default Pagerduty URL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>telegramApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Telegram API URL.
+Default value will be &ldquo;<a href="https://api.telegram.org&quot;">https://api.telegram.org&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webexApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Webex API URL.
+Default value will be &ldquo;<a href="https://webexapis.com/v1/messages&quot;">https://webexapis.com/v1/messages&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jiraApiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Webex API URL.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
