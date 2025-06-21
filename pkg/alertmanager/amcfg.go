@@ -473,25 +473,8 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 	if in == nil {
 		return nil
 	}
-	var matchers []string
 
-	// deprecated
-	match := map[string]string{}
-	matchRE := map[string]string{}
-
-	for _, matcher := range in.Matchers {
-		// prefer matchers to deprecated config
-		if matcher.MatchType != "" {
-			matchers = append(matchers, matcher.String())
-			continue
-		}
-
-		if matcher.Regex {
-			matchRE[matcher.Name] = matcher.Value
-		} else {
-			match[matcher.Name] = matcher.Value
-		}
-	}
+	matchers, match, matchRE := cb.convertMatchersV2(in.Matchers)
 
 	var routes []*route
 	if len(in.Routes) > 0 {
@@ -1442,62 +1425,8 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 }
 
 func (cb *ConfigBuilder) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) *inhibitRule {
-	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
-	var sourceMatchers []string
-	var targetMatchers []string
-
-	// todo (pgough) the following config are deprecated and can be removed when
-	// support matrix has reached >= 0.22.0
-	sourceMatch := map[string]string{}
-	sourceMatchRE := map[string]string{}
-	targetMatch := map[string]string{}
-	targetMatchRE := map[string]string{}
-
-	for _, sm := range in.SourceMatch {
-		// prefer matchers to deprecated syntax
-		if sm.MatchType != "" {
-			sourceMatchers = append(sourceMatchers, sm.String())
-			continue
-		}
-
-		if matchersV2Allowed {
-			if sm.Regex {
-				sourceMatchers = append(sourceMatchers, inhibitRuleRegexToV2(sm.Name, sm.Value))
-			} else {
-				sourceMatchers = append(sourceMatchers, inhibitRuleToV2(sm.Name, sm.Value))
-			}
-			continue
-		}
-
-		if sm.Regex {
-			sourceMatchRE[sm.Name] = sm.Value
-		} else {
-			sourceMatch[sm.Name] = sm.Value
-		}
-	}
-
-	for _, tm := range in.TargetMatch {
-		// prefer matchers to deprecated config
-		if tm.MatchType != "" {
-			targetMatchers = append(targetMatchers, tm.String())
-			continue
-		}
-
-		if matchersV2Allowed {
-			if tm.Regex {
-				targetMatchers = append(targetMatchers, inhibitRuleRegexToV2(tm.Name, tm.Value))
-			} else {
-				targetMatchers = append(targetMatchers, inhibitRuleToV2(tm.Name, tm.Value))
-			}
-			continue
-		}
-
-		if tm.Regex {
-			targetMatchRE[tm.Name] = tm.Value
-		} else {
-			targetMatch[tm.Name] = tm.Value
-		}
-	}
+	sourceMatchers, sourceMatch, sourceMatchRE := cb.convertMatchersV2(in.SourceMatch)
+	targetMatchers, targetMatch, targetMatchRE := cb.convertMatchersV2(in.TargetMatch)
 
 	return &inhibitRule{
 		SourceMatch:    sourceMatch,
@@ -1508,6 +1437,38 @@ func (cb *ConfigBuilder) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) 
 		TargetMatchers: targetMatchers,
 		Equal:          in.Equal,
 	}
+}
+
+func (cb *ConfigBuilder) convertMatchersV2(ms []monitoringv1alpha1.Matcher) ([]string, map[string]string, map[string]string) {
+	matchersV2Allowed := cb.amVersion.GTE(semver.MustParse("0.22.0"))
+
+	var matchers []string
+	match := map[string]string{}
+	matchRE := map[string]string{}
+
+	for _, m := range ms {
+		if m.MatchType != "" {
+			matchers = append(matchers, m.String())
+			continue
+		}
+
+		if matchersV2Allowed {
+			if m.Regex {
+				matchers = append(matchers, inhibitRuleRegexToV2(m.Name, m.Value))
+			} else {
+				matchers = append(matchers, inhibitRuleToV2(m.Name, m.Value))
+			}
+			continue
+		}
+
+		if m.Regex {
+			matchRE[m.Name] = m.Value
+		} else {
+			match[m.Name] = m.Value
+		}
+	}
+
+	return matchers, match, matchRE
 }
 
 func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey types.NamespacedName) (*timeInterval, error) {

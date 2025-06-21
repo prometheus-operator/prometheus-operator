@@ -389,6 +389,39 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 	return k.toString()
 }
 
+// AddObject adds an object to the underlying store.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
+func (s *StoreBuilder) AddObject(obj interface{}) error {
+	if obj == nil {
+		return errors.New("object cannot be nil")
+	}
+
+	if err := s.objStore.Add(obj); err != nil {
+		return fmt.Errorf("failed to add object to store: %w", err)
+	}
+
+	return nil
+}
+
+// GetObject retrieves an object from the underlying store.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
+func (s *StoreBuilder) GetObject(obj interface{}) (interface{}, bool, error) {
+	if obj == nil {
+		return nil, false, errors.New("object cannot be nil")
+	}
+
+	item, exists, err := s.objStore.Get(obj)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to get object from store: %w", err)
+	}
+
+	if !exists {
+		return nil, exists, nil
+	}
+
+	return item, exists, nil
+}
+
 // UpdateObject updates the object in the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 func (s *StoreBuilder) UpdateObject(obj interface{}) error {
@@ -401,4 +434,25 @@ func (s *StoreBuilder) UpdateObject(obj interface{}) error {
 	}
 
 	return nil
+}
+
+// DeleteObject deletes the object in the underlying store.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
+func (s *StoreBuilder) DeleteObject(obj interface{}) error {
+	if obj == nil {
+		return errors.New("object cannot be nil")
+	}
+
+	if err := s.objStore.Delete(obj); err != nil {
+		return fmt.Errorf("failed to delete object in store: %w", err)
+	}
+
+	return nil
+}
+
+// GetSecretClient returns the store's secret client.
+// This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
+// Example usage - Update asset store on a watch event requires the secret client to fetch the latest secrets.
+func (s *StoreBuilder) GetSecretClient() corev1client.SecretsGetter {
+	return s.sClient
 }
