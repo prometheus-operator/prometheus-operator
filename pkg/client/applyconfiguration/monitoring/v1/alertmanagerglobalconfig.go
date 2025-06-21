@@ -24,16 +24,17 @@ import (
 // AlertmanagerGlobalConfigApplyConfiguration represents a declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
 type AlertmanagerGlobalConfigApplyConfiguration struct {
-	SMTPConfig     *GlobalSMTPConfigApplyConfiguration `json:"smtp,omitempty"`
-	ResolveTimeout *monitoringv1.Duration              `json:"resolveTimeout,omitempty"`
-	HTTPConfig     *HTTPConfigApplyConfiguration       `json:"httpConfig,omitempty"`
-	SlackAPIURL    *corev1.SecretKeySelector           `json:"slackApiUrl,omitempty"`
-	OpsGenieAPIURL *corev1.SecretKeySelector           `json:"opsGenieApiUrl,omitempty"`
-	OpsGenieAPIKey *corev1.SecretKeySelector           `json:"opsGenieApiKey,omitempty"`
-	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
-	TelegramAPIURL *string                             `json:"telegramApiUrl,omitempty"`
-	WebexAPIURL    *string                             `json:"webexApiUrl,omitempty"`
-	JiraAPIURL     *string                             `json:"jiraApiUrl,omitempty"`
+	SMTPConfig     *GlobalSMTPConfigApplyConfiguration   `json:"smtp,omitempty"`
+	ResolveTimeout *monitoringv1.Duration                `json:"resolveTimeout,omitempty"`
+	HTTPConfig     *HTTPConfigApplyConfiguration         `json:"httpConfig,omitempty"`
+	SlackAPIURL    *corev1.SecretKeySelector             `json:"slackApiUrl,omitempty"`
+	OpsGenieAPIURL *corev1.SecretKeySelector             `json:"opsGenieApiUrl,omitempty"`
+	OpsGenieAPIKey *corev1.SecretKeySelector             `json:"opsGenieApiKey,omitempty"`
+	PagerdutyURL   *string                               `json:"pagerdutyUrl,omitempty"`
+	TelegramAPIURL *string                               `json:"telegramApiUrl,omitempty"`
+	WebexAPIURL    *string                               `json:"webexApiUrl,omitempty"`
+	JiraAPIURL     *string                               `json:"jiraApiUrl,omitempty"`
+	WeChatConfig   *WeChatGlobalConfigApplyConfiguration `json:"wechatConfig,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -119,5 +120,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexAPIURL(value strin
 // If called multiple times, the JiraAPIURL field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraAPIURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.JiraAPIURL = &value
+	return b
+}
+
+// WithWeChatConfig sets the WeChatConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WeChatConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWeChatConfig(value *WeChatGlobalConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.WeChatConfig = value
 	return b
 }

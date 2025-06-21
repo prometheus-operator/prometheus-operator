@@ -216,6 +216,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.WebHTTPHeadersApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebTLSConfig"):
 		return &monitoringv1.WebTLSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("WeChatGlobalConfig"):
+		return &monitoringv1.WeChatGlobalConfigApplyConfiguration{}
 
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig"):
