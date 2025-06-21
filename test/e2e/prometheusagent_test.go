@@ -641,7 +641,12 @@ type TargetsResponse struct {
 	} `json:"data"`
 }
 
-func testPrometheusAgentDaemonSetInvalidReplicas(t *testing.T) {
+func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
+	t.Run("DaemonSetInvalidReplicas", testDaemonSetInvalidReplicas)
+	t.Run("DaemonSetInvalidStorage", testDaemonSetInvalidStorage)
+}
+
+func testDaemonSetInvalidReplicas(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
@@ -669,7 +674,7 @@ func testPrometheusAgentDaemonSetInvalidReplicas(t *testing.T) {
 	require.Contains(t, err.Error(), "replicas cannot be set when mode is DaemonSet")
 }
 
-func testPrometheusAgentDaemonSetInvalidStorage(t *testing.T) {
+func testDaemonSetInvalidStorage(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
@@ -707,3 +712,4 @@ func testPrometheusAgentDaemonSetInvalidStorage(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
 }
+
