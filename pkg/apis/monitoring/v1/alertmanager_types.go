@@ -404,6 +404,10 @@ type AlertmanagerGlobalConfig struct {
 	// The default Webex API URL.
 	// +optional
 	JiraAPIURL *string `json:"jiraApiUrl,omitempty"`
+
+	// The default WeChat Config
+	// +optional
+	WeChatConfig *WeChatGlobalConfig `json:"wechatConfig,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -517,6 +521,21 @@ type GlobalSMTPConfig struct {
 	// The default TLS configuration for SMTP receivers
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+type WeChatGlobalConfig struct {
+	// WeChat API URL
+	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+	// +optional
+	APIURL *string `json:"apiUrl,omitempty"`
+
+	// WeChat API Secret
+	// +optional
+	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+
+	// WeChat API Corporate ID
+	// +optional
+	APICorpID *string `json:"apiCorpId,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
