@@ -421,6 +421,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusAgentDaemonSetSelectPodMonitor":     testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":                  testPrometheusRetentionPolicies,
 		"FinalizerWhenStatusForConfigResourcesEnabled": testFinalizerWhenStatusForConfigResourcesEnabled,
+		"PrometheusAgentDaemonSetCELValidations":       testPrometheusAgentDaemonSetCELValidations,
 	}
 
 	for name, f := range testFuncs {

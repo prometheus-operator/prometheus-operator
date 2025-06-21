@@ -640,3 +640,75 @@ type TargetsResponse struct {
 		ActiveTargets []Target `json:"activeTargets"`
 	} `json:"data"`
 }
+
+func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
+	t.Run("DaemonSetInvalidReplicas", testDaemonSetInvalidReplicas)
+	t.Run("DaemonSetInvalidStorage", testDaemonSetInvalidStorage)
+}
+
+func testDaemonSetInvalidReplicas(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-replicas"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// no replicas should be set in Daemonsets
+	p.Spec.Replicas = ptr.To(int32(3))
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "replicas cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidStorage(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-storage"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// storage should not be set in Daemonsets
+	p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+			Spec: v1.PersistentVolumeClaimSpec{
+				StorageClassName: ptr.To("standard"),
+				Resources: v1.VolumeResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
+}
