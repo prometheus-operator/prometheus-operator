@@ -523,6 +523,8 @@ type GlobalSMTPConfig struct {
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
+// GlobalSMTPCWeChatGlobalConfigonfig configures global WeChat parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
 type WeChatGlobalConfig struct {
 	// WeChat API URL
 	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
