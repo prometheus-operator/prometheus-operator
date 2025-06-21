@@ -420,6 +420,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PromAgentReconcileDaemonSetResourceDelete": testPromAgentReconcileDaemonSetResourceDelete,
 		"PrometheusAgentDaemonSetSelectPodMonitor":  testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":               testPrometheusRetentionPolicies,
+		"FinalizerWhenStatusForConfigResourcesEnabled": testFinalizerWhenStatusForConfigResourcesEnabled,
 		"PrometheusAgentDaemonSetCELValidations":    testPrometheusAgentDaemonSetCELValidations,
 	}
 
