@@ -909,7 +909,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_amVersion21.golden",
 		},
 		{
-			name: "valid global config telegram api url",
+			name:      "valid global config telegram api url",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramAPIURL: &telegramAPIURL,
 			},
@@ -943,7 +944,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_Telegram_API_URL.golden",
 		},
 		{
-			name: "invalid global config telegram api url",
+			name:      "invalid global config telegram api url",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramAPIURL: &invalidTelegramAPIURL,
 			},
@@ -1012,7 +1014,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "valid global config webex api url",
+			name:      "valid global config webex api url",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexAPIURL: &webexAPIURL,
 			},
@@ -1046,7 +1049,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_Webex_API_URL.golden",
 		},
 		{
-			name: "invalid global config webex api url",
+			name:      "invalid global config webex api url",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexAPIURL: &invalidWebexAPIURL,
 			},
@@ -1115,7 +1119,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "valid global config jira api url",
+			name:      "valid global config jira api url",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraAPIURL: &jiraAPIURL,
 			},
@@ -1149,7 +1154,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_Jira_API_URL.golden",
 		},
 		{
-			name: "invalid global config jira api url",
+			name:      "invalid global config jira api url",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraAPIURL: &invalidJiraAPIURL,
 			},
