@@ -466,6 +466,36 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.PagerdutyURL = &config.URL{URL: u}
 	}
 
+	if in.TelegramAPIURL != nil {
+		u, err := url.Parse(*in.TelegramAPIURL)
+		if err != nil {
+			return nil, fmt.Errorf("parse Telegram API URL: %w", err)
+		}
+		out.TelegramAPIURL = &config.URL{URL: u}
+	}
+
+	if in.WebexAPIURL != nil {
+		u, err := url.Parse(*in.WebexAPIURL)
+		if err != nil {
+			return nil, fmt.Errorf("parse Webex API URL: %w", err)
+		}
+		out.WebexAPIURL = &config.URL{URL: u}
+	}
+
+	if in.JiraAPIURL != nil {
+		u, err := url.Parse(*in.JiraAPIURL)
+		if err != nil {
+			return nil, fmt.Errorf("parse Webex API URL: %w", err)
+		}
+		out.JiraAPIURL = &config.URL{URL: u}
+	}
+
+	if in.WeChatConfig != nil {
+		if err := cb.convertGlobalWeChatConfig(ctx, out, *in.WeChatConfig, crKey); err != nil {
+			return nil, fmt.Errorf("invalid global wechatConfig: %w", err)
+		}
+	}
+
 	return out, nil
 }
 
@@ -1716,6 +1746,30 @@ func (cb *ConfigBuilder) convertProxyConfig(ctx context.Context, in monitoringv1
 	}
 
 	return out, nil
+}
+
+func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *globalConfig, in monitoringv1.GlobalWeChatConfig, crKey types.NamespacedName) error {
+	if in.APIURL != nil {
+		u, err := url.Parse(*in.APIURL)
+		if err != nil {
+			return fmt.Errorf("parse WeChat API URL: %w", err)
+		}
+		out.WeChatAPIURL = &config.URL{URL: u}
+	}
+
+	if in.APISecret != nil {
+		apiSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.APISecret)
+		if err != nil {
+			return fmt.Errorf("failed to get WeChat Secret: %w", err)
+		}
+		out.WeChatAPISecret = apiSecret
+	}
+
+	if in.APICorpID != nil {
+		out.WeChatAPICorpID = *in.APICorpID
+	}
+
+	return nil
 }
 
 // sanitize the config against a specific Alertmanager version

@@ -407,7 +407,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default WeChat Config
 	// +optional
-	WeChatConfig *WeChatGlobalConfig `json:"wechatConfig,omitempty"`
+	WeChatConfig *GlobalWeChatConfig `json:"wechatConfig,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -523,9 +523,9 @@ type GlobalSMTPConfig struct {
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
-// GlobalSMTPCWeChatGlobalConfigonfig configures global WeChat parameters.
+// GlobalWeChatConfig configures global WeChat parameters.
 // See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
-type WeChatGlobalConfig struct {
+type GlobalWeChatConfig struct {
 	// WeChat API URL
 	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
 	// +optional
