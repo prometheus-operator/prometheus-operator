@@ -1115,7 +1115,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
 			version, err := semver.ParseTolerant("v0.22.2")
