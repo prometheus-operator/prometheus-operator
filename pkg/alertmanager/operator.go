@@ -522,12 +522,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	logger := c.logger.With("key", key)
-
-	logger.Info("sync alertmanager")
-
 	if am == nil {
-		logger.Info("Object not found")
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
 
@@ -540,7 +537,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	logger := c.logger.With("key", key)
 	logDeprecatedFields(logger, am)
+
+	logger.Info("sync alertmanager")
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
@@ -677,7 +677,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if a == nil {
-		c.logger.Info("Alertmanager not found, skipping status update", "key", key)
+		c.logger.Info("Alertmanager not found", "key", key)
 		return nil
 	}
 

@@ -446,11 +446,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	logger := o.logger.With("key", key)
-	logger.Info("sync thanos-ruler")
-
 	if tr == nil {
-		logger.Info("Object not found")
+		o.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
 
@@ -462,6 +460,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	if tr.Spec.Paused {
 		return nil
 	}
+
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err

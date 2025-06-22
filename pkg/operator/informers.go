@@ -24,8 +24,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-// GetObjectFromKey retrieves an object from the informer cache using the provided key.
-// Returns nil,nil if the object is not found, or an error if there is a problem retrieving it.
+// GetObjectFromKey retrieves an object from the informer cache using the provided key. It returns a nil value and no error if the object is not found.
+// The function will panic if the caller provides an informer which doesn't reference objects of type T.
 func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string) (T, error) {
 	obj, err := infs.Get(key)
 	var zero T
@@ -38,7 +38,6 @@ func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string)
 	}
 
 	obj = obj.DeepCopyObject()
-
 	if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
 		return zero, err
 	}

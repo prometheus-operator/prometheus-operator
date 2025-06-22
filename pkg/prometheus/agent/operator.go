@@ -558,11 +558,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	logger := c.logger.With("key", key)
-	logger.Info("sync prometheusagent")
-
 	if p == nil {
-		logger.Info("object not found")
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
 
@@ -571,10 +569,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	logger := c.logger.With("key", key)
+
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
 		return nil
 	}
+
+	logger.Info("sync prometheusagent")
 
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
@@ -946,7 +948,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if p == nil {
-		c.logger.Info(("no PrometheusAgent object found for key"), "key", key)
+		c.logger.Info("PrometheusAgent object not found", "key", key)
 		return nil
 	}
 	// Check if the Agent instance is marked for deletion.

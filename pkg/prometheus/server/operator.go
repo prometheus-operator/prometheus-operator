@@ -740,15 +740,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	logger := c.logger.With("key", key)
-	logger.Info("sync prometheus")
-
 	if p == nil {
-		logger.Info("object not found")
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
 
+	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
+
+	logger.Info("sync prometheus")
 
 	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
 	if err != nil {
@@ -1041,7 +1042,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if p == nil {
-		c.logger.Info("Prometheus object not found, skipping status update", "key", key)
+		c.logger.Info("Prometheus object not found", "key", key)
 		return nil
 	}
 
