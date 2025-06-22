@@ -466,6 +466,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.PagerdutyURL = &config.URL{URL: u}
 	}
 
+	telegramAllowed := cb.amVersion.GTE(semver.MustParse("0.24.0"))
+	if !telegramAllowed {
+		return nil, fmt.Errorf(`invalid syntax in global config; telegram integration is available in Alertmanager >= 0.24.0`)
+	}
 	if in.TelegramAPIURL != nil {
 		u, err := url.Parse(*in.TelegramAPIURL)
 		if err != nil {
@@ -474,6 +478,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.TelegramAPIURL = &config.URL{URL: u}
 	}
 
+	webexAllowed := cb.amVersion.GTE(semver.MustParse("0.25.0"))
+	if !webexAllowed {
+		return nil, fmt.Errorf(`invalid syntax in global config; webex integration is available in Alertmanager >= 0.25.0`)
+	}
 	if in.WebexAPIURL != nil {
 		u, err := url.Parse(*in.WebexAPIURL)
 		if err != nil {
@@ -482,6 +490,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.WebexAPIURL = &config.URL{URL: u}
 	}
 
+	jiraAllowed := cb.amVersion.GTE(semver.MustParse("0.28.0"))
+	if !jiraAllowed {
+		return nil, fmt.Errorf(`invalid syntax in global config; jira integration is available in Alertmanager >= 0.28.0`)
+	}
 	if in.JiraAPIURL != nil {
 		u, err := url.Parse(*in.JiraAPIURL)
 		if err != nil {
