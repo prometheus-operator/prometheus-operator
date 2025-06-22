@@ -91,6 +91,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	webexAPIURL := "webex.example.com"
 	invalidWebexAPIURL := "://webex.example.com"
 
+	jiraAPIURL := "jira.example.com"
+	invalidJiraAPIURL := "://jira.example.com"
+
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
@@ -1041,6 +1044,77 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "valid global config jira api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				JiraAPIURL: &jiraAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Jira_API_URL.golden",
+		},
+		{
+			name:      "invalid global config jira api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				JiraAPIURL: &invalidJiraAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+	}
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
