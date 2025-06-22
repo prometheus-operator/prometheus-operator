@@ -85,6 +85,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
+	telegramAPIURL := "telegram.example.com"
+	invalidTelegramAPIURL := "://telegram.example.com"
+
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
@@ -894,6 +897,76 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Type: "OnNamespace",
 			},
 			golden: "valid_global_config_with_amVersion21.golden",
+		},
+		{
+			name:      "valid global config telegram api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramAPIURL: &telegramAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Telegram_API_URL.golden",
+		},
+		{
+			name:      "invalid global config telegram api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramAPIURL: &invalidTelegramAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
