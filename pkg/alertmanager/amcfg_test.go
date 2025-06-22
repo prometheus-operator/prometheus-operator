@@ -96,7 +96,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 	weChatAPIURL := "wechat.example.com"
 	invalidWeChatAPIURL := "://wechat.example.com"
-	wechatCorpID := "myechatcorpid"
+	wechatCorpID := "mywechatcorpid"
 
 	tests := []struct {
 		name            string
