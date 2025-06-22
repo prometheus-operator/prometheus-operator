@@ -1,5 +1,5 @@
 global:
-  telegram_api_url: telegram.example.com
+  webex_api_url: webex.example.com
 route:
   receiver: mynamespace/global-config/null
   routes:
