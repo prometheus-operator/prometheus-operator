@@ -909,8 +909,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_amVersion21.golden",
 		},
 		{
-			name:      "valid global config telegram api url",
-			amVersion: &version28,
+			name: "valid global config telegram api url",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramAPIURL: &telegramAPIURL,
 			},
@@ -944,8 +943,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_Telegram_API_URL.golden",
 		},
 		{
-			name:      "invalid global config telegram api url",
-			amVersion: &version28,
+			name: "invalid global config telegram api url",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramAPIURL: &invalidTelegramAPIURL,
 			},
@@ -979,8 +977,42 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:      "valid global config webex api url",
-			amVersion: &version28,
+			name:      "invalid global config telegram api url version not supported",
+			amVersion: &version21,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramAPIURL: &invalidTelegramAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid global config webex api url",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexAPIURL: &webexAPIURL,
 			},
@@ -1014,8 +1046,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_Webex_API_URL.golden",
 		},
 		{
-			name:      "invalid global config webex api url",
-			amVersion: &version28,
+			name: "invalid global config webex api url",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexAPIURL: &invalidWebexAPIURL,
 			},
@@ -1049,8 +1080,42 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:      "valid global config jira api url",
-			amVersion: &version28,
+			name:      "invalid global config webex api url version not supported",
+			amVersion: &version24,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexAPIURL: &invalidWebexAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid global config jira api url",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraAPIURL: &jiraAPIURL,
 			},
@@ -1084,8 +1149,42 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_Jira_API_URL.golden",
 		},
 		{
-			name:      "invalid global config jira api url",
-			amVersion: &version28,
+			name: "invalid global config jira api url",
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				JiraAPIURL: &invalidJiraAPIURL,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config jira api url version not supported",
+			amVersion: &version26,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraAPIURL: &invalidJiraAPIURL,
 			},
