@@ -34,7 +34,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	TelegramAPIURL *string                               `json:"telegramApiUrl,omitempty"`
 	WebexAPIURL    *string                               `json:"webexApiUrl,omitempty"`
 	JiraAPIURL     *string                               `json:"jiraApiUrl,omitempty"`
-	WeChatConfig   *WeChatGlobalConfigApplyConfiguration `json:"wechatConfig,omitempty"`
+	WeChatConfig   *GlobalWeChatConfigApplyConfiguration `json:"wechatConfig,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -126,7 +126,7 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraAPIURL(value string
 // WithWeChatConfig sets the WeChatConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WeChatConfig field is set to the value of the last call.
-func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWeChatConfig(value *WeChatGlobalConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWeChatConfig(value *GlobalWeChatConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.WeChatConfig = value
 	return b
 }

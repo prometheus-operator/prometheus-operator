@@ -90,6 +90,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ExemplarsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalWeChatConfig"):
+		return &monitoringv1.GlobalWeChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
@@ -216,8 +218,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.WebHTTPHeadersApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebTLSConfig"):
 		return &monitoringv1.WebTLSConfigApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("WeChatGlobalConfig"):
-		return &monitoringv1.WeChatGlobalConfigApplyConfiguration{}
 
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig"):

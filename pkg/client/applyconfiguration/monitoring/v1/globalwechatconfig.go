@@ -20,24 +20,24 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// WeChatGlobalConfigApplyConfiguration represents a declarative configuration of the WeChatGlobalConfig type for use
+// GlobalWeChatConfigApplyConfiguration represents a declarative configuration of the GlobalWeChatConfig type for use
 // with apply.
-type WeChatGlobalConfigApplyConfiguration struct {
+type GlobalWeChatConfigApplyConfiguration struct {
 	APIURL    *string                   `json:"apiUrl,omitempty"`
 	APISecret *corev1.SecretKeySelector `json:"apiSecret,omitempty"`
 	APICorpID *string                   `json:"apiCorpId,omitempty"`
 }
 
-// WeChatGlobalConfigApplyConfiguration constructs a declarative configuration of the WeChatGlobalConfig type for use with
+// GlobalWeChatConfigApplyConfiguration constructs a declarative configuration of the GlobalWeChatConfig type for use with
 // apply.
-func WeChatGlobalConfig() *WeChatGlobalConfigApplyConfiguration {
-	return &WeChatGlobalConfigApplyConfiguration{}
+func GlobalWeChatConfig() *GlobalWeChatConfigApplyConfiguration {
+	return &GlobalWeChatConfigApplyConfiguration{}
 }
 
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *WeChatGlobalConfigApplyConfiguration) WithAPIURL(value string) *WeChatGlobalConfigApplyConfiguration {
+func (b *GlobalWeChatConfigApplyConfiguration) WithAPIURL(value string) *GlobalWeChatConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
@@ -45,7 +45,7 @@ func (b *WeChatGlobalConfigApplyConfiguration) WithAPIURL(value string) *WeChatG
 // WithAPISecret sets the APISecret field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APISecret field is set to the value of the last call.
-func (b *WeChatGlobalConfigApplyConfiguration) WithAPISecret(value corev1.SecretKeySelector) *WeChatGlobalConfigApplyConfiguration {
+func (b *GlobalWeChatConfigApplyConfiguration) WithAPISecret(value corev1.SecretKeySelector) *GlobalWeChatConfigApplyConfiguration {
 	b.APISecret = &value
 	return b
 }
@@ -53,7 +53,7 @@ func (b *WeChatGlobalConfigApplyConfiguration) WithAPISecret(value corev1.Secret
 // WithAPICorpID sets the APICorpID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APICorpID field is set to the value of the last call.
-func (b *WeChatGlobalConfigApplyConfiguration) WithAPICorpID(value string) *WeChatGlobalConfigApplyConfiguration {
+func (b *GlobalWeChatConfigApplyConfiguration) WithAPICorpID(value string) *GlobalWeChatConfigApplyConfiguration {
 	b.APICorpID = &value
 	return b
 }
