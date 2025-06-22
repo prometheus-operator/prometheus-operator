@@ -485,7 +485,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	if in.JiraAPIURL != nil {
 		u, err := url.Parse(*in.JiraAPIURL)
 		if err != nil {
-			return nil, fmt.Errorf("parse Webex API URL: %w", err)
+			return nil, fmt.Errorf("parse Jira API URL: %w", err)
 		}
 		out.JiraAPIURL = &config.URL{URL: u}
 	}
