@@ -395,7 +395,7 @@ type AlertmanagerGlobalConfig struct {
 	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
 
 	// The default Jira API URL.
-	JiraConfig *GlobalJiraConfig `json:"jiraConfig,omitempty"`
+	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
