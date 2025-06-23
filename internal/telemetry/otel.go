@@ -249,8 +249,8 @@ func GetComponentTracer(name string, component string) trace.Tracer {
 // componentTracer wraps a regular tracer to automatically add component attributes
 type componentTracer struct {
 	embedded.Tracer // Embed to implement the interface
-	tracer    trace.Tracer
-	component string
+	tracer          trace.Tracer
+	component       string
 }
 
 // Start creates a span with the component attribute automatically added
