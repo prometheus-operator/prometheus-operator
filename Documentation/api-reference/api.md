@@ -906,6 +906,24 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 <p>Defaults to 120 seconds.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>envVars</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>EnvVars allows configuring environment variables for the &lsquo;alertmanager&rsquo; container.
+It is intended for e.g. adding environment variables for configuration that
+doesn&rsquo;t have a specific field in AlertmanagerSpec.
+The environment variables specified will be added to the ones automatically
+set by the operator (like POD_IP).</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -6650,6 +6668,24 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envVars</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>EnvVars allows configuring environment variables for the &lsquo;alertmanager&rsquo; container.
+It is intended for e.g. adding environment variables for configuration that
+doesn&rsquo;t have a specific field in AlertmanagerSpec.
+The environment variables specified will be added to the ones automatically
+set by the operator (like POD_IP).</p>
 </td>
 </tr>
 </tbody>

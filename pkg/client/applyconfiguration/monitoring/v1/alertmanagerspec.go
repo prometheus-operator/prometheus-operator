@@ -84,6 +84,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
 	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
+	EnvVars                              []corev1.EnvVar                                         `json:"envVars,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -591,5 +592,15 @@ func (b *AlertmanagerSpecApplyConfiguration) WithAdditionalArgs(values ...*Argum
 // If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *AlertmanagerSpecApplyConfiguration {
 	b.TerminationGracePeriodSeconds = &value
+	return b
+}
+
+// WithEnvVars adds the given value to the EnvVars field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EnvVars field.
+func (b *AlertmanagerSpecApplyConfiguration) WithEnvVars(values ...corev1.EnvVar) *AlertmanagerSpecApplyConfiguration {
+	for i := range values {
+		b.EnvVars = append(b.EnvVars, values[i])
+	}
 	return b
 }
