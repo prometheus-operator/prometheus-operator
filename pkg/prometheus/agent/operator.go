@@ -948,7 +948,6 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if p == nil {
-		c.logger.Info("PrometheusAgent object not found", "key", key)
 		return nil
 	}
 	// Check if the Agent instance is marked for deletion.

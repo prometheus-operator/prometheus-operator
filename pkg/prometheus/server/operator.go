@@ -749,8 +749,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	logger.Info("sync prometheus")
-
 	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
 	if err != nil {
 		return err
@@ -1042,7 +1040,6 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if p == nil {
-		c.logger.Info("Prometheus object not found", "key", key)
 		return nil
 	}
 

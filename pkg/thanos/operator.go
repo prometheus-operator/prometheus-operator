@@ -598,7 +598,6 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if tr == nil {
-		o.logger.Info("ThanosRuler object not found, skipping status update", "key", key)
 		return nil
 	}
 

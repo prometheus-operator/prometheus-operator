@@ -677,7 +677,6 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	if a == nil {
-		c.logger.Info("Alertmanager not found", "key", key)
 		return nil
 	}
 
