@@ -228,7 +228,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 
 	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			config.Namespaces.AlertmanagerConfigAllowList,
+			operator.MergeStringSets(config.Namespaces.AlertmanagerAllowList, config.Namespaces.AlertmanagerConfigAllowList),
 			config.Namespaces.DenyList,
 			c.mdClient,
 			resyncPeriod,
@@ -238,7 +238,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			},
 		),
 		v1.SchemeGroupVersion.WithResource("secrets"),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
 		return fmt.Errorf("error creating secret informers: %w", err)

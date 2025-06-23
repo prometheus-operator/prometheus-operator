@@ -5518,8 +5518,9 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 		Type: v1.SecretTypeOpaque,
 	}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns2).Create(ctx, secret, metav1.CreateOptions{})
+	secret, err = framework.KubeClient.CoreV1().Secrets(ns2).Create(ctx, secret, metav1.CreateOptions{})
 	require.NoError(t, err)
+	t.Logf("secret %s/%s created", secret.GetNamespace(), secret.GetName())
 
 	err = framework.WaitForHealthyTargets(ctx, ns, "prometheus-operated", 1)
 	require.NoError(t, err)
