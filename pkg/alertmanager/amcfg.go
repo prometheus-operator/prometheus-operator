@@ -1873,30 +1873,6 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.VictorOpsAPIKeyFile = ""
 	}
 
-	if gc.RocketChatToken != "" && gc.RocketChatTokenFile != "" {
-		msg := "'rocket_chat_token' and 'rocket_chat_token_file' are mutually exclusive - 'rocket_chat_token' has taken precedence"
-		logger.Warn(msg)
-		gc.RocketChatTokenFile = ""
-	}
-
-	if gc.RocketChatTokenID != "" && gc.RocketChatTokenIDFile != "" {
-		msg := "'rocket_chat_token_id' and 'rocket_chat_token_id_file' are mutually exclusive - 'rocket_chat_token_id' has taken precedence"
-		logger.Warn(msg)
-		gc.RocketChatTokenIDFile = ""
-	}
-
-	if gc.RocketChatTokenFile != "" && amVersion.LT(semver.MustParse("0.28.0")) {
-		msg := "'rocket_chat_token_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		gc.RocketChatTokenFile = ""
-	}
-
-	if gc.RocketChatTokenIDFile != "" && amVersion.LT(semver.MustParse("0.28.0")) {
-		msg := "'rocket_chat_token_id_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		gc.RocketChatTokenIDFile = ""
-	}
-
 	return nil
 }
 
