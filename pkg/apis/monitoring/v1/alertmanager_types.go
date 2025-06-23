@@ -394,7 +394,7 @@ type AlertmanagerGlobalConfig struct {
 	// The default Telegram config
 	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
 
-	// The default Jira API URL.
+	// The default configuration for Jira.
 	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
 }
 
