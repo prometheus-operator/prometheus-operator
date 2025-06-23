@@ -705,7 +705,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 					Drop: []v1.Capability{"ALL"},
 				},
 			},
-			Env: []v1.EnvVar{
+			Env: append([]v1.EnvVar{
 				{
 					// Necessary for '--cluster.listen-address' flag
 					Name: "POD_IP",
@@ -715,7 +715,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 						},
 					},
 				},
-			},
+			}, a.Spec.EnvVars...),
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(

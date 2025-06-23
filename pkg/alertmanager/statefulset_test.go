@@ -1542,3 +1542,95 @@ func TestStatefulSetEnableServiceLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeStatefulSetSpecEnvVars(t *testing.T) {
+	logger := slog.Default()
+
+	t.Run("no custom env vars", func(t *testing.T) {
+		am := monitoringv1.Alertmanager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "ns",
+			},
+			Spec: monitoringv1.AlertmanagerSpec{
+				Version:  "v0.27.0",
+				Replicas: toPtr(int32(1)),
+			},
+		}
+
+		sset, err := makeStatefulSetSpec(logger, &am, defaultTestConfig, &operator.ShardedSecret{})
+		require.NoError(t, err)
+
+		// Find alertmanager container
+		var amContainer v1.Container
+		for _, c := range sset.Template.Spec.Containers {
+			if c.Name == "alertmanager" {
+				amContainer = c
+				break
+			}
+		}
+
+		// Should only have POD_IP env var
+		require.Len(t, amContainer.Env, 1)
+		require.Equal(t, "POD_IP", amContainer.Env[0].Name)
+	})
+
+	t.Run("with custom env vars", func(t *testing.T) {
+		am := monitoringv1.Alertmanager{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "ns",
+			},
+			Spec: monitoringv1.AlertmanagerSpec{
+				Version:  "v0.27.0",
+				Replicas: toPtr(int32(1)),
+				EnvVars: []v1.EnvVar{
+					{
+						Name:  "CUSTOM_VAR",
+						Value: "custom_value",
+					},
+					{
+						Name: "SECRET_VAR",
+						ValueFrom: &v1.EnvVarSource{
+							SecretKeyRef: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret-name",
+								},
+								Key: "secret-key",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		sset, err := makeStatefulSetSpec(logger, &am, defaultTestConfig, &operator.ShardedSecret{})
+		require.NoError(t, err)
+
+		// Find alertmanager container
+		var amContainer v1.Container
+		for _, c := range sset.Template.Spec.Containers {
+			if c.Name == "alertmanager" {
+				amContainer = c
+				break
+			}
+		}
+
+		// Should have POD_IP + 2 custom env vars
+		require.Len(t, amContainer.Env, 3)
+
+		// First should be POD_IP (from the default)
+		require.Equal(t, "POD_IP", amContainer.Env[0].Name)
+		require.NotNil(t, amContainer.Env[0].ValueFrom)
+
+		// Then the custom vars should be appended
+		require.Equal(t, "CUSTOM_VAR", amContainer.Env[1].Name)
+		require.Equal(t, "custom_value", amContainer.Env[1].Value)
+
+		require.Equal(t, "SECRET_VAR", amContainer.Env[2].Name)
+		require.NotNil(t, amContainer.Env[2].ValueFrom)
+		require.NotNil(t, amContainer.Env[2].ValueFrom.SecretKeyRef)
+		require.Equal(t, "secret-name", amContainer.Env[2].ValueFrom.SecretKeyRef.Name)
+		require.Equal(t, "secret-key", amContainer.Env[2].ValueFrom.SecretKeyRef.Key)
+	})
+}
