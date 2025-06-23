@@ -5779,15 +5779,26 @@ string
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>telegram</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
 GlobalTelegramConfig
+=======
+<code>jiraConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalJiraConfig">
+GlobalJiraConfig
+>>>>>>> 774df2560 (update jira global config)
 </a>
 </em>
 </td>
 <td>
+<<<<<<< HEAD
 <p>The default Telegram config</p>
+=======
+<p>The default Jira API URL.</p>
+>>>>>>> 774df2560 (update jira global config)
 </td>
 </tr>
 </tbody>
@@ -9930,6 +9941,35 @@ int64
 option for exemplars to be scraped in the first place.</p>
 <p>If not set, Prometheus uses its default value. A value of zero or less
 than zero disables the storage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default API URL for Jira</p>
 </td>
 </tr>
 </tbody>
