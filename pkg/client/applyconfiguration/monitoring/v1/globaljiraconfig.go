@@ -19,7 +19,7 @@ package v1
 // GlobalJiraConfigApplyConfiguration represents a declarative configuration of the GlobalJiraConfig type for use
 // with apply.
 type GlobalJiraConfigApplyConfiguration struct {
-	APIURL *string `json:"apiUrl,omitempty"`
+	APIURL *string `json:"apiURL,omitempty"`
 }
 
 // GlobalJiraConfigApplyConfiguration constructs a declarative configuration of the GlobalJiraConfig type for use with

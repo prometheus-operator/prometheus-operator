@@ -9962,7 +9962,7 @@ than zero disables the storage.</p>
 <tbody>
 <tr>
 <td>
-<code>apiUrl</code><br/>
+<code>apiURL</code><br/>
 <em>
 string
 </em>

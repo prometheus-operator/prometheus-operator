@@ -523,7 +523,7 @@ type GlobalTelegramConfig struct {
 type GlobalJiraConfig struct {
 	// The default API URL for Jira
 	// +optional
-	APIURL *string `json:"apiUrl,omitempty"`
+	APIURL *string `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

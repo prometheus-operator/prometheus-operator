@@ -1831,7 +1831,7 @@ spec:
                       jiraConfig:
                         description: The default Jira API URL.
                         properties:
-                          apiUrl:
+                          apiURL:
                             description: The default API URL for Jira
                             type: string
                         type: object
