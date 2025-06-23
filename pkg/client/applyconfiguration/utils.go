@@ -92,8 +92,13 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.GlobalJiraConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
+<<<<<<< HEAD
 	case v1.SchemeGroupVersion.WithKind("GlobalTelegramConfig"):
 		return &monitoringv1.GlobalTelegramConfigApplyConfiguration{}
+=======
+	case v1.SchemeGroupVersion.WithKind("GlobalWeChatConfig"):
+		return &monitoringv1.GlobalWeChatConfigApplyConfiguration{}
+>>>>>>> e8764859c (update wechat global config)
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
