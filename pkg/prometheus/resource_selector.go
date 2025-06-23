@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
@@ -42,6 +43,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
+// ResourceSelector knows how to select and verify scrape configuration
+// resources that are matched by a Prometheus or PrometheusAgent object.
 type ResourceSelector struct {
 	l                  *slog.Logger
 	p                  monitoringv1.PrometheusInterface
@@ -56,7 +59,14 @@ type ResourceSelector struct {
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
-func NewResourceSelector(l *slog.Logger, p monitoringv1.PrometheusInterface, store *assets.StoreBuilder, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics, eventRecorder record.EventRecorder) (*ResourceSelector, error) {
+func NewResourceSelector(
+	l *slog.Logger,
+	p monitoringv1.PrometheusInterface,
+	store *assets.StoreBuilder,
+	namespaceInformers cache.SharedIndexInformer,
+	metrics *operator.Metrics,
+	eventRecorder record.EventRecorder,
+) (*ResourceSelector, error) {
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
@@ -75,165 +85,179 @@ func NewResourceSelector(l *slog.Logger, p monitoringv1.PrometheusInterface, sto
 	}, nil
 }
 
-// SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
-// returning only those with a valid configuration. This function also populates authentication stores and performs validations against
-// scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
-	cpf := rs.p.GetCommonPrometheusFields()
-	objMeta := rs.p.GetObjectMeta()
-	namespaces := []string{}
+func selectObjects[T *monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig](
+	ctx context.Context,
+	logger *slog.Logger,
+	rs *ResourceSelector,
+	kind string,
+	selector *metav1.LabelSelector,
+	nsSelector *metav1.LabelSelector,
+	listFn ListAllByNamespaceFn,
+	checkFn func(context.Context, T) error,
+) (map[string]T, error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
-	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
+	objects := make(map[string]runtime.Object)
+	namespaces := []string{}
 
-	servMonSelector, err := metav1.LabelSelectorAsSelector(cpf.ServiceMonitorSelector)
+	labelSelector, err := metav1.LabelSelectorAsSelector(selector)
 	if err != nil {
 		return nil, err
 	}
 
-	// If 'ServiceMonitorNamespaceSelector' is nil only check own namespace.
-	if cpf.ServiceMonitorNamespaceSelector == nil {
-		namespaces = append(namespaces, objMeta.GetNamespace())
+	if nsSelector == nil {
+		namespaces = append(namespaces, rs.p.GetObjectMeta().GetNamespace())
 	} else {
-		servMonNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ServiceMonitorNamespaceSelector)
+		nsLabelSelector, err := metav1.LabelSelectorAsSelector(nsSelector)
 		if err != nil {
 			return nil, err
 		}
 
-		namespaces, err = operator.ListMatchingNamespaces(servMonNSSelector, rs.namespaceInformers)
+		namespaces, err = operator.ListMatchingNamespaces(nsLabelSelector, rs.namespaceInformers)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	rs.l.Debug("filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+	logger.Debug(
+		"selecting objects",
+		"namespaces", strings.Join(namespaces, ","),
+	)
 
 	for _, ns := range namespaces {
-		err := listFn(ns, servMonSelector, func(obj interface{}) {
-			k, ok := rs.accessor.MetaNamespaceKey(obj)
-			if ok {
-				svcMon := obj.(*monitoringv1.ServiceMonitor).DeepCopy()
-				if err := k8sutil.AddTypeInformationToObject(svcMon); err != nil {
-					rs.l.Error("failed to set ServiceMonitor type information", "namespace", ns, "err", err)
-					return
-				}
-				serviceMonitors[k] = svcMon
+		err := listFn(ns, labelSelector, func(o interface{}) {
+			k, ok := rs.accessor.MetaNamespaceKey(o)
+			if !ok {
+				return
 			}
+
+			obj := o.(runtime.Object)
+			obj = obj.DeepCopyObject()
+			if err := k8sutil.AddTypeInformationToObject(obj); err != nil {
+				logger.Error("failed to set type information", "namespace", ns, "err", err)
+				return
+			}
+			objects[k] = obj
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list service monitors in namespace %s: %w", ns, err)
+			return nil, fmt.Errorf("failed to list objects in namespace %s: %w", ns, err)
 		}
 	}
 
 	var rejected int
-	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
-	for namespaceAndName, sm := range serviceMonitors {
-		var err error
-		rejectFn := func(sm *monitoringv1.ServiceMonitor, err error) {
+	res := make(map[string]T, len(objects))
+	for namespaceAndName, obj := range objects {
+		o := obj.(T)
+		if err := checkFn(ctx, o); err != nil {
 			rejected++
-			rs.l.Warn("skipping servicemonitor",
-				"error", err.Error(),
-				"servicemonitor", namespaceAndName,
-				"namespace", objMeta.GetNamespace(),
-				"prometheus", objMeta.GetName(),
-			)
-			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
-		}
-
-		_, err = metav1.LabelSelectorAsSelector(&sm.Spec.Selector)
-		if err != nil {
-			rejectFn(sm, fmt.Errorf("failed to parse label selector: %w", err))
+			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
+			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 			continue
 		}
 
-		err = validateMonitorSelectorMechanism(sm.Spec.SelectorMechanism, rs.version)
-		if err != nil {
-			rejectFn(sm, err)
-			continue
-		}
-
-		for _, endpoint := range sm.Spec.Endpoints {
-			// If denied by Prometheus spec, filter out all service monitors that access
-			// the file system.
-			if cpf.ArbitraryFSAccessThroughSMs.Deny {
-				if err = testForArbitraryFSAccess(endpoint); err != nil {
-					rejectFn(sm, err)
-					break
-				}
-			}
-
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
-				if _, err = rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
-					rejectFn(sm, err)
-					break
-				}
-			}
-
-			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth); err != nil {
-				rejectFn(sm, err)
-				break
-			}
-
-			if err = rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
-				rejectFn(sm, err)
-				break
-			}
-
-			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2); err != nil {
-				rejectFn(sm, err)
-				break
-			}
-
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization); err != nil {
-				rejectFn(sm, err)
-				break
-			}
-
-			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-				rejectFn(sm, err)
-				break
-			}
-
-			if err = rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
-				rejectFn(sm, fmt.Errorf("relabelConfigs: %w", err))
-				break
-			}
-
-			if err = rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
-				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
-				break
-			}
-
-			if err = validateProxyURL(endpoint.ProxyURL); err != nil {
-				rejectFn(sm, fmt.Errorf("proxyURL: %w", err))
-				break
-			}
-		}
-
-		if err != nil {
-			continue
-		}
-
-		if err = validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
-			rejectFn(sm, err)
-			continue
-		}
-
-		res[namespaceAndName] = sm
+		res[namespaceAndName] = o
 	}
 
-	smKeys := []string{}
+	keys := []string{}
 	for k := range res {
-		smKeys = append(smKeys, k)
+		keys = append(keys, k)
 	}
-	rs.l.Debug("selected ServiceMonitors", "servicemonitors", strings.Join(smKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
+	logger.Debug("objects selected", "objects", strings.Join(keys, ","))
 
 	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(pKey, monitoringv1.ServiceMonitorsKind, len(res))
-		rs.metrics.SetRejectedResources(pKey, monitoringv1.ServiceMonitorsKind, rejected)
+		rs.metrics.SetSelectedResources(pKey, kind, len(res))
+		rs.metrics.SetRejectedResources(pKey, kind, rejected)
 	}
 
 	return res, nil
+}
+
+// SelectServiceMonitors selects ServiceMonitors based on the selectors in the
+// Prometheus CR and filters them returning only those with a valid
+// configuration. This function also populates authentication stores and
+// performs validations against scrape intervals and relabel configs.
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
+	cpf := rs.p.GetCommonPrometheusFields()
+
+	return selectObjects[*monitoringv1.ServiceMonitor](
+		ctx,
+		rs.l.With("kind", monitoringv1.ServiceMonitorsKind),
+		rs,
+		monitoringv1.ServiceMonitorsKind,
+		cpf.ServiceMonitorSelector,
+		cpf.ServiceMonitorNamespaceSelector,
+		listFn,
+		rs.checkServiceMonitor,
+	)
+}
+
+// checkServiceMonitor verifies that the ServiceMonitor object is valid.
+func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitoringv1.ServiceMonitor) error {
+	cpf := rs.p.GetCommonPrometheusFields()
+
+	if _, err := metav1.LabelSelectorAsSelector(&sm.Spec.Selector); err != nil {
+		return err
+	}
+
+	if err := rs.validateMonitorSelectorMechanism(sm.Spec.SelectorMechanism); err != nil {
+		return err
+	}
+
+	for i, endpoint := range sm.Spec.Endpoints {
+		epErr := fmt.Errorf("endpoints[%d]", i)
+
+		// If denied by the Prometheus spec, filter out all service monitors
+		// that access the file system.
+		if cpf.ArbitraryFSAccessThroughSMs.Deny {
+			if err := testForArbitraryFSAccess(endpoint); err != nil {
+				return fmt.Errorf("%w: %w", epErr, err)
+			}
+		}
+
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
+			if _, err := rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
+				return fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
+			}
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth); err != nil {
+			return fmt.Errorf("%w: basicAuth: %w", epErr, err)
+		}
+
+		if err := rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
+			return fmt.Errorf("%w: tlsConfig: %w", epErr, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2); err != nil {
+			return fmt.Errorf("%w: oauth2: %w", epErr, err)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization); err != nil {
+			return fmt.Errorf("%w: authorization: %w", epErr, err)
+		}
+
+		if err := validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
+		if err := rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
+			return fmt.Errorf("%w: relabelConfigs: %w", epErr, err)
+		}
+
+		if err := rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
+			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
+		}
+
+		if err := validateProxyURL(endpoint.ProxyURL); err != nil {
+			return fmt.Errorf("%w: proxyURL: %w", epErr, err)
+		}
+	}
+
+	if err := validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
+		return fmt.Errorf("scrapeClassName: %w", err)
+	}
+
+	return nil
 }
 
 func (rs *ResourceSelector) ValidateRelabelConfigs(rcs []monitoringv1.RelabelConfig) error {
@@ -384,10 +408,11 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
 }
 
-func validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMechanism, version semver.Version) error {
-	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !version.GTE(semver.MustParse("2.17.0")) {
+func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMechanism) error {
+	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !rs.version.GTE(semver.MustParse("2.17.0")) {
 		return fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer")
 	}
+
 	return nil
 }
 
@@ -396,310 +421,158 @@ func validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMe
 // scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.PodMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
-	objMeta := rs.p.GetObjectMeta()
-	namespaces := []string{}
-	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
-	podMonitors := make(map[string]*monitoringv1.PodMonitor)
 
-	podMonSelector, err := metav1.LabelSelectorAsSelector(cpf.PodMonitorSelector)
-	if err != nil {
-		return nil, err
-	}
-
-	// If 'PodMonitorNamespaceSelector' is nil only check own namespace.
-	if cpf.PodMonitorNamespaceSelector == nil {
-		namespaces = append(namespaces, objMeta.GetNamespace())
-	} else {
-		podMonNSSelector, err := metav1.LabelSelectorAsSelector(cpf.PodMonitorNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
-
-		namespaces, err = operator.ListMatchingNamespaces(podMonNSSelector, rs.namespaceInformers)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	rs.l.Debug("filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
-
-	for _, ns := range namespaces {
-		err := listFn(ns, podMonSelector, func(obj interface{}) {
-			k, ok := rs.accessor.MetaNamespaceKey(obj)
-			if ok {
-				podMon := obj.(*monitoringv1.PodMonitor).DeepCopy()
-				if err := k8sutil.AddTypeInformationToObject(podMon); err != nil {
-					rs.l.Error("failed to set PodMonitor type information", "namespace", ns, "err", err)
-					return
-				}
-				podMonitors[k] = podMon
-			}
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to list pod monitors in namespace %s: %w", ns, err)
-		}
-	}
-
-	var rejected int
-	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
-	for namespaceAndName, pm := range podMonitors {
-		var err error
-		rejectFn := func(pm *monitoringv1.PodMonitor, err error) {
-			rejected++
-			rs.l.Warn("skipping podmonitor",
-				"error", err.Error(),
-				"podmonitor", namespaceAndName,
-				"namespace", objMeta.GetNamespace(),
-				"prometheus", objMeta.GetName(),
-			)
-			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
-		}
-
-		_, err = metav1.LabelSelectorAsSelector(&pm.Spec.Selector)
-		if err != nil {
-			rejectFn(pm, fmt.Errorf("failed to parse label selector: %w", err))
-			continue
-		}
-
-		err = validateMonitorSelectorMechanism(pm.Spec.SelectorMechanism, rs.version)
-		if err != nil {
-			rejectFn(pm, err)
-			continue
-		}
-
-		for _, endpoint := range pm.Spec.PodMetricsEndpoints {
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
-				if _, err = rs.store.GetSecretKey(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret); err != nil {
-					rejectFn(pm, err)
-					break
-				}
-			}
-
-			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth); err != nil {
-				rejectFn(pm, err)
-				break
-			}
-
-			if endpoint.TLSConfig != nil {
-				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
-					rejectFn(pm, err)
-					break
-				}
-			}
-
-			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2); err != nil {
-				rejectFn(pm, err)
-				break
-			}
-
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization); err != nil {
-				rejectFn(pm, err)
-				break
-			}
-
-			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-				rejectFn(pm, err)
-				break
-			}
-
-			if err = rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
-				rejectFn(pm, fmt.Errorf("relabelConfigs: %w", err))
-				break
-			}
-
-			if err = rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
-				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
-				break
-			}
-
-			if err = validateProxyURL(endpoint.ProxyURL); err != nil {
-				rejectFn(pm, fmt.Errorf("proxyURL: %w", err))
-				break
-			}
-		}
-
-		if err != nil {
-			continue
-		}
-
-		if err = validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
-			rejectFn(pm, err)
-			continue
-		}
-
-		res[namespaceAndName] = pm
-	}
-
-	pmKeys := []string{}
-	for k := range res {
-		pmKeys = append(pmKeys, k)
-	}
-	rs.l.Debug("selected PodMonitors", "podmonitors", strings.Join(pmKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
-
-	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(pKey, monitoringv1.PodMonitorsKind, len(res))
-		rs.metrics.SetRejectedResources(pKey, monitoringv1.PodMonitorsKind, rejected)
-	}
-
-	return res, nil
+	return selectObjects[*monitoringv1.PodMonitor](
+		ctx,
+		rs.l.With("kind", monitoringv1.PodMonitorsKind),
+		rs,
+		monitoringv1.PodMonitorsKind,
+		cpf.PodMonitorSelector,
+		cpf.PodMonitorNamespaceSelector,
+		listFn,
+		rs.checkPodMonitor,
+	)
 }
 
-// SelectProbes selects Probes based on the selectors in the Prometheus CR and filters them
-// returning only those with a valid configuration. This function also populates authentication stores and performs validations against
-// scrape intervals, relabel configs and Probe URLs.
+// checkPodMonitor verifies that the PodMonitor object is valid.
+func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv1.PodMonitor) error {
+	if _, err := metav1.LabelSelectorAsSelector(&pm.Spec.Selector); err != nil {
+		return fmt.Errorf("failed to parse label selector: %w", err)
+	}
+
+	if err := rs.validateMonitorSelectorMechanism(pm.Spec.SelectorMechanism); err != nil {
+		return err
+	}
+
+	for i, endpoint := range pm.Spec.PodMetricsEndpoints {
+		epErr := fmt.Errorf("endpoint[%d]", i)
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
+			if _, err := rs.store.GetSecretKey(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret); err != nil {
+				return fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
+			}
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth); err != nil {
+			return fmt.Errorf("%w: basicAuth: %w", epErr, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
+			return fmt.Errorf("%w: tlsConfig: %w", epErr, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2); err != nil {
+			return fmt.Errorf("%w: oauth2: %w", epErr, err)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization); err != nil {
+			return fmt.Errorf("%w: authorization: %w", epErr, err)
+		}
+
+		if err := validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
+		if err := rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
+			return fmt.Errorf("%w: relabelConfigs: %w", epErr, err)
+		}
+
+		if err := rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
+			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
+		}
+
+		if err := validateProxyURL(endpoint.ProxyURL); err != nil {
+			return fmt.Errorf("%w: proxyURL: %w", epErr, err)
+		}
+	}
+
+	if err := validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
+		return fmt.Errorf("scrapeClassName: %w", err)
+	}
+
+	return nil
+}
+
+// SelectProbes selects Probes based on the selectors in the Prometheus CR and
+// filters them returning only those with a valid configuration. This function
+// also populates authentication stores and performs validations against scrape
+// intervals, relabel configs and Probe URLs.
 func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.Probe, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
-	objMeta := rs.p.GetObjectMeta()
-	namespaces := []string{}
-	// Selectors might overlap. Deduplicate them along the keyFunc.
-	probes := make(map[string]*monitoringv1.Probe)
 
-	bMonSelector, err := metav1.LabelSelectorAsSelector(cpf.ProbeSelector)
-	if err != nil {
-		return nil, err
+	return selectObjects[*monitoringv1.Probe](
+		ctx,
+		rs.l.With("kind", monitoringv1.ProbesKind),
+		rs,
+		monitoringv1.ProbesKind,
+		cpf.ProbeSelector,
+		cpf.ProbeNamespaceSelector,
+		listFn,
+		rs.checkProbe,
+	)
+}
+
+// checkProbe verifies that the Probe object is valid.
+func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.Probe) error {
+	if err := validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
+		return fmt.Errorf("scrapeClassName: %w", err)
 	}
 
-	// If 'ProbeNamespaceSelector' is nil only check own namespace.
-	if cpf.ProbeNamespaceSelector == nil {
-		namespaces = append(namespaces, objMeta.GetNamespace())
-	} else {
-		bMonNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ProbeNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
-
-		namespaces, err = operator.ListMatchingNamespaces(bMonNSSelector, rs.namespaceInformers)
-		if err != nil {
-			return nil, err
-		}
+	if err := probe.Spec.Targets.Validate(); err != nil {
+		return err
 	}
 
-	rs.l.Debug("filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
-
-	for _, ns := range namespaces {
-		err := listFn(ns, bMonSelector, func(obj interface{}) {
-			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
-				probe := obj.(*monitoringv1.Probe).DeepCopy()
-				if err := k8sutil.AddTypeInformationToObject(probe); err != nil {
-					rs.l.Error("failed to set Probe type information", "namespace", ns, "err", err)
-					return
-				}
-				probes[k] = probe
-			}
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to list probes in namespace %s: %w", ns, err)
+	if probe.Spec.BearerTokenSecret.Name != "" && probe.Spec.BearerTokenSecret.Key != "" {
+		if _, err := rs.store.GetSecretKey(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret); err != nil {
+			return fmt.Errorf("bearerTokenSecret: %w", err)
 		}
 	}
 
-	var rejected int
-	res := make(map[string]*monitoringv1.Probe, len(probes))
-
-	for probeName, probe := range probes {
-		rejectFn := func(probe *monitoringv1.Probe, err error) {
-			rejected++
-			rs.l.Warn("skipping probe",
-				"error", err.Error(),
-				"probe", probeName,
-				"namespace", objMeta.GetNamespace(),
-				"prometheus", objMeta.GetName(),
-			)
-			rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
-		}
-
-		if err = validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
-			rejectFn(probe, err)
-			continue
-		}
-
-		if err = probe.Spec.Targets.Validate(); err != nil {
-			rejectFn(probe, err)
-			continue
-		}
-
-		if probe.Spec.BearerTokenSecret.Name != "" && probe.Spec.BearerTokenSecret.Key != "" {
-			if _, err = rs.store.GetSecretKey(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret); err != nil {
-				rejectFn(probe, err)
-				continue
-			}
-		}
-
-		if err = rs.store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth); err != nil {
-			rejectFn(probe, err)
-			continue
-		}
-
-		if probe.Spec.TLSConfig != nil {
-			if err = rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), probe.Spec.TLSConfig); err != nil {
-				rejectFn(probe, err)
-				continue
-			}
-		}
-
-		if err = rs.store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization); err != nil {
-			rejectFn(probe, err)
-			continue
-		}
-
-		if err = rs.store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2); err != nil {
-			rejectFn(probe, err)
-			continue
-		}
-
-		if err = validateScrapeIntervalAndTimeout(rs.p, probe.Spec.Interval, probe.Spec.ScrapeTimeout); err != nil {
-			rejectFn(probe, err)
-			continue
-		}
-
-		if err = rs.ValidateRelabelConfigs(probe.Spec.MetricRelabelConfigs); err != nil {
-			err = fmt.Errorf("metricRelabelConfigs: %w", err)
-			rejectFn(probe, err)
-			continue
-		}
-
-		if probe.Spec.Targets.StaticConfig != nil {
-			if err = rs.ValidateRelabelConfigs(probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
-				err = fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
-				rejectFn(probe, err)
-				continue
-			}
-		}
-
-		if probe.Spec.Targets.Ingress != nil {
-			if err = rs.ValidateRelabelConfigs(probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
-				err = fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
-				rejectFn(probe, err)
-				continue
-			}
-		}
-
-		if err = validateProxyURL(&probe.Spec.ProberSpec.ProxyURL); err != nil {
-			rejectFn(probe, fmt.Errorf("proxyURL: %w", err))
-			continue
-		}
-
-		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
-			err := fmt.Errorf("%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
-			rejectFn(probe, err)
-			continue
-		}
-
-		res[probeName] = probe
+	if err := rs.store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth); err != nil {
+		return fmt.Errorf("basicAuth: %w", err)
 	}
 
-	probeKeys := make([]string, 0)
-	for k := range res {
-		probeKeys = append(probeKeys, k)
-	}
-	rs.l.Debug("selected Probes", "probes", strings.Join(probeKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
-
-	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(pKey, monitoringv1.ProbesKind, len(res))
-		rs.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, rejected)
+	if err := rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), probe.Spec.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
 	}
 
-	return res, nil
+	if err := rs.store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := rs.store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := validateScrapeIntervalAndTimeout(rs.p, probe.Spec.Interval, probe.Spec.ScrapeTimeout); err != nil {
+		return err
+	}
+
+	if err := rs.ValidateRelabelConfigs(probe.Spec.MetricRelabelConfigs); err != nil {
+		return fmt.Errorf("metricRelabelConfigs: %w", err)
+	}
+
+	if probe.Spec.Targets.StaticConfig != nil {
+		if err := rs.ValidateRelabelConfigs(probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
+			return fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
+		}
+	}
+
+	if probe.Spec.Targets.Ingress != nil {
+		if err := rs.ValidateRelabelConfigs(probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
+			return fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
+		}
+	}
+
+	if err := validateProxyURL(&probe.Spec.ProberSpec.ProxyURL); err != nil {
+		return fmt.Errorf("proxyURL: %w", err)
+	}
+
+	if err := validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
+		return fmt.Errorf("%q url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
+	}
+
+	return nil
 }
 
 func validateProxyURL(proxyurl *string) error {
@@ -741,245 +614,158 @@ func validateServer(server string) error {
 	return nil
 }
 
-// SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
-// returning only those with a valid configuration.
+// SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the
+// Prometheus CR and filters them returning only those with a valid
+// configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
-	objMeta := rs.p.GetObjectMeta()
-	namespaces := []string{}
 
-	// Selectors might overlap. Deduplicate them along the keyFunc.
-	scrapeConfigs := make(map[string]*monitoringv1alpha1.ScrapeConfig)
+	return selectObjects[*monitoringv1alpha1.ScrapeConfig](
+		ctx,
+		rs.l.With("kind", monitoringv1alpha1.ScrapeConfigsKind),
+		rs,
+		monitoringv1alpha1.ScrapeConfigsKind,
+		cpf.ScrapeConfigSelector,
+		cpf.ScrapeConfigNamespaceSelector,
+		listFn,
+		rs.checkScrapeConfig,
+	)
+}
 
-	sConSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigSelector)
-	if err != nil {
-		return nil, err
+// checkScrapeConfig verifies that the ScrapeConfig object is valid.
+func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if err := validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
+		return err
 	}
 
-	// If 'ScrapeConfigNamespaceSelector' is nil only check own namespace.
-	if cpf.ScrapeConfigNamespaceSelector == nil {
-		namespaces = append(namespaces, objMeta.GetNamespace())
-	} else {
-		sConNSSelector, err := metav1.LabelSelectorAsSelector(cpf.ScrapeConfigNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
-
-		namespaces, err = operator.ListMatchingNamespaces(sConNSSelector, rs.namespaceInformers)
-		if err != nil {
-			return nil, err
-		}
+	if err := rs.ValidateRelabelConfigs(sc.Spec.RelabelConfigs); err != nil {
+		return fmt.Errorf("relabelConfigs: %w", err)
 	}
 
-	rs.l.Debug("filtering namespaces to select ScrapeConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
-
-	for _, ns := range namespaces {
-		err := listFn(ns, sConSelector, func(obj interface{}) {
-			if k, ok := rs.accessor.MetaNamespaceKey(obj); ok {
-				scrapeConfig := obj.(*monitoringv1alpha1.ScrapeConfig).DeepCopy()
-				if err := k8sutil.AddTypeInformationToObject(scrapeConfig); err != nil {
-					rs.l.Error("failed to set ScrapeConfig type information", "namespace", ns, "err", err)
-					return
-				}
-				scrapeConfigs[k] = scrapeConfig
-			}
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to list ScrapeConfigs in namespace %s: %w", ns, err)
-		}
+	if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), sc.Spec.BasicAuth); err != nil {
+		return fmt.Errorf("basicAuth: %w", err)
 	}
 
-	var rejected int
-	res := make(map[string]*monitoringv1alpha1.ScrapeConfig, len(scrapeConfigs))
-
-	for scName, sc := range scrapeConfigs {
-		rejectFn := func(sc *monitoringv1alpha1.ScrapeConfig, err error) {
-			rejected++
-			rs.l.Warn("skipping scrapeconfig",
-				"error", err.Error(),
-				"scrapeconfig", scName,
-				"namespace", objMeta.GetNamespace(),
-				"prometheus", objMeta.GetName(),
-			)
-			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
-		}
-
-		if err = validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		if err = rs.ValidateRelabelConfigs(sc.Spec.RelabelConfigs); err != nil {
-			rejectFn(sc, fmt.Errorf("relabelConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.store.AddBasicAuth(ctx, sc.GetNamespace(), sc.Spec.BasicAuth); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		if err = rs.store.AddOAuth2(ctx, sc.GetNamespace(), sc.Spec.OAuth2); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		if err = rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), sc.Spec.TLSConfig); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
-		if sc.Spec.ScrapeInterval != nil {
-			scrapeInterval = *sc.Spec.ScrapeInterval
-		}
-
-		if sc.Spec.ScrapeTimeout != nil {
-			scrapeTimeout = *sc.Spec.ScrapeTimeout
-		}
-
-		if err = validateScrapeIntervalAndTimeout(rs.p, scrapeInterval, scrapeTimeout); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		if err = addProxyConfigToStore(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-			rejectFn(sc, err)
-			continue
-		}
-
-		if err = rs.ValidateRelabelConfigs(sc.Spec.MetricRelabelConfigs); err != nil {
-			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
-			continue
-		}
-
-		// The Kubernetes API can't do the validation (for now) because kubebuilder validation markers don't work on map keys with custom type.
-		// https://github.com/prometheus-operator/prometheus-operator/issues/6889
-		if err = rs.validateStaticConfig(sc); err != nil {
-			rejectFn(sc, fmt.Errorf("staticConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateHTTPSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("httpSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateKubernetesSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("kubernetesSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateConsulSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("consulSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateDNSSDConfigs(sc); err != nil {
-			rejectFn(sc, fmt.Errorf("dnsSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateEC2SDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("ec2SDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateAzureSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("azureSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateOpenStackSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("openstackSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateDigitalOceanSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("digitalOceanSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateKumaSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("kumaSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateEurekaSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("eurekaSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateDockerSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("dockerSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateLinodeSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("linodeSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateHetznerSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("hetznerSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateNomadSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("nomadSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateDockerSwarmSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("dockerswarmSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validatePuppetDBSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("puppetDBSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateLightSailSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("lightSailSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateOVHCloudSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("OVHCloudSDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateScalewaySDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("ScalewaySDConfigs: %w", err))
-			continue
-		}
-
-		if err = rs.validateIonosSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("IonosSDConfigs: %w", err))
-			continue
-		}
-
-		res[scName] = sc
+	if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization); err != nil {
+		return fmt.Errorf("authorization: %w", err)
 	}
 
-	scrapeConfigKeys := make([]string, 0)
-	for k := range res {
-		scrapeConfigKeys = append(scrapeConfigKeys, k)
-	}
-	rs.l.Debug("selected ScrapeConfigs", "scrapeConfig", strings.Join(scrapeConfigKeys, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
-
-	if sKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
-		rs.metrics.SetSelectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, len(res))
-		rs.metrics.SetRejectedResources(sKey, monitoringv1alpha1.ScrapeConfigsKind, rejected)
+	if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), sc.Spec.OAuth2); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
 	}
 
-	return res, nil
+	if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), sc.Spec.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
+	if sc.Spec.ScrapeInterval != nil {
+		scrapeInterval = *sc.Spec.ScrapeInterval
+	}
+
+	if sc.Spec.ScrapeTimeout != nil {
+		scrapeTimeout = *sc.Spec.ScrapeTimeout
+	}
+
+	if err := validateScrapeIntervalAndTimeout(rs.p, scrapeInterval, scrapeTimeout); err != nil {
+		return err
+	}
+
+	if err := addProxyConfigToStore(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		return err
+	}
+
+	if err := rs.ValidateRelabelConfigs(sc.Spec.MetricRelabelConfigs); err != nil {
+		return fmt.Errorf("metricRelabelConfigs: %w", err)
+	}
+
+	// The Kubernetes API can't do the validation (for now) because kubebuilder validation markers don't work on map keys with custom type.
+	// https://github.com/prometheus-operator/prometheus-operator/issues/6889
+	if err := rs.validateStaticConfig(sc); err != nil {
+		return fmt.Errorf("staticConfigs: %w", err)
+	}
+
+	if err := rs.validateHTTPSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("httpSDConfigs: %w", err)
+	}
+
+	if err := rs.validateKubernetesSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("kubernetesSDConfigs: %w", err)
+	}
+
+	if err := rs.validateConsulSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("consulSDConfigs: %w", err)
+	}
+
+	if err := rs.validateDNSSDConfigs(sc); err != nil {
+		return fmt.Errorf("dnsSDConfigs: %w", err)
+	}
+
+	if err := rs.validateEC2SDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("ec2SDConfigs: %w", err)
+	}
+
+	if err := rs.validateAzureSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("azureSDConfigs: %w", err)
+	}
+
+	if err := rs.validateOpenStackSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("openstackSDConfigs: %w", err)
+	}
+
+	if err := rs.validateDigitalOceanSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("digitalOceanSDConfigs: %w", err)
+	}
+
+	if err := rs.validateKumaSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("kumaSDConfigs: %w", err)
+	}
+
+	if err := rs.validateEurekaSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("eurekaSDConfigs: %w", err)
+	}
+
+	if err := rs.validateDockerSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("dockerSDConfigs: %w", err)
+	}
+
+	if err := rs.validateLinodeSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("linodeSDConfigs: %w", err)
+	}
+
+	if err := rs.validateHetznerSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("hetznerSDConfigs: %w", err)
+	}
+
+	if err := rs.validateNomadSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("nomadSDConfigs: %w", err)
+	}
+
+	if err := rs.validateDockerSwarmSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("dockerswarmSDConfigs: %w", err)
+	}
+
+	if err := rs.validatePuppetDBSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("puppetDBSDConfigs: %w", err)
+	}
+
+	if err := rs.validateLightSailSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("lightSailSDConfigs: %w", err)
+	}
+
+	if err := rs.validateOVHCloudSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("OVHCloudSDConfigs: %w", err)
+	}
+
+	if err := rs.validateScalewaySDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("ScalewaySDConfigs: %w", err)
+	}
+
+	if err := rs.validateIonosSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("IonosSDConfigs: %w", err)
+	}
+
+	return nil
 }
 
 func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
