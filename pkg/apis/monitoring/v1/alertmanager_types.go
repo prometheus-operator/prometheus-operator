@@ -521,7 +521,7 @@ type GlobalTelegramConfig struct {
 }
 
 type GlobalJiraConfig struct {
-	// The default API URL for Jira
+	// The default API URL.
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
 }
