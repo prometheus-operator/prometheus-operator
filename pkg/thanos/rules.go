@@ -43,6 +43,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 
 	namespaces, err := o.selectRuleNamespaces(t)
 	if err != nil {
+		span.RecordError(err)
 		return nil, err
 	}
 
