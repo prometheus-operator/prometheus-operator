@@ -29,6 +29,7 @@ type EventHandler struct {
 
 	objName     string
 	enqueueFunc func(string)
+	filterFunc  func(interface{}) bool
 }
 
 func NewEventHandler(
@@ -38,26 +39,57 @@ func NewEventHandler(
 	objName string,
 	enqueueFunc func(ns string),
 ) *EventHandler {
+	return NewEventHandlerWithFilter(
+		logger,
+		accessor,
+		metrics,
+		objName,
+		enqueueFunc,
+		nil,
+	)
+}
+func NewEventHandlerWithFilter(
+	logger *slog.Logger,
+	accessor *Accessor,
+	metrics *Metrics,
+	objName string,
+	enqueueFunc func(ns string),
+	filterFunc func(interface{}) bool,
+) *EventHandler {
+	if filterFunc == nil {
+		filterFunc = func(interface{}) bool { return true }
+	}
 	return &EventHandler{
 		logger:      logger,
 		accessor:    accessor,
 		metrics:     metrics,
 		objName:     objName,
+		filterFunc:  filterFunc,
 		enqueueFunc: enqueueFunc,
 	}
 }
 
 func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 	o, ok := e.accessor.ObjectMetadata(obj)
-	if ok {
-		e.logger.Debug(fmt.Sprintf("%s added", e.objName))
-		e.metrics.TriggerByCounter(e.objName, AddEvent).Inc()
-		e.enqueueFunc(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	if !e.filterFunc(obj) {
+		return
+	}
+
+	e.logger.Debug(fmt.Sprintf("%s added", e.objName))
+	e.metrics.TriggerByCounter(e.objName, AddEvent).Inc()
+	e.enqueueFunc(o.GetNamespace())
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	if old.(metav1.Object).GetResourceVersion() == cur.(metav1.Object).GetResourceVersion() {
+		return
+	}
+
+	if !e.filterFunc(cur) {
 		return
 	}
 
@@ -69,9 +101,16 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 }
 
 func (e *EventHandler) OnDelete(obj interface{}) {
-	if o, ok := e.accessor.ObjectMetadata(obj); ok {
-		e.logger.Debug(fmt.Sprintf("%s deleted", e.objName))
-		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
-		e.enqueueFunc(o.GetNamespace())
+	o, ok := e.accessor.ObjectMetadata(obj)
+	if !ok {
+		return
 	}
+
+	if !e.filterFunc(obj) {
+		return
+	}
+
+	e.logger.Debug(fmt.Sprintf("%s deleted", e.objName))
+	e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
+	e.enqueueFunc(o.GetNamespace())
 }

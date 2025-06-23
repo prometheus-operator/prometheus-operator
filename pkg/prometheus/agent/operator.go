@@ -262,7 +262,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.cmapInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.Namespaces.PrometheusAllowList,
+			operator.MergeStringSets(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList),
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -271,7 +271,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configmap informers: %w", err)
@@ -279,7 +279,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.Namespaces.PrometheusAllowList,
+			operator.MergeStringSets(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList),
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -289,7 +289,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating secrets informers: %w", err)

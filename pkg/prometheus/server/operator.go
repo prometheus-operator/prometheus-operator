@@ -290,7 +290,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.cmapInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.Namespaces.PrometheusAllowList,
+			operator.MergeStringSets(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList),
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -299,7 +299,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configmap informers: %w", err)
@@ -307,7 +307,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.Namespaces.PrometheusAllowList,
+			operator.MergeStringSets(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList),
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -317,7 +317,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating secrets informers: %w", err)
@@ -475,20 +475,22 @@ func (c *Operator) addHandlers() {
 		c.enqueueForMonitorNamespace,
 	))
 
-	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+	c.cmapInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
 		c.enqueueForPrometheusNamespace,
+		c.hasReference,
 	))
 
-	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+	c.secrInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
 		c.enqueueForPrometheusNamespace,
+		c.hasReference,
 	))
 
 	// The controller needs to watch the namespaces in which the service/pod
@@ -798,6 +800,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
+	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
@@ -1381,4 +1384,47 @@ func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBui
 	}
 
 	return nil
+}
+
+func (c *Operator) hasReference(obj interface{}) bool {
+	partialObjMeta, ok := obj.(*metav1.PartialObjectMetadata)
+	if !ok {
+		return false
+	}
+
+	for _, informer := range c.promInfs.GetInformers() {
+		proms, err := informer.Lister().List(labels.Everything())
+		if err != nil {
+			continue
+		}
+
+		for _, prom := range proms {
+			objMeta, ok := prom.(metav1.Object)
+			if !ok {
+				continue
+			}
+
+			// Check if the object is owned by the same namespace as the
+			// workload resource. We should always trigger a reconciliation in
+			// case an external entity altered one of the workload resources.
+			//
+			// TODO: check also the managedfields and don't trigger a
+			// reconciliation if the operator is the only manager.
+			if objMeta.GetNamespace() == partialObjMeta.GetNamespace() {
+				for _, ownerRef := range partialObjMeta.GetOwnerReferences() {
+					if ownerRef.Name == objMeta.GetName() &&
+						ownerRef.Kind == "Prometheus" &&
+						ownerRef.APIVersion == "monitoring.coreos.com" {
+						return true
+					}
+				}
+			}
+
+			if c.reconciliations.HasRefTo(fmt.Sprintf("%s/%s", objMeta.GetNamespace(), objMeta.GetName()), partialObjMeta) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
