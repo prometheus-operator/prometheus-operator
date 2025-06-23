@@ -537,6 +537,7 @@ type GlobalJiraConfig struct {
 type GlobalWeChatConfig struct {
 	// WeChat API URL
 	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
 
@@ -545,6 +546,7 @@ type GlobalWeChatConfig struct {
 	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
 
 	// WeChat API Corporate ID
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	APICorpID *string `json:"apiCorpID,omitempty"`
 }

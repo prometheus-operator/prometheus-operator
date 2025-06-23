@@ -2196,6 +2196,7 @@ spec:
                         properties:
                           apiCorpID:
                             description: WeChat API Corporate ID
+                            minLength: 1
                             type: string
                           apiSecret:
                             description: WeChat API Secret
@@ -2225,7 +2226,11 @@ spec:
                             description: |-
                               WeChat API URL
                               The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+<<<<<<< HEAD
 >>>>>>> e8764859c (update wechat global config)
+=======
+                            pattern: ^(http|https)://.+$
+>>>>>>> 8ae9c7bca (update validation)
                             type: string
                         type: object
                     type: object

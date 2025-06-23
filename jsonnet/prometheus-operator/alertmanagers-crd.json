@@ -1973,6 +1973,7 @@
                             "properties": {
                               "apiCorpID": {
                                 "description": "WeChat API Corporate ID",
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "apiSecret": {
@@ -2000,7 +2001,11 @@
                               },
                               "apiURL": {
                                 "description": "WeChat API URL\nThe default value is \"https://qyapi.weixin.qq.com/cgi-bin/\"",
+<<<<<<< HEAD
 >>>>>>> e8764859c (update wechat global config)
+=======
+                                "pattern": "^(http|https)://.+$",
+>>>>>>> 8ae9c7bca (update validation)
                                 "type": "string"
                               }
                             },
