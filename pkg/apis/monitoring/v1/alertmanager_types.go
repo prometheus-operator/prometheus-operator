@@ -323,7 +323,7 @@ type AlertmanagerSpec struct {
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
 	// EnvVars allows configuring environment variables for the 'alertmanager' container.
-	// It is intended for e.g. adding environment variables for configuration that 
+	// It is intended for e.g. adding environment variables for configuration that
 	// doesn't have a specific field in AlertmanagerSpec.
 	// The environment variables specified will be added to the ones automatically
 	// set by the operator (like POD_IP).
