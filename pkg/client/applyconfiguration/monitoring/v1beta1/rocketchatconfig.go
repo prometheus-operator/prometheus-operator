@@ -28,9 +28,7 @@ type RocketChatConfigApplyConfiguration struct {
 	APIURL       *monitoringv1beta1.URL                     `json:"apiURL,omitempty"`
 	Channel      *string                                    `json:"channel,omitempty"`
 	Token        *v1.SecretKeySelector                      `json:"token,omitempty"`
-	TokenFile    *string                                    `json:"tokenFile,omitempty"`
 	TokenID      *v1.SecretKeySelector                      `json:"tokenID,omitempty"`
-	TokenIDFile  *string                                    `json:"tokenIDFile,omitempty"`
 	Color        *string                                    `json:"color,omitempty"`
 	Emoji        *string                                    `json:"emoji,omitempty"`
 	IconURL      *monitoringv1beta1.URL                     `json:"iconURL,omitempty"`
@@ -84,27 +82,11 @@ func (b *RocketChatConfigApplyConfiguration) WithToken(value v1.SecretKeySelecto
 	return b
 }
 
-// WithTokenFile sets the TokenFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TokenFile field is set to the value of the last call.
-func (b *RocketChatConfigApplyConfiguration) WithTokenFile(value string) *RocketChatConfigApplyConfiguration {
-	b.TokenFile = &value
-	return b
-}
-
 // WithTokenID sets the TokenID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TokenID field is set to the value of the last call.
 func (b *RocketChatConfigApplyConfiguration) WithTokenID(value v1.SecretKeySelector) *RocketChatConfigApplyConfiguration {
 	b.TokenID = &value
-	return b
-}
-
-// WithTokenIDFile sets the TokenIDFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TokenIDFile field is set to the value of the last call.
-func (b *RocketChatConfigApplyConfiguration) WithTokenIDFile(value string) *RocketChatConfigApplyConfiguration {
-	b.TokenIDFile = &value
 	return b
 }
 

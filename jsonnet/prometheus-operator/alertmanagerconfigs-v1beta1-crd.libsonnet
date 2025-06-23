@@ -5496,7 +5496,7 @@
                             type: 'string',
                           },
                           token: {
-                            description: 'The sender token. Either Token or TokenFile is required.',
+                            description: 'The sender token.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5517,13 +5517,9 @@
                             ],
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
-                          },
-                          tokenFile: {
-                            description: 'The file containing the sender token. Mutually exclusive with TokenFile\nEither Token or TokenFile is required.',
-                            type: 'string',
                           },
                           tokenID: {
-                            description: 'The sender token ID. Mutually exclusive with TokenIDFile.\nEither TokenID or TokenIDFile is required.',
+                            description: 'The sender token ID.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5545,11 +5541,11 @@
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
                           },
-                          tokenIDFile: {
-                            description: 'The file containing the sender token ID. Either TokenID or TokenIDFile is required.',
-                            type: 'string',
-                          },
                         },
+                        required: [
+                          'token',
+                          'tokenID',
+                        ],
                         type: 'object',
                       },
                       type: 'array',

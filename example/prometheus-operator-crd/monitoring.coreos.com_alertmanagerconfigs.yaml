@@ -6045,8 +6045,7 @@ spec:
                             minLength: 1
                             type: string
                           token:
-                            description: The sender token. Either `token` or `tokenFile`
-                              is required.
+                            description: The sender token.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -6069,13 +6068,8 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          tokenFile:
-                            description: The file containing the sender token. Either
-                              `token` or `tokenFile` is required.
-                            type: string
                           tokenID:
-                            description: The sender token ID. Either `tokenID` or
-                              `tokenIDFile` is required.
+                            description: The sender token ID.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -6098,10 +6092,9 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          tokenIDFile:
-                            description: The file containing the sender token ID.
-                              Either `tokenID` or `tokenIDFile` is required.
-                            type: string
+                        required:
+                        - token
+                        - tokenID
                         type: object
                       type: array
                     slackConfigs:

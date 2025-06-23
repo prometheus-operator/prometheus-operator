@@ -30276,20 +30276,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>The sender token. Either <code>token</code> or <code>tokenFile</code> is required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tokenFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The file containing the sender token. Either <code>token</code> or <code>tokenFile</code> is required.</p>
+<p>The sender token.</p>
 </td>
 </tr>
 <tr>
@@ -30302,20 +30289,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>The sender token ID. Either <code>tokenID</code> or <code>tokenIDFile</code> is required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tokenIDFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The file containing the sender token ID. Either <code>tokenID</code> or <code>tokenIDFile</code> is required.</p>
+<p>The sender token ID.</p>
 </td>
 </tr>
 <tr>
@@ -35692,21 +35666,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>The sender token. Either Token or TokenFile is required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tokenFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The file containing the sender token. Mutually exclusive with TokenFile
-Either Token or TokenFile is required.</p>
+<p>The sender token.</p>
 </td>
 </tr>
 <tr>
@@ -35719,21 +35679,7 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>The sender token ID. Mutually exclusive with TokenIDFile.
-Either TokenID or TokenIDFile is required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tokenIDFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The file containing the sender token ID. Either TokenID or TokenIDFile is required.</p>
+<p>The sender token ID.</p>
 </td>
 </tr>
 <tr>
