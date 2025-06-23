@@ -42,8 +42,12 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	OpsGenieAPIURL *corev1.SecretKeySelector             `json:"opsGenieApiUrl,omitempty"`
 	OpsGenieAPIKey *corev1.SecretKeySelector             `json:"opsGenieApiKey,omitempty"`
 	PagerdutyURL   *string                               `json:"pagerdutyUrl,omitempty"`
+<<<<<<< HEAD
 	WeChatConfig   *GlobalWeChatConfigApplyConfiguration `json:"wechatConfig,omitempty"`
 >>>>>>> e8764859c (update wechat global config)
+=======
+	WeChatConfig   *GlobalWeChatConfigApplyConfiguration `json:"wechat,omitempty"`
+>>>>>>> 398ae986b (update config name)
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with

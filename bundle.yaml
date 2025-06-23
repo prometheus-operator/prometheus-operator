@@ -12978,6 +12978,7 @@ spec:
                             type: object
                         type: object
 <<<<<<< HEAD
+<<<<<<< HEAD
                       telegram:
                         description: The default Telegram config
                         properties:
@@ -12989,6 +12990,9 @@ spec:
                             pattern: ^(http|https)://.+$
 =======
                       wechatConfig:
+=======
+                      wechat:
+>>>>>>> 398ae986b (update config name)
                         description: The default WeChat Config
                         properties:
                           apiCorpID:

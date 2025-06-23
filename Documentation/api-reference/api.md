@@ -5780,12 +5780,16 @@ string
 <tr>
 <td>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <code>telegram</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
 GlobalTelegramConfig
 =======
 <code>wechatConfig</code><br/>
+=======
+<code>wechat</code><br/>
+>>>>>>> 398ae986b (update config name)
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">
 GlobalWeChatConfig
