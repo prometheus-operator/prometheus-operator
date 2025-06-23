@@ -5780,12 +5780,16 @@ string
 <tr>
 <td>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <code>telegram</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
 GlobalTelegramConfig
 =======
 <code>jiraConfig</code><br/>
+=======
+<code>jira</code><br/>
+>>>>>>> d1ee42246 (update validation)
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalJiraConfig">
 GlobalJiraConfig
@@ -5795,10 +5799,14 @@ GlobalJiraConfig
 </td>
 <td>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <p>The default Telegram config</p>
 =======
 <p>The default Jira API URL.</p>
 >>>>>>> 774df2560 (update jira global config)
+=======
+<p>The default configuration for Jira.</p>
+>>>>>>> d1ee42246 (update validation)
 </td>
 </tr>
 </tbody>
@@ -9969,7 +9977,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default API URL for Jira</p>
+<p>The default API URL.</p>
 </td>
 </tr>
 </tbody>

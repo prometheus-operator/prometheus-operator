@@ -41,8 +41,12 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	OpsGenieAPIURL *corev1.SecretKeySelector           `json:"opsGenieApiUrl,omitempty"`
 	OpsGenieAPIKey *corev1.SecretKeySelector           `json:"opsGenieApiKey,omitempty"`
 	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
+<<<<<<< HEAD
 	JiraConfig     *GlobalJiraConfigApplyConfiguration `json:"jiraConfig,omitempty"`
 >>>>>>> 774df2560 (update jira global config)
+=======
+	JiraConfig     *GlobalJiraConfigApplyConfiguration `json:"jira,omitempty"`
+>>>>>>> d1ee42246 (update validation)
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with

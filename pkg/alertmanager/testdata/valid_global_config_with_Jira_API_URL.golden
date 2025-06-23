@@ -1,5 +1,5 @@
 global:
-  jira_api_url: jira.example.com
+  jira_api_url: https://jira.example.com
 route:
   receiver: mynamespace/global-config/null
   routes:

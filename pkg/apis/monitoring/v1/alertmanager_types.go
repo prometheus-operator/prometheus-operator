@@ -522,6 +522,7 @@ type GlobalTelegramConfig struct {
 
 type GlobalJiraConfig struct {
 	// The default API URL.
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
 }

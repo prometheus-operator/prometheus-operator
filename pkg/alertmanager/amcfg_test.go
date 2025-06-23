@@ -88,7 +88,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	telegramAPIURL := "https://telegram.example.com"
 	invalidTelegramAPIURL := "://telegram.example.com"
 
-	jiraAPIURL := "jira.example.com"
+	jiraAPIURL := "https://jira.example.com"
 	invalidJiraAPIURL := "://jira.example.com"
 
 	tests := []struct {
