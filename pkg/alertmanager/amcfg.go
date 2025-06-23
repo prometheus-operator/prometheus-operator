@@ -1750,8 +1750,8 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 
 func (cb *ConfigBuilder) convertGlobalJiraConfig(ctx context.Context, out *globalConfig, in monitoringv1.GlobalJiraConfig, crKey types.NamespacedName) error {
 	if in.APIURL != nil {
-		apiUrlAllowed := cb.amVersion.GTE(semver.MustParse("0.28.0"))
-		if !apiUrlAllowed {
+		apiURLAllowed := cb.amVersion.GTE(semver.MustParse("0.28.0"))
+		if !apiURLAllowed {
 			return fmt.Errorf(`invalid syntax in global config; jira api url integration is available in Alertmanager >= 0.28.0`)
 		}
 		u, err := url.Parse(*in.APIURL)
