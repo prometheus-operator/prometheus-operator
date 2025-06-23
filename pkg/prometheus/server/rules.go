@@ -198,7 +198,6 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
 func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string, opts ...operator.ObjectOption) ([]v1.ConfigMap, error) {
-
 	buckets := []map[string]string{
 		{},
 	}
