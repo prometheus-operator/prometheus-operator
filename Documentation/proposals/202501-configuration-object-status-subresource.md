@@ -51,12 +51,11 @@ Currently, the status subresource is only implemented for workload resources. Th
 
 ## Non-Goals
 
-* The solution does not aim to expose the full live configuration or runtime status of Prometheus. For example:
+* The solution does not aim to expose the full live configuration or runtime status of Prometheus. Doing so would be expensive for the workload, the operator and the Kubernetes system in general.
   * It will not include per-target scrape status, only summary information (e.g., number of targets up/down).
-  * It will not surface fired alerts from PrometheusRule resources, as querying Prometheus for this data can be expensive and places undue load on both Prometheus and the operator.
-* The status subresource is not intended to provide realtime information of the targets.
+  * It will not surface fired alerts from PrometheusRule resources, as querying Prometheus for this data can be expensive and places undue load on Prometheus, the operator and the Kubernetes platform in general.
 * Configuration resources won't expose status information that explains why they are not being selected by Prometheus or why their targets are not being scraped.
-* The solution doesn't attempt to replace [poctl](https://github.com/prometheus-operator/poctl) which provides some insights into configuration resources.
+  * This non-goal can be partially addressed by tools like [`poctl`](https://github.com/prometheus-operator/poctl), which provide insights into configuration resource selection and target matching.
 
 ### Audience
 
@@ -65,10 +64,10 @@ Currently, the status subresource is only implemented for workload resources. Th
 
 ## How
 
-Challenges that influenced the API design :
+There are different challenges that influence the API design:
 
 * A single config resource can be selected by multiple workload resources.
-* The config resource might not be in the same namespace as the workload resource.
+* The configuration resource may not be in the same namespace as the workload resource.
 * Which workload selects which configuration resources can vary over time depending on the workload resource's label selectors and on the configuration resource's labels.
 
 ### CRDs
@@ -81,6 +80,7 @@ kind: ServiceMonitor
 metadata:
   name: example-servicemonitor
   namespace: monitoring
+  generation: 3
   labels:
     team: backend
 spec:
@@ -117,28 +117,38 @@ spec:
             status: "True"
             observedGeneration: 3
             lastTransitionTime: "2025-05-20T12:34:56Z"
-```
-
-some other example conditions which can take place,
-
-```yaml
-conditions:
-  - type: Reconciled
-    status: "False"
-    observedGeneration: 2
-    lastTransitionTime: "2024-02-08T23:52:22Z"
-    reason: InvalidConfiguration
-    message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
-```
-
-```yaml
-conditions:
-  - type: Reconciled
-    status: "False"
-    observedGeneration: 1
-    lastTransitionTime: "2024-02-08T23:52:22Z"
-    reason: InvalidConfiguration
-    message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'."
+    bindings:
+      - group: monitoring.coreos.com
+        resource: prometheuses
+        name: prometheus-example
+        namespace: default
+        targets: 
+          up: 3
+          down: 1
+          lastCheckedTime: "2025-05-20T12:34:56Z"
+        conditions:
+          - type: Reconciled
+            status: "False"
+            observedGeneration: 2
+            lastTransitionTime: "2024-02-08T23:52:22Z"
+            reason: InvalidConfiguration
+            message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
+    bindings:
+      - group: monitoring.coreos.com
+        resource: prometheusagents
+        name: prometheus-agent-main
+        namespace: monitor
+        targets: 
+          up: 3
+          down: 1
+          lastCheckedTime: "2025-05-20T12:34:56Z"
+        conditions:
+          - type: Reconciled
+            status: "False"
+            observedGeneration: 3
+            lastTransitionTime: "2024-02-08T23:52:22Z"
+            reason: InvalidConfiguration
+            message: "Referenced Secret 'my-secret' in namespace 'monitoring' is missing or does not contain the required key 'basic-auth-password'"
 ```
 
 #### `PrometheusRule`
@@ -149,6 +159,7 @@ kind: PrometheusRule
 metadata:
   name: example-prometheus-rules
   namespace: monitoring
+  generation: 1
   labels:
     prometheus: k8s
     role: alert-rules
@@ -158,7 +169,7 @@ spec:
       interval: 30s
       rules:
         - alert: HighPodCPUUsage
-          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m)) by (pod) > 0.5
+          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m])) by (pod) > 0.5
           for: 5m
           labels:
             severity: warning
@@ -188,6 +199,7 @@ kind: AlertmanagerConfig
 metadata:
   name: minimal-alertmanager-config
   namespace: monitoring
+  generation: 1
 spec:
   route:
     receiver: "webhook-receiver"
@@ -215,7 +227,7 @@ spec:
 
 The operator sends the GET request at regular interval to the config-reloader sidecar with the serviceMonitor selector labels as the request body, the sidecar container after receiving the request sends the /api/v1/targets request to prometheus-container, from the response it gets from the prometheus, it modifies the response based on the labels and send the response to the operator. The sidecar will remove critical informations from the response which can be used by attackers.
 
-#### How to clear refrences in status section if the workload is deleted ?
+#### How to remove a binding when the workload is deleted ?
 
 When a workload resource is created, we add a finalizer to it to ensure proper cleanup before deletion. If a user later requests deletion of the resource, Kubernetes does not immediately remove it; instead, it sets a deletionTimestamp on the resource. This triggers an update event, which the controller receives and processes. The controller checks if the deletionTimestamp is set to determine if the resource is in the process of being deleted. If so, the controller proceeds to clean up associated references from relevant configuration resources (e.g., ServiceMonitors, PrometheusRules). Once the cleanup is complete, the controller removes the finalizer from the workload resource, allowing Kubernetes to complete the deletion process.
 
