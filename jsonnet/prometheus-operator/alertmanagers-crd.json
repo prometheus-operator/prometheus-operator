@@ -1957,6 +1957,7 @@
                             "type": "object"
                           },
 <<<<<<< HEAD
+<<<<<<< HEAD
                           "telegram": {
                             "description": "The default Telegram config",
                             "properties": {
@@ -1965,6 +1966,9 @@
                                 "pattern": "^(http|https)://.+$",
 =======
                           "wechatConfig": {
+=======
+                          "wechat": {
+>>>>>>> 398ae986b (update config name)
                             "description": "The default WeChat Config",
                             "properties": {
                               "apiCorpID": {

@@ -399,7 +399,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default WeChat Config
 	// +optional
-	WeChatConfig *GlobalWeChatConfig `json:"wechatConfig,omitempty"`
+	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
