@@ -266,8 +266,43 @@ func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, se
 	return cm.Data[sel.Key], nil
 }
 
-// GetSecretKey processes the given SecretKeySelector and returns the referenced data.
+// GetSecretKey processes the given v1.SecretKeySelector and returns the referenced data.
 func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel v1.SecretKeySelector) (string, error) {
+	if namespace == "" {
+		return "", errors.New("namespace cannot be empty")
+	}
+
+	obj, exists, err := s.objStore.Get(&v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      sel.Name,
+			Namespace: namespace,
+		},
+	})
+	if err != nil {
+		return "", fmt.Errorf("unexpected store error when getting secret %q: %w", sel.Name, err)
+	}
+
+	if !exists {
+		secret, err := s.sClient.Secrets(namespace).Get(ctx, sel.Name, metav1.GetOptions{})
+		if err != nil {
+			return "", fmt.Errorf("unable to get secret %q: %w", sel.Name, err)
+		}
+		if err = s.objStore.Add(secret); err != nil {
+			return "", fmt.Errorf("unexpected store error when adding secret %q: %w", sel.Name, err)
+		}
+		obj = secret
+	}
+
+	secret := obj.(*v1.Secret)
+	if _, found := secret.Data[sel.Key]; !found {
+		return "", fmt.Errorf("key %q in secret %q not found", sel.Key, sel.Name)
+	}
+
+	return string(secret.Data[sel.Key]), nil
+}
+
+// GetSecretKeyWithMonitoringV1 processes the given monitoringv1.SecretKeySelector and returns the referenced data.
+func (s *StoreBuilder) GetSecretKeyWithMonitoringV1(ctx context.Context, namespace string, sel monitoringv1.SecretKeySelector) (string, error) {
 	if namespace == "" {
 		return "", errors.New("namespace cannot be empty")
 	}
