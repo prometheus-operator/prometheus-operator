@@ -223,6 +223,18 @@ spec:
 
 ### Working
 
+#### Details of the Status API fields
+
+* `bindings`:  Lists the workload resources that reference or use the configuration resource.
+  * `conditions`: Describes the latest status of the configuration resource.
+    * `type`: The only condition type used is `Reconciled`, which indicates that the workload resource controller has successfully discovered the associated configuration resource and completed the necessary reconciliation steps.
+    * `status`: It can be either `true` or `false`.
+      * `true` indicates that the configuration resource was successfully accepted by the controller and written to the configuration secret.
+      * `false` means the controller rejected the configuration due to an error.
+    * `reason`: Specifies the reason for rejection, if the configuration was not accepted.
+    * `message`: Provides the detailed error message returned by the controller during reconciliation.
+    * `observedGeneration`: Represents the generation of the configuration resource that the controller has most recently reconciled.
+
 #### How to get targets information in scrape resources ?
 
 The operator sends the GET request at regular interval to the config-reloader sidecar with the serviceMonitor selector labels as the request body, the sidecar container after receiving the request sends the /api/v1/targets request to prometheus-container, from the response it gets from the prometheus, it modifies the response based on the labels and send the response to the operator. The sidecar will remove critical informations from the response which can be used by attackers.
