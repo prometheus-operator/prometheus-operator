@@ -165,6 +165,39 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "myreceiver",
 						},
+						{
+							Name: "jira",
+							JiraConfigs: []monitoringv1alpha1.JiraConfig{
+								{
+									Project:           "projectA",
+									SendResolved:      ptr.To(true),
+									APIURL:            ptr.To("https://test.com"),
+									Summary:           ptr.To("summary"),
+									Description:       ptr.To("description"),
+									Priority:          ptr.To("priority"),
+									Labels:            []string{"aa", "bb"},
+									IssueType:         "bug",
+									ResolveTransition: ptr.To("ResolveTransition"),
+									ReopenTransition:  ptr.To("ReopenTransition"),
+									WontFixResolution: ptr.To("WontFixResolution"),
+									ReopenDuration:    ptr.To(monitoringv1.Duration("5s")),
+									Fields: []monitoringv1alpha1.JiraField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
+								},
+							},
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -2791,6 +2824,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versioJiraAllowed := semver.Version{Major: 0, Minor: 28}
+	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
 
@@ -3453,6 +3489,73 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
+		},
+		{
+			name:           "Jira_config for supported versions",
+			againstVersion: versioJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    ptr.To("http://example.com"),
+								Project:   "foo",
+								IssueType: "bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Jira_config returns error for unsupported versions",
+			againstVersion: versionJiraNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:  ptr.To("http://example.com"),
+								Project: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Jira_config returns error for missing project mandatory field",
+			againstVersion: versioJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL: ptr.To("http://example.com"),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Jira_config returns error for missing api_url/Jira_api_url mandatory field",
+			againstVersion: versioJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								Project: "peojectA",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -4488,7 +4591,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL: "http://example.com",
+								APIURL: ptr.To("http://example.com"),
 							},
 						},
 					},
@@ -4504,7 +4607,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:    "http://issues.example.com",
+								APIURL:    ptr.To("http://issues.example.com"),
 								Project:   "Monitoring",
 								IssueType: "Bug",
 							},
@@ -4522,7 +4625,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL: "http://example.com",
+								APIURL: ptr.To("http://example.com"),
 							},
 						},
 					},
