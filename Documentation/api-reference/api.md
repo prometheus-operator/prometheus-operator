@@ -5779,6 +5779,7 @@ string
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>telegram</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
@@ -5796,6 +5797,12 @@ GlobalTelegramConfig
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalJiraConfig">
 GlobalJiraConfig
+=======
+<code>webex</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalWebexConfig">
+GlobalWebexConfig
+>>>>>>> da8c220e5 (update generated files)
 </a>
 </em>
 </td>
@@ -5803,6 +5810,7 @@ GlobalJiraConfig
 <p>The default configuration for Jira.</p>
 </td>
 </tr>
+<<<<<<< HEAD
 <tr>
 <td>
 <code>rocketChat</code><br/>
@@ -5816,6 +5824,8 @@ GlobalRocketChatConfig
 <p>The default configuration for Rocket Chat.</p>
 </td>
 </tr>
+=======
+>>>>>>> da8c220e5 (update generated files)
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -10235,13 +10245,22 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
+<<<<<<< HEAD
 <h3 id="monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig
+=======
+<h3 id="monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig
+>>>>>>> da8c220e5 (update generated files)
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
+<<<<<<< HEAD
 <p>GlobalTelegramConfig configures global Telegram parameters.</p>
+=======
+<p>GlobalWebexConfig configures global Webex parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+>>>>>>> da8c220e5 (update generated files)
 </div>
 <table>
 <thead>
@@ -10255,15 +10274,23 @@ SafeTLSConfig
 <td>
 <code>apiURL</code><br/>
 <em>
+<<<<<<< HEAD
 <a href="#monitoring.coreos.com/v1.URL">
 URL
 </a>
+=======
+string
+>>>>>>> da8c220e5 (update generated files)
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>The default Telegram API URL.</p>
 <p>It requires Alertmanager &gt;= v0.24.0.</p>
+=======
+<p>The default API URL.</p>
+>>>>>>> da8c220e5 (update generated files)
 </td>
 </tr>
 </tbody>

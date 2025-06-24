@@ -2241,6 +2241,7 @@ spec:
                                 type: string
                             type: object
                         type: object
+<<<<<<< HEAD
                       telegram:
                         description: The default Telegram config
                         properties:
@@ -2249,6 +2250,13 @@ spec:
                               The default Telegram API URL.
 
                               It requires Alertmanager >= v0.24.0.
+=======
+                      webex:
+                        description: The default configuration for Jira.
+                        properties:
+                          apiURL:
+                            description: The default API URL.
+>>>>>>> da8c220e5 (update generated files)
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object
