@@ -5777,6 +5777,19 @@ string
 <p>The default Pagerduty URL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>webex</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalWebexConfig">
+GlobalWebexConfig
+</a>
+</em>
+</td>
+<td>
+<p>The default configuration for Jira.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -10053,6 +10066,37 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>The default TLS configuration for SMTP receivers</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalWebexConfig configures global Webex parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default API URL.</p>
 </td>
 </tr>
 </tbody>

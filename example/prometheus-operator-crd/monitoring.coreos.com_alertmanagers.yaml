@@ -2165,6 +2165,14 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      webex:
+                        description: The default configuration for Jira.
+                        properties:
+                          apiURL:
+                            description: The default API URL.
+                            pattern: ^(http|https)://.+$
+                            type: string
+                        type: object
                     type: object
                   name:
                     description: |-
