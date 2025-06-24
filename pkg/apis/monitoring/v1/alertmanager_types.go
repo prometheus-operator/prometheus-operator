@@ -390,6 +390,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+
+	// The default Telegram config
+	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -503,6 +506,14 @@ type GlobalSMTPConfig struct {
 	// The default TLS configuration for SMTP receivers
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// GlobalTelegramConfig configures global Telegram parameters.
+type GlobalTelegramConfig struct {
+	// SMTP Auth using PLAIN
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
