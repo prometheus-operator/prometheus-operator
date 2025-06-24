@@ -223,9 +223,13 @@ spec:
 
 ### Working
 
+#### How to Enable/Disable the Status Subresource for Configuration Resources
+
+This feature is controlled by a feature flag: `StatusForConfigurationResources=true|false`. Cluster administrators can toggle this flag to enable or disable the status subresource support for configuration resources as needed.
+
 #### Details of the Status API fields
 
-* `bindings`:  Lists the workload resources that reference or use the configuration resource.
+* `bindings`: Lists the workload resources that reference or use the configuration resource.
   * `conditions`: Describes the latest status of the configuration resource.
     * `type`: The only condition type used is `Reconciled`, which indicates that the workload resource controller has successfully discovered the associated configuration resource and completed the necessary reconciliation steps.
     * `status`: It can be either `true` or `false`.
@@ -237,7 +241,19 @@ spec:
 
 #### How to get targets information in scrape resources ?
 
-The operator sends the GET request at regular interval to the config-reloader sidecar with the serviceMonitor selector labels as the request body, the sidecar container after receiving the request sends the /api/v1/targets request to prometheus-container, from the response it gets from the prometheus, it modifies the response based on the labels and send the response to the operator. The sidecar will remove critical informations from the response which can be used by attackers.
+The operator periodically sends a gRPC request to the `config-reloader` sidecar, including the configuration resources selector labels in the request body. Upon receiving the request, the sidecar queries the Prometheus container by calling the /api/v1/targets endpoint. It then filters and modifies the response based on the provided labels, removing sensitive information that could potentially be exploited by attackers. The sanitized response is finally sent back to the operator.
+
+##### Authentication/Authorization of the request ?
+
+To ensure secure and authenticated communication between the `config-reloader` sidecar and the `operator`, mutual TLS (mTLS) can be used. With mTLS, both parties validate each other’s identity and encrypt all communication, mitigating the risk of man-in-the-middle attacks or unauthorized access. The necessary TLS certificates and keys are provisioned as Kubernetes Secrets and mounted into both the Prometheus and operator pods. This setup ensures that only trusted components within the cluster can participate in the gRPC communication, further strengthening the overall security posture.
+
+##### Alternative (Not recommended)
+
+An alternative approach would involve allowing the workload's ServiceAccount to update its own binding in the status subresource of the configuration resource. In this method, the job_name field could be used to infer a reference to the originating resource—such as ServiceMonitor/namespace/name/index.
+
+Cons:
+* The workload's ServiceAccount would need additional permissions to update its own resource’s status subresource.
+* Complexity in Resource Mapping.
 
 #### How to remove a binding when the workload is deleted ?
 
