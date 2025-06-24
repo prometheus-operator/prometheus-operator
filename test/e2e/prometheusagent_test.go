@@ -645,6 +645,8 @@ type TargetsResponse struct {
 func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
 	t.Run("DaemonSetInvalidReplicas", testDaemonSetInvalidReplicas)
 	t.Run("DaemonSetInvalidStorage", testDaemonSetInvalidStorage)
+	t.Run("DaemonSetInvalidShards", testDaemonSetInvalidShards)
+	t.Run("DaemonSetInvalidPVCRetentionPolicy", testDaemonSetInvalidPVCRetentionPolicy)
 }
 
 func testDaemonSetInvalidReplicas(t *testing.T) {
@@ -714,7 +716,7 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
 }
 
-func testPrometheusAgentDaemonSetInvalidShards(t *testing.T) {
+func testDaemonSetInvalidShards(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
@@ -742,7 +744,7 @@ func testPrometheusAgentDaemonSetInvalidShards(t *testing.T) {
 	require.Contains(t, err.Error(), "shards cannot be greater than 1 when mode is DaemonSet")
 }
 
-func testPrometheusAgentDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
+func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
