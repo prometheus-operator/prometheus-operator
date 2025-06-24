@@ -399,6 +399,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default configuration for Rocket Chat.
 	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
+
+	// The default configuration for Jira.
+	WebexConfig *GlobalWebexConfig `json:"webex,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -555,6 +558,15 @@ type GlobalRocketChatConfig struct {
 	//
 	// +optional
 	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
+}
+
+// GlobalWebexConfig configures global Webex parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+type GlobalWebexConfig struct {
+	// The default API URL.
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

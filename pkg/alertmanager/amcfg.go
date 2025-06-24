@@ -478,6 +478,12 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global rocket chat config: %w", err)
 	}
 
+	if in.WebexConfig != nil {
+		if err := cb.convertGlobalWebexConfig(out, *in.WebexConfig); err != nil {
+			return nil, fmt.Errorf("invalid global webex: %w", err)
+		}
+	}
+
 	return out, nil
 }
 
@@ -1801,6 +1807,22 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 			return fmt.Errorf("failed to get Rocket Chat Token ID: %w", err)
 		}
 		out.RocketChatTokenID = tokenID
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in monitoringv1.GlobalWebexConfig) error {
+	if in.APIURL != nil {
+		apiURLAllowed := cb.amVersion.GTE(semver.MustParse("0.25.0"))
+		if !apiURLAllowed {
+			return fmt.Errorf(`invalid syntax in global config; webex api url integration is available in Alertmanager >= 0.25.0`)
+		}
+		u, err := url.Parse(*in.APIURL)
+		if err != nil {
+			return fmt.Errorf("parse Webex API URL: %w", err)
+		}
+		out.WebexAPIURL = &config.URL{URL: u}
 	}
 
 	return nil
