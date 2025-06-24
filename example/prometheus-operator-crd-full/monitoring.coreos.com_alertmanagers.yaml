@@ -2164,6 +2164,14 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      telegram:
+                        description: The default Telegram config
+                        properties:
+                          apiURL:
+                            description: SMTP Auth using PLAIN
+                            pattern: ^(http|https)://.+$
+                            type: string
+                        type: object
                     type: object
                   name:
                     description: |-

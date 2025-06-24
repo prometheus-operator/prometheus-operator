@@ -5777,6 +5777,19 @@ string
 <p>The default Pagerduty URL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>telegram</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
+GlobalTelegramConfig
+</a>
+</em>
+</td>
+<td>
+<p>The default Telegram config</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -10053,6 +10066,36 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>The default TLS configuration for SMTP receivers</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalTelegramConfig configures global Telegram parameters.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SMTP Auth using PLAIN</p>
 </td>
 </tr>
 </tbody>
