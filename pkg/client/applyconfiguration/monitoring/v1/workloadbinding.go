@@ -16,26 +16,26 @@
 
 package v1
 
-// WorkloadResourceReferenceApplyConfiguration represents a declarative configuration of the WorkloadResourceReference type for use
+// WorkloadBindingApplyConfiguration represents a declarative configuration of the WorkloadBinding type for use
 // with apply.
-type WorkloadResourceReferenceApplyConfiguration struct {
-	Group      *string                                `json:"group,omitempty"`
-	Resource   *string                                `json:"resource,omitempty"`
-	Name       *string                                `json:"name,omitempty"`
-	Namespace  *string                                `json:"namespace,omitempty"`
-	Conditions []ConfigResConditionApplyConfiguration `json:"conditions,omitempty"`
+type WorkloadBindingApplyConfiguration struct {
+	Group      *string                                     `json:"group,omitempty"`
+	Resource   *string                                     `json:"resource,omitempty"`
+	Name       *string                                     `json:"name,omitempty"`
+	Namespace  *string                                     `json:"namespace,omitempty"`
+	Conditions []ConfigResourceConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// WorkloadResourceReferenceApplyConfiguration constructs a declarative configuration of the WorkloadResourceReference type for use with
+// WorkloadBindingApplyConfiguration constructs a declarative configuration of the WorkloadBinding type for use with
 // apply.
-func WorkloadResourceReference() *WorkloadResourceReferenceApplyConfiguration {
-	return &WorkloadResourceReferenceApplyConfiguration{}
+func WorkloadBinding() *WorkloadBindingApplyConfiguration {
+	return &WorkloadBindingApplyConfiguration{}
 }
 
 // WithGroup sets the Group field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Group field is set to the value of the last call.
-func (b *WorkloadResourceReferenceApplyConfiguration) WithGroup(value string) *WorkloadResourceReferenceApplyConfiguration {
+func (b *WorkloadBindingApplyConfiguration) WithGroup(value string) *WorkloadBindingApplyConfiguration {
 	b.Group = &value
 	return b
 }
@@ -43,7 +43,7 @@ func (b *WorkloadResourceReferenceApplyConfiguration) WithGroup(value string) *W
 // WithResource sets the Resource field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Resource field is set to the value of the last call.
-func (b *WorkloadResourceReferenceApplyConfiguration) WithResource(value string) *WorkloadResourceReferenceApplyConfiguration {
+func (b *WorkloadBindingApplyConfiguration) WithResource(value string) *WorkloadBindingApplyConfiguration {
 	b.Resource = &value
 	return b
 }
@@ -51,7 +51,7 @@ func (b *WorkloadResourceReferenceApplyConfiguration) WithResource(value string)
 // WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
-func (b *WorkloadResourceReferenceApplyConfiguration) WithName(value string) *WorkloadResourceReferenceApplyConfiguration {
+func (b *WorkloadBindingApplyConfiguration) WithName(value string) *WorkloadBindingApplyConfiguration {
 	b.Name = &value
 	return b
 }
@@ -59,7 +59,7 @@ func (b *WorkloadResourceReferenceApplyConfiguration) WithName(value string) *Wo
 // WithNamespace sets the Namespace field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespace field is set to the value of the last call.
-func (b *WorkloadResourceReferenceApplyConfiguration) WithNamespace(value string) *WorkloadResourceReferenceApplyConfiguration {
+func (b *WorkloadBindingApplyConfiguration) WithNamespace(value string) *WorkloadBindingApplyConfiguration {
 	b.Namespace = &value
 	return b
 }
@@ -67,7 +67,7 @@ func (b *WorkloadResourceReferenceApplyConfiguration) WithNamespace(value string
 // WithConditions adds the given value to the Conditions field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Conditions field.
-func (b *WorkloadResourceReferenceApplyConfiguration) WithConditions(values ...*ConfigResConditionApplyConfiguration) *WorkloadResourceReferenceApplyConfiguration {
+func (b *WorkloadBindingApplyConfiguration) WithConditions(values ...*ConfigResourceConditionApplyConfiguration) *WorkloadBindingApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithConditions")

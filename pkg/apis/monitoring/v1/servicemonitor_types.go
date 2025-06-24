@@ -196,7 +196,7 @@ type ServiceMonitorStatus struct {
 	// +patchMergeKey=name
 	// +patchMergeStrategy=merge
 	// +optional
-	References []WorkloadResourceReference `json:"references,omitempty"`
+	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

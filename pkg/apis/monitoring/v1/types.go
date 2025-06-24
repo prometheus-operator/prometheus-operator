@@ -1016,9 +1016,9 @@ const (
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
 
-// WorkloadResourceReference is a link of workload resource wuth configuration resource.
+// WorkloadBinding is a link of workload resource wuth configuration resource.
 // +k8s:openapi-gen=true
-type WorkloadResourceReference struct {
+type WorkloadBinding struct {
 	// The group of the referenced resource.
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	// +required
@@ -1039,19 +1039,21 @@ type WorkloadResourceReference struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
-	Conditions []ConfigResCondition `json:"conditions,omitempty"`
+	Conditions []ConfigResourceCondition `json:"conditions,omitempty"`
 }
 
-// ConfigResCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.
+// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.
 // +k8s:deepcopy-gen=true
-type ConfigResCondition struct {
+type ConfigResourceCondition struct {
 	// Type of the condition being reported.
+	// Currently, only "Reconciled" is supported.
+	// +kubebuilder:validation:Enum=Reconciled
 	// +required
 	Type ConditionType `json:"type"`
 	// Status of the condition.
 	// +required
 	Status ConditionStatus `json:"status"`
-	// lastTransitionTime is the time of the last update to the current status property.
+	// LastTransitionTime is the time of the last update to the current status property.
 	// +required
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// Reason for the condition's last transition.

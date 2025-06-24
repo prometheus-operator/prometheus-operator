@@ -1233,23 +1233,23 @@ spec:
               More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
-              references:
+              bindings:
                 description: The list of workload resources(Prometheus or PrometheusAgent)
                   the service monitor is link to.
                 items:
-                  description: WorkloadResourceReference is a link of workload resource
-                    wuth configuration resource.
+                  description: WorkloadBinding is a link of workload resource wuth
+                    configuration resource.
                   properties:
                     conditions:
                       description: The current state of the service monitor when bound
                         to the referenced Prometheus object.
                       items:
-                        description: ConfigResCondition describes the status of configuration
-                          resources linked to Prometheus, PrometheusAgent, Alertmanager,
-                          or ThanosRuler.
+                        description: ConfigResourceCondition describes the status
+                          of configuration resources linked to Prometheus, PrometheusAgent,
+                          Alertmanager, or ThanosRuler.
                         properties:
                           lastTransitionTime:
-                            description: lastTransitionTime is the time of the last
+                            description: LastTransitionTime is the time of the last
                               update to the current status property.
                             format: date-time
                             type: string
@@ -1274,7 +1274,11 @@ spec:
                             minLength: 1
                             type: string
                           type:
-                            description: Type of the condition being reported.
+                            description: |-
+                              Type of the condition being reported.
+                              Currently, only "Reconciled" is supported.
+                            enum:
+                            - Reconciled
                             minLength: 1
                             type: string
                         required:

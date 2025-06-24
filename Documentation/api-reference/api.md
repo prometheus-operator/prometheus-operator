@@ -8973,7 +8973,7 @@ instance.</p>
 <h3 id="monitoring.coreos.com/v1.ConditionStatus">ConditionStatus
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>, <a href="#monitoring.coreos.com/v1.ConfigResCondition">ConfigResCondition</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>, <a href="#monitoring.coreos.com/v1.ConfigResourceCondition">ConfigResourceCondition</a>)
 </p>
 <div>
 </div>
@@ -8997,7 +8997,7 @@ instance.</p>
 <h3 id="monitoring.coreos.com/v1.ConditionType">ConditionType
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>, <a href="#monitoring.coreos.com/v1.ConfigResCondition">ConfigResCondition</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Condition">Condition</a>, <a href="#monitoring.coreos.com/v1.ConfigResourceCondition">ConfigResourceCondition</a>)
 </p>
 <div>
 </div>
@@ -9027,13 +9027,13 @@ The possible status values for this condition type are:
 </td>
 </tr></tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.ConfigResCondition">ConfigResCondition
+<h3 id="monitoring.coreos.com/v1.ConfigResourceCondition">ConfigResourceCondition
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WorkloadResourceReference">WorkloadResourceReference</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WorkloadBinding">WorkloadBinding</a>)
 </p>
 <div>
-<p>ConfigResCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.</p>
+<p>ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.</p>
 </div>
 <table>
 <thead>
@@ -9053,7 +9053,8 @@ ConditionType
 </em>
 </td>
 <td>
-<p>Type of the condition being reported.</p>
+<p>Type of the condition being reported.
+Currently, only &ldquo;Reconciled&rdquo; is supported.</p>
 </td>
 </tr>
 <tr>
@@ -9079,7 +9080,7 @@ Kubernetes meta/v1.Time
 </em>
 </td>
 <td>
-<p>lastTransitionTime is the time of the last update to the current status property.</p>
+<p>LastTransitionTime is the time of the last update to the current status property.</p>
 </td>
 </tr>
 <tr>
@@ -16938,10 +16939,10 @@ More info:
 <tbody>
 <tr>
 <td>
-<code>references</code><br/>
+<code>bindings</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.WorkloadResourceReference">
-[]WorkloadResourceReference
+<a href="#monitoring.coreos.com/v1.WorkloadBinding">
+[]WorkloadBinding
 </a>
 </em>
 </td>
@@ -19410,13 +19411,13 @@ order.</p>
 </p>
 <div>
 </div>
-<h3 id="monitoring.coreos.com/v1.WorkloadResourceReference">WorkloadResourceReference
+<h3 id="monitoring.coreos.com/v1.WorkloadBinding">WorkloadBinding
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus</a>)
 </p>
 <div>
-<p>WorkloadResourceReference is a link of workload resource wuth configuration resource.</p>
+<p>WorkloadBinding is a link of workload resource wuth configuration resource.</p>
 </div>
 <table>
 <thead>
@@ -19474,8 +19475,8 @@ string
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ConfigResCondition">
-[]ConfigResCondition
+<a href="#monitoring.coreos.com/v1.ConfigResourceCondition">
+[]ConfigResourceCondition
 </a>
 </em>
 </td>

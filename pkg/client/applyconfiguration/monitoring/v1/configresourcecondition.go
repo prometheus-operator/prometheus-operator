@@ -21,9 +21,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ConfigResConditionApplyConfiguration represents a declarative configuration of the ConfigResCondition type for use
+// ConfigResourceConditionApplyConfiguration represents a declarative configuration of the ConfigResourceCondition type for use
 // with apply.
-type ConfigResConditionApplyConfiguration struct {
+type ConfigResourceConditionApplyConfiguration struct {
 	Type               *monitoringv1.ConditionType   `json:"type,omitempty"`
 	Status             *monitoringv1.ConditionStatus `json:"status,omitempty"`
 	LastTransitionTime *metav1.Time                  `json:"lastTransitionTime,omitempty"`
@@ -32,16 +32,16 @@ type ConfigResConditionApplyConfiguration struct {
 	ObservedGeneration *int64                        `json:"observedGeneration,omitempty"`
 }
 
-// ConfigResConditionApplyConfiguration constructs a declarative configuration of the ConfigResCondition type for use with
+// ConfigResourceConditionApplyConfiguration constructs a declarative configuration of the ConfigResourceCondition type for use with
 // apply.
-func ConfigResCondition() *ConfigResConditionApplyConfiguration {
-	return &ConfigResConditionApplyConfiguration{}
+func ConfigResourceCondition() *ConfigResourceConditionApplyConfiguration {
+	return &ConfigResourceConditionApplyConfiguration{}
 }
 
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *ConfigResConditionApplyConfiguration) WithType(value monitoringv1.ConditionType) *ConfigResConditionApplyConfiguration {
+func (b *ConfigResourceConditionApplyConfiguration) WithType(value monitoringv1.ConditionType) *ConfigResourceConditionApplyConfiguration {
 	b.Type = &value
 	return b
 }
@@ -49,7 +49,7 @@ func (b *ConfigResConditionApplyConfiguration) WithType(value monitoringv1.Condi
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *ConfigResConditionApplyConfiguration) WithStatus(value monitoringv1.ConditionStatus) *ConfigResConditionApplyConfiguration {
+func (b *ConfigResourceConditionApplyConfiguration) WithStatus(value monitoringv1.ConditionStatus) *ConfigResourceConditionApplyConfiguration {
 	b.Status = &value
 	return b
 }
@@ -57,7 +57,7 @@ func (b *ConfigResConditionApplyConfiguration) WithStatus(value monitoringv1.Con
 // WithLastTransitionTime sets the LastTransitionTime field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LastTransitionTime field is set to the value of the last call.
-func (b *ConfigResConditionApplyConfiguration) WithLastTransitionTime(value metav1.Time) *ConfigResConditionApplyConfiguration {
+func (b *ConfigResourceConditionApplyConfiguration) WithLastTransitionTime(value metav1.Time) *ConfigResourceConditionApplyConfiguration {
 	b.LastTransitionTime = &value
 	return b
 }
@@ -65,7 +65,7 @@ func (b *ConfigResConditionApplyConfiguration) WithLastTransitionTime(value meta
 // WithReason sets the Reason field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Reason field is set to the value of the last call.
-func (b *ConfigResConditionApplyConfiguration) WithReason(value string) *ConfigResConditionApplyConfiguration {
+func (b *ConfigResourceConditionApplyConfiguration) WithReason(value string) *ConfigResourceConditionApplyConfiguration {
 	b.Reason = &value
 	return b
 }
@@ -73,7 +73,7 @@ func (b *ConfigResConditionApplyConfiguration) WithReason(value string) *ConfigR
 // WithMessage sets the Message field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Message field is set to the value of the last call.
-func (b *ConfigResConditionApplyConfiguration) WithMessage(value string) *ConfigResConditionApplyConfiguration {
+func (b *ConfigResourceConditionApplyConfiguration) WithMessage(value string) *ConfigResourceConditionApplyConfiguration {
 	b.Message = &value
 	return b
 }
@@ -81,7 +81,7 @@ func (b *ConfigResConditionApplyConfiguration) WithMessage(value string) *Config
 // WithObservedGeneration sets the ObservedGeneration field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ObservedGeneration field is set to the value of the last call.
-func (b *ConfigResConditionApplyConfiguration) WithObservedGeneration(value int64) *ConfigResConditionApplyConfiguration {
+func (b *ConfigResourceConditionApplyConfiguration) WithObservedGeneration(value int64) *ConfigResourceConditionApplyConfiguration {
 	b.ObservedGeneration = &value
 	return b
 }

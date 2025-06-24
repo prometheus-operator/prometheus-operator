@@ -78,8 +78,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Condition"):
 		return &monitoringv1.ConditionApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("ConfigResCondition"):
-		return &monitoringv1.ConfigResConditionApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ConfigResourceCondition"):
+		return &monitoringv1.ConfigResourceConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
@@ -220,8 +220,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.WebHTTPHeadersApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebTLSConfig"):
 		return &monitoringv1.WebTLSConfigApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("WorkloadResourceReference"):
-		return &monitoringv1.WorkloadResourceReferenceApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("WorkloadBinding"):
+		return &monitoringv1.WorkloadBindingApplyConfiguration{}
 
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig"):
