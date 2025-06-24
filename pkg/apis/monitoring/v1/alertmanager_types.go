@@ -510,7 +510,9 @@ type GlobalSMTPConfig struct {
 
 // GlobalTelegramConfig configures global Telegram parameters.
 type GlobalTelegramConfig struct {
-	// SMTP Auth using PLAIN
+	// The default Telegram API URL.
+	//
+	// It requires Alertmanager >= v0.24.0.
 	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`

@@ -1725,6 +1725,14 @@ func (cb *ConfigBuilder) convertProxyConfig(ctx context.Context, in monitoringv1
 }
 
 func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in monitoringv1.GlobalTelegramConfig) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`invalid syntax in global config; Telegram integration requires Alertmanager >= 0.24.0`)
+	}
+
 	if in.APIURL != nil {
 		apiURLAllowed := cb.amVersion.GTE(semver.MustParse("0.24.0"))
 		if !apiURLAllowed {
