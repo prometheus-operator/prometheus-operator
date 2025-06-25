@@ -10747,6 +10747,12 @@ spec:
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.replicas))'
             - message: storage cannot be set when mode is DaemonSet
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.storage))'
+            - message: shards cannot be greater than 1 when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.shards)
+                && self.shards > 1)'
+            - message: persistentVolumeClaimRetentionPolicy cannot be set when mode
+                is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.persistentVolumeClaimRetentionPolicy))'
           status:
             description: |-
               Most recent observed status of the Prometheus cluster. Read-only.
