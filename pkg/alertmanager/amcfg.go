@@ -466,6 +466,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.PagerdutyURL = &config.URL{URL: u}
 	}
 
+	if err := cb.convertGlobalTelegramConfig(out, in.TelegramConfig); err != nil {
+		return nil, fmt.Errorf("invalid global telegram config: %w", err)
+	}
+
 	return out, nil
 }
 
@@ -1716,6 +1720,26 @@ func (cb *ConfigBuilder) convertProxyConfig(ctx context.Context, in monitoringv1
 	}
 
 	return out, nil
+}
+
+func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *monitoringv1.GlobalTelegramConfig) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf("telegram integration requires Alertmanager >= 0.24.0")
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("failed to parse Telegram API URL: %w", err)
+		}
+		out.TelegramAPIURL = &config.URL{URL: u}
+	}
+
+	return nil
 }
 
 // sanitize the config against a specific Alertmanager version

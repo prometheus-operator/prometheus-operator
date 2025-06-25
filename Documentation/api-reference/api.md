@@ -5777,6 +5777,19 @@ string
 <p>The default Pagerduty URL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>telegram</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
+GlobalTelegramConfig
+</a>
+</em>
+</td>
+<td>
+<p>The default Telegram config</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -10053,6 +10066,39 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>The default TLS configuration for SMTP receivers</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalTelegramConfig configures global Telegram parameters.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Telegram API URL.</p>
+<p>It requires Alertmanager &gt;= v0.24.0.</p>
 </td>
 </tr>
 </tbody>
@@ -18893,6 +18939,14 @@ Supported values are:
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.URL">URL
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>)
+</p>
+<div>
+<p>URL represents a valid URL</p>
+</div>
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
