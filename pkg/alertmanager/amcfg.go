@@ -1732,7 +1732,7 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 	}
 
 	if in.APIURL != nil {
-		u, err := url.Parse(*in.APIURL)
+		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
 			return fmt.Errorf("failed to parse Telegram API URL: %w", err)
 		}

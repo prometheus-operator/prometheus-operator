@@ -513,7 +513,6 @@ type GlobalTelegramConfig struct {
 	// The default Telegram API URL.
 	//
 	// It requires Alertmanager >= v0.24.0.
-	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
 }
