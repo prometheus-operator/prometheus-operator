@@ -903,7 +903,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
-					APIURL: &telegramAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(telegramAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -940,7 +940,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
-					APIURL: &invalidTelegramAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(invalidTelegramAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -977,7 +977,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version21,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
-					APIURL: &telegramAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(telegramAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
