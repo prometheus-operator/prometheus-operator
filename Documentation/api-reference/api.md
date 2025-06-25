@@ -10096,7 +10096,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default API URL.</p>
+<p>The default Webex API URL.</p>
+<p>It requires Alertmanager &gt;= v0.25.0.</p>
 </td>
 </tr>
 </tbody>
