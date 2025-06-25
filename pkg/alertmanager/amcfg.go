@@ -471,7 +471,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if err := cb.convertGlobalJiraConfig(out, in.JiraConfig); err != nil {
-		return nil, fmt.Errorf("invalid global jira: %w", err)
+		return nil, fmt.Errorf("invalid global jira config: %w", err)
 	}
 
 	return out, nil
