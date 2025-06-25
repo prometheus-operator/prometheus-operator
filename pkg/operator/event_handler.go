@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -79,8 +80,7 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 		return
 	}
 
-	e.logger.Debug(fmt.Sprintf("%s added", e.objName))
-	e.metrics.TriggerByCounter(e.objName, AddEvent).Inc()
+	e.recordEvent(AddEvent, o)
 	e.enqueueFunc(o.GetNamespace())
 }
 
@@ -94,7 +94,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	}
 
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
-		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
+		e.recordEvent(UpdateEvent, o)
 		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
 		e.enqueueFunc(o.GetNamespace())
 	}
@@ -110,7 +110,21 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 		return
 	}
 
-	e.logger.Debug(fmt.Sprintf("%s deleted", e.objName))
-	e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
+	e.recordEvent(DeleteEvent, o)
 	e.enqueueFunc(o.GetNamespace())
+}
+
+func (e *EventHandler) recordEvent(event HandlerEvent, obj metav1.Object) {
+	eventName := string(event)
+	if strings.HasSuffix(eventName, "e") {
+		eventName += "d"
+	} else {
+		eventName += "ed"
+	}
+
+	e.logger.Debug(
+		fmt.Sprintf("%s %s", e.objName, eventName),
+		strings.ToLower(e.objName), fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()),
+	)
+	e.metrics.TriggerByCounter(e.objName, event).Inc()
 }
