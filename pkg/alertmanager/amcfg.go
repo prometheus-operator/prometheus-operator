@@ -467,7 +467,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if err := cb.convertGlobalTelegramConfig(out, in.TelegramConfig); err != nil {
-		return nil, fmt.Errorf("invalid global telegram: %w", err)
+		return nil, fmt.Errorf("invalid global telegram config: %w", err)
 	}
 
 	return out, nil
