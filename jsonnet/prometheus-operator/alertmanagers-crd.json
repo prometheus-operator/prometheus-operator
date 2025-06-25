@@ -1949,7 +1949,7 @@
                             "description": "The default Telegram config",
                             "properties": {
                               "apiURL": {
-                                "description": "SMTP Auth using PLAIN",
+                                "description": "The default Telegram API URL.\n\nIt requires Alertmanager >= v0.24.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }

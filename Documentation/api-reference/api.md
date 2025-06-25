@@ -10095,7 +10095,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>SMTP Auth using PLAIN</p>
+<p>The default Telegram API URL.</p>
+<p>It requires Alertmanager &gt;= v0.24.0.</p>
 </td>
 </tr>
 </tbody>
