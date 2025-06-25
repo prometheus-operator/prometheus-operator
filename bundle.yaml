@@ -12633,7 +12633,10 @@ spec:
                         description: The default configuration for Jira.
                         properties:
                           apiURL:
-                            description: The default API URL.
+                            description: |-
+                              The default API URL.
+
+                              It requires Alertmanager >= v0.28.0.
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object
