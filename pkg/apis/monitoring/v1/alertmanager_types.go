@@ -515,7 +515,7 @@ type GlobalTelegramConfig struct {
 	// It requires Alertmanager >= v0.24.0.
 	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
@@ -585,3 +585,7 @@ type ClusterTLSConfig struct {
 	// +required
 	ClientTLS SafeTLSConfig `json:"client"`
 }
+
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+type URL string
