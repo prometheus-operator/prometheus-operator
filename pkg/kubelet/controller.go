@@ -206,6 +206,8 @@ func New(
 func (c *Controller) Run(ctx context.Context) error {
 	c.logger.Info("Starting controller")
 
+	defer c.Stop()
+
 	ticker := time.NewTicker(resyncPeriod)
 	defer ticker.Stop()
 	for {
@@ -680,4 +682,37 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 
 func (c *Controller) fullCapacity(eps []discoveryv1.Endpoint) bool {
 	return len(eps) >= c.maxEndpointsPerSlice
+}
+
+func (c *Controller) Stop() {
+	c.logger.Debug("Stopping controller")
+	ctx := context.Background()
+
+	// Delete endpointslices
+	if c.manageEndpointSlice {
+		err := k8sutil.DeleteEndpointSlice(ctx, c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace),
+			metav1.ListOptions{
+				LabelSelector: labels.Set{
+					discoveryv1.LabelServiceName: c.kubeletObjectName,
+					discoveryv1.LabelManagedBy:   "prometheus-operator",
+				}.String(),
+			})
+		if err != nil {
+			c.logger.Error("Failed to delete kubelet endpointslice", "err", err)
+		}
+	}
+
+	// Delete endpoints
+	if c.manageEndpoints {
+		err := k8sutil.DeleteEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), c.kubeletObjectName)
+		if err != nil {
+			c.logger.Error("Failed to delete kubelet endpoints", "err", err)
+		}
+	}
+
+	// Delete service
+	err := k8sutil.DeleteService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), c.kubeletObjectName)
+	if err != nil {
+		c.logger.Error("Failed to delete kubelet service", "err", err)
+	}
 }

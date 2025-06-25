@@ -267,6 +267,12 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 	return ret, err
 }
 
+func DeleteService(ctx context.Context, sclient clientv1.ServiceInterface, name string) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return sclient.Delete(ctx, name, metav1.DeleteOptions{})
+	})
+}
+
 // CreateOrUpdateEndpoints creates or updates an endpoint resource.
 //
 //nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
@@ -287,6 +293,12 @@ func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInte
 
 		_, err = eclient.Update(ctx, eps, metav1.UpdateOptions{})
 		return err
+	})
+}
+
+func DeleteEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, name string) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return eclient.Delete(ctx, name, metav1.DeleteOptions{})
 	})
 }
 
@@ -312,6 +324,12 @@ func CreateOrUpdateEndpointSlice(ctx context.Context, c clientdiscoveryv1.Endpoi
 
 		_, err = c.Update(ctx, eps, metav1.UpdateOptions{})
 		return err
+	})
+}
+
+func DeleteEndpointSlice(ctx context.Context, c clientdiscoveryv1.EndpointSliceInterface, listOpts metav1.ListOptions) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return c.DeleteCollection(ctx, metav1.DeleteOptions{}, listOpts)
 	})
 }
 

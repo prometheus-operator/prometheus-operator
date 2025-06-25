@@ -20,11 +20,13 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -532,6 +534,34 @@ func TestSync(t *testing.T) {
 		require.Empty(t, ep.Subsets[0].Addresses)
 
 		_ = listEndpointSlices(t, esclient, 0)
+	})
+
+	t.Run("delete service", func(t *testing.T) {
+		for _, n := range [][2]string{
+			{"node-1", "10.0.0.1"},
+			{"node-2", "10.0.0.2"},
+		} {
+			_, _ = nclient.Create(ctx, newNode(n[0], n[1]), metav1.CreateOptions{})
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		{
+			ctx, cancel := context.WithCancel(ctx)
+			c.sync(ctx)
+			go func() {
+				defer wg.Done()
+				c.Stop()
+			}()
+			cancel()
+		}
+		wg.Wait()
+
+		_, err = sclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
+		require.True(t, apierrors.IsNotFound(err))
+
+		_, err = eclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
+		require.True(t, apierrors.IsNotFound(err))
 	})
 }
 
