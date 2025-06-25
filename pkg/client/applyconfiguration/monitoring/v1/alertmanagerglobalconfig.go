@@ -24,13 +24,14 @@ import (
 // AlertmanagerGlobalConfigApplyConfiguration represents a declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
 type AlertmanagerGlobalConfigApplyConfiguration struct {
-	SMTPConfig     *GlobalSMTPConfigApplyConfiguration `json:"smtp,omitempty"`
-	ResolveTimeout *monitoringv1.Duration              `json:"resolveTimeout,omitempty"`
-	HTTPConfig     *HTTPConfigApplyConfiguration       `json:"httpConfig,omitempty"`
-	SlackAPIURL    *corev1.SecretKeySelector           `json:"slackApiUrl,omitempty"`
-	OpsGenieAPIURL *corev1.SecretKeySelector           `json:"opsGenieApiUrl,omitempty"`
-	OpsGenieAPIKey *corev1.SecretKeySelector           `json:"opsGenieApiKey,omitempty"`
-	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
+	SMTPConfig     *GlobalSMTPConfigApplyConfiguration  `json:"smtp,omitempty"`
+	ResolveTimeout *monitoringv1.Duration               `json:"resolveTimeout,omitempty"`
+	HTTPConfig     *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
+	SlackAPIURL    *corev1.SecretKeySelector            `json:"slackApiUrl,omitempty"`
+	OpsGenieAPIURL *corev1.SecretKeySelector            `json:"opsGenieApiUrl,omitempty"`
+	OpsGenieAPIKey *corev1.SecretKeySelector            `json:"opsGenieApiKey,omitempty"`
+	PagerdutyURL   *string                              `json:"pagerdutyUrl,omitempty"`
+	WebexConfig    *GlobalWebexConfigApplyConfiguration `json:"webex,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -92,5 +93,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithOpsGenieAPIKey(value co
 // If called multiple times, the PagerdutyURL field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithPagerdutyURL(value string) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.PagerdutyURL = &value
+	return b
+}
+
+// WithWebexConfig sets the WebexConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebexConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexConfig(value *GlobalWebexConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.WebexConfig = value
 	return b
 }

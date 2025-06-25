@@ -390,6 +390,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+
+	// The default configuration for Jira.
+	WebexConfig *GlobalWebexConfig `json:"webex,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -503,6 +506,17 @@ type GlobalSMTPConfig struct {
 	// The default TLS configuration for SMTP receivers
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// GlobalWebexConfig configures global Webex parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+type GlobalWebexConfig struct {
+	// The default Webex API URL.
+	//
+	// It requires Alertmanager >= v0.25.0.
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

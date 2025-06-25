@@ -2165,6 +2165,17 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      webex:
+                        description: The default configuration for Jira.
+                        properties:
+                          apiURL:
+                            description: |-
+                              The default Webex API URL.
+
+                              It requires Alertmanager >= v0.25.0.
+                            pattern: ^(http|https)://.+$
+                            type: string
+                        type: object
                     type: object
                   name:
                     description: |-
