@@ -521,7 +521,9 @@ type GlobalTelegramConfig struct {
 }
 
 type GlobalJiraConfig struct {
-	// The default API URL.
+	// The default Jira API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
 	//
 	// It requires Alertmanager >= v0.28.0.
 	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"

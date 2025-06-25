@@ -1752,13 +1752,13 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(ctx context.Context, out *globa
 	}
 
 	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`invalid syntax in global config; jira api url integration is available in Alertmanager >= 0.28.0`)
+		return errors.New("jira integration requires Alertmanager >= 0.28.0")
 	}
 
 	if in.APIURL != nil {
 		u, err := url.Parse(*in.APIURL)
 		if err != nil {
-			return fmt.Errorf("parse Jira API URL: %w", err)
+			return fmt.Errorf("failed to parse Jira API URL: %w", err)
 		}
 		out.JiraAPIURL = &config.URL{URL: u}
 	}
