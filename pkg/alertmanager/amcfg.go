@@ -470,10 +470,8 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global telegram config: %w", err)
 	}
 
-	if in.JiraConfig != nil {
-		if err := cb.convertGlobalJiraConfig(out, *in.JiraConfig); err != nil {
-			return nil, fmt.Errorf("invalid global jira: %w", err)
-		}
+	if err := cb.convertGlobalJiraConfig(out, in.JiraConfig); err != nil {
+		return nil, fmt.Errorf("invalid global jira: %w", err)
 	}
 
 	return out, nil
@@ -1748,12 +1746,16 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 	return nil
 }
 
-func (cb *ConfigBuilder) convertGlobalJiraConfig(ctx context.Context, out *globalConfig, in monitoringv1.GlobalJiraConfig, crKey types.NamespacedName) error {
+func (cb *ConfigBuilder) convertGlobalJiraConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalJiraConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`invalid syntax in global config; jira api url integration is available in Alertmanager >= 0.28.0`)
+	}
+
 	if in.APIURL != nil {
-		apiURLAllowed := cb.amVersion.GTE(semver.MustParse("0.28.0"))
-		if !apiURLAllowed {
-			return fmt.Errorf(`invalid syntax in global config; jira api url integration is available in Alertmanager >= 0.28.0`)
-		}
 		u, err := url.Parse(*in.APIURL)
 		if err != nil {
 			return fmt.Errorf("parse Jira API URL: %w", err)
