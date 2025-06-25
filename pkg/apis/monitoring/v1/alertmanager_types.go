@@ -563,7 +563,9 @@ type GlobalRocketChatConfig struct {
 // GlobalWebexConfig configures global Webex parameters.
 // See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
 type GlobalWebexConfig struct {
-	// The default API URL.
+	// The default Webex API URL.
+	//
+	// It requires Alertmanager >= v0.25.0.
 	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
