@@ -324,6 +324,8 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 
 	minimumVersionCaseActions := lcv.v.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := lcv.v.GTE(semver.MustParse("2.41.0"))
+	utf8Supported := lcv.v.GTE(semver.MustParse("3.0.0"))
+
 	if rc.Action == "" {
 		rc.Action = string(relabel.Replace)
 	}
@@ -363,8 +365,14 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		}
 	}
 
-	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
-		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	if action == string(relabel.HashMod) {
+		if !utf8Supported && !model.LabelName(rc.TargetLabel).IsValidLegacy() {
+			return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		}
+
+		if utf8Supported && !model.LabelName(rc.TargetLabel).IsValid() {
+			return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		}
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
@@ -1367,9 +1375,15 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
+	utf8Supported := rs.version.GTE(semver.MustParse("3.0.0"))
+
 	for i, config := range sc.Spec.StaticConfigs {
 		for labelName := range config.Labels {
-			if !model.LabelName(labelName).IsValid() {
+			if utf8Supported && !model.LabelName(labelName).IsValid() {
+				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
+			}
+
+			if !utf8Supported && !model.LabelName(labelName).IsValidLegacy() {
 				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 			}
 		}
