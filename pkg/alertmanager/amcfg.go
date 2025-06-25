@@ -474,10 +474,8 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global jira config: %w", err)
 	}
 
-	if in.WeChatConfig != nil {
-		if err := cb.convertGlobalWeChatConfig(ctx, out, *in.WeChatConfig, crKey); err != nil {
-			return nil, fmt.Errorf("invalid global wechatConfig: %w", err)
-		}
+	if err := cb.convertGlobalWeChatConfig(ctx, out, in.WeChatConfig, crKey); err != nil {
+		return nil, fmt.Errorf("invalid global wechat config: %w", err)
 	}
 
 	return out, nil
@@ -1772,7 +1770,11 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 	return nil
 }
 
-func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *globalConfig, in monitoringv1.GlobalWeChatConfig, crKey types.NamespacedName) error {
+func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalWeChatConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
+	}
+
 	if in.APIURL != nil {
 		u, err := url.Parse(*in.APIURL)
 		if err != nil {
