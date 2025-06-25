@@ -466,7 +466,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.PagerdutyURL = &config.URL{URL: u}
 	}
 
-	if err := cb.convertGlobalTelegramConfig(out, *in.TelegramConfig); err != nil {
+	if err := cb.convertGlobalTelegramConfig(out, in.TelegramConfig); err != nil {
 		return nil, fmt.Errorf("invalid global telegram: %w", err)
 	}
 
