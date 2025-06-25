@@ -2255,8 +2255,15 @@ spec:
                         description: The default configuration for Jira.
                         properties:
                           apiURL:
+<<<<<<< HEAD
                             description: The default API URL.
 >>>>>>> da8c220e5 (update generated files)
+=======
+                            description: |-
+                              The default Webex API URL.
+
+                              It requires Alertmanager >= v0.25.0.
+>>>>>>> 9b5ffb67e (update generated files)
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object

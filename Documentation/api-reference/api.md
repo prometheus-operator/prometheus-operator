@@ -10286,11 +10286,16 @@ string
 <td>
 <em>(Optional)</em>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <p>The default Telegram API URL.</p>
 <p>It requires Alertmanager &gt;= v0.24.0.</p>
 =======
 <p>The default API URL.</p>
 >>>>>>> da8c220e5 (update generated files)
+=======
+<p>The default Webex API URL.</p>
+<p>It requires Alertmanager &gt;= v0.25.0.</p>
+>>>>>>> 9b5ffb67e (update generated files)
 </td>
 </tr>
 </tbody>
