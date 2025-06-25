@@ -1728,13 +1728,13 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 	}
 
 	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf(`invalid syntax in global config; Telegram integration requires Alertmanager >= 0.24.0`)
+		return fmt.Errorf("telegram integration requires Alertmanager >= 0.24.0")
 	}
 
 	if in.APIURL != nil {
 		u, err := url.Parse(*in.APIURL)
 		if err != nil {
-			return fmt.Errorf("parse Jira API URL: %w", err)
+			return fmt.Errorf("failed to parse Telegram API URL: %w", err)
 		}
 		out.TelegramAPIURL = &config.URL{URL: u}
 	}
