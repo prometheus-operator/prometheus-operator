@@ -390,6 +390,24 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+
+	// The default Telegram API URL.
+	// Default value will be "https://api.telegram.org"
+	// +optional
+	TelegramAPIURL *string `json:"telegramApiUrl,omitempty"`
+
+	// The default Webex API URL.
+	// Default value will be "https://webexapis.com/v1/messages"
+	// +optional
+	WebexAPIURL *string `json:"webexApiUrl,omitempty"`
+
+	// The default Webex API URL.
+	// +optional
+	JiraAPIURL *string `json:"jiraApiUrl,omitempty"`
+
+	// The default WeChat Config
+	// +optional
+	WeChatConfig *GlobalWeChatConfig `json:"wechatConfig,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -503,6 +521,23 @@ type GlobalSMTPConfig struct {
 	// The default TLS configuration for SMTP receivers
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// GlobalWeChatConfig configures global WeChat parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+type GlobalWeChatConfig struct {
+	// WeChat API URL
+	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+	// +optional
+	APIURL *string `json:"apiUrl,omitempty"`
+
+	// WeChat API Secret
+	// +optional
+	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+
+	// WeChat API Corporate ID
+	// +optional
+	APICorpID *string `json:"apiCorpId,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
