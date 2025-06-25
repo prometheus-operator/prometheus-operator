@@ -9977,7 +9977,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default API URL.</p>
+<p>The default Jira API URL.</p>
+<p>It requires Alertmanager &gt;= v0.28.0.</p>
 <p>It requires Alertmanager &gt;= v0.28.0.</p>
 </td>
 </tr>
