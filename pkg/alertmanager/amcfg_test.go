@@ -85,7 +85,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
-	telegramAPIURL := "telegram.example.com"
+	telegramAPIURL := "https://telegram.example.com"
 	invalidTelegramAPIURL := "://telegram.example.com"
 
 	tests := []struct {
