@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.83.0
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -1234,11 +1233,11 @@ spec:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
               bindings:
-                description: The list of workload resources(Prometheus or PrometheusAgent)
-                  the service monitor is link to.
+                description: The list of workload resources (Prometheus or PrometheusAgent)
+                  which select the service monitor.
                 items:
-                  description: WorkloadBinding is a link of workload resource wuth
-                    configuration resource.
+                  description: WorkloadBinding is a link between a configuration resource
+                    and a workload resource.
                   properties:
                     conditions:
                       description: The current state of the service monitor when bound
@@ -1262,8 +1261,7 @@ spec:
                               ObservedGeneration represents the .metadata.generation that the
                               condition was set based upon. For instance, if `.metadata.generation` is
                               currently 12, but the `.status.conditions[].observedGeneration` is 9, the
-                              condition is out of date with respect to the current state of the
-                              instance.
+                              condition is out of date with respect to the current state of the object.
                             format: int64
                             type: integer
                           reason:
@@ -1317,6 +1315,12 @@ spec:
                   - resource
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - group
+                - name
+                - namespace
+                - resource
+                x-kubernetes-list-type: map
             type: object
         required:
         - spec

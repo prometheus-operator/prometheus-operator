@@ -190,11 +190,13 @@ type ServiceMonitorSpec struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ServiceMonitorStatus struct {
-	// The list of workload resources(Prometheus or PrometheusAgent) the service monitor is link to.
-	// +patchMergeKey=resource
-	// +patchMergeKey=namespace
-	// +patchMergeKey=name
-	// +patchMergeStrategy=merge
+	// The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.
+    // +listMapKey=group
+	// +listMapKey=name
+	// +listMapKey=namespace
+	// +listMapKey=resource
+	// +listType=map
+	// +mapType=atomic
 	// +optional
 	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }

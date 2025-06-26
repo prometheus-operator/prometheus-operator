@@ -1016,7 +1016,7 @@ const (
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
 
-// WorkloadBinding is a link of workload resource wuth configuration resource.
+// WorkloadBinding is a link between a configuration resource and a workload resource.
 // +k8s:openapi-gen=true
 type WorkloadBinding struct {
 	// The group of the referenced resource.
@@ -1065,7 +1065,6 @@ type ConfigResourceCondition struct {
 	// ObservedGeneration represents the .metadata.generation that the
 	// condition was set based upon. For instance, if `.metadata.generation` is
 	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
-	// condition is out of date with respect to the current state of the
-	// instance.
+	// condition is out of date with respect to the current state of the object.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
