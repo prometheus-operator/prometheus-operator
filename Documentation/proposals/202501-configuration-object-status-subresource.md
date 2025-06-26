@@ -113,7 +113,7 @@ spec:
           down: 1
           lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
-          - type: Reconciled
+          - type: Accepted
             status: "True"
             observedGeneration: 3
             lastTransitionTime: "2025-05-20T12:34:56Z"
@@ -128,7 +128,7 @@ spec:
           down: 1
           lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
-          - type: Reconciled
+          - type: Accepted
             status: "False"
             observedGeneration: 2
             lastTransitionTime: "2024-02-08T23:52:22Z"
@@ -143,7 +143,7 @@ spec:
           down: 1
           lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
-          - type: Reconciled
+          - type: Accepted
             status: "False"
             observedGeneration: 3
             lastTransitionTime: "2024-02-08T23:52:22Z"
@@ -183,7 +183,7 @@ spec:
         name: prometheus-main
         namespace: monitoring
         conditions:
-          - type: Reconciled
+          - type: Accepted
             status: "False"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
@@ -215,7 +215,7 @@ spec:
         name: alertmanager-main
         namespace: monitoring
         conditions:
-          - type: Reconciled
+          - type: Accepted
             status: "True"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
