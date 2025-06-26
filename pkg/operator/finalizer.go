@@ -20,25 +20,31 @@ import (
 	"log/slog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/metadata"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-// SyncFinalizers adds or removes the finalizer form the workload resource(Prometheus, PrometheusAgent, Alertmanager and ThanosRuler).
-// It returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
-func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mclient monitoringclient.Interface, reconciliations *ReconciliationTracker, logger *slog.Logger, deletionInProgress bool, configResourcesStatusEnabled bool) (bool, error) {
+// SyncFinalizers ensures the `monitoring.coreos.com/status-cleanup` finalizer is correctly set on the given workload resource
+// (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler). It adds the finalizer if necessary, or removes it when appropriate.
+//
+// Returns true if the finalizer list was modified, otherwise false.
+// If the object is being deleted, it is also removed from the reconciliation tracker.
+// The second return value indicates any error encountered during the operation.
+func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mdClient metadata.Interface, reconciliations *ReconciliationTracker, logger *slog.Logger, deletionInProgress bool, configResourcesStatusEnabled bool) (bool, error) {
 	if !configResourcesStatusEnabled {
 		return false, nil
 	}
 
+	finalizers := p.GetFinalizers()
+
 	// The resource isn't being deleted, add the finalizer if missing.
 	if !deletionInProgress {
-		// Add finalizer to the Prometheus resource if it doesn't have one.
-		finalizers := p.GetFinalizers()
+		// Add finalizer to the workload resource if it doesn't have one.
 		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
 		if err != nil {
 			return false, fmt.Errorf("failed to marshal patch: %w", err)
@@ -47,15 +53,14 @@ func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mclie
 		if len(patchBytes) == 0 {
 			return false, nil
 		}
-		if err = updateObject[T](ctx, mclient, p, patchBytes); err != nil {
+		if err = updateObject[T](ctx, mdClient, p, patchBytes); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
 		logger.Debug("added finalizer to object")
 		return true, nil
 	}
 
-	// If the Prometheus instance is marked for deletion, we remove the finalizer.
-	finalizers := p.GetFinalizers()
+	// If the workload instance is marked for deletion, we remove the finalizer.
 	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
 	if err != nil {
 		return false, fmt.Errorf("failed to marshal patch: %w", err)
@@ -65,7 +70,7 @@ func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mclie
 		return false, nil
 	}
 
-	if err = updateObject[T](ctx, mclient, p, patchBytes); err != nil {
+	if err = updateObject[T](ctx, mdClient, p, patchBytes); err != nil {
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 	logger.Debug("removed finalizer from object")
@@ -74,40 +79,36 @@ func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mclie
 	return true, nil
 }
 
-// updateObject updates the given object in the cluster using a JSON patch.
+// updateObject applies a JSON patch to update the metadata of the given workload object (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler) in the cluster.
 func updateObject[T metav1.Object](
 	ctx context.Context,
-	mclient monitoringclient.Interface,
+	mdClient metadata.Interface,
 	p T,
 	patchBytes []byte,
 ) error {
 	var err error
-	opts := metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager}
+	var gvr schema.GroupVersionResource
 
-	switch obj := any(p).(type) {
+	switch any(p).(type) {
 	case *monitoringv1.Prometheus:
-		_, err = mclient.MonitoringV1().
-			Prometheuses(obj.GetNamespace()).
-			Patch(ctx, obj.GetName(), types.JSONPatchType, patchBytes, opts)
+		gvr = monitoringv1.SchemeGroupVersion.WithResource("prometheuses")
 
 	case *monitoringv1.Alertmanager:
-		_, err = mclient.MonitoringV1().
-			Alertmanagers(obj.GetNamespace()).
-			Patch(ctx, obj.GetName(), types.JSONPatchType, patchBytes, opts)
+		gvr = monitoringv1.SchemeGroupVersion.WithResource("alertmanagers")
 
 	case *monitoringv1.ThanosRuler:
-		_, err = mclient.MonitoringV1().
-			ThanosRulers(obj.GetNamespace()).
-			Patch(ctx, obj.GetName(), types.JSONPatchType, patchBytes, opts)
+		gvr = monitoringv1.SchemeGroupVersion.WithResource("thanosrulers")
 
 	case *monitoringv1alpha1.PrometheusAgent:
-		_, err = mclient.MonitoringV1alpha1().
-			PrometheusAgents(obj.GetNamespace()).
-			Patch(ctx, obj.GetName(), types.JSONPatchType, patchBytes, opts)
+		gvr = monitoringv1alpha1.SchemeGroupVersion.WithResource("prometheusagents")
 
 	default:
 		return fmt.Errorf("unknown object type %T", p)
 	}
+
+	_, err = mdClient.Resource(gvr).
+		Namespace(p.GetNamespace()).
+		Patch(ctx, p.GetName(), types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager})
 
 	return err
 }
