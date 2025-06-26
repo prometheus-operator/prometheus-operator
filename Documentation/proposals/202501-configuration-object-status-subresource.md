@@ -106,7 +106,7 @@ spec:
     bindings:
       - group: monitoring.coreos.com
         resource: prometheuses
-        name: prometheus-main
+        name: main
         namespace: monitoring
         targets: 
           up: 2
@@ -117,10 +117,11 @@ spec:
             status: "True"
             observedGeneration: 3
             lastTransitionTime: "2025-05-20T12:34:56Z"
-    bindings:
+            reason: ""
+            message: ""
       - group: monitoring.coreos.com
         resource: prometheuses
-        name: prometheus-example
+        name: example
         namespace: default
         targets: 
           up: 3
@@ -133,10 +134,9 @@ spec:
             lastTransitionTime: "2024-02-08T23:52:22Z"
             reason: InvalidConfiguration
             message: "'KeepEqual' relabel action is only supported with Prometheus >= 2.41.0"
-    bindings:
       - group: monitoring.coreos.com
         resource: prometheusagents
-        name: prometheus-agent-main
+        name: agent
         namespace: monitor
         targets: 
           up: 3
@@ -219,6 +219,8 @@ spec:
             status: "True"
             observedGeneration: 1
             lastTransitionTime: "2025-05-20T12:34:56Z"
+            reason: ""
+            message: ""
 ```
 
 ### Working
@@ -229,15 +231,15 @@ This feature is controlled by a feature flag: `StatusForConfigurationResources=t
 
 #### Details of the Status API fields
 
-* `bindings`: Lists the workload resources that reference or use the configuration resource.
-  * `conditions`: Describes the latest status of the configuration resource.
-    * `type`: The only condition type used is `Reconciled`, which indicates that the workload resource controller has successfully discovered the associated configuration resource and completed the necessary reconciliation steps.
+* `bindings`: Lists the workload resources that select the configuration resource.
+  * `conditions`: Describes the latest conditions of the configuration resource in relation to the workload resource.
+    * `type`: The only condition type used is `Accepted`, indicating whether the workload controller has successfully accepted the configuration resource and updated the secret configuration.
     * `status`: It can be either `true` or `false`.
-      * `true` indicates that the configuration resource was successfully accepted by the controller and written to the configuration secret.
-      * `false` means the controller rejected the configuration due to an error.
-    * `reason`: Specifies the reason for rejection, if the configuration was not accepted.
-    * `message`: Provides the detailed error message returned by the controller during reconciliation.
-    * `observedGeneration`: Represents the generation of the configuration resource that the controller has most recently reconciled.
+      * `True` indicates that the configuration resource was successfully accepted by the controller and written to the configuration secret.
+      * `False` means the controller rejected the configuration due to an error.
+    * `reason`: Specifies the reason why the configuration was not accepted.. Empty if the configuration was accepted.
+    * `message`: Provides the detailed error message returned by the controller during reconciliation. Empty if the configuration was accepted.
+    * `observedGeneration`: Represents the generation of the configuration resource that the controller has most recently observed. When the value doesn't match the object metadata's `generation` value, the condition is stale.
 
 #### How to get targets information in scrape resources ?
 
@@ -269,40 +271,7 @@ A dedicated goroutine runs continuously to monitor configuration resources for a
 
 A potential solution to mapping a configuration resource to a workload resource is the introduction of a Custom Resource Definition (CRD). This new CRD would act as an intermediary, maintaining a clear association between configurations and workloads.
 
-The Secrets Store CSI Driver handles the Secrets Provider pod status in a similar way.
-
-```yaml
-apiVersion: secrets-store.csi.x-k8s.io/v1
-kind: SecretProviderClassPodStatus
-metadata:
-  creationTimestamp: "2021-01-21T19:20:11Z"
-  generation: 1
-  labels:
-    internal.secrets-store.csi.k8s.io/node-name: kind-control-plane
-    manager: secrets-store-csi
-    operation: Update
-    time: "2021-01-21T19:20:11Z"
-  name: nginx-secrets-store-inline-crd-dev-azure-spc
-  namespace: dev
-  ownerReferences:
-  - apiVersion: v1
-    kind: Pod
-    name: nginx-secrets-store-inline-crd
-    uid: 10f3e31c-d20b-4e46-921a-39e4cace6db2
-  resourceVersion: "1638459"
-  selfLink: /apis/secrets-store.csi.x-k8s.io/v1/namespaces/dev/secretproviderclasspodstatuses/nginx-secrets-store-inline-crd
-  uid: 1d078ad7-c363-4147-a7e1-234d4b9e0d53
-status:
-  mounted: true
-  objects:
-  - id: secret/secret1
-    version: c55925c29c6743dcb9bb4bf091be03b0
-  - id: secret/secret2
-    version: 7521273d0e6e427dbda34e033558027a
-  podName: nginx-secrets-store-inline-crd
-  secretProviderClassName: azure-spc
-  targetPath: /var/lib/kubelet/pods/10f3e31c-d20b-4e46-921a-39e4cace6db2/volumes/kubernetes.io~csi/secrets-store-inline/mount
-```
+The [Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/introduction) handles the Secrets Provider pod status in a similar way.
 
 It comes with the following drawbacks:
 * Introducing a new CRD could lead to additional operational complexity.
