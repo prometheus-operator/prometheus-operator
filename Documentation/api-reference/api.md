@@ -5779,34 +5779,28 @@ string
 </tr>
 <tr>
 <td>
-<<<<<<< HEAD
-<<<<<<< HEAD
 <code>telegram</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
 GlobalTelegramConfig
-=======
-<code>jiraConfig</code><br/>
-=======
-<code>jira</code><br/>
->>>>>>> d1ee42246 (update validation)
-<em>
-<a href="#monitoring.coreos.com/v1.GlobalJiraConfig">
-GlobalJiraConfig
->>>>>>> 774df2560 (update jira global config)
 </a>
 </em>
 </td>
 <td>
-<<<<<<< HEAD
-<<<<<<< HEAD
 <p>The default Telegram config</p>
-=======
-<p>The default Jira API URL.</p>
->>>>>>> 774df2560 (update jira global config)
-=======
+</td>
+</tr>
+<tr>
+<td>
+<code>jira</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalJiraConfig">
+GlobalJiraConfig
+</a>
+</em>
+</td>
+<td>
 <p>The default configuration for Jira.</p>
->>>>>>> d1ee42246 (update validation)
 </td>
 </tr>
 </tbody>

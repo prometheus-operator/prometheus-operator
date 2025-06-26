@@ -24,7 +24,6 @@ import (
 // AlertmanagerGlobalConfigApplyConfiguration represents a declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
 type AlertmanagerGlobalConfigApplyConfiguration struct {
-<<<<<<< HEAD
 	SMTPConfig     *GlobalSMTPConfigApplyConfiguration     `json:"smtp,omitempty"`
 	ResolveTimeout *monitoringv1.Duration                  `json:"resolveTimeout,omitempty"`
 	HTTPConfig     *HTTPConfigApplyConfiguration           `json:"httpConfig,omitempty"`
@@ -33,20 +32,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	OpsGenieAPIKey *corev1.SecretKeySelector               `json:"opsGenieApiKey,omitempty"`
 	PagerdutyURL   *string                                 `json:"pagerdutyUrl,omitempty"`
 	TelegramConfig *GlobalTelegramConfigApplyConfiguration `json:"telegram,omitempty"`
-=======
-	SMTPConfig     *GlobalSMTPConfigApplyConfiguration `json:"smtp,omitempty"`
-	ResolveTimeout *monitoringv1.Duration              `json:"resolveTimeout,omitempty"`
-	HTTPConfig     *HTTPConfigApplyConfiguration       `json:"httpConfig,omitempty"`
-	SlackAPIURL    *corev1.SecretKeySelector           `json:"slackApiUrl,omitempty"`
-	OpsGenieAPIURL *corev1.SecretKeySelector           `json:"opsGenieApiUrl,omitempty"`
-	OpsGenieAPIKey *corev1.SecretKeySelector           `json:"opsGenieApiKey,omitempty"`
-	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
-<<<<<<< HEAD
-	JiraConfig     *GlobalJiraConfigApplyConfiguration `json:"jiraConfig,omitempty"`
->>>>>>> 774df2560 (update jira global config)
-=======
-	JiraConfig     *GlobalJiraConfigApplyConfiguration `json:"jira,omitempty"`
->>>>>>> d1ee42246 (update validation)
+	JiraConfig     *GlobalJiraConfigApplyConfiguration     `json:"jira,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -111,18 +97,18 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithPagerdutyURL(value stri
 	return b
 }
 
-<<<<<<< HEAD
 // WithTelegramConfig sets the TelegramConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TelegramConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithTelegramConfig(value *GlobalTelegramConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.TelegramConfig = value
-=======
+	return b
+}
+
 // WithJiraConfig sets the JiraConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the JiraConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraConfig(value *GlobalJiraConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.JiraConfig = value
->>>>>>> 774df2560 (update jira global config)
 	return b
 }

@@ -242,15 +242,14 @@ func (in *AlertmanagerGlobalConfig) DeepCopyInto(out *AlertmanagerGlobalConfig) 
 		*out = new(string)
 		**out = **in
 	}
-<<<<<<< HEAD
 	if in.TelegramConfig != nil {
 		in, out := &in.TelegramConfig, &out.TelegramConfig
 		*out = new(GlobalTelegramConfig)
-=======
+		(*in).DeepCopyInto(*out)
+	}
 	if in.JiraConfig != nil {
 		in, out := &in.JiraConfig, &out.JiraConfig
 		*out = new(GlobalJiraConfig)
->>>>>>> 774df2560 (update jira global config)
 		(*in).DeepCopyInto(*out)
 	}
 }

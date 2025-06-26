@@ -1746,7 +1746,7 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 	return nil
 }
 
-func (cb *ConfigBuilder) convertGlobalJiraConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalJiraConfig, crKey types.NamespacedName) error {
+func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitoringv1.GlobalJiraConfig) error {
 	if in == nil {
 		return nil
 	}
