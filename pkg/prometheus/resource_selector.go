@@ -320,7 +320,8 @@ func (lcv *LabelConfigValidator) Validate(rcs []monitoringv1.RelabelConfig) erro
 }
 
 func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
-	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+	relabelTargetLegacy := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+	relabelTargetUTF8 := regexp.MustCompile(`^(?:(?:[^\${}]|\$(?:\{[^\${}]+\}|[^\${}]+))+[^\${}]*)+$`) // All UTF-8 chars, but ${}.
 
 	minimumVersionCaseActions := lcv.v.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := lcv.v.GTE(semver.MustParse("2.41.0"))
@@ -351,7 +352,11 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if utf8Supported && (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTargetUTF8.MatchString(rc.TargetLabel) {
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if !utf8Supported && (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTargetLegacy.MatchString(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -360,7 +365,10 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 	}
 
 	if action == string(relabel.LabelMap) {
-		if rc.Replacement != nil && !relabelTarget.MatchString(*rc.Replacement) {
+		if utf8Supported && rc.Replacement != nil && !relabelTargetUTF8.MatchString(*rc.Replacement) {
+			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
+		}
+		if !utf8Supported && rc.Replacement != nil && !relabelTargetLegacy.MatchString(*rc.Replacement) {
 			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 		}
 	}
@@ -372,6 +380,7 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 
 		if utf8Supported && !model.LabelName(rc.TargetLabel).IsValid() {
 			return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+
 		}
 	}
 
