@@ -191,7 +191,7 @@ type ServiceMonitorSpec struct {
 // +k8s:openapi-gen=true
 type ServiceMonitorStatus struct {
 	// The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.
-    // +listMapKey=group
+	// +listMapKey=group
 	// +listMapKey=name
 	// +listMapKey=namespace
 	// +listMapKey=resource

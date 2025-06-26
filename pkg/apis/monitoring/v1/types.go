@@ -268,6 +268,12 @@ const (
 	// - False: the reconciliation failed.
 	// - Unknown: the operator couldn't determine the condition status.
 	Reconciled ConditionType = "Reconciled"
+	// Accepted indicates whether the workload controller has successfully accepted
+	// the configuration resource and updated the configuration of the workload accordingly.
+	// The possible status values for this condition type are:
+	// - True: the configuration resource was successfully accepted by the controller and written to the configuration secret.
+	// - False: the controller rejected the configuration due to an error.
+	Accepted ConditionType = "Accepted"
 )
 
 // +kubebuilder:validation:MinLength=1
