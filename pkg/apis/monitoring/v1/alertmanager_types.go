@@ -525,7 +525,6 @@ type GlobalJiraConfig struct {
 	//
 	// It requires Alertmanager >= v0.28.0.
 	//
-	// It requires Alertmanager >= v0.28.0.
 	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`

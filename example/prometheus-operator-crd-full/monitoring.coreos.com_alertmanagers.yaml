@@ -1835,8 +1835,6 @@ spec:
                               The default Jira API URL.
 
                               It requires Alertmanager >= v0.28.0.
-
-                              It requires Alertmanager >= v0.28.0.
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object
