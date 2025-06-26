@@ -91,16 +91,16 @@ func updateObject[T metav1.Object](
 
 	switch any(p).(type) {
 	case *monitoringv1.Prometheus:
-		gvr = monitoringv1.SchemeGroupVersion.WithResource("prometheuses")
+		gvr = monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName)
 
 	case *monitoringv1.Alertmanager:
-		gvr = monitoringv1.SchemeGroupVersion.WithResource("alertmanagers")
+		gvr = monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName)
 
 	case *monitoringv1.ThanosRuler:
-		gvr = monitoringv1.SchemeGroupVersion.WithResource("thanosrulers")
+		gvr = monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName)
 
 	case *monitoringv1alpha1.PrometheusAgent:
-		gvr = monitoringv1alpha1.SchemeGroupVersion.WithResource("prometheusagents")
+		gvr = monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName)
 
 	default:
 		return fmt.Errorf("unknown object type %T", p)
