@@ -233,12 +233,12 @@ This feature is controlled by a feature flag: `StatusForConfigurationResources=t
 
 * `bindings`: Lists the workload resources that select the configuration resource.
   * `conditions`: Describes the latest conditions of the configuration resource in relation to the workload resource.
-    * `type`: The only condition type used is `Accepted`, indicating whether the workload controller has successfully accepted the configuration resource and updated the secret configuration.
-    * `status`: It can be either `true` or `false`.
+    * `type`: The only condition type used is `Accepted`, indicating whether the workload controller has successfully accepted the configuration resource and updated the configuration of the workload accordingly.
+    * `status`: It can be either `True` or `False`.
       * `True` indicates that the configuration resource was successfully accepted by the controller and written to the configuration secret.
       * `False` means the controller rejected the configuration due to an error.
-    * `reason`: Specifies the reason why the configuration was not accepted.. Empty if the configuration was accepted.
-    * `message`: Provides the detailed error message returned by the controller during reconciliation. Empty if the configuration was accepted.
+    * `reason`: Specifies the reason why the configuration was not accepted.
+    * `message`: Provides the detailed error message returned by the controller during reconciliation.
     * `observedGeneration`: Represents the generation of the configuration resource that the controller has most recently observed. When the value doesn't match the object metadata's `generation` value, the condition is stale.
 
 #### How to get targets information in scrape resources ?
@@ -282,9 +282,9 @@ It comes with the following drawbacks:
 Another approach is to store configuration mappings directly within the workload resource.
 
 It comes with the following drawbacks:
-* Workload resources could reference a high number of configuration resources.
+* Workload resources could reference a high number of configuration resources (it isn't uncommon for a Prometheus resource to select more than a hundred of service monitors + pod monitors + rules).
 * Storing all these mappings within a single workload resource could lead to excessive API payload sizes.
-* Configuration resources won’t have a direct view of where their configurations are being used.
+* Owners of configuration resources not having permissions to view the workload resource won’t have a view of the status which is one of the main goals of this effort.
 
 ## Action Plan
 
