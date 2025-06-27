@@ -273,6 +273,7 @@ const (
 	// The possible status values for this condition type are:
 	// - True: the configuration resource was successfully accepted by the controller and written to the configuration secret.
 	// - False: the controller rejected the configuration due to an error.
+	// - Unknown: the operator couldn't determine the condition status.
 	Accepted ConditionType = "Accepted"
 )
 
@@ -1041,7 +1042,7 @@ type WorkloadBinding struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Namespace string `json:"namespace"`
-	// The current state of the service monitor when bound to the referenced Prometheus object.
+	// The current state of the configuration resource when bound to the referenced Prometheus object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
@@ -1052,8 +1053,8 @@ type WorkloadBinding struct {
 // +k8s:deepcopy-gen=true
 type ConfigResourceCondition struct {
 	// Type of the condition being reported.
-	// Currently, only "Reconciled" is supported.
-	// +kubebuilder:validation:Enum=Reconciled
+	// Currently, only "Accepted" is supported.
+	// +kubebuilder:validation:Enum=Accepted
 	// +required
 	Type ConditionType `json:"type"`
 	// Status of the condition.

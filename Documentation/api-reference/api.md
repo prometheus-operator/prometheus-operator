@@ -9008,7 +9008,15 @@ instance.</p>
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;Available&#34;</p></td>
+<tbody><tr><td><p>&#34;Accepted&#34;</p></td>
+<td><p>Accepted indicates whether the workload controller has successfully accepted
+the configuration resource and updated the configuration of the workload accordingly.
+The possible status values for this condition type are:
+- True: the configuration resource was successfully accepted by the controller and written to the configuration secret.
+- False: the controller rejected the configuration due to an error.
+- Unknown: the operator couldn&rsquo;t determine the condition status.</p>
+</td>
+</tr><tr><td><p>&#34;Available&#34;</p></td>
 <td><p>Available indicates whether enough pods are ready to provide the
 service.
 The possible status values for this condition type are:
@@ -9054,7 +9062,7 @@ ConditionType
 </td>
 <td>
 <p>Type of the condition being reported.
-Currently, only &ldquo;Reconciled&rdquo; is supported.</p>
+Currently, only &ldquo;Accepted&rdquo; is supported.</p>
 </td>
 </tr>
 <tr>
@@ -9118,8 +9126,7 @@ int64
 <p>ObservedGeneration represents the .metadata.generation that the
 condition was set based upon. For instance, if <code>.metadata.generation</code> is
 currently 12, but the <code>.status.conditions[].observedGeneration</code> is 9, the
-condition is out of date with respect to the current state of the
-instance.</p>
+condition is out of date with respect to the current state of the object.</p>
 </td>
 </tr>
 </tbody>
@@ -16948,7 +16955,7 @@ More info:
 </td>
 <td>
 <em>(Optional)</em>
-<p>The list of workload resources(Prometheus or PrometheusAgent) the service monitor is link to.</p>
+<p>The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.</p>
 </td>
 </tr>
 </tbody>
@@ -19417,7 +19424,7 @@ order.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus</a>)
 </p>
 <div>
-<p>WorkloadBinding is a link of workload resource wuth configuration resource.</p>
+<p>WorkloadBinding is a link between a configuration resource and a workload resource.</p>
 </div>
 <table>
 <thead>
@@ -19482,7 +19489,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The current state of the service monitor when bound to the referenced Prometheus object.</p>
+<p>The current state of the configuration resource when bound to the referenced Prometheus object.</p>
 </td>
 </tr>
 </tbody>

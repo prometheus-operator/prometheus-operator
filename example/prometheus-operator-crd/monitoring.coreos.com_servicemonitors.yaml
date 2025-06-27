@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
+    operator.prometheus.io/version: 0.83.0
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -1240,8 +1241,8 @@ spec:
                     and a workload resource.
                   properties:
                     conditions:
-                      description: The current state of the service monitor when bound
-                        to the referenced Prometheus object.
+                      description: The current state of the configuration resource
+                        when bound to the referenced Prometheus object.
                       items:
                         description: ConfigResourceCondition describes the status
                           of configuration resources linked to Prometheus, PrometheusAgent,
@@ -1274,9 +1275,9 @@ spec:
                           type:
                             description: |-
                               Type of the condition being reported.
-                              Currently, only "Reconciled" is supported.
+                              Currently, only "Accepted" is supported.
                             enum:
-                            - Reconciled
+                            - Accepted
                             minLength: 1
                             type: string
                         required:
@@ -1315,12 +1316,6 @@ spec:
                   - resource
                   type: object
                 type: array
-                x-kubernetes-list-map-keys:
-                - group
-                - name
-                - namespace
-                - resource
-                x-kubernetes-list-type: map
             type: object
         required:
         - spec

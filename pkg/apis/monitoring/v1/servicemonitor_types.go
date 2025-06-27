@@ -23,7 +23,6 @@ const (
 	ServiceMonitorsKind   = "ServiceMonitor"
 	ServiceMonitorName    = "servicemonitors"
 	ServiceMonitorKindKey = "servicemonitor"
-	GroupName             = "monitoring.coreos.com"
 )
 
 // +genclient
@@ -191,12 +190,6 @@ type ServiceMonitorSpec struct {
 // +k8s:openapi-gen=true
 type ServiceMonitorStatus struct {
 	// The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.
-	// +listMapKey=group
-	// +listMapKey=name
-	// +listMapKey=namespace
-	// +listMapKey=resource
-	// +listType=map
-	// +mapType=atomic
 	// +optional
 	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }
