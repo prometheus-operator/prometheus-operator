@@ -43,7 +43,6 @@ Currently, the status subresource is only implemented for workload resources. Th
   * `Probes`
   * `PrometheusRule`
   * `AlertmanagerConfig`
-* Provide information about the targets being scraped and their status for scrape resources (`PodMonitor`, `ServiceMonitor`, `Probes` and `ScrapeConfig`).
 * Report when a configuration resource is considered invalid during reconciliation. For example:
   * Feature not being supported by the version of the workload.
   * Invalid configmap/secret key reference.
@@ -52,7 +51,7 @@ Currently, the status subresource is only implemented for workload resources. Th
 ## Non-Goals
 
 * The solution does not aim to expose the full live configuration or runtime status of Prometheus. Doing so would be expensive for the workload, the operator and the Kubernetes system in general.
-  * It will not include per-target scrape status, only summary information (e.g., number of targets up/down).
+  * It will not provide information about the targets being scraped and their status for scrape resources (`PodMonitor`, `ServiceMonitor`, `Probes` and `ScrapeConfig`).
   * It will not surface fired alerts from PrometheusRule resources, as querying Prometheus for this data can be expensive and places undue load on Prometheus, the operator and the Kubernetes platform in general.
 * Configuration resources won't expose status information that explains why they are not being selected by Prometheus or why their targets are not being scraped.
   * This non-goal can be partially addressed by tools like [`poctl`](https://github.com/prometheus-operator/poctl), which provide insights into configuration resource selection and target matching.
@@ -108,10 +107,6 @@ spec:
         resource: prometheuses
         name: main
         namespace: monitoring
-        targets: 
-          up: 2
-          down: 1
-          lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
           - type: Accepted
             status: "True"
@@ -123,10 +118,6 @@ spec:
         resource: prometheuses
         name: example
         namespace: default
-        targets: 
-          up: 3
-          down: 1
-          lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
           - type: Accepted
             status: "False"
@@ -138,10 +129,6 @@ spec:
         resource: prometheusagents
         name: agent
         namespace: monitor
-        targets: 
-          up: 3
-          down: 1
-          lastCheckedTime: "2025-05-20T12:34:56Z"
         conditions:
           - type: Accepted
             status: "False"
@@ -241,22 +228,6 @@ This feature is controlled by a feature flag: `StatusForConfigurationResources=t
     * `message`: Provides the detailed error message returned by the controller during reconciliation.
     * `observedGeneration`: Represents the generation of the configuration resource that the controller has most recently observed. When the value doesn't match the object metadata's `generation` value, the condition is stale.
 
-#### How to get targets information in scrape resources ?
-
-The operator periodically sends a gRPC request to the `config-reloader` sidecar, including the configuration resources selector labels in the request body. Upon receiving the request, the sidecar queries the Prometheus container by calling the /api/v1/targets endpoint. It then filters and modifies the response based on the provided labels, removing sensitive information that could potentially be exploited by attackers. The sanitized response is finally sent back to the operator.
-
-##### Authentication/Authorization of the request ?
-
-To ensure secure and authenticated communication between the `config-reloader` sidecar and the `operator`, mutual TLS (mTLS) can be used. With mTLS, both parties validate each other’s identity and encrypt all communication, mitigating the risk of man-in-the-middle attacks or unauthorized access. The necessary TLS certificates and keys are provisioned as Kubernetes Secrets and mounted into both the Prometheus and operator pods. This setup ensures that only trusted components within the cluster can participate in the gRPC communication, further strengthening the overall security posture.
-
-##### Alternative (Not recommended)
-
-An alternative approach would involve allowing the workload's ServiceAccount to update its own binding in the status subresource of the configuration resource. In this method, the job_name field could be used to infer a reference to the originating resource—such as ServiceMonitor/namespace/name/index.
-
-Cons:
-* The workload's ServiceAccount would need additional permissions to update its own resource’s status subresource.
-* Complexity in Resource Mapping.
-
 #### How to remove a binding when the workload is deleted ?
 
 When a workload resource is created, we add a finalizer to it to ensure proper cleanup before deletion. If a user later requests deletion of the resource, Kubernetes does not immediately remove it; instead, it sets a deletionTimestamp on the resource. This triggers an update event, which the controller receives and processes. The controller checks if the deletionTimestamp is set to determine if the resource is in the process of being deleted. If so, the controller proceeds to clean up associated references from relevant configuration resources (e.g., ServiceMonitors, PrometheusRules). Once the cleanup is complete, the controller removes the finalizer from the workload resource, allowing Kubernetes to complete the deletion process.
@@ -317,4 +288,8 @@ It comes with the following drawbacks:
   * Recalculate and remove invalid bindings from affected configuration resources.
 * Clean up bindings on workload deletion
   * When a workload is deleted, remove its references from all associated configuration resources
-    ...
+
+## Follow-ups
+
+Once the goals of this proposal are achieved, we can extend the implementation to populate scrape targets information in the status subresource of ServiceMonitor, PodMonitor, ScrapeConfig, and Probe resources.
+...
