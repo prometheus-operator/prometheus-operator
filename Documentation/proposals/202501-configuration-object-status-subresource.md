@@ -263,7 +263,23 @@ When a workload resource is created, we add a finalizer to it to ensure proper c
 
 #### How to remove invalid bindings from config-resources status ?
 
-A dedicated goroutine runs continuously to monitor configuration resources for any invalid bindings.
+`invaid binding`: A configuration resource contains a reference to a workload resource in its bindings, even though no valid association exists between them.
+
+This can occur under certain conditions. For example, at some point in time, a workload resource A selects a configuration resource X in namespace Y:
+* The operator updates the status of resource X to reference workload A.
+  Later, changes may happen that break this association:
+* The labels of X and/or its namespace Y are modified.
+* The label selectors and/or namespace selectors of workload A are updated.
+
+These changes can result in workload A no longer selecting configuration resource X.
+
+A separate Go routine can be used to remove invalid bindings, offloading this responsibility from the main workload controller threads.
+This background routine can periodically:
+* Query all workload resources.
+* List all configuration resources.
+* For each configuration resource, check if its bindings are still valid.
+* Remove any bindings that no longer have an active association with a workload resource.
+  This approach ensures that the cleanup process does not interfere with the primary reconciliation loop and improves controller efficiency.
 
 ## Alternatives
 
@@ -298,8 +314,7 @@ It comes with the following drawbacks:
     * Namespace labels
     * Configuration resource labels
     * Workload’s label/namespace selectors
-
   * Recalculate and remove invalid bindings from affected configuration resources.
 * Clean up bindings on workload deletion
   * When a workload is deleted, remove its references from all associated configuration resources
-...
+    ...
