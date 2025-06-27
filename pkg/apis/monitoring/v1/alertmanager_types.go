@@ -393,6 +393,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Telegram config
 	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
+
+	// The default configuration for Jira.
+	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -515,6 +518,16 @@ type GlobalTelegramConfig struct {
 	// It requires Alertmanager >= v0.24.0.
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+type GlobalJiraConfig struct {
+	// The default Jira API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

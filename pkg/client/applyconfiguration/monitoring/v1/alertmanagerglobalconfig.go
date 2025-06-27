@@ -32,6 +32,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	OpsGenieAPIKey *corev1.SecretKeySelector               `json:"opsGenieApiKey,omitempty"`
 	PagerdutyURL   *string                                 `json:"pagerdutyUrl,omitempty"`
 	TelegramConfig *GlobalTelegramConfigApplyConfiguration `json:"telegram,omitempty"`
+	JiraConfig     *GlobalJiraConfigApplyConfiguration     `json:"jira,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -101,5 +102,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithPagerdutyURL(value stri
 // If called multiple times, the TelegramConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithTelegramConfig(value *GlobalTelegramConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.TelegramConfig = value
+	return b
+}
+
+// WithJiraConfig sets the JiraConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the JiraConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraConfig(value *GlobalJiraConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.JiraConfig = value
 	return b
 }

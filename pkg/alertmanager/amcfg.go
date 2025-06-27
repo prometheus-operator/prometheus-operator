@@ -470,6 +470,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global telegram config: %w", err)
 	}
 
+	if err := cb.convertGlobalJiraConfig(out, in.JiraConfig); err != nil {
+		return nil, fmt.Errorf("invalid global jira config: %w", err)
+	}
+
 	return out, nil
 }
 
@@ -1737,6 +1741,26 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 			return fmt.Errorf("failed to parse Telegram API URL: %w", err)
 		}
 		out.TelegramAPIURL = &config.URL{URL: u}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitoringv1.GlobalJiraConfig) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return errors.New("jira integration requires Alertmanager >= 0.28.0")
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(*in.APIURL)
+		if err != nil {
+			return fmt.Errorf("failed to parse Jira API URL: %w", err)
+		}
+		out.JiraAPIURL = &config.URL{URL: u}
 	}
 
 	return nil

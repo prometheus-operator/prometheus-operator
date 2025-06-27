@@ -5790,6 +5790,19 @@ GlobalTelegramConfig
 <p>The default Telegram config</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>jira</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalJiraConfig">
+GlobalJiraConfig
+</a>
+</em>
+</td>
+<td>
+<p>The default configuration for Jira.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -9930,6 +9943,36 @@ int64
 option for exemplars to be scraped in the first place.</p>
 <p>If not set, Prometheus uses its default value. A value of zero or less
 than zero disables the storage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Jira API URL.</p>
+<p>It requires Alertmanager &gt;= v0.28.0.</p>
 </td>
 </tr>
 </tbody>

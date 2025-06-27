@@ -88,6 +88,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.EndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Exemplars"):
 		return &monitoringv1.ExemplarsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalJiraConfig"):
+		return &monitoringv1.GlobalJiraConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalTelegramConfig"):
