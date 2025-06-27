@@ -288,4 +288,18 @@ It comes with the following drawbacks:
 
 ## Action Plan
 
+* Introduce a new feature gate.
+* Manage finalizers on workload resources.
+  * Add or remove a finalizer based on the feature gate status.
+* Create bindings in associated configuration resources.
+  * During workload reconciliation, populate status.bindings in matching configuration resources.
+* Handle updates affecting selection logic
+  * On changes to:
+    * Namespace labels
+    * Configuration resource labels
+    * Workload’s label/namespace selectors
+
+  * Recalculate and remove invalid bindings from affected configuration resources.
+* Clean up bindings on workload deletion
+  * When a workload is deleted, remove its references from all associated configuration resources
 ...
