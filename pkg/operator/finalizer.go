@@ -35,7 +35,7 @@ import (
 // Returns true if the finalizer list was modified, otherwise false.
 // If the object is being deleted, it is also removed from the reconciliation tracker.
 // The second return value indicates any error encountered during the operation.
-func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mdClient metadata.Interface, reconciliations *ReconciliationTracker, logger *slog.Logger, deletionInProgress bool, configResourcesStatusEnabled bool) (bool, error) {
+func SyncFinalizers(ctx context.Context, p metav1.Object, key string, mdClient metadata.Interface, reconciliations *ReconciliationTracker, logger *slog.Logger, deletionInProgress bool, configResourcesStatusEnabled bool) (bool, error) {
 	if !configResourcesStatusEnabled {
 		return false, nil
 	}
@@ -53,7 +53,7 @@ func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mdCli
 		if len(patchBytes) == 0 {
 			return false, nil
 		}
-		if err = updateObject[T](ctx, mdClient, p, patchBytes); err != nil {
+		if err = updateObject(ctx, mdClient, p, patchBytes); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
 		logger.Debug("added finalizer to object")
@@ -70,7 +70,7 @@ func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mdCli
 		return false, nil
 	}
 
-	if err = updateObject[T](ctx, mdClient, p, patchBytes); err != nil {
+	if err = updateObject(ctx, mdClient, p, patchBytes); err != nil {
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 	logger.Debug("removed finalizer from object")
@@ -80,10 +80,10 @@ func SyncFinalizers[T metav1.Object](ctx context.Context, p T, key string, mdCli
 }
 
 // updateObject applies a JSON patch to update the metadata of the given workload object (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler) in the cluster.
-func updateObject[T metav1.Object](
+func updateObject(
 	ctx context.Context,
 	mdClient metadata.Interface,
-	p T,
+	p metav1.Object,
 	patchBytes []byte,
 ) error {
 	var err error
