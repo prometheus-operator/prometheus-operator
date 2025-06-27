@@ -248,8 +248,8 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := validateProxyURL(endpoint.ProxyURL); err != nil {
-			return fmt.Errorf("%w: proxyURL: %w", epErr, err)
+		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, sm.GetNamespace()); err != nil {
+			return err
 		}
 	}
 
