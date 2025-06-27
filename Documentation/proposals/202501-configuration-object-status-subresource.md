@@ -269,9 +269,9 @@ It comes with the following drawbacks:
 Another approach is to store configuration mappings directly within the workload resource.
 
 It comes with the following drawbacks:
+* Owners of configuration resources not having permissions to view the workload resource won’t have a view of the status which is one of the main goals of this effort.
 * Workload resources could reference a high number of configuration resources (it isn't uncommon for a Prometheus resource to select more than a hundred of service monitors + pod monitors + rules).
 * Storing all these mappings within a single workload resource could lead to excessive API payload sizes.
-* Owners of configuration resources not having permissions to view the workload resource won’t have a view of the status which is one of the main goals of this effort.
 
 ## Action Plan
 
