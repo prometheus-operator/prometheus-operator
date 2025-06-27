@@ -751,7 +751,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := operator.SyncFinalizers[*monitoringv1.Prometheus](ctx, p, key, c.mdClient, c.reconciliations, logger, c.rr.DeletionInProgress(p), c.configResourcesStatusEnabled)
+	finalizersChanged, err := operator.SyncFinalizers(ctx, p, key, c.mdClient, c.reconciliations, logger, c.rr.DeletionInProgress(p), c.configResourcesStatusEnabled)
 	if err != nil {
 		return err
 	}
