@@ -1023,22 +1023,137 @@ func TestSelectServiceMonitors(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "invalid proxyurl",
+			scenario: "valid proxy config",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyURL: ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid proxy config with invalid secret key",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "invalid_key",
+								},
+							},
+						},
+					},
 				})
 			},
 			selected: false,
 		},
 		{
-			scenario: "valid proxyurl",
+			scenario: "invalid proxy config due to invalid proxy url",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyURL: ptr.To("http://proxy.svc.cluster.local:80"),
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
 				})
 			},
-			selected: true,
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(true),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						ProxyFromEnvironment: ptr.To(true),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config only with proxy connect header defined",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
 		},
 		{
 			scenario:    "inexistent Scrape Class",
@@ -1091,6 +1206,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 						"invalid_ca": []byte("garbage"),
 						"cert":       cert,
 						"key":        key,
+						"key1":       []byte("val1"),
 					},
 				},
 				&v1.ConfigMap{
