@@ -17,13 +17,14 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // GlobalWeChatConfigApplyConfiguration represents a declarative configuration of the GlobalWeChatConfig type for use
 // with apply.
 type GlobalWeChatConfigApplyConfiguration struct {
-	APIURL    *string                   `json:"apiURL,omitempty"`
+	APIURL    *monitoringv1.URL         `json:"apiURL,omitempty"`
 	APISecret *corev1.SecretKeySelector `json:"apiSecret,omitempty"`
 	APICorpID *string                   `json:"apiCorpID,omitempty"`
 }
@@ -37,7 +38,7 @@ func GlobalWeChatConfig() *GlobalWeChatConfigApplyConfiguration {
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *GlobalWeChatConfigApplyConfiguration) WithAPIURL(value string) *GlobalWeChatConfigApplyConfiguration {
+func (b *GlobalWeChatConfigApplyConfiguration) WithAPIURL(value monitoringv1.URL) *GlobalWeChatConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
