@@ -1807,6 +1807,15 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "wechat",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"api_secret": []byte("mywechatsecret"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "secret",
 					Namespace: "mynamespace",
 				},
