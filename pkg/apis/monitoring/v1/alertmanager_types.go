@@ -546,7 +546,7 @@ type GlobalWeChatConfig struct {
 
 	// WeChat API Corporate ID
 	// +optional
-	// +kubebuilder:validation:MinLength=2
+	// +kubebuilder:validation:MinLength=1
 	APICorpID *string `json:"apiCorpID,omitempty"`
 }
 

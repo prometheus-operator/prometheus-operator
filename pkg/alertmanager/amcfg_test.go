@@ -1703,50 +1703,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name:      "invalid global config wechat config empty api corp id",
-			amVersion: &version28,
-			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
-					APIURL: ptr.To(monitoringv1.URL(weChatAPIURL)),
-					APISecret: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "wechat",
-						},
-						Key: "api_secret",
-					},
-					APICorpID: ptr.To("x"),
-				},
-			},
-			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "global-config",
-					Namespace: "mynamespace",
-				},
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "null",
-						},
-						{
-							Name: "myreceiver",
-						},
-					},
-					Route: &monitoringv1alpha1.Route{
-						Receiver: "null",
-						Routes: []apiextensionsv1.JSON{
-							{
-								Raw: myrouteJSON,
-							},
-						},
-					},
-				},
-			},
-			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
-				Type: "OnNamespace",
-			},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
