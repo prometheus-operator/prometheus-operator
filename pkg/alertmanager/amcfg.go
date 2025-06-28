@@ -1776,7 +1776,7 @@ func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *glo
 	}
 
 	if in.APIURL != nil {
-		u, err := url.Parse(*in.APIURL)
+		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
 			return fmt.Errorf("parse WeChat API URL: %w", err)
 		}

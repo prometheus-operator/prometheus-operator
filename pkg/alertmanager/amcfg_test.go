@@ -91,7 +91,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	jiraAPIURL := "https://jira.example.com"
 	invalidJiraAPIURL := "://jira.example.com"
 
-	weChatAPIURL := "wechat.example.com"
+	weChatAPIURL := "https://wechat.example.com"
 	invalidWeChatAPIURL := "://wechat.example.com"
 	wechatCorpID := "mywechatcorpid"
 
@@ -904,12 +904,13 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Type: "OnNamespace",
 			},
 			golden: "valid_global_config_with_amVersion21.golden",
-		}, {
+		},
+		{
 			name:      "valid global config wechat config",
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
-					APIURL: &weChatAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(weChatAPIURL)),
 					APISecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "wechat",
@@ -953,7 +954,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
-					APIURL: &invalidWeChatAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(invalidWeChatAPIURL)),
 					APISecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "wechat",
@@ -997,7 +998,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
-					APIURL: &weChatAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(weChatAPIURL)),
 					APISecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "wechat-missing",
