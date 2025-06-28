@@ -5803,6 +5803,20 @@ GlobalJiraConfig
 <p>The default configuration for Jira.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>wechat</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">
+GlobalWeChatConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default WeChat Config</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -10185,6 +10199,64 @@ URL
 <em>(Optional)</em>
 <p>The default Telegram API URL.</p>
 <p>It requires Alertmanager &gt;= v0.24.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WeChat API URL
+The default value is &ldquo;<a href="https://qyapi.weixin.qq.com/cgi-bin/&quot;">https://qyapi.weixin.qq.com/cgi-bin/&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WeChat API Secret</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiCorpID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WeChat API Corporate ID</p>
 </td>
 </tr>
 </tbody>
@@ -19028,7 +19100,7 @@ Supported values are:
 <h3 id="monitoring.coreos.com/v1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

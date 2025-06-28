@@ -396,6 +396,10 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default configuration for Jira.
 	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
+
+	// The default WeChat Config
+	// +optional
+	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -528,6 +532,22 @@ type GlobalJiraConfig struct {
 	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
+}
+
+type GlobalWeChatConfig struct {
+	// WeChat API URL
+	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// WeChat API Secret
+	// +optional
+	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+
+	// WeChat API Corporate ID
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	APICorpID *string `json:"apiCorpID,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
