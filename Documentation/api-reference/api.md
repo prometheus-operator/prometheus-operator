@@ -5779,26 +5779,14 @@ string
 </tr>
 <tr>
 <td>
-<<<<<<< HEAD
-<<<<<<< HEAD
 <code>telegram</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">
 GlobalTelegramConfig
-=======
-<code>wechatConfig</code><br/>
-=======
-<code>wechat</code><br/>
->>>>>>> 398ae986b (update config name)
-<em>
-<a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">
-GlobalWeChatConfig
->>>>>>> e8764859c (update wechat global config)
 </a>
 </em>
 </td>
 <td>
-<<<<<<< HEAD
 <p>The default Telegram config</p>
 </td>
 </tr>
@@ -5813,10 +5801,20 @@ GlobalJiraConfig
 </td>
 <td>
 <p>The default configuration for Jira.</p>
-=======
+</td>
+</tr>
+<tr>
+<td>
+<code>wechat</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">
+GlobalWeChatConfig
+</a>
+</em>
+</td>
+<td>
 <em>(Optional)</em>
 <p>The default WeChat Config</p>
->>>>>>> e8764859c (update wechat global config)
 </td>
 </tr>
 </tbody>
@@ -10175,20 +10173,13 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
-<<<<<<< HEAD
 <h3 id="monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig
-=======
-<h3 id="monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig
->>>>>>> e8764859c (update wechat global config)
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
-<<<<<<< HEAD
 <p>GlobalTelegramConfig configures global Telegram parameters.</p>
-=======
->>>>>>> e8764859c (update wechat global config)
 </div>
 <table>
 <thead>
@@ -10202,10 +10193,38 @@ SafeTLSConfig
 <td>
 <code>apiURL</code><br/>
 <em>
-<<<<<<< HEAD
 <a href="#monitoring.coreos.com/v1.URL">
 URL
-=======
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Telegram API URL.</p>
+<p>It requires Alertmanager &gt;= v0.24.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
 string
 </em>
 </td>
@@ -10221,16 +10240,11 @@ The default value is &ldquo;<a href="https://qyapi.weixin.qq.com/cgi-bin/&quot;"
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 Kubernetes core/v1.SecretKeySelector
->>>>>>> e8764859c (update wechat global config)
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<<<<<<< HEAD
-<p>The default Telegram API URL.</p>
-<p>It requires Alertmanager &gt;= v0.24.0.</p>
-=======
 <p>WeChat API Secret</p>
 </td>
 </tr>
@@ -10244,7 +10258,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>WeChat API Corporate ID</p>
->>>>>>> e8764859c (update wechat global config)
 </td>
 </tr>
 </tbody>
