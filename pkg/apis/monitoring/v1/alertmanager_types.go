@@ -525,9 +525,8 @@ type GlobalJiraConfig struct {
 	//
 	// It requires Alertmanager >= v0.28.0.
 	//
-	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
