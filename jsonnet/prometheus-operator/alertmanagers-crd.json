@@ -1972,7 +1972,7 @@
                             "properties": {
                               "apiCorpID": {
                                 "description": "WeChat API Corporate ID",
-                                "minLength": 1,
+                                "minLength": 2,
                                 "type": "string"
                               },
                               "apiSecret": {

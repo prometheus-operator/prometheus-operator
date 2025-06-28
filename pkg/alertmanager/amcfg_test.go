@@ -1715,7 +1715,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 						Key: "api_secret",
 					},
-					APICorpID: ptr.To(""),
+					APICorpID: ptr.To("x"),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
