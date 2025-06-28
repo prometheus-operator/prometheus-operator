@@ -12977,8 +12977,6 @@ spec:
                                 type: string
                             type: object
                         type: object
-<<<<<<< HEAD
-<<<<<<< HEAD
                       telegram:
                         description: The default Telegram config
                         properties:
@@ -12988,11 +12986,9 @@ spec:
 
                               It requires Alertmanager >= v0.24.0.
                             pattern: ^(http|https)://.+$
-=======
-                      wechatConfig:
-=======
+                            type: string
+                        type: object
                       wechat:
->>>>>>> 398ae986b (update config name)
                         description: The default WeChat Config
                         properties:
                           apiCorpID:
@@ -13027,11 +13023,7 @@ spec:
                             description: |-
                               WeChat API URL
                               The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
-<<<<<<< HEAD
->>>>>>> e8764859c (update wechat global config)
-=======
                             pattern: ^(http|https)://.+$
->>>>>>> 8ae9c7bca (update validation)
                             type: string
                         type: object
                     type: object
