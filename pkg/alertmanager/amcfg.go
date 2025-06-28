@@ -474,6 +474,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global jira config: %w", err)
 	}
 
+	if err := cb.convertGlobalRocketChatConfig(ctx, out, in.RocketChatConfig, crKey); err != nil {
+		return nil, fmt.Errorf("invalid global rocket chat config: %w", err)
+	}
+
 	return out, nil
 }
 
