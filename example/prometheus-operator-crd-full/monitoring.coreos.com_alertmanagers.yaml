@@ -2191,7 +2191,7 @@ spec:
                         properties:
                           apiCorpID:
                             description: WeChat API Corporate ID
-                            minLength: 2
+                            minLength: 1
                             type: string
                           apiSecret:
                             description: WeChat API Secret
