@@ -396,6 +396,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default configuration for Jira.
 	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
+
+	// The default configuration for Rocket Chat.
+	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -528,6 +531,29 @@ type GlobalJiraConfig struct {
 	//
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+type GlobalRocketChatConfig struct {
+	// The default Rocket Chat API URL
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
+
+	// The default Rocket Chat Token
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+
+	// The default Rocket Chat Token ID
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
