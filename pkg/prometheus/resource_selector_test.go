@@ -1338,22 +1338,137 @@ func TestSelectPodMonitors(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "invalid proxyurl",
+			scenario: "valid proxy config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyURL: ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid proxy config with invalid secret key",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "invalid_key",
+								},
+							},
+						},
+					},
 				})
 			},
 			selected: false,
 		},
 		{
-			scenario: "valid proxyurl",
+			scenario: "invalid proxy config due to invalid proxy url",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyURL: ptr.To("http://proxy.svc.cluster.local:80"),
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
 				})
 			},
-			selected: true,
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(true),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						ProxyFromEnvironment: ptr.To(true),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxy config only with proxy connect header defined",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: false,
 		},
 		{
 			scenario:    "Inexistent Scrape Class",
@@ -1395,7 +1510,17 @@ func TestSelectPodMonitors(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			cs := fake.NewSimpleClientset()
+			cs := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"key1": []byte("val1"),
+					},
+				},
+			)
 			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{

@@ -1891,11 +1891,7 @@ func (in *PodMetricsEndpoint) DeepCopyInto(out *PodMetricsEndpoint) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.ProxyURL != nil {
-		in, out := &in.ProxyURL, &out.ProxyURL
-		*out = new(string)
-		**out = **in
-	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)

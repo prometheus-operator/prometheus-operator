@@ -481,8 +481,8 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := validateProxyURL(endpoint.ProxyURL); err != nil {
-			return fmt.Errorf("%w: proxyURL: %w", epErr, err)
+		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, pm.GetNamespace()); err != nil {
+			return fmt.Errorf("%w: proxyConfig: %w", epErr, err)
 		}
 	}
 
