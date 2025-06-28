@@ -1,5 +1,5 @@
 global:
-  wechat_api_url: wechat.example.com
+  wechat_api_url: https://wechat.example.com
   wechat_api_secret: mywechatsecret
   wechat_api_corp_id: mywechatcorpid
 route:
