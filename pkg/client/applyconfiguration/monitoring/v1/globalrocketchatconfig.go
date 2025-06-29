@@ -17,13 +17,14 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // GlobalRocketChatConfigApplyConfiguration represents a declarative configuration of the GlobalRocketChatConfig type for use
 // with apply.
 type GlobalRocketChatConfigApplyConfiguration struct {
-	APIURL  *string                   `json:"apiURL,omitempty"`
+	APIURL  *monitoringv1.URL         `json:"apiURL,omitempty"`
 	Token   *corev1.SecretKeySelector `json:"token,omitempty"`
 	TokenID *corev1.SecretKeySelector `json:"tokenID,omitempty"`
 }
@@ -37,7 +38,7 @@ func GlobalRocketChatConfig() *GlobalRocketChatConfigApplyConfiguration {
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *GlobalRocketChatConfigApplyConfiguration) WithAPIURL(value string) *GlobalRocketChatConfigApplyConfiguration {
+func (b *GlobalRocketChatConfigApplyConfiguration) WithAPIURL(value monitoringv1.URL) *GlobalRocketChatConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
