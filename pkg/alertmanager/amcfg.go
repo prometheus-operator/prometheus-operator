@@ -474,7 +474,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global jira config: %w", err)
 	}
 
-	if err := cb.convertGlobalVictorOpsConfig(ctx, out, in.VictorOpsConfig, crKey); err != nil {
+	if err := cb.convertGlobalVictorOpsConfig(out, in.VictorOpsConfig); err != nil {
 		return nil, fmt.Errorf("invalid global victorops config: %w", err)
 	}
 
@@ -1770,7 +1770,7 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 	return nil
 }
 
-func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalVictorOpsConfig, crKey types.NamespacedName) error {
+func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(out *globalConfig, in *monitoringv1.GlobalVictorOpsConfig) error {
 	if in == nil {
 		return nil
 	}
