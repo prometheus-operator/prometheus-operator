@@ -1322,6 +1322,55 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "invalid global config rocket chat version not supported",
+			amVersion: &version26,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(rocketChatAPIURL)),
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token",
+					},
+					TokenID: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token_id",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
