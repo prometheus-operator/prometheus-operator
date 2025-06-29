@@ -36,15 +36,6 @@ import (
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 )
 
-func init() {
-	// For now, the operator only supports legacy label names.
-	// Eventually the operator should support UTF-8 label names too and the
-	// issue is tracked by
-	// https://github.com/prometheus-operator/prometheus-operator/issues/7362
-	// nolint:staticcheck
-	model.NameValidationScheme = model.LegacyValidation
-}
-
 type RuleConfigurationFormat int
 
 const (
@@ -72,6 +63,9 @@ type PrometheusRuleSelector struct {
 
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
+	// At this time this is the best option to pass validation scheme to prometheus programatically
+	// nolint:staticcheck
+	model.NameValidationScheme = model.UTF8Validation
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
 	}
@@ -79,6 +73,11 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 	ruleSelector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
 		return nil, fmt.Errorf("convert rule label selector to selector: %w", err)
+	}
+
+	if componentVersion.LT(semver.MustParse("3.0.0")) {
+		// nolint:staticcheck
+		model.NameValidationScheme = model.LegacyValidation
 	}
 
 	return &PrometheusRuleSelector{

@@ -438,6 +438,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 func TestSelectProbes(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
+		promVersion string
 		updateSpec  func(*monitoringv1.ProbeSpec)
 		selected    bool
 		scrapeClass *string
@@ -533,7 +534,8 @@ func TestSelectProbes(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario:    "utf-8 metric relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -543,6 +545,21 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
+			selected: false,
+		},
+		{
+			scenario:    "utf-8 metric relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid static relabeling config",
@@ -558,7 +575,8 @@ func TestSelectProbes(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid static relabeling config",
+			scenario:    "utf-8 label in static relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -569,6 +587,20 @@ func TestSelectProbes(t *testing.T) {
 				}
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 label in static relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid ingress relabeling config",
@@ -587,7 +619,8 @@ func TestSelectProbes(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid ingress relabeling config",
+			scenario:    "utf-8 label in ingress relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -600,6 +633,22 @@ func TestSelectProbes(t *testing.T) {
 				}
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 label in ingress relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: true,
 		},
 		{
 			scenario:    "inexistent scrape class",
@@ -644,6 +693,7 @@ func TestSelectProbes(t *testing.T) {
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
 						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							Version: tc.promVersion,
 							ScrapeClasses: []monitoringv1.ScrapeClass{
 								{
 									Name: "existent",
@@ -793,6 +843,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 	for _, tc := range []struct {
 		scenario    string
+		promVersion string
 		updateSpec  func(*monitoringv1.ServiceMonitorSpec)
 		selected    bool
 		scrapeClass *string
@@ -813,7 +864,8 @@ func TestSelectServiceMonitors(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario:    "utf-8 label in metric relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -826,6 +878,22 @@ func TestSelectServiceMonitors(t *testing.T) {
 				})
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 label in metric relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid relabeling config",
@@ -843,7 +911,8 @@ func TestSelectServiceMonitors(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid relabeling config",
+			scenario:    "utf-8 label in relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -856,6 +925,22 @@ func TestSelectServiceMonitors(t *testing.T) {
 				})
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 label in relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid TLS config with CA, cert and key",
@@ -1170,7 +1255,8 @@ func TestSelectServiceMonitors(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Mixed Endpoints",
+			scenario:    "Mixed Endpoints",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1226,6 +1312,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
 						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							Version: tc.promVersion,
 							ScrapeClasses: []monitoringv1.ScrapeClass{
 								{
 									Name: "existent",
@@ -1273,6 +1360,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 func TestSelectPodMonitors(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
+		promVersion string
 		updateSpec  func(*monitoringv1.PodMonitorSpec)
 		selected    bool
 		scrapeClass *string
@@ -1293,7 +1381,8 @@ func TestSelectPodMonitors(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario:    "utf-8 label in metric relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1306,6 +1395,22 @@ func TestSelectPodMonitors(t *testing.T) {
 				})
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 label in metric relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid relabeling config",
@@ -1323,7 +1428,8 @@ func TestSelectPodMonitors(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid relabeling config",
+			scenario:    "utf-8 label in relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1336,6 +1442,22 @@ func TestSelectPodMonitors(t *testing.T) {
 				})
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 label in relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: true,
 		},
 		{
 			scenario: "invalid proxyurl",
@@ -1370,7 +1492,8 @@ func TestSelectPodMonitors(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Mixed Endpoints",
+			scenario:    "Mixed Endpoints",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1401,6 +1524,7 @@ func TestSelectPodMonitors(t *testing.T) {
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
 						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							Version: tc.promVersion,
 							ScrapeClasses: []monitoringv1.ScrapeClass{
 								{
 									Name: "existent",
@@ -1476,7 +1600,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid relabeling config",
+			scenario:    "utf-8 labels used in relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -1487,6 +1612,20 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 labels used in relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.RelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid metric relabeling config",
@@ -1502,7 +1641,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario:    "utf-8 labels used in metric relabeling config prometheus v2",
+			promVersion: operator.DefaultPrometheusV2,
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -1513,6 +1653,20 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: false,
+		},
+		{
+			scenario:    "utf-8 labels used in metric relabeling config prometheus v3",
+			promVersion: operator.DefaultPrometheusVersion,
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			selected: true,
 		},
 		{
 			scenario: "valid proxy config",
@@ -1695,7 +1849,19 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "staticConfig with invalid Labels",
+			scenario: "staticConfig with UTF8 Labels",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+					{
+						Labels: map[string]string{"1owner": "prometheus"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario:    "staticConfig with UTF8 Labels and prometheus version < 3",
+			promVersion: "2.55.0",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
 					{
