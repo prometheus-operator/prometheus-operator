@@ -91,6 +91,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	jiraAPIURL := "https://jira.example.com"
 	invalidJiraAPIURL := "://jira.example.com"
 
+	victorOpsAPIURL := "https://victorops.example.com"
+	invalidVictorOpsAPIURL := "://victorops.example.com"
+
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
@@ -1092,6 +1095,82 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraConfig: &monitoringv1.GlobalJiraConfig{
 					APIURL: &jiraAPIURL,
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid global config victorops",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
+					APIURL: ptr.To(monitoringv1.URL(victorOpsAPIURL)),
+					APIKey: ptr.To("myvictoropsapikey"),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Telegram_API_URL.golden",
+		},
+		{
+			name:      "invalid global config victorops api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidVictorOpsAPIURL)),
+					APIKey: ptr.To("myvictoropsapikey"),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
