@@ -330,7 +330,7 @@ type AlertmanagerConfigMatcherStrategy struct {
 	//
 	// The default value is `OnNamespace`.
 	//
-	// +kubebuilder:validation:Enum="OnNamespace";"None"
+	// +kubebuilder:validation:Enum="OnNamespace";"OnNamespaceInOtherNamespaces";"None"
 	// +kubebuilder:default:="OnNamespace"
 	Type AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
@@ -342,6 +342,12 @@ const (
 	// AlertmanagerConfig object only process alerts that have a `namespace`
 	// label equal to the namespace of the object.
 	OnNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespace"
+
+	// With `OnNamespaceInOtherNamespaces`, the route and inhibition rules of an
+	// AlertmanagerConfig object only process alerts that have a `namespace`
+	// label equal to the namespace of the object, unless the AlertmanagerConfig object
+	// is in the same namespace as the Alertmanager object, where it will process all alerts.
+	OnNamespaceInOtherNamespacesConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespaceInOtherNamespaces"
 
 	// With `None`, the route and inhbition rules of an AlertmanagerConfig
 	// object process all incoming alerts.
