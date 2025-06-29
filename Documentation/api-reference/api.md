@@ -9996,6 +9996,7 @@ than zero disables the storage.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
+<p>GlobalJiraConfig configures global Jira parameters.</p>
 </div>
 <table>
 <thead>

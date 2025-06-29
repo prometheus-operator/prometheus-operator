@@ -520,6 +520,7 @@ type GlobalTelegramConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 }
 
+// GlobalJiraConfig configures global Jira parameters.
 type GlobalJiraConfig struct {
 	// The default Jira API URL.
 	//
