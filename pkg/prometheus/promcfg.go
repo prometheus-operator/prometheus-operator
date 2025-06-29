@@ -1827,9 +1827,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1842,6 +1839,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 

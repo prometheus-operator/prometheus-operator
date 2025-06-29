@@ -390,6 +390,12 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+
+	// The default Telegram config
+	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
+
+	// The default configuration for Jira.
+	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -505,6 +511,25 @@ type GlobalSMTPConfig struct {
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
+// GlobalTelegramConfig configures global Telegram parameters.
+type GlobalTelegramConfig struct {
+	// The default Telegram API URL.
+	//
+	// It requires Alertmanager >= v0.24.0.
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+type GlobalJiraConfig struct {
+	// The default Jira API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
+}
+
 // HostPort represents a "host:port" network address.
 type HostPort struct {
 	// Defines the host's address, it can be a DNS name or a literal IP address.
@@ -572,3 +597,7 @@ type ClusterTLSConfig struct {
 	// +required
 	ClientTLS SafeTLSConfig `json:"client"`
 }
+
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+type URL string

@@ -517,21 +517,15 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
-	aobj, err := c.alrtInfs.Get(key)
-
-	if apierrors.IsNotFound(err) {
-		c.reconciliations.ForgetObject(key)
-		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
-	}
+	am, err := operator.GetObjectFromKey[*monitoringv1.Alertmanager](c.alrtInfs, key)
 	if err != nil {
 		return err
 	}
 
-	am := aobj.(*monitoringv1.Alertmanager)
-	am = am.DeepCopy()
-	if err := k8sutil.AddTypeInformationToObject(am); err != nil {
-		return fmt.Errorf("failed to set Alertmanager type information: %w", err)
+	if am == nil {
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
 	}
 
 	// Check if the Alertmanager instance is marked for deletion.
@@ -655,21 +649,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// getAlertmanagerFromKey returns a copy of the Alertmanager object identified by key.
-// If the object is not found, it returns a nil pointer.
-func (c *Operator) getAlertmanagerFromKey(key string) (*monitoringv1.Alertmanager, error) {
-	obj, err := c.alrtInfs.Get(key)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			c.logger.Info("Alertmanager not found", "key", key)
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to retrieve Alertmanager from informer: %w", err)
-	}
-
-	return obj.(*monitoringv1.Alertmanager).DeepCopy(), nil
-}
-
 // getStatefulSetFromAlertmanagerKey returns a copy of the StatefulSet object
 // corresponding to the Alertmanager object identified by key.
 // If the object is not found, it returns a nil pointer without error.
@@ -692,12 +671,16 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	a, err := c.getAlertmanagerFromKey(key)
+	a, err := operator.GetObjectFromKey[*monitoringv1.Alertmanager](c.alrtInfs, key)
 	if err != nil {
 		return err
 	}
 
-	if a == nil || c.rr.DeletionInProgress(a) {
+	if a == nil {
+		return nil
+	}
+
+	if c.rr.DeletionInProgress(a) {
 		return nil
 	}
 

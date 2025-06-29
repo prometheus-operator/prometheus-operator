@@ -734,21 +734,16 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
-	pobj, err := c.promInfs.Get(key)
+	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
 
-	if apierrors.IsNotFound(err) {
-		c.reconciliations.ForgetObject(key)
-		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
-	}
 	if err != nil {
 		return err
 	}
 
-	p := pobj.(*monitoringv1.Prometheus)
-	p = p.DeepCopy()
-	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
-		return fmt.Errorf("failed to set Prometheus type information: %w", err)
+	if p == nil {
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
 	}
 
 	logger := c.logger.With("key", key)
@@ -1039,17 +1034,14 @@ func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	pobj, err := c.promInfs.Get(key)
-
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
+	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
 	if err != nil {
 		return err
 	}
 
-	p := pobj.(*monitoringv1.Prometheus)
-	p = p.DeepCopy()
+	if p == nil {
+		return nil
+	}
 
 	if c.rr.DeletionInProgress(p) {
 		return nil
