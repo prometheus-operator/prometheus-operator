@@ -582,6 +582,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
+	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
+		if err := validateDaemonSetSpec(p); err != nil {
+			return err
+		}
+	}
+
 	// Generate the configuration data.
 	var (
 		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
@@ -1183,4 +1189,27 @@ func makeSelectorLabels(name string) map[string]string {
 func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
+}
+
+// a fallback CEL validation function for older kubernetes versions when CEL is not available
+func validateDaemonSetSpec(p *monitoringv1alpha1.PrometheusAgent) error {
+	
+	if p.Spec.Replicas != nil {
+		return fmt.Errorf("replicas cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.Storage != nil {
+		return fmt.Errorf("storage cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
+		return fmt.Errorf("shards cannot be greater than 1 when mode is DaemonSet")
+	}
+	
+	if p.Spec.PersistentVolumeClaimRetentionPolicy != nil {
+		return fmt.Errorf("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
+	}
+	
+
+	return nil
 }
