@@ -1162,7 +1162,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			golden: "valid_global_config_with_Telegram_API_URL.golden",
+			golden: "valid_global_config_with_VictorOps.golden",
 		},
 		{
 			name:      "invalid global config victorops api url",
