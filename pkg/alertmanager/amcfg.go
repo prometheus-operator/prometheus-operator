@@ -1780,7 +1780,7 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 	}
 
 	if in.APIURL != nil {
-		u, err := url.Parse(*in.APIURL)
+		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
 			return fmt.Errorf("failed to parse Rocket Chat API URL: %w", err)
 		}

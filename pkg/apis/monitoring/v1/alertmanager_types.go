@@ -539,7 +539,7 @@ type GlobalRocketChatConfig struct {
 	// It requires Alertmanager >= v0.28.0.
 	//
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 
 	// The default Rocket Chat Token
 	//
