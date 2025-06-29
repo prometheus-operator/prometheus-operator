@@ -1756,7 +1756,7 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 	}
 
 	if in.APIURL != nil {
-		u, err := url.Parse(*in.APIURL)
+		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
 			return fmt.Errorf("failed to parse Jira API URL: %w", err)
 		}

@@ -16,10 +16,14 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // GlobalJiraConfigApplyConfiguration represents a declarative configuration of the GlobalJiraConfig type for use
 // with apply.
 type GlobalJiraConfigApplyConfiguration struct {
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
 }
 
 // GlobalJiraConfigApplyConfiguration constructs a declarative configuration of the GlobalJiraConfig type for use with
@@ -31,7 +35,7 @@ func GlobalJiraConfig() *GlobalJiraConfigApplyConfiguration {
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *GlobalJiraConfigApplyConfiguration) WithAPIURL(value string) *GlobalJiraConfigApplyConfiguration {
+func (b *GlobalJiraConfigApplyConfiguration) WithAPIURL(value monitoringv1.URL) *GlobalJiraConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
