@@ -774,3 +774,142 @@ func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
 }
+
+// TDD Test cases for runtime validation - these should fail initially
+func testPrometheusAgentDaemonSetRuntimeValidations(t *testing.T) {
+	t.Parallel()
+
+	t.Run("ReplicasValidation", testPrometheusAgentDaemonSetReplicasValidation)
+	t.Run("StorageValidation", testPrometheusAgentDaemonSetStorageValidation)
+	t.Run("ShardsValidation", testPrometheusAgentDaemonSetShardsValidation)
+	t.Run("PVCRetentionValidation", testPrometheusAgentDaemonSetPVCRetentionValidation)
+}
+
+func testPrometheusAgentDaemonSetReplicasValidation(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-replicas-validation"
+	prometheusAgentDS := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	
+	// add invalid replicas field
+	prometheusAgentDS.Spec.Replicas = ptr.To(int32(3))
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDS)
+	require.Error(t, err, "Expected error when creating PrometheusAgent DaemonSet with replicas field")
+	require.Contains(t, err.Error(), "replicas", "Error should mention replicas field is not allowed")
+}
+
+func testPrometheusAgentDaemonSetStorageValidation(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-storage-validation"
+	prometheusAgentDS := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	
+	// add invalid storage field
+	prometheusAgentDS.Spec.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+			Spec: v1.PersistentVolumeClaimSpec{
+				Resources: v1.VolumeResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("10Gi"),
+					},
+				},
+			},
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDS)
+	require.Error(t, err, "Expected error when creating PrometheusAgent DaemonSet with storage field")
+	require.Contains(t, err.Error(), "storage", "Error should mention storage field is not allowed")
+}
+
+func testPrometheusAgentDaemonSetShardsValidation(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-shards-validation"
+	prometheusAgentDS := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	
+	// add invalid shards field
+	prometheusAgentDS.Spec.Shards = ptr.To(int32(2))
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDS)
+	require.Error(t, err, "Expected error when creating PrometheusAgent DaemonSet with shards field")
+	require.Contains(t, err.Error(), "shards", "Error should mention shards field is not allowed")
+}
+
+func testPrometheusAgentDaemonSetPVCRetentionValidation(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-pvc-retention-validation"
+	prometheusAgentDS := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	
+	// add invalid policy
+	prometheusAgentDS.Spec.PersistentVolumeClaimRetentionPolicy = &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+		WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+		WhenScaled:  appsv1.RetainPersistentVolumeClaimRetentionPolicyType,
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDS)
+	require.Error(t, err, "Expected error when creating PrometheusAgent DaemonSet with PVC retention policy field")
+	require.Contains(t, err.Error(), "persistentVolumeClaimRetentionPolicy", "Error should mention PVC retention policy field is not allowed")
+}
