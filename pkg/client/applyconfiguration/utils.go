@@ -94,6 +94,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalTelegramConfig"):
 		return &monitoringv1.GlobalTelegramConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalVictorOpsConfig"):
+		return &monitoringv1.GlobalVictorOpsConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):

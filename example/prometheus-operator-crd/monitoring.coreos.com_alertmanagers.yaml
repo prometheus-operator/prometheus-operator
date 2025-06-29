@@ -2187,6 +2187,18 @@ spec:
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object
+                      victorops:
+                        description: The default configuration for VictorOps.
+                        properties:
+                          apiKey:
+                            description: The default VictorOps API Key.
+                            minLength: 1
+                            type: string
+                          apiURL:
+                            description: The default VictorOps API URL.
+                            pattern: ^(http|https)://.+$
+                            type: string
+                        type: object
                     type: object
                   name:
                     description: |-
