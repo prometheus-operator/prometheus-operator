@@ -474,6 +474,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global jira config: %w", err)
 	}
 
+	if err := cb.convertGlobalVictorOpsConfig(ctx, out, in.VictorOpsConfig, crKey); err != nil {
+		return nil, fmt.Errorf("invalid global victorops config: %w", err)
+	}
+
 	return out, nil
 }
 
@@ -1761,6 +1765,26 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 			return fmt.Errorf("failed to parse Jira API URL: %w", err)
 		}
 		out.JiraAPIURL = &config.URL{URL: u}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalVictorOpsConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("parse VictorOps API URL: %w", err)
+		}
+		out.VictorOpsAPIURL = &config.URL{URL: u}
+	}
+
+	if in.APIKey != nil {
+		out.VictorOpsAPIKey = *in.APIKey
 	}
 
 	return nil

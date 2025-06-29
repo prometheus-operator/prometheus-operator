@@ -398,7 +398,7 @@ type AlertmanagerGlobalConfig struct {
 	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
 
 	// The default configuration for VictorOps.
-	VictorOpsConfig *GlobalVictorOpsConfig `json:"victorOps,omitempty"`
+	VictorOpsConfig *GlobalVictorOpsConfig `json:"victorops,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -537,15 +537,12 @@ type GlobalJiraConfig struct {
 type GlobalVictorOpsConfig struct {
 	// The default VictorOps API URL.
 	//
-	// It requires Alertmanager >= v0.28.0.
-	//
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
-	// The default VictorOps API URL.
-	//
-	// It requires Alertmanager >= v0.28.0.
+	// The default VictorOps API Key.
 	//
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	APIKey *string `json:"apiKey,omitempty"`
 }
 
