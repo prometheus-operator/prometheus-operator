@@ -266,6 +266,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.InhibitRuleApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("IonosSDConfig"):
 		return &monitoringv1alpha1.IonosSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("JiraConfig"):
+		return &monitoringv1alpha1.JiraConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("JiraField"):
+		return &monitoringv1alpha1.JiraFieldApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("K8SSelectorConfig"):
 		return &monitoringv1alpha1.K8SSelectorConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KeyValue"):
@@ -364,6 +368,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.HTTPConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1beta1.InhibitRuleApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("JiraConfig"):
+		return &monitoringv1beta1.JiraConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("JiraField"):
+		return &monitoringv1beta1.JiraFieldApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("KeyValue"):
 		return &monitoringv1beta1.KeyValueApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Matcher"):

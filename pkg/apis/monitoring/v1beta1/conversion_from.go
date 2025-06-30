@@ -154,6 +154,19 @@ func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
 	}
 }
 
+func convertJiraFieldFrom(in []v1alpha1.JiraField) []JiraField {
+	out := make([]JiraField, len(in))
+
+	for i := range in {
+		out[i] = JiraField{
+			Key:   in[i].Key,
+			Value: in[i].Value,
+		}
+	}
+
+	return out
+}
+
 func convertKeyValuesFrom(in []v1alpha1.KeyValue) []KeyValue {
 	out := make([]KeyValue, len(in))
 
@@ -472,6 +485,25 @@ func convertMSTeamsConfigFrom(in v1alpha1.MSTeamsConfig) MSTeamsConfig {
 	}
 }
 
+func convertJiraConfigFrom(in v1alpha1.JiraConfig) JiraConfig {
+	return JiraConfig{
+		SendResolved:      in.SendResolved,
+		APIURL:            in.APIURL,
+		Project:           in.Project,
+		Summary:           in.Summary,
+		Description:       in.Description,
+		Labels:            in.Labels,
+		Priority:          in.Priority,
+		IssueType:         in.IssueType,
+		ResolveTransition: in.ResolveTransition,
+		ReopenTransition:  in.ReopenTransition,
+		WontFixResolution: in.WontFixResolution,
+		ReopenDuration:    in.ReopenDuration,
+		Fields:            convertJiraFieldFrom(in.Fields),
+		HTTPConfig:        convertHTTPConfigFrom(in.HTTPConfig),
+	}
+}
+
 func convertMSTeamsV2ConfigFrom(in v1alpha1.MSTeamsV2Config) MSTeamsV2Config {
 	return MSTeamsV2Config{
 		SendResolved: in.SendResolved,
@@ -581,6 +613,13 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 			out.MSTeamsConfigs = append(
 				out.MSTeamsConfigs,
 				convertMSTeamsConfigFrom(in),
+			)
+		}
+
+		for _, in := range in.JiraConfigs {
+			out.JiraConfigs = append(
+				out.JiraConfigs,
+				convertJiraConfigFrom(in),
 			)
 		}
 
