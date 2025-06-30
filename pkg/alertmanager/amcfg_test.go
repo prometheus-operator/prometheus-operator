@@ -1672,6 +1672,18 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraConfig: &monitoringv1.GlobalJiraConfig{
 					APIURL: ptr.To(monitoringv1.URL(jiraAPIURL)),
+			name:      "invalid global config wechat config api corp id empty string",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(weChatAPIURL)),
+					APISecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "wechat",
+						},
+						Key: "api_secret",
+					},
+					APICorpID: ptr.To(""),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
