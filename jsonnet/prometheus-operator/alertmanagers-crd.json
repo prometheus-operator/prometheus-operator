@@ -1684,7 +1684,7 @@
                             "description": "The default configuration for Rocket Chat.",
                             "properties": {
                               "apiURL": {
-                                "description": "The default Rocket Chat API URL\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "The default Rocket Chat API URL.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               },
@@ -1712,7 +1712,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "tokenID": {
-                                "description": "The default Rocket Chat Token ID\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "The default Rocket Chat Token ID.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",

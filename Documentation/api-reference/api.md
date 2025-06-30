@@ -10063,7 +10063,7 @@ URL
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default Rocket Chat API URL</p>
+<p>The default Rocket Chat API URL.</p>
 <p>It requires Alertmanager &gt;= v0.28.0.</p>
 </td>
 </tr>
@@ -10093,7 +10093,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default Rocket Chat Token ID</p>
+<p>The default Rocket Chat Token ID.</p>
 <p>It requires Alertmanager &gt;= v0.28.0.</p>
 </td>
 </tr>

@@ -12703,7 +12703,7 @@ spec:
                         properties:
                           apiURL:
                             description: |-
-                              The default Rocket Chat API URL
+                              The default Rocket Chat API URL.
 
                               It requires Alertmanager >= v0.28.0.
                             pattern: ^(http|https)://.+$
@@ -12737,7 +12737,7 @@ spec:
                             x-kubernetes-map-type: atomic
                           tokenID:
                             description: |-
-                              The default Rocket Chat Token ID
+                              The default Rocket Chat Token ID.
 
                               It requires Alertmanager >= v0.28.0.
                             properties:
