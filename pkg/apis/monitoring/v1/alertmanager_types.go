@@ -535,7 +535,7 @@ type GlobalJiraConfig struct {
 
 // GlobalRocketChatConfig configures global Rocket Chat parameters.
 type GlobalRocketChatConfig struct {
-	// The default Rocket Chat API URL
+	// The default Rocket Chat API URL.
 	//
 	// It requires Alertmanager >= v0.28.0.
 	//
@@ -549,7 +549,7 @@ type GlobalRocketChatConfig struct {
 	// +optional
 	Token *v1.SecretKeySelector `json:"token,omitempty"`
 
-	// The default Rocket Chat Token ID
+	// The default Rocket Chat Token ID.
 	//
 	// It requires Alertmanager >= v0.28.0.
 	//
