@@ -1394,7 +1394,7 @@ func (in *GlobalJiraConfig) DeepCopyInto(out *GlobalJiraConfig) {
 	*out = *in
 	if in.APIURL != nil {
 		in, out := &in.APIURL, &out.APIURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 }

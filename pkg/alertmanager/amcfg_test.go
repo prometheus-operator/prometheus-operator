@@ -1017,7 +1017,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraConfig: &monitoringv1.GlobalJiraConfig{
-					APIURL: &jiraAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(jiraAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1054,7 +1054,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraConfig: &monitoringv1.GlobalJiraConfig{
-					APIURL: &invalidJiraAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(invalidJiraAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1091,7 +1091,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version26,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				JiraConfig: &monitoringv1.GlobalJiraConfig{
-					APIURL: &jiraAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(jiraAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
