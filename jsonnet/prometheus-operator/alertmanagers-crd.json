@@ -1689,7 +1689,7 @@
                                 "type": "string"
                               },
                               "token": {
-                                "description": "The default Rocket Chat Token\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "The default Rocket Chat token.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",

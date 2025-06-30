@@ -1909,7 +1909,7 @@ spec:
                             type: string
                           token:
                             description: |-
-                              The default Rocket Chat Token
+                              The default Rocket Chat token.
 
                               It requires Alertmanager >= v0.28.0.
                             properties:

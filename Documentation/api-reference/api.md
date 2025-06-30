@@ -10042,6 +10042,7 @@ URL
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
+<p>GlobalRocketChatConfig configures global Rocket Chat parameters.</p>
 </div>
 <table>
 <thead>
@@ -10077,7 +10078,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default Rocket Chat Token</p>
+<p>The default Rocket Chat token.</p>
 <p>It requires Alertmanager &gt;= v0.28.0.</p>
 </td>
 </tr>
