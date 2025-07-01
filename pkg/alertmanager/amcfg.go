@@ -1816,7 +1816,7 @@ func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitor
 	}
 
 	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`invalid syntax in global config; webex api url integration is available in Alertmanager >= 0.25.0`)
+		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
 	}
 
 	if in.APIURL != nil {
