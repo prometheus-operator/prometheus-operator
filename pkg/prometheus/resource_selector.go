@@ -50,7 +50,7 @@ const (
 	NoFilesystemAccess            = "NoFilesystemAccess"
 	SecretNotFound                = "SecretNotFound"
 	BasicAuthNotFound             = "BasicAuthNotFound"
-	TlsConfigInvalid              = "TlsConfigInvalid"
+	TLSConfigInvalid              = "TLSConfigInvalid"
 	Oauth2NotFound                = "Oauth2NotFound"
 	AuthorizationNotFound         = "AuthorizationNotFound"
 	ScrapeTimeoutInvalid          = "ScrapeTimeoutInvalid"
@@ -295,7 +295,7 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 		}
 
 		if err := rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
-			return TlsConfigInvalid, fmt.Errorf("%w: tlsConfig: %w", epErr, err)
+			return TLSConfigInvalid, fmt.Errorf("%w: tlsConfig: %w", epErr, err)
 		}
 
 		if err := rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2); err != nil {
@@ -529,7 +529,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 		}
 
 		if err := rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
-			return TlsConfigInvalid, fmt.Errorf("%w: tlsConfig: %w", epErr, err)
+			return TLSConfigInvalid, fmt.Errorf("%w: tlsConfig: %w", epErr, err)
 		}
 
 		if err := rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2); err != nil {
@@ -605,7 +605,7 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	}
 
 	if err := rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), probe.Spec.TLSConfig); err != nil {
-		return TlsConfigInvalid, fmt.Errorf("tlsConfig: %w", err)
+		return TLSConfigInvalid, fmt.Errorf("tlsConfig: %w", err)
 	}
 
 	if err := rs.store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization); err != nil {
@@ -719,7 +719,7 @@ func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitorin
 	}
 
 	if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), sc.Spec.TLSConfig); err != nil {
-		return TlsConfigInvalid, fmt.Errorf("tlsConfig: %w", err)
+		return TLSConfigInvalid, fmt.Errorf("tlsConfig: %w", err)
 	}
 
 	var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
