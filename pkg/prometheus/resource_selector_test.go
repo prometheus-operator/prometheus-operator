@@ -506,16 +506,123 @@ func TestSelectProbes(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "invalid proxyurl",
+			scenario: "invalid proxyconfig due to invalid proxyurl",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
-				ps.ProberSpec.ProxyURL = "http://xxx-${dev}.svc.cluster.local:80"
+				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
 			},
 			selected: false,
 		},
 		{
-			scenario: "valid proxyurl",
+			scenario: "invalid proxyconfig due to proxy environment set to true and proxyurl defined",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
-				ps.ProberSpec.ProxyURL = "123-proxy.example.com"
+				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					ProxyFromEnvironment: ptr.To(true),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxyconfig due to proxy environment set to true and noproxy defined",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(true),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxyconfig due to invalid secret secret key",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					ProxyFromEnvironment: ptr.To(true),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "invaild_key",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "invalid proxyconfig due to proxy from environment set to false and proxyurl and noproxy not defined",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "valid proxyconfig",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
 			},
 			selected: true,
 		},
@@ -637,7 +744,17 @@ func TestSelectProbes(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			cs := fake.NewSimpleClientset()
+			cs := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"key1": []byte("val1"),
+					},
+				},
+			)
 
 			rs, err := NewResourceSelector(
 				newLogger(),

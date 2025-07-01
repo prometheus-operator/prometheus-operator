@@ -4735,10 +4735,24 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme:   "http",
-						URL:      "blackbox.exporter.io",
-						Path:     "/probe",
-						ProxyURL: "socks://myproxy:9095",
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key",
+									},
+								},
+							},
+						},
 					},
 					Module: "http_2xx",
 					Targets: monitoringv1.ProbeTargets{
@@ -4759,6 +4773,18 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				probe.Spec.LabelValueLengthLimit = &labelValueLengthLimit
 			}
 
+			s := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+					},
+				},
+			)
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
@@ -4768,7 +4794,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 					"testprobe1": &probe,
 				},
 				nil,
-				&assets.StoreBuilder{},
+				s,
 				nil,
 				nil,
 				nil,
@@ -5803,10 +5829,24 @@ func TestProbeSpecConfig(t *testing.T) {
 			golden: "ProbeSpecConfig_prober_spec.golden",
 			pbSpec: monitoringv1.ProbeSpec{
 				ProberSpec: monitoringv1.ProberSpec{
-					Scheme:   "http",
-					URL:      "example.com",
-					Path:     "/probe",
-					ProxyURL: "socks://myproxy:9095",
+					Scheme: "http",
+					URL:    "example.com",
+					Path:   "/probe",
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key",
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -5863,6 +5903,18 @@ func TestProbeSpecConfig(t *testing.T) {
 				tc.patchProm(p)
 			}
 
+			s := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+					},
+				},
+			)
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
@@ -5870,7 +5922,7 @@ func TestProbeSpecConfig(t *testing.T) {
 				nil,
 				pbs,
 				nil,
-				&assets.StoreBuilder{},
+				s,
 				nil,
 				nil,
 				nil,

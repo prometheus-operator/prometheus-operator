@@ -564,7 +564,7 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 		}
 	}
 
-	if err := validateProxyURL(&probe.Spec.ProberSpec.ProxyURL); err != nil {
+	if err := addProxyConfigToStore(ctx, probe.Spec.ProberSpec.ProxyConfig, rs.store, probe.GetNamespace()); err != nil {
 		return fmt.Errorf("proxyURL: %w", err)
 	}
 
