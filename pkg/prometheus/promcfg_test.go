@@ -4746,9 +4746,9 @@ func TestLabelValueLengthLimits(t *testing.T) {
 								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
-											Name: "secret",
+											Name: "foo",
 										},
-										Key: "key",
+										Key: "proxy-header",
 									},
 								},
 							},
@@ -5840,9 +5840,9 @@ func TestProbeSpecConfig(t *testing.T) {
 							"header": {
 								{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+										Name: "foo",
 									},
-									Key: "key",
+									Key: "proxy-header",
 								},
 							},
 						},

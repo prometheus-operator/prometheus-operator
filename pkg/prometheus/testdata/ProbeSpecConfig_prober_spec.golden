@@ -14,7 +14,7 @@ scrape_configs:
   proxy_from_environment: false
   proxy_connect_header:
     header:
-    - ""
+    - value
   relabel_configs:
   - source_labels:
     - job
