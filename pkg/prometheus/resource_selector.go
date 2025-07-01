@@ -241,8 +241,8 @@ func selectObjects[T configurationResource](
 }
 
 // SelectServiceMonitors selects ServiceMonitors based on the selectors in the
-// Prometheus CR and filters them returning only those with a valid
-// configuration. This function also populates authentication stores and
+// Prometheus CR and retuns all the ServiceMonitors that match the selectors
+// This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) ([]SelectedResource[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
@@ -260,6 +260,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 }
 
 // checkServiceMonitor verifies that the ServiceMonitor object is valid.
+// Returns an error and reason if the ServiceMonitor is not valid.
 func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitoringv1.ServiceMonitor) (string, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
@@ -504,6 +505,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 }
 
 // checkPodMonitor verifies that the PodMonitor object is valid.
+// Returns an error and reason if the PodMonitor is not valid.
 func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv1.PodMonitor) (string, error) {
 	if _, err := metav1.LabelSelectorAsSelector(&pm.Spec.Selector); err != nil {
 		return InvalidSelector, fmt.Errorf("failed to parse label selector: %w", err)
@@ -582,6 +584,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 }
 
 // checkProbe verifies that the Probe object is valid.
+// Returns an error and reason if the Probe is not valid.
 func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.Probe) (string, error) {
 	if err := validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
 		return ScrapeClassNotFound, fmt.Errorf("scrapeClassName: %w", err)
@@ -694,6 +697,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 }
 
 // checkScrapeConfig verifies that the ScrapeConfig object is valid.
+// Returns an error and reason if the ScrapeConfig is not valid.
 func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) (string, error) {
 	if err := validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
 		return ScrapeClassNotFound, err
