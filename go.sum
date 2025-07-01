@@ -289,8 +289,8 @@ github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXl
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/thanos-io/thanos v0.39.0 h1:FPCW5IxliEPWyviau5EOOzr/G96p21mQsP2+6hKNRrk=
-github.com/thanos-io/thanos v0.39.0/go.mod h1:bvUPJNIx2LBXme6yBinRiGqQinxlGikLlK7PGeFQPkQ=
+github.com/thanos-io/thanos v0.39.1 h1:JXFKPgvmf7XohV8ylasxERkRLgxqwbhuu6JkrWIgrio=
+github.com/thanos-io/thanos v0.39.1/go.mod h1:bvUPJNIx2LBXme6yBinRiGqQinxlGikLlK7PGeFQPkQ=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8Ydu2Bstc=
