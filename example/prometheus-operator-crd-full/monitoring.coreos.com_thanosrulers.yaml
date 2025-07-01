@@ -5717,9 +5717,9 @@ spec:
                 type: string
               ruleConcurrentEval:
                 description: |-
-                  Rule concurrent evaluation used for how many rules can be evaluated concurrently.
+                  How many rules can be evaluated concurrently.
                   It requires Thanos >= v0.37.0.
-                format: int64
+                format: int32
                 minimum: 1
                 type: integer
               ruleNamespaceSelector:

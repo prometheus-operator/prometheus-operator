@@ -64,7 +64,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	PortName                           *string                                         `json:"portName,omitempty"`
 	EvaluationInterval                 *monitoringv1.Duration                          `json:"evaluationInterval,omitempty"`
 	RuleQueryOffset                    *monitoringv1.Duration                          `json:"ruleQueryOffset,omitempty"`
-	RuleConcurrentEval                 *int64                                          `json:"ruleConcurrentEval,omitempty"`
+	RuleConcurrentEval                 *int32                                          `json:"ruleConcurrentEval,omitempty"`
 	Retention                          *monitoringv1.Duration                          `json:"retention,omitempty"`
 	Containers                         []corev1.Container                              `json:"containers,omitempty"`
 	InitContainers                     []corev1.Container                              `json:"initContainers,omitempty"`
@@ -437,7 +437,7 @@ func (b *ThanosRulerSpecApplyConfiguration) WithRuleQueryOffset(value monitoring
 // WithRuleConcurrentEval sets the RuleConcurrentEval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RuleConcurrentEval field is set to the value of the last call.
-func (b *ThanosRulerSpecApplyConfiguration) WithRuleConcurrentEval(value int64) *ThanosRulerSpecApplyConfiguration {
+func (b *ThanosRulerSpecApplyConfiguration) WithRuleConcurrentEval(value int32) *ThanosRulerSpecApplyConfiguration {
 	b.RuleConcurrentEval = &value
 	return b
 }

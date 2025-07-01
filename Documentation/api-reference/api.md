@@ -4775,12 +4775,12 @@ It requires Thanos &gt;= v0.38.0.</p>
 <td>
 <code>ruleConcurrentEval</code><br/>
 <em>
-int64
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Rule concurrent evaluation used for how many rules can be evaluated concurrently.
+<p>How many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
 </td>
 </tr>
@@ -18059,12 +18059,12 @@ It requires Thanos &gt;= v0.38.0.</p>
 <td>
 <code>ruleConcurrentEval</code><br/>
 <em>
-int64
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Rule concurrent evaluation used for how many rules can be evaluated concurrently.
+<p>How many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
 </td>
 </tr>

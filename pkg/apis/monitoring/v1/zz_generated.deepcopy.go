@@ -3675,7 +3675,7 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 	}
 	if in.RuleConcurrentEval != nil {
 		in, out := &in.RuleConcurrentEval, &out.RuleConcurrentEval
-		*out = new(int64)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.Containers != nil {

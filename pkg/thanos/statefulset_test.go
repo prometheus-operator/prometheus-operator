@@ -1114,12 +1114,12 @@ func TestRuleQueryOffset(t *testing.T) {
 }
 
 func TestRuleConcurrentEval(t *testing.T) {
-	ruleConcurrentEval := int64(5)
+	ruleConcurrentEval := int32(5)
 
 	tt := []struct {
 		scenario           string
 		version            string
-		ruleConcurrentEval *int64
+		ruleConcurrentEval *int32
 		shouldHaveArg      bool
 	}{{
 		scenario:           "version >= 0.37.0 with rule concurrent evaluation",
