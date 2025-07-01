@@ -43,6 +43,12 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
+// ConfigResource is a type constraint that permits only the specific pointer types for configuration resources
+// selectable by Prometheus or PrometheusAgent
+type ConfigurationResource interface {
+	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
+}
+
 // ResourceSelector knows how to select and verify scrape configuration
 // resources that are matched by a Prometheus or PrometheusAgent object.
 type ResourceSelector struct {
@@ -55,6 +61,38 @@ type ResourceSelector struct {
 	accessor           *operator.Accessor
 
 	eventRecorder record.EventRecorder
+}
+
+// SelectedResource represents a single configuration resource selected by Prometheus or PrometheusAgent.
+type SelectedResource[T ConfigurationResource] struct {
+	Object T
+	Key    string
+	Reason *string // Reason explains why the resource was rejected; nil if accepted.
+	Err    error   // error encountered during selection or validation (nil if valid).
+}
+
+// GetValidSelectedResources filters and returns only the valid selected resources (those without an error).
+// Returns a map of resource keys to valid resource objects.
+func GetValidSelectedResources[T ConfigurationResource](resources []SelectedResource[T]) map[string]T {
+	validRes := make(map[string]T)
+	for _, res := range resources {
+		if res.Err == nil {
+			validRes[res.Key] = res.Object
+		}
+	}
+	return validRes
+}
+
+// GetInvalidSelectedResources filters and returns only the invalid  selected resources (those with a non-nil error).
+// Returns a slice of SelectedResource containing details of each invalid resource.
+func GetInvalidSelectedResources[T ConfigurationResource](resources []SelectedResource[T]) []SelectedResource[T] {
+	var invalidRes []SelectedResource[T]
+	for _, res := range resources {
+		if res.Err != nil {
+			invalidRes = append(invalidRes, res)
+		}
+	}
+	return invalidRes
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -85,7 +123,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T *monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig](
+func selectObjects[T ConfigurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
