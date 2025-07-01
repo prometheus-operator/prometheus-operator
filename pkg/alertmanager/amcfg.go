@@ -474,6 +474,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global jira config: %w", err)
 	}
 
+	if err := cb.convertGlobalRocketChatConfig(ctx, out, in.RocketChatConfig, crKey); err != nil {
+		return nil, fmt.Errorf("invalid global rocket chat config: %w", err)
+	}
+
 	return out, nil
 }
 
@@ -1761,6 +1765,42 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 			return fmt.Errorf("failed to parse Jira API URL: %w", err)
 		}
 		out.JiraAPIURL = &config.URL{URL: u}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalRocketChatConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return errors.New("rocket chat integration requires Alertmanager >= 0.28.0")
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("failed to parse Rocket Chat API URL: %w", err)
+		}
+		out.RocketChatAPIURL = &config.URL{URL: u}
+	}
+
+	if in.Token != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
+		if err != nil {
+			return fmt.Errorf("failed to get Rocket Chat Token: %w", err)
+		}
+		out.RocketChatToken = token
+	}
+
+	if in.TokenID != nil {
+		tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.TokenID)
+		if err != nil {
+			return fmt.Errorf("failed to get Rocket Chat Token ID: %w", err)
+		}
+		out.RocketChatTokenID = tokenID
 	}
 
 	return nil
