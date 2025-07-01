@@ -4773,6 +4773,19 @@ It requires Thanos &gt;= v0.38.0.</p>
 </tr>
 <tr>
 <td>
+<code>ruleConcurrentEval</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>How many rules can be evaluated concurrently.
+It requires Thanos &gt;= v0.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -18161,6 +18174,19 @@ Duration
 <em>(Optional)</em>
 <p>The default rule group&rsquo;s query offset duration to use.
 It requires Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleConcurrentEval</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>How many rules can be evaluated concurrently.
+It requires Thanos &gt;= v0.37.0.</p>
 </td>
 </tr>
 <tr>
