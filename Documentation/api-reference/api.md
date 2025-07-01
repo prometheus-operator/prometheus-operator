@@ -5805,27 +5805,29 @@ GlobalJiraConfig
 </tr>
 <tr>
 <td>
-<<<<<<< HEAD
-<code>wechat</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">
-GlobalWeChatConfig
-=======
 <code>rocketChat</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">
 GlobalRocketChatConfig
->>>>>>> main
 </a>
 </em>
 </td>
 <td>
-<<<<<<< HEAD
+<p>The default configuration for Rocket Chat.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>wechat</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">
+GlobalWeChatConfig
+</a>
+</em>
+</td>
+<td>
 <em>(Optional)</em>
 <p>The default WeChat Config</p>
-=======
-<p>The default configuration for Rocket Chat.</p>
->>>>>>> main
 </td>
 </tr>
 </tbody>
@@ -19220,11 +19222,7 @@ Supported values are:
 <h3 id="monitoring.coreos.com/v1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-<<<<<<< HEAD
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>)
-=======
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>)
->>>>>>> main
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

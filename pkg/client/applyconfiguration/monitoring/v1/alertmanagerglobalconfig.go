@@ -34,7 +34,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	TelegramConfig   *GlobalTelegramConfigApplyConfiguration   `json:"telegram,omitempty"`
 	JiraConfig       *GlobalJiraConfigApplyConfiguration       `json:"jira,omitempty"`
 	RocketChatConfig *GlobalRocketChatConfigApplyConfiguration `json:"rocketChat,omitempty"`
-	WeChatConfig   *GlobalWeChatConfigApplyConfiguration   `json:"wechat,omitempty"`
+	WeChatConfig     *GlobalWeChatConfigApplyConfiguration     `json:"wechat,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
