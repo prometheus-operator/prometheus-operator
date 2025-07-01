@@ -292,6 +292,13 @@ type ThanosRulerSpec struct {
 	// +optional
 	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
 
+	// Rule concurrent evaluation used for how many rules can be evaluated concurrently.
+	// It requires Thanos >= v0.37.0.
+	// +kubebuilder:validation:Minimum=1
+	//
+	// +optional
+	RuleConcurrentEval *int64 `json:"ruleConcurrentEval,omitempty"`
+
 	// Time duration ThanosRuler shall retain data for. Default is '24h', and
 	// must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds
 	// seconds minutes hours days weeks years).
