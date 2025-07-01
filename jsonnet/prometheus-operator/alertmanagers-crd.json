@@ -2013,23 +2013,22 @@
                             },
                             "type": "object"
                           },
-<<<<<<< HEAD
                           "telegram": {
                             "description": "The default Telegram config",
                             "properties": {
                               "apiURL": {
                                 "description": "The default Telegram API URL.\n\nIt requires Alertmanager >= v0.24.0.",
-=======
+                                "pattern": "^(http|https)://.+$",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "webex": {
                             "description": "The default configuration for Jira.",
                             "properties": {
                               "apiURL": {
-<<<<<<< HEAD
-                                "description": "The default API URL.",
->>>>>>> da8c220e5 (update generated files)
-=======
                                 "description": "The default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",
->>>>>>> 9b5ffb67e (update generated files)
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }

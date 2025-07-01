@@ -24,7 +24,6 @@ import (
 // AlertmanagerGlobalConfigApplyConfiguration represents a declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
 type AlertmanagerGlobalConfigApplyConfiguration struct {
-<<<<<<< HEAD
 	SMTPConfig       *GlobalSMTPConfigApplyConfiguration       `json:"smtp,omitempty"`
 	ResolveTimeout   *monitoringv1.Duration                    `json:"resolveTimeout,omitempty"`
 	HTTPConfig       *HTTPConfigApplyConfiguration             `json:"httpConfig,omitempty"`
@@ -35,16 +34,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	TelegramConfig   *GlobalTelegramConfigApplyConfiguration   `json:"telegram,omitempty"`
 	JiraConfig       *GlobalJiraConfigApplyConfiguration       `json:"jira,omitempty"`
 	RocketChatConfig *GlobalRocketChatConfigApplyConfiguration `json:"rocketChat,omitempty"`
-=======
-	SMTPConfig     *GlobalSMTPConfigApplyConfiguration  `json:"smtp,omitempty"`
-	ResolveTimeout *monitoringv1.Duration               `json:"resolveTimeout,omitempty"`
-	HTTPConfig     *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
-	SlackAPIURL    *corev1.SecretKeySelector            `json:"slackApiUrl,omitempty"`
-	OpsGenieAPIURL *corev1.SecretKeySelector            `json:"opsGenieApiUrl,omitempty"`
-	OpsGenieAPIKey *corev1.SecretKeySelector            `json:"opsGenieApiKey,omitempty"`
-	PagerdutyURL   *string                              `json:"pagerdutyUrl,omitempty"`
-	WebexConfig    *GlobalWebexConfigApplyConfiguration `json:"webex,omitempty"`
->>>>>>> da8c220e5 (update generated files)
+	WebexConfig      *GlobalWebexConfigApplyConfiguration      `json:"webex,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -109,7 +99,6 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithPagerdutyURL(value stri
 	return b
 }
 
-<<<<<<< HEAD
 // WithTelegramConfig sets the TelegramConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TelegramConfig field is set to the value of the last call.
@@ -131,12 +120,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraConfig(value *Globa
 // If called multiple times, the RocketChatConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithRocketChatConfig(value *GlobalRocketChatConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.RocketChatConfig = value
-=======
+	return b
+}
+
 // WithWebexConfig sets the WebexConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WebexConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexConfig(value *GlobalWebexConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.WebexConfig = value
->>>>>>> da8c220e5 (update generated files)
 	return b
 }

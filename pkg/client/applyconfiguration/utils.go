@@ -94,13 +94,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.GlobalRocketChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
-<<<<<<< HEAD
 	case v1.SchemeGroupVersion.WithKind("GlobalTelegramConfig"):
 		return &monitoringv1.GlobalTelegramConfigApplyConfiguration{}
-=======
 	case v1.SchemeGroupVersion.WithKind("GlobalWebexConfig"):
 		return &monitoringv1.GlobalWebexConfigApplyConfiguration{}
->>>>>>> da8c220e5 (update generated files)
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
