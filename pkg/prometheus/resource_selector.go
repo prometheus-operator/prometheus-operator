@@ -575,15 +575,6 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	return nil
 }
 
-func validateProxyURL(proxyurl *string) error {
-	if proxyurl == nil {
-		return nil
-	}
-
-	_, err := url.Parse(*proxyurl)
-	return err
-}
-
 func validateProberURL(url string) error {
 	hostPort := strings.Split(url, ":")
 
