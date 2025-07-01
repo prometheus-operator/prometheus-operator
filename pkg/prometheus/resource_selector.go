@@ -45,7 +45,7 @@ import (
 
 // ConfigResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent
-type ConfigurationResource interface {
+type configurationResource interface {
 	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
 }
 
@@ -64,35 +64,24 @@ type ResourceSelector struct {
 }
 
 // SelectedResource represents a single configuration resource selected by Prometheus or PrometheusAgent.
-type SelectedResource[T ConfigurationResource] struct {
-	Object T
-	Key    string
-	Reason *string // Reason explains why the resource was rejected; nil if accepted.
-	Err    error   // error encountered during selection or validation (nil if valid).
+type SelectedResource[T configurationResource] struct {
+	Object  T
+	Key     string
+	Error   error  // error encountered during selection or validation (nil if valid).
+	Reason  string // Reason for rejection; empty if accepted.
+	Message string // Human-readable rejection message; empty if selected.
 }
 
 // GetValidSelectedResources filters and returns only the valid selected resources (those without an error).
 // Returns a map of resource keys to valid resource objects.
-func GetValidSelectedResources[T ConfigurationResource](resources []SelectedResource[T]) map[string]T {
+func GetValidSelectedResources[T configurationResource](resources []SelectedResource[T]) map[string]T {
 	validRes := make(map[string]T)
 	for _, res := range resources {
-		if res.Err == nil {
+		if res.Error == nil {
 			validRes[res.Key] = res.Object
 		}
 	}
 	return validRes
-}
-
-// GetInvalidSelectedResources filters and returns only the invalid  selected resources (those with a non-nil error).
-// Returns a slice of SelectedResource containing details of each invalid resource.
-func GetInvalidSelectedResources[T ConfigurationResource](resources []SelectedResource[T]) []SelectedResource[T] {
-	var invalidRes []SelectedResource[T]
-	for _, res := range resources {
-		if res.Err != nil {
-			invalidRes = append(invalidRes, res)
-		}
-	}
-	return invalidRes
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -123,7 +112,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T ConfigurationResource](
+func selectObjects[T configurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
