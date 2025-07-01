@@ -57,6 +57,29 @@ const (
 	RelabelConfigInvalid          = "RelabelConfigInvalid"
 	ProxyConfigInvalid            = "ProxyConfigInvalid"
 	ScrapeClassNotFound           = "ScrapeClassNotFound"
+	ProberURLInvalid              = "ProberURLInvalid"
+	ProbeTargetsInvalid           = "ProbeTargetsInvalid"
+	InvalidLabel                  = "InvalidLabel"
+	HTTPSDConfigInvalid           = "HTTPSDConfigInvalid"
+	KubernetesSDConfigInvalid     = "KubernetesSDConfigInvalid"
+	ConsulSDConfigInvalid         = "ConsulSDConfigInvalid"
+	DNSSDConfigInvalid            = "DNSSDConfigInvalid"
+	EC2SDConfigInvalid            = "EC2SDConfigInvalid"
+	AzureSDConfigInvalid          = "AzureSDConfigInvalid"
+	OpenStackSDConfigInvalid      = "OpenStackSDConfigInvalid"
+	DigitalOceanSDConfigInvalid   = "DigitalOceanSDConfigInvalid"
+	KumaSDConfigInvalid           = "KumaSDConfigInvalid"
+	EurekaSDConfigInvalid         = "EurekaSDConfigInvalid"
+	DockerSDConfigInvalid         = "DockerSDConfigInvalid"
+	LinodeSDConfigInvalid         = "LinodeSDConfigInvalid"
+	HetznerSDConfigInvalid        = "HetznerSDConfigInvalid"
+	NomadSDConfigInvalid          = "NomadSDConfigInvalid"
+	DockerSwarmSDConfigInvalid    = "DockerSwarmSDConfigInvalid"
+	PuppetDBSDConfigInvalid       = "PuppetDBSDConfigInvalid"
+	LightSailSDConfigInvalid      = "LightSailSDConfigInvalid"
+	OVHCloudSDConfigInvalid       = "OVHCloudSDConfigInvalid"
+	ScalewaySDConfigInvalid       = "ScalewaySDConfigInvalid"
+	IonosSDConfigInvalid          = "IonosSDConfigInvalid"
 )
 
 // ConfigResource is a type constraint that permits only the specific pointer types for configuration resources
@@ -135,7 +158,7 @@ func selectObjects[T configurationResource](
 	selector *metav1.LabelSelector,
 	nsSelector *metav1.LabelSelector,
 	listFn ListAllByNamespaceFn,
-	checkFn func(context.Context, T) error,
+	checkFn func(context.Context, T) (string, error),
 ) ([]SelectedResource[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
@@ -189,7 +212,8 @@ func selectObjects[T configurationResource](
 	res := make([]SelectedResource[T], len(objects))
 	for namespaceAndName, obj := range objects {
 		o := obj.(T)
-		if err := checkFn(ctx, o); err != nil {
+		reason, err := checkFn(ctx, o)
+		if err != nil {
 			rejected++
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
@@ -198,6 +222,7 @@ func selectObjects[T configurationResource](
 			Object: o,
 			Key:    namespaceAndName,
 			Error:  err,
+			Reason: reason,
 		})
 	}
 
@@ -557,66 +582,67 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 }
 
 // checkProbe verifies that the Probe object is valid.
-func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.Probe) error {
+func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.Probe) (string, error) {
 	if err := validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
-		return fmt.Errorf("scrapeClassName: %w", err)
+		return ScrapeClassNotFound, fmt.Errorf("scrapeClassName: %w", err)
 	}
 
 	if err := probe.Spec.Targets.Validate(); err != nil {
-		return err
+		return ProbeTargetsInvalid, err
 	}
 
 	if probe.Spec.BearerTokenSecret.Name != "" && probe.Spec.BearerTokenSecret.Key != "" {
 		if _, err := rs.store.GetSecretKey(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret); err != nil {
-			return fmt.Errorf("bearerTokenSecret: %w", err)
+			return SecretNotFound, fmt.Errorf("bearerTokenSecret: %w", err)
 		}
 	}
 
 	if err := rs.store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth); err != nil {
-		return fmt.Errorf("basicAuth: %w", err)
+		return BasicAuthNotFound, fmt.Errorf("basicAuth: %w", err)
 	}
 
 	if err := rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), probe.Spec.TLSConfig); err != nil {
-		return fmt.Errorf("tlsConfig: %w", err)
+		return TlsConfigInvalid, fmt.Errorf("tlsConfig: %w", err)
 	}
 
 	if err := rs.store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization); err != nil {
-		return fmt.Errorf("authorization: %w", err)
+		return AuthorizationNotFound, fmt.Errorf("authorization: %w", err)
 	}
 
 	if err := rs.store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2); err != nil {
-		return fmt.Errorf("oauth2: %w", err)
+		return Oauth2NotFound, fmt.Errorf("oauth2: %w", err)
 	}
 
 	if err := validateScrapeIntervalAndTimeout(rs.p, probe.Spec.Interval, probe.Spec.ScrapeTimeout); err != nil {
-		return err
+		return ScrapeTimeoutInvalid, err
 	}
 
 	if err := rs.ValidateRelabelConfigs(probe.Spec.MetricRelabelConfigs); err != nil {
-		return fmt.Errorf("metricRelabelConfigs: %w", err)
+		return RelabelConfigInvalid, fmt.Errorf("metricRelabelConfigs: %w", err)
 	}
 
 	if probe.Spec.Targets.StaticConfig != nil {
 		if err := rs.ValidateRelabelConfigs(probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
-			return fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
+			return RelabelConfigInvalid, fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
 		}
 	}
 
 	if probe.Spec.Targets.Ingress != nil {
 		if err := rs.ValidateRelabelConfigs(probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
-			return fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
+			return RelabelConfigInvalid, fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
 		}
 	}
 
+
 	if err := addProxyConfigToStore(ctx, probe.Spec.ProberSpec.ProxyConfig, rs.store, probe.GetNamespace()); err != nil {
-		return fmt.Errorf("proxy configuration: %w", err)
+		return ProxyConfigInvalid,fmt.Errorf("proxy configuration: %w", err)
 	}
 
 	if err := validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
-		return fmt.Errorf("%q url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
+		return ProberURLInvalid, fmt.Errorf("%q url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
 	}
 
-	return nil
+	return "", nil
 }
 
 func validateProberURL(url string) error {
@@ -668,29 +694,29 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 }
 
 // checkScrapeConfig verifies that the ScrapeConfig object is valid.
-func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) (string, error) {
 	if err := validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
-		return err
+		return ScrapeClassNotFound, err
 	}
 
 	if err := rs.ValidateRelabelConfigs(sc.Spec.RelabelConfigs); err != nil {
-		return fmt.Errorf("relabelConfigs: %w", err)
+		return RelabelConfigInvalid, fmt.Errorf("relabelConfigs: %w", err)
 	}
 
 	if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), sc.Spec.BasicAuth); err != nil {
-		return fmt.Errorf("basicAuth: %w", err)
+		return BasicAuthNotFound, fmt.Errorf("basicAuth: %w", err)
 	}
 
 	if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization); err != nil {
-		return fmt.Errorf("authorization: %w", err)
+		return AuthorizationNotFound, fmt.Errorf("authorization: %w", err)
 	}
 
 	if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), sc.Spec.OAuth2); err != nil {
-		return fmt.Errorf("oauth2: %w", err)
+		return Oauth2NotFound, fmt.Errorf("oauth2: %w", err)
 	}
 
 	if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), sc.Spec.TLSConfig); err != nil {
-		return fmt.Errorf("tlsConfig: %w", err)
+		return TlsConfigInvalid, fmt.Errorf("tlsConfig: %w", err)
 	}
 
 	var scrapeInterval, scrapeTimeout monitoringv1.Duration = "", ""
@@ -703,104 +729,104 @@ func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitorin
 	}
 
 	if err := validateScrapeIntervalAndTimeout(rs.p, scrapeInterval, scrapeTimeout); err != nil {
-		return err
+		return ScrapeTimeoutInvalid, err
 	}
 
 	if err := addProxyConfigToStore(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-		return err
+		return ProxyConfigInvalid, err
 	}
 
 	if err := rs.ValidateRelabelConfigs(sc.Spec.MetricRelabelConfigs); err != nil {
-		return fmt.Errorf("metricRelabelConfigs: %w", err)
+		return RelabelConfigInvalid, fmt.Errorf("metricRelabelConfigs: %w", err)
 	}
 
 	// The Kubernetes API can't do the validation (for now) because kubebuilder validation markers don't work on map keys with custom type.
 	// https://github.com/prometheus-operator/prometheus-operator/issues/6889
 	if err := rs.validateStaticConfig(sc); err != nil {
-		return fmt.Errorf("staticConfigs: %w", err)
+		return InvalidLabel, fmt.Errorf("staticConfigs: %w", err)
 	}
 
 	if err := rs.validateHTTPSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("httpSDConfigs: %w", err)
+		return HTTPSDConfigInvalid, fmt.Errorf("httpSDConfigs: %w", err)
 	}
 
 	if err := rs.validateKubernetesSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("kubernetesSDConfigs: %w", err)
+		return KubernetesSDConfigInvalid, fmt.Errorf("kubernetesSDConfigs: %w", err)
 	}
 
 	if err := rs.validateConsulSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("consulSDConfigs: %w", err)
+		return ConsulSDConfigInvalid, fmt.Errorf("consulSDConfigs: %w", err)
 	}
 
 	if err := rs.validateDNSSDConfigs(sc); err != nil {
-		return fmt.Errorf("dnsSDConfigs: %w", err)
+		return DNSSDConfigInvalid, fmt.Errorf("dnsSDConfigs: %w", err)
 	}
 
 	if err := rs.validateEC2SDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("ec2SDConfigs: %w", err)
+		return EC2SDConfigInvalid, fmt.Errorf("ec2SDConfigs: %w", err)
 	}
 
 	if err := rs.validateAzureSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("azureSDConfigs: %w", err)
+		return AzureSDConfigInvalid, fmt.Errorf("azureSDConfigs: %w", err)
 	}
 
 	if err := rs.validateOpenStackSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("openstackSDConfigs: %w", err)
+		return OpenStackSDConfigInvalid, fmt.Errorf("openstackSDConfigs: %w", err)
 	}
 
 	if err := rs.validateDigitalOceanSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("digitalOceanSDConfigs: %w", err)
+		return DigitalOceanSDConfigInvalid, fmt.Errorf("digitalOceanSDConfigs: %w", err)
 	}
 
 	if err := rs.validateKumaSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("kumaSDConfigs: %w", err)
+		return KumaSDConfigInvalid, fmt.Errorf("kumaSDConfigs: %w", err)
 	}
 
 	if err := rs.validateEurekaSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("eurekaSDConfigs: %w", err)
+		return EurekaSDConfigInvalid, fmt.Errorf("eurekaSDConfigs: %w", err)
 	}
 
 	if err := rs.validateDockerSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("dockerSDConfigs: %w", err)
+		return DockerSDConfigInvalid, fmt.Errorf("dockerSDConfigs: %w", err)
 	}
 
 	if err := rs.validateLinodeSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("linodeSDConfigs: %w", err)
+		return LinodeSDConfigInvalid, fmt.Errorf("linodeSDConfigs: %w", err)
 	}
 
 	if err := rs.validateHetznerSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("hetznerSDConfigs: %w", err)
+		return HetznerSDConfigInvalid, fmt.Errorf("hetznerSDConfigs: %w", err)
 	}
 
 	if err := rs.validateNomadSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("nomadSDConfigs: %w", err)
+		return NomadSDConfigInvalid, fmt.Errorf("nomadSDConfigs: %w", err)
 	}
 
 	if err := rs.validateDockerSwarmSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("dockerswarmSDConfigs: %w", err)
+		return DockerSwarmSDConfigInvalid, fmt.Errorf("dockerswarmSDConfigs: %w", err)
 	}
 
 	if err := rs.validatePuppetDBSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("puppetDBSDConfigs: %w", err)
+		return PuppetDBSDConfigInvalid, fmt.Errorf("puppetDBSDConfigs: %w", err)
 	}
 
 	if err := rs.validateLightSailSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("lightSailSDConfigs: %w", err)
+		return LightSailSDConfigInvalid, fmt.Errorf("lightSailSDConfigs: %w", err)
 	}
 
 	if err := rs.validateOVHCloudSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("OVHCloudSDConfigs: %w", err)
+		return OVHCloudSDConfigInvalid, fmt.Errorf("OVHCloudSDConfigs: %w", err)
 	}
 
 	if err := rs.validateScalewaySDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("ScalewaySDConfigs: %w", err)
+		return ScalewaySDConfigInvalid, fmt.Errorf("ScalewaySDConfigs: %w", err)
 	}
 
 	if err := rs.validateIonosSDConfigs(ctx, sc); err != nil {
-		return fmt.Errorf("IonosSDConfigs: %w", err)
+		return IonosSDConfigInvalid, fmt.Errorf("IonosSDConfigs: %w", err)
 	}
 
-	return nil
+	return "", nil
 }
 
 func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
