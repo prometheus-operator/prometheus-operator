@@ -50,7 +50,7 @@ type configurationResource interface {
 }
 
 // ResourceSelector knows how to select and verify scrape configuration
-// resources that are matched by a Prometheus or PrometheusAgent.
+// resources that are matched by a Prometheus or PrometheusAgent object.
 type ResourceSelector struct {
 	l                  *slog.Logger
 	p                  monitoringv1.PrometheusInterface
@@ -65,11 +65,10 @@ type ResourceSelector struct {
 
 // SelectedResource represents a single configuration resource selected by Prometheus or PrometheusAgent.
 type SelectedResource[T configurationResource] struct {
-	Object  T
-	Key     string
-	Error   error  // error encountered during selection or validation (nil if valid).
-	Reason  string // Reason for rejection; empty if accepted.
-	Message string // Human-readable rejection message; empty if selected.
+	Object T
+	Key    string
+	Error  error  // error encountered during selection or validation (nil if valid).
+	Reason string // Reason for rejection; empty if accepted.
 }
 
 // GetValidSelectedResources filters and returns only the valid selected resources (those without an error).
@@ -220,15 +219,15 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 }
 
 // checkServiceMonitor verifies that the ServiceMonitor object is valid.
-func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitoringv1.ServiceMonitor) error {
+func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitoringv1.ServiceMonitor) (string, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	if _, err := metav1.LabelSelectorAsSelector(&sm.Spec.Selector); err != nil {
-		return err
+		return "InvalidSelector", err
 	}
 
 	if err := rs.validateMonitorSelectorMechanism(sm.Spec.SelectorMechanism); err != nil {
-		return err
+		return "SelectorMechanismNotSupported", err
 	}
 
 	for i, endpoint := range sm.Spec.Endpoints {
@@ -238,55 +237,55 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 		// that access the file system.
 		if cpf.ArbitraryFSAccessThroughSMs.Deny {
 			if err := testForArbitraryFSAccess(endpoint); err != nil {
-				return fmt.Errorf("%w: %w", epErr, err)
+				return "NoFilesystemAccess", fmt.Errorf("%w: %w", epErr, err)
 			}
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
 			if _, err := rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
-				return fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
+				return "SecretNotFound", fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
 			}
 		}
 
 		if err := rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth); err != nil {
-			return fmt.Errorf("%w: basicAuth: %w", epErr, err)
+			return "BasicAuthNotFound", fmt.Errorf("%w: basicAuth: %w", epErr, err)
 		}
 
 		if err := rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
-			return fmt.Errorf("%w: tlsConfig: %w", epErr, err)
+			return "TlsConfigInvalid", fmt.Errorf("%w: tlsConfig: %w", epErr, err)
 		}
 
 		if err := rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2); err != nil {
-			return fmt.Errorf("%w: oauth2: %w", epErr, err)
+			return "Oauth2NotFound", fmt.Errorf("%w: oauth2: %w", epErr, err)
 		}
 
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization); err != nil {
-			return fmt.Errorf("%w: authorization: %w", epErr, err)
+			return "AuthorizationNotFound", fmt.Errorf("%w: authorization: %w", epErr, err)
 		}
 
 		if err := validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-			return fmt.Errorf("%w: %w", epErr, err)
+			return "ScrapeTimeoutInvalid", fmt.Errorf("%w: %w", epErr, err)
 		}
 
 		if err := rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
-			return fmt.Errorf("%w: relabelConfigs: %w", epErr, err)
+			return "RelabelConfigInvalid", fmt.Errorf("%w: relabelConfigs: %w", epErr, err)
 		}
 
 		if err := rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
-			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
+			return "RelabelConfigInvalid", fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
 		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, sm.GetNamespace()); err != nil {
-			return err
+			return "ProxyConfigInvalid", err
 		}
 	}
 
 	if err := validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
-		return fmt.Errorf("scrapeClassName: %w", err)
+		return "ScrapeClassNotFound", fmt.Errorf("scrapeClassName: %w", err)
 	}
 
-	return nil
+	return "", nil
 }
 
 func (rs *ResourceSelector) ValidateRelabelConfigs(rcs []monitoringv1.RelabelConfig) error {
