@@ -1534,7 +1534,7 @@ func (in *GlobalWebexConfig) DeepCopyInto(out *GlobalWebexConfig) {
 	*out = *in
 	if in.APIURL != nil {
 		in, out := &in.APIURL, &out.APIURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 }

@@ -566,9 +566,9 @@ type GlobalWebexConfig struct {
 	// The default Webex API URL.
 	//
 	// It requires Alertmanager >= v0.25.0.
-	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+	//
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

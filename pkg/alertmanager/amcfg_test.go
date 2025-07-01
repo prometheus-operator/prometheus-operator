@@ -1379,7 +1379,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexConfig: &monitoringv1.GlobalWebexConfig{
-					APIURL: &webexAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(webexAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1416,7 +1416,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexConfig: &monitoringv1.GlobalWebexConfig{
-					APIURL: &invalidWebexAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(invalidWebexAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1453,7 +1453,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version24,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				WebexConfig: &monitoringv1.GlobalWebexConfig{
-					APIURL: &webexAPIURL,
+					APIURL: ptr.To(monitoringv1.URL(webexAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{

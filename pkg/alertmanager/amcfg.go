@@ -1820,7 +1820,7 @@ func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitor
 	}
 
 	if in.APIURL != nil {
-		u, err := url.Parse(*in.APIURL)
+		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
 			return fmt.Errorf("parse Webex API URL: %w", err)
 		}
