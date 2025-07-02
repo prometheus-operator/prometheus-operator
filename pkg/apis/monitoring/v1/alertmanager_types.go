@@ -562,16 +562,16 @@ type GlobalRocketChatConfig struct {
 }
 
 type GlobalWeChatConfig struct {
-	// WeChat API URL
+	// The default WeChat API URL.
 	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
 
-	// WeChat API Secret
+	// The default WeChat API Secret.
 	// +optional
 	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
 
-	// WeChat API Corporate ID
+	// The default WeChat API Corporate ID.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	APICorpID *string `json:"apiCorpID,omitempty"`
