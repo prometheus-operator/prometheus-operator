@@ -1320,7 +1320,6 @@ func checkRocketChatConfigs(
 		}
 
 		token, err := store.GetSecretKey(ctx, namespace, config.Token)
-
 		if err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
 		}
