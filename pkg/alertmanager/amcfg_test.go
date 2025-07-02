@@ -94,6 +94,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	rocketChatAPIURL := "https://rocketchat.example.com"
 	invalidRocketChatAPIURL := "://rocketchat.example.com"
 
+	victorOpsAPIURL := "https://victorops.example.com"
+	invalidVictorOpsAPIURL := "://victorops.example.com"
+
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
