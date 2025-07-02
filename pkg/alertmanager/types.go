@@ -465,7 +465,6 @@ type rocketChatConfig struct {
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	TokenID       *string           `yaml:"token_id,omitempty" json:"token_id,omitempty"`
-	TokenIDFile   string            `yaml:"token_id_file,omitempty" json:"token_id_file,omitempty"`
 	Token         *string           `yaml:"token,omitempty" json:"token,omitempty"`
 	// RocketChat channel override, (like #other-channel or @username).
 	Channel     string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
