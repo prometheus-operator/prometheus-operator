@@ -214,7 +214,13 @@ spec:
 
 #### How to Enable/Disable the Status Subresource for Configuration Resources
 
-This feature is controlled by a feature flag: `StatusForConfigurationResources=true|false`. Cluster administrators can toggle this flag to enable or disable the status subresource support for configuration resources as needed.
+This feature is controlled by a feature flag: `StatusForConfigurationResources`. Cluster administrators can toggle this flag to enable or disable the status subresource support for configuration resources as needed.
+
+This feature gate is disabled by default. To enable it, pass the following argument to the prometheus-operator container during installation:
+
+```bash
+ --feature-gates=StatusForConfigurationResources=true
+```
 
 #### Details of the Status API fields
 
@@ -292,4 +298,4 @@ It comes with the following drawbacks:
 ## Follow-ups
 
 Once the goals of this proposal are achieved, we can extend the implementation to populate scrape targets information in the status subresource of ServiceMonitor, PodMonitor, ScrapeConfig, and Probe resources.
-...
+
