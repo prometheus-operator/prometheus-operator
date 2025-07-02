@@ -94,7 +94,8 @@ type Operator struct {
 
 	statusReporter prompkg.StatusReporter
 
-	daemonSetFeatureGateEnabled bool
+	daemonSetFeatureGateEnabled  bool
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -156,10 +157,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                c.Annotations,
 			Labels:                     c.Labels,
 		},
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
-		controllerID:    c.ControllerID,
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		metrics:                      operator.NewMetrics(r),
+		reconciliations:              &operator.ReconciliationTracker{},
+		controllerID:                 c.ControllerID,
+		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -550,30 +552,24 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
-	pobj, err := c.promInfs.Get(key)
-
-	if apierrors.IsNotFound(err) {
-		c.reconciliations.ForgetObject(key)
-		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
-	}
+	p, err := operator.GetObjectFromKey[*monitoringv1alpha1.PrometheusAgent](c.promInfs, key)
 
 	if err != nil {
 		return err
 	}
 
-	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
-	p = p.DeepCopy()
-	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
-		return fmt.Errorf("failed to set Prometheus type information: %w", err)
+	if p == nil {
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
 	}
-
-	logger := c.logger.With("key", key)
 
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
+
+	logger := c.logger.With("key", key)
 
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
@@ -603,7 +599,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
+	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
@@ -834,8 +830,8 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
-	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
 		return err
 	}
@@ -876,7 +872,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalScrapeConfigs)
+	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
 	}
@@ -900,7 +896,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return fmt.Errorf("creating compressed secret failed: %w", err)
 	}
 
-	c.logger.Debug("updating Prometheus configuration secret")
+	logger.Debug("updating Prometheus configuration secret")
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
@@ -945,17 +941,19 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	pobj, err := c.promInfs.Get(key)
+	p, err := operator.GetObjectFromKey[*monitoringv1alpha1.PrometheusAgent](c.promInfs, key)
 
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
 	if err != nil {
 		return err
 	}
-	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
-	p = p.DeepCopy()
 
+	if p == nil {
+		return nil
+	}
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		return nil
+	}
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus agent status: %w", err)

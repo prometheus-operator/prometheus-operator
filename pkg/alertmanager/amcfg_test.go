@@ -62,8 +62,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Value: "myvalue",
 				Regex: false,
 			},
+			{
+				Name:  "mykey1",
+				Value: "myvalue1",
+				Regex: false,
+			},
 		},
 	})
+
+	version21, err := semver.ParseTolerant("v0.21.0")
+	require.NoError(t, err)
 
 	version24, err := semver.ParseTolerant("v0.24.0")
 	require.NoError(t, err)
@@ -76,6 +84,15 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
+
+	telegramAPIURL := "https://telegram.example.com"
+	invalidTelegramAPIURL := "://telegram.example.com"
+
+	jiraAPIURL := "https://jira.example.com"
+	invalidJiraAPIURL := "://jira.example.com"
+
+	rocketChatAPIURL := "https://rocketchat.example.com"
+	invalidRocketChatAPIURL := "://rocketchat.example.com"
 
 	tests := []struct {
 		name            string
@@ -800,6 +817,560 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			golden: "valid_global_config_smtp_tlsconfig_email_receiver.golden",
 		},
+		{
+			name:      "valid global config with amVersion21 ",
+			amVersion: &version21,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					From: ptr.To("from"),
+					SmartHost: &monitoringv1.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					Hello:        ptr.To("smtp.example.org"),
+					AuthUsername: ptr.To("dev@smtp.example.org"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "password",
+					},
+					AuthIdentity: ptr.To("dev@smtp.example.org"),
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "smtp-auth",
+						},
+						Key: "secret",
+					},
+					RequireTLS: ptr.To(true),
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						MinVersion:         ptr.To(monitoringv1.TLSVersion12),
+						MaxVersion:         ptr.To(monitoringv1.TLSVersion13),
+					},
+				},
+				ResolveTimeout: "30s",
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-id",
+								},
+								Key: "test",
+							},
+						},
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+						TokenURL: "https://test.com",
+						Scopes:   []string{"any"},
+						EndpointParams: map[string]string{
+							"some": "value",
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_amVersion21.golden",
+		},
+		{
+			name:      "valid global config telegram api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+					APIURL: ptr.To(monitoringv1.URL(telegramAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Telegram_API_URL.golden",
+		},
+		{
+			name:      "invalid global config telegram api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidTelegramAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config telegram api url version not supported",
+			amVersion: &version21,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+					APIURL: ptr.To(monitoringv1.URL(telegramAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid global config jira api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				JiraConfig: &monitoringv1.GlobalJiraConfig{
+					APIURL: ptr.To(monitoringv1.URL(jiraAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Jira_API_URL.golden",
+		},
+		{
+			name:      "invalid global config jira api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				JiraConfig: &monitoringv1.GlobalJiraConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidJiraAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config jira api url version not supported",
+			amVersion: &version26,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				JiraConfig: &monitoringv1.GlobalJiraConfig{
+					APIURL: ptr.To(monitoringv1.URL(jiraAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid global config rocket chat",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(rocketChatAPIURL)),
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token",
+					},
+					TokenID: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token_id",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_RocketChat.golden",
+		},
+		{
+			name:      "invalid global config rocket chat api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidRocketChatAPIURL)),
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token",
+					},
+					TokenID: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token_id",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config rocket chat token missing secret",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(rocketChatAPIURL)),
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat-missing",
+						},
+						Key: "token",
+					},
+					TokenID: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token_id",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config rocket chat token id missing secret",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(rocketChatAPIURL)),
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token",
+					},
+					TokenID: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat-missing",
+						},
+						Key: "token_id",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config rocket chat version not supported",
+			amVersion: &version26,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(rocketChatAPIURL)),
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token",
+					},
+					TokenID: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token_id",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
@@ -856,6 +1427,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					"url":         []byte("https://opsgenie.example.com"),
 					"invalid_url": []byte("://opsgenie.example.com"),
 					"api_key":     []byte("mykey"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "rocketchat",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"token":    []byte("mytoken"),
+					"token_id": []byte("mytokenid"),
 				},
 			},
 			&corev1.Secret{

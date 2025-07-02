@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"strconv"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -164,6 +165,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	if version.GTE(semver.MustParse("0.38.0")) && tr.Spec.RuleQueryOffset != nil && len(*tr.Spec.RuleQueryOffset) > 0 {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "rule-query-offset", Value: string(*tr.Spec.RuleQueryOffset)})
+	}
+
+	if version.GTE(semver.MustParse("0.37.0")) && tr.Spec.RuleConcurrentEval != nil && *tr.Spec.RuleConcurrentEval > 0 {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "rule-concurrent-evaluation", Value: strconv.FormatInt(int64(*tr.Spec.RuleConcurrentEval), 10)})
 	}
 
 	trEnvVars := []v1.EnvVar{

@@ -318,11 +318,8 @@ type PodMetricsEndpoint struct {
 	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
-	// `proxyURL` configures the HTTP Proxy URL (e.g.
-	// "http://proxyserver:2195") to go through when scraping the target.
-	//
 	// +optional
-	ProxyURL *string `json:"proxyUrl,omitempty"`
+	ProxyConfig `json:",inline"`
 
 	// `followRedirects` defines whether the scrape requests should follow HTTP
 	// 3xx redirects.

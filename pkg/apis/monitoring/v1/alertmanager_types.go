@@ -390,6 +390,15 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+
+	// The default Telegram config
+	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
+
+	// The default configuration for Jira.
+	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
+
+	// The default configuration for Rocket Chat.
+	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -505,6 +514,49 @@ type GlobalSMTPConfig struct {
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
+// GlobalTelegramConfig configures global Telegram parameters.
+type GlobalTelegramConfig struct {
+	// The default Telegram API URL.
+	//
+	// It requires Alertmanager >= v0.24.0.
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+// GlobalJiraConfig configures global Jira parameters.
+type GlobalJiraConfig struct {
+	// The default Jira API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+// GlobalRocketChatConfig configures global Rocket Chat parameters.
+type GlobalRocketChatConfig struct {
+	// The default Rocket Chat API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The default Rocket Chat token.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+
+	// The default Rocket Chat Token ID.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
+}
+
 // HostPort represents a "host:port" network address.
 type HostPort struct {
 	// Defines the host's address, it can be a DNS name or a literal IP address.
@@ -572,3 +624,7 @@ type ClusterTLSConfig struct {
 	// +required
 	ClientTLS SafeTLSConfig `json:"client"`
 }
+
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+type URL string

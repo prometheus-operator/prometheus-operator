@@ -215,8 +215,9 @@ type ProberSpec struct {
 	// Defaults to `/probe`.
 	// +kubebuilder:default:="/probe"
 	Path string `json:"path,omitempty"`
-	// Optional ProxyURL.
-	ProxyURL string `json:"proxyUrl,omitempty"`
+
+	// +optional
+	ProxyConfig `json:",inline"`
 }
 
 // ProbeList is a list of Probes.

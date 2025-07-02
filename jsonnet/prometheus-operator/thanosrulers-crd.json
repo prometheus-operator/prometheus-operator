@@ -5032,6 +5032,12 @@
                     "description": "The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.",
                     "type": "string"
                   },
+                  "ruleConcurrentEval": {
+                    "description": "How many rules can be evaluated concurrently.\nIt requires Thanos >= v0.37.0.",
+                    "format": "int32",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
                   "ruleNamespaceSelector": {
                     "description": "Namespaces to be selected for Rules discovery. If unspecified, only\nthe same namespace as the ThanosRuler object is in is used.",
                     "properties": {
