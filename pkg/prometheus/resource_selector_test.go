@@ -4580,6 +4580,148 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    true,
 			scrapeClass: ptr.To("existent"),
 		},
+		{
+			scenario: "StackitSDconfig with supported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						Project: "11111111-1111-1111-1111-111111111111",
+						Region:  ptr.To("eu01"),
+						Authorization: monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+					},
+				}
+			},
+			selected:    true,
+			promVersion: "3.5.0",
+		},
+		{
+			scenario: "StackitSDconfig with unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						Project: "11111111-1111-1111-1111-111111111111",
+						Region:  ptr.To("eu01"),
+						Authorization: monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "3.2.0",
+		},
+		{
+			scenario: "StackitSDconfig with invalid TLS config with invalid CA data",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						Project: "11111111-1111-1111-1111-111111111111",
+						Region:  ptr.To("eu01"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "3.2.0",
+		},
+		{
+			scenario: "StackitSDconfig with valid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						Project: "11111111-1111-1111-1111-111111111111",
+						Authorization: monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected:    true,
+			promVersion: "3.5.0",
+		},
+		{
+			scenario: "StackitSDconfig with invalid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "StackitSDconfig with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						Authorization: monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
@@ -4591,6 +4733,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					Data: map[string][]byte{
 						"key1":       []byte("val1"),
 						"key2":       []byte("val2"),
+						"credential": []byte("test-credential"),
 						"ca":         ca,
 						"invalid_ca": []byte("garbage"),
 						"cert":       cert,
