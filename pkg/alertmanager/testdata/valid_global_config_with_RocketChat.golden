@@ -1,0 +1,15 @@
+global:
+  rocketchat_api_url: https://rocketchat.example.com
+  rocketchat_token: mytoken
+  rocketchat_token_id: mytokenid
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    matchers:
+    - mykey="myvalue"
+    - mykey1="myvalue1"
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+templates: []
