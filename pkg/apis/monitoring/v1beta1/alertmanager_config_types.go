@@ -189,6 +189,9 @@ type Receiver struct {
 	// List of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
+	// List of Jira configurations.
+	// It requires Alertmanager >= 0.28.0.
+	JiraConfigs []JiraConfig `json:"jiraConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -989,6 +992,51 @@ type MSTeamsV2Config struct {
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+type JiraConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The Jira API URL i.e. https://api.jira.com.
+	// If not specified, default API URL will be used.
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+	// The Jira project where issues are created.
+	Project string `json:"project,omitempty"`
+	// The Jira issue summary.
+	// +optional
+	Summary *string `json:"summary,omitempty"`
+	// The Jira issue description.
+	// +optional
+	Description *string `json:"description,omitempty"`
+	// A list of labels added to the issue. Template expressions are supported.
+	// +optional
+	Labels []string `json:"labels,omitempty"`
+	// The Jira issue priority.
+	// +optional
+	Priority *string `json:"priority,omitempty"`
+	// The Jira issue type (e.g. bug).
+	// +optional
+	IssueType *string `json:"issueType,omitempty"`
+	// Name of the workflow transition to resolve an issue. The target status must have the category "done".
+	// +optional
+	ResolveTransition *string `json:"resolveTransition,omitempty"`
+	// Name of the workflow transition to reopen an issue. The target status should not have the category "done".
+	// +optional
+	ReopenTransition *string `json:"reopenTransition,omitempty"`
+	// If reopen_transition is defined, ignore issues with that resolution.
+	// +optional
+	WontFixResolution *string `json:"wontFixResolution,omitempty"`
+	// If reopen_transition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
+	// +optional
+	ReopenDuration *string `json:"reopenDuration,omitempty"`
+	// Other issue and custom fields.
+	// +optional
+	Fields []string `json:"fields,omitempty"`
+	// The HTTP client's configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP `Authorization` header.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
