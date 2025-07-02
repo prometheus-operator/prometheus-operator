@@ -478,6 +478,25 @@ func convertMSTeamsV2ConfigTo(in MSTeamsV2Config) v1alpha1.MSTeamsV2Config {
 	}
 }
 
+func convertJiraConfigTo(in JiraConfig) v1alpha1.JiraConfig {
+	return v1alpha1.JiraConfig{
+		SendResolved:      in.SendResolved,
+		APIURL:            (*v1alpha1.URL)(in.APIURL),
+		Project:           in.Project,
+		Summary:           in.Summary,
+		Description:       in.Description,
+		Labels:            in.Labels,
+		Priority:          in.Priority,
+		IssueType:         in.IssueType,
+		ResolveTransition: in.ResolveTransition,
+		ReopenTransition:  in.ReopenTransition,
+		WontFixResolution: in.WontFixResolution,
+		ReopenDuration:    in.ReopenDuration,
+		Fields:            in.Fields,
+		HTTPConfig:        convertHTTPConfigTo(in.HTTPConfig),
+	}
+}
+
 // ConvertTo converts from this version (v1beta1) to the Hub version (v1alpha1).
 func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha1.AlertmanagerConfig)
@@ -584,6 +603,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.MSTeamsV2Configs = append(
 				out.MSTeamsV2Configs,
 				convertMSTeamsV2ConfigTo(in),
+			)
+		}
+
+		for _, in := range in.JiraConfigs {
+			out.JiraConfigs = append(
+				out.JiraConfigs,
+				convertJiraConfigTo(in),
 			)
 		}
 
