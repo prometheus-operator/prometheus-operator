@@ -5215,16 +5215,15 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 			golden: "rocketchat_configs_for_supported_versions.golden",
 		},
 		{
-			name:           "rocketchat_configs both token or token_file set",
+			name:           "rocketchat_configs token_id not set",
 			againstVersion: versionRocketChatAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						RocketChatConfigs: []*rocketChatConfig{
 							{
-								APIURL:    "http://example.com",
-								Token:     ptr.To("aaaa-bbbb-cccc-dddd"),
-								TokenFile: "/var/kubernetes/secrets/token",
+								APIURL: "http://example.com",
+								Token:  ptr.To("aaaa-bbbb-cccc-dddd"),
 							},
 						},
 					},
@@ -5233,16 +5232,15 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "rocketchat_configs both token_id or token_id_file set",
+			name:           "rocketchat_configs token not set",
 			againstVersion: versionRocketChatAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						RocketChatConfigs: []*rocketChatConfig{
 							{
-								APIURL:      "http://example.com",
-								TokenID:     ptr.To("t123456"),
-								TokenIDFile: "/var/kubernetes/secrets/token-id",
+								APIURL:  "http://example.com",
+								TokenID: ptr.To("t123456"),
 							},
 						},
 					},

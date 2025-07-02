@@ -2585,11 +2585,11 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		return fmt.Errorf(`invalid syntax in receivers config; rocketchat integration is available in Alertmanager >= 0.28.0`)
 	}
 
-	if rc.Token != nil && len(rc.TokenFile) > 0 {
-		return fmt.Errorf("at most one of token & token_file must be configured")
+	if rc.Token == nil {
+		return fmt.Errorf("token must be configured")
 	}
-	if rc.TokenID != nil && len(rc.TokenIDFile) > 0 {
-		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
+	if rc.TokenID != nil {
+		return fmt.Errorf("token_id must be configured")
 	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)
