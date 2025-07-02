@@ -24943,7 +24943,7 @@ string
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -25730,6 +25730,195 @@ OAuth2
 <td>
 <em>(Optional)</em>
 <p>Configure whether to enable OAuth2.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira API URL i.e. <a href="https://api.jira.com">https://api.jira.com</a>.
+If not specified, default API URL will be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>project</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The Jira project where issues are created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue summary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue description.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>A list of labels added to the issue. Template expressions are supported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue priority.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>issueType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue type (e.g. bug).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resolveTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name of the workflow transition to resolve an issue. The target status must have the category &ldquo;done&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name of the workflow transition to reopen an issue. The target status should not have the category &ldquo;done&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>wontFixResolution</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If reopen_transition is defined, ignore issues with that resolution.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If reopen_transition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Other issue and custom fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The HTTP client&rsquo;s configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP <code>Authorization</code> header.</p>
 </td>
 </tr>
 </tbody>
@@ -30701,6 +30890,20 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>jiraConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.JiraConfig">
+[]JiraConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of Jira configurations.
+It requires Alertmanager &gt;= 0.28.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.Route">Route
@@ -32950,7 +33153,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -34055,7 +34258,7 @@ SafeTLSConfig
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -34284,6 +34487,195 @@ resource&rsquo;s namespace.</p>
 <td>
 <p>Labels that must have an equal value in the source and target alert for
 the inhibition to take effect.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira API URL i.e. <a href="https://api.jira.com">https://api.jira.com</a>.
+If not specified, default API URL will be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>project</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The Jira project where issues are created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue summary.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue description.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>A list of labels added to the issue. Template expressions are supported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue priority.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>issueType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Jira issue type (e.g. bug).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resolveTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name of the workflow transition to resolve an issue. The target status must have the category &ldquo;done&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name of the workflow transition to reopen an issue. The target status should not have the category &ldquo;done&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>wontFixResolution</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If reopen_transition is defined, ignore issues with that resolution.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenDuration</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If reopen_transition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Other issue and custom fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The HTTP client&rsquo;s configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP <code>Authorization</code> header.</p>
 </td>
 </tr>
 </tbody>
@@ -35715,6 +36107,20 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>jiraConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.JiraConfig">
+[]JiraConfig
+</a>
+</em>
+</td>
+<td>
+<p>List of Jira configurations.
+It requires Alertmanager &gt;= 0.28.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1beta1.Route">Route
@@ -36892,7 +37298,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
