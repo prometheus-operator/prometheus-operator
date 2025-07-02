@@ -1323,6 +1323,7 @@ func checkRocketChatConfigs(
 		if err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
 		}
+		
 		if err := validation.ValidateSecretURL(strings.TrimSpace(token)); err != nil {
 			return fmt.Errorf("failed to validate RocketChat token: %w", err)
 		}
