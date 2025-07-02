@@ -10441,7 +10441,7 @@ URL
 </td>
 <td>
 <em>(Optional)</em>
-<p>WeChat API URL
+<p>The default WeChat API URL.
 The default value is &ldquo;<a href="https://qyapi.weixin.qq.com/cgi-bin/&quot;">https://qyapi.weixin.qq.com/cgi-bin/&rdquo;</a></p>
 </td>
 </tr>
@@ -10456,7 +10456,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>WeChat API Secret</p>
+<p>The default WeChat API Secret.</p>
 </td>
 </tr>
 <tr>
@@ -10468,7 +10468,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>WeChat API Corporate ID</p>
+<p>The default WeChat API Corporate ID.</p>
 </td>
 </tr>
 </tbody>

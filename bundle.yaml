@@ -13057,11 +13057,11 @@ spec:
                         description: The default WeChat Config
                         properties:
                           apiCorpID:
-                            description: WeChat API Corporate ID
+                            description: The default WeChat API Corporate ID.
                             minLength: 1
                             type: string
                           apiSecret:
-                            description: WeChat API Secret
+                            description: The default WeChat API Secret.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -13086,7 +13086,7 @@ spec:
                             x-kubernetes-map-type: atomic
                           apiURL:
                             description: |-
-                              WeChat API URL
+                              The default WeChat API URL.
                               The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
                             pattern: ^(http|https)://.+$
                             type: string

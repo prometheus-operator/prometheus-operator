@@ -2028,12 +2028,12 @@
                             "description": "The default WeChat Config",
                             "properties": {
                               "apiCorpID": {
-                                "description": "WeChat API Corporate ID",
+                                "description": "The default WeChat API Corporate ID.",
                                 "minLength": 1,
                                 "type": "string"
                               },
                               "apiSecret": {
-                                "description": "WeChat API Secret",
+                                "description": "The default WeChat API Secret.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2056,7 +2056,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "apiURL": {
-                                "description": "WeChat API URL\nThe default value is \"https://qyapi.weixin.qq.com/cgi-bin/\"",
+                                "description": "The default WeChat API URL.\nThe default value is \"https://qyapi.weixin.qq.com/cgi-bin/\"",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }
