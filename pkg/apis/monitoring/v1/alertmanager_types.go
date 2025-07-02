@@ -399,6 +399,9 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default configuration for VictorOps.
 	VictorOpsConfig *GlobalVictorOpsConfig `json:"victorops,omitempty"`
+
+	// The default configuration for Rocket Chat.
+	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -523,14 +526,38 @@ type GlobalTelegramConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 }
 
+// GlobalJiraConfig configures global Jira parameters.
 type GlobalJiraConfig struct {
 	// The default Jira API URL.
 	//
 	// It requires Alertmanager >= v0.28.0.
 	//
-	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+// GlobalRocketChatConfig configures global Rocket Chat parameters.
+type GlobalRocketChatConfig struct {
+	// The default Rocket Chat API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The default Rocket Chat token.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+
+	// The default Rocket Chat Token ID.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
 }
 
 // GlobalVictorOpsConfig configures global VictorOps parameters.

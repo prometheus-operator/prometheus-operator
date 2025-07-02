@@ -96,6 +96,7 @@ function(params) {
                  'thanosrulers/status',
                  'scrapeconfigs',
                  'servicemonitors',
+                 'servicemonitors/status',
                  'podmonitors',
                  'probes',
                  'prometheusrules',
