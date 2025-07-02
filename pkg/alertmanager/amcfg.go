@@ -1832,9 +1832,6 @@ func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *glo
 	}
 
 	if in.APICorpID != nil {
-		if *in.APICorpID == "" {
-			return fmt.Errorf("failed to parse WeChat corp id: value cannot be empty string")
-		}
 		out.WeChatAPICorpID = *in.APICorpID
 	}
 
