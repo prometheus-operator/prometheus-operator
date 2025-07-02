@@ -46,7 +46,7 @@
     "k8s.io/apimachinery/pkg/apis/": "Kubernetes ",
     "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1": "Monitoring v1",
     "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1": "Monitoring v1alpha1",
-    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1": "Monitoring v1beta1"
+    "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1": "Monitoring v1beta1"
   },
   "markdownDisabled": false
 }
