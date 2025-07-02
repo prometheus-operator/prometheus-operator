@@ -5608,12 +5608,24 @@ spec:
                       Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
                       It requires Prometheus >= v3.4.0.
                     type: boolean
+                  ignoreResourceAttributes:
+                    description: |-
+                      Enables to add a list of Resource Attributes to Ignore
+                      It requires Prometheus >= v3.5.0.
+                    items:
+                      type: string
+                    type: array
                   keepIdentifyingResourceAttributes:
                     description: |-
                       Enables adding `service.name`, `service.namespace` and `service.instance.id`
                       resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
 
                       It requires Prometheus >= v3.1.0.
+                    type: boolean
+                  promoteAllResourceAttributes:
+                    description: |-
+                      Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes
+                      It requires Prometheus >= v3.5.0.
                     type: boolean
                   promoteResourceAttributes:
                     description: List of OpenTelemetry Attributes that should be promoted
