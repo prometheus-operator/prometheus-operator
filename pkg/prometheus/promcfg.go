@@ -4723,6 +4723,104 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// StackitSDConfig
+	if len(sc.Spec.StackitSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.StackitSDConfigs))
+		for i, config := range sc.Spec.StackitSDConfigs {
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "project",
+				Value: config.Project,
+			})
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: config.Endpoint,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.PrivateKey != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "private_key",
+					Value: config.PrivateKey,
+				})
+			}
+
+			if config.PrivateKeyPath != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "private_key_path",
+					Value: config.PrivateKeyPath,
+				})
+			}
+
+			if config.ServiceAccountKey != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "service_account_key",
+					Value: config.ServiceAccountKey,
+				})
+			}
+
+			if config.ServiceAccountKeyPath != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "service_account_key_path",
+					Value: config.ServiceAccountKeyPath,
+				})
+			}
+
+			if config.CredentialsFilePath != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "credentials_file_path",
+					Value: config.CredentialsFilePath,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			cfg = append(cfg, yaml.MapItem{
+				Key:   "stackit_sd_config",
+				Value: configs,
+			})
+		}
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}
