@@ -11451,6 +11451,19 @@ string
 <tbody>
 <tr>
 <td>
+<code>promoteAllResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>promoteResourceAttributes</code><br/>
 <em>
 []string
@@ -11501,6 +11514,19 @@ bool
 <em>(Optional)</em>
 <p>Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
 It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enables to add a list of Resource Attributes to Ignore
+It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 </tbody>
