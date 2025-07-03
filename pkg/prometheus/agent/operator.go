@@ -1192,7 +1192,7 @@ func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 }
 
 // a fallback CEL validation function for older kubernetes versions when CEL is not available
-func validateDaemonSetSpec(p *monitoringv1alpha1.PrometheusAgent) error {
+func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 	
 	if p.Spec.Replicas != nil {
 		return fmt.Errorf("replicas cannot be set when mode is DaemonSet")
