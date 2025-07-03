@@ -1033,9 +1033,6 @@ type JiraConfig struct {
 	// If reopen_transition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
 	// +optional
 	ReopenDuration *string `json:"reopenDuration,omitempty"`
-	// Other issue and custom fields.
-	// +optional
-	Fields map[string]any `json:"fields,omitempty"`
 	// The HTTP client's configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP `Authorization` header.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
