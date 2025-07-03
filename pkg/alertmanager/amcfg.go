@@ -1414,6 +1414,7 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 	out := &jiraConfig{
 		SendResolved: in.SendResolved,
 		Project:      in.Project,
+		Labels:       in.Labels,
 	}
 
 	if in.APIURL != nil {
@@ -1426,11 +1427,6 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 
 	if in.Description != nil && *in.Description != "" {
 		out.Description = *in.Description
-	}
-
-	if l := len(in.Labels); l > 0 {
-		out.Labels = make([]string, l)
-		copy(out.Labels, in.Labels)
 	}
 
 	if in.Priority != nil && *in.Priority != "" {
