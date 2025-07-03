@@ -2383,6 +2383,9 @@ type OTLPConfig struct {
 
 	// Enables to add a list of Resource Attributes to Ignore
 	// It requires Prometheus >= v3.5.0.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
 }
