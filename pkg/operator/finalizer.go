@@ -30,7 +30,7 @@ import (
 )
 
 // FinalizerSyncOptions holds the configuration and dependencies
-// required to perform finalizer synchronization
+// required to perform finalizer synchronization.
 type SyncFinalizerOptions struct {
 	ConfigResourcesStatusEnabled bool
 	Reconciliations              *ReconciliationTracker
