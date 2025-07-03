@@ -240,8 +240,7 @@ func selectObjects[T configurationResource](
 	return res, nil
 }
 
-// SelectServiceMonitors selects ServiceMonitors based on the selectors in the
-// Prometheus CR and retuns all the ServiceMonitors that match the selectors
+// SelectServiceMonitors returns the ServiceMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) ([]SelectedResource[*monitoringv1.ServiceMonitor], error) {
