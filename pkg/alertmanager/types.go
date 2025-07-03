@@ -429,6 +429,7 @@ type msTeamsV2Config struct {
 }
 
 type jiraConfig struct {
+	SendResolved      *bool             `yaml:"send_resolved,omitempty"`
 	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty"`
 	APIURL            string            `yaml:"api_url,omitempty"`
 	Project           string            `yaml:"project,omitempty"`

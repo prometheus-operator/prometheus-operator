@@ -1182,11 +1182,6 @@ func (in *JiraConfig) DeepCopyInto(out *JiraConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Fields != nil {
-		in, out := &in.Fields, &out.Fields
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

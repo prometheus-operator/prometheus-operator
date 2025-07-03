@@ -705,6 +705,18 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var jiraConfigs []*jiraConfig
+	if l := len(in.JiraConfigs); l > 0 {
+		jiraConfigs = make([]*jiraConfig, l)
+		for i := range in.WebexConfigs {
+			receiver, err := cb.convertJiraConfig(ctx, in.JiraConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("JiraConfig[%d]: %w", i, err)
+			}
+			jiraConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -721,6 +733,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		WebexConfigs:     webexConfigs,
 		MSTeamsConfigs:   msTeamsConfigs,
 		MSTeamsV2Configs: msTeamsV2Configs,
+		JiraConfigs:      jiraConfigs,
 	}, nil
 }
 
@@ -1386,6 +1399,77 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 		}
 
 		out.WebhookURL = webHookURL
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1alpha1.JiraConfig, crKey types.NamespacedName) (*jiraConfig, error) {
+	out := &jiraConfig{
+		SendResolved: in.SendResolved,
+		Project:      in.Project,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
+	}
+
+	if in.Summary != nil && *in.Summary != "" {
+		out.Summary = *in.Summary
+	}
+
+	if in.Description != nil && *in.Description != "" {
+		out.Description = *in.Description
+	}
+
+	if l := len(in.Labels); l > 0 {
+		labels := make([]string, l)
+		for i, lbl := range in.Labels {
+			labels[i] = lbl
+		}
+		out.Labels = labels
+	}
+
+	if in.Priority != nil && *in.Priority != "" {
+		out.Priority = *in.Priority
+	}
+
+	if in.IssueType != nil && *in.IssueType != "" {
+		out.IssueType = *in.IssueType
+	}
+
+	if in.ResolveTransition != nil && *in.ResolveTransition != "" {
+		out.ResolveTransition = *in.ResolveTransition
+	}
+
+	if in.ReopenTransition != nil && *in.ReopenTransition != "" {
+		out.ReopenTransition = *in.ReopenTransition
+	}
+
+	if in.WontFixResolution != nil && *in.WontFixResolution != "" {
+		out.WontFixResolution = *in.WontFixResolution
+	}
+
+	if in.ReopenDuration != nil && *in.ReopenDuration != "" {
+		d, err := model.ParseDuration(*in.ReopenDuration)
+		if err != nil {
+			return nil, fmt.Errorf("parse reopen duration: %w", err)
+		}
+		out.ReopenDuration = d
+	}
+
+	if l := len(in.Fields); l > 0 {
+		fields := make([]string, l)
+		for i, f := range in.Fields {
+			fields[i] = f
+		}
+		out.Fields = fields
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
