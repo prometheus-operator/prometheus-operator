@@ -298,4 +298,3 @@ It comes with the following drawbacks:
 ## Follow-ups
 
 Once the goals of this proposal are achieved, we can extend the implementation to populate scrape targets information in the status subresource of ServiceMonitor, PodMonitor, ScrapeConfig, and Probe resources.
-
