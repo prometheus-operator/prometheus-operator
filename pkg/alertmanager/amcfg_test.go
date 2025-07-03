@@ -94,6 +94,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	rocketChatAPIURL := "https://rocketchat.example.com"
 	invalidRocketChatAPIURL := "://rocketchat.example.com"
 
+	webexAPIURL := "https://webex.example.com"
+	invalidWebexAPIURL := "://webex.example.com"
+
 	weChatAPIURL := "https://wechat.example.com"
 	invalidWeChatAPIURL := "://wechat.example.com"
 	wechatCorpID := "mywechatcorpid"
@@ -1344,6 +1347,117 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 						Key: "token_id",
 					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid global config webex api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexConfig: &monitoringv1.GlobalWebexConfig{
+					APIURL: ptr.To(monitoringv1.URL(webexAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Webex_API_URL.golden",
+		},
+		{
+			name:      "invalid global config webex api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexConfig: &monitoringv1.GlobalWebexConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidWebexAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config webex api url version not supported",
+			amVersion: &version24,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexConfig: &monitoringv1.GlobalWebexConfig{
+					APIURL: ptr.To(monitoringv1.URL(webexAPIURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
