@@ -4774,6 +4774,21 @@ Duration
 </tr>
 <tr>
 <td>
+<code>ruleOutageTolerance</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Max time to tolerate prometheus outage for restoring &ldquo;for&rdquo; state of alert.
+It requires Thanos &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ruleQueryOffset</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -18313,6 +18328,21 @@ Duration
 </td>
 <td>
 <p>Interval between consecutive evaluations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleOutageTolerance</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Max time to tolerate prometheus outage for restoring &ldquo;for&rdquo; state of alert.
+It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>

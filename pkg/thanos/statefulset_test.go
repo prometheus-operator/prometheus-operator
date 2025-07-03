@@ -1166,3 +1166,57 @@ func TestRuleConcurrentEval(t *testing.T) {
 		})
 	}
 }
+
+func TestRuleOutageTolerance(t *testing.T) {
+	ruleOutageTolerance := monitoringv1.Duration("1h")
+
+	tt := []struct {
+		scenario            string
+		version             string
+		ruleOutageTolerance *monitoringv1.Duration
+		shouldHaveArg       bool
+	}{{
+		scenario:            "version >= 0.30.0 with for outage tolerance",
+		version:             "0.30.0",
+		ruleOutageTolerance: &ruleOutageTolerance,
+		shouldHaveArg:       true,
+	}, {
+		scenario:            "version < 0.30.0 with for outage tolerance",
+		version:             "0.29.0",
+		ruleOutageTolerance: &ruleOutageTolerance,
+		shouldHaveArg:       false,
+	}, {
+		scenario:            "version > 0.30.0 without for outage tolerance",
+		version:             "0.37.0",
+		ruleOutageTolerance: nil,
+		shouldHaveArg:       false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:             &version,
+					RuleOutageTolerance: ts.ruleOutageTolerance,
+					QueryEndpoints:      emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--for-outage-tolerance=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}

@@ -5770,6 +5770,12 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              ruleOutageTolerance:
+                description: |-
+                  Max time to tolerate prometheus outage for restoring "for" state of alert.
+                  It requires Thanos >= v0.30.0.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               ruleQueryOffset:
                 description: |-
                   The default rule group's query offset duration to use.
