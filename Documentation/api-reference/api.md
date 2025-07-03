@@ -5860,6 +5860,19 @@ GlobalRocketChatConfig
 <p>The default configuration for Rocket Chat.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>webex</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalWebexConfig">
+GlobalWebexConfig
+</a>
+</em>
+</td>
+<td>
+<p>The default configuration for Jira.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -10412,6 +10425,40 @@ URL
 <em>(Optional)</em>
 <p>The default Telegram API URL.</p>
 <p>It requires Alertmanager &gt;= v0.24.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalWebexConfig configures global Webex parameters.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#configuration-file">https://prometheus.io/docs/alerting/latest/configuration/#configuration-file</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default Webex API URL.</p>
+<p>It requires Alertmanager &gt;= v0.25.0.</p>
 </td>
 </tr>
 </tbody>
@@ -19405,7 +19452,7 @@ Supported values are:
 <h3 id="monitoring.coreos.com/v1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
