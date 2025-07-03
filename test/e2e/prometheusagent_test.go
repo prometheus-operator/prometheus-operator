@@ -775,7 +775,6 @@ func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 	require.Contains(t, err.Error(), "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
 }
 
-// TDD Test cases for runtime validation - these should fail initially
 func testPrometheusAgentDaemonSetRuntimeValidations(t *testing.T) {
 	t.Parallel()
 
