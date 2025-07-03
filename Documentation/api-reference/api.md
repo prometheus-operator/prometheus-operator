@@ -2953,6 +2953,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -8550,6 +8563,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -13983,6 +14009,19 @@ bool
 <p>Whether to convert all scraped classic histograms into a native
 histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -21221,6 +21260,19 @@ bool
 <p>Whether to convert all scraped classic histograms into a native
 histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -29647,6 +29699,19 @@ bool
 <p>Whether to convert all scraped classic histograms into a native
 histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
