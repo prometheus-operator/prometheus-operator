@@ -100,6 +100,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.GlobalTelegramConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalWebexConfig"):
 		return &monitoringv1.GlobalWebexConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalWeChatConfig"):
+		return &monitoringv1.GlobalWeChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
