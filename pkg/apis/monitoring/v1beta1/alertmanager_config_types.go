@@ -1035,7 +1035,7 @@ type JiraConfig struct {
 	ReopenDuration *string `json:"reopenDuration,omitempty"`
 	// Other issue and custom fields.
 	// +optional
-	Fields []string `json:"fields,omitempty"`
+	Fields map[string]any `json:"fields,omitempty"`
 	// The HTTP client's configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP `Authorization` header.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

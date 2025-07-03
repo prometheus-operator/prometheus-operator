@@ -496,9 +496,19 @@ func convertJiraConfigFrom(in v1alpha1.JiraConfig) JiraConfig {
 		ReopenTransition:  in.ReopenTransition,
 		WontFixResolution: in.WontFixResolution,
 		ReopenDuration:    in.ReopenDuration,
-		Fields:            in.Fields,
+		Fields:            convertJiraFieldsFrom(in.Fields),
 		HTTPConfig:        convertHTTPConfigFrom(in.HTTPConfig),
 	}
+}
+
+func convertJiraFieldsFrom(in map[string]any) map[string]any {
+	out := make(map[string]any)
+
+	for k, v := range in {
+		out[k] = v
+	}
+
+	return out
 }
 
 // ConvertFrom converts from the Hub version (v1alpha1) to this version (v1beta1).
