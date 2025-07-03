@@ -620,6 +620,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	switch ptr.Deref(p.Spec.Mode, "") {
 	case monitoringv1alpha1.DaemonSetPrometheusAgentMode:
+		if err := validateDaemonSetModeSpec(p); err != nil {
+			return err
+		}
 		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
 	default:
 		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
@@ -1193,7 +1196,7 @@ func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 
 // a fallback CEL validation function for older kubernetes versions when CEL is not available
 func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
-	
+
 	if p.Spec.Replicas != nil {
 		return fmt.Errorf("replicas cannot be set when mode is DaemonSet")
 	}
@@ -1205,11 +1208,10 @@ func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
 		return fmt.Errorf("shards cannot be greater than 1 when mode is DaemonSet")
 	}
-	
+
 	if p.Spec.PersistentVolumeClaimRetentionPolicy != nil {
 		return fmt.Errorf("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
 	}
-	
 
 	return nil
 }
