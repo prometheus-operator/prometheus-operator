@@ -4667,6 +4667,10 @@
                           "description": "Configure whether HTTP requests follow HTTP 3xx redirects.",
                           "type": "boolean"
                         },
+                        "labelSelector": {
+                          "description": "Label selector used to filter the servers when fetching them from the API.\nIt requires Prometheus >= v3.5.0.",
+                          "type": "string"
+                        },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "string"
