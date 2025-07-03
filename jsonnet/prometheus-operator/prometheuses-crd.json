@@ -4769,9 +4769,12 @@
                       "ignoreResourceAttributes": {
                         "description": "Enables to add a list of Resource Attributes to Ignore\nIt requires Prometheus >= v3.5.0.",
                         "items": {
+                          "minLength": 1,
                           "type": "string"
                         },
-                        "type": "array"
+                        "minItems": 1,
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
                       },
                       "keepIdentifyingResourceAttributes": {
                         "description": "Enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",

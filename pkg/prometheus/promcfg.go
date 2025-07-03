@@ -4771,6 +4771,15 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 
 	otlp := yaml.MapSlice{}
 
+	if cg.version.LT(semver.MustParse("3.5.0")) && otlpConfig.PromoteAllResourceAttributes != nil && *otlpConfig.PromoteAllResourceAttributes {
+		if len(otlpConfig.PromoteResourceAttributes) > 0 {
+			return cfg, fmt.Errorf("PromoteAllResourceAttributes and PromoteResourceAttributes cannot be configured simultaneously")
+		}
+		if len(otlpConfig.IgnoreResourceAttributes) > 0 {
+			return cfg, fmt.Errorf("IgnoreResourceAttributes cannot be set when PromoteAllResourceAttributes is set to true")
+		}
+	}
+
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {
 		otlp = cg.WithMinimumVersion("2.55.0").AppendMapItem(otlp,
 			"promote_resource_attributes",

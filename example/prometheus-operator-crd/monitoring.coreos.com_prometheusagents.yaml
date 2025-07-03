@@ -4843,8 +4843,11 @@ spec:
                       Enables to add a list of Resource Attributes to Ignore
                       It requires Prometheus >= v3.5.0.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   keepIdentifyingResourceAttributes:
                     description: |-
                       Enables adding `service.name`, `service.namespace` and `service.instance.id`
