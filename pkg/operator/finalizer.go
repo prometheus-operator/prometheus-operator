@@ -29,14 +29,24 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-// SyncFinalizers ensures the `monitoring.coreos.com/status-cleanup` finalizer is correctly set on the given workload resource
+// FinalizerSyncOptions holds the configuration and dependencies
+// required to perform finalizer synchronization
+type SyncFinalizerOptions struct {
+	ConfigResourcesStatusEnabled bool
+	Reconciliations              *ReconciliationTracker
+	Logger                       *slog.Logger
+	MdClient                     metadata.Interface
+}
+
+// Sync ensures the `monitoring.coreos.com/status-cleanup` finalizer is correctly set on the given workload resource
 // (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler). It adds the finalizer if necessary, or removes it when appropriate.
 //
 // Returns true if the finalizer list was modified, otherwise false.
 // If the object is being deleted, it is also removed from the reconciliation tracker.
 // The second return value indicates any error encountered during the operation.
-func SyncFinalizers(ctx context.Context, p metav1.Object, key string, mdClient metadata.Interface, reconciliations *ReconciliationTracker, logger *slog.Logger, deletionInProgress bool, configResourcesStatusEnabled bool) (bool, error) {
-	if !configResourcesStatusEnabled {
+func (s *SyncFinalizerOptions) Sync(ctx context.Context, p metav1.Object, key string, deletionInProgress bool) (bool, error) {
+	logger := s.Logger.With("key", key)
+	if !s.ConfigResourcesStatusEnabled {
 		return false, nil
 	}
 
@@ -53,7 +63,7 @@ func SyncFinalizers(ctx context.Context, p metav1.Object, key string, mdClient m
 		if len(patchBytes) == 0 {
 			return false, nil
 		}
-		if err = updateObject(ctx, mdClient, p, patchBytes); err != nil {
+		if err = updateObject(ctx, s.MdClient, p, patchBytes); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
 		logger.Debug("added finalizer to object")
@@ -66,15 +76,15 @@ func SyncFinalizers(ctx context.Context, p metav1.Object, key string, mdClient m
 		return false, fmt.Errorf("failed to marshal patch: %w", err)
 	}
 	if len(patchBytes) == 0 {
-		reconciliations.ForgetObject(key)
+		s.Reconciliations.ForgetObject(key)
 		return false, nil
 	}
 
-	if err = updateObject(ctx, mdClient, p, patchBytes); err != nil {
+	if err = updateObject(ctx, s.MdClient, p, patchBytes); err != nil {
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 	logger.Debug("removed finalizer from object")
-	reconciliations.ForgetObject(key)
+	s.Reconciliations.ForgetObject(key)
 
 	return true, nil
 }

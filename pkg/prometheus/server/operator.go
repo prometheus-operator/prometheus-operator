@@ -97,7 +97,8 @@ type Operator struct {
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
 
-	eventRecorder record.EventRecorder
+	eventRecorder        record.EventRecorder
+	syncFinalizerOptions *operator.SyncFinalizerOptions
 }
 
 type ControllerOption func(*Operator)
@@ -176,6 +177,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:                c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		syncFinalizerOptions: &operator.SyncFinalizerOptions{
+			ConfigResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+			MdClient:                     mdClient,
+			Logger:                       logger,
+		},
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -377,6 +383,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		Rr:              o.rr,
 	}
 
+	o.syncFinalizerOptions.Reconciliations = o.reconciliations
 	return o, nil
 }
 
@@ -751,7 +758,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := operator.SyncFinalizers(ctx, p, key, c.mdClient, c.reconciliations, logger, c.rr.DeletionInProgress(p), c.configResourcesStatusEnabled)
+	finalizersChanged, err := c.syncFinalizerOptions.Sync(ctx, p, key, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
