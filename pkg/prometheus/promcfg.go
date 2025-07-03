@@ -2264,6 +2264,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
+
+		k8sSDConfig = cg.addProxyConfigtoYaml(k8sSDConfig, store, apiserverConfig.ProxyConfig)
 	}
 
 	if attachMetadataConfig != nil {
