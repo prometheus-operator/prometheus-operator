@@ -35,7 +35,6 @@ type JiraConfigApplyConfiguration struct {
 	ReopenTransition  *string                       `json:"reopenTransition,omitempty"`
 	WontFixResolution *string                       `json:"wontFixResolution,omitempty"`
 	ReopenDuration    *string                       `json:"reopenDuration,omitempty"`
-	Fields            []string                      `json:"fields,omitempty"`
 	HTTPConfig        *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
@@ -140,16 +139,6 @@ func (b *JiraConfigApplyConfiguration) WithWontFixResolution(value string) *Jira
 // If called multiple times, the ReopenDuration field is set to the value of the last call.
 func (b *JiraConfigApplyConfiguration) WithReopenDuration(value string) *JiraConfigApplyConfiguration {
 	b.ReopenDuration = &value
-	return b
-}
-
-// WithFields adds the given value to the Fields field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Fields field.
-func (b *JiraConfigApplyConfiguration) WithFields(values ...string) *JiraConfigApplyConfiguration {
-	for i := range values {
-		b.Fields = append(b.Fields, values[i])
-	}
 	return b
 }
 

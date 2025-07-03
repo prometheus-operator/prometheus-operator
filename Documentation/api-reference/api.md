@@ -25897,18 +25897,6 @@ string
 </tr>
 <tr>
 <td>
-<code>fields</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Other issue and custom fields.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -34650,18 +34638,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>If reopen_transition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>fields</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Other issue and custom fields.</p>
 </td>
 </tr>
 <tr>

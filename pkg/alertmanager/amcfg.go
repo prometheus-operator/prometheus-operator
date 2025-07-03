@@ -1464,14 +1464,6 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 		out.ReopenDuration = d
 	}
 
-	if l := len(in.Fields); l > 0 {
-		fields := make(map[string]any, l)
-		for i, f := range in.Fields {
-			fields[i] = f
-		}
-		out.Fields = fields
-	}
-
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
 		return nil, err

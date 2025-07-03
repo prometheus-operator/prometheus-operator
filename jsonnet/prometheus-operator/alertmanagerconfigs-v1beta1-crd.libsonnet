@@ -1090,13 +1090,6 @@
                             description: 'The Jira issue description.',
                             type: 'string',
                           },
-                          fields: {
-                            description: 'Other issue and custom fields.',
-                            items: {
-                              type: 'string',
-                            },
-                            type: 'array',
-                          },
                           httpConfig: {
                             description: "The HTTP client's configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP `Authorization` header.",
                             properties: {
