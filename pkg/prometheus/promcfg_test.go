@@ -13548,3 +13548,60 @@ func TestPodMonitorSelectors(t *testing.T) {
 		})
 	}
 }
+
+func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
+	testCases := []struct {
+		name                    string
+		version                 string
+		ScrapeClassicHistograms *bool
+		expectedCfg             string
+	}{
+		{
+			name:                    "ScrapeClassicHistograms true with Prometheus Version 3.5",
+			version:                 "v3.5.0",
+			ScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:             "ScrapeClassicHistogramsTrueProperPromVersion.golden",
+		},
+		{
+			name:                    "ScrapeClassicHistograms false with Prometheus Version 3.5",
+			version:                 "v3.5.0",
+			ScrapeClassicHistograms: ptr.To(false),
+			expectedCfg:             "ScrapeClassicHistogramsFalseProperPromVersion.golden",
+		},
+		{
+			name:                    "ScrapeClassicHistograms true with Prometheus Version 2",
+			version:                 "v2.45.0",
+			ScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:             "ScrapeClassicHistogramsTrueWrongPromVersion.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.ScrapeClassicHistograms != nil {
+				p.Spec.CommonPrometheusFields.ScrapeClassicHistograms = tc.ScrapeClassicHistograms
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}

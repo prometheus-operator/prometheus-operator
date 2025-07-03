@@ -478,6 +478,14 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global rocket chat config: %w", err)
 	}
 
+	if err := cb.convertGlobalWebexConfig(out, in.WebexConfig); err != nil {
+		return nil, fmt.Errorf("invalid global webex config: %w", err)
+	}
+
+	if err := cb.convertGlobalWeChatConfig(ctx, out, in.WeChatConfig, crKey); err != nil {
+		return nil, fmt.Errorf("invalid global wechat config: %w", err)
+	}
+
 	if err := cb.convertGlobalVictorOpsConfig(out, in.VictorOpsConfig); err != nil {
 		return nil, fmt.Errorf("invalid global victorops config: %w", err)
 	}
@@ -1805,6 +1813,54 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 			return fmt.Errorf("failed to get Rocket Chat Token ID: %w", err)
 		}
 		out.RocketChatTokenID = tokenID
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitoringv1.GlobalWebexConfig) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("parse Webex API URL: %w", err)
+		}
+		out.WebexAPIURL = &config.URL{URL: u}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalWeChatConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("wechat API URL: %w", err)
+		}
+		out.WeChatAPIURL = &config.URL{URL: u}
+	}
+
+	if in.APISecret != nil {
+		apiSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.APISecret)
+		if err != nil {
+			return fmt.Errorf("failed to get WeChat Secret: %w", err)
+		}
+		out.WeChatAPISecret = apiSecret
+	}
+
+	if in.APICorpID != nil {
+		out.WeChatAPICorpID = *in.APICorpID
 	}
 
 	return nil

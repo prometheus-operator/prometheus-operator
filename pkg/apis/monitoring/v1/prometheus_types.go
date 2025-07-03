@@ -716,6 +716,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
+	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	// It requires Prometheus >= v3.5.0.
+	//
+	// +optional
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
@@ -1992,6 +1998,10 @@ type APIServerConfig struct {
 	//
 	// Deprecated: this will be removed in a future release.
 	BearerToken string `json:"bearerToken,omitempty"`
+
+	// Optional ProxyConfig.
+	// +optional
+	ProxyConfig `json:",inline"`
 }
 
 // +kubebuilder:validation:Enum=v1;V1;v2;V2

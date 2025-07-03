@@ -402,6 +402,13 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default configuration for Rocket Chat.
 	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
+
+	// The default configuration for Jira.
+	WebexConfig *GlobalWebexConfig `json:"webex,omitempty"`
+
+	// The default WeChat Config
+	// +optional
+	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -558,6 +565,33 @@ type GlobalRocketChatConfig struct {
 	//
 	// +optional
 	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
+}
+
+// GlobalWebexConfig configures global Webex parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+type GlobalWebexConfig struct {
+	// The default Webex API URL.
+	//
+	// It requires Alertmanager >= v0.25.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+type GlobalWeChatConfig struct {
+	// The default WeChat API URL.
+	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The default WeChat API Secret.
+	// +optional
+	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+
+	// The default WeChat API Corporate ID.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	APICorpID *string `json:"apiCorpID,omitempty"`
 }
 
 // GlobalVictorOpsConfig configures global VictorOps parameters.

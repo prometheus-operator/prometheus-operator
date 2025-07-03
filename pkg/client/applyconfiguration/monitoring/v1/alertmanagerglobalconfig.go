@@ -35,6 +35,8 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	JiraConfig       *GlobalJiraConfigApplyConfiguration       `json:"jira,omitempty"`
 	VictorOpsConfig  *GlobalVictorOpsConfigApplyConfiguration  `json:"victorops,omitempty"`
 	RocketChatConfig *GlobalRocketChatConfigApplyConfiguration `json:"rocketChat,omitempty"`
+	WebexConfig      *GlobalWebexConfigApplyConfiguration      `json:"webex,omitempty"`
+	WeChatConfig     *GlobalWeChatConfigApplyConfiguration     `json:"wechat,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -128,5 +130,21 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithVictorOpsConfig(value *
 // If called multiple times, the RocketChatConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithRocketChatConfig(value *GlobalRocketChatConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.RocketChatConfig = value
+	return b
+}
+
+// WithWebexConfig sets the WebexConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebexConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexConfig(value *GlobalWebexConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.WebexConfig = value
+	return b
+}
+
+// WithWeChatConfig sets the WeChatConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WeChatConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWeChatConfig(value *GlobalWeChatConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.WeChatConfig = value
 	return b
 }
