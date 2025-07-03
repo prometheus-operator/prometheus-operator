@@ -1992,6 +1992,10 @@ type APIServerConfig struct {
 	//
 	// Deprecated: this will be removed in a future release.
 	BearerToken string `json:"bearerToken,omitempty"`
+
+	// Optional ProxyConfig.
+	// +optional
+	ProxyConfig `json:",inline"`
 }
 
 // +kubebuilder:validation:Enum=v1;V1;v2;V2
