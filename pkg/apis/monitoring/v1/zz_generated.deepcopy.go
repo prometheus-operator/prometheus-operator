@@ -1049,6 +1049,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ScrapeClassicHistograms != nil {
+		in, out := &in.ScrapeClassicHistograms, &out.ScrapeClassicHistograms
+		*out = new(bool)
+		**out = **in
+	}
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
 		*out = new(uint32)
