@@ -1429,11 +1429,8 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 	}
 
 	if l := len(in.Labels); l > 0 {
-		labels := make([]string, l)
-		for i, lbl := range in.Labels {
-			labels[i] = lbl
-		}
-		out.Labels = labels
+		out.Labels = make([]string, l)
+		copy(out.Labels, in.Labels)
 	}
 
 	if in.Priority != nil && *in.Priority != "" {
