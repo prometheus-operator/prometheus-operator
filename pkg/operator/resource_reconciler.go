@@ -338,7 +338,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if !k8sutil.IsFinalizerPresent(mCur.GetFinalizers(), k8sutil.StatusCleanupFinalizerName) && rr.DeletionInProgress(mCur) {
+	if !k8sutil.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
 		return
 	}
 
