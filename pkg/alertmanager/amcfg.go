@@ -2588,7 +2588,6 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	if rc.Token == nil || rc.TokenID == nil {
 		return fmt.Errorf("both token_id and token must be configured")
 	}
-	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)
 }
