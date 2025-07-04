@@ -24,18 +24,27 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/metadata"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 // FinalizerSyncer holds the configuration and dependencies
 // required to perform finalizer synchronization.
 type FinalizerSyncer struct {
-	ConfigResourcesStatusEnabled bool
-	Reconciliations              *ReconciliationTracker
-	Logger                       *slog.Logger
-	MdClient                     metadata.Interface
+	mdClient                     metadata.Interface
+	gvr                          schema.GroupVersionResource
+	configResourcesStatusEnabled bool
+}
+
+func NewFinalizerSyncer(
+	mdClient metadata.Interface,
+	gvr schema.GroupVersionResource,
+	configResourcesStatusEnabled bool,
+) *FinalizerSyncer {
+	return &FinalizerSyncer{
+		mdClient:                     mdClient,
+		gvr:                          gvr,
+		configResourcesStatusEnabled: configResourcesStatusEnabled,
+	}
 }
 
 // Sync ensures the `monitoring.coreos.com/status-cleanup` finalizer is correctly set on the given workload resource
@@ -44,9 +53,8 @@ type FinalizerSyncer struct {
 // Returns true if the finalizer list was modified, otherwise false.
 // If the object is being deleted, it is also removed from the reconciliation tracker.
 // The second return value indicates any error encountered during the operation.
-func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, key string, deletionInProgress bool) (bool, error) {
-	logger := s.Logger.With("key", key)
-	if !s.ConfigResourcesStatusEnabled {
+func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slog.Logger, deletionInProgress bool) (bool, error) {
+	if !s.configResourcesStatusEnabled {
 		return false, nil
 	}
 
@@ -63,7 +71,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, key string,
 		if len(patchBytes) == 0 {
 			return false, nil
 		}
-		if err = updateObject(ctx, s.MdClient, p, patchBytes); err != nil {
+		if err = s.updateObject(ctx, p, patchBytes); err != nil {
 			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
 		logger.Debug("added finalizer to object")
@@ -76,47 +84,24 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, key string,
 		return false, fmt.Errorf("failed to marshal patch: %w", err)
 	}
 	if len(patchBytes) == 0 {
-		s.Reconciliations.ForgetObject(key)
 		return false, nil
 	}
 
-	if err = updateObject(ctx, s.MdClient, p, patchBytes); err != nil {
+	if err = s.updateObject(ctx, p, patchBytes); err != nil {
 		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 	logger.Debug("removed finalizer from object")
-	s.Reconciliations.ForgetObject(key)
 
 	return true, nil
 }
 
 // updateObject applies a JSON patch to update the metadata of the given workload object (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler) in the cluster.
-func updateObject(
+func (s *FinalizerSyncer) updateObject(
 	ctx context.Context,
-	mdClient metadata.Interface,
 	p metav1.Object,
 	patchBytes []byte,
 ) error {
-	var err error
-	var gvr schema.GroupVersionResource
-
-	switch any(p).(type) {
-	case *monitoringv1.Prometheus:
-		gvr = monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName)
-
-	case *monitoringv1.Alertmanager:
-		gvr = monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName)
-
-	case *monitoringv1.ThanosRuler:
-		gvr = monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName)
-
-	case *monitoringv1alpha1.PrometheusAgent:
-		gvr = monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName)
-
-	default:
-		return fmt.Errorf("unknown object type %T", p)
-	}
-
-	_, err = mdClient.Resource(gvr).
+	_, err := s.mdClient.Resource(s.gvr).
 		Namespace(p.GetNamespace()).
 		Patch(ctx, p.GetName(), types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager})
 

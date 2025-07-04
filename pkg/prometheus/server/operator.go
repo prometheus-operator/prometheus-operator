@@ -97,8 +97,8 @@ type Operator struct {
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
 
-	eventRecorder        record.EventRecorder
-	syncFinalizerOptions *operator.FinalizerSyncer
+	eventRecorder   record.EventRecorder
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -177,11 +177,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:                c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
-		syncFinalizerOptions: &operator.FinalizerSyncer{
-			ConfigResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
-			MdClient:                     mdClient,
-			Logger:                       logger,
-		},
+		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -383,7 +379,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		Rr:              o.rr,
 	}
 
-	o.syncFinalizerOptions.Reconciliations = o.reconciliations
 	return o, nil
 }
 
@@ -758,10 +753,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := c.syncFinalizerOptions.Sync(ctx, p, key, c.rr.DeletionInProgress(p))
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
+
 	if finalizersChanged {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
@@ -769,6 +765,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if c.rr.DeletionInProgress(p) {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
