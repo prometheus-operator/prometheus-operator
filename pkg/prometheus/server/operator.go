@@ -54,6 +54,9 @@ import (
 const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
+
+	unmanagedConfigurationReason         = "ConfigurationUnmanaged"
+	unmanagedConfigurationMessage string = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead."
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -1051,6 +1054,16 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to get prometheus status: %w", err)
 	}
 
+	if c.unmanagedPrometheusConfiguration(p) {
+		for i, condition := range pStatus.Conditions {
+			if condition.Type == monitoringv1.Reconciled && condition.Status == monitoringv1.ConditionTrue {
+				condition.Reason = unmanagedConfigurationReason
+				condition.Message = unmanagedConfigurationMessage
+				pStatus.Conditions[i] = condition
+			}
+		}
+	}
+
 	p.Status = *pStatus
 	selectorLabels := makeSelectorLabels(p.Name)
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
@@ -1106,10 +1119,19 @@ func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prom
 		}
 	}
 
-	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
-
-		logger.Warn("neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
+	if c.unmanagedPrometheusConfiguration(p) {
+		logger.Warn("the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified")
+		logger.Warn("unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead")
+		logger.Warn("unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')")
 	}
+}
+
+func (c *Operator) unmanagedPrometheusConfiguration(p *monitoringv1.Prometheus) bool {
+	return !c.disableUnmanagedConfiguration &&
+		p.Spec.ServiceMonitorSelector == nil &&
+		p.Spec.PodMonitorSelector == nil &&
+		p.Spec.ProbeSelector == nil &&
+		p.Spec.ScrapeConfigSelector == nil
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
@@ -1161,30 +1183,27 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
-	// If no service or pod monitor selectors are configured, the user wants to
-	// manage configuration themselves. Do create an empty Secret if it doesn't
-	// exist.
-	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
-		p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
-		logger.Debug("neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
-
-		// make an empty secret
+	// If no service/pod monitor and probe selectors are configured, the user
+	// wants to manage configuration themselves. Let's create an empty Secret
+	// if it doesn't exist.
+	if c.unmanagedPrometheusConfiguration(p) {
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {
-			return fmt.Errorf("generating empty config secret failed: %w", err)
+			return fmt.Errorf("failed to generate empty configuration secret: %w", err)
 		}
+
 		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 		_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
+			logger.Debug("creating an empty configuration secret")
 			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-				return fmt.Errorf("creating empty config file failed: %w", err)
+				return fmt.Errorf("failed to create an empty configuration secret: %w", err)
 			}
-		}
-		if !apierrors.IsNotFound(err) && err != nil {
-			return err
+
+			return nil
 		}
 
-		return nil
+		return err
 	}
 
 	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
