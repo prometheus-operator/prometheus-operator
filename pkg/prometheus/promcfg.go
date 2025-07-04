@@ -4240,6 +4240,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
+
+			if config.LabelSelector != nil && len(*config.LabelSelector) > 0 {
+				configs[i] = cg.WithMinimumVersion("3.5.0").AppendMapItem(configs[i],
+					"label_selector",
+					config.LabelSelector)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "hetzner_sd_configs",

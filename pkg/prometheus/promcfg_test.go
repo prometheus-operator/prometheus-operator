@@ -9153,9 +9153,10 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 }
 func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		scSpec monitoringv1alpha1.ScrapeConfigSpec
-		golden string
+		name    string
+		version string
+		scSpec  monitoringv1alpha1.ScrapeConfigSpec
+		golden  string
 	}{
 		{
 			name: "hetzner_sd_config",
@@ -9186,6 +9187,70 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_HetznerSD.golden",
+		},
+		{
+			name:    "hetzner_sd_config_label_selector",
+			version: "v3.5.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role: "hcloud",
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Port:            ptr.To(9100),
+						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
+						LabelSelector:   ptr.To("label_value"),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HetznerSDLabelSelector.golden",
+		},
+		{
+			name:    "hetzner_sd_config_no_label_selector",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role: "hcloud",
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Port:            ptr.To(9100),
+						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
+						LabelSelector:   ptr.To("label_value"),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HetznerSDNoLabelSelector.golden",
 		},
 		{
 			name: "hetzner_sd_config_basic_auth",
@@ -9342,6 +9407,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
