@@ -51,7 +51,7 @@ In specific, the MVP will need to:
 
 Building upon the MVP, enable ServiceMonitor support for DaemonSet mode by leveraging EndpointSlice discovery to address the performance concerns mentioned in the non-goals section. This extended implementation includes:
 
-* **EndpointSlice Integration**: Implement support for `serviceDiscoveryRole: EndpointSlice` in PrometheusAgent CRD to use EndpointSlice API instead of classic Endpoints for service discovery.
+* **EndpointSlice Integration**: Explore support for `serviceDiscoveryRole: EndpointSlice` in PrometheusAgent CRD to use EndpointSlice API instead of classic Endpoints for service discovery.
 * **Performance Optimization**: Reduce Kubernetes API server load by using the more efficient and scalable EndpointSlice API, which distributes endpoint information across multiple smaller objects instead of one large Endpoints object.
 * **DaemonSet Compatibility**: Ensure EndpointSlice discovery works correctly with DaemonSet mode for node-local service monitoring.
 * **Validation and Fallback**: Implement proper validation to ensure EndpointSlice is only used when supported by the Kubernetes cluster (v1.21+), with graceful fallback to classic Endpoints on older clusters.
