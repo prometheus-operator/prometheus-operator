@@ -1097,6 +1097,7 @@ type HetznerSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// Label selector used to filter the servers when fetching them from the API.
 	// It requires Prometheus >= v3.5.0.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	LabelSelector *string `json:"labelSelector,omitempty"`
 }

@@ -4951,6 +4951,7 @@ spec:
                       description: |-
                         Label selector used to filter the servers when fetching them from the API.
                         It requires Prometheus >= v3.5.0.
+                      minLength: 1
                       type: string
                     noProxy:
                       description: |-
