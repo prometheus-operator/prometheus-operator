@@ -177,10 +177,12 @@ func selectObjects[T configurationResource](
 	var rejected int
 	res := make(ResourcesSelection[T], len(objects))
 	for namespaceAndName, obj := range objects {
+		var reason string
 		o := obj.(T)
 		err := checkFn(ctx, o)
 		if err != nil {
 			rejected++
+			reason = invalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		}
@@ -193,7 +195,8 @@ func selectObjects[T configurationResource](
 			resource: o,
 			key:      namespaceAndName,
 			err:      err,
-			reason:   invalidConfiguration})
+			reason:   reason,
+		})
 	}
 
 	keys := []string{}
