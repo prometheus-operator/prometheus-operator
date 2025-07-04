@@ -457,7 +457,7 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 	return nil
 }
 
-// SelectPodMonitors returns the SelectPodMonitors that match the selectors in the Prometheus custom resource.
+// SelectPodMonitors returns the PodMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.PodMonitor], error) {
@@ -534,7 +534,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 	return nil
 }
 
-// SelectProbes filters and returns probes matching the selectors specified in the Prometheus CR.
+// SelectProbes returns the probes matching the selectors specified in the Prometheus CR.
 // This function also populates authentication stores and performs
 // validations against scrape intervals, relabel configs and Probe URLs.
 func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.Probe], error) {
@@ -645,7 +645,7 @@ func validateServer(server string) error {
 	return nil
 }
 
-// SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the
+// SelectScrapeConfigs returns the ScrapeConfigs which match the selectors in the
 // Prometheus CR and filters them returning all the configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
