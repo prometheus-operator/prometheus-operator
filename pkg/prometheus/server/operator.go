@@ -98,7 +98,7 @@ type Operator struct {
 	configResourcesStatusEnabled  bool
 
 	eventRecorder        record.EventRecorder
-	syncFinalizerOptions *operator.SyncFinalizerOptions
+	syncFinalizerOptions *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -177,7 +177,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:                c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
-		syncFinalizerOptions: &operator.SyncFinalizerOptions{
+		syncFinalizerOptions: &operator.FinalizerSyncer{
 			ConfigResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 			MdClient:                     mdClient,
 			Logger:                       logger,
