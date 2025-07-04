@@ -44,7 +44,7 @@ import (
 )
 
 const (
-	// Error reasons for selected resources that are not valid.
+	// Generic reason for selected resources that are not valid.
 	invalidConfiguration = "InvalidConfiguration"
 )
 
@@ -68,7 +68,7 @@ type ResourceSelector struct {
 	eventRecorder record.EventRecorder
 }
 
-// ResourcesSelection represents slice of configuration resource selected by Prometheus or PrometheusAgent.
+// ResourcesSelection represents a slice of configuration resources selected by Prometheus or PrometheusAgent.
 type ResourcesSelection[T configurationResource] []struct {
 	resource T
 	key      string
@@ -76,8 +76,8 @@ type ResourcesSelection[T configurationResource] []struct {
 	reason   string // Reason for rejection; empty if accepted.
 }
 
-// ValidResources filters and returns only the valid selected resources (those without an error).
-// Returns a map of resource keys to valid resource objects.
+// ValidResources returns only the resources which the operator considers to be valid.
+// The keys of the returned map identify the resources using the `<namespace>/<name>` format.
 func (resources ResourcesSelection[T]) ValidResources() map[string]T {
 	validRes := make(map[string]T)
 	for _, res := range resources {
@@ -232,7 +232,6 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 }
 
 // checkServiceMonitor verifies that the ServiceMonitor object is valid.
-// Returns an error and reason if the ServiceMonitor is not valid.
 func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitoringv1.ServiceMonitor) error {
 	cpf := rs.p.GetCommonPrometheusFields()
 
@@ -458,9 +457,9 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 	return nil
 }
 
-// SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
-// returning only those with a valid configuration. This function also populates authentication stores and performs validations against
-// scrape intervals and relabel configs.
+// SelectPodMonitors returns the SelectPodMonitors that match the selectors in the Prometheus custom resource.
+// This function also populates authentication stores and
+// performs validations against scrape intervals and relabel configs.
 func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
@@ -477,7 +476,6 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 }
 
 // checkPodMonitor verifies that the PodMonitor object is valid.
-// Returns an error and reason if the PodMonitor is not valid.
 func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv1.PodMonitor) error {
 	if _, err := metav1.LabelSelectorAsSelector(&pm.Spec.Selector); err != nil {
 		return fmt.Errorf("failed to parse label selector: %w", err)
@@ -536,10 +534,9 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 	return nil
 }
 
-// SelectProbes selects Probes based on the selectors in the Prometheus CR and
-// filters them returning only those with a valid configuration. This function
-// also populates authentication stores and performs validations against scrape
-// intervals, relabel configs and Probe URLs.
+// SelectProbes filters and returns probes matching the selectors specified in the Prometheus CR.
+// This function also populates authentication stores and performs
+// validations against scrape intervals, relabel configs and Probe URLs.
 func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
@@ -556,7 +553,6 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 }
 
 // checkProbe verifies that the Probe object is valid.
-// Returns an error and reason if the Probe is not valid.
 func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.Probe) error {
 	if err := validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
 		return fmt.Errorf("scrapeClassName: %w", err)
@@ -650,8 +646,7 @@ func validateServer(server string) error {
 }
 
 // SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the
-// Prometheus CR and filters them returning only those with a valid
-// configuration.
+// Prometheus CR and filters them returning all the configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
@@ -668,7 +663,6 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 }
 
 // checkScrapeConfig verifies that the ScrapeConfig object is valid.
-// Returns an error and reason if the ScrapeConfig is not valid.
 func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	if err := validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
 		return err
