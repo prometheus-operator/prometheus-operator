@@ -2252,7 +2252,6 @@ spec:
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object
-<<<<<<< HEAD
                       victorops:
                         description: The default configuration for VictorOps.
                         properties:
@@ -2262,7 +2261,9 @@ spec:
                             type: string
                           apiURL:
                             description: The default VictorOps API URL.
-=======
+                            pattern: ^(http|https)://.+$
+                            type: string
+                        type: object
                       webex:
                         description: The default configuration for Jira.
                         properties:
@@ -2309,7 +2310,6 @@ spec:
                             description: |-
                               The default WeChat API URL.
                               The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
->>>>>>> main
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object

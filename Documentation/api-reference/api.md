@@ -10538,20 +10538,13 @@ URL
 </tr>
 </tbody>
 </table>
-<<<<<<< HEAD
 <h3 id="monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig
-=======
-<h3 id="monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig
->>>>>>> main
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
-<<<<<<< HEAD
 <p>GlobalVictorOpsConfig configures global VictorOps parameters.</p>
-=======
->>>>>>> main
 </div>
 <table>
 <thead>
@@ -10572,19 +10565,55 @@ URL
 </td>
 <td>
 <em>(Optional)</em>
-<<<<<<< HEAD
 <p>The default VictorOps API URL.</p>
-=======
-<p>The default WeChat API URL.
-The default value is &ldquo;<a href="https://qyapi.weixin.qq.com/cgi-bin/&quot;">https://qyapi.weixin.qq.com/cgi-bin/&rdquo;</a></p>
->>>>>>> main
 </td>
 </tr>
 <tr>
 <td>
-<<<<<<< HEAD
 <code>apiKey</code><br/>
-=======
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default VictorOps API Key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The default WeChat API URL.
+The default value is &ldquo;<a href="https://qyapi.weixin.qq.com/cgi-bin/&quot;">https://qyapi.weixin.qq.com/cgi-bin/&rdquo;</a></p>
+</td>
+</tr>
+<tr>
+<td>
 <code>apiSecret</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
@@ -10600,16 +10629,12 @@ Kubernetes core/v1.SecretKeySelector
 <tr>
 <td>
 <code>apiCorpID</code><br/>
->>>>>>> main
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<<<<<<< HEAD
-<p>The default VictorOps API Key.</p>
-=======
 <p>The default WeChat API Corporate ID.</p>
 </td>
 </tr>
@@ -10645,7 +10670,6 @@ URL
 <em>(Optional)</em>
 <p>The default Webex API URL.</p>
 <p>It requires Alertmanager &gt;= v0.25.0.</p>
->>>>>>> main
 </td>
 </tr>
 </tbody>
@@ -19652,11 +19676,7 @@ Supported values are:
 <h3 id="monitoring.coreos.com/v1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-<<<<<<< HEAD
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig</a>)
-=======
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>)
->>>>>>> main
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
