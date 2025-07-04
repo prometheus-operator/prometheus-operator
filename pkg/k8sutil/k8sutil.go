@@ -647,6 +647,6 @@ func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, er
 	return nil, nil
 }
 
-func IsFinalizerPresent(finalizers []string, finalizerName string) bool {
-	return slices.Contains(finalizers, finalizerName)
+func HasStatusCleanupFinalizer(obj metav1.Object) bool {
+	return slices.Contains(obj.GetFinalizers(), StatusCleanupFinalizerName)
 }
