@@ -878,6 +878,7 @@
                         "description": "AlertmanagerConfigMatcherStrategyType defines the strategy used by\nAlertmanagerConfig objects to match alerts in the routes and inhibition\nrules.\n\nThe default value is `OnNamespace`.",
                         "enum": [
                           "OnNamespace",
+                          "OnNamespaceExceptForAlertmanagerNamespace",
                           "None"
                         ],
                         "type": "string"

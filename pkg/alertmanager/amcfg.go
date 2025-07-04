@@ -200,6 +200,27 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	return r
 }
 
+type otherNamespaceEnforcer struct {
+	alertmanagerNamespace string
+	namespaceEnforcer
+}
+
+var _ enforcer = &otherNamespaceEnforcer{}
+
+func (one *otherNamespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	if crKey.Namespace == one.alertmanagerNamespace {
+		return ir
+	}
+	return one.namespaceEnforcer.processInhibitRule(crKey, ir)
+}
+
+func (one *otherNamespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+	if crKey.Namespace == one.alertmanagerNamespace {
+		return r
+	}
+	return one.namespaceEnforcer.processRoute(crKey, r)
+}
+
 // ConfigBuilder knows how to build an Alertmanager configuration from a raw
 // configuration and/or AlertmanagerConfig objects.
 // The API is public because it's used by Grafana Alloy (https://github.com/grafana/alloy).
@@ -212,21 +233,28 @@ type ConfigBuilder struct {
 	enforcer  enforcer
 }
 
-func NewConfigBuilder(logger *slog.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *ConfigBuilder {
+func NewConfigBuilder(logger *slog.Logger, amVersion semver.Version, store *assets.StoreBuilder, am *monitoringv1.Alertmanager) *ConfigBuilder {
 	cg := &ConfigBuilder{
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
-		enforcer:  getEnforcer(matcherStrategy, amVersion),
+		enforcer:  getEnforcer(am.Spec.AlertmanagerConfigMatcherStrategy, amVersion, am.Namespace),
 	}
 	return cg
 }
 
-func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
+func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version, amNamespace string) enforcer {
 	var e enforcer
 	switch matcherStrategy.Type {
 	case monitoringv1.NoneConfigMatcherStrategyType:
 		e = &noopEnforcer{}
+	case monitoringv1.OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType:
+		e = &otherNamespaceEnforcer{
+			alertmanagerNamespace: amNamespace,
+			namespaceEnforcer: namespaceEnforcer{
+				matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+			},
+		}
 	default:
 		e = &namespaceEnforcer{
 			matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
