@@ -24,15 +24,15 @@ This page contains presentations and blog articles that talk about the Prometheu
 
 * [Architecting Growth: Scaling Tactics for Prometheus Metrics Collection](https://youtu.be/bVICOulH5IY?si=M1GKX0lDmuBzyCzH) - Arthur Silva Sens & Nicolas Takashi - KubeCon + CloudNativeCon Europe 2024 - [Slides](https://docs.google.com/presentation/d/13PzKz1na83rESIbqDBTeKUzTR9B1mH0s7QF7cESbSrI/edit?usp=sharing)
 
-* [ScrapeConfig CRD: The Rising Star in the Prometheus-Operator Ecosystem](https://youtu.be/RabXsaOl1TE?si=Sc82jMpIgddcR212) - Jayapriya Pai - KCD Kerala 2024
+* [ScrapeConfig CRD: The Rising Star in the Prometheus-Operator Ecosystem](https://youtu.be/RabXsaOl1TE?si=Sc82jMpIgddcR212) - Jayapriya Pai - KCD Kerala 2024 - [Slides](https://github.com/slashpai/speaker-notes/tree/main/kcd-kerala-2024)
 
 * [Prometheus-Operator: What's next?](https://www.youtube.com/live/ymR57Q0qqg4?si=JUmYjkfSOJe4qpam&t=27386) - Simon Pasquier - PromCon 2023 (Lightning Talk) - [Slides](https://docs.google.com/presentation/d/1P3fBYHpzQ67M-KwO2s-KaorXn4p7WcBEaOYWLI84hFA/edit?slide=id.gae9988762_0_0#slide=id.gae9988762_0_0)
 
 * [Additional scrape configs, my love](https://www.youtube.com/live/ymR57Q0qqg4?si=LsDGIBC42ylJbjbw&t=26271) - Guillaume Hérail - PromCon 2023 (Lightning Talk)
 
-* [Deep Dive into the Prometheus Operator Ecosystem](https://youtu.be/P__R4CFFxEQ?si=1YPkY-X-4ST4YJ7j) - Jayapriya Pai - KCD Bengaluru 2023
+* [Deep Dive into the Prometheus Operator Ecosystem](https://youtu.be/P__R4CFFxEQ?si=1YPkY-X-4ST4YJ7j) - Jayapriya Pai - KCD Bengaluru 2023 - [Slides](https://github.com/slashpai/speaker-notes/tree/main/kcd-blr-2023)
 
-* [How to Be 10x SRE? A Deep Dive to Prometheus Operator](https://youtu.be/Uph_Say4D3M?si=vElc7eea9mSKiE9d) - Jayapriya Pai & Haoyu Sun - Prometheus Day Europe 2022
+* [How to Be 10x SRE? A Deep Dive to Prometheus Operator](https://youtu.be/Uph_Say4D3M?si=vElc7eea9mSKiE9d) - Jayapriya Pai & Haoyu Sun - Prometheus Day Europe 2022 - [Slides](https://static.sched.com/hosted_files/prometheusdayeu22/29/How%20to%20be%2010x%20SRE_%20A%20Deep%20Dive%20to%20Prometheus%20Operator%20V2.pdf?_gl=1*1yv88w6*_gcl_au*MjE0MTk0NjQ1NS4xNzUxNjA1NDQw*FPAU*MjE0MTk0NjQ1NS4xNzUxNjA1NDQw)
 
 * [Practical Kubernetes Monitoring with Prometheus](https://youtu.be/CyQNYT1ZQQ8?si=0k6NhMsQVqTxULl1) - Michael Friedrich - PromCon North America 2021
 
