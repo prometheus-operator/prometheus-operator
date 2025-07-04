@@ -29,9 +29,9 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-// FinalizerSyncOptions holds the configuration and dependencies
+// FinalizerSyncer holds the configuration and dependencies
 // required to perform finalizer synchronization.
-type SyncFinalizerOptions struct {
+type FinalizerSyncer struct {
 	ConfigResourcesStatusEnabled bool
 	Reconciliations              *ReconciliationTracker
 	Logger                       *slog.Logger
@@ -44,7 +44,7 @@ type SyncFinalizerOptions struct {
 // Returns true if the finalizer list was modified, otherwise false.
 // If the object is being deleted, it is also removed from the reconciliation tracker.
 // The second return value indicates any error encountered during the operation.
-func (s *SyncFinalizerOptions) Sync(ctx context.Context, p metav1.Object, key string, deletionInProgress bool) (bool, error) {
+func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, key string, deletionInProgress bool) (bool, error) {
 	logger := s.Logger.With("key", key)
 	if !s.ConfigResourcesStatusEnabled {
 		return false, nil
