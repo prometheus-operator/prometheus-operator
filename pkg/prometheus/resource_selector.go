@@ -175,7 +175,7 @@ func selectObjects[T configurationResource](
 	}
 
 	var rejected int
-	res := make(ResourcesSelection[T], len(objects))
+	res := make(ResourcesSelection[T], 0, len(objects))
 	for namespaceAndName, obj := range objects {
 		var reason string
 		o := obj.(T)

@@ -439,7 +439,7 @@ func TestSelectProbes(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1.ProbeSpec)
-		selected    bool
+		valid       bool
 		scrapeClass *string
 	}{
 		{
@@ -447,63 +447,63 @@ func TestSelectProbes(t *testing.T) {
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "http://blackbox-exporter.example.com"
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "url starting with https",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "https://blackbox-exporter.example.com"
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "url starting with ftp",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "ftp://fileserver.com"
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "ip address as prober url",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "192.168.178.3"
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "ip address:port as prober url",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "192.168.178.3:9090"
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "dnsname as prober url",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "blackbox-exporter.example.com"
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "dnsname:port as prober url",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "blackbox-exporter.example.com:8080"
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "hostname as prober url",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "localhost"
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "hostname starting with a digit as prober url",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.URL = "12-exporter.example.com"
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid proxyconfig due to invalid proxyurl",
@@ -524,7 +524,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxyconfig due to proxy environment set to true and proxyurl defined",
@@ -544,7 +544,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxyconfig due to proxy environment set to true and noproxy defined",
@@ -564,7 +564,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxyconfig due to invalid secret secret key",
@@ -584,7 +584,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxyconfig due to proxy from environment set to false and proxyurl and noproxy not defined",
@@ -603,7 +603,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid proxyconfig",
@@ -624,7 +624,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "valid metric relabeling config",
@@ -637,7 +637,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid metric relabeling config",
@@ -662,7 +662,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid static relabeling config",
@@ -675,7 +675,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid ingress relabeling config",
@@ -691,7 +691,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid ingress relabeling config",
@@ -706,7 +706,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario:    "inexistent scrape class",
@@ -723,7 +723,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario:    "existent scrape class",
@@ -740,7 +740,7 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
@@ -803,10 +803,14 @@ func TestSelectProbes(t *testing.T) {
 			})
 
 			require.NoError(t, err)
-			if tc.selected {
-				require.Len(t, probes, 1)
+
+			valid := probes.ValidResources()
+
+			require.Len(t, probes, 1)
+			if tc.valid {
+				require.Len(t, valid, 1)
 			} else {
-				require.Empty(t, probes)
+				require.Len(t, valid, 0)
 			}
 		})
 	}
@@ -911,7 +915,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1.ServiceMonitorSpec)
-		selected    bool
+		valid       bool
 		scrapeClass *string
 	}{
 		{
@@ -927,7 +931,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid metric relabeling config",
@@ -942,7 +946,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid relabeling config",
@@ -957,7 +961,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid relabeling config",
@@ -972,7 +976,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid TLS config with CA, cert and key",
@@ -1006,7 +1010,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid TLS config with both CA and CAFile",
@@ -1027,7 +1031,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid TLS config with both CA Secret and Configmap",
@@ -1053,7 +1057,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid TLS config with invalid CA data",
@@ -1073,7 +1077,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid TLS config with cert and missing key",
@@ -1093,7 +1097,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid TLS config with key and missing cert",
@@ -1111,7 +1115,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid TLS config with key and invalid cert",
@@ -1137,7 +1141,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid proxy config",
@@ -1160,7 +1164,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid proxy config with invalid secret key",
@@ -1183,7 +1187,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config due to invalid proxy url",
@@ -1206,7 +1210,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
@@ -1228,7 +1232,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
@@ -1250,7 +1254,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config only with proxy connect header defined",
@@ -1270,21 +1274,21 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario:    "inexistent Scrape Class",
 			scrapeClass: ptr.To("inexistent"),
 			updateSpec: func(_ *monitoringv1.ServiceMonitorSpec) {
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario:    "existent Scrape Class",
 			scrapeClass: ptr.To("existent"),
 			updateSpec: func(_ *monitoringv1.ServiceMonitorSpec) {
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Mixed Endpoints",
@@ -1308,7 +1312,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
@@ -1378,10 +1382,13 @@ func TestSelectServiceMonitors(t *testing.T) {
 			})
 
 			require.NoError(t, err)
-			if tc.selected {
-				require.Len(t, sms, 1)
+			require.Len(t, sms, 1)
+
+			valid := sms.ValidResources()
+			if tc.valid {
+				require.Len(t, valid, 1)
 			} else {
-				require.Empty(t, sms)
+				require.Empty(t, valid)
 			}
 		})
 	}
@@ -1391,7 +1398,7 @@ func TestSelectPodMonitors(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1.PodMonitorSpec)
-		selected    bool
+		valid       bool
 		scrapeClass *string
 	}{
 		{
@@ -1407,7 +1414,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid metric relabeling config",
@@ -1422,7 +1429,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid relabeling config",
@@ -1437,7 +1444,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid relabeling config",
@@ -1452,7 +1459,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid proxy config",
@@ -1475,7 +1482,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid proxy config with invalid secret key",
@@ -1498,7 +1505,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config due to invalid proxy url",
@@ -1521,7 +1528,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
@@ -1543,7 +1550,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
@@ -1565,7 +1572,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config only with proxy connect header defined",
@@ -1585,21 +1592,21 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario:    "Inexistent Scrape Class",
 			scrapeClass: ptr.To("inexistent"),
 			updateSpec: func(_ *monitoringv1.PodMonitorSpec) {
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario:    "existent Scrape Class",
 			scrapeClass: ptr.To("existent"),
 			updateSpec: func(_ *monitoringv1.PodMonitorSpec) {
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Mixed Endpoints",
@@ -1623,7 +1630,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			selected: false,
+			valid: false,
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
@@ -1677,13 +1684,14 @@ func TestSelectPodMonitors(t *testing.T) {
 			})
 
 			require.NoError(t, err)
+			require.Len(t, sms, 1)
 
-			if tc.selected {
-				require.Len(t, sms, 1)
-				return
+			valid := sms.ValidResources()
+			if tc.valid {
+				require.Len(t, valid, 1)
+			} else {
+				require.Empty(t, valid)
 			}
-
-			require.Empty(t, sms)
 		})
 	}
 }
@@ -1700,7 +1708,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1alpha1.ScrapeConfigSpec)
-		selected    bool
+		valid       bool
 		promVersion string
 		scrapeClass *string
 	}{
@@ -1715,7 +1723,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid relabeling config",
@@ -1728,7 +1736,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid metric relabeling config",
@@ -1741,7 +1749,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid metric relabeling config",
@@ -1754,7 +1762,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid proxy config",
@@ -1775,7 +1783,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
@@ -1793,7 +1801,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with proxy from environment set to true but proxyUrl defined",
@@ -1813,7 +1821,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with proxyFromEnvironment set to true but noProxy defined",
@@ -1833,7 +1841,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with invalid secret key",
@@ -1860,7 +1868,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "invalid proxy config with noProxy defined and but no proxyUrl defined",
@@ -1869,7 +1877,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					NoProxy: ptr.To("0.0.0.0"),
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "valid proxy config with muti header values",
@@ -1902,7 +1910,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "invalid proxy config with one invalid secret key",
@@ -1923,7 +1931,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "staticConfig with valid Labels",
@@ -1934,7 +1942,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "staticConfig with invalid Labels",
@@ -1945,7 +1953,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "HTTP SD config with valid proxy settings",
@@ -1971,7 +1979,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "2.29.0",
 		},
 		{
@@ -1997,7 +2005,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "2.29.0",
 		},
 		{
@@ -2017,7 +2025,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "2.29.0",
 		},
 		{
@@ -2037,7 +2045,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "2.29.0",
 		},
 		{
@@ -2063,7 +2071,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "2.29.0",
 		},
 		{
@@ -2084,7 +2092,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.27.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Kubernetes SD config with valid secret ref",
@@ -2103,7 +2111,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with invalid secret ref",
@@ -2122,7 +2130,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kubernetes SD config with valid TLS Config",
@@ -2157,7 +2165,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with invalid TLS Config",
@@ -2178,7 +2186,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kubernetes SD config with valid proxy settings",
@@ -2204,7 +2212,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with invalid proxy settings",
@@ -2229,7 +2237,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kubernetes SD config with invalid label selector",
@@ -2244,7 +2252,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kubernetes SD config with invalid field selector",
@@ -2259,7 +2267,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kubernetes SD config with valid Selector Role",
@@ -2275,7 +2283,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with invalid Selector Role",
@@ -2292,7 +2300,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kubernetes SD config with Role Pod",
@@ -2304,7 +2312,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "Kubernetes SD config with Role Pod but wrong version",
@@ -2316,7 +2324,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.31.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Kubernetes SD config with Role Endpoint",
@@ -2328,7 +2336,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "Kubernetes SD config with Role Endpoint but wrong version",
@@ -2340,7 +2348,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.31.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Kubernetes SD config with Role EndpointSlice",
@@ -2352,7 +2360,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "Kubernetes SD config with Role EndpointSlice but wrong version",
@@ -2364,7 +2372,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.31.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Kubernetes SD config with valid label and field selectors",
@@ -2382,7 +2390,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with only apiServer specified",
@@ -2393,7 +2401,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with only namespaces.ownNamespace specified",
@@ -2406,7 +2414,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kubernetes SD config with both apiServer and namespaces.ownNamespace specified",
@@ -2420,7 +2428,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Consul SD config with valid secret ref",
@@ -2437,7 +2445,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Consul SD config with invalid secret ref",
@@ -2454,7 +2462,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Consul SD config with no secret ref provided",
@@ -2465,7 +2473,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Consul SD config with filter",
@@ -2477,7 +2485,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    true,
+			valid:       true,
 			promVersion: "3.0.0",
 		},
 		{
@@ -2490,7 +2498,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "2.55.0",
 		},
 		{
@@ -2525,7 +2533,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Consul SD config with valid TLS Config",
@@ -2560,7 +2568,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Consul SD config with invalid TLS Config",
@@ -2581,7 +2589,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Consul SD config with valid TLS Config",
@@ -2616,7 +2624,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Consul SD config with invalid TLS Config",
@@ -2637,7 +2645,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "DNS SD config with no port specified for type other than SRV record",
@@ -2650,7 +2658,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "DNS SD config with MX record type and correct version",
@@ -2664,7 +2672,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "DNS SD config with A record type and correct version",
@@ -2678,7 +2686,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "DNS SD config with port specified for type other than SRV record",
@@ -2691,7 +2699,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "DNS SD config with NS record type and correct version",
@@ -2705,7 +2713,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "DNS SD config with MX record type and correct version",
@@ -2719,7 +2727,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "DNS SD config with A record type and correct version",
@@ -2733,7 +2741,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with valid secret ref",
@@ -2756,7 +2764,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "EC2 SD config with no secret ref provided",
@@ -2767,7 +2775,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "EC2 SD config with invalid secret ref for secretKey",
@@ -2790,7 +2798,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "EC2 SD config with valid TLS Config",
@@ -2825,7 +2833,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "EC2 SD config with valid HTTPS Config",
@@ -2863,7 +2871,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.52.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with invalid TLS config with invalid CA data",
@@ -2884,7 +2892,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "EC2 SD config with valid proxy settings",
@@ -2911,7 +2919,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.52.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
@@ -2929,7 +2937,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Azure SD config with no client secret ref provided for OAuth authentication method",
@@ -2942,7 +2950,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Azure SD config with no tenant id provided for OAuth authentication method",
@@ -2960,7 +2968,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Azure SD config with no client id provided for OAuth authentication method",
@@ -2978,7 +2986,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Azure SD config without options provided for ManagedIdentity authentication method",
@@ -2989,7 +2997,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Azure SD config without options provided for SDK authentication method",
@@ -3001,7 +3009,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.52.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "Azure SD config with SDK authentication method but unsupported prometheus version",
@@ -3013,7 +3021,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Azure SD config with ResourceGroup and prometheus version",
@@ -3026,7 +3034,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.51.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "Azure SD config with ResourceGroup but unsupported prometheus version",
@@ -3039,7 +3047,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.34.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Azure SD config with valid TLS Config",
@@ -3082,7 +3090,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Azure SD config with invalid TLS config with invalid CA data",
@@ -3102,7 +3110,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "OpenStack SD config with valid secret ref",
@@ -3126,7 +3134,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "OpenStack SD config with invalid secret ref for password",
@@ -3142,7 +3150,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "OpenStack SD config with invalid secret ref for application credentials",
@@ -3158,7 +3166,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "OpenStack SD config with no secret ref provided",
@@ -3170,7 +3178,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "OpenStack SD config loadbalancer role in unsupported Prometheus version",
@@ -3182,7 +3190,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			promVersion: "3.1.0",
 		},
 		{
@@ -3195,7 +3203,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    true,
+			valid:       true,
 			promVersion: "3.2.0",
 		},
 		{
@@ -3231,7 +3239,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.40.0",
-			selected:    true,
+			valid:       true,
 		},
 		{
 			scenario: "DigitalOcean SD config with invalid TLS config with invalid CA data",
@@ -3252,7 +3260,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.40.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Digital Ocean SD config in unsupported Prometheus version",
@@ -3271,7 +3279,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.11.0",
-			selected:    false,
+			valid:       false,
 		},
 		{
 			scenario: "Kuma SD config with valid TLS Config",
@@ -3306,7 +3314,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kuma SD config with invalid TLS config with invalid CA data",
@@ -3327,7 +3335,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kuma SD config with invalid server",
@@ -3338,7 +3346,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Kuma SD config with valid proxy settings",
@@ -3364,7 +3372,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Kuma SD config with invalid secret ref",
@@ -3383,7 +3391,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Eureka SD config with valid TLS Config",
@@ -3417,7 +3425,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Eureka SD config with invalid TLS config with invalid CA data",
@@ -3437,7 +3445,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Eureka SD config with valid proxy settings",
@@ -3462,7 +3470,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Eureka SD config with invalid secret ref",
@@ -3480,7 +3488,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 
 		{
@@ -3516,7 +3524,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Docker SD config with invalid TLS config with invalid CA data",
@@ -3537,7 +3545,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Docker SD config with valid secret ref",
@@ -3556,7 +3564,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Docker SD config with invalid secret ref",
@@ -3575,7 +3583,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Linode SD config with valid TLS Config",
@@ -3609,7 +3617,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Linode SD config with invalid TLS config with invalid CA data",
@@ -3629,7 +3637,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Linode SD config with valid secret ref",
@@ -3647,7 +3655,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Linode SD config with invalid secret ref",
@@ -3665,7 +3673,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Hetzner SD config with valid secret ref",
@@ -3684,7 +3692,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Hetzner SD config with invalid secret ref",
@@ -3703,7 +3711,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Hetzener SD config with valid TLS Config",
@@ -3738,7 +3746,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Hetzner SD config with invalid TLS Config",
@@ -3759,7 +3767,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Hetzner SD config with valid proxy settings",
@@ -3785,7 +3793,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Hetzner SD config with invalid proxy settings",
@@ -3810,7 +3818,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Nomad SD config with valid TLS Config",
@@ -3844,7 +3852,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Nomad SD config with invalid TLS config with invalid CA data",
@@ -3864,7 +3872,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Nomad SD config with valid proxy settings",
@@ -3889,7 +3897,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Nomad SD config with invalid secret ref",
@@ -3907,7 +3915,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Dockerswarm SD config with valid TLS Config",
@@ -3941,7 +3949,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Dockerswarm SD config with invalid TLS config with invalid CA data",
@@ -3961,7 +3969,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Dockerswarm SD config with valid proxy settings",
@@ -3986,7 +3994,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Dockerswarm SD config with invalid secret ref",
@@ -4004,7 +4012,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "PuppetDB SD config with valid TLS Config",
@@ -4039,7 +4047,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "PuppetDB SD config with invalid TLS config with invalid CA data",
@@ -4060,7 +4068,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "PuppetDB SD config with valid proxy settings",
@@ -4086,7 +4094,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "PuppetDB SD config with invalid secret ref",
@@ -4105,7 +4113,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "PuppetDB SD config with invalid URL",
@@ -4116,7 +4124,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "LightSail SD config with valid TLS Config",
@@ -4150,7 +4158,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "LightSail SD config with invalid TLS config with invalid CA data",
@@ -4170,7 +4178,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "LightSail SD config with valid proxy settings",
@@ -4195,7 +4203,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "LightSail SD config with invalid proxy settings",
@@ -4219,7 +4227,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref",
@@ -4237,7 +4245,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 
 		{
@@ -4261,7 +4269,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "LightSail SD config with no secret ref provided",
@@ -4272,7 +4280,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref for accessKey",
@@ -4295,7 +4303,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref for secretKey",
@@ -4318,7 +4326,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "OVHCloud SD config",
@@ -4343,7 +4351,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Scaleway SD config",
@@ -4368,7 +4376,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Scaleway SD config with invalid secret ref for secretKey",
@@ -4387,7 +4395,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Scaleway SD config with invalid proxy settings",
@@ -4411,7 +4419,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Scaleway SD config with invalid TLS config with invalid CA data",
@@ -4431,7 +4439,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Ionos SD config with valid TLS config",
@@ -4465,7 +4473,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Ionos SD config with invalid TLS config with invalid CA data",
@@ -4485,7 +4493,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Ionos SD config with valid proxy settings",
@@ -4510,7 +4518,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			valid: true,
 		},
 		{
 			scenario: "Ionos SD config with invalid proxy settings",
@@ -4534,7 +4542,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Ionos SD config with invalid secret ref",
@@ -4552,7 +4560,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			valid: false,
 		},
 		{
 			scenario: "Inexistent Scrape Class",
@@ -4564,7 +4572,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    false,
+			valid:       false,
 			scrapeClass: ptr.To("inexistent"),
 		},
 		{
@@ -4577,7 +4585,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected:    true,
+			valid:       true,
 			scrapeClass: ptr.To("existent"),
 		},
 	} {
@@ -4652,10 +4660,13 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			})
 
 			require.NoError(t, err)
-			if tc.selected {
-				require.Len(t, sms, 1)
+			require.Len(t, sms, 1)
+
+			valid := sms.ValidResources()
+			if tc.valid {
+				require.Len(t, valid, 1)
 			} else {
-				require.Empty(t, sms)
+				require.Empty(t, valid)
 			}
 		})
 	}
