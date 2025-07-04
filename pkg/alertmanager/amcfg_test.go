@@ -1630,7 +1630,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 					APIURL: ptr.To(monitoringv1.URL(victorOpsAPIURL)),
-					APIKey: ptr.To("myvictoropsapikey"),
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "victorops",
+						},
+						Key: "api_key",
+					},
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1668,7 +1673,55 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 					APIURL: ptr.To(monitoringv1.URL(invalidVictorOpsAPIURL)),
-					APIKey: ptr.To("myvictoropsapikey"),
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "victorops",
+						},
+						Key: "api_key",
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config victorops api key missing",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
+					APIURL: ptr.To(monitoringv1.URL(victorOpsAPIURL)),
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "victorops-missing",
+						},
+						Key: "api_key",
+					},
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1777,7 +1830,15 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					"api_secret": []byte("mywechatsecret"),
 				},
 			},
-
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "victorops",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"api_key": []byte("myvictoropsapikey"),
+				},
+			},
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "secret",

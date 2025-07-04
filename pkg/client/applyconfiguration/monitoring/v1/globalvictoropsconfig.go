@@ -18,13 +18,14 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // GlobalVictorOpsConfigApplyConfiguration represents a declarative configuration of the GlobalVictorOpsConfig type for use
 // with apply.
 type GlobalVictorOpsConfigApplyConfiguration struct {
-	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
-	APIKey *string           `json:"apiKey,omitempty"`
+	APIURL *monitoringv1.URL         `json:"apiURL,omitempty"`
+	APIKey *corev1.SecretKeySelector `json:"apiKey,omitempty"`
 }
 
 // GlobalVictorOpsConfigApplyConfiguration constructs a declarative configuration of the GlobalVictorOpsConfig type for use with
@@ -44,7 +45,7 @@ func (b *GlobalVictorOpsConfigApplyConfiguration) WithAPIURL(value monitoringv1.
 // WithAPIKey sets the APIKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIKey field is set to the value of the last call.
-func (b *GlobalVictorOpsConfigApplyConfiguration) WithAPIKey(value string) *GlobalVictorOpsConfigApplyConfiguration {
+func (b *GlobalVictorOpsConfigApplyConfiguration) WithAPIKey(value corev1.SecretKeySelector) *GlobalVictorOpsConfigApplyConfiguration {
 	b.APIKey = &value
 	return b
 }

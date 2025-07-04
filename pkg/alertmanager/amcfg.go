@@ -486,7 +486,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global wechat config: %w", err)
 	}
 
-	if err := cb.convertGlobalVictorOpsConfig(out, in.VictorOpsConfig); err != nil {
+	if err := cb.convertGlobalVictorOpsConfig(ctx, out, in.VictorOpsConfig, crKey); err != nil {
 		return nil, fmt.Errorf("invalid global victorops config: %w", err)
 	}
 
@@ -1866,7 +1866,7 @@ func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *glo
 	return nil
 }
 
-func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(out *globalConfig, in *monitoringv1.GlobalVictorOpsConfig) error {
+func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalVictorOpsConfig, crKey types.NamespacedName) error {
 	if in == nil {
 		return nil
 	}
@@ -1880,7 +1880,11 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(out *globalConfig, in *mon
 	}
 
 	if in.APIKey != nil {
-		out.VictorOpsAPIKey = *in.APIKey
+		apiSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
+		if err != nil {
+			return fmt.Errorf("failed to get WeChat Secret: %w", err)
+		}
+		out.VictorOpsAPIKey = apiSecret
 	}
 
 	return nil

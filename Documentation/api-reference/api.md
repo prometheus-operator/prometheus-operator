@@ -10572,7 +10572,9 @@ URL
 <td>
 <code>apiKey</code><br/>
 <em>
-string
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
 </em>
 </td>
 <td>

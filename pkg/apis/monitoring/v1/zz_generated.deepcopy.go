@@ -1571,8 +1571,8 @@ func (in *GlobalVictorOpsConfig) DeepCopyInto(out *GlobalVictorOpsConfig) {
 	}
 	if in.APIKey != nil {
 		in, out := &in.APIKey, &out.APIKey
-		*out = new(string)
-		**out = **in
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
 	}
 }
 

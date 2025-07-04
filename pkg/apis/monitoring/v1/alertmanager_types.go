@@ -603,8 +603,7 @@ type GlobalVictorOpsConfig struct {
 	// The default VictorOps API Key.
 	//
 	// +optional
-	// +kubebuilder:validation:MinLength=1
-	APIKey *string `json:"apiKey,omitempty"`
+	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
