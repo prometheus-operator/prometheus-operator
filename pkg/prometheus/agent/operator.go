@@ -582,12 +582,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
-	// if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
-	// 	if err := validateDaemonSetSpec(p); err != nil {
-	// 		return err
-	// 	}
-	// }
-
 	// Generate the configuration data.
 	var (
 		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
