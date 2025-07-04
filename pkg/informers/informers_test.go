@@ -309,7 +309,7 @@ func TestPartialObjectMetadataStripOnDeletedFinalStateUnknown(t *testing.T) {
 			nil,
 		),
 		appsv1.SchemeGroupVersion.WithResource("secrets"),
-		PartialObjectMetadataStrip,
+		PartialObjectMetadataStrip(schema.GroupVersionKind{Version: "v1", Kind: "Secret"}),
 	)
 	require.NoError(t, err)
 

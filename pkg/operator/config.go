@@ -369,6 +369,18 @@ func (s StringSet) Set(value string) error {
 	return nil
 }
 
+// MergeStringSets returns a StringSet which is the concatenation of a and b.
+func MergeStringSets(a, b StringSet) StringSet {
+	res := make(map[string]struct{}, len(a)+len(b))
+	for k := range a {
+		res[k] = struct{}{}
+	}
+	for k := range b {
+		res[k] = struct{}{}
+	}
+	return res
+}
+
 // String implements the flag.Value interface.
 func (s StringSet) String() string {
 	return strings.Join(s.Slice(), ",")

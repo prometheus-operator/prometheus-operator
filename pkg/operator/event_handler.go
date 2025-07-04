@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -29,6 +30,7 @@ type EventHandler struct {
 
 	objName     string
 	enqueueFunc func(string)
+	filterFunc  func(interface{}) bool
 }
 
 func NewEventHandler(
@@ -38,22 +40,48 @@ func NewEventHandler(
 	objName string,
 	enqueueFunc func(ns string),
 ) *EventHandler {
+	return NewEventHandlerWithFilter(
+		logger,
+		accessor,
+		metrics,
+		objName,
+		enqueueFunc,
+		nil,
+	)
+}
+func NewEventHandlerWithFilter(
+	logger *slog.Logger,
+	accessor *Accessor,
+	metrics *Metrics,
+	objName string,
+	enqueueFunc func(ns string),
+	filterFunc func(interface{}) bool,
+) *EventHandler {
+	if filterFunc == nil {
+		filterFunc = func(interface{}) bool { return true }
+	}
 	return &EventHandler{
 		logger:      logger,
 		accessor:    accessor,
 		metrics:     metrics,
 		objName:     objName,
+		filterFunc:  filterFunc,
 		enqueueFunc: enqueueFunc,
 	}
 }
 
 func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 	o, ok := e.accessor.ObjectMetadata(obj)
-	if ok {
-		e.logger.Debug(fmt.Sprintf("%s added", e.objName))
-		e.metrics.TriggerByCounter(e.objName, AddEvent).Inc()
-		e.enqueueFunc(o.GetNamespace())
+	if !ok {
+		return
 	}
+
+	if !e.filterFunc(obj) {
+		return
+	}
+
+	e.recordEvent(AddEvent, o)
+	e.enqueueFunc(o.GetNamespace())
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
@@ -61,17 +89,44 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if o, ok := e.accessor.ObjectMetadata(cur); ok {
-		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
-		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
-		e.enqueueFunc(o.GetNamespace())
+	o, ok := e.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
 	}
+
+	if !e.filterFunc(cur) {
+		return
+	}
+
+	e.recordEvent(UpdateEvent, o)
+	e.enqueueFunc(o.GetNamespace())
 }
 
 func (e *EventHandler) OnDelete(obj interface{}) {
-	if o, ok := e.accessor.ObjectMetadata(obj); ok {
-		e.logger.Debug(fmt.Sprintf("%s deleted", e.objName))
-		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
-		e.enqueueFunc(o.GetNamespace())
+	o, ok := e.accessor.ObjectMetadata(obj)
+	if !ok {
+		return
 	}
+
+	if !e.filterFunc(obj) {
+		return
+	}
+
+	e.recordEvent(DeleteEvent, o)
+	e.enqueueFunc(o.GetNamespace())
+}
+
+func (e *EventHandler) recordEvent(event HandlerEvent, obj metav1.Object) {
+	eventName := string(event)
+	if strings.HasSuffix(eventName, "e") {
+		eventName += "d"
+	} else {
+		eventName += "ed"
+	}
+
+	e.logger.Debug(
+		fmt.Sprintf("%s %s", e.objName, eventName),
+		strings.ToLower(e.objName), fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()),
+	)
+	e.metrics.TriggerByCounter(e.objName, event).Inc()
 }
