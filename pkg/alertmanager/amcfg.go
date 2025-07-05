@@ -200,6 +200,27 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	return r
 }
 
+type otherNamespaceEnforcer struct {
+	alertmanagerNamespace string
+	namespaceEnforcer
+}
+
+var _ enforcer = &otherNamespaceEnforcer{}
+
+func (one *otherNamespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	if crKey.Namespace == one.alertmanagerNamespace {
+		return ir
+	}
+	return one.namespaceEnforcer.processInhibitRule(crKey, ir)
+}
+
+func (one *otherNamespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+	if crKey.Namespace == one.alertmanagerNamespace {
+		return r
+	}
+	return one.namespaceEnforcer.processRoute(crKey, r)
+}
+
 // ConfigBuilder knows how to build an Alertmanager configuration from a raw
 // configuration and/or AlertmanagerConfig objects.
 // The API is public because it's used by Grafana Alloy (https://github.com/grafana/alloy).
@@ -212,21 +233,28 @@ type ConfigBuilder struct {
 	enforcer  enforcer
 }
 
-func NewConfigBuilder(logger *slog.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *ConfigBuilder {
+func NewConfigBuilder(logger *slog.Logger, amVersion semver.Version, store *assets.StoreBuilder, am *monitoringv1.Alertmanager) *ConfigBuilder {
 	cg := &ConfigBuilder{
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
-		enforcer:  getEnforcer(matcherStrategy, amVersion),
+		enforcer:  getEnforcer(am.Spec.AlertmanagerConfigMatcherStrategy, amVersion, am.Namespace),
 	}
 	return cg
 }
 
-func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
+func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version, amNamespace string) enforcer {
 	var e enforcer
 	switch matcherStrategy.Type {
 	case monitoringv1.NoneConfigMatcherStrategyType:
 		e = &noopEnforcer{}
+	case monitoringv1.OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType:
+		e = &otherNamespaceEnforcer{
+			alertmanagerNamespace: amNamespace,
+			namespaceEnforcer: namespaceEnforcer{
+				matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+			},
+		}
 	default:
 		e = &namespaceEnforcer{
 			matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
@@ -476,6 +504,14 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 
 	if err := cb.convertGlobalRocketChatConfig(ctx, out, in.RocketChatConfig, crKey); err != nil {
 		return nil, fmt.Errorf("invalid global rocket chat config: %w", err)
+	}
+
+	if err := cb.convertGlobalWebexConfig(out, in.WebexConfig); err != nil {
+		return nil, fmt.Errorf("invalid global webex config: %w", err)
+	}
+
+	if err := cb.convertGlobalWeChatConfig(ctx, out, in.WeChatConfig, crKey); err != nil {
+		return nil, fmt.Errorf("invalid global wechat config: %w", err)
 	}
 
 	return out, nil
@@ -1840,6 +1876,54 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 			return fmt.Errorf("failed to get Rocket Chat Token ID: %w", err)
 		}
 		out.RocketChatTokenID = tokenID
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitoringv1.GlobalWebexConfig) error {
+	if in == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("parse Webex API URL: %w", err)
+		}
+		out.WebexAPIURL = &config.URL{URL: u}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalWeChatConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
+	}
+
+	if in.APIURL != nil {
+		u, err := url.Parse(string(*in.APIURL))
+		if err != nil {
+			return fmt.Errorf("wechat API URL: %w", err)
+		}
+		out.WeChatAPIURL = &config.URL{URL: u}
+	}
+
+	if in.APISecret != nil {
+		apiSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.APISecret)
+		if err != nil {
+			return fmt.Errorf("failed to get WeChat Secret: %w", err)
+		}
+		out.WeChatAPISecret = apiSecret
+	}
+
+	if in.APICorpID != nil {
+		out.WeChatAPICorpID = *in.APICorpID
 	}
 
 	return nil

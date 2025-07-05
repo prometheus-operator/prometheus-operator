@@ -878,6 +878,7 @@
                         "description": "AlertmanagerConfigMatcherStrategyType defines the strategy used by\nAlertmanagerConfig objects to match alerts in the routes and inhibition\nrules.\n\nThe default value is `OnNamespace`.",
                         "enum": [
                           "OnNamespace",
+                          "OnNamespaceExceptForAlertmanagerNamespace",
                           "None"
                         ],
                         "type": "string"
@@ -2018,6 +2019,56 @@
                             "properties": {
                               "apiURL": {
                                 "description": "The default Telegram API URL.\n\nIt requires Alertmanager >= v0.24.0.",
+                                "pattern": "^(http|https)://.+$",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "webex": {
+                            "description": "The default configuration for Jira.",
+                            "properties": {
+                              "apiURL": {
+                                "description": "The default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",
+                                "pattern": "^(http|https)://.+$",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "wechat": {
+                            "description": "The default WeChat Config",
+                            "properties": {
+                              "apiCorpID": {
+                                "description": "The default WeChat API Corporate ID.",
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "apiSecret": {
+                                "description": "The default WeChat API Secret.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "apiURL": {
+                                "description": "The default WeChat API URL.\nThe default value is \"https://qyapi.weixin.qq.com/cgi-bin/\"",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }

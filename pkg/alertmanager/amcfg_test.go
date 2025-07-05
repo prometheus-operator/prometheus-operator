@@ -94,6 +94,13 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	rocketChatAPIURL := "https://rocketchat.example.com"
 	invalidRocketChatAPIURL := "://rocketchat.example.com"
 
+	webexAPIURL := "https://webex.example.com"
+	invalidWebexAPIURL := "://webex.example.com"
+
+	weChatAPIURL := "https://wechat.example.com"
+	invalidWeChatAPIURL := "://wechat.example.com"
+	wechatCorpID := "mywechatcorpid"
+
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
@@ -1371,6 +1378,249 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "valid global config webex api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexConfig: &monitoringv1.GlobalWebexConfig{
+					APIURL: ptr.To(monitoringv1.URL(webexAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_Webex_API_URL.golden",
+		},
+		{
+			name:      "invalid global config webex api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexConfig: &monitoringv1.GlobalWebexConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidWebexAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config webex api url version not supported",
+			amVersion: &version24,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WebexConfig: &monitoringv1.GlobalWebexConfig{
+					APIURL: ptr.To(monitoringv1.URL(webexAPIURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid global config wechat config",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(weChatAPIURL)),
+					APISecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "wechat",
+						},
+						Key: "api_secret",
+					},
+					APICorpID: &wechatCorpID,
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_WeChat_Config.golden",
+		},
+		{
+			name:      "invalid global config wechat config api url",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(invalidWeChatAPIURL)),
+					APISecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "wechat",
+						},
+						Key: "api_secret",
+					},
+					APICorpID: &wechatCorpID,
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config wechat config missing secret",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				WeChatConfig: &monitoringv1.GlobalWeChatConfig{
+					APIURL: ptr.To(monitoringv1.URL(weChatAPIURL)),
+					APISecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "wechat-missing",
+						},
+						Key: "api_secret",
+					},
+					APICorpID: &wechatCorpID,
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
@@ -1441,6 +1691,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "wechat",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"api_secret": []byte("mywechatsecret"),
+				},
+			},
+
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "secret",
 					Namespace: "mynamespace",
 				},
@@ -1453,7 +1713,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			newNopLogger(t),
 			*tt.amVersion,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
-			tt.matcherStrategy,
+			&monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+				Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tt.matcherStrategy},
+			},
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
@@ -1844,6 +2107,60 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "skeleton_base_simple_CR_with_namespaceMatcher_disabled.golden",
+		},
+		{
+			name:    "skeleton base in same namespace as alertmanager, simple CR with namespaceMatcher disabled for alertmanager namespace",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespaceExceptForAlertmanagerNamespace",
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"alertmanager-namespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "alertmanager-namespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_same_namespace_simple_CR_with_namespaceMatcher_disabled_other_namespaces.golden",
+		},
+		{
+			name:    "skeleton base in different namespace to alertmanager, simple CR with namespaceMatcher disabled for alertmanager namespace",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespaceExceptForAlertmanagerNamespace",
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_diff_namespace_simple_CR_with_namespaceMatcher_disabled_other_namespaces.golden",
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers not converted)",
@@ -3223,7 +3540,12 @@ func TestGenerateConfig(t *testing.T) {
 				tc.amVersion = &version
 			}
 
-			cb := NewConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
 			cb.cfg = &tc.baseConfig
 
 			if tc.expectedError {
@@ -5535,8 +5857,11 @@ func TestConvertHTTPConfig(t *testing.T) {
 				newNopLogger(t),
 				v,
 				nil,
-				monitoringv1.AlertmanagerConfigMatcherStrategy{
-					Type: monitoringv1.OnNamespaceConfigMatcherStrategyType,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+						Type: monitoringv1.OnNamespaceConfigMatcherStrategyType,
+					}},
 				},
 			)
 

@@ -2264,6 +2264,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
+
+		k8sSDConfig = cg.addProxyConfigtoYaml(k8sSDConfig, store, apiserverConfig.ProxyConfig)
 	}
 
 	if attachMetadataConfig != nil {
@@ -4238,6 +4240,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
+
+			if config.LabelSelector != nil && len(*config.LabelSelector) > 0 {
+				configs[i] = cg.WithMinimumVersion("3.5.0").AppendMapItem(configs[i],
+					"label_selector",
+					config.LabelSelector)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "hetzner_sd_configs",
@@ -4907,6 +4915,16 @@ func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlic
 	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", *cpf.ConvertClassicHistogramsToNHCB)
 }
 
+func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeClassicHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4983,6 +5001,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
+	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 
 	return cfg
 }
