@@ -33,6 +33,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	PagerdutyURL     *string                                   `json:"pagerdutyUrl,omitempty"`
 	TelegramConfig   *GlobalTelegramConfigApplyConfiguration   `json:"telegram,omitempty"`
 	JiraConfig       *GlobalJiraConfigApplyConfiguration       `json:"jira,omitempty"`
+	VictorOpsConfig  *GlobalVictorOpsConfigApplyConfiguration  `json:"victorops,omitempty"`
 	RocketChatConfig *GlobalRocketChatConfigApplyConfiguration `json:"rocketChat,omitempty"`
 	WebexConfig      *GlobalWebexConfigApplyConfiguration      `json:"webex,omitempty"`
 	WeChatConfig     *GlobalWeChatConfigApplyConfiguration     `json:"wechat,omitempty"`
@@ -113,6 +114,14 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithTelegramConfig(value *G
 // If called multiple times, the JiraConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithJiraConfig(value *GlobalJiraConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.JiraConfig = value
+	return b
+}
+
+// WithVictorOpsConfig sets the VictorOpsConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the VictorOpsConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithVictorOpsConfig(value *GlobalVictorOpsConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.VictorOpsConfig = value
 	return b
 }
 

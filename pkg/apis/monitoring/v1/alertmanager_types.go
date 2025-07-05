@@ -403,6 +403,9 @@ type AlertmanagerGlobalConfig struct {
 	// The default configuration for Jira.
 	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
 
+	// The default configuration for VictorOps.
+	VictorOpsConfig *GlobalVictorOpsConfig `json:"victorops,omitempty"`
+
 	// The default configuration for Rocket Chat.
 	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
 
@@ -595,6 +598,18 @@ type GlobalWeChatConfig struct {
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	APICorpID *string `json:"apiCorpID,omitempty"`
+}
+
+// GlobalVictorOpsConfig configures global VictorOps parameters.
+type GlobalVictorOpsConfig struct {
+	// The default VictorOps API URL.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+	// The default VictorOps API Key.
+	//
+	// +optional
+	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

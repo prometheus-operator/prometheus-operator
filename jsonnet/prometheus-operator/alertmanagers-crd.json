@@ -2025,6 +2025,40 @@
                             },
                             "type": "object"
                           },
+                          "victorops": {
+                            "description": "The default configuration for VictorOps.",
+                            "properties": {
+                              "apiKey": {
+                                "description": "The default VictorOps API Key.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "apiURL": {
+                                "description": "The default VictorOps API URL.",
+                                "pattern": "^(http|https)://.+$",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
                           "webex": {
                             "description": "The default configuration for Jira.",
                             "properties": {
