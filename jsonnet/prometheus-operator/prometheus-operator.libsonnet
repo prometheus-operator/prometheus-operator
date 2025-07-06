@@ -152,7 +152,7 @@ function(params) {
                verbs: ['get'],
              },
            ] + (
-             if po.config.kubeletEndpointsEnabled then
+             if po.config.kubeletEndpointsEnabled && !po.config.kubeletEndpointSliceEnabled then
                [
                  {
                    apiGroups: [''],
