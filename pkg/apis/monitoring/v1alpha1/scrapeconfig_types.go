@@ -223,6 +223,9 @@ type ScrapeConfigSpec struct {
 	// IonosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
+	// NerveSDConfigs defines a list of Airbnb's Nerve service discovery configurations.
+	// +optional
+	NerveSDConfigs []NerveSDConfig `json:"nerveSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1468,4 +1471,22 @@ type IonosSDConfig struct {
 	// Configure whether to enable OAuth2.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+}
+
+// NeveSDConfig configurations allow retrieving scrape targets from Airbnb's Nerve, which is stored in Zookeeper.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#nerve_sd_config
+type NerveSDConfig struct {
+	// The Zookeeper server hosts.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +required
+	Servers []string `json:"servers"`
+	// The list of paths, which can point to the individual service or the root of a tree of services.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +required
+	Paths []string `json:"paths"`
+	// Timeout is the number of seconds to wait until a scrape request times out.
+	// +optional
+	Timeout *v1.Duration `json:"timeout,omitempty"`
 }
