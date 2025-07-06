@@ -9731,6 +9731,39 @@ spec:
                   It requires Prometheus >= v2.50.0.
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 x-kubernetes-int-or-string: true
+              nerveSDConfigs:
+                description: NerveSDConfigs defines a list of Airbnb's Nerve service
+                  discovery configurations.
+                items:
+                  description: |-
+                    NeveSDConfig configurations allow retrieving scrape targets from Airbnb's Nerve, which is stored in Zookeeper.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#nerve_sd_config
+                  properties:
+                    paths:
+                      description: The list of paths, which can point to the individual
+                        service or the root of a tree of services.
+                      items:
+                        minLength: 1
+                        type: string
+                      minItems: 1
+                      type: array
+                    servers:
+                      description: The Zookeeper server hosts.
+                      items:
+                        minLength: 1
+                        type: string
+                      minItems: 1
+                      type: array
+                    timeout:
+                      description: Timeout is the number of seconds to wait until
+                        a scrape request times out.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                  required:
+                  - paths
+                  - servers
+                  type: object
+                type: array
               noProxy:
                 description: |-
                   `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

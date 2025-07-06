@@ -50,6 +50,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	OVHCloudSDConfigs                          []OVHCloudSDConfigApplyConfiguration     `json:"ovhcloudSDConfigs,omitempty"`
 	ScalewaySDConfigs                          []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfigs,omitempty"`
 	IonosSDConfigs                             []IonosSDConfigApplyConfiguration        `json:"ionosSDConfigs,omitempty"`
+	NerveSDConfigs                             []NerveSDConfigApplyConfiguration        `json:"nerveSDConfigs,omitempty"`
 	RelabelConfigs                             []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                                *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                             *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
@@ -390,6 +391,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithIonosSDConfigs(values ...*Ionos
 			panic("nil value passed to WithIonosSDConfigs")
 		}
 		b.IonosSDConfigs = append(b.IonosSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithNerveSDConfigs adds the given value to the NerveSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the NerveSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithNerveSDConfigs(values ...*NerveSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithNerveSDConfigs")
+		}
+		b.NerveSDConfigs = append(b.NerveSDConfigs, *values[i])
 	}
 	return b
 }
