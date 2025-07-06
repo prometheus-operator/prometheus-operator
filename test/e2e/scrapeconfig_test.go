@@ -630,6 +630,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("ScalewaySD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
 	})
+	t.Run("NerveSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, NerveSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -3664,6 +3667,89 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 						Key: "key.pem",
 					},
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var NerveSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+				{
+					Servers: []string{
+						"zookeeper1.example.com",
+						"zookeeper2.example.com",
+						"zookeeper3.example.com",
+					},
+					Paths: []string{
+						"/nerve1",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Config with Timeout",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+				{
+					Servers: []string{
+						"zookeeper1.example.com",
+					},
+					Paths: []string{
+						"/nerve1",
+					},
+					Timeout: ptr.To(monitoringv1.Duration("10s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Config with Invalid Timeout",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+				{
+					Servers: []string{
+						"zookeeper1.example.com",
+					},
+					Paths: []string{
+						"/nerve1",
+					},
+					Timeout: ptr.To(monitoringv1.Duration("10g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Config Empty Servers",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+				{
+					Servers: []string{},
+					Paths: []string{
+						"/nerve1",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Config Empty Paths",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+				{
+					Servers: []string{
+						"zookeeper1.example.com",
+					},
+					Paths: []string{},
 				},
 			},
 		},
