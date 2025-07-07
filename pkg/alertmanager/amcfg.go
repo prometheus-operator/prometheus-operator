@@ -1874,7 +1874,7 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
-			return fmt.Errorf("parse VictorOps API URL: %w", err)
+			return fmt.Errorf("failed to parse VictorOps API URL: %w", err)
 		}
 		out.VictorOpsAPIURL = &config.URL{URL: u}
 	}
