@@ -268,6 +268,13 @@ const (
 	// - False: the reconciliation failed.
 	// - Unknown: the operator couldn't determine the condition status.
 	Reconciled ConditionType = "Reconciled"
+	// Accepted indicates whether the workload controller has successfully accepted
+	// the configuration resource and updated the configuration of the workload accordingly.
+	// The possible status values for this condition type are:
+	// - True: the configuration resource was successfully accepted by the controller and written to the configuration secret.
+	// - False: the controller rejected the configuration due to an error.
+	// - Unknown: the operator couldn't determine the condition status.
+	Accepted ConditionType = "Accepted"
 )
 
 // +kubebuilder:validation:MinLength=1
@@ -645,11 +652,8 @@ type Endpoint struct {
 	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
-	// `proxyURL` configures the HTTP Proxy URL (e.g.
-	// "http://proxyserver:2195") to go through when scraping the target.
-	//
 	// +optional
-	ProxyURL *string `json:"proxyUrl,omitempty"`
+	ProxyConfig `json:",inline"`
 
 	// `followRedirects` defines whether the scrape requests should follow HTTP
 	// 3xx redirects.
@@ -1015,3 +1019,56 @@ const (
 	SelectorMechanismRelabel SelectorMechanism = "RelabelConfig"
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
+
+// WorkloadBinding is a link between a configuration resource and a workload resource.
+// +k8s:openapi-gen=true
+type WorkloadBinding struct {
+	// The group of the referenced resource.
+	// +kubebuilder:validation:Enum=monitoring.coreos.com
+	// +required
+	Group string `json:"group"`
+	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
+	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
+	// +required
+	Resource string `json:"resource"`
+	// The name of the referenced object.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Name string `json:"name"`
+	// The namespace of the referenced object.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Namespace string `json:"namespace"`
+	// The current state of the configuration resource when bound to the referenced Prometheus object.
+	// +listType=map
+	// +listMapKey=type
+	// +optional
+	Conditions []ConfigResourceCondition `json:"conditions,omitempty"`
+}
+
+// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.
+// +k8s:deepcopy-gen=true
+type ConfigResourceCondition struct {
+	// Type of the condition being reported.
+	// Currently, only "Accepted" is supported.
+	// +kubebuilder:validation:Enum=Accepted
+	// +required
+	Type ConditionType `json:"type"`
+	// Status of the condition.
+	// +required
+	Status ConditionStatus `json:"status"`
+	// LastTransitionTime is the time of the last update to the current status property.
+	// +required
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
+	// Reason for the condition's last transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+	// Human-readable message indicating details for the condition's last transition.
+	// +optional
+	Message string `json:"message,omitempty"`
+	// ObservedGeneration represents the .metadata.generation that the
+	// condition was set based upon. For instance, if `.metadata.generation` is
+	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+	// condition is out of date with respect to the current state of the object.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}

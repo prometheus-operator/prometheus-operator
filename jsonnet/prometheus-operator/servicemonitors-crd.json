@@ -274,6 +274,10 @@
                           },
                           "type": "array"
                         },
+                        "noProxy": {
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "type": "string"
+                        },
                         "oauth2": {
                           "description": "`oauth2` configures the OAuth2 settings to use when scraping the target.\n\nIt requires Prometheus >= 2.27.0.\n\nCannot be set at the same time as `authorization`, or `basicAuth`.",
                           "properties": {
@@ -602,8 +606,44 @@
                           "description": "Name of the Service port which this endpoint refers to.\n\nIt takes precedence over `targetPort`.",
                           "type": "string"
                         },
+                        "proxyConnectHeader": {
+                          "additionalProperties": {
+                            "items": {
+                              "description": "SecretKeySelector selects a key of a Secret.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "type": "array"
+                          },
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
+                        },
+                        "proxyFromEnvironment": {
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "type": "boolean"
+                        },
                         "proxyUrl": {
-                          "description": "`proxyURL` configures the HTTP Proxy URL (e.g.\n\"http://proxyserver:2195\") to go through when scraping the target.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
+                          "pattern": "^(http|https|socks5)://.+$",
                           "type": "string"
                         },
                         "relabelings": {
@@ -1060,6 +1100,103 @@
                   "selector"
                 ],
                 "type": "object"
+              },
+              "status": {
+                "description": "Most recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "properties": {
+                  "bindings": {
+                    "description": "The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.",
+                    "items": {
+                      "description": "WorkloadBinding is a link between a configuration resource and a workload resource.",
+                      "properties": {
+                        "conditions": {
+                          "description": "The current state of the configuration resource when bound to the referenced Prometheus object.",
+                          "items": {
+                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.",
+                            "properties": {
+                              "lastTransitionTime": {
+                                "description": "LastTransitionTime is the time of the last update to the current status property.",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "message": {
+                                "description": "Human-readable message indicating details for the condition's last transition.",
+                                "type": "string"
+                              },
+                              "observedGeneration": {
+                                "description": "ObservedGeneration represents the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the object.",
+                                "format": "int64",
+                                "type": "integer"
+                              },
+                              "reason": {
+                                "description": "Reason for the condition's last transition.",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "Status of the condition.",
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "type": {
+                                "description": "Type of the condition being reported.\nCurrently, only \"Accepted\" is supported.",
+                                "enum": [
+                                  "Accepted"
+                                ],
+                                "minLength": 1,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "lastTransitionTime",
+                              "status",
+                              "type"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "type"
+                          ],
+                          "x-kubernetes-list-type": "map"
+                        },
+                        "group": {
+                          "description": "The group of the referenced resource.",
+                          "enum": [
+                            "monitoring.coreos.com"
+                          ],
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "The name of the referenced object.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "The namespace of the referenced object.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "resource": {
+                          "description": "The type of resource being referenced (e.g. Prometheus or PrometheusAgent).",
+                          "enum": [
+                            "prometheuses",
+                            "prometheusagents"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "group",
+                        "name",
+                        "namespace",
+                        "resource"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
               }
             },
             "required": [
@@ -1069,7 +1206,10 @@
           }
         },
         "served": true,
-        "storage": true
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
       }
     ]
   }

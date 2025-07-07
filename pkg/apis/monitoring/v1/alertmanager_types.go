@@ -330,7 +330,7 @@ type AlertmanagerConfigMatcherStrategy struct {
 	//
 	// The default value is `OnNamespace`.
 	//
-	// +kubebuilder:validation:Enum="OnNamespace";"None"
+	// +kubebuilder:validation:Enum="OnNamespace";"OnNamespaceExceptForAlertmanagerNamespace";"None"
 	// +kubebuilder:default:="OnNamespace"
 	Type AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
@@ -342,6 +342,12 @@ const (
 	// AlertmanagerConfig object only process alerts that have a `namespace`
 	// label equal to the namespace of the object.
 	OnNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespace"
+
+	// With `OnNamespaceExceptForAlertmanagerNamespace`, the route and inhibition rules of an
+	// AlertmanagerConfig object only process alerts that have a `namespace`
+	// label equal to the namespace of the object, unless the AlertmanagerConfig object
+	// is in the same namespace as the Alertmanager object, where it will process all alerts.
+	OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespaceExceptForAlertmanagerNamespace"
 
 	// With `None`, the route and inhbition rules of an AlertmanagerConfig
 	// object process all incoming alerts.
@@ -393,6 +399,22 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Telegram config
 	TelegramConfig *GlobalTelegramConfig `json:"telegram,omitempty"`
+
+	// The default configuration for Jira.
+	JiraConfig *GlobalJiraConfig `json:"jira,omitempty"`
+
+	// The default configuration for VictorOps.
+	VictorOpsConfig *GlobalVictorOpsConfig `json:"victorops,omitempty"`
+
+	// The default configuration for Rocket Chat.
+	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
+
+	// The default configuration for Jira.
+	WebexConfig *GlobalWebexConfig `json:"webex,omitempty"`
+
+	// The default WeChat Config
+	// +optional
+	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -515,6 +537,79 @@ type GlobalTelegramConfig struct {
 	// It requires Alertmanager >= v0.24.0.
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+// GlobalJiraConfig configures global Jira parameters.
+type GlobalJiraConfig struct {
+	// The default Jira API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+// GlobalRocketChatConfig configures global Rocket Chat parameters.
+type GlobalRocketChatConfig struct {
+	// The default Rocket Chat API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The default Rocket Chat token.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+
+	// The default Rocket Chat Token ID.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	//
+	// +optional
+	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
+}
+
+// GlobalWebexConfig configures global Webex parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
+type GlobalWebexConfig struct {
+	// The default Webex API URL.
+	//
+	// It requires Alertmanager >= v0.25.0.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+}
+
+type GlobalWeChatConfig struct {
+	// The default WeChat API URL.
+	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+
+	// The default WeChat API Secret.
+	// +optional
+	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+
+	// The default WeChat API Corporate ID.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	APICorpID *string `json:"apiCorpID,omitempty"`
+}
+
+// GlobalVictorOpsConfig configures global VictorOps parameters.
+type GlobalVictorOpsConfig struct {
+	// The default VictorOps API URL.
+	//
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+	// The default VictorOps API Key.
+	//
+	// +optional
+	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

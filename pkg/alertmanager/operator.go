@@ -847,7 +847,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 	var (
 		additionalData map[string][]byte
-		cfgBuilder     = NewConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
+		cfgBuilder     = NewConfigBuilder(namespacedLogger, version, store, am)
 	)
 
 	if am.Spec.AlertmanagerConfiguration != nil {

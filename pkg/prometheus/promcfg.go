@@ -1325,9 +1325,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1357,6 +1354,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 
 	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
@@ -1570,9 +1569,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.ProberSpec.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
-	if m.Spec.ProberSpec.ProxyURL != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: m.Spec.ProberSpec.ProxyURL})
-	}
 
 	if m.Spec.Module != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
@@ -1608,6 +1604,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	s := store.ForNamespace(m.Namespace)
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
 
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
@@ -1827,9 +1825,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1842,6 +1837,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
@@ -2267,6 +2264,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
+
+		k8sSDConfig = cg.addProxyConfigtoYaml(k8sSDConfig, store, apiserverConfig.ProxyConfig)
 	}
 
 	if attachMetadataConfig != nil {
@@ -4241,6 +4240,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
+
+			if config.LabelSelector != nil && len(*config.LabelSelector) > 0 {
+				configs[i] = cg.WithMinimumVersion("3.5.0").AppendMapItem(configs[i],
+					"label_selector",
+					config.LabelSelector)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "hetzner_sd_configs",
@@ -4910,6 +4915,16 @@ func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlic
 	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", *cpf.ConvertClassicHistogramsToNHCB)
 }
 
+func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeClassicHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4986,6 +5001,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
+	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 
 	return cfg
 }

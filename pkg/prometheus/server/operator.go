@@ -30,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -54,6 +53,9 @@ import (
 const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
+
+	unmanagedConfigurationReason         = "ConfigurationUnmanaged"
+	unmanagedConfigurationMessage string = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead."
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -95,7 +97,8 @@ type Operator struct {
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
 
-	eventRecorder record.EventRecorder
+	eventRecorder   record.EventRecorder
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -174,6 +177,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:                c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -749,10 +753,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
+
 	if finalizersChanged {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
@@ -760,6 +765,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if c.rr.DeletionInProgress(p) {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
@@ -969,52 +975,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// syncFinalizers adds or removes the finalizer for the Prometheus resource.
-// It returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
-func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1.Prometheus, key string) (bool, error) {
-	if !c.configResourcesStatusEnabled {
-		return false, nil
-	}
-
-	// The resource isn't being deleted, add the finalizer if missing.
-	if !c.rr.DeletionInProgress(p) {
-		// Add finalizer to the Prometheus resource if it doesn't have one.
-		finalizers := p.GetFinalizers()
-		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
-		if err != nil {
-			return false, fmt.Errorf("failed to marshal patch: %w", err)
-		}
-
-		if len(patchBytes) == 0 {
-			return false, nil
-		}
-		if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-		}
-		c.logger.Debug("added finalizer to Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
-		return true, nil
-	}
-
-	// If the Prometheus instance is marked for deletion, we remove the finalizer.
-	finalizers := p.GetFinalizers()
-	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
-	if err != nil {
-		return false, fmt.Errorf("failed to marshal patch: %w", err)
-	}
-	if len(patchBytes) == 0 {
-		c.reconciliations.ForgetObject(key)
-		return false, nil
-	}
-
-	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-	}
-	c.logger.Debug("removed finalizer from Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
-	c.reconciliations.ForgetObject(key)
-
-	return true, nil
-}
-
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
 // For now, shouldRetain just returns the appropriate boolean based on the retention type.
 func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
@@ -1049,6 +1009,16 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus status: %w", err)
+	}
+
+	if c.unmanagedPrometheusConfiguration(p) {
+		for i, condition := range pStatus.Conditions {
+			if condition.Type == monitoringv1.Reconciled && condition.Status == monitoringv1.ConditionTrue {
+				condition.Reason = unmanagedConfigurationReason
+				condition.Message = unmanagedConfigurationMessage
+				pStatus.Conditions[i] = condition
+			}
+		}
 	}
 
 	p.Status = *pStatus
@@ -1106,10 +1076,19 @@ func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prom
 		}
 	}
 
-	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
-
-		logger.Warn("neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
+	if c.unmanagedPrometheusConfiguration(p) {
+		logger.Warn("the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified")
+		logger.Warn("unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead")
+		logger.Warn("unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')")
 	}
+}
+
+func (c *Operator) unmanagedPrometheusConfiguration(p *monitoringv1.Prometheus) bool {
+	return !c.disableUnmanagedConfiguration &&
+		p.Spec.ServiceMonitorSelector == nil &&
+		p.Spec.PodMonitorSelector == nil &&
+		p.Spec.ProbeSelector == nil &&
+		p.Spec.ScrapeConfigSelector == nil
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
@@ -1161,30 +1140,27 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
-	// If no service or pod monitor selectors are configured, the user wants to
-	// manage configuration themselves. Do create an empty Secret if it doesn't
-	// exist.
-	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
-		p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
-		logger.Debug("neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
-
-		// make an empty secret
+	// If no service/pod monitor and probe selectors are configured, the user
+	// wants to manage configuration themselves. Let's create an empty Secret
+	// if it doesn't exist.
+	if c.unmanagedPrometheusConfiguration(p) {
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {
-			return fmt.Errorf("generating empty config secret failed: %w", err)
+			return fmt.Errorf("failed to generate empty configuration secret: %w", err)
 		}
+
 		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 		_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
+			logger.Debug("creating an empty configuration secret")
 			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-				return fmt.Errorf("creating empty config file failed: %w", err)
+				return fmt.Errorf("failed to create an empty configuration secret: %w", err)
 			}
-		}
-		if !apierrors.IsNotFound(err) && err != nil {
-			return err
+
+			return nil
 		}
 
-		return nil
+		return err
 	}
 
 	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
@@ -1207,7 +1183,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
-	var scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig
+	var scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {
@@ -1262,10 +1238,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateServerConfiguration(
 		p,
-		smons,
-		pmons,
-		bmons,
-		scrapeConfigs,
+		smons.ValidResources(),
+		pmons.ValidResources(),
+		bmons.ValidResources(),
+		scrapeConfigs.ValidResources(),
 		store,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
