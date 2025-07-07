@@ -1882,7 +1882,7 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	if in.APIKey != nil {
 		apiSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
 		if err != nil {
-			return fmt.Errorf("failed to get WeChat Secret: %w", err)
+			return fmt.Errorf("failed to get VictorOps Secret: %w", err)
 		}
 		out.VictorOpsAPIKey = apiSecret
 	}
