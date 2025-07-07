@@ -51,7 +51,6 @@ func NewFinalizerSyncer(
 // (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler). It adds the finalizer if necessary, or removes it when appropriate.
 //
 // Returns true if the finalizer list was modified, otherwise false.
-// If the object is being deleted, it is also removed from the reconciliation tracker.
 // The second return value indicates any error encountered during the operation.
 func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slog.Logger, deletionInProgress bool) (bool, error) {
 	if !s.configResourcesStatusEnabled {
@@ -72,7 +71,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slo
 			return false, nil
 		}
 		if err = s.updateObject(ctx, p, patchBytes); err != nil {
-			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+			return false, fmt.Errorf("failed to add %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
 		logger.Debug("added finalizer to object")
 		return true, nil
@@ -88,7 +87,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slo
 	}
 
 	if err = s.updateObject(ctx, p, patchBytes); err != nil {
-		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		return false, fmt.Errorf("failed to remove %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
 	logger.Debug("removed finalizer from object")
 
