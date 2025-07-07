@@ -106,6 +106,11 @@ Usage of ./operator:
     	- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.
   -version
     	Prints current version.
+  -watch-referenced-objects-in-all-namespaces
+    	When true the operator watches for configmaps and secrets in both workload and configuration resource namespaces.
+    	When false (default), the operator will only watch for secrets and configmaps in:
+    	* Workload namespaces for Prometheus and PrometheusAgent resources.
+    	* Configuration namespaces for Alertmanager resources.
   -web.cert-file string
     	Certficate file to be used for the web server. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
