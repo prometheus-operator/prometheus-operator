@@ -288,9 +288,13 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("error creating prometheusrule informers: %w", err)
 	}
 
+	allowList := c.Namespaces.PrometheusAllowList
+	if c.WatchObjectRefsInAllNamespaces {
+		allowList = operator.MergeAllowLists(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList)
+	}
 	o.cmapInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			operator.MergeStringSets(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList),
+			allowList,
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -307,7 +311,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			operator.MergeStringSets(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList),
+			allowList,
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
