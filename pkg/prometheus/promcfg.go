@@ -4723,6 +4723,38 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// NerveSDConfig
+	if len(sc.Spec.NerveSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.NerveSDConfigs))
+		for i, config := range sc.Spec.NerveSDConfigs {
+			if len(config.Servers) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "servers",
+					Value: config.Servers,
+				})
+			}
+
+			if len(config.Paths) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "paths",
+					Value: config.Paths,
+				})
+			}
+
+			if config.Timeout != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "timeout",
+					Value: config.Timeout,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "nerve_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}
