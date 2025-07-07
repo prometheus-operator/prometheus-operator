@@ -226,9 +226,17 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 		return fmt.Errorf("error creating alertmanagerconfig informers: %w", err)
 	}
 
+	allowList := config.Namespaces.AlertmanagerConfigAllowList
+	if config.WatchObjectRefsInAllNamespaces {
+		allowList = operator.MergeAllowLists(
+			config.Namespaces.AlertmanagerAllowList,
+			config.Namespaces.AlertmanagerConfigAllowList,
+		)
+	}
+
 	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			operator.MergeStringSets(config.Namespaces.AlertmanagerAllowList, config.Namespaces.AlertmanagerConfigAllowList),
+			allowList,
 			config.Namespaces.DenyList,
 			c.mdClient,
 			resyncPeriod,

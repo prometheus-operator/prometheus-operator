@@ -173,7 +173,17 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(ctx, ns, nil, nil, nil, nil, true, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx,
+		operatorFramework.PrometheusOperatorOpts{
+			Namespace:              ns,
+			EnableAdmissionWebhook: true,
+			ClusterRoleBindings:    true,
+			EnableScrapeConfigs:    true,
+			// testPrometheusReconciliationOnSecretChanges needs this flag to be turned on.
+			AdditionalArgs: []string{"--watch-referenced-objects-in-all-namespaces=true"},
+		},
+	)
 	require.NoError(t, err)
 
 	for _, f := range finalizers {

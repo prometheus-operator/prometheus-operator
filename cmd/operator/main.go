@@ -168,6 +168,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(cfg.Namespaces.AlertmanagerAllowList, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
 	fs.Var(cfg.Namespaces.AlertmanagerConfigAllowList, "alertmanager-config-namespaces", "Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.")
 	fs.Var(cfg.Namespaces.ThanosRulerAllowList, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
+	fs.BoolVar(&cfg.WatchObjectRefsInAllNamespaces, "watch-referenced-objects-in-all-namespaces", false, "When true the operator watches for configmaps and secrets in both workload and configuration resource namespaces.\nWhen false (default), the operator will only watch for secrets and configmaps in:\n* Workload namespaces for Prometheus and PrometheusAgent resources.\n* Configuration namespaces for Alertmanager resources.")
 
 	fs.Var(&cfg.Annotations, "annotations", "Annotations to be add to all resources created by the operator")
 	fs.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
@@ -212,19 +213,21 @@ func run(fs *flag.FlagSet) int {
 	}
 
 	logger.Info("Starting Prometheus Operator", "version", version.Info(), "build_context", version.BuildContext(), "feature_gates", cfg.Gates.String())
+	logger.Info("Operator's configuration",
+		"watch_referenced_objects_in_all_namespaces", cfg.WatchObjectRefsInAllNamespaces,
+		"controller_id", cfg.ControllerID,
+		"enable_config_reloader_probes", cfg.ReloaderConfig.EnableProbes)
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
-		logger.Error(
-			"--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
-			"namespaces", cfg.Namespaces.AllowList,
-			"deny_namespaces", cfg.Namespaces.DenyList,
-		)
 		return 1
 	}
-	cfg.Namespaces.Finalize()
-	logger.Info("namespaces filtering configuration ", "config", cfg.Namespaces.String())
+	if err := cfg.Namespaces.Finalize(); err != nil {
+		logger.Error("failed to parse namespaces configuration", "configuration", cfg.Namespaces.String(), "error", err)
+		return 1
+	}
+	logger.Info("Namespaces filtering configuration ", "config", cfg.Namespaces.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
