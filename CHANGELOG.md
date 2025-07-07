@@ -1,3 +1,7 @@
+## Unreleased
+
+* [ENHANCEMENT] Set `reason: ConfigurationUnmanaged` in the `Reconciled` condition when the operator doesn't managed the Prometheus configuration. #7661
+
 ## 0.83.0 / 2025-05-30
 
 * [FEATURE] Add `limits` option for Alertmanager silences. #7478
