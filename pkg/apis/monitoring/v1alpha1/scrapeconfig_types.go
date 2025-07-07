@@ -223,7 +223,7 @@ type ScrapeConfigSpec struct {
 	// IonosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
-	//StackitSDConfigs defines a list of STACKIT service discovery configurations.
+	// StackitSDConfigs defines a list of STACKIT service discovery configurations.
 	// +optional
 	StackitSDConfigs []StackitSDConfig `json:"stackitSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
@@ -1492,10 +1492,10 @@ type StackitSDConfig struct {
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	Port *int32 `json:"port,omitempty"`
-	// The STACKIT Raw private key string used for authenticating a service account.
+	// Raw private key string used for authenticating a service account.
 	// +optional
 	PrivateKey *string `json:"privateKey"`
-	// The STACKIT Path to a file containing the raw private key string.
+	// Path to a file containing the raw private key string.
 	// +optional
 	PrivateKeyPath *string `json:"privateKeyPath"`
 	// Full JSON-formatted service account key used for authentication.
@@ -1507,7 +1507,7 @@ type StackitSDConfig struct {
 	// Path to a file containing STACKIT credentials.
 	// +optional
 	CredentialsFilePath *string `json:"credentialsFilePath"`
-	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
+	// RefreshInterval configures the time after which the servers are refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// Authorization` header configuration, required when using STACKIT.
