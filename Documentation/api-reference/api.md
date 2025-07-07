@@ -33056,7 +33056,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The STACKIT Raw private key string used for authenticating a service account.</p>
+<p>Raw private key string used for authenticating a service account.</p>
 </td>
 </tr>
 <tr>
@@ -33068,7 +33068,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The STACKIT Path to a file containing the raw private key string.</p>
+<p>Path to a file containing the raw private key string.</p>
 </td>
 </tr>
 <tr>
@@ -33118,7 +33118,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.</p>
+<p>RefreshInterval configures the time after which the servers are refreshed.</p>
 </td>
 </tr>
 <tr>

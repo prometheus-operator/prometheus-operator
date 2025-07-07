@@ -12062,11 +12062,11 @@
                           "type": "integer"
                         },
                         "privateKey": {
-                          "description": "The STACKIT Raw private key string used for authenticating a service account.",
+                          "description": "Raw private key string used for authenticating a service account.",
                           "type": "string"
                         },
                         "privateKeyPath": {
-                          "description": "The STACKIT Path to a file containing the raw private key string.",
+                          "description": "Path to a file containing the raw private key string.",
                           "type": "string"
                         },
                         "project": {
@@ -12115,7 +12115,7 @@
                           "type": "string"
                         },
                         "refreshInterval": {
-                          "description": "RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.",
+                          "description": "RefreshInterval configures the time after which the servers are refreshed.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },

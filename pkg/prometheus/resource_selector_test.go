@@ -4689,7 +4689,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			promVersion: "3.5.0",
 		},
 		{
-			scenario: "StackitSDconfig with invalid proxy settings",
+			scenario: "StackitSDconfig with invalid proxy config with proxyurl defined and proxy from environment set to true",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
 					{
