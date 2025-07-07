@@ -30,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -98,7 +97,8 @@ type Operator struct {
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
 
-	eventRecorder record.EventRecorder
+	eventRecorder   record.EventRecorder
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -177,6 +177,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:                c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -752,10 +753,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := c.syncFinalizers(ctx, p, key)
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
+
 	if finalizersChanged {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
@@ -763,6 +765,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if c.rr.DeletionInProgress(p) {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
@@ -970,52 +973,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
-}
-
-// syncFinalizers adds or removes the finalizer for the Prometheus resource.
-// It returns true if the finalizers were modified, otherwise false. The second return value is an error, if any.
-func (c *Operator) syncFinalizers(ctx context.Context, p *monitoringv1.Prometheus, key string) (bool, error) {
-	if !c.configResourcesStatusEnabled {
-		return false, nil
-	}
-
-	// The resource isn't being deleted, add the finalizer if missing.
-	if !c.rr.DeletionInProgress(p) {
-		// Add finalizer to the Prometheus resource if it doesn't have one.
-		finalizers := p.GetFinalizers()
-		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
-		if err != nil {
-			return false, fmt.Errorf("failed to marshal patch: %w", err)
-		}
-
-		if len(patchBytes) == 0 {
-			return false, nil
-		}
-		if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-			return false, fmt.Errorf("failed to add %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-		}
-		c.logger.Debug("added finalizer to Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
-		return true, nil
-	}
-
-	// If the Prometheus instance is marked for deletion, we remove the finalizer.
-	finalizers := p.GetFinalizers()
-	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
-	if err != nil {
-		return false, fmt.Errorf("failed to marshal patch: %w", err)
-	}
-	if len(patchBytes) == 0 {
-		c.reconciliations.ForgetObject(key)
-		return false, nil
-	}
-
-	if _, err = c.mclient.MonitoringV1().Prometheuses(p.Namespace).Patch(ctx, p.Name, types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: operator.PrometheusOperatorFieldManager}); err != nil {
-		return false, fmt.Errorf("failed to remove %s finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
-	}
-	c.logger.Debug("removed finalizer from Prometheus resource", "name", p.Name, "namespace", p.Namespace, "finalizer", k8sutil.StatusCleanupFinalizerName)
-	c.reconciliations.ForgetObject(key)
-
-	return true, nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
