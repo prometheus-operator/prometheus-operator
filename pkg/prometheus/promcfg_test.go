@@ -12121,6 +12121,112 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 	}
 }
 
+func TestScrapeConfigSpecConfigWithNerveSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "nerve_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+					{
+						Servers: []string{
+							"zookeeper1.example.com",
+							"zookeeper2.example.com",
+							"zookeeper3.example.com",
+						},
+						Paths: []string{
+							"/service1",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ScaleWaySD.golden",
+		},
+		{
+			name: "nerve_sd_config_with_timeout",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NerveSDConfigs: []monitoringv1alpha1.NerveSDConfig{
+					{
+						Servers: []string{
+							"zookeeper1.example.com",
+							"zookeeper2.example.com",
+							"zookeeper3.example.com",
+						},
+						Paths: []string{
+							"/service1",
+						},
+						Timeout: ptr.To(monitoringv1.Duration("10s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ScaleWaySD.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	p := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
