@@ -4654,6 +4654,89 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			promVersion: "3.2.0",
 		},
 		{
+			scenario: "StackitSDconfig with valid TLS config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				}
+			},
+			valid:       true,
+			promVersion: "3.5.0",
+		},
+		{
+			scenario: "StackitSDconfig with invalid proxy config with invalid secret key",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "invalid_key",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "StackitSDconfig with invalid proxy config with missing proxyurl and noproxy not defined",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
+					{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "invalid_key",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
 			scenario: "StackitSDconfig with valid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
