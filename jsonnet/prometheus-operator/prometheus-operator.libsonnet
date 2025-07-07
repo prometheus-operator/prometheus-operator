@@ -30,6 +30,7 @@ local defaults = {
   kubeletService: 'kube-system/kubelet',
   kubeletEndpointsEnabled: true,
   kubeletEndpointSliceEnabled: false,
+  watchObjectRefsInAllNamespaces: true,
 };
 
 function(params) {
@@ -200,7 +201,8 @@ function(params) {
             reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
             reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
             reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory) +
-            enableReloaderProbesArg(po.config.enableReloaderProbes),
+            enableReloaderProbesArg(po.config.enableReloaderProbes) +
+            [std.format('--watch-object-references-in-all-namespaces=%s', po.config.kubeletEndpointsEnabled)],
       ports: [{
         containerPort: po.config.port,
         name: 'http',
