@@ -1,4 +1,15 @@
-# Prometheus Agent support
+---
+weight: 501
+toc: true
+title: Prometheus Agent support
+status: approved
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 ## Status
 
