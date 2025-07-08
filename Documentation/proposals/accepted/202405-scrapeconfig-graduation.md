@@ -1,5 +1,5 @@
 ---
-weight: 508
+weight: 522
 toc: true
 title: Graduate ScrapeConfig CRD To Beta
 menu:

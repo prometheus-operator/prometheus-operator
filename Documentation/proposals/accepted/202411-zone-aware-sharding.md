@@ -1,5 +1,5 @@
 ---
-weight: 511
+weight: 524
 toc: true
 title: Zone aware sharding for Prometheus
 menu:

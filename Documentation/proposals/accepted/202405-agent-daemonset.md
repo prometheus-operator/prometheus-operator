@@ -1,5 +1,5 @@
 ---
-weight: 506
+weight: 521
 toc: true
 title: DaemonSet deployment for Prometheus Agent
 menu:

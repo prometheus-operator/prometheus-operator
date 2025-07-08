@@ -1,5 +1,5 @@
 ---
-weight: 510
+weight: 508
 toc: true
 title: Status subresource for Prometheus operator Workload CRDs
 menu:

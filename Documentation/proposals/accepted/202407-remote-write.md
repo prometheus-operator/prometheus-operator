@@ -1,5 +1,5 @@
 ---
-weight: 509
+weight: 523
 toc: true
 title: RemoteWrite CRD
 menu:
