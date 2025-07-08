@@ -16,6 +16,10 @@
 
 package v1
 
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:pkg/client/applyconfiguration/monitoring/v1/configurationresourcestatus.go
+>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 <<<<<<<< HEAD:pkg/client/applyconfiguration/monitoring/v1/configresourcestatus.go
 // ConfigResourceStatusApplyConfiguration represents a declarative configuration of the ConfigResourceStatus type for use
 // with apply.
@@ -29,6 +33,7 @@ func ConfigResourceStatus() *ConfigResourceStatusApplyConfiguration {
 	return &ConfigResourceStatusApplyConfiguration{}
 ========
 // ConfigurationResourceStatusApplyConfiguration represents a declarative configuration of the ConfigurationResourceStatus type for use
+<<<<<<< HEAD
 // with apply.
 type ConfigurationResourceStatusApplyConfiguration struct {
 	Bindings []WorkloadBindingApplyConfiguration `json:"bindings,omitempty"`
@@ -39,16 +44,46 @@ type ConfigurationResourceStatusApplyConfiguration struct {
 func ConfigurationResourceStatus() *ConfigurationResourceStatusApplyConfiguration {
 	return &ConfigurationResourceStatusApplyConfiguration{}
 >>>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types):pkg/client/applyconfiguration/monitoring/v1/configurationresourcestatus.go
+=======
+========
+// ConfigResourceStatusApplyConfiguration represents a declarative configuration of the ConfigResourceStatus type for use
+>>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references):pkg/client/applyconfiguration/monitoring/v1/configresourcestatus.go
+// with apply.
+type ConfigResourceStatusApplyConfiguration struct {
+	Bindings []WorkloadBindingApplyConfiguration `json:"bindings,omitempty"`
+}
+
+// ConfigResourceStatusApplyConfiguration constructs a declarative configuration of the ConfigResourceStatus type for use with
+// apply.
+<<<<<<<< HEAD:pkg/client/applyconfiguration/monitoring/v1/configurationresourcestatus.go
+func ConfigurationResourceStatus() *ConfigurationResourceStatusApplyConfiguration {
+	return &ConfigurationResourceStatusApplyConfiguration{}
+>>>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types):pkg/client/applyconfiguration/monitoring/v1/configurationresourcestatus.go
+========
+func ConfigResourceStatus() *ConfigResourceStatusApplyConfiguration {
+	return &ConfigResourceStatusApplyConfiguration{}
+>>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references):pkg/client/applyconfiguration/monitoring/v1/configresourcestatus.go
+>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 }
 
 // WithBindings adds the given value to the Bindings field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Bindings field.
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:pkg/client/applyconfiguration/monitoring/v1/configurationresourcestatus.go
+>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 <<<<<<<< HEAD:pkg/client/applyconfiguration/monitoring/v1/configresourcestatus.go
 func (b *ConfigResourceStatusApplyConfiguration) WithBindings(values ...*WorkloadBindingApplyConfiguration) *ConfigResourceStatusApplyConfiguration {
 ========
 func (b *ConfigurationResourceStatusApplyConfiguration) WithBindings(values ...*WorkloadBindingApplyConfiguration) *ConfigurationResourceStatusApplyConfiguration {
 >>>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types):pkg/client/applyconfiguration/monitoring/v1/configurationresourcestatus.go
+<<<<<<< HEAD
+=======
+========
+func (b *ConfigResourceStatusApplyConfiguration) WithBindings(values ...*WorkloadBindingApplyConfiguration) *ConfigResourceStatusApplyConfiguration {
+>>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references):pkg/client/applyconfiguration/monitoring/v1/configresourcestatus.go
+>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithBindings")
