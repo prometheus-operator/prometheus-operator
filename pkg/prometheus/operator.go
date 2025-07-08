@@ -62,6 +62,13 @@ type ConfigResourceSyncer[T configurationResource] struct {
 	logger  *slog.Logger
 }
 
+func NewConfigResourceSyncer[T configurationResource](mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
+	return &ConfigResourceSyncer[T]{
+		mclient: mclient,
+		logger:  logger,
+	}
+}
+
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
