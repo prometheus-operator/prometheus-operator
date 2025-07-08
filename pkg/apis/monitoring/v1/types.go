@@ -1025,7 +1025,7 @@ const (
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ConfigResourceStatus struct {
-	// The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.
+	// The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.
 	// +optional
 	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }

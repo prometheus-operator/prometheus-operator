@@ -1285,7 +1285,7 @@ spec:
             properties:
               bindings:
                 description: The list of workload resources (Prometheus or PrometheusAgent)
-                  which select the service monitor.
+                  which select the configuration resource.
                 items:
                   description: WorkloadBinding is a link between a configuration resource
                     and a workload resource.

@@ -9357,7 +9357,7 @@ More info:
 </td>
 <td>
 <em>(Optional)</em>
-<p>The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.</p>
+<p>The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.</p>
 </td>
 </tr>
 </tbody>
