@@ -62,11 +62,9 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	curMeta, _ := cur.(metav1.Object)
 
 	// Compare Metadata fields
-	labelsEqual := reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels())
-	annotationsEqual := reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations())
-	generationEqual := oldMeta.GetGeneration() == curMeta.GetGeneration()
-
-	if generationEqual && labelsEqual && annotationsEqual {
+	if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
+		reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
+		oldMeta.GetGeneration() == curMeta.GetGeneration() {
 		return
 	}
 
