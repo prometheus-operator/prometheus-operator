@@ -40,6 +40,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -1442,7 +1443,7 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 
 // UpdateResource updates the status subresource of the serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
-func (resources ResourcesSelection[T]) UpdateResource(ctx context.Context, p metav1.Object, logger *slog.Logger) {
+func (resources ResourcesSelection[T]) UpdateResource(ctx context.Context, p metav1.Object, mclient monitoringclient.Interface, logger *slog.Logger) {
 	var workload string
 	switch any(p).(type) {
 	case *monitoringv1.Prometheus:
@@ -1493,8 +1494,10 @@ func (resources ResourcesSelection[T]) UpdateResource(ctx context.Context, p met
 				binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
 				r.Status.Bindings = append(r.Status.Bindings, binding)
 			}
-
-			logger.Info("Handling ServiceMonitor", "name", r.Name)
+			_, err := mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			if err != nil {
+				logger.Debug("Failed to update %s ServiceMonitor status in %s namespace", "error", err, r.GetName(), r.GetNamespace())
+			}
 
 		default:
 			return
