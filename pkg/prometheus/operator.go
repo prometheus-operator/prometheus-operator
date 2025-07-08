@@ -57,6 +57,11 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
+type ConfigResourceSyncer[T configurationResource] struct {
+	mclient monitoringclient.Interface
+	logger  *slog.Logger
+}
+
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
@@ -254,7 +259,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 
 // UpdateResource updates the status subresource of the serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
-func UpdateResource[T configurationResource](ctx context.Context, p metav1.Object, mclient monitoringclient.Interface, logger *slog.Logger, resources ResourcesSelection[T]) {
+func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) {
 	var workload string
 	switch any(p).(type) {
 	case *monitoringv1.Prometheus:
@@ -262,7 +267,7 @@ func UpdateResource[T configurationResource](ctx context.Context, p metav1.Objec
 	case *monitoringv1alpha1.PrometheusAgent:
 		workload = monitoringv1alpha1.PrometheusAgentName
 	default:
-		logger.Debug("Unknown workload resource type, skipping update", "type", fmt.Sprintf("%T", p))
+		ru.logger.Debug("Unknown workload resource type, skipping update", "type", fmt.Sprintf("%T", p))
 		return
 	}
 
@@ -305,9 +310,9 @@ func UpdateResource[T configurationResource](ctx context.Context, p metav1.Objec
 				binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
 				r.Status.Bindings = append(r.Status.Bindings, binding)
 			}
-			_, err := mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 			if err != nil {
-				logger.Debug("Failed to update %s ServiceMonitor status in %s namespace", "error", err, r.GetName(), r.GetNamespace())
+				ru.logger.Debug("Failed to update %s ServiceMonitor status in %s namespace", "error", err, r.GetName(), r.GetNamespace())
 			}
 
 		default:
