@@ -1275,7 +1275,11 @@ spec:
             type: object
           status:
             description: |-
+<<<<<<< HEAD
               This Status subresource is under active development and is updated only when the
+=======
+              This Status subresource is under active development and is accessible only when the
+>>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types)
               "StatusForConfigurationResources" feature gate is enabled.
 
               Most recent observed status of the ServiceMonitor. Read-only.

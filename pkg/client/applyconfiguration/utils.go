@@ -80,8 +80,13 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ConfigResourceCondition"):
 		return &monitoringv1.ConfigResourceConditionApplyConfiguration{}
+<<<<<<< HEAD
 	case v1.SchemeGroupVersion.WithKind("ConfigResourceStatus"):
 		return &monitoringv1.ConfigResourceStatusApplyConfiguration{}
+=======
+	case v1.SchemeGroupVersion.WithKind("ConfigurationResourceStatus"):
+		return &monitoringv1.ConfigurationResourceStatusApplyConfiguration{}
+>>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types)
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
