@@ -69,7 +69,7 @@ There are different challenges that influence the API design:
 * The configuration resource may not be in the same namespace as the workload resource.
 * Which workload selects which configuration resources can vary over time depending on the workload resource's label selectors and on the configuration resource's labels.
 
-### CRDs
+### API
 
 #### `ServiceMonitor`/`PodMonitor`/`Probes`/`ScrapeConfig`
 
@@ -128,7 +128,7 @@ spec:
       - group: monitoring.coreos.com
         resource: prometheusagents
         name: agent
-        namespace: monitor
+        namespace: monitoring
         conditions:
           - type: Accepted
             status: "False"
@@ -210,18 +210,6 @@ spec:
             message: ""
 ```
 
-### Working
-
-#### How to Enable/Disable the Status Subresource for Configuration Resources
-
-This feature is controlled by a feature flag: `StatusForConfigurationResources`. Cluster administrators can toggle this flag to enable or disable the status subresource support for configuration resources as needed.
-
-This feature gate is disabled by default. To enable it, pass the following argument to the prometheus-operator container during installation:
-
-```bash
- --feature-gates=StatusForConfigurationResources=true
-```
-
 #### Details of the Status API fields
 
 * `bindings`: Lists the workload resources that select the configuration resource.
@@ -234,21 +222,35 @@ This feature gate is disabled by default. To enable it, pass the following argum
     * `message`: Provides the detailed error message returned by the controller during reconciliation.
     * `observedGeneration`: Represents the generation of the configuration resource that the controller has most recently observed. When the value doesn't match the object metadata's `generation` value, the condition is stale.
 
-#### How to remove a binding when the workload is deleted ?
+### Implementation
+
+#### How to Enable/Disable the Status Subresource for Configuration Resources
+
+This feature is controlled by a feature gate: `StatusForConfigurationResources`. Cluster administrators can toggle this flag to enable or disable the status subresource support for configuration resources as needed.
+
+This feature gate is disabled by default. To enable it, pass the following argument to the prometheus-operator container during installation:
+
+```bash
+ --feature-gates=StatusForConfigurationResources=true
+```
+
+Once we've reached feature completeness and we're confident about the stability, we will toggle the feature gate to be enabled by default.
+
+#### Keeping the status up-to-date
+
+##### How to remove a binding when the workload is deleted ?
 
 When a workload resource is created, we add a finalizer to it to ensure proper cleanup before deletion. If a user later requests deletion of the resource, Kubernetes does not immediately remove it; instead, it sets a deletionTimestamp on the resource. This triggers an update event, which the controller receives and processes. The controller checks if the deletionTimestamp is set to determine if the resource is in the process of being deleted. If so, the controller proceeds to clean up associated references from relevant configuration resources (e.g., ServiceMonitors, PrometheusRules). Once the cleanup is complete, the controller removes the finalizer from the workload resource, allowing Kubernetes to complete the deletion process.
 
-#### How to remove invalid bindings from config-resources status ?
+##### Removing invalid bindings from configuration resources status
 
-`invaid binding`: A configuration resource contains a reference to a workload resource in its bindings, even though no valid association exists between them.
-
-This can occur under certain conditions. For example, at some point in time, a workload resource A selects a configuration resource X in namespace Y:
+A configuration resource may contain a reference to a workload resource in its bindings which is not relevant anymore. This can occur under certain conditions. For example, at some point in time, a workload resource A selects a configuration resource X in namespace Y:
 * The operator updates the status of resource X to reference workload A.
-  Later, changes may happen that break this association:
+* Later, changes may happen that break this association:
 * The labels of X and/or its namespace Y are modified.
 * The label selectors and/or namespace selectors of workload A are updated.
 
-These changes can result in workload A no longer selecting configuration resource X.
+These changes can result in workload A no longer selecting configuration resource X and the configuration resource's status needs to be updated to reflect this.
 
 A separate Go routine can be used to remove invalid bindings, offloading this responsibility from the main workload controller threads.
 This background routine can periodically:
