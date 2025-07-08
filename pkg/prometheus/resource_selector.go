@@ -36,11 +36,9 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -1439,68 +1437,4 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 
 	}
 	return nil
-}
-
-// UpdateResource updates the status subresource of the serviceMonitor, podMonitor, probes and scrapeConfig
-// resources selected by the Prometheus or PrometheusAgent.
-func (resources ResourcesSelection[T]) UpdateResource(ctx context.Context, p metav1.Object, mclient monitoringclient.Interface, logger *slog.Logger) {
-	var workload string
-	switch any(p).(type) {
-	case *monitoringv1.Prometheus:
-		workload = monitoringv1.PrometheusName
-	case *monitoringv1alpha1.PrometheusAgent:
-		workload = monitoringv1alpha1.PrometheusAgentName
-	default:
-		logger.Debug("Unknown workload resource type, skipping update", "type", fmt.Sprintf("%T", p))
-		return
-	}
-
-	for _, res := range resources {
-		condition := monitoringv1.ConfigResourceCondition{
-			Type:               monitoringv1.Accepted,
-			Status:             monitoringv1.ConditionTrue,
-			LastTransitionTime: metav1.Now(),
-			Message:            res.err.Error(),
-			Reason:             res.reason,
-		}
-
-		if res.err != nil {
-			condition.Status = monitoringv1.ConditionFalse
-		}
-
-		binding := monitoringv1.WorkloadBinding{
-			Namespace:  p.GetNamespace(),
-			Name:       p.GetName(),
-			Resource:   workload,
-			Group:      monitoring.GroupName,
-			Conditions: []monitoringv1.ConfigResourceCondition{condition},
-		}
-		switch r := any(res.resource).(type) {
-		case *monitoringv1.ServiceMonitor:
-			condition.ObservedGeneration = r.GetGeneration()
-			var found bool
-			for i := range r.Status.Bindings {
-				binding := &r.Status.Bindings[i]
-				if binding.Namespace == p.GetNamespace() &&
-					binding.Name == p.GetName() &&
-					binding.Resource == monitoringv1.PrometheusName {
-					found = true
-					binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
-					break
-				}
-			}
-
-			if !found {
-				binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
-				r.Status.Bindings = append(r.Status.Bindings, binding)
-			}
-			_, err := mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-			if err != nil {
-				logger.Debug("Failed to update %s ServiceMonitor status in %s namespace", "error", err, r.GetName(), r.GetNamespace())
-			}
-
-		default:
-			return
-		}
-	}
 }
