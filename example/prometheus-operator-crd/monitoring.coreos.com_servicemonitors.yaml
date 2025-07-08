@@ -1276,6 +1276,9 @@ spec:
             type: object
           status:
             description: |-
+              This Status subresource is under active development and is updated only when the
+              "StatusForConfigurationResources" feature gate is enabled.
+
               Most recent observed status of the ServiceMonitor. Read-only.
               More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
