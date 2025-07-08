@@ -28,12 +28,17 @@ type ServiceMonitorApplyConfiguration struct {
 	metav1.TypeMetaApplyConfiguration    `json:",inline"`
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 <<<<<<< HEAD
+<<<<<<< HEAD
 	Spec                                 *ServiceMonitorSpecApplyConfiguration   `json:"spec,omitempty"`
 	Status                               *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 =======
 	Spec                                 *ServiceMonitorSpecApplyConfiguration          `json:"spec,omitempty"`
 	Status                               *ConfigurationResourceStatusApplyConfiguration `json:"status,omitempty"`
 >>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types)
+=======
+	Spec                                 *ServiceMonitorSpecApplyConfiguration   `json:"spec,omitempty"`
+	Status                               *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
+>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 }
 
 // ServiceMonitor constructs a declarative configuration of the ServiceMonitor type for use with
@@ -217,10 +222,14 @@ func (b *ServiceMonitorApplyConfiguration) WithSpec(value *ServiceMonitorSpecApp
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
 <<<<<<< HEAD
+<<<<<<< HEAD
 func (b *ServiceMonitorApplyConfiguration) WithStatus(value *ConfigResourceStatusApplyConfiguration) *ServiceMonitorApplyConfiguration {
 =======
 func (b *ServiceMonitorApplyConfiguration) WithStatus(value *ConfigurationResourceStatusApplyConfiguration) *ServiceMonitorApplyConfiguration {
 >>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types)
+=======
+func (b *ServiceMonitorApplyConfiguration) WithStatus(value *ConfigResourceStatusApplyConfiguration) *ServiceMonitorApplyConfiguration {
+>>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 	b.Status = value
 	return b
 }
