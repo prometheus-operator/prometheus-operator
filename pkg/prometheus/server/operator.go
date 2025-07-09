@@ -103,6 +103,15 @@ type Operator struct {
 
 type ControllerOption func(*Operator)
 
+// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes and scrapeConfig)
+// selected by Prometheus.
+type selectedConfigResources struct {
+	sMons         prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor]
+	pMons         prompkg.ResourcesSelection[*monitoringv1.PodMonitor]
+	bMons         prompkg.ResourcesSelection[*monitoringv1.Probe]
+	scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+}
+
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
 func WithEndpointSlice() ControllerOption {
 	return func(o *Operator) {
@@ -795,7 +804,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore); err != nil {
+	if _, err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
@@ -1139,14 +1148,14 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) (*selectedConfigResources, error) {
 	// If no service/pod monitor and probe selectors are configured, the user
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
 	if c.unmanagedPrometheusConfiguration(p) {
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {
-			return fmt.Errorf("failed to generate empty configuration secret: %w", err)
+			return nil, fmt.Errorf("failed to generate empty configuration secret: %w", err)
 		}
 
 		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
@@ -1154,53 +1163,53 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		if apierrors.IsNotFound(err) {
 			logger.Debug("creating an empty configuration secret")
 			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-				return fmt.Errorf("failed to create an empty configuration secret: %w", err)
+				return nil, fmt.Errorf("failed to create an empty configuration secret: %w", err)
 			}
 
-			return nil
+			return nil, nil
 		}
 
-		return err
+		return nil, err
 	}
 
 	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
-		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
+		return nil, fmt.Errorf("selecting ServiceMonitors failed: %w", err)
 	}
 
 	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
 	if err != nil {
-		return fmt.Errorf("selecting PodMonitors failed: %w", err)
+		return nil, fmt.Errorf("selecting PodMonitors failed: %w", err)
 	}
 
 	bmons, err := resourceSelector.SelectProbes(ctx, c.probeInfs.ListAllByNamespace)
 	if err != nil {
-		return fmt.Errorf("selecting Probes failed: %w", err)
+		return nil, fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
 	var scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {
-			return fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
+			return nil, fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
 		}
 	}
 
 	if err := prompkg.AddRemoteReadsToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteRead); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := prompkg.AddAPIServerConfigToStore(ctx, store, p.GetNamespace(), p.Spec.APIServerConfig); err != nil {
-		return err
+		return nil, err
 	}
 
 	if p.Spec.Alerting != nil {
@@ -1208,31 +1217,31 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 
 		for i, am := range ams {
 			if err := validateAlertmanagerEndpoints(p, am); err != nil {
-				return fmt.Errorf("alertmanager %d: %w", i, err)
+				return nil, fmt.Errorf("alertmanager %d: %w", i, err)
 			}
 		}
 
 		if err := addAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), ams); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if err := prompkg.AddScrapeClassesToStore(ctx, store, p.GetNamespace(), p.Spec.ScrapeClasses); err != nil {
-		return fmt.Errorf("failed to process scrape classes: %w", err)
+		return nil, fmt.Errorf("failed to process scrape classes: %w", err)
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
-		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
+		return nil, fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
 	}
 	additionalAlertRelabelConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalAlertRelabelConfigs)
 	if err != nil {
-		return fmt.Errorf("loading additional alert relabel configs from Secret failed: %w", err)
+		return nil, fmt.Errorf("loading additional alert relabel configs from Secret failed: %w", err)
 	}
 	additionalAlertManagerConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalAlertManagerConfigs)
 	if err != nil {
-		return fmt.Errorf("loading additional alert manager configs from Secret failed: %w", err)
+		return nil, fmt.Errorf("loading additional alert manager configs from Secret failed: %w", err)
 	}
 
 	// Update secret based on the most recent configuration.
@@ -1249,17 +1258,22 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		ruleConfigMapNames,
 	)
 	if err != nil {
-		return fmt.Errorf("generating config failed: %w", err)
+		return nil, fmt.Errorf("generating config failed: %w", err)
 	}
 
 	// Compress config to avoid 1mb secret limit for a while
 	s, err := prompkg.MakeConfigurationSecret(p, c.config, conf)
 	if err != nil {
-		return fmt.Errorf("creating compressed secret failed: %w", err)
+		return nil, fmt.Errorf("creating compressed secret failed: %w", err)
 	}
 
 	logger.Debug("updating Prometheus configuration secret")
-	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
+	return &selectedConfigResources{
+		sMons:         smons,
+		bMons:         bmons,
+		pMons:         pmons,
+		scrapeConfigs: scrapeConfigs,
+	}, k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
