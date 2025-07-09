@@ -95,7 +95,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			errorSubstring: "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet",
 		},
 		{
-			name: "valid spec should not error",
+			name: "valid daemonset configuration",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
