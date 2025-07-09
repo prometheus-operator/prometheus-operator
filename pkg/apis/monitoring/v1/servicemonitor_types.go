@@ -44,11 +44,14 @@ type ServiceMonitor struct {
 	// Specification of desired Service selection for target discovery by
 	// Prometheus.
 	Spec ServiceMonitorSpec `json:"spec"`
+	// This Status subresource is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
 	// Most recent observed status of the ServiceMonitor. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	Status ServiceMonitorStatus `json:"status,omitempty"`
+	Status ConfigResourceStatus `json:"status,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -182,16 +185,6 @@ type ServiceMonitorSpec struct {
 	//
 	// +optional
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
-}
-
-// ServiceMonitorStatus is the most recent observed status of the ServiceMonitor. Read-only.
-// More info:
-// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
-// +k8s:openapi-gen=true
-type ServiceMonitorStatus struct {
-	// The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.
-	// +optional
-	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

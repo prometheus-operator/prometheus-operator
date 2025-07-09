@@ -1020,6 +1020,16 @@ const (
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
 
+// ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
+// More info:
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+// +k8s:openapi-gen=true
+type ConfigResourceStatus struct {
+	// The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.
+	// +optional
+	Bindings []WorkloadBinding `json:"bindings,omitempty"`
+}
+
 // WorkloadBinding is a link between a configuration resource and a workload resource.
 // +k8s:openapi-gen=true
 type WorkloadBinding struct {

@@ -28,7 +28,7 @@ type ServiceMonitorApplyConfiguration struct {
 	metav1.TypeMetaApplyConfiguration    `json:",inline"`
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	Spec                                 *ServiceMonitorSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                               *ServiceMonitorStatusApplyConfiguration `json:"status,omitempty"`
+	Status                               *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // ServiceMonitor constructs a declarative configuration of the ServiceMonitor type for use with
@@ -211,7 +211,7 @@ func (b *ServiceMonitorApplyConfiguration) WithSpec(value *ServiceMonitorSpecApp
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *ServiceMonitorApplyConfiguration) WithStatus(value *ServiceMonitorStatusApplyConfiguration) *ServiceMonitorApplyConfiguration {
+func (b *ServiceMonitorApplyConfiguration) WithStatus(value *ConfigResourceStatusApplyConfiguration) *ServiceMonitorApplyConfiguration {
 	b.Status = value
 	return b
 }
