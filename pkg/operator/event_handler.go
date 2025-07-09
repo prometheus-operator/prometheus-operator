@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
@@ -58,20 +56,23 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	oldMeta, _ := old.(metav1.Object)
-	curMeta, _ := cur.(metav1.Object)
-
-	// Compare Metadata fields
-	if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
-		reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
-		oldMeta.GetGeneration() == curMeta.GetGeneration() {
+	oldMeta, ok := e.accessor.ObjectMetadata(old)
+	if !ok {
 		return
 	}
 
-	if o, ok := e.accessor.ObjectMetadata(cur); ok {
+	curMeta, ok := e.accessor.ObjectMetadata(cur)
+	if !ok {
+		return
+	}
+
+	// Compare Metadata fields
+	if !reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) ||
+		!reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) ||
+		oldMeta.GetGeneration() != curMeta.GetGeneration() {
 		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
 		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
-		e.enqueueFunc(o.GetNamespace())
+		e.enqueueFunc(curMeta.GetNamespace())
 	}
 }
 
