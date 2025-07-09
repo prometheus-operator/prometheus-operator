@@ -33131,7 +33131,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<p>Authorization` header configuration, required when using STACKIT.</p>
+<p>Authorization header configuration, required when using STACKIT.</p>
 </td>
 </tr>
 <tr>

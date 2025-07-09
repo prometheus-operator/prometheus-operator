@@ -1510,7 +1510,7 @@ type StackitSDConfig struct {
 	// RefreshInterval configures the time after which the servers are refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// Authorization` header configuration, required when using STACKIT.
+	// Authorization header configuration, required when using STACKIT.
 	// +required
 	Authorization  v1.SafeAuthorization `json:"authorization"`
 	v1.ProxyConfig `json:",inline"`

@@ -12346,7 +12346,7 @@ spec:
                     See https://prometheus.io/docs/prometheus/3.5/configuration/configuration/#stackit_sd_config
                   properties:
                     authorization:
-                      description: Authorization` header configuration, required when
+                      description: Authorization header configuration, required when
                         using STACKIT.
                       properties:
                         credentials:
