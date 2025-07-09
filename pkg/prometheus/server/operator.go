@@ -804,7 +804,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	if _, err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore); err != nil {
+	resources, err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore)
+	if err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
@@ -981,6 +982,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
+	c.updateConfigResourcesStatus(ctx, p, logger, resources)
 	return nil
 }
 
@@ -1320,6 +1322,17 @@ func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *moni
 	)
 
 	return k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(secret.Namespace), secret)
+}
+
+// updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources *selectedConfigResources) {
+	if resources == nil {
+		return
+	}
+	if len(resources.sMons) > 0 {
+		configResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
+		configResourceSyncer.UpdateStatus(ctx, p, resources.sMons)
+	}
 }
 
 func makeSelectorLabels(name string) map[string]string {

@@ -62,8 +62,9 @@ type ConfigResourceSyncer[T configurationResource] struct {
 	logger  *slog.Logger
 }
 
-func NewConfigResourceSyncer[T configurationResource](mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
+func NewConfigResourceSyncer[T configurationResource](gvr schema.GroupVersionResource, mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
 	return &ConfigResourceSyncer[T]{
+		gvr:     gvr,
 		mclient: mclient,
 		logger:  logger,
 	}
