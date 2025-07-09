@@ -81,7 +81,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			errorSubstring: "shards cannot be set when mode is DaemonSet",
 		},
 		{
-			name: "PVC retention policy set should error",
+			name: "invalid: configuring persistentVolumeClaimRetentionPolicy in the daemonset mode",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
