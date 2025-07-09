@@ -105,10 +105,16 @@ This is mainly because :
 ```go
 if spec.Mode == "DaemonSet" {
 	if spec.Replicas != nil {
-		return fmt.Errorf("replicas is not allowed when using DaemonSet mode")
+		return fmt.Errorf("cannot configure replicas when using DaemonSet mode")
 	}
 	if spec.Storage != nil {
-		return fmt.Errorf("storage configuration is not supported in DaemonSet mode")
+		return fmt.Errorf("cannot configure storage when using DaemonSet mode")
+	}
+	if spec.Shards != nil {
+		return fmt.Errorf("cannot configure shards when using DaemonSet mode")
+	}
+	if spec.PersistentVolumeClaimRetentionPolicy != nil {
+		return fmt.Errorf("cannot configure persistentVolumeClaimRetentionPolicy when using DaemonSet mode")
 	}
 }
 ```
@@ -184,7 +190,7 @@ EndpointSlice provides significant performance improvements over classic Endpoin
 
 #### 6.4.3. Implementation Details
 
-The current implementation has a bug where EndpointSlice support is only enabled based on Kubernetes version (>=1.21.0), not on the user's `serviceDiscoveryRole` setting. The fix involves:
+The implementation properly handles EndpointSlice support by checking both the user's `serviceDiscoveryRole` setting and cluster compatibility. The logic involves:
 
 ```go
 // Check if THIS PrometheusAgent wants EndpointSlice discovery
