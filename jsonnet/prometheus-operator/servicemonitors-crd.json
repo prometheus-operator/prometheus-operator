@@ -1102,11 +1102,7 @@
                 "type": "object"
               },
               "status": {
-<<<<<<< HEAD
                 "description": "This Status subresource is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
-=======
-                "description": "This Status subresource is under active development and is accessible only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
->>>>>>> 8d6bdcb5a (feat: update ServiceMonitor status subresource description and refactor related types)
                 "properties": {
                   "bindings": {
                     "description": "The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.",
