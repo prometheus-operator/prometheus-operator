@@ -11691,7 +11691,7 @@
                       "description": "StackitSDConfig configurations enables service discovery for STACKIT.\nSee https://prometheus.io/docs/prometheus/3.5/configuration/configuration/#stackit_sd_config",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization` header configuration, required when using STACKIT.",
+                          "description": "Authorization header configuration, required when using STACKIT.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",

@@ -4651,7 +4651,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			valid:       false,
-			promVersion: "3.2.0",
+			promVersion: "3.5.0",
 		},
 		{
 			scenario: "StackitSDconfig with valid TLS config",
