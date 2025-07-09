@@ -4181,11 +4181,7 @@ ConfigResourceStatus
 </td>
 <td>
 <em>(Optional)</em>
-<<<<<<< HEAD
 <p>This Status subresource is under active development and is updated only when the
-=======
-<p>This Status subresource is under active development and is accessible only when the
->>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 &ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
 <p>Most recent observed status of the ServiceMonitor. Read-only.
 More info:
@@ -9361,11 +9357,7 @@ More info:
 </td>
 <td>
 <em>(Optional)</em>
-<<<<<<< HEAD
 <p>The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.</p>
-=======
-<p>The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.</p>
->>>>>>> 29549c6f5 (feat: rename ConfigurationResourceStatus to ConfigResourceStatus and update related references)
 </td>
 </tr>
 </tbody>
