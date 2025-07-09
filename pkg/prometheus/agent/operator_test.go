@@ -70,7 +70,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			errorSubstring: "storage cannot be configured when mode is DaemonSet",
 		},
 		{
-			name: "shards set should error",
+			name: "invalid: configuring shards in the daemonset mode",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
