@@ -38,7 +38,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 		errorSubstring string
 	}{
 		{
-			name: "replicas set should error",
+			name: "invalid: configuring replicas in the daemonset mode",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
