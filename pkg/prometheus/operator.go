@@ -28,11 +28,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -58,6 +57,7 @@ type StatusReporter struct {
 }
 
 type ConfigResourceSyncer[T configurationResource] struct {
+	gvr     schema.GroupVersionResource
 	mclient monitoringclient.Interface
 	logger  *slog.Logger
 }
@@ -267,17 +267,6 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 // UpdateResource updates the status subresource of the serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
 func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) {
-	var workload string
-	switch any(p).(type) {
-	case *monitoringv1.Prometheus:
-		workload = monitoringv1.PrometheusName
-	case *monitoringv1alpha1.PrometheusAgent:
-		workload = monitoringv1alpha1.PrometheusAgentName
-	default:
-		ru.logger.Debug("Unknown workload resource type, skipping update", "type", fmt.Sprintf("%T", p))
-		return
-	}
-
 	for _, res := range resources {
 		condition := monitoringv1.ConfigResourceCondition{
 			Type:               monitoringv1.Accepted,
@@ -294,8 +283,8 @@ func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Ob
 		binding := monitoringv1.WorkloadBinding{
 			Namespace:  p.GetNamespace(),
 			Name:       p.GetName(),
-			Resource:   workload,
-			Group:      monitoring.GroupName,
+			Resource:   ru.gvr.Resource,
+			Group:      ru.gvr.Group,
 			Conditions: []monitoringv1.ConfigResourceCondition{condition},
 		}
 		switch r := any(res.resource).(type) {
