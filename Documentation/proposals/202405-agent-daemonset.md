@@ -46,16 +46,7 @@ In specific, the MVP will need to:
 * Allow users to restrict which set of nodes they want to deploy Prometheus Agent, if desired.
 * Allow users to set the priority of Prometheus Agent pod compared to other pods on the same node, if desired.
 * Allow each Prometheus Agent pod to only scrape from the pods from PodMonitor that run on the same node.
-* Explore the EndpointSlices API for a scalable implementation of ServiceMonitors with the Daemonset Mode. 
-
-### 4.1. ServiceMonitor Support with EndpointSlice (Extended Goal)
-
-Building upon the MVP, enable ServiceMonitor support for DaemonSet mode by leveraging EndpointSlice discovery to address the performance concerns mentioned in the non-goals section. This extended implementation includes:
-
-* **EndpointSlice Integration**: Explore support for `serviceDiscoveryRole: EndpointSlice` in PrometheusAgent CRD to use EndpointSlice API instead of classic Endpoints for service discovery.
-* **Performance Optimization**: Potentially reduce Kubernetes API server load by using the more efficient and scalable EndpointSlice API, which distributes endpoint information across multiple smaller objects instead of one large Endpoints object.
-* **DaemonSet Compatibility**: Ensure EndpointSlice discovery works correctly with DaemonSet mode for node-local service monitoring.
-* **Validation and Fallback**: Implement proper validation to ensure EndpointSlice is only used when supported by the Kubernetes cluster (v1.21+), with graceful fallback to classic Endpoints on older clusters.
+* Enable ServiceMonitor support for DaemonSet mode using EndpointSlice discovery (extended goal).
 
 ## 5. Non-Goals
 
