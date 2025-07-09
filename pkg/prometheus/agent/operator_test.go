@@ -119,7 +119,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "minimal valid spec should not error",
+			name: "valid daemonset configuration with only required fields",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 			},
