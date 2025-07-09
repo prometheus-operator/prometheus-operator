@@ -49,7 +49,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			errorSubstring: "replicas cannot be set when mode is DaemonSet",
 		},
 		{
-			name: "storage set should error",
+			name: "invalid: configuring storage in the daemonset mode",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
