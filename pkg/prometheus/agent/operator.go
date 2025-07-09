@@ -521,20 +521,26 @@ func (c *Operator) addHandlers() {
 		))
 	}
 
-	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+	hasRefFunc := operator.HasReferenceFunc(
+		c.promInfs,
+		c.reconciliations,
+	)
+	c.cmapInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
 		c.enqueueForPrometheusNamespace,
+		hasRefFunc,
 	))
 
-	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+	c.secrInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
 		c.enqueueForPrometheusNamespace,
+		hasRefFunc,
 	))
 
 	// The controller needs to watch the namespaces in which the service/pod

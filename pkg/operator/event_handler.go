@@ -22,6 +22,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type FilterFunc func(interface{}) bool
+
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
 type EventHandler struct {
 	logger   *slog.Logger
@@ -30,7 +32,7 @@ type EventHandler struct {
 
 	objName     string
 	enqueueFunc func(string)
-	filterFunc  func(interface{}) bool
+	filterFunc  FilterFunc
 }
 
 func NewEventHandler(
@@ -55,7 +57,7 @@ func NewEventHandlerWithFilter(
 	metrics *Metrics,
 	objName string,
 	enqueueFunc func(ns string),
-	filterFunc func(interface{}) bool,
+	filterFunc FilterFunc,
 ) *EventHandler {
 	if filterFunc == nil {
 		filterFunc = func(interface{}) bool { return true }
@@ -95,7 +97,6 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
 		e.recordEvent(UpdateEvent, o)
-		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
 		e.enqueueFunc(o.GetNamespace())
 	}
 }
