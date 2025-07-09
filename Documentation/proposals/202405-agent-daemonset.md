@@ -46,6 +46,7 @@ In specific, the MVP will need to:
 * Allow users to restrict which set of nodes they want to deploy Prometheus Agent, if desired.
 * Allow users to set the priority of Prometheus Agent pod compared to other pods on the same node, if desired.
 * Allow each Prometheus Agent pod to only scrape from the pods from PodMonitor that run on the same node.
+* Explore the EndpointSlices API for a scalable implementation of ServiceMonitors with the Daemonset Mode. 
 
 ### 4.1. ServiceMonitor Support with EndpointSlice (Extended Goal)
 
