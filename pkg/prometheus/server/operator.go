@@ -298,9 +298,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.LabelSelector = prompkg.LabelPrometheusName
-			},
+			nil,
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
@@ -479,13 +477,17 @@ func (c *Operator) addHandlers() {
 		c.enqueueForMonitorNamespace,
 	))
 
+	hasRefFunc := operator.HasReferenceFunc(
+		c.promInfs,
+		c.reconciliations,
+	)
 	c.cmapInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
 		c.enqueueForPrometheusNamespace,
-		c.hasReference,
+		hasRefFunc,
 	))
 
 	c.secrInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
@@ -494,7 +496,7 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		"Secret",
 		c.enqueueForPrometheusNamespace,
-		c.hasReference,
+		hasRefFunc,
 	))
 
 	// The controller needs to watch the namespaces in which the service/pod
@@ -1388,47 +1390,4 @@ func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBui
 	}
 
 	return nil
-}
-
-func (c *Operator) hasReference(obj interface{}) bool {
-	partialObjMeta, ok := obj.(*metav1.PartialObjectMetadata)
-	if !ok {
-		return false
-	}
-
-	for _, informer := range c.promInfs.GetInformers() {
-		proms, err := informer.Lister().List(labels.Everything())
-		if err != nil {
-			continue
-		}
-
-		for _, prom := range proms {
-			objMeta, ok := prom.(metav1.Object)
-			if !ok {
-				continue
-			}
-
-			// Check if the object is owned by the same namespace as the
-			// workload resource. We should always trigger a reconciliation in
-			// case an external entity altered one of the workload resources.
-			//
-			// TODO: check also the managedfields and don't trigger a
-			// reconciliation if the operator is the only manager.
-			if objMeta.GetNamespace() == partialObjMeta.GetNamespace() {
-				for _, ownerRef := range partialObjMeta.GetOwnerReferences() {
-					if ownerRef.Name == objMeta.GetName() &&
-						ownerRef.Kind == "Prometheus" &&
-						ownerRef.APIVersion == "monitoring.coreos.com" {
-						return true
-					}
-				}
-			}
-
-			if c.reconciliations.HasRefTo(fmt.Sprintf("%s/%s", objMeta.GetNamespace(), objMeta.GetName()), partialObjMeta) {
-				return true
-			}
-		}
-	}
-
-	return false
 }

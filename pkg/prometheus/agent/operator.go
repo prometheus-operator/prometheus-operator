@@ -523,20 +523,26 @@ func (c *Operator) addHandlers() {
 		))
 	}
 
-	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+	hasRefFunc := operator.HasReferenceFunc(
+		c.promInfs,
+		c.reconciliations,
+	)
+	c.cmapInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
 		c.enqueueForPrometheusNamespace,
+		hasRefFunc,
 	))
 
-	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+	c.secrInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
 		c.enqueueForPrometheusNamespace,
+		hasRefFunc,
 	))
 
 	// The controller needs to watch the namespaces in which the service/pod
@@ -608,6 +614,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
+	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
