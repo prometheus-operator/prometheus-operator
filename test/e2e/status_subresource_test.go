@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
@@ -51,4 +52,37 @@ func testFinalizerWhenStatusForConfigResourcesEnabled(t *testing.T) {
 	require.NotEmpty(t, finalizers, "finalizers list should not be empty")
 	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err, "failed to delete Prometheus with status-cleanup finalizer")
+}
+
+func testServiceMonitorStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+	name := "serviceMonitor-status-subresource-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceMonitorSelector = &v1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test-service-monitor",
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+	smon := framework.MakeBasicServiceMonitor(name)
+	smon.ObjectMeta.Labels = map[string]string{
+		"app": "test-service-monitor",
+	}
+
 }
