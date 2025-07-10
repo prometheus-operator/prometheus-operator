@@ -627,7 +627,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
 	})
-	t.Run("KumaSDConfig", func(t *testing.T) {
+	t.Run("KumaSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, KumaSDTestCases)
 	})
 	t.Run("ScalewaySD", func(t *testing.T) {
@@ -3290,6 +3290,30 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 				{
 					Server:          "http://example.com",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid fetchTimeout",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid fetchTimeout",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					FetchTimeout: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
 		},
