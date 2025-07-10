@@ -3318,7 +3318,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server:          "http://example.com",
+					Server:       "http://example.com",
 					FetchTimeout: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
