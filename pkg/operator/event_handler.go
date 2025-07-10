@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,7 +88,12 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	if old.(metav1.Object).GetResourceVersion() == cur.(metav1.Object).GetResourceVersion() {
+	oldMeta, ok := e.accessor.ObjectMetadata(old)
+	if !ok {
+		return
+	}
+	curMeta, ok := e.accessor.ObjectMetadata(cur)
+	if !ok {
 		return
 	}
 
@@ -97,10 +103,13 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		}
 	}
 
-	if o, ok := e.accessor.ObjectMetadata(cur); ok {
-		e.recordEvent(UpdateEvent, o)
-		e.enqueueFunc(o.GetNamespace())
+	if !isConfigMapSecretChanged(oldMeta, curMeta) && !isConfigResChanged(oldMeta, curMeta) {
+		return
 	}
+
+	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
+	e.metrics.TriggerByCounter(e.objName, UpdateEvent).Inc()
+	e.enqueueFunc(curMeta.GetNamespace())
 }
 
 func (e *EventHandler) OnDelete(obj interface{}) {
@@ -132,4 +141,18 @@ func (e *EventHandler) recordEvent(event HandlerEvent, obj metav1.Object) {
 		strings.ToLower(e.objName), fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()),
 	)
 	e.metrics.TriggerByCounter(e.objName, event).Inc()
+}
+
+// isConfigMapSecretChanged checks if the ConfigMap or Secret has changed.
+func isConfigMapSecretChanged(oldMeta, curMeta metav1.Object) bool {
+	// Generation is always 0 for ConfigMap and Secret.
+	return curMeta.GetGeneration() == 0 && oldMeta.GetResourceVersion() != curMeta.GetResourceVersion()
+}
+
+// isConfigResChanged checks if the configResources (PodMonitor, ServiceMonitor, Probes, ScrapeConfig, AlertManagerConfig and PrometheusRule)
+// has changed in terms of labels, annotations, or generation.
+func isConfigResChanged(oldMeta, curMeta metav1.Object) bool {
+	return curMeta.GetGeneration() != 0 && (!reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) ||
+		!reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) ||
+		oldMeta.GetGeneration() != curMeta.GetGeneration())
 }
