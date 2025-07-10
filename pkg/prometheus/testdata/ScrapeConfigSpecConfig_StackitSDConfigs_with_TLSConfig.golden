@@ -16,6 +16,7 @@ scrape_configs:
       key_file: /etc/prometheus/certs/0_default_tls_key
     project: 11111111-1111-1111-1111-111111111111
     region: eu01
+    endpoint: null
   relabel_configs:
   - source_labels:
     - job
