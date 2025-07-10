@@ -1,6 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
 
-go 1.24.0
+go 1.24.4
 
 toolchain go1.24.3
 

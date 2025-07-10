@@ -1,8 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.24.4
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.3
