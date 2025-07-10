@@ -267,7 +267,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 
 // UpdateResource updates the status subresource of the serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
-func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) {
+func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
 	for _, res := range resources {
 		condition := monitoringv1.ConfigResourceCondition{
 			Type:               monitoringv1.Accepted,
@@ -311,10 +311,11 @@ func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Ob
 			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 			if err != nil {
 				ru.logger.Debug("Failed to update %s ServiceMonitor status in %s namespace", "error", err, r.GetName(), r.GetNamespace())
+				return err
 			}
-
 		default:
-			return
+			return fmt.Errorf("unsupported resource type %T", r)
 		}
 	}
+	return nil
 }
