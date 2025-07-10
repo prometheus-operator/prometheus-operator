@@ -1481,11 +1481,12 @@ type StackitSDConfig struct {
 	// +required
 	Project string `json:"project"`
 	// The STACKIT region.
-	// +optional
-	Region *string `json:"region,omitempty"`
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Region string `json:"region"`
 	// The STACKIT endpoint.
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
-	// +optional
+	// +required
 	Endpoint *string `json:"endpoint"`
 	// Default port to scrape metrics from.
 	// +kubebuilder:validation:Minimum=0
@@ -1493,26 +1494,19 @@ type StackitSDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// Raw private key string used for authenticating a service account.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	PrivateKey *string `json:"privateKey"`
-	// Path to a file containing the raw private key string.
-	// +optional
-	PrivateKeyPath *string `json:"privateKeyPath"`
+	PrivateKey *string `json:"privateKey,omitempty"`
 	// Full JSON-formatted service account key used for authentication.
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
-	ServiceAccountKey *string `json:"serviceAccountKey"`
-	// Path to a file containing the JSON-formatted service account key.
-	// +optional
-	ServiceAccountKeyPath *string `json:"serviceAccountKeyPath"`
-	// Path to a file containing STACKIT credentials.
-	// +optional
-	CredentialsFilePath *string `json:"credentialsFilePath"`
+	ServiceAccountKey *string `json:"serviceAccountKey,omitempty"`
 	// RefreshInterval configures the time after which the servers are refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// Authorization header configuration, required when using STACKIT.
-	// +required
-	Authorization  v1.SafeAuthorization `json:"authorization"`
+	// +optional
+	Authorization  *v1.SafeAuthorization `json:"authorization,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// TLS configuration to use when connecting to the STACKIT API.
 	// +optional

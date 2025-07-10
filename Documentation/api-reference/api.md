@@ -33019,7 +33019,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>The STACKIT region.</p>
 </td>
 </tr>
@@ -33031,7 +33030,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>The STACKIT endpoint.</p>
 </td>
 </tr>
@@ -33061,18 +33059,6 @@ string
 </tr>
 <tr>
 <td>
-<code>privateKeyPath</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Path to a file containing the raw private key string.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>serviceAccountKey</code><br/>
 <em>
 string
@@ -33081,30 +33067,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>Full JSON-formatted service account key used for authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceAccountKeyPath</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Path to a file containing the JSON-formatted service account key.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>credentialsFilePath</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Path to a file containing STACKIT credentials.</p>
 </td>
 </tr>
 <tr>
@@ -33131,6 +33093,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Authorization header configuration, required when using STACKIT.</p>
 </td>
 </tr>

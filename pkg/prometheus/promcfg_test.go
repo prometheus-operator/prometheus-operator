@@ -13685,12 +13685,11 @@ func TestScrapeConfigSpecConfigWithStackitSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StackitSDConfigs: []monitoringv1alpha1.StackitSDConfig{
 					{
-						Project:             "11111111-1111-1111-1111-111111111111",
-						Region:              ptr.To("eu01"),
-						Port:                ptr.To(int32(23456)),
-						Endpoint:            ptr.To("https://api.stackit.de/"),
-						CredentialsFilePath: ptr.To("path/to/credentials/"),
-						Authorization: monitoringv1.SafeAuthorization{
+						Project:  "11111111-1111-1111-1111-111111111111",
+						Region:   "eu01",
+						Port:     ptr.To(int32(23456)),
+						Endpoint: ptr.To("https://api.stackit.de/"),
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -13727,8 +13726,8 @@ func TestScrapeConfigSpecConfigWithStackitSD(t *testing.T) {
 				StackitSDConfigs: []monitoringv1alpha1.StackitSDConfig{
 					{
 						Project: "11111111-1111-1111-1111-111111111111",
-						Region:  ptr.To("eu01"),
-						Authorization: monitoringv1.SafeAuthorization{
+						Region:  "eu01",
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -13768,8 +13767,8 @@ func TestScrapeConfigSpecConfigWithStackitSD(t *testing.T) {
 				StackitSDConfigs: []monitoringv1alpha1.StackitSDConfig{
 					{
 						Project: "11111111-1111-1111-1111-111111111111",
-						Region:  ptr.To("eu01"),
-						Authorization: monitoringv1.SafeAuthorization{
+						Region:  "eu01",
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
