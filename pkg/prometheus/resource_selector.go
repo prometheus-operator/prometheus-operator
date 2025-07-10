@@ -1164,20 +1164,20 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("field `clientID` is only supported for Prometheus version >= 2.50.0")
 		}
 
-		parsedURL, err := url.Parse(config.Server)
+		parsedURL, err := url.Parse(string(config.Server))
 		if err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if parsedURL.Host == "" {
-			return fmt.Errorf("[%d]: kuma SD server field must not be empty: %s", config.Server)
+			return fmt.Errorf("[%d]: kuma SD server field must not be empty: %s", i, config.Server)
 		}
 
 		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 			return fmt.Errorf("[%d]: invalid scheme '%s'. Only 'http' and 'https' are supported", i, parsedURL.Scheme)
 		}
 
-		if err := validateServer(config.Server); err != nil {
+		if err := validateServer(string(config.Server)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 

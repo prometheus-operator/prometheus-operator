@@ -7625,7 +7625,7 @@
                         },
                         "server": {
                           "description": "Address of the Kuma Control Plane's MADS xDS server.",
-                          "minLength": 1,
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         },
                         "tlsConfig": {
