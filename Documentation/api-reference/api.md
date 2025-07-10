@@ -4174,13 +4174,15 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <td>
 <code>status</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">
-ServiceMonitorStatus
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<p>This Status subresource is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
 <p>Most recent observed status of the ServiceMonitor. Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
@@ -9322,6 +9324,40 @@ int64
 condition was set based upon. For instance, if <code>.metadata.generation</code> is
 currently 12, but the <code>.status.conditions[].observedGeneration</code> is 9, the
 condition is out of date with respect to the current state of the object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ConfigResourceStatus">ConfigResourceStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
+</p>
+<div>
+<p>ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>bindings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WorkloadBinding">
+[]WorkloadBinding
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.</p>
 </td>
 </tr>
 </tbody>
@@ -17532,40 +17568,6 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
-</p>
-<div>
-<p>ServiceMonitorStatus is the most recent observed status of the ServiceMonitor. Read-only.
-More info:
-<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>bindings</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.WorkloadBinding">
-[]WorkloadBinding
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The list of workload resources (Prometheus or PrometheusAgent) which select the service monitor.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.ShardRetentionPolicy">ShardRetentionPolicy
 </h3>
 <p>
@@ -20063,7 +20065,7 @@ order.</p>
 <h3 id="monitoring.coreos.com/v1.WorkloadBinding">WorkloadBinding
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorStatus">ServiceMonitorStatus</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ConfigResourceStatus">ConfigResourceStatus</a>)
 </p>
 <div>
 <p>WorkloadBinding is a link between a configuration resource and a workload resource.</p>
