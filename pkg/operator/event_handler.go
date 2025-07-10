@@ -17,8 +17,9 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"reflect"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
@@ -57,15 +58,31 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	if old.(metav1.Object).GetResourceVersion() == cur.(metav1.Object).GetResourceVersion() {
+	oldMeta, ok := e.accessor.ObjectMetadata(old)
+	if !ok {
+		return
+	}
+	curMeta, ok := e.accessor.ObjectMetadata(cur)
+	if !ok {
 		return
 	}
 
-	if o, ok := e.accessor.ObjectMetadata(cur); ok {
-		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
-		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
-		e.enqueueFunc(o.GetNamespace())
+	switch curMeta.(type) {
+	case *corev1.ConfigMap, *corev1.Secret:
+		if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
+			return
+		}
+	default:
+		if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
+			reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
+			oldMeta.GetGeneration() != curMeta.GetGeneration() {
+			return
+		}
 	}
+
+	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
+	e.metrics.TriggerByCounter(e.objName, UpdateEvent)
+	e.enqueueFunc(curMeta.GetNamespace())
 }
 
 func (e *EventHandler) OnDelete(obj interface{}) {
