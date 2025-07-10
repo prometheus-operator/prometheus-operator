@@ -1161,7 +1161,7 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
 		if config.ClientID != nil && rs.version.LT(semver.MustParse("2.50.0")) {
-			return fmt.Errorf("field `clientID` is only supported for Prometheus version >= 2.50.0")
+			return fmt.Errorf("field `clientID` in kuma SD configuration is only supported for Prometheus version >= 2.50.0")
 		}
 
 		parsedURL, err := url.Parse(string(config.Server))
