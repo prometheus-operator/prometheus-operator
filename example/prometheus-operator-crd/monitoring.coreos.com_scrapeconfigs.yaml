@@ -12383,9 +12383,6 @@ spec:
                             Default: "Bearer"
                           type: string
                       type: object
-                    credentialsFilePath:
-                      description: Path to a file containing STACKIT credentials.
-                      type: string
                     enableHTTP2:
                       description: Configure whether to enable HTTP2.
                       type: boolean
@@ -12740,9 +12737,7 @@ spec:
                     privateKey:
                       description: Raw private key string used for authenticating
                         a service account.
-                      type: string
-                    privateKeyPath:
-                      description: Path to a file containing the raw private key string.
+                      minLength: 1
                       type: string
                     project:
                       description: The STACKIT Project ID.
@@ -12799,14 +12794,12 @@ spec:
                       type: string
                     region:
                       description: The STACKIT region.
+                      minLength: 1
                       type: string
                     serviceAccountKey:
                       description: Full JSON-formatted service account key used for
                         authentication.
-                      type: string
-                    serviceAccountKeyPath:
-                      description: Path to a file containing the JSON-formatted service
-                        account key.
+                      minLength: 1
                       type: string
                     tlsConfig:
                       description: TLS configuration to use when connecting to the
@@ -12972,8 +12965,9 @@ spec:
                           type: string
                       type: object
                   required:
-                  - authorization
+                  - endpoint
                   - project
+                  - region
                   type: object
                 type: array
               staticConfigs:

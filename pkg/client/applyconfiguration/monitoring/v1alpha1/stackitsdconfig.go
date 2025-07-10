@@ -30,10 +30,7 @@ type StackitSDConfigApplyConfiguration struct {
 	Endpoint                                   *string                                           `json:"endpoint,omitempty"`
 	Port                                       *int32                                            `json:"port,omitempty"`
 	PrivateKey                                 *string                                           `json:"privateKey,omitempty"`
-	PrivateKeyPath                             *string                                           `json:"privateKeyPath,omitempty"`
 	ServiceAccountKey                          *string                                           `json:"serviceAccountKey,omitempty"`
-	ServiceAccountKeyPath                      *string                                           `json:"serviceAccountKeyPath,omitempty"`
-	CredentialsFilePath                        *string                                           `json:"credentialsFilePath,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
@@ -89,35 +86,11 @@ func (b *StackitSDConfigApplyConfiguration) WithPrivateKey(value string) *Stacki
 	return b
 }
 
-// WithPrivateKeyPath sets the PrivateKeyPath field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the PrivateKeyPath field is set to the value of the last call.
-func (b *StackitSDConfigApplyConfiguration) WithPrivateKeyPath(value string) *StackitSDConfigApplyConfiguration {
-	b.PrivateKeyPath = &value
-	return b
-}
-
 // WithServiceAccountKey sets the ServiceAccountKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceAccountKey field is set to the value of the last call.
 func (b *StackitSDConfigApplyConfiguration) WithServiceAccountKey(value string) *StackitSDConfigApplyConfiguration {
 	b.ServiceAccountKey = &value
-	return b
-}
-
-// WithServiceAccountKeyPath sets the ServiceAccountKeyPath field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ServiceAccountKeyPath field is set to the value of the last call.
-func (b *StackitSDConfigApplyConfiguration) WithServiceAccountKeyPath(value string) *StackitSDConfigApplyConfiguration {
-	b.ServiceAccountKeyPath = &value
-	return b
-}
-
-// WithCredentialsFilePath sets the CredentialsFilePath field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the CredentialsFilePath field is set to the value of the last call.
-func (b *StackitSDConfigApplyConfiguration) WithCredentialsFilePath(value string) *StackitSDConfigApplyConfiguration {
-	b.CredentialsFilePath = &value
 	return b
 }
 

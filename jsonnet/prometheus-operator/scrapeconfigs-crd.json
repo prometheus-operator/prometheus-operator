@@ -11723,10 +11723,6 @@
                           },
                           "type": "object"
                         },
-                        "credentialsFilePath": {
-                          "description": "Path to a file containing STACKIT credentials.",
-                          "type": "string"
-                        },
                         "enableHTTP2": {
                           "description": "Configure whether to enable HTTP2.",
                           "type": "boolean"
@@ -12063,10 +12059,7 @@
                         },
                         "privateKey": {
                           "description": "Raw private key string used for authenticating a service account.",
-                          "type": "string"
-                        },
-                        "privateKeyPath": {
-                          "description": "Path to a file containing the raw private key string.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "project": {
@@ -12121,14 +12114,12 @@
                         },
                         "region": {
                           "description": "The STACKIT region.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "serviceAccountKey": {
                           "description": "Full JSON-formatted service account key used for authentication.",
-                          "type": "string"
-                        },
-                        "serviceAccountKeyPath": {
-                          "description": "Path to a file containing the JSON-formatted service account key.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "tlsConfig": {
@@ -12294,8 +12285,9 @@
                         }
                       },
                       "required": [
-                        "authorization",
-                        "project"
+                        "endpoint",
+                        "project",
+                        "region"
                       ],
                       "type": "object"
                     },

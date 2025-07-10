@@ -4594,8 +4594,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
 					{
 						Project: "11111111-1111-1111-1111-111111111111",
-						Region:  ptr.To("eu01"),
-						Authorization: monitoringv1.SafeAuthorization{
+						Region:  "eu01",
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -4615,8 +4615,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
 					{
 						Project: "11111111-1111-1111-1111-111111111111",
-						Region:  ptr.To("eu01"),
-						Authorization: monitoringv1.SafeAuthorization{
+						Region:  "eu01",
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -4636,7 +4636,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
 					{
 						Project: "11111111-1111-1111-1111-111111111111",
-						Region:  ptr.To("eu01"),
+						Region:  "eu01",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -4742,7 +4742,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
 					{
 						Project: "11111111-1111-1111-1111-111111111111",
-						Authorization: monitoringv1.SafeAuthorization{
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -4800,7 +4800,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StackitSDConfigs = []monitoringv1alpha1.StackitSDConfig{
 					{
-						Authorization: monitoringv1.SafeAuthorization{
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "wrong",

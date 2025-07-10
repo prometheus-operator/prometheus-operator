@@ -4727,7 +4727,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.StackitSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.StackitSDConfigs))
 		for i, config := range sc.Spec.StackitSDConfigs {
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -4735,6 +4735,16 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "project",
 				Value: config.Project,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "region",
+				Value: config.Region,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "endpoint",
+				Value: config.Endpoint,
 			})
 
 			if config.FollowRedirects != nil {
@@ -4748,20 +4758,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "enable_http2",
 					Value: config.EnableHTTP2,
-				})
-			}
-
-			if config.Region != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "region",
-					Value: config.Region,
-				})
-			}
-
-			if config.Endpoint != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "endpoint",
-					Value: config.Endpoint,
 				})
 			}
 
@@ -4779,31 +4775,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.PrivateKeyPath != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "private_key_path",
-					Value: config.PrivateKeyPath,
-				})
-			}
-
 			if config.ServiceAccountKey != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "service_account_key",
 					Value: config.ServiceAccountKey,
-				})
-			}
-
-			if config.ServiceAccountKeyPath != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "service_account_key_path",
-					Value: config.ServiceAccountKeyPath,
-				})
-			}
-
-			if config.CredentialsFilePath != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "credentials_file_path",
-					Value: config.CredentialsFilePath,
 				})
 			}
 

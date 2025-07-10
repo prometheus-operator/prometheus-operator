@@ -1456,7 +1456,7 @@ func (rs *ResourceSelector) validateStackitSDConfigs(ctx context.Context, sc *mo
 	}
 
 	for i, config := range sc.Spec.StackitSDConfigs {
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), &config.Authorization); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
