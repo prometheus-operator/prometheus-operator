@@ -1323,20 +1323,20 @@ func checkRocketChatConfigs(
 			return err
 		}
 
-		token, err := store.GetSecretKey(ctx, namespace, config.Token)
-		if err != nil {
+		if config.APIURL != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.APIURL))); err != nil {
+				return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
+			}
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.Token); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
 		}
 
-		if err := validation.ValidateSecretURL(strings.TrimSpace(token)); err != nil {
-			return fmt.Errorf("failed to validate RocketChat token: %w", err)
-		}
-
-		tokenID, err := store.GetSecretKey(ctx, namespace, config.TokenID)
-		if err != nil {
+		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
-
+	}
 
 	return nil
 }
