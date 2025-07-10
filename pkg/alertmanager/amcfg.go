@@ -782,15 +782,15 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		VSendResolved: in.SendResolved,
 	}
 
-	token, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.Token)
+	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
 	}
 	out.Token = &token
 
-	tokenID, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.TokenID)
+	tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.TokenID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
 	}
 	out.TokenID = &tokenID
 

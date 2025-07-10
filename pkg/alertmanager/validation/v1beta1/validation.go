@@ -343,6 +343,12 @@ func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 
 func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) error {
 	for _, config := range configs {
+		if config.APIURL != nil && *config.APIURL != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return fmt.Errorf("invalid 'apiURL': %w", err)
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
