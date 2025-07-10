@@ -2,8 +2,6 @@ module github.com/prometheus-operator/prometheus-operator/tooling
 
 go 1.24.4
 
-toolchain go1.24.2
-
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20241111191808-71fefeed8910
 	github.com/brancz/gojsontoyaml v0.1.0
