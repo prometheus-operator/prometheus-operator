@@ -1,6 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator/tooling
 
-go 1.24.4
+go 1.24.5
 
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20241111191808-71fefeed8910
