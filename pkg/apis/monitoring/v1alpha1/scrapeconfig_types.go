@@ -934,7 +934,7 @@ type KumaSDConfig struct {
 	// +required
 	Server URL `json:"server"`
 	// Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
-    // It requires Prometheus >= v2.50.0.
+	// It requires Prometheus >= v2.50.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
