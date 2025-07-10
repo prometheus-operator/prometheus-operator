@@ -2,6 +2,7 @@
 
 * Owners:
   * [haanhvu](https://github.com/haanhvu)
+  * [slashexx](https://github.com/slashexx)
 * Status:
   * `Accepted`
 * Related Tickets:
@@ -45,6 +46,7 @@ In specific, the MVP will need to:
 * Allow users to restrict which set of nodes they want to deploy Prometheus Agent, if desired.
 * Allow users to set the priority of Prometheus Agent pod compared to other pods on the same node, if desired.
 * Allow each Prometheus Agent pod to only scrape from the pods from PodMonitor that run on the same node.
+* Enable ServiceMonitor support for DaemonSet mode using EndpointSlice discovery (extended goal).
 
 ## 5. Non-Goals
 
@@ -73,6 +75,49 @@ The current [PrometheusAgent CRD](https://prometheus-operator.dev/docs/platform/
 * Storage
 
 We will add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`, with `StatefulSet` being the default. If the DaemonSet mode is activated (`mode: DaemonSet`), all the unrelated fields listed above will not be accepted. In the MVP, we will simply fail the reconciliation if any of those fields are set. We will prevent users to directly switch from a live StatefulSet setup to DaemonSet, because that might break their workload if they forget to unset the unsupported fields. Following up, we will leverage validation rules with [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/). Only then, we will allow switching from a live StatefulSet setup to DaemonSet. We already have an issue for CEL [here](https://github.com/prometheus-operator/prometheus-operator/issues/5079).
+
+#### 6.1.1 CEL Validation rules
+
+When `mode:DaemonSet`, the following CEL rules will be applied:
+
+- `replicas` 
+- `storage`  
+- `shards` 
+- `persistentVolumeClaimRetentionPolicy` 
+
+This is implemented by adding `x-kubernetes-validations` like:
+
+```yaml
+x-kubernetes-validations:
+  - rule: "self.mode == 'DaemonSet' ? !has(self.replicas) : true"
+    message: "replicas field is not allowed when mode is 'DaemonSet'"
+```
+
+#### 6.1.2 Runtime Validation Logic as Fallback 
+
+CEL validation will provide immediate feedback during `kubectl apply` but we will need runtime validation logic in the controller as a fallback mechanism. This fallback will be integrated directly in the `PrometheusAgent` reconciler loop.
+
+This is mainly because :
+1. CEL validation will require Kubernetes version 1.25+ and hence not all users might have CEL supported clusters.
+2. This will provide an in-depth defense mechamnism against misconfigurations.
+3. More detailed error response in case the first layer of defense fails.
+
+```go
+if spec.Mode == "DaemonSet" {
+	if spec.Replicas != nil {
+		return fmt.Errorf("cannot configure replicas when using DaemonSet mode")
+	}
+	if spec.Storage != nil {
+		return fmt.Errorf("cannot configure storage when using DaemonSet mode")
+	}
+	if spec.Shards != nil {
+		return fmt.Errorf("cannot configure shards when using DaemonSet mode")
+	}
+	if spec.PersistentVolumeClaimRetentionPolicy != nil {
+		return fmt.Errorf("cannot configure persistentVolumeClaimRetentionPolicy when using DaemonSet mode")
+	}
+}
+```
 
 ### 6.2. Node detecting:
 
@@ -104,6 +149,62 @@ kubernetes_sd_configs:
 We'll go with this option, because it filters targets right at discovery time, and also because Kubernetes API server watch cache indexes pods by node name (as we can see in [Kubernetes codebase](https://github.com/kubernetes/kubernetes/blob/v1.30.0-rc.0/pkg/registry/core/pod/storage/storage.go#L91)).
 
 We've also considered using relabel config that filters pods by `__meta_kubernetes_pod_node_name` label. However, we didn't choose to go with this option because it filters pods only after discovering all the pods from PodMonitor, which increases load on Kubernetes API server.
+
+### 6.4. ServiceMonitor Support with EndpointSlice
+
+To enable ServiceMonitor support for DaemonSet mode while addressing the performance concerns mentioned in section 5, we implement EndpointSlice-based service discovery:
+
+#### 6.4.1. EndpointSlice Discovery Implementation
+
+The PrometheusAgent CRD already supports a `serviceDiscoveryRole` field that can be set to `EndpointSlice`:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+spec:
+  mode: DaemonSet
+  serviceDiscoveryRole: EndpointSlice  # Use EndpointSlice instead of Endpoints
+  serviceMonitorSelector:
+    matchLabels:
+      team: platform
+```
+
+When `serviceDiscoveryRole: EndpointSlice` is specified, the generated Prometheus configuration will use:
+
+```yaml
+scrape_configs:
+- job_name: serviceMonitor/default/my-service/0
+  kubernetes_sd_configs:
+  - role: endpointslice  # Instead of "endpoints"
+    namespaces:
+      names: [default]
+```
+
+#### 6.4.2. Performance Benefits
+
+EndpointSlice provides significant performance improvements over classic Endpoints:
+* **Scalability**: EndpointSlice objects are limited to 1000 endpoints each, preventing massive objects
+* **Efficiency**: Multiple smaller objects reduce memory usage and network traffic
+* **Parallel Processing**: Multiple EndpointSlice objects can be processed in parallel
+* **Reduced API Server Load**: Less stress on Kubernetes API server with distributed endpoint information
+
+#### 6.4.3. Implementation Details
+
+The implementation properly handles EndpointSlice support by checking both the user's `serviceDiscoveryRole` setting and cluster compatibility. The logic involves:
+
+```go
+// Check if THIS PrometheusAgent wants EndpointSlice discovery
+cpf := p.GetCommonPrometheusFields()
+if ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole {
+    if c.endpointSliceSupported {
+        opts = append(opts, prompkg.WithEndpointSliceSupport())
+    } else {
+        // Warn user that they want EndpointSlice but cluster doesn't support it
+        c.logger.Warn("EndpointSlice requested but not supported by Kubernetes cluster")
+        // Fall back to classic endpoints
+    }
+}
+```
 
 ## 7. Action Plan
 
