@@ -75,7 +75,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	default:
 		if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
 			reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
-			oldMeta.GetGeneration() != curMeta.GetGeneration() {
+			oldMeta.GetGeneration() == curMeta.GetGeneration() {
 			return
 		}
 	}
