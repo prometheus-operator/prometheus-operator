@@ -1196,11 +1196,11 @@ func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 	}
 
 	if p.Spec.Storage != nil {
-		return fmt.Errorf("storage cannot be configured when mode is DaemonSet")
+		return fmt.Errorf("storage cannot be set when mode is DaemonSet")
 	}
 
-	if p.Spec.Shards != nil {
-		return fmt.Errorf("shards cannot be set when mode is DaemonSet")
+	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
+		return fmt.Errorf("shards cannot be greater than 1 when mode is DaemonSet")
 	}
 
 	if p.Spec.PersistentVolumeClaimRetentionPolicy != nil {
