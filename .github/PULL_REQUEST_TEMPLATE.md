@@ -1,7 +1,9 @@
 ## Description
 
 _Describe the big picture of your changes here to communicate to the maintainers why we should accept this pull request._
+
 _If it fixes an existing issue (bug or feature), use the following keyword:_
+
 _Closes: #ISSUE-NUMBER_
 
 ## Type of change
