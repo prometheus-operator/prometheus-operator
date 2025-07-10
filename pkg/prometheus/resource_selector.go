@@ -1169,12 +1169,12 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 			return err
 		}
 
-		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-			return fmt.Errorf("[%d]: invalid scheme '%s'. Only 'http' and 'https' are supported", i, parsedURL.Scheme)
+		if parsedURL.Host == "" {
+			return fmt.Errorf("[%d]: kuma SD server field must not be empty: %s", config.Server)
 		}
 
-		if len(parsedURL.Scheme) == 0 || len(parsedURL.Host) == 0 {
-			return fmt.Errorf("kuma SD server must not be empty and have a scheme: %s", config.Server)
+		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+			return fmt.Errorf("[%d]: invalid scheme '%s'. Only 'http' and 'https' are supported", i, parsedURL.Scheme)
 		}
 
 		if err := validateServer(config.Server); err != nil {
