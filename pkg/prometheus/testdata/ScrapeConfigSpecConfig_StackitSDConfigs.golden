@@ -17,12 +17,11 @@ scrape_configs:
       header:
       - value
     project: 11111111-1111-1111-1111-111111111111
-    follow_redirects: true
-    enable_http2: true
     region: eu01
     endpoint: https://api.stackit.de/
+    follow_redirects: true
+    enable_http2: true
     port: 23456
-    credentials_file_path: path/to/credentials/
     refresh_interval: 30s
   relabel_configs:
   - source_labels:
