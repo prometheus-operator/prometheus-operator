@@ -17,7 +17,7 @@ package operator
 import (
 	"fmt"
 	"log/slog"
-	"reflect"
+	// "reflect"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -73,11 +73,12 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 			return
 		}
 	default:
-		if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
-			reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
-			oldMeta.GetGeneration() == curMeta.GetGeneration() {
-			return
-		}
+		// if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
+		// 	reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
+		// 	oldMeta.GetGeneration() == curMeta.GetGeneration() {
+		// 	return
+		// }
+		// return
 	}
 
 	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
