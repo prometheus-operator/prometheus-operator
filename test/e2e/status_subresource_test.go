@@ -72,7 +72,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-	name := "serviceMonitor-status-subresource-test"
+	name := "servicemonitor-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceMonitorSelector = &v1.LabelSelector{
