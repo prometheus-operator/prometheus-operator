@@ -1,6 +1,23 @@
 ## Unreleased
 
+## 0.84.0 / 2025-07-11
+
+* [FEATURE] Add `ruleQueryOffset` to Thanos ruler. #7580
+* [FEATURE] feat: add startupProbe to config-reloader #7575
+* [FEATURE] Add support for API URLs in the global configuration for the alert manager for Telegram #7631
+* [FEATURE] Add support for API URLs in the global configuration for the alert manager for Jira #7626
+* [FEATURE] Add `ruleConcurrentEval` option to Thanos Ruler #7659
+* [FEATURE] Add `ruleOutageTolerance` option for Thanos Ruler #7672
+* [FEATURE] Add support for API URLs in the global configuration for the alert manager for Webex #7632
+* [FEATURE] Add ProxyConfig fields for Prometheus `apiServerConfig` #7670
+* [FEATURE] Add WeChat in Alertmanager Global Config #7627
+* [FEATURE] Add `scrapeClassicHistograms` option to Prometheus for Prometheus v3.5 #7667
+* [FEATURE] Add `labelSelector` to HetznerSDConfig in the ScrapeConfig CRD #7675
+* [FEATURE] Add VictorOps in Alertmanager Global Config #7654
 * [ENHANCEMENT] Set `reason: ConfigurationUnmanaged` in the `Reconciled` condition when the operator doesn't managed the Prometheus configuration. #7661
+* [ENHANCEMENT] Fix MatchType is empty in AM matchers #7592
+* [ENHANCEMENT] Support ProxyConfig fields for ServiceMonitor #7647
+* [ENHANCEMENT] Support ProxyConfig fields for Probe #7660
 
 ## 0.83.0 / 2025-05-30
 
