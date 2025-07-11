@@ -70,3 +70,39 @@ func prometheusStatusApplyConfigurationFromPrometheusStatus(status *monitoringv1
 
 	return psac
 }
+
+// ApplyConfigurationFromServiceMonitor updates the ServiceMonitor Status subresource.
+func ApplyConfigurationFromServiceMonitor(sm *monitoringv1.ServiceMonitor) *monitoringv1ac.ServiceMonitorApplyConfiguration {
+	smsac := configResourceStatusApplyConfigurationFromConfigResourceStatus(&sm.Status)
+	return monitoringv1ac.ServiceMonitor(sm.Name, sm.Namespace).
+		WithStatus(smsac)
+}
+
+func configResourceStatusApplyConfigurationFromConfigResourceStatus(status *monitoringv1.ConfigResourceStatus) *monitoringv1ac.ConfigResourceStatusApplyConfiguration {
+	crsac := monitoringv1ac.ConfigResourceStatus()
+
+	for _, binding := range status.Bindings {
+		bg := monitoringv1ac.WorkloadBinding().
+			WithGroup(binding.Group).
+			WithName(binding.Name).
+			WithNamespace(binding.Namespace).
+			WithResource(binding.Resource)
+
+		var conditions []*monitoringv1ac.ConfigResourceConditionApplyConfiguration
+		for _, condition := range binding.Conditions {
+			conditions = append(conditions, monitoringv1ac.ConfigResourceCondition().
+				WithType(condition.Type).
+				WithStatus(condition.Status).
+				WithLastTransitionTime(condition.LastTransitionTime).
+				WithReason(condition.Reason).
+				WithMessage(condition.Message).
+				WithObservedGeneration(condition.ObservedGeneration),
+			)
+		}
+
+		bg.WithConditions(conditions...)
+		crsac.WithBindings(bg)
+	}
+
+	return crsac
+}
