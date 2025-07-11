@@ -87,8 +87,8 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 		"app": "test-service-monitor",
 	}
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
-    require.NoError(t, err)
+	require.NoError(t, err)
 
 	time.Sleep(1 * time.Minute)
-	require.NotEmpty(t, sm.Status.Bindings)	
+	require.NotEmpty(t, sm.Status.Bindings)
 }

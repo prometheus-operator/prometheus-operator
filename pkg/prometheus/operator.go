@@ -273,12 +273,12 @@ func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Ob
 			Type:               monitoringv1.Accepted,
 			Status:             monitoringv1.ConditionTrue,
 			LastTransitionTime: metav1.Now(),
-			Message:            res.err.Error(),
 			Reason:             res.reason,
 		}
 
 		if res.err != nil {
 			condition.Status = monitoringv1.ConditionFalse
+			condition.Message = res.err.Error()
 		}
 
 		binding := monitoringv1.WorkloadBinding{
