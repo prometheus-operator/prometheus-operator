@@ -1,4 +1,14 @@
-# Graduate ScrapeConfig CRD To Beta
+---
+weight: 522
+toc: true
+title: Graduate ScrapeConfig CRD To Beta
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 * Owners:
   * [mviswanathsai](https://github.com/mviswanathsai)
