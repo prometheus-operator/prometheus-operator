@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
@@ -67,12 +65,12 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	switch curMeta.(type) {
-	case *corev1.ConfigMap, *corev1.Secret:
+	// Generation value is 0 for ConfigMaps and Secrets.
+	if curMeta.GetGeneration() == 0 {
 		if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
 			return
 		}
-	default:
+	} else {
 		if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
 			reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
 			oldMeta.GetGeneration() == curMeta.GetGeneration() {
