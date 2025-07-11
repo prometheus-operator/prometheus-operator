@@ -78,7 +78,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		// 	oldMeta.GetGeneration() == curMeta.GetGeneration() {
 		// 	return
 		// }
-		// return
+		return
 	}
 
 	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
