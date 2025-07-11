@@ -103,6 +103,15 @@ type Operator struct {
 
 type ControllerOption func(*Operator)
 
+// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes and scrapeConfig)
+// selected by Prometheus.
+type selectedConfigResources struct {
+	sMons         prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor]
+	pMons         prompkg.ResourcesSelection[*monitoringv1.PodMonitor]
+	bMons         prompkg.ResourcesSelection[*monitoringv1.Probe]
+	scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+}
+
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
 func WithEndpointSlice() ControllerOption {
 	return func(o *Operator) {
@@ -795,7 +804,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore); err != nil {
+	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+
+	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore, resources); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
@@ -1139,7 +1150,45 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder) error {
+// getSeletedConfigResources returns the selected configuration resources (PodMonitor, ServiceMonitor, Probes and ScrapeConfigs) by the Prometheus.
+func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, store *assets.StoreBuilder) (selectedConfigResources, error) {
+	var resources selectedConfigResources
+
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	if err != nil {
+		return resources, err
+	}
+	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
+	if err != nil {
+		return resources, fmt.Errorf("selecting ServiceMonitors failed: %w", err)
+	}
+
+	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
+	if err != nil {
+		return resources, fmt.Errorf("selecting PodMonitors failed: %w", err)
+	}
+
+	bmons, err := resourceSelector.SelectProbes(ctx, c.probeInfs.ListAllByNamespace)
+	if err != nil {
+		return resources, fmt.Errorf("selecting Probes failed: %w", err)
+	}
+
+	var scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	if c.sconInfs != nil {
+		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
+		if err != nil {
+			return resources, fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
+		}
+	}
+	return selectedConfigResources{
+		sMons:         smons,
+		bMons:         bmons,
+		pMons:         pmons,
+		scrapeConfigs: scrapeConfigs,
+	}, nil
+}
+
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder, resources selectedConfigResources) error {
 	// If no service/pod monitor and probe selectors are configured, the user
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
@@ -1161,34 +1210,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		}
 
 		return err
-	}
-
-	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
-	if err != nil {
-		return err
-	}
-
-	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
-	if err != nil {
-		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
-	}
-
-	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
-	if err != nil {
-		return fmt.Errorf("selecting PodMonitors failed: %w", err)
-	}
-
-	bmons, err := resourceSelector.SelectProbes(ctx, c.probeInfs.ListAllByNamespace)
-	if err != nil {
-		return fmt.Errorf("selecting Probes failed: %w", err)
-	}
-
-	var scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
-	if c.sconInfs != nil {
-		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
-		if err != nil {
-			return fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
-		}
 	}
 
 	if err := prompkg.AddRemoteReadsToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteRead); err != nil {
@@ -1238,10 +1259,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateServerConfiguration(
 		p,
-		smons.ValidResources(),
-		pmons.ValidResources(),
-		bmons.ValidResources(),
-		scrapeConfigs.ValidResources(),
+		resources.sMons.ValidResources(),
+		resources.pMons.ValidResources(),
+		resources.bMons.ValidResources(),
+		resources.scrapeConfigs.ValidResources(),
 		store,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
