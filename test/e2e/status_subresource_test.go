@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,6 +55,7 @@ func testFinalizerWhenStatusForConfigResourcesEnabled(t *testing.T) {
 	require.NoError(t, err, "failed to delete Prometheus with status-cleanup finalizer")
 }
 
+// testServiceMonitorStatusSubresource validates ServiceMonitor status updates upon Prometheus selection.
 func testServiceMonitorStatusSubresource(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -84,5 +86,9 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	smon.ObjectMeta.Labels = map[string]string{
 		"app": "test-service-monitor",
 	}
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+    require.NoError(t, err)
 
+	time.Sleep(1 * time.Minute)
+	require.NotEmpty(t, sm.Status.Bindings)	
 }
