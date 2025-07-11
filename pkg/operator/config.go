@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"maps"
@@ -70,6 +71,8 @@ type Config struct {
 
 	// Feature gates.
 	Gates *FeatureGates
+
+	WatchObjectRefsInAllNamespaces bool
 }
 
 // DefaultConfig returns a default operator configuration.
@@ -244,18 +247,22 @@ func (m *Map) SortedKeys() []string {
 	return slices.Sorted(maps.Keys(*m))
 }
 
+// Namespaces defines the namespaces which are watched by the operator.
+// The zero value is valid and allows all namespaces.
 type Namespaces struct {
-	// Allow list for common custom resources.
+	// Allow list of namespaces for common custom resources.
+	// If not empty, DenyList must be empty.
 	AllowList StringSet
-	// Deny list for common custom resources.
+	// Deny list of namespaces for common custom resources.
+	// If not empty, AllowList must be empty.
 	DenyList StringSet
-	// Allow list for Prometheus custom resources.
+	// Allow list of namespaces for Prometheus custom resources.
 	PrometheusAllowList StringSet
-	// Allow list for Alertmanager custom resources.
+	// Allow list of namespaces for Alertmanager custom resources.
 	AlertmanagerAllowList StringSet
-	// Allow list for AlertmanagerConfig custom resources.
+	// Allow list of namespaces for AlertmanagerConfig custom resources.
 	AlertmanagerConfigAllowList StringSet
-	// Allow list for ThanosRuler custom resources.
+	// Allow list of namespaces for ThanosRuler custom resources.
 	ThanosRulerAllowList StringSet
 }
 
@@ -270,9 +277,14 @@ func (n *Namespaces) String() string {
 	)
 }
 
-func (n *Namespaces) Finalize() {
+// Finalize must be called to verify that the configuration is valid.
+func (n *Namespaces) Finalize() error {
+	if len(n.AllowList) > 0 && len(n.DenyList) > 0 {
+		return errors.New("allow and deny lists are mutually exclusive, only one should be provided")
+	}
+
 	if len(n.AllowList) == 0 {
-		n.AllowList.Insert(v1.NamespaceAll)
+		n.AllowList = StringSet{v1.NamespaceAll: struct{}{}}
 	}
 
 	if len(n.PrometheusAllowList) == 0 {
@@ -290,6 +302,8 @@ func (n *Namespaces) Finalize() {
 	if len(n.ThanosRulerAllowList) == 0 {
 		n.ThanosRulerAllowList = n.AllowList
 	}
+
+	return nil
 }
 
 type LabelSelector string
@@ -369,13 +383,38 @@ func (s StringSet) Set(value string) error {
 	return nil
 }
 
+func (s StringSet) isAllNamespace() bool {
+	if len(s) != 1 {
+		return false
+	}
+
+	_, found := s[v1.NamespaceAll]
+	return found
+}
+
+// MergeAllowLists returns a StringSet which is the merge of a and b.
+func MergeAllowLists(a, b StringSet) StringSet {
+	if a.isAllNamespace() {
+		return a
+	}
+
+	if b.isAllNamespace() {
+		return b
+	}
+
+	res := make(map[string]struct{}, len(a)+len(b))
+	for k := range a {
+		res[k] = struct{}{}
+	}
+	for k := range b {
+		res[k] = struct{}{}
+	}
+	return res
+}
+
 // String implements the flag.Value interface.
 func (s StringSet) String() string {
 	return strings.Join(s.Slice(), ",")
-}
-
-func (s StringSet) Insert(value string) {
-	s[value] = struct{}{}
 }
 
 func (s StringSet) Slice() []string {

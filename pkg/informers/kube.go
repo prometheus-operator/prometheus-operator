@@ -59,7 +59,6 @@ func NewMetadataInformerFactory(
 	defaultResync time.Duration,
 	tweakListOptions func(*metav1.ListOptions),
 ) FactoriesForNamespaces {
-
 	tweaks, namespaces := newInformerOptions(allowNamespaces, denyNamespaces, tweakListOptions)
 
 	ret := metadataInformersForNamespace{}

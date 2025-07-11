@@ -70507,6 +70507,7 @@ spec:
         - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.83.0
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
+        - --watch-object-references-in-all-namespaces=true
         env:
         - name: GOGC
           value: "30"

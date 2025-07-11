@@ -260,9 +260,13 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
+	allowList := c.Namespaces.PrometheusAllowList
+	if c.WatchObjectRefsInAllNamespaces {
+		allowList = operator.MergeAllowLists(c.Namespaces.PrometheusAllowList, c.Namespaces.AllowList)
+	}
 	o.cmapInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.Namespaces.PrometheusAllowList,
+			allowList,
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -271,7 +275,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configmap informers: %w", err)
@@ -279,7 +283,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			c.Namespaces.PrometheusAllowList,
+			allowList,
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
@@ -289,7 +293,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
-		informers.PartialObjectMetadataStrip,
+		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating secrets informers: %w", err)
@@ -517,20 +521,26 @@ func (c *Operator) addHandlers() {
 		))
 	}
 
-	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+	hasRefFunc := operator.HasReferenceFunc(
+		c.promInfs,
+		c.reconciliations,
+	)
+	c.cmapInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
 		c.enqueueForPrometheusNamespace,
+		hasRefFunc,
 	))
 
-	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+	c.secrInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
 		c.enqueueForPrometheusNamespace,
+		hasRefFunc,
 	))
 
 	// The controller needs to watch the namespaces in which the service/pod
