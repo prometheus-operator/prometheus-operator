@@ -17,9 +17,10 @@ package operator
 import (
 	"fmt"
 	"log/slog"
-	// "reflect"
+	"reflect"
 
-	corev1 "k8s.io/api/core/v1"
+	// corev1 "k8s.io/api/core/v1"
+	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
@@ -58,6 +59,7 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
+	fmt.Println("OnUpdate called for", e.objName)
 	oldMeta, ok := e.accessor.ObjectMetadata(old)
 	if !ok {
 		return
@@ -66,21 +68,32 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	if !ok {
 		return
 	}
+	
 
-	switch curMeta.(type) {
-	case *corev1.ConfigMap, *corev1.Secret:
+	fmt.Println("generation int", curMeta.GetGeneration())
+	if(curMeta.GetGeneration()==0 && oldMeta.GetResourceVersion() == curMeta.GetResourceVersion()){
+		return
+	}
+	switch curMeta.GetGeneration() {
+	case int64(0):
+		fmt.Println("indside switch 1", e.objName)
 		if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
+			fmt.Println("No significant change detected, switch1, skipping enqueue for", e.objName)
 			return
 		}
 	default:
-		// if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
-		// 	reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
-		// 	oldMeta.GetGeneration() == curMeta.GetGeneration() {
-		// 	return
-		// }
-		return
+		fmt.Println("inside switch 2", e.objName)
+		if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
+			reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
+			oldMeta.GetGeneration() == curMeta.GetGeneration() {
+				fmt.Println("No significant change detected, switch2,skipping enqueue for", e.objName)
+			return
+		}
 	}
 
+
+	fmt.Println("Update detected for", e.objName)
+	e.logger.Info(fmt.Sprintf("update detected for %s", e.objName))
 	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
 	e.metrics.TriggerByCounter(e.objName, UpdateEvent)
 	e.enqueueFunc(curMeta.GetNamespace())
