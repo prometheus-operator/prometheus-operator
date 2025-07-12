@@ -191,7 +191,7 @@ func selectObjects[T configurationResource](
 			reason   string
 		}{
 			resource: o,
-			err:      nil,
+			err:      err,
 			reason:   reason,
 		}
 	}
