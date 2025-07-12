@@ -80,18 +80,18 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceMonitorSelector = &v1.LabelSelector{
 		MatchLabels: map[string]string{
-			"app": "test-service-monitor",
+			"app": name,
 		},
 	}
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
 	smon := framework.MakeBasicServiceMonitor(name)
 	smon.ObjectMeta.Labels = map[string]string{
-		"app": "test-service-monitor",
+		"app": name,
 	}
 	smon.Spec.Selector = v1.LabelSelector{
 		MatchLabels: map[string]string{
-			"app": "test-service-monitor",
+			"app": "testing",
 		},
 	}
 	smon.Spec.Endpoints = []monitoringv1.Endpoint{
