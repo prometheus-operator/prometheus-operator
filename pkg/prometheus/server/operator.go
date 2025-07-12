@@ -987,8 +987,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	err = c.updateConfigResourcesStatus(ctx, p, logger, resources)
-	return err
+	if c.configResourcesStatusEnabled {
+		if err := c.updateConfigResourcesStatus(ctx, p, logger,resources); err != nil {
+			return err 
+		}
+	}
+	return nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
