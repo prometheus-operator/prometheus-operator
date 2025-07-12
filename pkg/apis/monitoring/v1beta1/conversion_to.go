@@ -269,6 +269,59 @@ func convertDiscordConfigTo(in DiscordConfig) v1alpha1.DiscordConfig {
 	}
 }
 
+func convertRocketChatFieldConfigsTo(in []RocketChatFieldConfig) []v1alpha1.RocketChatFieldConfig {
+	if in == nil {
+		return nil
+	}
+	out := make([]v1alpha1.RocketChatFieldConfig, len(in))
+	for i, field := range in {
+		out[i] = v1alpha1.RocketChatFieldConfig{
+			Title: field.Title,
+			Value: field.Value,
+			Short: field.Short,
+		}
+	}
+	return out
+}
+
+func convertRocketChatActionConfigsTo(in []RocketChatActionConfig) []v1alpha1.RocketChatActionConfig {
+	if in == nil {
+		return nil
+	}
+	out := make([]v1alpha1.RocketChatActionConfig, len(in))
+	for i, action := range in {
+		out[i] = v1alpha1.RocketChatActionConfig{
+			Text: action.Text,
+			URL:  (*v1alpha1.URL)(action.URL),
+			Msg:  action.Msg,
+		}
+	}
+	return out
+}
+
+func convertRocketchatConfigTo(in RocketChatConfig) v1alpha1.RocketChatConfig {
+	return v1alpha1.RocketChatConfig{
+		SendResolved: in.SendResolved,
+		APIURL:       (*v1alpha1.URL)(in.APIURL),
+		Channel:      in.Channel,
+		Token:        in.Token,
+		TokenID:      in.TokenID,
+		Color:        in.Color,
+		Emoji:        in.Emoji,
+		IconURL:      (*v1alpha1.URL)(in.IconURL),
+		Text:         in.Text,
+		Title:        in.Title,
+		TitleLink:    in.TitleLink,
+		Fields:       convertRocketChatFieldConfigsTo(in.Fields),
+		ShortFields:  in.ShortFields,
+		ImageURL:     (*v1alpha1.URL)(in.ImageURL),
+		ThumbURL:     (*v1alpha1.URL)(in.ThumbURL),
+		LinkNames:    in.LinkNames,
+		Actions:      convertRocketChatActionConfigsTo(in.Actions),
+		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+	}
+}
+
 func convertSlackFieldsTo(in []SlackField) []v1alpha1.SlackField {
 	out := make([]v1alpha1.SlackField, len(in))
 
@@ -584,6 +637,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.MSTeamsV2Configs = append(
 				out.MSTeamsV2Configs,
 				convertMSTeamsV2ConfigTo(in),
+			)
+		}
+
+		for _, in := range in.RocketChatConfigs {
+			out.RocketChatConfigs = append(
+				out.RocketChatConfigs,
+				convertRocketchatConfigTo(in),
 			)
 		}
 
