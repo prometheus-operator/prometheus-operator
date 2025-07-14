@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
@@ -67,15 +69,11 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 
 	// Generation value is 0 for ConfigMaps and Secrets.
 	if curMeta.GetGeneration() == 0 {
-		if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
+		if hasResourceVersionChanged(oldMeta, curMeta) {
 			return
 		}
-	} else {
-		if reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) &&
-			reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) &&
-			oldMeta.GetGeneration() == curMeta.GetGeneration() {
-			return
-		}
+	} else if !hasObjMetaChanged(oldMeta, curMeta) {
+		return
 	}
 
 	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
@@ -89,4 +87,14 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
 		e.enqueueFunc(o.GetNamespace())
 	}
+}
+
+func hasResourceVersionChanged(oldMeta, curMeta metav1.Object) bool {
+	return oldMeta.GetResourceVersion() != curMeta.GetResourceVersion()
+}
+
+func hasObjMetaChanged(oldMeta, curMeta metav1.Object) bool {
+	return !reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) ||
+		!reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) ||
+		oldMeta.GetGeneration() != curMeta.GetGeneration()
 }
