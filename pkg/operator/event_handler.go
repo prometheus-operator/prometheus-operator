@@ -68,11 +68,8 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	}
 
 	// Generation value is 0 for ConfigMaps and Secrets.
-	if curMeta.GetGeneration() == 0 {
-		if hasResourceVersionChanged(oldMeta, curMeta) {
-			return
-		}
-	} else if !hasObjMetaChanged(oldMeta, curMeta) {
+	if (curMeta.GetGeneration() == 0 && !hasResourceVersionChanged(oldMeta, curMeta)) ||
+		(curMeta.GetGeneration() != 0 && !hasObjMetaChanged(oldMeta, curMeta)) {
 		return
 	}
 
