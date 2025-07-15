@@ -84,14 +84,14 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 	}
 }
 
-// isConfigMapSecretChanged checks if the ConfigMap or Secret has changed
+// isConfigMapSecretChanged checks if the ConfigMap or Secret has changed.
 func isConfigMapSecretChanged(oldMeta, curMeta metav1.Object) bool {
 	// Generation is always 0 for ConfigMap and Secret.
 	return curMeta.GetGeneration() == 0 && oldMeta.GetResourceVersion() != curMeta.GetResourceVersion()
 }
 
 // isConfigResChanged checks if the configResources (PodMonitor, ServiceMonitor, Probes, ScrapeConfig, AlertManagerConfig and PrometheusRule)
-// has changed in terms of labels, annotations, or generation
+// has changed in terms of labels, annotations, or generation.
 func isConfigResChanged(oldMeta, curMeta metav1.Object) bool {
 	return curMeta.GetGeneration() != 0 && (!reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) ||
 		!reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) ||
