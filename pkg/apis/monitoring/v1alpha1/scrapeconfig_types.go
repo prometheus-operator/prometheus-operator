@@ -223,6 +223,9 @@ type ScrapeConfigSpec struct {
 	// IonosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
+	// StackitSDConfigs defines a list of STACKIT service discovery configurations.
+	// +optional
+	StackitSDConfigs []StackitSDConfig `json:"stackitSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1457,6 +1460,55 @@ type IonosSDConfig struct {
 	Authorization  v1.SafeAuthorization `json:"authorization"`
 	v1.ProxyConfig `json:",inline"`
 	// TLS configuration to use when connecting to the IONOS API.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Configure whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// Configure whether to enable OAuth2.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+}
+
+// StackitSDConfig configurations enables service discovery for STACKIT.
+// See https://prometheus.io/docs/prometheus/3.5/configuration/configuration/#stackit_sd_config
+type StackitSDConfig struct {
+	// The STACKIT Project ID.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Project string `json:"project"`
+	// The STACKIT region.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Region string `json:"region"`
+	// The STACKIT endpoint.
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +required
+	Endpoint *string `json:"endpoint"`
+	// Default port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// Raw private key string used for authenticating a service account.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	PrivateKey *string `json:"privateKey,omitempty"`
+	// Full JSON-formatted service account key used for authentication.
+	// +kubebuilder:validation:MinLength:=1
+	// +optional
+	ServiceAccountKey *string `json:"serviceAccountKey,omitempty"`
+	// RefreshInterval configures the time after which the servers are refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Authorization header configuration, required when using STACKIT.
+	// +optional
+	Authorization  *v1.SafeAuthorization `json:"authorization,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to use when connecting to the STACKIT API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
