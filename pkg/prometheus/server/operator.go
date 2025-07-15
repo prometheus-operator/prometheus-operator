@@ -773,15 +773,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-		assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if c.rr.DeletionInProgress(p) {
 		resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 		if err != nil {
-			return err 
+			return err
 		}
-		err = c.updateConfigResourcesStatus(ctx,  p,logger, resources)
+		err = c.updateConfigResourcesStatus(ctx, p, logger, resources)
 		if err != nil {
-			return err 
+			return err
 		}
 		c.reconciliations.ForgetObject(key)
 		return nil
@@ -1348,19 +1348,45 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if !c.configResourcesStatusEnabled {
 		return nil
 	}
+	smonconfigResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
 	if len(resources.sMons) > 0 {
-		configResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
+
 		if c.rr.DeletionInProgress(p) {
-			err := configResourceSyncer.RemoveStatus(ctx, p, resources.sMons)
+			err := smonconfigResourceSyncer.RemoveStatus(ctx, p, resources.sMons)
 			if err != nil {
 				return err
 			}
 		}
-		err := configResourceSyncer.AddStatus(ctx, p, resources.sMons)
+		err := smonconfigResourceSyncer.AddStatus(ctx, p, resources.sMons)
 		if err != nil {
 			return err
 		}
-	
+	}
+	var invalidSmons prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor] 
+	err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
+        k, ok := c.accessor.MetaNamespaceKey(obj)
+			if !ok {
+				return
+			}
+		_, ok = resources.sMons[k]
+		if ok {
+			return
+		}
+		s := obj.(*monitoringv1.ServiceMonitor)
+        for _, binding := range s.Status.Bindings {
+			if binding.Name == p.Name && binding.Namespace == p.Namespace && binding.Resource == monitoringv1.PrometheusName {
+		       invalidSmons[k]= prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
+			}
+		}
+	})
+	if err != nil {
+		return err 
+	}
+	if len(invalidSmons) > 0 {
+		err := smonconfigResourceSyncer.RemoveStatus(ctx, p, invalidSmons)
+		if err != nil {
+			return err 
+		}
 	}
 	return nil
 }
