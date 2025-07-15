@@ -1,4 +1,14 @@
-# Shard Autoscaling
+---
+weight: 506
+toc: true
+title: Shard Autoscaling
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 * Owners:
   * [Arthur Sens](https://github.com/ArthurSens)
