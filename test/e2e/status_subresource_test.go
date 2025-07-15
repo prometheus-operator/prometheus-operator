@@ -95,12 +95,12 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 		},
 	}
 	smon.Spec.Endpoints = []monitoringv1.Endpoint{
-        {
-		  Port: "web",
-		  Path: "/metrics",
-		  TargetPort: ptr.To(intstr.FromString("80")),
-		  Interval: monitoringv1.Duration("30s"),
-		  Scheme: "http",
+		{
+			Port:       "web",
+			Path:       "/metrics",
+			TargetPort: ptr.To(intstr.FromString("80")),
+			Interval:   monitoringv1.Duration("30s"),
+			Scheme:     "http",
 		},
 	}
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})

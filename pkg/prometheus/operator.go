@@ -321,8 +321,7 @@ func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Objec
 	return nil
 }
 
-
-// RemoveStatus remove the Prometheus or PrometheusAgent binding from the status 
+// RemoveStatus remove the Prometheus or PrometheusAgent binding from the status
 // subresource of status in serviceMonitor, podMonitor, probes and scrapeConfig.
 func (ru *ConfigResourceSyncer[T]) RemoveStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
 	for key, res := range resources {
@@ -333,8 +332,8 @@ func (ru *ConfigResourceSyncer[T]) RemoveStatus(ctx context.Context, p metav1.Ob
 				if binding.Namespace == p.GetNamespace() &&
 					binding.Name == p.GetName() &&
 					binding.Resource == monitoringv1.PrometheusName {
-                    r.Status.Bindings = append(r.Status.Bindings[:i], r.Status.Bindings[i+1:]...)
-			        break;
+					r.Status.Bindings = append(r.Status.Bindings[:i], r.Status.Bindings[i+1:]...)
+					break
 				}
 			}
 
@@ -349,4 +348,3 @@ func (ru *ConfigResourceSyncer[T]) RemoveStatus(ctx context.Context, p metav1.Ob
 	}
 	return nil
 }
-

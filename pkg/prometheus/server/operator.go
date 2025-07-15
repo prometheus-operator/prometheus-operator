@@ -773,7 +773,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+		assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if c.rr.DeletionInProgress(p) {
+		resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+		if err != nil {
+			return err 
+		}
+		err = c.updateConfigResourcesStatus(ctx,  p,logger, resources)
+		if err != nil {
+			return err 
+		}
 		c.reconciliations.ForgetObject(key)
 		return nil
 	}
@@ -792,8 +801,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err != nil {
 		return err
 	}
-
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
@@ -987,9 +994,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-		if err := c.updateConfigResourcesStatus(ctx, p, logger,resources); err != nil {
-			return err 
-		}
+	if err := c.updateConfigResourcesStatus(ctx, p, logger, resources); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1338,15 +1345,22 @@ func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *moni
 
 // updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) error {
-	if !c.configResourcesStatusEnabled{
+	if !c.configResourcesStatusEnabled {
 		return nil
 	}
 	if len(resources.sMons) > 0 {
 		configResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
+		if c.rr.DeletionInProgress(p) {
+			err := configResourceSyncer.RemoveStatus(ctx, p, resources.sMons)
+			if err != nil {
+				return err
+			}
+		}
 		err := configResourceSyncer.AddStatus(ctx, p, resources.sMons)
 		if err != nil {
 			return err
 		}
+	
 	}
 	return nil
 }
