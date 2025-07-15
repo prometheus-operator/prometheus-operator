@@ -67,14 +67,12 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	// Generation value is 0 for ConfigMaps and Secrets.
-	if (curMeta.GetGeneration() == 0 && !hasResourceVersionChanged(oldMeta, curMeta)) ||
-		(curMeta.GetGeneration() != 0 && !hasObjMetaChanged(oldMeta, curMeta)) {
+	if !isConfigMapSecretChanged(oldMeta, curMeta) && !isConfigResChanged(oldMeta, curMeta) {
 		return
 	}
 
 	e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
-	e.metrics.TriggerByCounter(e.objName, UpdateEvent)
+	e.metrics.TriggerByCounter(e.objName, UpdateEvent).Inc()
 	e.enqueueFunc(curMeta.GetNamespace())
 }
 
@@ -86,12 +84,16 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 	}
 }
 
-func hasResourceVersionChanged(oldMeta, curMeta metav1.Object) bool {
-	return oldMeta.GetResourceVersion() != curMeta.GetResourceVersion()
+// isConfigMapSecretChanged checks if the ConfigMap or Secret has changed
+func isConfigMapSecretChanged(oldMeta, curMeta metav1.Object) bool {
+	// Generation is always 0 for ConfigMap and Secret.
+	return curMeta.GetGeneration() == 0 && oldMeta.GetResourceVersion() != curMeta.GetResourceVersion()
 }
 
-func hasObjMetaChanged(oldMeta, curMeta metav1.Object) bool {
-	return !reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) ||
+// isConfigResChanged checks if the configResources (PodMonitor, ServiceMonitor, Probes, ScrapeConfig, AlertManagerConfig and PrometheusRule)
+// has changed in terms of labels, annotations, or generation
+func isConfigResChanged(oldMeta, curMeta metav1.Object) bool {
+	return curMeta.GetGeneration() != 0 && (!reflect.DeepEqual(oldMeta.GetLabels(), curMeta.GetLabels()) ||
 		!reflect.DeepEqual(oldMeta.GetAnnotations(), curMeta.GetAnnotations()) ||
-		oldMeta.GetGeneration() != curMeta.GetGeneration()
+		oldMeta.GetGeneration() != curMeta.GetGeneration())
 }
