@@ -987,11 +987,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	if c.configResourcesStatusEnabled {
 		if err := c.updateConfigResourcesStatus(ctx, p, logger,resources); err != nil {
 			return err 
 		}
-	}
 	return nil
 }
 
@@ -1340,9 +1338,12 @@ func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *moni
 
 // updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) error {
+	if !c.configResourcesStatusEnabled{
+		return nil
+	}
 	if len(resources.sMons) > 0 {
 		configResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
-		err := configResourceSyncer.UpdateStatus(ctx, p, resources.sMons)
+		err := configResourceSyncer.AddStatus(ctx, p, resources.sMons)
 		if err != nil {
 			return err
 		}

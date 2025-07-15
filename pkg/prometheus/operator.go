@@ -265,9 +265,9 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
-// UpdateResource updates the status subresource of the serviceMonitor, podMonitor, probes and scrapeConfig
+// AddStatus add the latest status in serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
-func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
+func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
 	for _, res := range resources {
 		condition := monitoringv1.ConfigResourceCondition{
 			Type:               monitoringv1.Accepted,
@@ -320,3 +320,4 @@ func (ru *ConfigResourceSyncer[T]) UpdateStatus(ctx context.Context, p metav1.Ob
 	}
 	return nil
 }
+
