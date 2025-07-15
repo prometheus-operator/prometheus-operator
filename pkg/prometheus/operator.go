@@ -268,7 +268,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 // AddStatus add the latest status in serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
 func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
-	for _, res := range resources {
+	for key, res := range resources {
 		condition := monitoringv1.ConfigResourceCondition{
 			Type:               monitoringv1.Accepted,
 			Status:             monitoringv1.ConditionTrue,
@@ -311,7 +311,36 @@ func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Objec
 			}
 			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 			if err != nil {
-				ru.logger.Debug("Failed to update %s ServiceMonitor status in %s namespace", "error", err, r.GetName(), r.GetNamespace())
+				ru.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported resource type %T", r)
+		}
+	}
+	return nil
+}
+
+
+// RemoveStatus remove the Prometheus or PrometheusAgent binding from the status 
+// subresource of status in serviceMonitor, podMonitor, probes and scrapeConfig.
+func (ru *ConfigResourceSyncer[T]) RemoveStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
+	for key, res := range resources {
+		switch r := any(res.resource).(type) {
+		case *monitoringv1.ServiceMonitor:
+			for i := range r.Status.Bindings {
+				binding := &r.Status.Bindings[i]
+				if binding.Namespace == p.GetNamespace() &&
+					binding.Name == p.GetName() &&
+					binding.Resource == monitoringv1.PrometheusName {
+                    r.Status.Bindings = append(r.Status.Bindings[:i], r.Status.Bindings[i+1:]...)
+			        break;
+				}
+			}
+
+			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			if err != nil {
+				ru.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
 				return err
 			}
 		default:
