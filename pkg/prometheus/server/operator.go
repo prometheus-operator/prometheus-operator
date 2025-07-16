@@ -1377,12 +1377,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			return
 		}
 		s := obj.(*monitoringv1.ServiceMonitor)
-		for _, binding := range s.Status.Bindings {
-			if binding.Name == p.Name && binding.Namespace == p.Namespace && binding.Resource == monitoringv1.PrometheusName {
-				invalidSmons[k] = prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
-			}
+		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
+			invalidSmons[k] = prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
 		}
 	})
+
 	if err != nil {
 		return err
 	}
