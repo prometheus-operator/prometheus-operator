@@ -1185,8 +1185,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -1230,19 +1230,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -1635,8 +1622,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -1680,19 +1667,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -2992,19 +2966,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>scrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -4101,8 +4062,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -4146,19 +4107,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -8747,19 +8695,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>scrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -11262,8 +11197,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -11307,19 +11242,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 </tbody>
@@ -12332,8 +12254,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -12377,19 +12299,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -12733,8 +12642,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -12778,19 +12687,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -14417,19 +14313,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
 <p>It requires Prometheus &gt;= v3.5.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -17578,8 +17461,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -17623,19 +17506,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -21679,19 +21549,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>scrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -22788,8 +22645,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -22833,19 +22690,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -30157,19 +30001,6 @@ bool
 </tr>
 <tr>
 <td>
-<code>scrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -32457,8 +32288,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v2.45.0.</p>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -32502,19 +32333,6 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>alwaysScrapeClassicHistograms</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>

@@ -674,14 +674,6 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithAlwaysScrapeClassicHistogram
 	return b
 }
 
-// WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *PrometheusAgentSpecApplyConfiguration {
-	b.CommonPrometheusFieldsApplyConfiguration.ScrapeClassicHistograms = &value
-	return b
-}
-
 // WithMinReadySeconds sets the MinReadySeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinReadySeconds field is set to the value of the last call.

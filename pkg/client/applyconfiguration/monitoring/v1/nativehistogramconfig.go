@@ -27,7 +27,6 @@ type NativeHistogramConfigApplyConfiguration struct {
 	NativeHistogramBucketLimit     *uint64            `json:"nativeHistogramBucketLimit,omitempty"`
 	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
 	ConvertClassicHistogramsToNHCB *bool              `json:"convertClassicHistogramsToNHCB,omitempty"`
-	AlwaysScrapeClassicHistograms  *bool              `json:"alwaysScrapeClassicHistograms,omitempty"`
 }
 
 // NativeHistogramConfigApplyConfiguration constructs a declarative configuration of the NativeHistogramConfig type for use with
@@ -65,13 +64,5 @@ func (b *NativeHistogramConfigApplyConfiguration) WithNativeHistogramMinBucketFa
 // If called multiple times, the ConvertClassicHistogramsToNHCB field is set to the value of the last call.
 func (b *NativeHistogramConfigApplyConfiguration) WithConvertClassicHistogramsToNHCB(value bool) *NativeHistogramConfigApplyConfiguration {
 	b.ConvertClassicHistogramsToNHCB = &value
-	return b
-}
-
-// WithAlwaysScrapeClassicHistograms sets the AlwaysScrapeClassicHistograms field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AlwaysScrapeClassicHistograms field is set to the value of the last call.
-func (b *NativeHistogramConfigApplyConfiguration) WithAlwaysScrapeClassicHistograms(value bool) *NativeHistogramConfigApplyConfiguration {
-	b.AlwaysScrapeClassicHistograms = &value
 	return b
 }

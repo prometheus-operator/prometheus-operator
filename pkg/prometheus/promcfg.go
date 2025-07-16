@@ -479,10 +479,6 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 		cfg = cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", nhc.ConvertClassicHistogramsToNHCB)
 	}
 
-	if nhc.AlwaysScrapeClassicHistograms != nil {
-		cfg = cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", nhc.AlwaysScrapeClassicHistograms)
-	}
-
 	return cfg
 }
 
@@ -4929,16 +4925,6 @@ func (cg *ConfigGenerator) appendAlwaysScrapeClassicHistograms(cfg yaml.MapSlice
 	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.AlwaysScrapeClassicHistograms)
 }
 
-func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlice) yaml.MapSlice {
-	cpf := cg.prom.GetCommonPrometheusFields()
-
-	if cpf.ScrapeClassicHistograms == nil {
-		return cfg
-	}
-
-	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
-}
-
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -5016,7 +5002,6 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendAlwaysScrapeClassicHistograms(cfg)
-	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 
 	return cfg
 }

@@ -8589,11 +8589,6 @@ spec:
                 x-kubernetes-list-map-keys:
                 - name
                 x-kubernetes-list-type: map
-              scrapeClassicHistograms:
-                description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
-                  It requires Prometheus >= v3.5.0.
-                type: boolean
               scrapeConfigNamespaceSelector:
                 description: |-
                   Namespaces to match for ScrapeConfig discovery. An empty label selector

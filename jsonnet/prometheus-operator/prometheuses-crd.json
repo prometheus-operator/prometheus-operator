@@ -7385,10 +7385,6 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
-                  "scrapeClassicHistograms": {
-                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v3.5.0.",
-                    "type": "boolean"
-                  },
                   "scrapeConfigNamespaceSelector": {
                     "description": "Namespaces to match for ScrapeConfig discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level.",
                     "properties": {
