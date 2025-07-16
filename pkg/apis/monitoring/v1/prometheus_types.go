@@ -15,7 +15,6 @@
 package v1
 
 import (
-	"fmt"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -2360,22 +2359,6 @@ type OTLPConfig struct {
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 
-	// Promoting all resource attributes to labels, except for the ones configured with 'ignore_resource_attributes'.
-	// Be aware that changes in attributes received by the OTLP endpoint may result in time series churn and lead to high memory usage by the Prometheus server.
-	// It cannot be set to 'true' simultaneously with 'promote_resource_attributes'.
-	//
-	// It requires Prometheus >= v3.5.0.
-	// +optional
-	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"`
-	// Which resource attributes to ignore, can only be set when 'promote_all_resource_attributes' is true.
-	//
-	// It requires Prometheus >= v3.5.0.
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
-	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
-
 	// Configures how the OTLP receiver endpoint translates the incoming metrics.
 	//
 	// It requires Prometheus >= v3.0.0.
@@ -2393,21 +2376,4 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.4.0.
 	// +optional
 	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
-}
-
-// Validate semantically validates the given OTLPConfig.
-func (c *OTLPConfig) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if len(c.PromoteResourceAttributes) > 0 && c.PromoteAllResourceAttributes != nil && *c.PromoteAllResourceAttributes {
-		return fmt.Errorf("promote_all_resource_attributes cannot be set to 'true' simultaneously with 'promote_resource_attributes'")
-	}
-
-	if len(c.IgnoreResourceAttributes) > 0 && (c.PromoteAllResourceAttributes == nil || !*c.PromoteAllResourceAttributes) {
-		return fmt.Errorf("ignore_resource_attributes can only be set when 'promote_all_resource_attributes' is true")
-	}
-
-	return nil
 }

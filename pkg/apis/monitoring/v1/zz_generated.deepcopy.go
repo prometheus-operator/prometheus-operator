@@ -1887,16 +1887,6 @@ func (in *OTLPConfig) DeepCopyInto(out *OTLPConfig) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.PromoteAllResourceAttributes != nil {
-		in, out := &in.PromoteAllResourceAttributes, &out.PromoteAllResourceAttributes
-		*out = new(bool)
-		**out = **in
-	}
-	if in.IgnoreResourceAttributes != nil {
-		in, out := &in.IgnoreResourceAttributes, &out.IgnoreResourceAttributes
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.TranslationStrategy != nil {
 		in, out := &in.TranslationStrategy, &out.TranslationStrategy
 		*out = new(TranslationStrategyOption)

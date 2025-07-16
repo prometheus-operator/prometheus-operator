@@ -4771,29 +4771,10 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 
 	otlp := yaml.MapSlice{}
 
-	if cg.version.GTE(semver.MustParse("3.5.0")) {
-		err := otlpConfig.Validate()
-		if err != nil {
-			return cfg, err
-		}
-	}
-
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {
 		otlp = cg.WithMinimumVersion("2.55.0").AppendMapItem(otlp,
 			"promote_resource_attributes",
 			otlpConfig.PromoteResourceAttributes)
-	}
-
-	if otlpConfig.PromoteAllResourceAttributes != nil {
-		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
-			"promote_all_resource_attributes",
-			otlpConfig.PromoteAllResourceAttributes)
-	}
-
-	if len(otlpConfig.IgnoreResourceAttributes) > 0 {
-		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
-			"ignore_resource_attributes",
-			otlpConfig.IgnoreResourceAttributes)
 	}
 
 	if otlpConfig.TranslationStrategy != nil {
