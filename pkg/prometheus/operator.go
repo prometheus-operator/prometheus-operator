@@ -337,7 +337,13 @@ func (ru *ConfigResourceSyncer[T]) RemoveStatus(ctx context.Context, p metav1.Ob
 				}
 			}
 
-			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			var err error
+			if len(r.Status.Bindings) == 0 {
+				_, err = ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).UpdateStatus(ctx, r, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
+			} else {
+				_, err = ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			}
+
 			if err != nil {
 				ru.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
 				return err

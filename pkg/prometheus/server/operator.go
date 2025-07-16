@@ -762,6 +762,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+
+	if c.isPrometheusBindingRemoval(p) {
+		resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+		if err != nil {
+			return err
+		}
+		err = c.updateConfigResourcesStatus(ctx, p, logger, resources)
+		if err != nil {
+			return err
+		}
+	}
+
 	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
@@ -773,16 +786,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if c.rr.DeletionInProgress(p) {
-		resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
-		if err != nil {
-			return err
-		}
-		err = c.updateConfigResourcesStatus(ctx, p, logger, resources)
-		if err != nil {
-			return err
-		}
 		c.reconciliations.ForgetObject(key)
 		return nil
 	}
@@ -1362,33 +1366,37 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			return err
 		}
 	}
-	var invalidSmons prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor] 
+	var invalidSmons prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor]
 	err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
-        k, ok := c.accessor.MetaNamespaceKey(obj)
-			if !ok {
-				return
-			}
+		k, ok := c.accessor.MetaNamespaceKey(obj)
+		if !ok {
+			return
+		}
 		_, ok = resources.sMons[k]
 		if ok {
 			return
 		}
 		s := obj.(*monitoringv1.ServiceMonitor)
-        for _, binding := range s.Status.Bindings {
+		for _, binding := range s.Status.Bindings {
 			if binding.Name == p.Name && binding.Namespace == p.Namespace && binding.Resource == monitoringv1.PrometheusName {
-		       invalidSmons[k]= prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
+				invalidSmons[k] = prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
 			}
 		}
 	})
 	if err != nil {
-		return err 
+		return err
 	}
 	if len(invalidSmons) > 0 {
 		err := smonconfigResourceSyncer.RemoveStatus(ctx, p, invalidSmons)
 		if err != nil {
-			return err 
+			return err
 		}
 	}
 	return nil
+}
+
+func (c *Operator) isPrometheusBindingRemoval(p *monitoringv1.Prometheus) bool {
+	return c.configResourcesStatusEnabled && c.rr.DeletionInProgress(p)
 }
 
 func makeSelectorLabels(name string) map[string]string {
