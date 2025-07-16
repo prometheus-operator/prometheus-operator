@@ -78,6 +78,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Condition"):
 		return &monitoringv1.ConditionApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ConfigResourceCondition"):
+		return &monitoringv1.ConfigResourceConditionApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ConfigResourceStatus"):
+		return &monitoringv1.ConfigResourceStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
@@ -88,8 +92,20 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.EndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Exemplars"):
 		return &monitoringv1.ExemplarsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalJiraConfig"):
+		return &monitoringv1.GlobalJiraConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalRocketChatConfig"):
+		return &monitoringv1.GlobalRocketChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalTelegramConfig"):
+		return &monitoringv1.GlobalTelegramConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalVictorOpsConfig"):
+		return &monitoringv1.GlobalVictorOpsConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalWebexConfig"):
+		return &monitoringv1.GlobalWebexConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalWeChatConfig"):
+		return &monitoringv1.GlobalWeChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
@@ -216,6 +232,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.WebHTTPHeadersApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebTLSConfig"):
 		return &monitoringv1.WebTLSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("WorkloadBinding"):
+		return &monitoringv1.WorkloadBindingApplyConfiguration{}
 
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig"):

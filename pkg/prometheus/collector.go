@@ -17,6 +17,7 @@ package prometheus
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -84,7 +85,6 @@ func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p v1.Promethe
 	if cpf.EnforcedSampleLimit != nil {
 		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*cpf.EnforcedSampleLimit), namespace, name)
 	}
-	if cpf.Shards != nil {
-		ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(*cpf.Shards), namespace, name)
-	}
+
+	ch <- prometheus.MustNewConstMetric(descPrometheusSpecShards, prometheus.GaugeValue, float64(ptr.Deref(cpf.Shards, 1)), namespace, name)
 }

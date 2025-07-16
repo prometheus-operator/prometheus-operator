@@ -4735,10 +4735,24 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme:   "http",
-						URL:      "blackbox.exporter.io",
-						Path:     "/probe",
-						ProxyURL: "socks://myproxy:9095",
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
 					},
 					Module: "http_2xx",
 					Targets: monitoringv1.ProbeTargets{
@@ -4759,6 +4773,18 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				probe.Spec.LabelValueLengthLimit = &labelValueLengthLimit
 			}
 
+			s := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+					},
+				},
+			)
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
@@ -4768,7 +4794,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 					"testprobe1": &probe,
 				},
 				nil,
-				&assets.StoreBuilder{},
+				s,
 				nil,
 				nil,
 				nil,
@@ -5803,10 +5829,24 @@ func TestProbeSpecConfig(t *testing.T) {
 			golden: "ProbeSpecConfig_prober_spec.golden",
 			pbSpec: monitoringv1.ProbeSpec{
 				ProberSpec: monitoringv1.ProberSpec{
-					Scheme:   "http",
-					URL:      "example.com",
-					Path:     "/probe",
-					ProxyURL: "socks://myproxy:9095",
+					Scheme: "http",
+					URL:    "example.com",
+					Path:   "/probe",
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -5863,6 +5903,18 @@ func TestProbeSpecConfig(t *testing.T) {
 				tc.patchProm(p)
 			}
 
+			s := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+					},
+				},
+			)
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
@@ -5870,7 +5922,7 @@ func TestProbeSpecConfig(t *testing.T) {
 				nil,
 				pbs,
 				nil,
-				&assets.StoreBuilder{},
+				s,
 				nil,
 				nil,
 				nil,
@@ -6589,6 +6641,70 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
+		},
+		{
+			name:    "config_NameValidationScheme_utf8",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
+			},
+			golden: "NameValidationScheme_utf8.golden",
+		},
+		{
+			name:    "config_NameValidationScheme_legacy",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			},
+			golden: "NameValidationScheme_legacy.golden",
+		},
+		{
+			name:    "config_NameValidationScheme_unsupported",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
+			},
+			golden: "NameValidationScheme_unsupported.golden",
+		},
+		{
+			name:    "config_NameEscapingScheme_AllowUTF8",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
+			},
+			golden: "NameEscapingScheme_AllowUTF8.golden",
+		},
+		{
+			name:    "config_NameEscapingScheme_Underscores",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+			},
+			golden: "NameEscapingScheme_Underscores.golden",
+		},
+		{
+			name:    "config_NameEscapingScheme_Dots",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameEscapingScheme: ptr.To(monitoringv1.DotsNameEscapingScheme),
+			},
+			golden: "NameEscapingScheme_Dots.golden",
+		},
+		{
+			name:    "config_NameEscapingScheme_Values",
+			version: "v3.4.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
+			},
+			golden: "NameEscapingScheme_Values.golden",
+		},
+		{
+			name:    "config_NameEscapingScheme_Unsupported",
+			version: "v3.3.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
+			},
+			golden: "NameEscapingScheme_Unsupported.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -9037,9 +9153,10 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 }
 func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		scSpec monitoringv1alpha1.ScrapeConfigSpec
-		golden string
+		name    string
+		version string
+		scSpec  monitoringv1alpha1.ScrapeConfigSpec
+		golden  string
 	}{
 		{
 			name: "hetzner_sd_config",
@@ -9070,6 +9187,70 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_HetznerSD.golden",
+		},
+		{
+			name:    "hetzner_sd_config_label_selector",
+			version: "v3.5.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role: "hcloud",
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Port:            ptr.To(9100),
+						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
+						LabelSelector:   ptr.To("label_value"),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HetznerSDLabelSelector.golden",
+		},
+		{
+			name:    "hetzner_sd_config_no_label_selector",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role: "hcloud",
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Port:            ptr.To(9100),
+						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
+						LabelSelector:   ptr.To("label_value"),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HetznerSDNoLabelSelector.golden",
 		},
 		{
 			name: "hetzner_sd_config_basic_auth",
@@ -9226,6 +9407,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
@@ -9307,6 +9491,121 @@ func TestAppendNameValidationScheme(t *testing.T) {
 		})
 	}
 }
+
+func TestAppendNameEscapingScheme(t *testing.T) {
+	testCases := []struct {
+		name               string
+		version            string
+		nameEscapingScheme *monitoringv1.NameEscapingSchemeOptions
+		expectedCfg        string
+	}{
+		{
+			name:               "AllowUTF8 nameEscapingScheme withPrometheus Version 3",
+			version:            "v3.4.0",
+			nameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
+			expectedCfg:        "NameEscapingSchemeUTF8WithPrometheusV3.golden",
+		},
+		{
+			name:               "Underscores nameEscapingScheme with Prometheus Version 3",
+			version:            "v3.4.0",
+			nameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+			expectedCfg:        "NameEscapingSchemeUnderscoresWithPrometheusV3.golden",
+		},
+		{
+			name:               "Underscores nameEscapingScheme with Prometheus Version 3",
+			version:            "v2.55.0",
+			nameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
+			expectedCfg:        "NameEscapingSchemeUnderscoresWithPrometheusLowerThanV3.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.nameEscapingScheme != nil {
+				p.Spec.CommonPrometheusFields.NameEscapingScheme = tc.nameEscapingScheme
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
+func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
+	testCases := []struct {
+		name                           string
+		version                        string
+		convertClassicHistogramsToNHCB *bool
+		expectedCfg                    string
+	}{
+		{
+			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 3.4",
+			version:                        "v3.4.0",
+			convertClassicHistogramsToNHCB: ptr.To(true),
+			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusV3.golden",
+		},
+		{
+			name:                           "ConvertClassicHistogramsToNHCB false with Prometheus Version 3.4",
+			version:                        "v3.4.0",
+			convertClassicHistogramsToNHCB: ptr.To(false),
+			expectedCfg:                    "ConvertClassicHistogramsToNHCBFalseWithPrometheusV3.golden",
+		},
+		{
+			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 2",
+			version:                        "v2.55.0",
+			convertClassicHistogramsToNHCB: ptr.To(true),
+			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusLowerThanV3.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.convertClassicHistogramsToNHCB != nil {
+				p.Spec.CommonPrometheusFields.ConvertClassicHistogramsToNHCB = tc.convertClassicHistogramsToNHCB
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
 func TestOTLPConfig(t *testing.T) {
 	testCases := []struct {
 		otlpConfig    *monitoringv1.OTLPConfig
@@ -9391,12 +9690,44 @@ func TestOTLPConfig(t *testing.T) {
 			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
 		},
 		{
-			name:    "Config KeepIdentifyingResourceAttributes with old version",
+			name:    "Config ConvertHistogramsToNHCB old version",
 			version: "v3.0.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
 				KeepIdentifyingResourceAttributes: ptr.To(false),
 			},
 			golden: "OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
+		},
+		{
+			name:    "Config NoTranslation translation strategy",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
+			},
+			golden: "OTLPConfig_Config_translation_strategy_with_notranslation.golden",
+		},
+		{
+			name:    "Config NoTranslation translation strategye unsupported version",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
+			},
+			expectedErr: true,
+		},
+		{
+			name:    "Config ConvertHistogramsToNHCB",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				ConvertHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_convert_histograms_to_nhcb.golden",
+		},
+		{
+			name:    "Config ConvertHistogramsToNHCB with old version",
+			version: "v3.3.1",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				ConvertHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -13282,6 +13613,63 @@ func TestPodMonitorSelectors(t *testing.T) {
 			)
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
+	testCases := []struct {
+		name                    string
+		version                 string
+		ScrapeClassicHistograms *bool
+		expectedCfg             string
+	}{
+		{
+			name:                    "ScrapeClassicHistograms true with Prometheus Version 3.5",
+			version:                 "v3.5.0",
+			ScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:             "ScrapeClassicHistogramsTrueProperPromVersion.golden",
+		},
+		{
+			name:                    "ScrapeClassicHistograms false with Prometheus Version 3.5",
+			version:                 "v3.5.0",
+			ScrapeClassicHistograms: ptr.To(false),
+			expectedCfg:             "ScrapeClassicHistogramsFalseProperPromVersion.golden",
+		},
+		{
+			name:                    "ScrapeClassicHistograms true with Prometheus Version 2",
+			version:                 "v2.45.0",
+			ScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:             "ScrapeClassicHistogramsTrueWrongPromVersion.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.ScrapeClassicHistograms != nil {
+				p.Spec.CommonPrometheusFields.ScrapeClassicHistograms = tc.ScrapeClassicHistograms
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
 		})
 	}
 }

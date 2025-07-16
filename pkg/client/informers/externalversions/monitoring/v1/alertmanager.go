@@ -60,13 +60,25 @@ func NewFilteredAlertmanagerInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().Alertmanagers(namespace).List(context.TODO(), options)
+				return client.MonitoringV1().Alertmanagers(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().Alertmanagers(namespace).Watch(context.TODO(), options)
+				return client.MonitoringV1().Alertmanagers(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MonitoringV1().Alertmanagers(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MonitoringV1().Alertmanagers(namespace).Watch(ctx, options)
 			},
 		},
 		&apismonitoringv1.Alertmanager{},

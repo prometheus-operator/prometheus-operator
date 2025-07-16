@@ -143,10 +143,10 @@ The process is adopted from the Thanos community.
 
 * **Owners:**
   * `<@author: single champion for the moment of writing>`
-
+* **Status:**
+  * `<Accepted/Rejected/Implemented>`
 * **Related Tickets:**
   * `<JIRA, GH Issues>`
-
 * **Other docs:**
   * `<Links…>`
 
@@ -171,6 +171,10 @@ What specific problems are we hitting with the current solution? Why is it not e
 Because of inconsistencies, those documents were harder to understand, and it was easy to miss important sections.
 This was causing certain engineering time to be wasted.*
 
+## Audience
+
+Provide the target audience for this change.
+
 ## Goals
 
 Goals and use cases for the solution as proposed in [How](#how):
@@ -178,10 +182,6 @@ Goals and use cases for the solution as proposed in [How](#how):
 * Allow easy collaboration and decision making on design ideas.
 * Have a consistent design style that is readable and understandable.
 * Have a design style that is concise and covers all the essential information.
-
-### Audience
-
-If this is not clear already, provide the target audience for this change.
 
 ## Non-Goals
 

@@ -20,7 +20,6 @@ import (
 	"log/slog"
 	"math"
 	"net/url"
-	"os"
 	"path"
 	"reflect"
 	"regexp"
@@ -122,12 +121,7 @@ func NewConfigGenerator(
 	opts ...ConfigGeneratorOption,
 ) (*ConfigGenerator, error) {
 	if logger == nil {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			// slog level math.MaxInt means no logging
-			// We would like to use the slog buil-in No-op level once it is available
-			// More: https://github.com/golang/go/issues/62005
-			Level: slog.Level(math.MaxInt),
-		}))
+		logger = slog.New(slog.DiscardHandler)
 	}
 
 	cg := &ConfigGenerator{
@@ -1331,9 +1325,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1363,6 +1354,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 
 	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
@@ -1576,9 +1569,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.ProberSpec.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
-	if m.Spec.ProberSpec.ProxyURL != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: m.Spec.ProberSpec.ProxyURL})
-	}
 
 	if m.Spec.Module != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
@@ -1614,6 +1604,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	s := store.ForNamespace(m.Namespace)
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
 
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
@@ -1833,9 +1825,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1848,6 +1837,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
@@ -2273,6 +2264,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
+
+		k8sSDConfig = cg.addProxyConfigtoYaml(k8sSDConfig, store, apiserverConfig.ProxyConfig)
 	}
 
 	if attachMetadataConfig != nil {
@@ -3799,7 +3792,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
-					Value: string(config.Role),
+					Value: strings.ToLower(string(config.Role)),
 				},
 			}
 
@@ -4246,6 +4239,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "refresh_interval",
 					Value: config.RefreshInterval,
 				})
+			}
+
+			if config.LabelSelector != nil && len(*config.LabelSelector) > 0 {
+				configs[i] = cg.WithMinimumVersion("3.5.0").AppendMapItem(configs[i],
+					"label_selector",
+					config.LabelSelector)
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -4744,6 +4743,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
+	cfg = cg.appendNameValidationScheme(cfg, sc.Spec.NameValidationScheme)
+	cfg = cg.appendNameEscapingScheme(cfg, sc.Spec.NameEscapingScheme)
+
 	return cfg, nil
 }
 
@@ -4761,6 +4763,10 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 
 	if ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoUTF8EscapingWithSuffixes && ptr.Deref(nameValidationScheme, "") == monitoringv1.LegacyNameValidationScheme {
 		return cfg, fmt.Errorf("nameValidationScheme %q is not compatible with OTLP translation strategy %q", monitoringv1.LegacyNameValidationScheme, monitoringv1.NoUTF8EscapingWithSuffixes)
+	}
+
+	if cg.version.LT(semver.MustParse("3.4.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoTranslation {
+		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
 	}
 
 	otlp := yaml.MapSlice{}
@@ -4781,6 +4787,12 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.1.0").AppendMapItem(otlp,
 			"keep_identifying_resource_attributes",
 			otlpConfig.KeepIdentifyingResourceAttributes)
+	}
+
+	if otlpConfig.ConvertHistogramsToNHCB != nil {
+		otlp = cg.WithMinimumVersion("3.4.0").AppendMapItem(otlp,
+			"convert_histograms_to_nhcb",
+			otlpConfig.ConvertHistogramsToNHCB)
 	}
 
 	if len(otlp) == 0 {
@@ -4873,6 +4885,46 @@ func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice, nameVal
 	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", strings.ToLower(nameValidationSchemeValue))
 }
 
+func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscapingScheme *monitoringv1.NameEscapingSchemeOptions) yaml.MapSlice {
+	if nameEscapingScheme == nil {
+		return cfg
+	}
+
+	// conversion to prometheus values.
+	nameMap := map[monitoringv1.NameEscapingSchemeOptions]string{
+		monitoringv1.AllowUTF8NameEscapingScheme:   "allow-utf-8",
+		monitoringv1.UnderscoresNameEscapingScheme: "underscores",
+		monitoringv1.DotsNameEscapingScheme:        "dots",
+		monitoringv1.ValuesNameEscapingScheme:      "values",
+	}
+
+	if v, ok := nameMap[*nameEscapingScheme]; ok {
+		return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "metric_name_escaping_scheme", v)
+	}
+
+	return cfg
+}
+
+func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ConvertClassicHistogramsToNHCB == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", *cpf.ConvertClassicHistogramsToNHCB)
+}
+
+func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeClassicHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4947,6 +4999,9 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendScrapeLimits(cfg)
 	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
+	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
+	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
+	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 
 	return cfg
 }

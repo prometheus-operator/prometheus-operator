@@ -2,6 +2,8 @@
 
 * Owners:
   * [haanhvu](https://github.com/haanhvu)
+* Status:
+  * `Accepted`
 * Related Tickets:
   * [#5495](https://github.com/prometheus-operator/prometheus-operator/issues/5495)
 * Other docs:

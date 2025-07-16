@@ -693,8 +693,34 @@ type CommonPrometheusFields struct {
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// Specifies the validation scheme for metric and label names.
+	//
+	// It requires Prometheus >= v2.55.0.
+	//
 	// +optional
 	NameValidationScheme *NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+
+	// Specifies the character escaping scheme that will be requested when scraping
+	// for metric and label names that do not conform to the legacy Prometheus
+	// character set.
+	//
+	// It requires Prometheus >= v3.4.0.
+	//
+	// +optional
+	NameEscapingScheme *NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
+
+	// Whether to convert all scraped classic histograms into a native
+	// histogram with custom buckets.
+	//
+	// It requires Prometheus >= v3.4.0.
+	//
+	// +optional
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+
+	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	// It requires Prometheus >= v3.5.0.
+	//
+	// +optional
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
 
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
@@ -748,7 +774,7 @@ type CommonPrometheusFields struct {
 	// Use the host's network namespace if true.
 	//
 	// Make sure to understand the security implications if you want to enable
-	// it (https://kubernetes.io/docs/concepts/configuration/overview/).
+	// it (https://kubernetes.io/docs/concepts/configuration/overview/ ).
 	//
 	// When hostNetwork is enabled, this will set the DNS policy to
 	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
@@ -902,17 +928,44 @@ type CommonPrometheusFields struct {
 }
 
 // Specifies the validation scheme for metric and label names.
-// Supported values are:
-// * `UTF8NameValidationScheme` for UTF-8 support.
-// * `LegacyNameValidationScheme` for letters, numbers, colons, and underscores.
 //
-// Note that `LegacyNameValidationScheme` cannot be used along with the OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if enabled).
+// Supported values are:
+//   - `UTF8NameValidationScheme` for UTF-8 support.
+//   - `LegacyNameValidationScheme` for letters, numbers, colons, and underscores.
+//
+// Note that `LegacyNameValidationScheme` cannot be used along with the
+// OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if
+// enabled).
+//
 // +kubebuilder:validation:Enum=UTF8;Legacy
 type NameValidationSchemeOptions string
 
 const (
 	UTF8NameValidationScheme   NameValidationSchemeOptions = "UTF8"
 	LegacyNameValidationScheme NameValidationSchemeOptions = "Legacy"
+)
+
+// Specifies the character escaping scheme that will be applied when scraping
+// for metric and label names that do not conform to the legacy Prometheus
+// character set.
+//
+// Supported values are:
+//
+//   - `AllowUTF8`, full UTF-8 support, no escaping needed.
+//   - `Underscores`, legacy-invalid characters are escaped to underscores.
+//   - `Dots`, dot characters are escaped to `_dot_`, underscores to `__`, and
+//     all other legacy-invalid characters to underscores.
+//   - `Values`, the string is prefixed by `U__` and all invalid characters are
+//     escaped to their unicode value, surrounded by underscores.
+//
+// +kubebuilder:validation:Enum=AllowUTF8;Underscores;Dots;Values
+type NameEscapingSchemeOptions string
+
+const (
+	AllowUTF8NameEscapingScheme   NameEscapingSchemeOptions = "AllowUTF8"
+	UnderscoresNameEscapingScheme NameEscapingSchemeOptions = "Underscores"
+	DotsNameEscapingScheme        NameEscapingSchemeOptions = "Dots"
+	ValuesNameEscapingScheme      NameEscapingSchemeOptions = "Values"
 )
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -1945,6 +1998,10 @@ type APIServerConfig struct {
 	//
 	// Deprecated: this will be removed in a future release.
 	BearerToken string `json:"bearerToken,omitempty"`
+
+	// Optional ProxyConfig.
+	// +optional
+	ProxyConfig `json:",inline"`
 }
 
 // +kubebuilder:validation:Enum=v1;V1;v2;V2
@@ -2278,12 +2335,15 @@ type ScrapeClass struct {
 // Supported values are:
 // * `NoUTF8EscapingWithSuffixes`
 // * `UnderscoreEscapingWithSuffixes`
-// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes
+// * `NoTranslation`
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;NoTranslation
 type TranslationStrategyOption string
 
 const (
 	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
 	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+	// It requires Prometheus >= v3.4.0.
+	NoTranslation TranslationStrategyOption = "NoTranslation"
 )
 
 // OTLPConfig is the configuration for writing to the OTLP endpoint.
@@ -2310,4 +2370,9 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.1.0.
 	// +optional
 	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
+
+	// Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
+	// It requires Prometheus >= v3.4.0.
+	// +optional
+	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
 }

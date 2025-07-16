@@ -2,10 +2,10 @@
 
 * **Owners:**
   * [arnecls](https://github.com/arnecls)
-
+* **Status:**
+  * `Accepted`
 * **Related Tickets:**
   * [#6437](https://github.com/prometheus-operator/prometheus-operator/issues/6437)
-
 * **Other docs:**
   * [Well known kubernetes labels](https://kubernetes.io/docs/reference/labels-annotations-taints/#topologykubernetesiozone)
   * [AWS zone names](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-availability-zones)

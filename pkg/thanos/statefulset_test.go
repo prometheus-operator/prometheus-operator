@@ -1058,3 +1058,165 @@ func TestStatefulSetenableServiceLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestRuleQueryOffset(t *testing.T) {
+	ruleQueryOffset := monitoringv1.Duration("5m")
+
+	tt := []struct {
+		scenario        string
+		version         string
+		ruleQueryOffset *monitoringv1.Duration
+		shouldHaveArg   bool
+	}{{
+		scenario:        "version >= 0.38.0 with rule query offset",
+		version:         "0.38.0",
+		ruleQueryOffset: &ruleQueryOffset,
+		shouldHaveArg:   true,
+	}, {
+		scenario:        "version < 0.38.0 with rule query offset",
+		version:         "0.37.0",
+		ruleQueryOffset: &ruleQueryOffset,
+		shouldHaveArg:   false,
+	}, {
+		scenario:        "version >= 0.38.0 without rule query offset",
+		version:         "0.38.0",
+		ruleQueryOffset: nil,
+		shouldHaveArg:   false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:         &version,
+					RuleQueryOffset: ts.ruleQueryOffset,
+					QueryEndpoints:  emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--rule-query-offset=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}
+
+func TestRuleConcurrentEval(t *testing.T) {
+	ruleConcurrentEval := int32(5)
+
+	tt := []struct {
+		scenario           string
+		version            string
+		ruleConcurrentEval *int32
+		shouldHaveArg      bool
+	}{{
+		scenario:           "version >= 0.37.0 with rule concurrent evaluation",
+		version:            "0.37.0",
+		ruleConcurrentEval: &ruleConcurrentEval,
+		shouldHaveArg:      true,
+	}, {
+		scenario:           "version < 0.37.0 with rule concurrent evaluation",
+		version:            "0.36.0",
+		ruleConcurrentEval: &ruleConcurrentEval,
+		shouldHaveArg:      false,
+	}, {
+		scenario:           "version >= 0.37.0 without rule concurrent evaluation",
+		version:            "0.37.0",
+		ruleConcurrentEval: nil,
+		shouldHaveArg:      false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:            &version,
+					RuleConcurrentEval: ts.ruleConcurrentEval,
+					QueryEndpoints:     emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--rule-concurrent-evaluation=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}
+
+func TestRuleOutageTolerance(t *testing.T) {
+	ruleOutageTolerance := monitoringv1.Duration("1h")
+
+	tt := []struct {
+		scenario            string
+		version             string
+		ruleOutageTolerance *monitoringv1.Duration
+		shouldHaveArg       bool
+	}{{
+		scenario:            "version >= 0.30.0 with for outage tolerance",
+		version:             "0.30.0",
+		ruleOutageTolerance: &ruleOutageTolerance,
+		shouldHaveArg:       true,
+	}, {
+		scenario:            "version < 0.30.0 with for outage tolerance",
+		version:             "0.29.0",
+		ruleOutageTolerance: &ruleOutageTolerance,
+		shouldHaveArg:       false,
+	}, {
+		scenario:            "version > 0.30.0 without for outage tolerance",
+		version:             "0.37.0",
+		ruleOutageTolerance: nil,
+		shouldHaveArg:       false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:             &version,
+					RuleOutageTolerance: ts.ruleOutageTolerance,
+					QueryEndpoints:      emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--for-outage-tolerance=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}

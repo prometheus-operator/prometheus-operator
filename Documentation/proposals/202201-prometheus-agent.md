@@ -1,5 +1,9 @@
 # Prometheus Agent support
 
+## Status
+
+`Implemented`
+
 ## Summary
 
 The Prometheus 2.32.0 release introduces the Prometheus Agent, a mode optimized for remote-write dominant scenarios. This document proposes extending the Prometheus Operator to allow running a Prometheus Agent with different deployment strategies.

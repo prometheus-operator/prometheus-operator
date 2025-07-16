@@ -2,6 +2,8 @@
 
 * Owners:
   * [danielmellado](https://github.com/danielmellado)
+* Status:
+  * `Implemented`
 * Related Tickets:
   * [#4281](https://github.com/prometheus-operator/prometheus-operator/issues/4281)
   * [#4498](https://github.com/prometheus-operator/prometheus-operator/pull/4498)

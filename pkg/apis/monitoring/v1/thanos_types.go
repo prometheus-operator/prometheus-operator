@@ -287,6 +287,23 @@ type ThanosRulerSpec struct {
 	// +kubebuilder:default:="15s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
+	// Max time to tolerate prometheus outage for restoring "for" state of alert.
+	// It requires Thanos >= v0.30.0.
+	// +optional
+	RuleOutageTolerance *Duration `json:"ruleOutageTolerance,omitempty"`
+
+	// The default rule group's query offset duration to use.
+	// It requires Thanos >= v0.38.0.
+	// +optional
+	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
+
+	// How many rules can be evaluated concurrently.
+	// It requires Thanos >= v0.37.0.
+	// +kubebuilder:validation:Minimum=1
+	//
+	// +optional
+	RuleConcurrentEval *int32 `json:"ruleConcurrentEval,omitempty"`
+
 	// Time duration ThanosRuler shall retain data for. Default is '24h', and
 	// must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds
 	// seconds minutes hours days weeks years).

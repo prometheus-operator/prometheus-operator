@@ -1,22 +1,22 @@
-# Status subresource for Prometheus operator CRDs
+# Status subresource for Prometheus operator Workload CRDs
 
 * **Owners:**
   * [simonpasquier](https://github.com/simonpasquier)
-
+* **Status:**
+  * `Implemented`
 * **Related Tickets:**
   * [#3335](https://github.com/prometheus-operator/prometheus-operator/issues/3335)
-
 * **Other docs:**
   * N/A
 
-This proposal describes how we will extend the Prometheus operator Custom
+This proposal describes how we will extend the Prometheus operator workload Custom
 Resource Definitions (CRDs) with a Status subresource field.
 
 ## Why
 
 Core Kubernetes resources differentiate between the desired state of an object
 (the `spec` field) and the current status of the object (the `status` field)
-([details][https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status)).
+[details](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status).
 Before this proposal, the current status of the objects was never reflected by
 the Prometheus operator which makes it harder for external actors to know if
 the underlying resource is available or not.
