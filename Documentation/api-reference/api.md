@@ -1234,6 +1234,19 @@ It requires Prometheus &gt;= v3.0.0.</p>
 </tr>
 <tr>
 <td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>keepDroppedTargets</code><br/>
 <em>
 uint64
@@ -1667,6 +1680,19 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -2953,6 +2979,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -4107,6 +4146,19 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -8682,6 +8734,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -11244,6 +11309,19 @@ bool
 It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
@@ -12303,6 +12381,19 @@ It requires Prometheus &gt;= v3.0.0.</p>
 </tr>
 <tr>
 <td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>keepDroppedTargets</code><br/>
 <em>
 uint64
@@ -12687,6 +12778,19 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -14300,6 +14404,19 @@ bool
 <p>Whether to convert all scraped classic histograms into a native
 histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -17506,6 +17623,19 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -21536,6 +21666,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -22690,6 +22833,19 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -29988,6 +30144,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -32333,6 +32502,19 @@ bool
 <em>(Optional)</em>
 <p>Whether to convert all scraped classic histograms into a native histogram with custom buckets.
 It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alwaysScrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>

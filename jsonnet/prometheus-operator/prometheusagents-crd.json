@@ -886,6 +886,10 @@
                     },
                     "type": "object"
                   },
+                  "alwaysScrapeClassicHistograms": {
+                    "description": "Whether to scrape a classic histogram, even if it is also exposed as a native histogram.\n\nIt requires Prometheus >= v3.5.0.",
+                    "type": "boolean"
+                  },
                   "apiserverConfig": {
                     "description": "APIServerConfig allows specifying a host and auth methods to access the\nKuberntees API server.\nIf null, Prometheus is assumed to run inside of the cluster: it will\ndiscover the API servers automatically and use the Pod's CA certificate\nand bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
                     "properties": {

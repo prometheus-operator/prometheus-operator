@@ -716,6 +716,13 @@ type CommonPrometheusFields struct {
 	// +optional
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
+	// Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+	//
+	// It requires Prometheus >= v3.5.0.
+	//
+	// +optional
+	AlwaysScrapeClassicHistograms *bool `json:"alwaysScrapeClassicHistograms,omitempty"`
+
 	// Whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v3.5.0.
 	//

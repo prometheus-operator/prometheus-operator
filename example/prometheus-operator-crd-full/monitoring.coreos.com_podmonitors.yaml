@@ -52,6 +52,12 @@ spec:
             description: Specification of desired Pod selection for target discovery
               by Prometheus.
             properties:
+              alwaysScrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
+                  It requires Prometheus >= v3.5.0.
+                type: boolean
               attachMetadata:
                 description: |-
                   `attachMetadata` defines additional metadata which is added to the
