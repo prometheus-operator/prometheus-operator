@@ -1144,7 +1144,24 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 }
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
-		if err := validateServer(config.Server); err != nil {
+		if config.ClientID != nil && rs.version.LT(semver.MustParse("2.50.0")) {
+			return fmt.Errorf("field `clientID` in kuma SD configuration is only supported for Prometheus version >= 2.50.0")
+		}
+
+		parsedURL, err := url.Parse(string(config.Server))
+		if err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if parsedURL.Host == "" {
+			return fmt.Errorf("[%d]: kuma SD server field must not be empty: %s", i, config.Server)
+		}
+
+		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+			return fmt.Errorf("[%d]: invalid scheme '%s'. Only 'http' and 'https' are supported", i, parsedURL.Scheme)
+		}
+
+		if err := validateServer(string(config.Server)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
