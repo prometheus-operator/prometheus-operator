@@ -41,9 +41,8 @@ func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
 			},
 			Ports: []v1.ServicePort{
 				{
-					Name:       "http",
 					Port:       9115,
-					TargetPort: intstr.FromString("http"),
+					TargetPort: intstr.FromInt(9115),
 				},
 			},
 		},
@@ -108,7 +107,6 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ctx context.Con
 							},
 							Ports: []v1.ContainerPort{
 								{
-									Name:          "http",
 									ContainerPort: 9115,
 									Protocol:      v1.ProtocolTCP,
 								},
