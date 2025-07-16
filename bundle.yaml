@@ -27650,7 +27650,9 @@ spec:
                     type: boolean
                   ignoreResourceAttributes:
                     description: |-
-                      Enables to add a list of Resource Attributes to Ignore
+                      List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+
+                      Cannot be defined when ` promoteAllResourceAttributes` is not true or promoteResourceAttributes` is defined.
                       It requires Prometheus >= v3.5.0.
                     items:
                       minLength: 1
@@ -27667,12 +27669,15 @@ spec:
                     type: boolean
                   promoteAllResourceAttributes:
                     description: |-
-                      Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes
+                      Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+
+                      Cannot be true when `promoteResourceAttributes` is defined.
                       It requires Prometheus >= v3.5.0.
                     type: boolean
                   promoteResourceAttributes:
-                    description: List of OpenTelemetry Attributes that should be promoted
-                      to metric labels, defaults to none.
+                    description: |-
+                      Cannot be defined when `promoteAllResourceAttributes` is true.
+                      List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
                     items:
                       minLength: 1
                       type: string
@@ -39394,7 +39399,9 @@ spec:
                     type: boolean
                   ignoreResourceAttributes:
                     description: |-
-                      Enables to add a list of Resource Attributes to Ignore
+                      List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+
+                      Cannot be defined when ` promoteAllResourceAttributes` is not true or promoteResourceAttributes` is defined.
                       It requires Prometheus >= v3.5.0.
                     items:
                       minLength: 1
@@ -39411,12 +39418,15 @@ spec:
                     type: boolean
                   promoteAllResourceAttributes:
                     description: |-
-                      Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes
+                      Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+
+                      Cannot be true when `promoteResourceAttributes` is defined.
                       It requires Prometheus >= v3.5.0.
                     type: boolean
                   promoteResourceAttributes:
-                    description: List of OpenTelemetry Attributes that should be promoted
-                      to metric labels, defaults to none.
+                    description: |-
+                      Cannot be defined when `promoteAllResourceAttributes` is true.
+                      List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
                     items:
                       minLength: 1
                       type: string

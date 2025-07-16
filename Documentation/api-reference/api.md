@@ -11458,7 +11458,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes
+<p>Promote all resource attributes to metric labels except the ones defined in <code>ignoreResourceAttributes</code>.</p>
+<p>Cannot be true when <code>promoteResourceAttributes</code> is defined.
 It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
@@ -11471,7 +11472,8 @@ It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
+<p>Cannot be defined when <code>promoteAllResourceAttributes</code> is true.
+List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
 </td>
 </tr>
 <tr>
@@ -11525,7 +11527,8 @@ It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enables to add a list of Resource Attributes to Ignore
+<p>List of OpenTelemetry resource attributes to ignore when <code>promoteAllResourceAttributes</code> is true.</p>
+<p>Cannot be defined when <code>promoteAllResourceAttributes</code> is not true or promoteResourceAttributes` is defined.
 It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
