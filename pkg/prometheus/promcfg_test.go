@@ -4935,6 +4935,26 @@ func TestNativeHistogramConfig(t *testing.T) {
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},
+		{
+			version: "v3.5.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				AlwaysScrapeClassicHistograms:  ptr.To(true),
+			},
+			golden: "NativeHistogramConfigWithAlwaysScrapeClassicHistograms.golden",
+		},
+		{
+			version: "v3.4.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				AlwaysScrapeClassicHistograms:  ptr.To(true),
+			},
+			golden: "NativeHistogramConfigMissAlwaysScrapeClassicHistograms.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -9584,6 +9604,63 @@ func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
 			}
 			if tc.convertClassicHistogramsToNHCB != nil {
 				p.Spec.CommonPrometheusFields.ConvertClassicHistogramsToNHCB = tc.convertClassicHistogramsToNHCB
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
+func TestAppendAlwaysScrapeClassicHistograms(t *testing.T) {
+	testCases := []struct {
+		name                          string
+		version                       string
+		alwaysScrapeClassicHistograms *bool
+		expectedCfg                   string
+	}{
+		{
+			name:                          "AlwaysScrapeClassicHistograms true with Prometheus Version 3.4",
+			version:                       "v3.5.0",
+			alwaysScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:                   "AlwaysScrapeClassicHistogramsTrueWithPrometheusV3.golden",
+		},
+		{
+			name:                          "AlwaysScrapeClassicHistograms false with Prometheus Version 3.4",
+			version:                       "v3.5.0",
+			alwaysScrapeClassicHistograms: ptr.To(false),
+			expectedCfg:                   "AlwaysScrapeClassicHistogramsFalseWithPrometheusV3.golden",
+		},
+		{
+			name:                          "AlwaysScrapeClassicHistograms true with Prometheus Version 2",
+			version:                       "v3.4.0",
+			alwaysScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:                   "AlwaysScrapeClassicHistogramsTrueWithPrometheusLowerThanV3.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.alwaysScrapeClassicHistograms != nil {
+				p.Spec.CommonPrometheusFields.AlwaysScrapeClassicHistograms = tc.alwaysScrapeClassicHistograms
 			}
 
 			cg := mustNewConfigGenerator(t, p)
