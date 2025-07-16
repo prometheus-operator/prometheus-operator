@@ -11463,6 +11463,34 @@ string
 </tr>
 <tr>
 <td>
+<code>promoteAllResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Promoting all resource attributes to labels, except for the ones configured with &lsquo;ignore_resource_attributes&rsquo;.
+Be aware that changes in attributes received by the OTLP endpoint may result in time series churn and lead to high memory usage by the Prometheus server.
+It cannot be set to &lsquo;true&rsquo; simultaneously with &lsquo;promote_resource_attributes&rsquo;.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Which resource attributes to ignore, can only be set when &lsquo;promote_all_resource_attributes&rsquo; is true.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>translationStrategy</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.TranslationStrategyOption">
