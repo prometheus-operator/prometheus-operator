@@ -1045,9 +1045,6 @@ type JiraConfig struct {
 	// The HTTP client's configuration. You must use this configuration to supply the personal access token (PAT) as part of the HTTP `Authorization` header.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
-	// Other issue and custom Jira fields.
-	// +optional
-	Fields map[string]any `json:"fields,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
