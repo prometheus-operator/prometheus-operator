@@ -518,7 +518,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 
 	service.Namespace = opts.Namespace
 	service.Spec.ClusterIP = ""
-	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromString("web")}}
+	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
 	if _, err := f.CreateOrUpdateServiceAndWaitUntilReady(ctx, opts.Namespace, service); err != nil {
 		return finalizers, fmt.Errorf("failed to create or update prometheus operator service: %w", err)
