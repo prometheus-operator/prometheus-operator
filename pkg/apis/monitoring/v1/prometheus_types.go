@@ -2350,11 +2350,14 @@ const (
 //
 // +k8s:openapi-gen=true
 type OTLPConfig struct {
-	// Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes
+	// Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+	//
+	// Cannot be true when `promoteResourceAttributes` is defined.
 	// It requires Prometheus >= v3.5.0.
 	// +optional
 	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"`
 
+	// Cannot be defined when `promoteAllResourceAttributes` is true.
 	// List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
 	//
 	// +kubebuilder:validation:MinItems=1
@@ -2381,7 +2384,9 @@ type OTLPConfig struct {
 	// +optional
 	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
 
-	// Enables to add a list of Resource Attributes to Ignore
+	// List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+	//
+	// Cannot be defined when ` promoteAllResourceAttributes` is not true or promoteResourceAttributes` is defined.
 	// It requires Prometheus >= v3.5.0.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
