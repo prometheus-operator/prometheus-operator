@@ -4116,7 +4116,7 @@
                         "type": "boolean"
                       },
                       "ignoreResourceAttributes": {
-                        "description": "Enables to add a list of Resource Attributes to Ignore\nIt requires Prometheus >= v3.5.0.",
+                        "description": "List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.\n\nCannot be defined when ` promoteAllResourceAttributes` is not true or promoteResourceAttributes` is defined.\nIt requires Prometheus >= v3.5.0.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -4130,11 +4130,11 @@
                         "type": "boolean"
                       },
                       "promoteAllResourceAttributes": {
-                        "description": "Configure to promote all resource attributes except ignore ones using IgnoreResourceAttributes\nIt requires Prometheus >= v3.5.0.",
+                        "description": "Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.\n\nCannot be true when `promoteResourceAttributes` is defined.\nIt requires Prometheus >= v3.5.0.",
                         "type": "boolean"
                       },
                       "promoteResourceAttributes": {
-                        "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
+                        "description": "Cannot be defined when `promoteAllResourceAttributes` is true.\nList of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
