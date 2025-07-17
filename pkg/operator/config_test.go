@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestMap(t *testing.T) {
@@ -121,5 +122,178 @@ func TestStringSet(t *testing.T) {
 	for _, k := range []string{"a", "b", "c"} {
 		_, found := s[k]
 		require.True(t, found)
+	}
+}
+
+func TestNamespaceFinalize(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		ns   Namespaces
+
+		exp Namespaces
+		err bool
+	}{
+		{
+			name: "allow all",
+			ns:   Namespaces{},
+			exp: Namespaces{
+				AllowList: StringSet{
+					"": struct{}{},
+				},
+				PrometheusAllowList: StringSet{
+					"": struct{}{},
+				},
+				AlertmanagerAllowList: StringSet{
+					"": struct{}{},
+				},
+				AlertmanagerConfigAllowList: StringSet{
+					"": struct{}{},
+				},
+				ThanosRulerAllowList: StringSet{
+					"": struct{}{},
+				},
+			},
+		},
+		{
+			name: "allow one",
+			ns: Namespaces{
+				AllowList: StringSet{
+					"foo": struct{}{},
+				},
+			},
+			exp: Namespaces{
+				AllowList: StringSet{
+					"foo": struct{}{},
+				},
+				PrometheusAllowList: StringSet{
+					"foo": struct{}{},
+				},
+				AlertmanagerAllowList: StringSet{
+					"foo": struct{}{},
+				},
+				AlertmanagerConfigAllowList: StringSet{
+					"foo": struct{}{},
+				},
+				ThanosRulerAllowList: StringSet{
+					"foo": struct{}{},
+				},
+			},
+		},
+		{
+			name: "deny one",
+			ns: Namespaces{
+				DenyList: StringSet{
+					"foo": struct{}{},
+				},
+			},
+			exp: Namespaces{
+				AllowList: StringSet{
+					"": struct{}{},
+				},
+				DenyList: StringSet{
+					"foo": struct{}{},
+				},
+				PrometheusAllowList: StringSet{
+					"": struct{}{},
+				},
+				AlertmanagerAllowList: StringSet{
+					"": struct{}{},
+				},
+				AlertmanagerConfigAllowList: StringSet{
+					"": struct{}{},
+				},
+				ThanosRulerAllowList: StringSet{
+					"": struct{}{},
+				},
+			},
+		},
+		{
+			name: "allow and deny forbidden",
+			ns: Namespaces{
+				AllowList: StringSet{
+					"bar": struct{}{},
+				},
+				DenyList: StringSet{
+					"foo": struct{}{},
+				},
+			},
+			err: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.ns.Finalize()
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.exp, tc.ns)
+		})
+	}
+}
+
+func TestMergeAllowLists(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		a    StringSet
+		b    StringSet
+
+		exp StringSet
+	}{
+		{
+			a: StringSet{
+				v1.NamespaceAll: struct{}{},
+			},
+			b: StringSet{
+				"foo": struct{}{},
+			},
+			exp: StringSet{
+				v1.NamespaceAll: struct{}{},
+			},
+		},
+		{
+			a: StringSet{
+				"foo": struct{}{},
+			},
+			b: StringSet{
+				v1.NamespaceAll: struct{}{},
+			},
+			exp: StringSet{
+				v1.NamespaceAll: struct{}{},
+			},
+		},
+		{
+			a: StringSet{
+				"foo": struct{}{},
+			},
+			b: StringSet{
+				"bar": struct{}{},
+			},
+			exp: StringSet{
+				"foo": struct{}{},
+				"bar": struct{}{},
+			},
+		},
+		{
+			a: StringSet{
+				"foo": struct{}{},
+				"bar": struct{}{},
+			},
+			b: StringSet{
+				"bar":  struct{}{},
+				"fred": struct{}{},
+			},
+			exp: StringSet{
+				"foo":  struct{}{},
+				"bar":  struct{}{},
+				"fred": struct{}{},
+			},
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			got := MergeAllowLists(tc.a, tc.b)
+			require.Equal(t, tc.exp, got)
+		})
 	}
 }

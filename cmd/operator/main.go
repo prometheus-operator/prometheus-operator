@@ -168,6 +168,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(cfg.Namespaces.AlertmanagerAllowList, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
 	fs.Var(cfg.Namespaces.AlertmanagerConfigAllowList, "alertmanager-config-namespaces", "Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.")
 	fs.Var(cfg.Namespaces.ThanosRulerAllowList, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
+	fs.BoolVar(&cfg.WatchObjectRefsInAllNamespaces, "watch-object-references-in-all-namespaces", false, "When true the operator watches for configmaps and secrets in the union of workload and configuration resource namespaces.\nWhen false (default), the operator will only watch for secrets and configmaps in:\n* Workload namespaces for Prometheus and PrometheusAgent resources.\n* Configuration namespaces for Alertmanager resources.")
 
 	fs.Var(&cfg.Annotations, "annotations", "Annotations to be add to all resources created by the operator")
 	fs.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
@@ -216,14 +217,12 @@ func run(fs *flag.FlagSet) int {
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
-		logger.Error(
-			"--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
-			"namespaces", cfg.Namespaces.AllowList,
-			"deny_namespaces", cfg.Namespaces.DenyList,
-		)
 		return 1
 	}
-	cfg.Namespaces.Finalize()
+	if err := cfg.Namespaces.Finalize(); err != nil {
+		logger.Error("failed to parse namespace configuration", "config", cfg.Namespaces.String(), "error", err)
+		return 1
+	}
 	logger.Info("namespaces filtering configuration ", "config", cfg.Namespaces.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
