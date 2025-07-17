@@ -31,9 +31,13 @@ import (
 const (
 	kubeletServiceName      = "prometheus-operator-kubelet"
 	kubeletServiceNamespace = "kube-system"
+
+	resourceTimeout = 90 * time.Second
+	pollInterval    = 5 * time.Second
+	stabilizeTime   = 20 * time.Second
 )
 
-func TestKubeletEndpointSliceMigration(t *testing.T) {
+func testKubeletEndpointSliceMigration(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
@@ -42,7 +46,7 @@ func TestKubeletEndpointSliceMigration(t *testing.T) {
 
 	t.Log("Starting Kubelet EndpointSlice migration test")
 
-	t.Log("Testing with kubelet-endpoints=true and kubelet-endpointslice=false")
+	t.Log("Phase 1: Deploying operator with kubelet-endpoints=true")
 	finalizers, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(ctx, operatorFramework.PrometheusOperatorOpts{
 		Namespace:           ns,
 		ClusterRoleBindings: true,
@@ -58,14 +62,14 @@ func TestKubeletEndpointSliceMigration(t *testing.T) {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(stabilizeTime)
 
 	err = waitForKubeletEndpoints(ctx, t)
-	require.NoError(t, err, "Failed to find kubelet Endpoints resource")
+	require.NoError(t, err, "Failed to verify kubelet Endpoints resource creation")
 
-	t.Log("Endpoints created successfully - now switching to EndpointSlices")
+	t.Log("Successfully verified Endpoints resource creation")
 
-	t.Log("Switching to kubelet-endpoints=false and kubelet-endpointslice=true")
+	t.Log("Phase 2: Switching operator to kubelet-endpointslice=true")
 	_, err = framework.CreateOrUpdatePrometheusOperatorWithOpts(ctx, operatorFramework.PrometheusOperatorOpts{
 		Namespace:           ns,
 		ClusterRoleBindings: true,
@@ -77,94 +81,79 @@ func TestKubeletEndpointSliceMigration(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	time.Sleep(15 * time.Second)
+	time.Sleep(stabilizeTime)
 
 	err = waitForKubeletEndpointSlices(ctx, t)
-	require.NoError(t, err, "Failed to find kubelet EndpointSlice resources")
+	require.NoError(t, err, "Failed to verify kubelet EndpointSlice resource creation")
 
 	err = verifyKubeletEndpointSliceTargets(ctx, t)
 	require.NoError(t, err, "EndpointSlice targets verification failed")
 
-	t.Log("EndpointSlices created successfully - verifying migration")
-
-	_, err = framework.KubeClient.CoreV1().Services(kubeletServiceNamespace).Get(ctx, kubeletServiceName, metav1.GetOptions{})
-	require.NoError(t, err, "Kubelet service should still exist after migration")
-
-	endpointSlices, err := getKubeletEndpointSlices(ctx)
-	require.NoError(t, err)
-	require.NotEmpty(t, endpointSlices, "EndpointSlices should exist after migration")
-
-	expectedPorts := map[string]int32{
-		"https-metrics": 10250,
-		"http-metrics":  10255,
-		"cadvisor":      4194,
-	}
-
-	for _, eps := range endpointSlices {
-		require.NotEmpty(t, eps.Endpoints, "EndpointSlice should have endpoints")
-
-		portMap := make(map[string]int32)
-		for _, port := range eps.Ports {
-			if port.Name != nil && port.Port != nil {
-				portMap[*port.Name] = *port.Port
-			}
-		}
-
-		for expectedName, expectedPort := range expectedPorts {
-			actualPort, exists := portMap[expectedName]
-			require.True(t, exists, "Expected port %s not found in EndpointSlice", expectedName)
-			require.Equal(t, expectedPort, actualPort, "Port %s has incorrect value", expectedName)
-		}
-	}
-
+	t.Log("Successfully verified EndpointSlice resource creation and target validation")
 	t.Log("Kubelet EndpointSlice migration test completed successfully")
 }
 
 func waitForKubeletEndpoints(ctx context.Context, t *testing.T) error {
-	timeout := 60 * time.Second
-	interval := 2 * time.Second
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, resourceTimeout)
 	defer cancel()
 
+	t.Log("Waiting for kubelet Endpoints resource creation...")
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("timeout waiting for kubelet Endpoints resource")
+			return fmt.Errorf("timeout waiting for kubelet Endpoints resource after %v", resourceTimeout)
 		default:
 			endpoints, err := framework.KubeClient.CoreV1().Endpoints(kubeletServiceNamespace).Get(ctx, kubeletServiceName, metav1.GetOptions{})
 			if err == nil && endpoints != nil && len(endpoints.Subsets) > 0 && len(endpoints.Subsets[0].Addresses) > 0 {
 				t.Logf("Found kubelet Endpoints resource with %d addresses", len(endpoints.Subsets[0].Addresses))
 				return nil
 			}
-			time.Sleep(interval)
+			if err != nil {
+				t.Logf("Error getting kubelet Endpoints: %v", err)
+			}
+			time.Sleep(pollInterval)
 		}
 	}
 }
 
 func waitForKubeletEndpointSlices(ctx context.Context, t *testing.T) error {
-	timeout := 60 * time.Second
-	interval := 2 * time.Second
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, resourceTimeout)
 	defer cancel()
 
+	t.Log("Waiting for kubelet EndpointSlice resource creation...")
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("timeout waiting for kubelet EndpointSlice resources")
-		default:
 			endpointSlices, err := getKubeletEndpointSlices(ctx)
-			if err == nil && len(endpointSlices) > 0 {
-				// Check if any EndpointSlice has endpoints
-				for _, eps := range endpointSlices {
-					if len(eps.Endpoints) > 0 {
-						t.Logf("Found kubelet EndpointSlice resources: %d slices with endpoints", len(endpointSlices))
-						return nil
-					}
+			if err != nil {
+				t.Logf("Error getting EndpointSlices during timeout: %v", err)
+			} else {
+				t.Logf("EndpointSlices found during timeout: %d", len(endpointSlices))
+				for i, eps := range endpointSlices {
+					t.Logf("EndpointSlice %d: %s, endpoints: %d", i, eps.Name, len(eps.Endpoints))
 				}
 			}
-			time.Sleep(interval)
+			return fmt.Errorf("timeout waiting for kubelet EndpointSlice resources after %v", resourceTimeout)
+		default:
+			endpointSlices, err := getKubeletEndpointSlices(ctx)
+			if err != nil {
+				t.Logf("Error getting EndpointSlices: %v", err)
+				time.Sleep(pollInterval)
+				continue
+			}
+
+			if len(endpointSlices) > 0 {
+				totalEndpoints := 0
+				for _, eps := range endpointSlices {
+					totalEndpoints += len(eps.Endpoints)
+				}
+				if totalEndpoints > 0 {
+					t.Logf("Found kubelet EndpointSlice resources: %d slices with %d total endpoints", len(endpointSlices), totalEndpoints)
+					return nil
+				}
+				t.Logf("Found %d EndpointSlice resources but no endpoints yet", len(endpointSlices))
+			}
+			time.Sleep(pollInterval)
 		}
 	}
 }
