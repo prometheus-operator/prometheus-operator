@@ -104,52 +104,6 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			expectError:    true,
 			errorSubstring: "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet",
 		},
-		// {
-		// 	name: "scrapeConfigSelector set should error",
-		// 	spec: monitoringv1alpha1.PrometheusAgentSpec{
-		// 		Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
-		// 		CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-		// 			ScrapeConfigSelector: &metav1.LabelSelector{
-		// 				MatchLabels: map[string]string{
-		// 					"app": "my-scrape-config",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	expectError:    true,
-		// 	errorSubstring: "scrapeConfigSelector cannot be set when mode is DaemonSet",
-		// },
-		// {
-		// 	name: "scrapeConfigNamespaceSelector set should error",
-		// 	spec: monitoringv1alpha1.PrometheusAgentSpec{
-		// 		Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
-		// 		CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-		// 			ScrapeConfigNamespaceSelector: &metav1.LabelSelector{
-		// 				MatchLabels: map[string]string{
-		// 					"env": "production",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	expectError:    true,
-		// 	errorSubstring: "scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet",
-		// },
-		// {
-		// 	name: "additionalScrapeConfigs set should error",
-		// 	spec: monitoringv1alpha1.PrometheusAgentSpec{
-		// 		Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
-		// 		CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-		// 			AdditionalScrapeConfigs: &v1.SecretKeySelector{
-		// 				LocalObjectReference: v1.LocalObjectReference{
-		// 					Name: "additional-scrape-configs",
-		// 				},
-		// 				Key: "scrape-config.yaml",
-		// 			},
-		// 		},
-		// 	},
-		// 	expectError:    true,
-		// 	errorSubstring: "additionalScrapeConfigs cannot be set when mode is DaemonSet",
-		// },
 		{
 			name: "valid daemonset configuration",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
