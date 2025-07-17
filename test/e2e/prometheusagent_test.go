@@ -647,6 +647,7 @@ func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
 	t.Run("DaemonSetInvalidStorage", testDaemonSetInvalidStorage)
 	t.Run("DaemonSetInvalidShards", testDaemonSetInvalidShards)
 	t.Run("DaemonSetInvalidPVCRetentionPolicy", testDaemonSetInvalidPVCRetentionPolicy)
+	t.Run("DaemonSetInvalidScrapeConfigSelector", testDaemonSetInvalidScrapeConfigSelector)
 }
 
 func testDaemonSetInvalidReplicas(t *testing.T) {
@@ -773,4 +774,36 @@ func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-scrape-config-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// scrapeConfigSelector cannot be set in DaemonSets
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "prometheus-agent",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scrapeConfigSelector cannot be set when mode is DaemonSet")
 }
