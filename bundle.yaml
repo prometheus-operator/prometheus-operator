@@ -21478,7 +21478,7 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
 
-                  It requires Prometheus >= v3.5.0.
+                  It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeProtocols:
                 description: |-
@@ -22329,7 +22329,7 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
 
-                  It requires Prometheus >= v3.5.0.
+                  It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeProtocols:
                 description: |-
@@ -59444,7 +59444,7 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
 
-                  It requires Prometheus >= v3.5.0.
+                  It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
@@ -60863,7 +60863,7 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
 
-                  It requires Prometheus >= v3.5.0.
+                  It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeProtocols:
                 description: |-

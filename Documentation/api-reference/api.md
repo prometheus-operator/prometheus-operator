@@ -1186,7 +1186,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -1623,7 +1623,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -4063,7 +4063,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -11198,7 +11198,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -12255,7 +12255,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -12643,7 +12643,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -17462,7 +17462,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -22646,7 +22646,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -32289,7 +32289,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram, even if it is also exposed as a native histogram.</p>
-<p>It requires Prometheus &gt;= v3.5.0.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
