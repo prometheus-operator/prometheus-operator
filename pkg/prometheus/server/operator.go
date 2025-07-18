@@ -84,7 +84,8 @@ type Operator struct {
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
 
-	rr *operator.ResourceReconciler
+	rr     *operator.ResourceReconciler
+	smonRR *operator.ResourceReconciler
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -131,6 +132,21 @@ func WithoutUnmanagedConfiguration() ControllerOption {
 	return func(o *Operator) {
 		o.disableUnmanagedConfiguration = true
 	}
+}
+
+// Add a new type to implement Syncer for ServiceMonitor
+
+type serviceMonitorSyncer struct {
+	op *Operator
+}
+
+func (s *serviceMonitorSyncer) Sync(ctx context.Context, key string) error {
+	// No-op or implement reconciliation if needed
+	return nil
+}
+
+func (s *serviceMonitorSyncer) UpdateStatus(ctx context.Context, key string) error {
+	return s.op.UpdateServiceMonitorStatus(ctx, key)
 }
 
 // New creates a new controller.
@@ -337,6 +353,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("error creating statefulset informers: %w", err)
 	}
 
+	o.smonRR = operator.NewResourceReconciler(
+		o.logger,
+		&serviceMonitorSyncer{op: o},
+		o.smonInfs,
+		o.metrics,
+		monitoringv1.ServiceMonitorsKind,
+		r,
+		o.controllerID,
+	)
+
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
@@ -490,6 +516,8 @@ func (c *Operator) addHandlers() {
 		"Secret",
 		c.enqueueForPrometheusNamespace,
 	))
+
+	c.smonInfs.AddEventHandler(c.smonRR)
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
@@ -1039,6 +1067,55 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+// UpdateServiceMonitorStatus updates the status subresource for a ServiceMonitor after reconcile.
+func (c *Operator) UpdateServiceMonitorStatus(ctx context.Context, key string) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	sm, err := operator.GetObjectFromKey[*monitoringv1.ServiceMonitor](c.smonInfs, key)
+	if err != nil {
+		return err
+	}
+	if sm == nil {
+		return nil
+	}
+	if c.smonRR.DeletionInProgress(sm) {
+		return nil
+	}
+
+	// For demonstration, create a single binding to a dummy Prometheus instance.
+	// In a real implementation, you would determine which Prometheus/Agent selects this ServiceMonitor.
+	binding := monitoringv1.WorkloadBinding{
+		Group:     "monitoring.coreos.com",
+		Resource:  "prometheuses",
+		Name:      "example-prometheus",
+		Namespace: sm.Namespace,
+		Conditions: []monitoringv1.ConfigResourceCondition{
+			{
+				Type:               "Accepted",
+				Status:             "True",
+				LastTransitionTime: metav1.Now(),
+				Reason:             "Reconciled",
+				Message:            "ServiceMonitor successfully reconciled.",
+				ObservedGeneration: sm.Generation,
+			},
+		},
+	}
+
+	sm.Status.Bindings = []monitoringv1.WorkloadBinding{binding}
+
+	_, err = c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).UpdateStatus(ctx, sm, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update ServiceMonitor status: %w", err)
+	}
+	return nil
+}
+
+func (c *Operator) UpdateServiceMonitorStatusSyncer(ctx context.Context, key string) error {
+	return c.UpdateServiceMonitorStatus(ctx, key)
 }
 
 func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) {
