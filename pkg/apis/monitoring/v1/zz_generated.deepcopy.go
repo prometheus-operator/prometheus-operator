@@ -3603,6 +3603,11 @@ func (in *StorageSpec) DeepCopyInto(out *StorageSpec) {
 		*out = new(corev1.EphemeralVolumeSource)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.EphemeralMetadata != nil {
+		in, out := &in.EphemeralMetadata, &out.EphemeralMetadata
+		*out = new(EmbeddedObjectMetadata)
+		(*in).DeepCopyInto(*out)
+	}
 	in.VolumeClaimTemplate.DeepCopyInto(&out.VolumeClaimTemplate)
 }
 
