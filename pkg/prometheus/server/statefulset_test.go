@@ -248,6 +248,11 @@ func TestStatefulSetEphemeral(t *testing.T) {
 		},
 	}
 
+	ephemeralMetadata := &monitoringv1.EmbeddedObjectMetadata{
+		Labels:      labels,
+		Annotations: annotations,
+	}
+
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
@@ -256,7 +261,8 @@ func TestStatefulSetEphemeral(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
-					Ephemeral: &ephemeral,
+					Ephemeral:         &ephemeral,
+					EphemeralMetadata: ephemeralMetadata,
 				},
 			},
 		},
@@ -266,6 +272,12 @@ func TestStatefulSetEphemeral(t *testing.T) {
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
 	require.NotNil(t, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral, "Error adding Ephemeral Spec to StatefulSetSpec")
 	require.Equal(t, ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName, "Error adding Ephemeral Spec to StatefulSetSpec")
+
+	// Check that metadata was applied to the volumeClaimTemplate
+	ephemeralVolume := ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral
+	require.NotNil(t, ephemeralVolume.VolumeClaimTemplate)
+	require.Equal(t, labels, ephemeralVolume.VolumeClaimTemplate.Labels)
+	require.Equal(t, annotations, ephemeralVolume.VolumeClaimTemplate.Annotations)
 }
 
 func TestStatefulSetVolumeInitial(t *testing.T) {

@@ -1334,6 +1334,9 @@ type StorageSpec struct {
 	// For lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 	// More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes
 	Ephemeral *v1.EphemeralVolumeSource `json:"ephemeral,omitempty"`
+	// Metadata to be applied to the ephemeral volume's volumeClaimTemplate.
+	// This allows setting labels and annotations on the generated PVC.
+	EphemeralMetadata *EmbeddedObjectMetadata `json:"ephemeralMetadata,omitempty"`
 	// Defines the PVC spec to be used by the Prometheus StatefulSets.
 	// The easiest way to use a volume that cannot be automatically provisioned
 	// is to use a label selector alongside manually created PersistentVolumes.

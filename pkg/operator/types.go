@@ -53,3 +53,30 @@ func MakeHostAliases(input []monitoringv1.HostAlias) []v1.HostAlias {
 
 	return output
 }
+
+// MakeEphemeralVolumeSourceWithMetadata converts v1.EphemeralVolumeSource to v1.EphemeralVolumeSource
+// and applies metadata to the volumeClaimTemplate if present in the StorageSpec.
+func MakeEphemeralVolumeSourceWithMetadata(ephemeral *v1.EphemeralVolumeSource, metadata *monitoringv1.EmbeddedObjectMetadata) *v1.EphemeralVolumeSource {
+	if ephemeral == nil || metadata == nil {
+		return ephemeral
+	}
+
+	// Create a copy of the ephemeral volume source
+	result := ephemeral.DeepCopy()
+
+	// Apply metadata to the volumeClaimTemplate if present
+	if result.VolumeClaimTemplate != nil {
+		// Create a new PersistentVolumeClaimTemplate with metadata
+		pvcTemplate := &v1.PersistentVolumeClaimTemplate{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        metadata.Name,
+				Labels:      metadata.Labels,
+				Annotations: metadata.Annotations,
+			},
+			Spec: result.VolumeClaimTemplate.Spec,
+		}
+		result.VolumeClaimTemplate = pvcTemplate
+	}
+
+	return result
+}

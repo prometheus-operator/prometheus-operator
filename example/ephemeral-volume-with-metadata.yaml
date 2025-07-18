@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-with-ephemeral-metadata
+  namespace: default
+spec:
+  replicas: 1
+  storage:
+    ephemeral:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: "1Gi"
+    ephemeralMetadata:
+      labels:
+        app: prometheus
+        storage-type: ephemeral
+      annotations:
+        storage.kubernetes.io/selected-node: "node-1"
+        example.com/custom-annotation: "value"

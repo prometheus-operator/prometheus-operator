@@ -107,10 +107,11 @@ func makeStatefulSet(
 		})
 
 	case storageSpec.Ephemeral != nil:
+		ephemeral := operator.MakeEphemeralVolumeSourceWithMetadata(storageSpec.Ephemeral, storageSpec.EphemeralMetadata)
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				Ephemeral: storageSpec.Ephemeral,
+				Ephemeral: ephemeral,
 			},
 		})
 
