@@ -26,6 +26,7 @@ type StorageSpecApplyConfiguration struct {
 	DisableMountSubPath *bool                                            `json:"disableMountSubPath,omitempty"`
 	EmptyDir            *corev1.EmptyDirVolumeSource                     `json:"emptyDir,omitempty"`
 	Ephemeral           *corev1.EphemeralVolumeSource                    `json:"ephemeral,omitempty"`
+	EphemeralMetadata   *EmbeddedObjectMetadataApplyConfiguration        `json:"ephemeralMetadata,omitempty"`
 	VolumeClaimTemplate *EmbeddedPersistentVolumeClaimApplyConfiguration `json:"volumeClaimTemplate,omitempty"`
 }
 
@@ -56,6 +57,14 @@ func (b *StorageSpecApplyConfiguration) WithEmptyDir(value corev1.EmptyDirVolume
 // If called multiple times, the Ephemeral field is set to the value of the last call.
 func (b *StorageSpecApplyConfiguration) WithEphemeral(value corev1.EphemeralVolumeSource) *StorageSpecApplyConfiguration {
 	b.Ephemeral = &value
+	return b
+}
+
+// WithEphemeralMetadata sets the EphemeralMetadata field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EphemeralMetadata field is set to the value of the last call.
+func (b *StorageSpecApplyConfiguration) WithEphemeralMetadata(value *EmbeddedObjectMetadataApplyConfiguration) *StorageSpecApplyConfiguration {
+	b.EphemeralMetadata = value
 	return b
 }
 
