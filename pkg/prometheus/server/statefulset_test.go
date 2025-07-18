@@ -618,6 +618,9 @@ func TestListenTLS(t *testing.T) {
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" {
 			require.Equal(t, expectedArgsConfigReloader, c.Args, "expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			for _, env := range c.Env {
+				require.False(t, (env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(0))), "expectd shard value is %s, but found %s", strconv.Itoa(0), env.Value)
+			}
 		}
 	}
 }
@@ -1337,12 +1340,12 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 		foundRetention := false
 		foundRetentionSize := false
 		for _, flag := range promArgs {
-			if flag == test.expectedRetentionArg {
+			switch flag {
+			case test.expectedRetentionArg:
 				foundRetention = true
-			} else if flag == test.expectedRetentionSizeArg {
+			case test.expectedRetentionSizeArg:
 				foundRetentionSize = true
 			}
-
 			if strings.HasPrefix(flag, retentionFlag) {
 				foundRetentionFlag = true
 			} else if strings.HasPrefix(flag, "--storage.tsdb.retention.size") {
@@ -1868,7 +1871,7 @@ func TestConfigReloader(t *testing.T) {
 		if c.Name == "config-reloader" {
 			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
 			for _, env := range c.Env {
-				require.False(t, (env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum))), "expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
+				require.False(t, (env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(0))), "expectd shard value is %s, but found %s", strconv.Itoa(0), env.Value)
 			}
 		}
 	}
@@ -1884,7 +1887,7 @@ func TestConfigReloader(t *testing.T) {
 		if c.Name == "init-config-reloader" {
 			require.Equal(t, expectedArgsInitConfigReloader, c.Args, "expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
 			for _, env := range c.Env {
-				require.False(t, (env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum))), "expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
+				require.False(t, (env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(0))), "expectd shard value is %s, but found %s", strconv.Itoa(0), env.Value)
 			}
 		}
 	}
@@ -1929,7 +1932,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 			require.Equal(t, expectedArgsConfigReloader, c.Args)
 			for _, env := range c.Env {
 				if env.Name == "SHARD" {
-					require.Equal(t, strconv.Itoa(expectedShardNum), env.Value)
+					require.Equal(t, strconv.Itoa(0), env.Value)
 				}
 			}
 
@@ -1950,7 +1953,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 			require.Equal(t, expectedArgsInitConfigReloader, c.Args)
 			for _, env := range c.Env {
 				if env.Name == "SHARD" {
-					require.Equal(t, strconv.Itoa(expectedShardNum), env.Value)
+					require.Equal(t, strconv.Itoa(0), env.Value)
 				}
 			}
 		}

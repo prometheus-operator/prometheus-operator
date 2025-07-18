@@ -140,7 +140,7 @@ type serviceMonitorSyncer struct {
 	op *Operator
 }
 
-func (s *serviceMonitorSyncer) Sync(_ context.Context, key string) error {
+func (s *serviceMonitorSyncer) Sync(_ context.Context, _ string) error {
 	// No-op or implement reconciliation if needed
 	return nil
 }

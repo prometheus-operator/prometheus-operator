@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/util"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -487,7 +487,7 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
 
-	for _, k := range util.SortedKeys(m) {
+	for _, k := range sortutil.SortedKeys(m) {
 		res = append(res, yaml.MapItem{Key: k, Value: m[k]})
 	}
 
@@ -1370,7 +1370,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
 
-		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
+		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
@@ -1661,7 +1661,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Generate kubernetes_sd_config section for the ingress resources.
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
-		for _, k := range util.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels) {
+		for _, k := range sortutil.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(k)}},
@@ -1871,7 +1871,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
-		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
+		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
@@ -2943,7 +2943,7 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	for _, identifier := range util.SortedKeys(serviceMonitors) {
+	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
 				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
@@ -2966,7 +2966,7 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	for _, identifier := range util.SortedKeys(podMonitors) {
+	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
 				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
@@ -2989,7 +2989,7 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	for _, identifier := range util.SortedKeys(probes) {
+	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
 				probes[identifier],
@@ -3105,7 +3105,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
 
-	for _, identifier := range util.SortedKeys(scrapeConfigs) {
+	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
 
