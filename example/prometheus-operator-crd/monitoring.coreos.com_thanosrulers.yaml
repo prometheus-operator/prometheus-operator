@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 66ccf8442
     operator.prometheus.io/version: 0.84.0
   name: thanosrulers.monitoring.coreos.com
 spec:
@@ -6361,6 +6360,39 @@ spec:
                         required:
                         - spec
                         type: object
+                    type: object
+                  ephemeralMetadata:
+                    description: |-
+                      Metadata to be applied to the ephemeral volume's volumeClaimTemplate.
+                      This allows setting labels and annotations on the generated PVC.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Annotations is an unstructured key value map stored with a resource that may be
+                          set by external tools to store and retrieve arbitrary metadata. They are not
+                          queryable and should be preserved when modifying objects.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Map of string keys and values that can be used to organize and categorize
+                          (scope and select) objects. May match selectors of replication controllers
+                          and services.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+                        type: object
+                      name:
+                        description: |-
+                          Name must be unique within a namespace. Is required when creating resources, although
+                          some resources may allow a client to request the generation of an appropriate name
+                          automatically. Name is primarily intended for creation idempotence and configuration
+                          definition.
+                          Cannot be updated.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+                        type: string
                     type: object
                   volumeClaimTemplate:
                     description: |-
