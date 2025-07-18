@@ -98,7 +98,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	NameValidationScheme                 *monitoringv1.NameValidationSchemeOptions               `json:"nameValidationScheme,omitempty"`
 	NameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions                 `json:"nameEscapingScheme,omitempty"`
 	ConvertClassicHistogramsToNHCB       *bool                                                   `json:"convertClassicHistogramsToNHCB,omitempty"`
-	ScrapeClassicHistograms              *bool                                                   `json:"scrapeClassicHistograms,omitempty"`
+	AlwaysScrapeClassicHistograms        *bool                                                   `json:"alwaysScrapeClassicHistograms,omitempty"`
 	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
@@ -751,11 +751,11 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithConvertClassicHistogramsT
 	return b
 }
 
-// WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
+// WithAlwaysScrapeClassicHistograms sets the AlwaysScrapeClassicHistograms field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClassicHistograms(value bool) *CommonPrometheusFieldsApplyConfiguration {
-	b.ScrapeClassicHistograms = &value
+// If called multiple times, the AlwaysScrapeClassicHistograms field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithAlwaysScrapeClassicHistograms(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.AlwaysScrapeClassicHistograms = &value
 	return b
 }
 
