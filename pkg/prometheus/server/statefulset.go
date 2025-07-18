@@ -246,7 +246,7 @@ func makeStatefulSetSpec(
 	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != nil &&
 		compactionDisabled(p) &&
 		cg.WithMinimumVersion("2.55.0").IsCompatible() {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-compaction"})
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.allow-overlapping-compaction"})
 	}
 
 	var watchedDirectories []string
