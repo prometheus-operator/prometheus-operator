@@ -88,6 +88,43 @@ func (resources ResourcesSelection[T]) ValidResources() map[string]T {
 	return validRes
 }
 
+// GetResource returns the resource at the given index
+func (resources ResourcesSelection[T]) GetResource(index int) T {
+	if index >= len(resources) {
+		return nil
+	}
+	return resources[index].resource
+}
+
+// GetKey returns the key at the given index
+func (resources ResourcesSelection[T]) GetKey(index int) string {
+	if index >= len(resources) {
+		return ""
+	}
+	return resources[index].key
+}
+
+// GetError returns the error at the given index
+func (resources ResourcesSelection[T]) GetError(index int) error {
+	if index >= len(resources) {
+		return nil
+	}
+	return resources[index].err
+}
+
+// GetReason returns the reason at the given index
+func (resources ResourcesSelection[T]) GetReason(index int) string {
+	if index >= len(resources) {
+		return ""
+	}
+	return resources[index].reason
+}
+
+// Len returns the length of the resources selection
+func (resources ResourcesSelection[T]) Len() int {
+	return len(resources)
+}
+
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
 func NewResourceSelector(

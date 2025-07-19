@@ -16,6 +16,8 @@ package prometheus
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,6 +29,9 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	monitoringv1client "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
@@ -263,4 +268,67 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 			require.Equal(t, "tls_config:\n  insecure_skip_verify: true\n", string(get.Data[thanosPrometheusHTTPClientConfigFileName]))
 		})
 	}
+}
+
+func TestUpdateServiceMonitorStatus(t *testing.T) {
+	// Create a test operator with minimal configuration
+	o := &Operator{
+		mclient: &fakeMonitoringClient{},
+		logger:  slog.New(slog.NewTextHandler(io.Discard, nil)),
+	}
+
+	// Create test ServiceMonitor and Prometheus objects
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:       "test-servicemonitor",
+			Namespace:  "test-namespace",
+			Generation: 1,
+		},
+	}
+
+	prom := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-prometheus",
+			Namespace: "test-namespace",
+		},
+	}
+
+	// Test successful status update
+	err := o.updateServiceMonitorStatus(context.Background(), sm, prom, true, "Selected", "Selected by Prometheus")
+	if err != nil {
+		t.Errorf("Expected no error for successful status update, got: %v", err)
+	}
+
+	// Test failed status update
+	err = o.updateServiceMonitorStatus(context.Background(), sm, prom, false, "Rejected", "Rejected by Prometheus")
+	if err != nil {
+		t.Errorf("Expected no error for failed status update, got: %v", err)
+	}
+}
+
+// fakeMonitoringClient is a minimal fake client for testing
+type fakeMonitoringClient struct {
+	monitoringclient.Interface
+}
+
+func (f *fakeMonitoringClient) MonitoringV1() monitoringv1client.MonitoringV1Interface {
+	return &fakeMonitoringV1Client{}
+}
+
+type fakeMonitoringV1Client struct {
+	monitoringv1client.MonitoringV1Interface
+}
+
+func (f *fakeMonitoringV1Client) ServiceMonitors(namespace string) monitoringv1client.ServiceMonitorInterface {
+	return &fakeServiceMonitorClient{}
+}
+
+type fakeServiceMonitorClient struct {
+	monitoringv1client.ServiceMonitorInterface
+}
+
+func (f *fakeServiceMonitorClient) ApplyStatus(ctx context.Context, serviceMonitor *monitoringv1ac.ServiceMonitorApplyConfiguration, opts metav1.ApplyOptions) (*monitoringv1.ServiceMonitor, error) {
+	// This is a simple fake that just returns success
+	// In a real test, you might want to verify the structure of the apply configuration
+	return &monitoringv1.ServiceMonitor{}, nil
 }

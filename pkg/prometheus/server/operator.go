@@ -41,6 +41,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -1041,6 +1042,45 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
+// updateServiceMonitorStatus updates the status of a ServiceMonitor after reconcile
+// This function sets the .status.bindings field to indicate whether the ServiceMonitor was accepted or rejected by a Prometheus instance
+func (c *Operator) updateServiceMonitorStatus(ctx context.Context, sm *monitoringv1.ServiceMonitor, prom *monitoringv1.Prometheus, accepted bool, reason, message string) error {
+	// Build the condition status
+	var status monitoringv1.ConditionStatus
+	if accepted {
+		status = monitoringv1.ConditionTrue
+	} else {
+		status = monitoringv1.ConditionFalse
+	}
+
+	// Create the apply configuration for the ServiceMonitor status
+	applyConfig := monitoringv1ac.ServiceMonitor(sm.Name, sm.Namespace).WithStatus(
+		monitoringv1ac.ConfigResourceStatus().WithBindings(
+			monitoringv1ac.WorkloadBinding().
+				WithGroup("monitoring.coreos.com").
+				WithResource("prometheuses").
+				WithNamespace(prom.Namespace).
+				WithName(prom.Name).
+				WithConditions(
+					monitoringv1ac.ConfigResourceCondition().
+						WithType(monitoringv1.Accepted).
+						WithStatus(status).
+						WithLastTransitionTime(metav1.Now()).
+						WithObservedGeneration(sm.Generation).
+						WithReason(reason).
+						WithMessage(message),
+				),
+		),
+	)
+
+	// Apply the status update
+	_, err := c.mclient.MonitoringV1().ServiceMonitors(sm.Namespace).ApplyStatus(ctx, applyConfig, metav1.ApplyOptions{
+		FieldManager: operator.PrometheusOperatorFieldManager,
+		Force:        true,
+	})
+	return err
+}
+
 func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 
@@ -1171,6 +1211,25 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
 		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
+	}
+
+	// Update ServiceMonitor status after selection and validation
+	// This updates the .status.bindings field to indicate whether each ServiceMonitor was accepted or rejected
+	for i := 0; i < smons.Len(); i++ {
+		accepted := smons.GetError(i) == nil
+		reason := "Selected"
+		message := "Selected by Prometheus"
+		if !accepted {
+			reason = "Rejected"
+			message = fmt.Sprintf("Rejected by Prometheus: %v", smons.GetError(i))
+		}
+
+		// Only update status if the feature gate is enabled
+		if c.configResourcesStatusEnabled {
+			if err := c.updateServiceMonitorStatus(ctx, smons.GetResource(i), p, accepted, reason, message); err != nil {
+				logger.Warn("failed to update ServiceMonitor status", "serviceMonitor", smons.GetKey(i), "error", err)
+			}
+		}
 	}
 
 	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
