@@ -1043,7 +1043,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 // updateServiceMonitorStatus updates the status of a ServiceMonitor after reconcile
-// This function sets the .status.bindings field to indicate whether the ServiceMonitor was accepted or rejected by a Prometheus instance
+// This function sets the .status.bindings field to indicate whether the ServiceMonitor was accepted or rejected by a Prometheus instance.
 func (c *Operator) updateServiceMonitorStatus(ctx context.Context, sm *monitoringv1.ServiceMonitor, prom *monitoringv1.Prometheus, accepted bool, reason, message string) error {
 	// Build the condition status
 	var status monitoringv1.ConditionStatus

@@ -305,7 +305,7 @@ func TestUpdateServiceMonitorStatus(t *testing.T) {
 	}
 }
 
-// fakeMonitoringClient is a minimal fake client for testing
+// fakeMonitoringClient is a minimal fake client for testing.
 type fakeMonitoringClient struct {
 	monitoringclient.Interface
 }
