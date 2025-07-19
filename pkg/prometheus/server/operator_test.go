@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"context"
-	"io"
 	"log/slog"
 	"testing"
 
@@ -274,7 +273,7 @@ func TestUpdateServiceMonitorStatus(t *testing.T) {
 	// Create a test operator with minimal configuration
 	o := &Operator{
 		mclient: &fakeMonitoringClient{},
-		logger:  slog.New(slog.NewTextHandler(io.Discard, nil)),
+		logger:  slog.New(slog.DiscardHandler),
 	}
 
 	// Create test ServiceMonitor and Prometheus objects

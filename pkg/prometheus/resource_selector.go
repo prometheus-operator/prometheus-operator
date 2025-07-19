@@ -88,7 +88,7 @@ func (resources ResourcesSelection[T]) ValidResources() map[string]T {
 	return validRes
 }
 
-// GetResource returns the resource at the given index
+// GetResource returns the resource at the given index.
 func (resources ResourcesSelection[T]) GetResource(index int) T {
 	if index >= len(resources) {
 		return nil
@@ -96,7 +96,7 @@ func (resources ResourcesSelection[T]) GetResource(index int) T {
 	return resources[index].resource
 }
 
-// GetKey returns the key at the given index
+// GetKey returns the key at the given index.
 func (resources ResourcesSelection[T]) GetKey(index int) string {
 	if index >= len(resources) {
 		return ""
@@ -104,7 +104,7 @@ func (resources ResourcesSelection[T]) GetKey(index int) string {
 	return resources[index].key
 }
 
-// GetError returns the error at the given index
+// GetError returns the error at the given index.
 func (resources ResourcesSelection[T]) GetError(index int) error {
 	if index >= len(resources) {
 		return nil
@@ -112,7 +112,7 @@ func (resources ResourcesSelection[T]) GetError(index int) error {
 	return resources[index].err
 }
 
-// GetReason returns the reason at the given index
+// GetReason returns the reason at the given index.
 func (resources ResourcesSelection[T]) GetReason(index int) string {
 	if index >= len(resources) {
 		return ""
@@ -120,7 +120,7 @@ func (resources ResourcesSelection[T]) GetReason(index int) string {
 	return resources[index].reason
 }
 
-// Len returns the length of the resources selection
+// Len returns the length of the resources selection.
 func (resources ResourcesSelection[T]) Len() int {
 	return len(resources)
 }

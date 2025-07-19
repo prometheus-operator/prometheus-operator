@@ -1068,7 +1068,7 @@ func (c *Operator) updateServiceMonitorStatus(ctx context.Context, sm *monitorin
 						WithLastTransitionTime(metav1.Now()).
 						WithObservedGeneration(sm.Generation).
 						WithReason(reason).
-						WithMessage(message),
+						WithMessage(message), //nolint:staticcheck // These fields are used in the fluent API
 				),
 		),
 	)
