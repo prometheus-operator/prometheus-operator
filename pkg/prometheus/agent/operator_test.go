@@ -46,7 +46,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 				},
 			},
 			expectError:    true,
-			errorSubstring: "replicas cannot be set when mode is DaemonSet",
+			errorSubstring: "replicas cannot be configured when mode is DaemonSet",
 		},
 		{
 			name: "invalid: configuring storage in the daemonset mode",
@@ -67,28 +67,18 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 				},
 			},
 			expectError:    true,
-			errorSubstring: "storage cannot be set when mode is DaemonSet",
+			errorSubstring: "storage cannot be configured when mode is DaemonSet",
 		},
 		{
-			name: "invalid: configuring shards > 1 in the daemonset mode",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Shards: ptr.To(int32(2)),
-				},
-			},
-			expectError:    true,
-			errorSubstring: "shards cannot be greater than 1 when mode is DaemonSet",
-		},
-		{
-			name: "valid: configuring shards = 1 in the daemonset mode",
+			name: "invalid: configuring shards in the daemonset mode",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					Shards: ptr.To(int32(1)),
 				},
 			},
-			expectError: false,
+			expectError:    true,
+			errorSubstring: "shards cannot be configured when mode is DaemonSet",
 		},
 		{
 			name: "invalid: configuring persistentVolumeClaimRetentionPolicy in the daemonset mode",
@@ -102,7 +92,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 				},
 			},
 			expectError:    true,
-			errorSubstring: "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet",
+			errorSubstring: "persistentVolumeClaimRetentionPolicy cannot be configured when mode is DaemonSet",
 		},
 		{
 			name: "valid daemonset configuration",
