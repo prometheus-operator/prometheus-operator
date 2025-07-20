@@ -1153,7 +1153,7 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-// getSeletedConfigResources returns the selected configuration resources (PodMonitor, ServiceMonitor, Probes and ScrapeConfigs) by the Prometheus.
+// getSeletedConfigResources returns all the configuration resources (PodMonitor, ServiceMonitor, Probes and ScrapeConfigs) selected by the Prometheus.
 func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, store *assets.StoreBuilder) (selectedConfigResources, error) {
 	var resources selectedConfigResources
 
