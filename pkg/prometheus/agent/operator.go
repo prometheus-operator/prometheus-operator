@@ -1188,23 +1188,23 @@ func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
 }
 
-// Runtime validations for the PrometheusAgent Daemonset mode. 
+// Runtime validations for the PrometheusAgent Daemonset mode.
 func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 
 	if p.Spec.Replicas != nil {
-		return fmt.Errorf("replicas cannot be configured when mode is DaemonSet")
+		return fmt.Errorf("replicas cannot be set when mode is DaemonSet")
 	}
 
 	if p.Spec.Storage != nil {
-		return fmt.Errorf("storage cannot be configured when mode is DaemonSet")
+		return fmt.Errorf("storage cannot be set when mode is DaemonSet")
 	}
 
 	if p.Spec.Shards != nil {
-		return fmt.Errorf("shards cannot be configured when mode is DaemonSet")
+		return fmt.Errorf("shards cannot be set when mode is DaemonSet")
 	}
 
 	if p.Spec.PersistentVolumeClaimRetentionPolicy != nil {
-		return fmt.Errorf("persistentVolumeClaimRetentionPolicy cannot be configured when mode is DaemonSet")
+		return fmt.Errorf("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
 	}
 
 	return nil
