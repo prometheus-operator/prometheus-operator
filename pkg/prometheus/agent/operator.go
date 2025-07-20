@@ -1188,7 +1188,7 @@ func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
 }
 
-// a fallback CEL validation function for older kubernetes versions when CEL is not available.
+// Runtime validations for the PrometheusAgent Daemonset mode. 
 func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 
 	if p.Spec.Replicas != nil {
