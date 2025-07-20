@@ -88,19 +88,18 @@ func configResourceStatusApplyConfigurationFromConfigResourceStatus(status *moni
 			WithNamespace(binding.Namespace).
 			WithResource(binding.Resource)
 
-		var conditions []*monitoringv1ac.ConfigResourceConditionApplyConfiguration
 		for _, condition := range binding.Conditions {
-			conditions = append(conditions, monitoringv1ac.ConfigResourceCondition().
-				WithType(condition.Type).
-				WithStatus(condition.Status).
-				WithLastTransitionTime(condition.LastTransitionTime).
-				WithReason(condition.Reason).
-				WithMessage(condition.Message).
-				WithObservedGeneration(condition.ObservedGeneration),
+			bg.WithConditions(
+				monitoringv1ac.ConfigResourceCondition().
+					WithType(condition.Type).
+					WithStatus(condition.Status).
+					WithLastTransitionTime(condition.LastTransitionTime).
+					WithReason(condition.Reason).
+					WithMessage(condition.Message).
+					WithObservedGeneration(condition.ObservedGeneration),
 			)
 		}
 
-		bg.WithConditions(conditions...)
 		crsac.WithBindings(bg)
 	}
 
