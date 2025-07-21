@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"fmt"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -2393,4 +2394,21 @@ type OTLPConfig struct {
 	// +listType=set
 	// +optional
 	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
+}
+
+// Validate semantically validates the given OTLPConfig section.
+func (c *OTLPConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.PromoteResourceAttributes) > 0 && c.PromoteAllResourceAttributes != nil && *c.PromoteAllResourceAttributes {
+		return fmt.Errorf("promote_all_resource_attributes cannot be set to 'true' simultaneously with 'promote_resource_attributes'")
+	}
+
+	if len(c.IgnoreResourceAttributes) > 0 && (c.PromoteAllResourceAttributes == nil || !*c.PromoteAllResourceAttributes) {
+		return fmt.Errorf("ignore_resource_attributes can only be set when 'promote_all_resource_attributes' is true")
+	}
+
+	return nil
 }
