@@ -245,7 +245,7 @@ When a workload resource is created, we add a finalizer to it to ensure proper c
 ##### Removing invalid bindings from configuration resources status
 
 A configuration resource may contain a reference to a workload resource in its bindings which is not relevant anymore. This can occur for instance when:
-*  A workload resource A selects a configuration resource X in namespace Y.
+* A workload resource A selects a configuration resource X in namespace Y.
 * The operator updates the status of resource X to reference workload A.
 * At a later time, changes may happen that break this association:
   * The labels of X and/or its namespace Y are modified.
