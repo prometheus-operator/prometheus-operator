@@ -20,18 +20,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
+var logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldAcceptRuleWithValidPartialResponseStrategyValue", shouldAcceptRuleWithValidPartialResponseStrategyValue)
 	t.Run("shouldAcceptValidRule", shouldAcceptValidRule)
 	t.Run("shouldAcceptRulesWithEmptyDurations", shouldAcceptRulesWithEmptyDurations)
-	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
+	t.Run("shouldAcceptRulesWithUTF8Labels", shouldAcceptRulesWithUTF8Labels)
+	t.Run("shouldRejectRuleWithUTF8LabelsWithPrometheusVersionUnsupported", shouldRejectRuleWithUTF8LabelsWithPrometheusVersionUnsupported)
 	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
 	t.Run("shouldResetRuleWithPartialResponseStrategySet", shouldResetRuleWithPartialResponseStrategySet)
 	t.Run("shouldAcceptRuleWithLimitPrometheus", shouldAcceptRuleWithLimitPrometheus)
@@ -47,15 +49,6 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldErrorOnTooLargePrometheusRule", shouldErrorOnTooLargePrometheusRule)
 	t.Run("shouldDropGroupLabelsForUnsupportedPrometheusVersion", shouldDropGroupLabelsForUnsupportedPrometheusVersion)
 	t.Run("shouldAcceptRuleWithGroupLabels", shouldAcceptRuleWithGroupLabels)
-}
-
-func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	return PrometheusRuleSelector{
-		ruleFormat: ruleFormat,
-		version:    version,
-		logger:     logger,
-	}
 }
 
 func shouldAcceptRuleWithValidPartialResponseStrategyValue(t *testing.T) {
@@ -74,8 +67,10 @@ func shouldAcceptRuleWithValidPartialResponseStrategyValue(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
-	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	pr, err := NewPrometheusRuleSelector(ThanosFormat, DefaultThanosVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.Contains(t, content, "partial_response_strategy: warn", "expected `partial_response_strategy` to be set in PrometheusRule as `warn`")
 }
@@ -97,9 +92,11 @@ func shouldAcceptValidRule(t *testing.T) {
 			},
 		}},
 	}
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
+	_, err = pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
 }
 
@@ -127,13 +124,17 @@ func shouldAcceptRulesWithEmptyDurations(t *testing.T) {
 			},
 		}},
 	}
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
+
+	_, err = pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
 }
 
-func shouldRejectRuleWithInvalidLabels(t *testing.T) {
+func shouldRejectRuleWithUTF8LabelsWithPrometheusVersionUnsupported(t *testing.T) {
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -150,10 +151,37 @@ func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 			},
 		}},
 	}
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, "v2.55.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
+	_, err = pr.generateRulesConfiguration(rules)
 	require.Error(t, err)
+}
+
+func shouldAcceptRulesWithUTF8Labels(t *testing.T) {
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+						Labels: map[string]string{
+							"invalid/label": "value",
+						},
+					},
+				},
+			},
+		}},
+	}
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
+	_, err = pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
 }
 
 func shouldRejectRuleWithInvalidExpression(t *testing.T) {
@@ -171,9 +199,11 @@ func shouldRejectRuleWithInvalidExpression(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
+	_, err = pr.generateRulesConfiguration(rules)
 	require.Error(t, err)
 }
 
@@ -192,8 +222,11 @@ func shouldResetRuleWithPartialResponseStrategySet(t *testing.T) {
 			},
 		}},
 	}
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "partial_response_strategy", "expected `partial_response_strategy` removed from PrometheusRule")
 }
@@ -215,8 +248,10 @@ func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.Contains(t, content, "keep_firing_for", "expected `keep_firing_for` to be present in PrometheusRule")
 }
@@ -238,8 +273,10 @@ func shouldDropRuleFiringForThanos(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant("v0.33.0")
-	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	pr, err := NewPrometheusRuleSelector(ThanosFormat, "v0.33.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "keep_firing_for", "expected `keep_firing_for` not to be present in PrometheusRule")
 }
@@ -261,8 +298,10 @@ func shouldAcceptRuleFiringForThanos(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
-	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	pr, err := NewPrometheusRuleSelector(ThanosFormat, DefaultThanosVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.Contains(t, content, "keep_firing_for", "expected `keep_firing_for` to be present in PrometheusRule")
 }
@@ -284,8 +323,10 @@ func shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant("v2.30.0")
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, "v2.33.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "keep_firing_for", "expected `keep_firing_for` not to be present in PrometheusRule")
 }
@@ -307,8 +348,10 @@ func shouldAcceptRuleWithLimitPrometheus(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
@@ -330,8 +373,10 @@ func shouldAcceptRuleWithLimitThanos(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
-	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	pr, err := NewPrometheusRuleSelector(ThanosFormat, DefaultThanosVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
@@ -353,10 +398,10 @@ func shouldAcceptRuleWithQueryOffsetPrometheus(t *testing.T) {
 		}},
 	}
 
-	promVersion, err := semver.ParseTolerant(DefaultPrometheusVersion)
-	require.NoError(t, err)
-
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, err := pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
 
@@ -380,8 +425,10 @@ func shouldDropLimitFieldForUnsupportedPrometheusVersion(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant("v2.30.0")
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, "v2.30.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
 }
@@ -403,8 +450,10 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant("v0.23.0")
-	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	pr, err := NewPrometheusRuleSelector(ThanosFormat, "v0.23.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
 }
@@ -426,10 +475,10 @@ func shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion(t *testing.T) {
 		}},
 	}
 
-	promVersion, err := semver.ParseTolerant("v2.52.0")
-	require.NoError(t, err)
-
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, "v2.32.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, err := pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
 
@@ -477,8 +526,10 @@ func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant("2.53.0")
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, "v2.53.0", nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
 	content, _ := pr.generateRulesConfiguration(rules)
 
 	require.NotContains(t, content, "key", "expected group labels not to be present in PrometheusRule")
@@ -504,8 +555,10 @@ func shouldAcceptRuleWithGroupLabels(t *testing.T) {
 		}},
 	}
 
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
-	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	pr, err := NewPrometheusRuleSelector(PrometheusFormat, DefaultPrometheusVersion, nil, nil, nil, nil, logger)
+	if err != nil {
+		t.Fatalf("error in creating prometheus rule selector: %s", err)
+	}
+	_, err = pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
 }
