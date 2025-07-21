@@ -1,4 +1,14 @@
-# Zone aware sharding for Prometheus
+---
+weight: 524
+toc: true
+title: Zone aware sharding for Prometheus
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 * **Owners:**
   * [arnecls](https://github.com/arnecls)

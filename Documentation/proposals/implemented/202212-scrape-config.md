@@ -1,4 +1,14 @@
-# ScrapeConfig CRD
+---
+weight: 502
+toc: true
+title: ScrapeConfig CRD
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 * Owners:
   * [xiu](https://github.com/xiu)

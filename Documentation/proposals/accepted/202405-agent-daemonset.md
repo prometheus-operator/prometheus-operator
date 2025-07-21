@@ -1,4 +1,14 @@
-# DaemonSet deployment for Prometheus Agent
+---
+weight: 521
+toc: true
+title: DaemonSet deployment for Prometheus Agent
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 * Owners:
   * [haanhvu](https://github.com/haanhvu)
