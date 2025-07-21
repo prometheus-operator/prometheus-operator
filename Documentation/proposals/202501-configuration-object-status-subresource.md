@@ -30,7 +30,7 @@ Mapping between configuration resources and their associated workload resources:
 
 ## Pitfalls of the current solution
 
-Prometheus operator allows users to define their observability workloads through "workload" resources like `Prometheus`, `PrometheusAgent`, `AlertManager`. The configuration of these workloads can be done dynamically by orchestrating "configuration" resources like `ServiceMonitor`, `PodMonitor`, `ScrapeConfig`, etc.
+Prometheus operator allows users to define their observability workloads through "workload" resources like `Prometheus`, `PrometheusAgent`, `Alertmanager`. The configuration of these workloads can be done dynamically by orchestrating "configuration" resources like `ServiceMonitor`, `PodMonitor`, `ScrapeConfig`, etc.
 
 Currently, the status subresource is only implemented for workload resources. The absence of the status subresource for configuration resources makes it difficult to determine the source of the generated configuration of the workload resources. Additionally, there is no straightforward way to observe the reconciliation status of configuration resources. While Kubernetes events are available when a configuration is rejected by a workload, they are not sufficient for ongoing visibility or troubleshooting.
 
@@ -156,7 +156,7 @@ spec:
       interval: 30s
       rules:
         - alert: HighPodCPUUsage
-          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m])) by (pod) > 0.5
+          expr: sum(rate(container_cpu_usage_seconds_total{container!="", pod!=""}[5m)) by (pod) > 0.5
           for: 5m
           labels:
             severity: warning
@@ -178,7 +178,7 @@ spec:
             message: "rule 0, alert: 'HighPodCPUUsage', parse error: expected type vector in aggregation expression, got scalar"
 ```
 
-#### `AlertManagerConfig`
+#### `AlertmanagerConfig`
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
@@ -215,7 +215,7 @@ spec:
 * `bindings`: Lists the workload resources that select the configuration resource.
   * `conditions`: Describes the latest conditions of the configuration resource in relation to the workload resource.
     * `type`: The only condition type used is `Accepted`, indicating whether the workload controller has successfully accepted the configuration resource and updated the configuration of the workload accordingly.
-    * `status`: It can be either `True` or `False`.
+    * `status`: It can be either `True` , `False` or `Unknown`.
       * `True` indicates that the configuration resource was successfully accepted by the controller and written to the configuration secret.
       * `False` means the controller rejected the configuration due to an error.
     * `reason`: Specifies the reason why the configuration was not accepted.
@@ -224,7 +224,7 @@ spec:
 
 ### Implementation
 
-#### How to Enable/Disable the Status Subresource for Configuration Resources
+#### Feature gate
 
 This feature is controlled by a feature gate: `StatusForConfigurationResources`. Cluster administrators can toggle this flag to enable or disable the status subresource support for configuration resources as needed.
 
@@ -238,27 +238,29 @@ Once we've reached feature completeness and we're confident about the stability,
 
 #### Keeping the status up-to-date
 
-##### How to remove a binding when the workload is deleted ?
+##### Removing a binding when the workload is deleted
 
-When a workload resource is created, we add a finalizer to it to ensure proper cleanup before deletion. If a user later requests deletion of the resource, Kubernetes does not immediately remove it; instead, it sets a deletionTimestamp on the resource. This triggers an update event, which the controller receives and processes. The controller checks if the deletionTimestamp is set to determine if the resource is in the process of being deleted. If so, the controller proceeds to clean up associated references from relevant configuration resources (e.g., ServiceMonitors, PrometheusRules). Once the cleanup is complete, the controller removes the finalizer from the workload resource, allowing Kubernetes to complete the deletion process.
+When a workload resource is created, we add a finalizer to it to ensure proper cleanup before deletion. If a user later requests deletion of the resource, Kubernetes does not immediately remove it; instead, it sets a deletionTimestamp on the resource. This triggers an update event, which the workload controller receives and processes. When the deletionTimestamp is set, the controller proceeds to clean up the configuration resources (e.g., ServiceMonitors, PrometheusRules) with bindings to the workload. Once the cleanup is complete, the controller removes the finalizer from the workload resource, allowing Kubernetes to complete the deletion process.
 
 ##### Removing invalid bindings from configuration resources status
 
-A configuration resource may contain a reference to a workload resource in its bindings which is not relevant anymore. This can occur under certain conditions. For example, at some point in time, a workload resource A selects a configuration resource X in namespace Y:
+A configuration resource may contain a reference to a workload resource in its bindings which is not relevant anymore. This can occur for instance when:
+*  A workload resource A selects a configuration resource X in namespace Y.
 * The operator updates the status of resource X to reference workload A.
-* Later, changes may happen that break this association:
-* The labels of X and/or its namespace Y are modified.
-* The label selectors and/or namespace selectors of workload A are updated.
+* At a later time, changes may happen that break this association:
+  * The labels of X and/or its namespace Y are modified.
+  * The label selectors and/or namespace selectors of workload A are updated.
 
-These changes can result in workload A no longer selecting configuration resource X and the configuration resource's status needs to be updated to reflect this.
+These changes can result in the workload A no longer selecting the configuration resource X which requires the operator to update the configuration resource's status.
 
-A separate Go routine can be used to remove invalid bindings, offloading this responsibility from the main workload controller threads.
+A separate Go routine can be used to remove invalid bindings, offloading this responsibility from the main workload controller's reconciliation loop.
 This background routine can periodically:
 * Query all workload resources.
 * List all configuration resources.
 * For each configuration resource, check if its bindings are still valid.
 * Remove any bindings that no longer have an active association with a workload resource.
-  This approach ensures that the cleanup process does not interfere with the primary reconciliation loop and improves controller efficiency.
+
+This approach ensures that the cleanup process does not interfere with the primary reconciliation loop and improves controller efficiency.
 
 ## Alternatives
 
