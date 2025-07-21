@@ -21476,7 +21476,8 @@ spec:
                 type: string
               scrapeClassicHistograms:
                 description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
                   It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeProtocols:
@@ -22326,7 +22327,8 @@ spec:
                 type: string
               scrapeClassicHistograms:
                 description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
                   It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeProtocols:
@@ -23859,6 +23861,12 @@ spec:
                         x-kubernetes-list-type: atomic
                     type: object
                 type: object
+              alwaysScrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
+                  It requires Prometheus >= v3.5.0.
+                type: boolean
               apiserverConfig:
                 description: |-
                   APIServerConfig allows specifying a host and auth methods to access the
@@ -29684,11 +29692,6 @@ spec:
                 x-kubernetes-list-map-keys:
                 - name
                 x-kubernetes-list-type: map
-              scrapeClassicHistograms:
-                description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
-                  It requires Prometheus >= v3.5.0.
-                type: boolean
               scrapeConfigNamespaceSelector:
                 description: |-
                   Namespaces to match for ScrapeConfig discovery. An empty label selector
@@ -35551,6 +35554,12 @@ spec:
                   merge in Prometheus.
 
                   Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
+                type: boolean
+              alwaysScrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
+                  It requires Prometheus >= v3.5.0.
                 type: boolean
               apiserverConfig:
                 description: |-
@@ -42351,11 +42360,6 @@ spec:
                 x-kubernetes-list-map-keys:
                 - name
                 x-kubernetes-list-type: map
-              scrapeClassicHistograms:
-                description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
-                  It requires Prometheus >= v3.5.0.
-                type: boolean
               scrapeConfigNamespaceSelector:
                 description: |-
                   Namespaces to match for ScrapeConfig discovery. An empty label selector
@@ -59438,7 +59442,8 @@ spec:
                 type: string
               scrapeClassicHistograms:
                 description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
                   It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeInterval:
@@ -60856,7 +60861,8 @@ spec:
                 type: string
               scrapeClassicHistograms:
                 description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+
                   It requires Prometheus >= v2.45.0.
                 type: boolean
               scrapeProtocols:

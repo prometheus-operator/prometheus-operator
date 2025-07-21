@@ -716,11 +716,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
-	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	// Whether to scrape a classic histogram, even if it is also exposed as a native histogram.
+	//
 	// It requires Prometheus >= v3.5.0.
 	//
 	// +optional
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	AlwaysScrapeClassicHistograms *bool `json:"alwaysScrapeClassicHistograms,omitempty"`
 
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
