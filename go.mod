@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/KimMachineGun/automemlimit v0.7.3
+	github.com/KimMachineGun/automemlimit v0.7.4
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
@@ -21,15 +21,15 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.2.0
 	github.com/prometheus-community/prom-label-proxy v0.11.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.83.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.83.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.84.0
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.84.0
 	github.com/prometheus/alertmanager v0.28.1
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.65.0
 	github.com/prometheus/exporter-toolkit v0.14.0
 	github.com/prometheus/prometheus v0.304.2
 	github.com/stretchr/testify v1.10.0
-	github.com/thanos-io/thanos v0.39.1
+	github.com/thanos-io/thanos v0.39.2
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.42.0
 	golang.org/x/sync v0.16.0

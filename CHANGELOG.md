@@ -1,6 +1,23 @@
 ## Unreleased
 
+## 0.84.0 / 2025-07-14
+
+* [FEATURE] Add `telegram` field to AlertManager CRD global configuration. #7631
+* [FEATURE] Add `jira` field to AlertManager CRD global configuration. #7626
+* [FEATURE] Add `webex` field to AlertManager CRD global configuration. #7632
+* [FEATURE] Add `victorops` field to Alertmanager CRD global configuration. #7654
+* [FEATURE] Add `wechat` field to Alertmanager CRD global configuration. #7627
+* [FEATURE] Add `ruleQueryOffset` field to ThanosRuler CRD. #7580
+* [FEATURE] Add `ruleConcurrentEval` field to ThanosRuler CRD. #7659
+* [FEATURE] Add `ruleOutageTolerance` field to ThanosRuler CRD. #7672
+* [FEATURE] Add ProxyConfig fields to ServiceMonitor. #7647
+* [FEATURE] Add ProxyConfig fields to Probe. #7660
+* [FEATURE] Add ProxyConfig fields to Prometheus `apiServerConfig`. #7670
+* [FEATURE] Add `scrapeClassicHistograms` field to Prometheus. #7667
+* [FEATURE] Add `labelSelector` field to HetznerSDConfig in the ScrapeConfig CRD. #7675
+* [FEATURE] Add startupProbe to config-reloader. #7575
 * [ENHANCEMENT] Set `reason: ConfigurationUnmanaged` in the `Reconciled` condition when the operator doesn't managed the Prometheus configuration. #7661
+* [ENHANCEMENT] AlertManager `matchType` defaults to `=` if neither `matchType` nor `regex` is set, and `=~` if `regex: true` is set without matchType. #7592
 
 ## 0.83.0 / 2025-05-30
 
