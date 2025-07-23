@@ -24,7 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
@@ -202,7 +202,7 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 
 	// To make bin packing algorithm deterministic, sort ruleFiles filenames and
 	// iterate over filenames instead of ruleFiles map (not deterministic).
-	for _, filename := range util.SortedKeys(ruleFiles) {
+	for _, filename := range sortutil.SortedKeys(ruleFiles) {
 		// If rule file doesn't fit into current bucket, create new bucket.
 		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > operator.MaxConfigMapDataSize {
 			buckets = append(buckets, map[string]string{})

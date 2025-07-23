@@ -1,5 +1,5 @@
 ---
-weight: 505
+weight: 605
 toc: true
 title: Code of Conduct
 menu:

@@ -34,7 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -344,7 +344,7 @@ func (cb *ConfigBuilder) InitializeFromRawConfiguration(b []byte) error {
 // AddAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
 func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
 	subRoutes := make([]*route, 0, len(amConfigs))
-	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
+	for _, amConfigIdentifier := range sortutil.SortedKeys(amConfigs) {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
