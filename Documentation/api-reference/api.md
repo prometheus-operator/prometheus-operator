@@ -405,7 +405,7 @@ bool
 </td>
 <td>
 <p>If set to true all actions on the underlying managed objects are not
-goint to be performed, except for delete actions.</p>
+going to be performed, except for delete actions.</p>
 </td>
 </tr>
 <tr>
@@ -6351,7 +6351,7 @@ bool
 </td>
 <td>
 <p>If set to true all actions on the underlying managed objects are not
-goint to be performed, except for delete actions.</p>
+going to be performed, except for delete actions.</p>
 </td>
 </tr>
 <tr>
