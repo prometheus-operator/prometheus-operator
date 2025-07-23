@@ -170,7 +170,7 @@ type AlertmanagerSpec struct {
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// If set to true all actions on the underlying managed objects are not
-	// goint to be performed, except for delete actions.
+	// going to be performed, except for delete actions.
 	Paused bool `json:"paused,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`

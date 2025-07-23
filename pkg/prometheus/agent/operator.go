@@ -86,7 +86,7 @@ type Operator struct {
 
 	config prompkg.Config
 
-	endpointSliceSupported bool // Whether the Kubernetes API suports the EndpointSlice kind.
+	endpointSliceSupported bool // Whether the Kubernetes API supports the EndpointSlice kind.
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 

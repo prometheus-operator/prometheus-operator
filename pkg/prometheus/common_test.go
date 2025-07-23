@@ -190,7 +190,7 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
-		// OTLP receiver config supported but verison not support
+		// OTLP receiver config supported but version not support
 		{
 			version:            "2.46.0",
 			enableOTLPReceiver: ptr.To(false),
@@ -210,7 +210,7 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 			expectedOTLPFeatureEnabled: true,
 			expectedOTLPReceiverFlag:   false,
 		},
-		// OTLP receiver config supported with verison 3.x
+		// OTLP receiver config supported with version 3.x
 		{
 			version:            "3.0.0",
 			enableOTLPReceiver: nil,

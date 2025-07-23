@@ -578,7 +578,7 @@ func TestSelectProbes(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
 								},
-								Key: "invaild_key",
+								Key: "invalid_key",
 							},
 						},
 					},
@@ -1880,7 +1880,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: false,
 		},
 		{
-			scenario: "valid proxy config with muti header values",
+			scenario: "valid proxy config with multi header values",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),

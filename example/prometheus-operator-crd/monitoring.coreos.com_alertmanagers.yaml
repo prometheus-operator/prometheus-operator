@@ -5911,7 +5911,7 @@ spec:
               paused:
                 description: |-
                   If set to true all actions on the underlying managed objects are not
-                  goint to be performed, except for delete actions.
+                  going to be performed, except for delete actions.
                 type: boolean
               persistentVolumeClaimRetentionPolicy:
                 description: |-
