@@ -11451,6 +11451,20 @@ string
 <tbody>
 <tr>
 <td>
+<code>promoteAllResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Promote all resource attributes to metric labels except the ones defined in <code>ignoreResourceAttributes</code>.</p>
+<p>Cannot be true when <code>promoteResourceAttributes</code> is defined.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>promoteResourceAttributes</code><br/>
 <em>
 []string
@@ -11458,7 +11472,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
+<p>Cannot be defined when <code>promoteAllResourceAttributes</code> is true.
+List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
 </td>
 </tr>
 <tr>
@@ -11501,6 +11516,20 @@ bool
 <em>(Optional)</em>
 <p>Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
 It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of OpenTelemetry resource attributes to ignore when <code>promoteAllResourceAttributes</code> is true.</p>
+<p>Cannot be defined when <code>promoteAllResourceAttributes</code> is not true or promoteResourceAttributes` is defined.
+It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 </tbody>
