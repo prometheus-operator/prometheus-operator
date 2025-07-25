@@ -24,6 +24,8 @@ import (
 // with apply.
 type OTLPConfigApplyConfiguration struct {
 	PromoteResourceAttributes         []string                                `json:"promoteResourceAttributes,omitempty"`
+	PromoteAllResourceAttributes      *bool                                   `json:"promoteAllResourceAttributes,omitempty"`
+	IgnoreResourceAttributes          []string                                `json:"ignoreResourceAttributes,omitempty"`
 	TranslationStrategy               *monitoringv1.TranslationStrategyOption `json:"translationStrategy,omitempty"`
 	KeepIdentifyingResourceAttributes *bool                                   `json:"keepIdentifyingResourceAttributes,omitempty"`
 	ConvertHistogramsToNHCB           *bool                                   `json:"convertHistogramsToNHCB,omitempty"`
@@ -41,6 +43,24 @@ func OTLPConfig() *OTLPConfigApplyConfiguration {
 func (b *OTLPConfigApplyConfiguration) WithPromoteResourceAttributes(values ...string) *OTLPConfigApplyConfiguration {
 	for i := range values {
 		b.PromoteResourceAttributes = append(b.PromoteResourceAttributes, values[i])
+	}
+	return b
+}
+
+// WithPromoteAllResourceAttributes sets the PromoteAllResourceAttributes field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PromoteAllResourceAttributes field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithPromoteAllResourceAttributes(value bool) *OTLPConfigApplyConfiguration {
+	b.PromoteAllResourceAttributes = &value
+	return b
+}
+
+// WithIgnoreResourceAttributes adds the given value to the IgnoreResourceAttributes field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the IgnoreResourceAttributes field.
+func (b *OTLPConfigApplyConfiguration) WithIgnoreResourceAttributes(values ...string) *OTLPConfigApplyConfiguration {
+	for i := range values {
+		b.IgnoreResourceAttributes = append(b.IgnoreResourceAttributes, values[i])
 	}
 	return b
 }
