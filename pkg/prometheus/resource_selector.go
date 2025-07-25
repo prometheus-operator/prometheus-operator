@@ -1463,10 +1463,6 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 }
 
 func (rs *ResourceSelector) validateStackitSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if len(sc.Spec.StackitSDConfigs) == 0 {
-		return nil
-	}
-
 	if rs.version.LT(semver.MustParse("3.5.0")) {
 		return fmt.Errorf("StackitSDConfig is only supported for Prometheus version >= 3.5.0")
 	}
