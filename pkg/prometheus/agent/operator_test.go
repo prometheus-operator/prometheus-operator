@@ -35,7 +35,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 		name           string
 		spec           monitoringv1alpha1.PrometheusAgentSpec
 		expectError    bool
-		errorSubstring string
+		expectedError string
 	}{
 		{
 			name: "invalid: configuring replicas in the daemonset mode",
@@ -139,7 +139,12 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 
 			err := validateDaemonSetModeSpec(p)
 
-			if tc.expectError {
+			if tc.expectedError != nil {
+			    require.Error(t, err)
+			    require.Equal(t, tc.expectedErr.Error(), err.Error())
+			    return
+			}
+			require.NoError(t, err)
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.errorSubstring)
 			} else {
