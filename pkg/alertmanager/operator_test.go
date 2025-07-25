@@ -81,7 +81,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 			equal: false,
 		},
 		{
-			// differrent resource.Quantity produce the same hash because the
+			// different resource.Quantity produce the same hash because the
 			// struct contains private fields that aren't integrated into the
 			// hash computation.
 			name: "different specs but same hash",
@@ -962,7 +962,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subroute-with-unknow-field",
+					Name:      "subroute-with-unknown-field",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
