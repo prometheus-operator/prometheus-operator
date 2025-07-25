@@ -32,10 +32,9 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 	t.Parallel()
 
 	for _, tc := range []struct {
-		name           string
-		spec           monitoringv1alpha1.PrometheusAgentSpec
-		expectError    bool
-		expectedError string
+		name          string
+		spec          monitoringv1alpha1.PrometheusAgentSpec
+		expectedError *string
 	}{
 		{
 			name: "invalid: configuring replicas in the daemonset mode",
@@ -45,8 +44,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 					Replicas: ptr.To(int32(3)),
 				},
 			},
-			expectError:    true,
-			errorSubstring: "replicas cannot be set when mode is DaemonSet",
+			expectedError: ptr.To("replicas cannot be set when mode is DaemonSet"),
 		},
 		{
 			name: "invalid: configuring storage in the daemonset mode",
@@ -66,8 +64,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 					},
 				},
 			},
-			expectError:    true,
-			errorSubstring: "storage cannot be set when mode is DaemonSet",
+			expectedError: ptr.To("storage cannot be set when mode is DaemonSet"),
 		},
 		{
 			name: "invalid: configuring shards in the daemonset mode",
@@ -77,8 +74,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 					Shards: ptr.To(int32(1)),
 				},
 			},
-			expectError:    true,
-			errorSubstring: "shards cannot be set when mode is DaemonSet",
+			expectedError: ptr.To("shards cannot be set when mode is DaemonSet"),
 		},
 		{
 			name: "invalid: configuring persistentVolumeClaimRetentionPolicy in the daemonset mode",
@@ -91,8 +87,7 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 					},
 				},
 			},
-			expectError:    true,
-			errorSubstring: "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet",
+			expectedError: ptr.To("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet"),
 		},
 		{
 			name: "valid daemonset configuration",
@@ -116,14 +111,14 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 					},
 				},
 			},
-			expectError: false,
+			expectedError: nil,
 		},
 		{
 			name: "valid daemonset configuration with only required fields",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 			},
-			expectError: false,
+			expectedError: nil,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -140,13 +135,8 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			err := validateDaemonSetModeSpec(p)
 
 			if tc.expectedError != nil {
-			    require.Error(t, err)
-			    require.Equal(t, tc.expectedErr.Error(), err.Error())
-			    return
-			}
-			require.NoError(t, err)
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.errorSubstring)
+				require.Contains(t, err.Error(), *tc.expectedError)
 			} else {
 				require.NoError(t, err)
 			}
