@@ -219,7 +219,7 @@ func selectObjects[T configurationResource](
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
-	return selectObjects[*monitoringv1.ServiceMonitor](
+	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1.ServiceMonitorsKind),
 		rs,
@@ -463,7 +463,7 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
-	return selectObjects[*monitoringv1.PodMonitor](
+	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1.PodMonitorsKind),
 		rs,
@@ -540,7 +540,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
-	return selectObjects[*monitoringv1.Probe](
+	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1.ProbesKind),
 		rs,
@@ -650,7 +650,7 @@ func validateServer(server string) error {
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
-	return selectObjects[*monitoringv1alpha1.ScrapeConfig](
+	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1alpha1.ScrapeConfigsKind),
 		rs,
