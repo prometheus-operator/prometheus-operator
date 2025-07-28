@@ -69,6 +69,7 @@ type ResourceSelector struct {
 }
 
 // ResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
+// The map's key is the full resource name in the "<namespace>/<name>" form.
 type ResourcesSelection[T configurationResource] map[string]struct {
 	resource T
 	err      error  // error encountered during selection or validation (nil if valid).
