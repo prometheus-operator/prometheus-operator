@@ -9729,6 +9729,56 @@ func TestOTLPConfig(t *testing.T) {
 			},
 			golden: "OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
 		},
+		{
+			name:    "Config IgnoreResourceAttributes with old version",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				IgnoreResourceAttributes: []string{"aa", "bb", "cc"},
+			},
+			golden: "OTLPConfig_Config_ignore_resource_attributes_with_old_version.golden",
+		},
+		{
+			name:    "Config IgnoreResourceAttributes",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				IgnoreResourceAttributes: []string{"aa", "bb", "cc"},
+			},
+			expectedErr: true,
+		},
+		{
+			name:    "Config IgnoreResourceAttributes with PromoteAllResourceAttributes true",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				IgnoreResourceAttributes:     []string{"aa", "bb", "cc"},
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_ignore_resource_attributes_with_true.golden",
+		},
+		{
+			name:    "Config PromoteAllResourceAttributes",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_all_resource_attributes.golden",
+		},
+		{
+			name:    "Config PromoteAllResourceAttributes",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes:    []string{"aa", "bb", "cc"},
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			expectedErr: true,
+		},
+		{
+			name:    "Config PromoteAllResourceAttributes with_old_version",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_all_resource_attributes_with_old_version.golden",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
