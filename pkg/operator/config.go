@@ -94,6 +94,10 @@ func DefaultConfig(cpu, memory string) Config {
 				description: "Enables the DaemonSet mode for PrometheusAgent",
 				enabled:     false,
 			},
+			PrometheusAgentDaemonSetServiceMonitorFeature: FeatureGate{
+				description: "Enables ServiceMonitor support for PrometheusAgent DaemonSet mode using EndpointSlice",
+				enabled:     false,
+			},
 			PrometheusTopologyShardingFeature: FeatureGate{
 				description: "Enables the zone aware sharding for Prometheus",
 				enabled:     false,

@@ -26,6 +26,9 @@ const (
 	// PrometheusAgentDaemonSetFeature enables the DaemonSet mode for PrometheusAgent.
 	PrometheusAgentDaemonSetFeature FeatureGateName = "PrometheusAgentDaemonSet"
 
+	// PrometheusAgentDaemonSetServiceMonitorFeature enables ServiceMonitor support for PrometheusAgent DaemonSet mode using EndpointSlice.
+	PrometheusAgentDaemonSetServiceMonitorFeature FeatureGateName = "PrometheusAgentDaemonSetServiceMonitor"
+
 	// PrometheusTopologySharding enables the zone-aware sharding for Prometheus.
 	PrometheusTopologyShardingFeature FeatureGateName = "PrometheusTopologySharding"
 
