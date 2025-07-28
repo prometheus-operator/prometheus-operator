@@ -1,14 +1,4 @@
----
-weight: 504
-toc: true
-title: Controller-ID Proposal
-menu:
-    docs:
-        parent: proposals
-lead: ""
-images: []
-draft: false
----
+# Controller-ID Proposal
 
 * Owners:
   * [danielmellado](https://github.com/danielmellado)

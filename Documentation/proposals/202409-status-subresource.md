@@ -1,14 +1,4 @@
----
-weight: 508
-toc: true
-title: Status subresource for Prometheus operator Workload CRDs
-menu:
-    docs:
-        parent: proposals
-lead: ""
-images: []
-draft: false
----
+# Status subresource for Prometheus operator Workload CRDs
 
 * **Owners:**
   * [simonpasquier](https://github.com/simonpasquier)

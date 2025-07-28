@@ -1,14 +1,4 @@
----
-weight: 507
-toc: true
-title: Revamping Documentation Structure
-menu:
-    docs:
-        parent: proposals
-lead: ""
-images: []
-draft: false
----
+# Revamping Documentation Structure
 
 - Owners:
   - [AshwinSriram11](https://github.com/AshwinSriram11)

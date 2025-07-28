@@ -1,14 +1,4 @@
----
-weight: 523
-toc: true
-title: RemoteWrite CRD
-menu:
-    docs:
-        parent: proposals
-lead: ""
-images: []
-draft: false
----
+# RemoteWrite CRD
 
 - Owners:
   - [@superbrothers](https://github.com/superbrothers)

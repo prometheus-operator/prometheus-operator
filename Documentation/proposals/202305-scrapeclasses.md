@@ -1,14 +1,4 @@
----
-weight: 503
-toc: true
-title: Scrape Classes
-menu:
-    docs:
-        parent: proposals
-lead: ""
-images: []
-draft: false
----
+## Scrape Classes
 
 * **Owners:**
   * `nicolastakashi`
