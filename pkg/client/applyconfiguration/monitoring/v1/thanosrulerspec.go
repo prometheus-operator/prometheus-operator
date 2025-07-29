@@ -66,6 +66,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	RuleOutageTolerance                *monitoringv1.Duration                          `json:"ruleOutageTolerance,omitempty"`
 	RuleQueryOffset                    *monitoringv1.Duration                          `json:"ruleQueryOffset,omitempty"`
 	RuleConcurrentEval                 *int32                                          `json:"ruleConcurrentEval,omitempty"`
+	RuleGracePeriod                    *monitoringv1.Duration                          `json:"ruleGracePeriod,omitempty"`
 	Retention                          *monitoringv1.Duration                          `json:"retention,omitempty"`
 	Containers                         []corev1.Container                              `json:"containers,omitempty"`
 	InitContainers                     []corev1.Container                              `json:"initContainers,omitempty"`
@@ -448,6 +449,14 @@ func (b *ThanosRulerSpecApplyConfiguration) WithRuleQueryOffset(value monitoring
 // If called multiple times, the RuleConcurrentEval field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithRuleConcurrentEval(value int32) *ThanosRulerSpecApplyConfiguration {
 	b.RuleConcurrentEval = &value
+	return b
+}
+
+// WithRuleGracePeriod sets the RuleGracePeriod field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RuleGracePeriod field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithRuleGracePeriod(value monitoringv1.Duration) *ThanosRulerSpecApplyConfiguration {
+	b.RuleGracePeriod = &value
 	return b
 }
 
