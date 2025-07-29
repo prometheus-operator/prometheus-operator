@@ -4842,6 +4842,7 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
 It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
@@ -18681,6 +18682,7 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
 It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>

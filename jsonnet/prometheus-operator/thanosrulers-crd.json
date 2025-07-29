@@ -5039,7 +5039,7 @@
                     "type": "integer"
                   },
                   "ruleGracePeriod": {
-                    "description": "Minimum duration between alert and restored \"for\" state.\nIt requires Thanos >= v0.30.0.",
+                    "description": "Minimum duration between alert and restored \"for\" state.\nThis is maintained only for alerts with configured \"for\" time greater than grace period.\nIt requires Thanos >= v0.30.0.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },

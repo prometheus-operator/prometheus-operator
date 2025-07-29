@@ -305,6 +305,7 @@ type ThanosRulerSpec struct {
 	RuleConcurrentEval *int32 `json:"ruleConcurrentEval,omitempty"`
 
 	// Minimum duration between alert and restored "for" state.
+	// This is maintained only for alerts with configured "for" time greater than grace period.
 	// It requires Thanos >= v0.30.0.
 	//
 	// +optional
