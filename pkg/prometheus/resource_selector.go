@@ -174,8 +174,11 @@ func selectObjects[T configurationResource](
 		}
 	}
 
-	var rejected int
-	res := make(ResourcesSelection[T], 0, len(objects))
+	var (
+		rejected int
+		valid    []string
+		res      = make(ResourcesSelection[T], 0, len(objects))
+	)
 	for namespaceAndName, obj := range objects {
 		var reason string
 		o := obj.(T)
@@ -185,7 +188,10 @@ func selectObjects[T configurationResource](
 			reason = invalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+		} else {
+			valid = append(valid, namespaceAndName)
 		}
+
 		res = append(res, struct {
 			resource T
 			key      string
@@ -199,11 +205,7 @@ func selectObjects[T configurationResource](
 		})
 	}
 
-	keys := []string{}
-	for _, r := range res {
-		keys = append(keys, r.key)
-	}
-	logger.Debug("objects selected", "objects", strings.Join(keys, ","))
+	logger.Debug("valid objects selected", "objects", strings.Join(valid, ","))
 
 	if pKey, ok := rs.accessor.MetaNamespaceKey(rs.p); ok {
 		rs.metrics.SetSelectedResources(pKey, kind, len(res))

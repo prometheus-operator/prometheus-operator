@@ -1,6 +1,7 @@
 ## Unreleased
 
 * [CHANGE/BUGFIX] Disable compaction of overlapping blocks when Thanos sidecar is configured with object storage. #7747
+* [BUGFIX] Log only selected resources which are valid. #7749
 
 ## 0.84.0 / 2025-07-14
 
