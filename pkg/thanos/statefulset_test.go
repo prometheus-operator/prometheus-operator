@@ -1220,3 +1220,57 @@ func TestRuleOutageTolerance(t *testing.T) {
 		})
 	}
 }
+
+func TestRuleGracePeriod(t *testing.T) {
+	ruleGracePeriod := monitoringv1.Duration("10m")
+
+	tt := []struct {
+		scenario        string
+		version         string
+		ruleGracePeriod *monitoringv1.Duration
+		shouldHaveArg   bool
+	}{{
+		scenario:        "version >= 0.30.0 with rule query offset",
+		version:         "0.30.0",
+		ruleGracePeriod: &ruleGracePeriod,
+		shouldHaveArg:   true,
+	}, {
+		scenario:        "version < 0.30.0 with rule query offset",
+		version:         "0.29.0",
+		ruleGracePeriod: &ruleGracePeriod,
+		shouldHaveArg:   false,
+	}, {
+		scenario:        "version >= 0.30.0 without rule query offset",
+		version:         "0.30.0",
+		ruleGracePeriod: nil,
+		shouldHaveArg:   false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:         &version,
+					RuleGracePeriod: ts.ruleGracePeriod,
+					QueryEndpoints:  emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--for-grace-period=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}
