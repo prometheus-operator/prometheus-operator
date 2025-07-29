@@ -1887,6 +1887,11 @@ func (in *OTLPConfig) DeepCopyInto(out *OTLPConfig) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.IgnoreResourceAttributes != nil {
+		in, out := &in.IgnoreResourceAttributes, &out.IgnoreResourceAttributes
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.PromoteResourceAttributes != nil {
 		in, out := &in.PromoteResourceAttributes, &out.PromoteResourceAttributes
 		*out = make([]string, len(*in))
@@ -1906,11 +1911,6 @@ func (in *OTLPConfig) DeepCopyInto(out *OTLPConfig) {
 		in, out := &in.ConvertHistogramsToNHCB, &out.ConvertHistogramsToNHCB
 		*out = new(bool)
 		**out = **in
-	}
-	if in.IgnoreResourceAttributes != nil {
-		in, out := &in.IgnoreResourceAttributes, &out.IgnoreResourceAttributes
-		*out = make([]string, len(*in))
-		copy(*out, *in)
 	}
 }
 

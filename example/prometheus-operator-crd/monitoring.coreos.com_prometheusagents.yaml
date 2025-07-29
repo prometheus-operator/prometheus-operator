@@ -4842,7 +4842,7 @@ spec:
                     description: |-
                       List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
 
-                      Cannot be defined when ` promoteAllResourceAttributes` is not true or promoteResourceAttributes` is defined.
+                      It requires `promoteAllResourceAttributes` to be true.
                       It requires Prometheus >= v3.5.0.
                     items:
                       minLength: 1
@@ -4866,8 +4866,8 @@ spec:
                     type: boolean
                   promoteResourceAttributes:
                     description: |-
-                      Cannot be defined when `promoteAllResourceAttributes` is true.
                       List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+                      Cannot be defined when `promoteAllResourceAttributes` is true.
                     items:
                       minLength: 1
                       type: string

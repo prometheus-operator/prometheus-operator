@@ -4116,7 +4116,7 @@
                         "type": "boolean"
                       },
                       "ignoreResourceAttributes": {
-                        "description": "List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.\n\nCannot be defined when ` promoteAllResourceAttributes` is not true or promoteResourceAttributes` is defined.\nIt requires Prometheus >= v3.5.0.",
+                        "description": "List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.\n\nIt requires `promoteAllResourceAttributes` to be true.\nIt requires Prometheus >= v3.5.0.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -4134,7 +4134,7 @@
                         "type": "boolean"
                       },
                       "promoteResourceAttributes": {
-                        "description": "Cannot be defined when `promoteAllResourceAttributes` is true.\nList of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
+                        "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.\nCannot be defined when `promoteAllResourceAttributes` is true.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
