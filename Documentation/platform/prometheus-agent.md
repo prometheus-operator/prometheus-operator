@@ -200,4 +200,224 @@ spec:
       team: frontend
 ```
 
+## Deployment Modes
+
+PrometheusAgent supports two deployment modes that determine how the Prometheus Agent pods are deployed and managed:
+
+### StatefulSet Mode (Default)
+
+This is the default deployment mode where PrometheusAgent is deployed as a StatefulSet. This mode is suitable for:
+
+- **Cluster-wide monitoring**: One or more high-availability Prometheus Agents scrape metrics from the entire cluster
+- **Persistent storage requirements**: When you need persistent volumes for WAL (Write-Ahead Log) storage
+- **Centralized management**: Easier to manage fewer agent instances with predictable scaling
+
+### DaemonSet Mode (Alpha)
+
+{{< alert icon="🚨" text="DaemonSet mode is currently in Alpha and requires the PrometheusAgentDaemonSet feature gate to be enabled."/>}}
+
+In DaemonSet mode, PrometheusAgent is deployed as a DaemonSet, running one pod per node. This mode is ideal for:
+
+- **Node-local monitoring**: Each agent only scrapes metrics from targets on the same node
+- **Automatic scalability**: Agents automatically scale with node additions/removals
+- **Load distribution**: Load is naturally distributed across nodes
+- **Resource efficiency**: Lower memory usage and no persistent storage requirements
+
+## Comparison of Deployment Modes
+
+| Feature               | StatefulSet Mode            | DaemonSet Mode            |
+|-----------------------|-----------------------------|---------------------------|
+| **Scaling**           | Manual replica management   | Automatic with node count |
+| **Load Distribution** | Cluster-wide scraping       | Node-local scraping       |
+| **Storage**           | Supports persistent storage | Ephemeral storage only    |
+| **Target Discovery**  | ServiceMonitor & PodMonitor | PodMonitor recommended    |
+| **Resource Usage**    | Higher memory usage         | Lower memory per pod      |
+| **High Availability** | Multi-replica support       | One pod per node          |
+| **Use Case**          | Centralized monitoring      | Distributed monitoring    |
+
+## Enabling DaemonSet Mode
+
+To use DaemonSet mode, you need to:
+
+1. **Enable the feature gate** on the Prometheus Operator:
+
+   ```bash
+   --feature-gates=PrometheusAgentDaemonSet=true
+   ```
+
+2. **Ensure DaemonSet RBAC permissions** are granted to the operator. The operator needs permissions to manage DaemonSet resources:
+
+   ```yaml
+   - apiGroups:
+     - apps
+     resources:
+     - daemonsets
+     verbs:
+     - '*'
+   ```
+
+## Configuration Examples
+
+### StatefulSet Mode (Default)
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: prometheus-agent-statefulset
+spec:
+  # mode: StatefulSet (default, can be omitted)
+  replicas: 2
+  serviceAccountName: prometheus-agent
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: fast-ssd
+        resources:
+          requests:
+            storage: 10Gi
+  serviceMonitorSelector:
+    matchLabels:
+      team: frontend
+```
+
+### DaemonSet Mode
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: prometheus-agent-daemonset
+spec:
+  mode: DaemonSet
+  serviceAccountName: prometheus-agent
+  # Note: replicas, storage, shards, and persistentVolumeClaimRetentionPolicy
+  # are not allowed in DaemonSet mode
+  podMonitorSelector:
+    matchLabels:
+      team: frontend
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 500m
+    requests:
+      memory: 512Mi
+      cpu: 100m
+```
+
+### DaemonSet Mode with Node Selection
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: prometheus-agent-workers
+spec:
+  mode: DaemonSet
+  serviceAccountName: prometheus-agent
+  nodeSelector:
+    node-role.kubernetes.io/worker: "true"
+  tolerations:
+  - key: "monitoring"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  podMonitorSelector:
+    matchLabels:
+      environment: production
+```
+
+## Field Restrictions in DaemonSet Mode
+
+When using DaemonSet mode, the following fields are **not allowed** and will be rejected by CEL validation:
+
+- `replicas`: DaemonSets automatically manage one pod per node
+- `storage`: DaemonSets use ephemeral storage only
+- `shards`: Cannot be greater than 1 in DaemonSet mode
+- `persistentVolumeClaimRetentionPolicy`: Not applicable without persistent storage
+
+### Example of Invalid Configuration
+
+```yaml
+# This configuration will be rejected
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: invalid-daemonset-config
+spec:
+  mode: DaemonSet
+  replicas: 3  # ❌ Not allowed in DaemonSet mode
+  storage:     # ❌ Not allowed in DaemonSet mode
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 10Gi
+  serviceAccountName: prometheus-agent
+```
+
+## Target Discovery in DaemonSet Mode
+
+### Recommended: PodMonitor
+
+DaemonSet mode works best with `PodMonitor` resources since each agent naturally discovers and scrapes pods running on the same node:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: app-podmonitor
+spec:
+  selector:
+    matchLabels:
+      app: my-application
+  podMetricsEndpoints:
+  - port: metrics
+    path: /metrics
+```
+
+### ServiceMonitor Considerations
+
+While `ServiceMonitor` can be used with DaemonSet mode, it may result in some inefficiency since:
+- Multiple agents might attempt to scrape the same service endpoints
+- Load balancing behavior depends on the service configuration
+- Node-local targeting is not guaranteed
+
+## Best Practices
+
+### When to Use DaemonSet Mode
+
+Choose DaemonSet mode when you have:
+- Large clusters with many nodes
+- Node-specific workloads that need monitoring
+- Resource constraints requiring distributed load
+- No requirement for persistent metric storage
+- Preference for automatic scaling with cluster size
+
+### When to Use StatefulSet Mode
+
+Choose StatefulSet mode when you need:
+- Centralized metric collection and management
+- Persistent storage for the Write-Ahead Log
+- Complex sharding strategies
+- Integration with existing StatefulSet-based workflows
+- Predictable resource allocation
+
+### Resource Management
+
+For DaemonSet mode, consider:
+- Setting appropriate resource limits to prevent node resource exhaustion
+- Using node selectors to target specific node types
+- Implementing proper tolerations for specialized nodes
+- Monitoring per-node resource usage
+
+## Migration Between Modes
+
+When migrating between deployment modes:
+
+1. **StatefulSet to DaemonSet**: Remove storage, replicas, and sharding configuration
+2. **DaemonSet to StatefulSet**: Add replica count and storage configuration if needed
+3. **Consider monitoring gaps**: Plan for potential gaps in metric collection during migration
+4. **Test thoroughly**: Validate target discovery and metric collection in non-production first
+
 Continue with the [Getting Started page]({{<ref "docs/developer/getting-started.md">}}) to learn how to monitor applications running on Kubernetes.
