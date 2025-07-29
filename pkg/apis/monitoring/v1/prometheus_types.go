@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"fmt"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -2350,7 +2351,25 @@ const (
 //
 // +k8s:openapi-gen=true
 type OTLPConfig struct {
+	// Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+	//
+	// Cannot be true when `promoteResourceAttributes` is defined.
+	// It requires Prometheus >= v3.5.0.
+	// +optional
+	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"`
+
+	// List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+	//
+	// It requires `promoteAllResourceAttributes` to be true.
+	// It requires Prometheus >= v3.5.0.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
+
 	// List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+	// Cannot be defined when `promoteAllResourceAttributes` is true.
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
@@ -2375,4 +2394,21 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.4.0.
 	// +optional
 	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
+}
+
+// Validate semantically validates the given OTLPConfig section.
+func (c *OTLPConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.PromoteResourceAttributes) > 0 && c.PromoteAllResourceAttributes != nil && *c.PromoteAllResourceAttributes {
+		return fmt.Errorf("'promoteAllResourceAttributes' cannot be set to 'true' simultaneously with 'promoteResourceAttributes'")
+	}
+
+	if len(c.IgnoreResourceAttributes) > 0 && (c.PromoteAllResourceAttributes == nil || !*c.PromoteAllResourceAttributes) {
+		return fmt.Errorf("'ignoreResourceAttributes' can only be set when 'promoteAllResourceAttributes' is true")
+	}
+
+	return nil
 }

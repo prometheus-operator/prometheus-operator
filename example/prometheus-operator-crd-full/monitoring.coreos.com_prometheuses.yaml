@@ -5608,6 +5608,18 @@ spec:
                       Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
                       It requires Prometheus >= v3.4.0.
                     type: boolean
+                  ignoreResourceAttributes:
+                    description: |-
+                      List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+
+                      It requires `promoteAllResourceAttributes` to be true.
+                      It requires Prometheus >= v3.5.0.
+                    items:
+                      minLength: 1
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
                   keepIdentifyingResourceAttributes:
                     description: |-
                       Enables adding `service.name`, `service.namespace` and `service.instance.id`
@@ -5615,9 +5627,17 @@ spec:
 
                       It requires Prometheus >= v3.1.0.
                     type: boolean
+                  promoteAllResourceAttributes:
+                    description: |-
+                      Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+
+                      Cannot be true when `promoteResourceAttributes` is defined.
+                      It requires Prometheus >= v3.5.0.
+                    type: boolean
                   promoteResourceAttributes:
-                    description: List of OpenTelemetry Attributes that should be promoted
-                      to metric labels, defaults to none.
+                    description: |-
+                      List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+                      Cannot be defined when `promoteAllResourceAttributes` is true.
                     items:
                       minLength: 1
                       type: string
