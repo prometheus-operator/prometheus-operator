@@ -1316,3 +1316,70 @@ func TestRuleResendDelay(t *testing.T) {
 		})
 	}
 }
+
+func TestEnableFeatures(t *testing.T) {
+	tt := []struct {
+		scenario       string
+		version        string
+		enableFeatures []monitoringv1.EnableFeature
+		shouldHaveArg  bool
+		expectedValue  string
+	}{{
+		scenario:       "version >= 0.39.0 with single feature",
+		version:        "0.39.0",
+		enableFeatures: []monitoringv1.EnableFeature{"promql-experimental-functions"},
+		shouldHaveArg:  true,
+		expectedValue:  "promql-experimental-functions",
+	}, {
+		scenario:       "version < 0.39.0 with features",
+		version:        "0.38.0",
+		enableFeatures: []monitoringv1.EnableFeature{"promql-experimental-functions"},
+		shouldHaveArg:  false,
+		expectedValue:  "",
+	}, {
+		scenario:       "version >= 0.39.0 with empty features",
+		version:        "0.39.0",
+		enableFeatures: []monitoringv1.EnableFeature{},
+		shouldHaveArg:  false,
+		expectedValue:  "",
+	}, {
+		scenario:       "version >= 0.39.0 with nil features",
+		version:        "0.39.0",
+		enableFeatures: nil,
+		shouldHaveArg:  false,
+		expectedValue:  "",
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:        &version,
+					EnableFeatures: ts.enableFeatures,
+					QueryEndpoints: emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			var actualValue string
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--enable-feature=") {
+					found = true
+					actualValue = strings.TrimPrefix(flag, "--enable-feature=")
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+			if ts.shouldHaveArg {
+				require.Equal(t, ts.expectedValue, actualValue)
+			}
+		})
+	}
+}

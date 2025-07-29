@@ -4495,6 +4495,12 @@ spec:
                   - ruleNamespace
                   type: object
                 type: array
+              promqlExperimentalFunctions:
+                description: |-
+                  Thanos Rule enable feature flags currently only supports promql-experimental-functions.
+
+                  It requires Thanos >= 0.39.0.
+                type: boolean
               queryConfig:
                 description: |-
                   Configures the list of Thanos Query endpoints from which to query metrics.

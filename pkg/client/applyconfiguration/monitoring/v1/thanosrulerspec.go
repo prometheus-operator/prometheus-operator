@@ -87,6 +87,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	Web                                *ThanosRulerWebSpecApplyConfiguration           `json:"web,omitempty"`
 	RemoteWrite                        []RemoteWriteSpecApplyConfiguration             `json:"remoteWrite,omitempty"`
 	TerminationGracePeriodSeconds      *int64                                          `json:"terminationGracePeriodSeconds,omitempty"`
+	PromqlExperimentalFunctions        *bool                                           `json:"promqlExperimentalFunctions,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerSpec type for use with
@@ -645,5 +646,13 @@ func (b *ThanosRulerSpecApplyConfiguration) WithRemoteWrite(values ...*RemoteWri
 // If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *ThanosRulerSpecApplyConfiguration {
 	b.TerminationGracePeriodSeconds = &value
+	return b
+}
+
+// WithPromqlExperimentalFunctions sets the PromqlExperimentalFunctions field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PromqlExperimentalFunctions field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithPromqlExperimentalFunctions(value bool) *ThanosRulerSpecApplyConfiguration {
+	b.PromqlExperimentalFunctions = &value
 	return b
 }
