@@ -1274,3 +1274,47 @@ func TestRuleGracePeriod(t *testing.T) {
 		})
 	}
 }
+
+func TestRuleResendDelay(t *testing.T) {
+	resendDelay := monitoringv1.Duration("1h")
+
+	tt := []struct {
+		scenario      string
+		resendDelay   *monitoringv1.Duration
+		shouldHaveArg bool
+	}{{
+		scenario:      "resend delay defined",
+		resendDelay:   &resendDelay,
+		shouldHaveArg: true,
+	}, {
+		scenario:      "resend-delay is nill",
+		resendDelay:   nil,
+		shouldHaveArg: false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					ResendDelay:    ts.resendDelay,
+					QueryEndpoints: emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--resend-delay=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}

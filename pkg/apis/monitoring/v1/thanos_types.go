@@ -287,6 +287,11 @@ type ThanosRulerSpec struct {
 	// +kubebuilder:default:="15s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
+	// Minimum amount of time to wait before resending an alert to Alertmanager.
+	// +kubebuilder:default:="1m"
+	// +optional
+	ResendDelay *Duration `json:"resendDelay,omitempty"`
+
 	// Max time to tolerate prometheus outage for restoring "for" state of alert.
 	// It requires Thanos >= v0.30.0.
 	// +optional
