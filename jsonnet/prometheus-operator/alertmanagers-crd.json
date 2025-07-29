@@ -5294,7 +5294,7 @@
                     "type": "object"
                   },
                   "paused": {
-                    "description": "If set to true all actions on the underlying managed objects are not\ngoint to be performed, except for delete actions.",
+                    "description": "If set to true all actions on the underlying managed objects are not\ngoing to be performed, except for delete actions.",
                     "type": "boolean"
                   },
                   "persistentVolumeClaimRetentionPolicy": {

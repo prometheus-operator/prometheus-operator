@@ -1381,10 +1381,10 @@ func testPromReloadRules(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
-	firtAlertName := "firstAlert"
+	firstAlertName := "firstAlert"
 	secondAlertName := "secondAlert"
 
-	ruleFile, err := framework.MakeAndCreateFiringRule(context.Background(), ns, name, firtAlertName)
+	ruleFile, err := framework.MakeAndCreateFiringRule(context.Background(), ns, name, firstAlertName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1403,7 +1403,7 @@ func testPromReloadRules(t *testing.T) {
 		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
-	err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, firtAlertName)
+	err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, firstAlertName)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -405,7 +405,7 @@ bool
 </td>
 <td>
 <p>If set to true all actions on the underlying managed objects are not
-goint to be performed, except for delete actions.</p>
+going to be performed, except for delete actions.</p>
 </td>
 </tr>
 <tr>
@@ -6351,7 +6351,7 @@ bool
 </td>
 <td>
 <p>If set to true all actions on the underlying managed objects are not
-goint to be performed, except for delete actions.</p>
+going to be performed, except for delete actions.</p>
 </td>
 </tr>
 <tr>
@@ -11451,6 +11451,34 @@ string
 <tbody>
 <tr>
 <td>
+<code>promoteAllResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Promote all resource attributes to metric labels except the ones defined in <code>ignoreResourceAttributes</code>.</p>
+<p>Cannot be true when <code>promoteResourceAttributes</code> is defined.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of OpenTelemetry resource attributes to ignore when <code>promoteAllResourceAttributes</code> is true.</p>
+<p>It requires <code>promoteAllResourceAttributes</code> to be true.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>promoteResourceAttributes</code><br/>
 <em>
 []string
@@ -11458,7 +11486,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
+<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+Cannot be defined when <code>promoteAllResourceAttributes</code> is true.</p>
 </td>
 </tr>
 <tr>

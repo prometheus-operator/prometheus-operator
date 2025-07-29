@@ -321,7 +321,7 @@ check-metrics: $(PROMLINTER_BINARY)
 
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
-	$(GOLANGCILINTER_BINARY) run
+	$(GOLANGCILINTER_BINARY) run -v
 
 .PHONY: fix-golang
 fix-golang: $(GOLANGCILINTER_BINARY)

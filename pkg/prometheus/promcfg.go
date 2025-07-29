@@ -4769,6 +4769,13 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
 	}
 
+	if cg.version.GTE(semver.MustParse("3.5.0")) {
+		err := otlpConfig.Validate()
+		if err != nil {
+			return cfg, err
+		}
+	}
+
 	otlp := yaml.MapSlice{}
 
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {
@@ -4793,6 +4800,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.4.0").AppendMapItem(otlp,
 			"convert_histograms_to_nhcb",
 			otlpConfig.ConvertHistogramsToNHCB)
+	}
+
+	if otlpConfig.PromoteAllResourceAttributes != nil {
+		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
+			"promote_all_resource_attributes",
+			otlpConfig.PromoteAllResourceAttributes)
+	}
+
+	if len(otlpConfig.IgnoreResourceAttributes) > 0 {
+		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
+			"ignore_resource_attributes",
+			otlpConfig.IgnoreResourceAttributes)
 	}
 
 	if len(otlp) == 0 {
