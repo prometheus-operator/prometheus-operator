@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 ---
 title: "API reference"
 description: "Prometheus operator generated API reference docs"
@@ -4791,6 +4789,20 @@ Duration
 </tr>
 <tr>
 <td>
+<code>resendDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ruleOutageTolerance</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -5164,7 +5176,7 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enable access to Thanos Rules feature flags. By default, no features are enabled.</p>
+<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
@@ -18679,6 +18691,20 @@ Duration
 </tr>
 <tr>
 <td>
+<code>resendDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ruleOutageTolerance</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -19052,7 +19078,7 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enable access to Thanos Rules feature flags. By default, no features are enabled.</p>
+<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
@@ -37878,4 +37904,3 @@ Days can be specified by name (e.g &lsquo;Sunday&rsquo;) or as an inclusive rang
 <p>YearRange is an inclusive range of years</p>
 </div>
 <hr/>
->>>>>>> 4dd1591a1 (feat: enable features)

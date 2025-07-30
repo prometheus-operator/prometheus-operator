@@ -2608,7 +2608,7 @@ spec:
                 type: string
               enableFeatures:
                 description: |-
-                  Enable access to Thanos Rules feature flags. By default, no features are enabled.
+                  Enable access to Thanos Ruler feature flags. By default, no features are enabled.
 
                   Enabling features which are disabled by default is entirely outside the
                   scope of what the maintainers will support and by doing so, you accept
