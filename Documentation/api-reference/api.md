@@ -4789,6 +4789,20 @@ Duration
 </tr>
 <tr>
 <td>
+<code>resendDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ruleOutageTolerance</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -18654,6 +18668,20 @@ Duration
 </td>
 <td>
 <p>Interval between consecutive evaluations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resendDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
 </td>
 </tr>
 <tr>

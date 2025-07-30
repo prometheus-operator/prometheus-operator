@@ -3849,6 +3849,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		*out = make([]PrometheusRuleExcludeConfig, len(*in))
 		copy(*out, *in)
 	}
+	if in.ResendDelay != nil {
+		in, out := &in.ResendDelay, &out.ResendDelay
+		*out = new(Duration)
+		**out = **in
+	}
 	if in.RuleOutageTolerance != nil {
 		in, out := &in.RuleOutageTolerance, &out.RuleOutageTolerance
 		*out = new(Duration)

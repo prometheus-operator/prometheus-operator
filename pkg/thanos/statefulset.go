@@ -179,6 +179,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "for-grace-period", Value: string(*tr.Spec.RuleGracePeriod)})
 	}
 
+	if tr.Spec.ResendDelay != nil && len(*tr.Spec.ResendDelay) > 0 {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "resend-delay", Value: string(*tr.Spec.ResendDelay)})
+	}
+
 	trEnvVars := []v1.EnvVar{
 		{
 			Name: "POD_NAME",
