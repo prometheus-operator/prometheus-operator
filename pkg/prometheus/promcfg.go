@@ -1580,7 +1580,10 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: k, Value: v})
 		}
 	}
-	cfg = append(cfg, yaml.MapItem{Key: "params", Value: paramsMapSlice})
+
+	if len(paramsMapSlice) != 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: paramsMapSlice})
+	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
