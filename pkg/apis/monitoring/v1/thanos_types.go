@@ -288,7 +288,6 @@ type ThanosRulerSpec struct {
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
 	// Minimum amount of time to wait before resending an alert to Alertmanager.
-	// +kubebuilder:default:="1m"
 	// +optional
 	ResendDelay *Duration `json:"resendDelay,omitempty"`
 

@@ -4960,7 +4960,6 @@
                     "type": "integer"
                   },
                   "resendDelay": {
-                    "default": "1m",
                     "description": "Minimum amount of time to wait before resending an alert to Alertmanager.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
