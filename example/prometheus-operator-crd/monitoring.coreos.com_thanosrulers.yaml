@@ -2606,6 +2606,19 @@ spec:
                 - Default
                 - None
                 type: string
+              enableFeatures:
+                description: |-
+                  Enable access to Thanos Rules feature flags. By default, no features are enabled.
+                  Currently Valid options for now: promql-experimental-functions
+                  (enables promql experimental functions for ruler)
+                  For more information see https://thanos.io/tip/components/rule.md/
+
+                  It requires Thanos >= 0.39.0.
+                items:
+                  minLength: 1
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
               enableServiceLinks:
                 description: Indicates whether information about services should be
                   injected into pod's environment variables
@@ -4495,12 +4508,6 @@ spec:
                   - ruleNamespace
                   type: object
                 type: array
-              promqlExperimentalFunctions:
-                description: |-
-                  Thanos Rule enable feature flags currently only supports promql-experimental-functions.
-
-                  It requires Thanos >= 0.39.0.
-                type: boolean
               queryConfig:
                 description: |-
                   Configures the list of Thanos Query endpoints from which to query metrics.
