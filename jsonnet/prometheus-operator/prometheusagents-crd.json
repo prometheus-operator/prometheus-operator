@@ -8935,6 +8935,10 @@
                   {
                     "message": "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet",
                     "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.persistentVolumeClaimRetentionPolicy))"
+                  },
+                  {
+                    "message": "scrapeConfigSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigSelector))"
                   }
                 ]
               },
