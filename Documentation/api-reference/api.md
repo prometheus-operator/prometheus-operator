@@ -4832,6 +4832,22 @@ It requires Thanos &gt;= v0.37.0.</p>
 </tr>
 <tr>
 <td>
+<code>ruleGracePeriod</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
+It requires Thanos &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retention</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -18681,6 +18697,22 @@ int32
 <em>(Optional)</em>
 <p>How many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleGracePeriod</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
+It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>

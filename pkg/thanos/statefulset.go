@@ -175,6 +175,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "for-outage-tolerance", Value: string(*tr.Spec.RuleOutageTolerance)})
 	}
 
+	if version.GTE(semver.MustParse("0.30.0")) && tr.Spec.RuleGracePeriod != nil && len(*tr.Spec.RuleGracePeriod) > 0 {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "for-grace-period", Value: string(*tr.Spec.RuleGracePeriod)})
+	}
+
 	trEnvVars := []v1.EnvVar{
 		{
 			Name: "POD_NAME",

@@ -3864,6 +3864,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.RuleGracePeriod != nil {
+		in, out := &in.RuleGracePeriod, &out.RuleGracePeriod
+		*out = new(Duration)
+		**out = **in
+	}
 	if in.Containers != nil {
 		in, out := &in.Containers, &out.Containers
 		*out = make([]corev1.Container, len(*in))

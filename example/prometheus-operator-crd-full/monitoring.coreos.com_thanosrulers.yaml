@@ -5722,6 +5722,13 @@ spec:
                 format: int32
                 minimum: 1
                 type: integer
+              ruleGracePeriod:
+                description: |-
+                  Minimum duration between alert and restored "for" state.
+                  This is maintained only for alerts with configured "for" time greater than grace period.
+                  It requires Thanos >= v0.30.0.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               ruleNamespaceSelector:
                 description: |-
                   Namespaces to be selected for Rules discovery. If unspecified, only
