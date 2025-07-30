@@ -1276,18 +1276,16 @@ func TestRuleGracePeriod(t *testing.T) {
 }
 
 func TestRuleResendDelay(t *testing.T) {
-	resendDelay := monitoringv1.Duration("1h")
-
 	tt := []struct {
 		scenario      string
 		resendDelay   *monitoringv1.Duration
 		shouldHaveArg bool
 	}{{
 		scenario:      "resend delay defined",
-		resendDelay:   &resendDelay,
+		resendDelay:   ptr.To(monitoringv1.Duration("1h")),
 		shouldHaveArg: true,
 	}, {
-		scenario:      "resend-delay is nill",
+		scenario:      "resend-delay is nil",
 		resendDelay:   nil,
 		shouldHaveArg: false,
 	}}
