@@ -5164,10 +5164,11 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enable access to Thanos Rules feature flags. By default, no features are enabled.
-Currently Valid options for now: promql-experimental-functions
-(enables promql experimental functions for ruler)
-For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
+<p>Enable access to Thanos Rules feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
 <p>It requires Thanos &gt;= 0.39.0.</p>
 </td>
 </tr>
@@ -19051,10 +19052,11 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enable access to Thanos Rules feature flags. By default, no features are enabled.
-Currently Valid options for now: promql-experimental-functions
-(enables promql experimental functions for ruler)
-For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
+<p>Enable access to Thanos Rules feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
 <p>It requires Thanos &gt;= 0.39.0.</p>
 </td>
 </tr>
