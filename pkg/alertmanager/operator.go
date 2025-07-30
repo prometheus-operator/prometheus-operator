@@ -374,22 +374,22 @@ func (c *Operator) addHandlers() {
 		c.alrtInfs,
 		c.reconciliations,
 	)
-	c.secrInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
+	c.secrInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
 		c.enqueueForNamespace,
-		hasRefFunc,
+		operator.WithFilter(hasRefFunc),
 	))
 
-	c.cmapInfs.AddEventHandler(operator.NewEventHandlerWithFilter(
+	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
 		c.enqueueForNamespace,
-		hasRefFunc,
+		operator.WithFilter(hasRefFunc),
 	))
 
 	// The controller needs to watch the namespaces in which the

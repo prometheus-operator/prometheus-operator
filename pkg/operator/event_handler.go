@@ -20,9 +20,19 @@ import (
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 )
 
 type FilterFunc func(interface{}) bool
+
+type EventHandlerOption func(*EventHandler)
+
+// The object is enqueued only if FilterFunc returns true.
+func WithFilter(filter FilterFunc) EventHandlerOption {
+	return func(eh *EventHandler) {
+		eh.filterFuncs = append(eh.filterFuncs, filter)
+	}
+}
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
 type EventHandler struct {
@@ -32,8 +42,10 @@ type EventHandler struct {
 
 	objName     string
 	enqueueFunc func(string)
-	filterFunc  FilterFunc
+	filterFuncs []FilterFunc
 }
+
+var _ = cache.ResourceEventHandler(&EventHandler{})
 
 func NewEventHandler(
 	logger *slog.Logger,
@@ -41,35 +53,21 @@ func NewEventHandler(
 	metrics *Metrics,
 	objName string,
 	enqueueFunc func(ns string),
+	options ...EventHandlerOption,
 ) *EventHandler {
-	return NewEventHandlerWithFilter(
-		logger,
-		accessor,
-		metrics,
-		objName,
-		enqueueFunc,
-		nil,
-	)
-}
-func NewEventHandlerWithFilter(
-	logger *slog.Logger,
-	accessor *Accessor,
-	metrics *Metrics,
-	objName string,
-	enqueueFunc func(ns string),
-	filterFunc FilterFunc,
-) *EventHandler {
-	if filterFunc == nil {
-		filterFunc = func(interface{}) bool { return true }
-	}
-	return &EventHandler{
+	eh := &EventHandler{
 		logger:      logger,
 		accessor:    accessor,
 		metrics:     metrics,
 		objName:     objName,
-		filterFunc:  filterFunc,
 		enqueueFunc: enqueueFunc,
 	}
+
+	for _, opt := range options {
+		opt(eh)
+	}
+
+	return eh
 }
 
 func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
@@ -78,8 +76,10 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 		return
 	}
 
-	if !e.filterFunc(obj) {
-		return
+	for _, fn := range e.filterFuncs {
+		if !fn(obj) {
+			return
+		}
 	}
 
 	e.recordEvent(AddEvent, o)
@@ -91,8 +91,10 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if !e.filterFunc(cur) {
-		return
+	for _, fn := range e.filterFuncs {
+		if !fn(cur) {
+			return
+		}
 	}
 
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
@@ -107,8 +109,10 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 		return
 	}
 
-	if !e.filterFunc(obj) {
-		return
+	for _, fn := range e.filterFuncs {
+		if !fn(obj) {
+			return
+		}
 	}
 
 	e.recordEvent(DeleteEvent, o)

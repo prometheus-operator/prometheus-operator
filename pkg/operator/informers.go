@@ -34,9 +34,10 @@ type RefResolver interface {
 	HasRefTo(namespacedName string, obj runtime.Object) bool
 }
 
-// HasReferenceFunc returns a function which takes a object as input parameter
-// and returns true if at least one workload watched by the controller has a
-// reference to this object or is in the same namespace.
+// HasReferenceFunc returns a function which takes a object (secret or
+// configmap) as input parameter and returns true if at least one workload
+// watched by the controller has a reference to this object or is in the same
+// namespace.
 //
 // The object is expected to be a [*metav1.PartialObjectMetadata].
 func HasReferenceFunc(
