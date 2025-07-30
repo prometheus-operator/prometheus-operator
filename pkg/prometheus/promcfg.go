@@ -1570,11 +1570,17 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
 
+	var paramsMapSlice yaml.MapSlice
 	if m.Spec.Module != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
-			{Key: "module", Value: []string{m.Spec.Module}},
-		}})
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: "module", Value: []string{m.Spec.Module}})
 	}
+
+	if len(m.Spec.Params) != 0 {
+		for k, v := range m.Spec.Params {
+			paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: k, Value: v})
+		}
+	}
+	cfg = append(cfg, yaml.MapItem{Key: "params", Value: paramsMapSlice})
 
 	cpf := cg.prom.GetCommonPrometheusFields()
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
