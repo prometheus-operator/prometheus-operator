@@ -13617,30 +13617,30 @@ func TestPodMonitorSelectors(t *testing.T) {
 	}
 }
 
-func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
+func TestAppendAlwaysScrapeClassicHistograms(t *testing.T) {
 	testCases := []struct {
-		name                    string
-		version                 string
-		ScrapeClassicHistograms *bool
-		expectedCfg             string
+		name                          string
+		version                       string
+		AlwaysScrapeClassicHistograms *bool
+		expectedCfg                   string
 	}{
 		{
-			name:                    "ScrapeClassicHistograms true with Prometheus Version 3.5",
-			version:                 "v3.5.0",
-			ScrapeClassicHistograms: ptr.To(true),
-			expectedCfg:             "ScrapeClassicHistogramsTrueProperPromVersion.golden",
+			name:                          "AlwaysScrapeClassicHistograms true with Prometheus Version 3.5",
+			version:                       "v3.5.0",
+			AlwaysScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:                   "AlwaysScrapeClassicHistogramsTrueProperPromVersion.golden",
 		},
 		{
-			name:                    "ScrapeClassicHistograms false with Prometheus Version 3.5",
-			version:                 "v3.5.0",
-			ScrapeClassicHistograms: ptr.To(false),
-			expectedCfg:             "ScrapeClassicHistogramsFalseProperPromVersion.golden",
+			name:                          "AlwaysScrapeClassicHistograms false with Prometheus Version 3.5",
+			version:                       "v3.5.0",
+			AlwaysScrapeClassicHistograms: ptr.To(false),
+			expectedCfg:                   "AlwaysScrapeClassicHistogramsFalseProperPromVersion.golden",
 		},
 		{
-			name:                    "ScrapeClassicHistograms true with Prometheus Version 2",
-			version:                 "v2.45.0",
-			ScrapeClassicHistograms: ptr.To(true),
-			expectedCfg:             "ScrapeClassicHistogramsTrueWrongPromVersion.golden",
+			name:                          "AlwaysScrapeClassicHistograms true with Prometheus Version 2",
+			version:                       "v2.45.0",
+			AlwaysScrapeClassicHistograms: ptr.To(true),
+			expectedCfg:                   "AlwaysScrapeClassicHistogramsTrueWrongPromVersion.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -13650,8 +13650,8 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
 			}
-			if tc.ScrapeClassicHistograms != nil {
-				p.Spec.CommonPrometheusFields.ScrapeClassicHistograms = tc.ScrapeClassicHistograms
+			if tc.AlwaysScrapeClassicHistograms != nil {
+				p.Spec.CommonPrometheusFields.AlwaysScrapeClassicHistograms = tc.AlwaysScrapeClassicHistograms
 			}
 
 			cg := mustNewConfigGenerator(t, p)
