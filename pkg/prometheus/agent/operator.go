@@ -614,6 +614,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	switch ptr.Deref(p.Spec.Mode, "") {
 	case monitoringv1alpha1.DaemonSetPrometheusAgentMode:
+		if err := validateDaemonSetModeSpec(p); err != nil {
+			return err
+		}
 		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
 	default:
 		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
@@ -1183,4 +1186,26 @@ func makeSelectorLabels(name string) map[string]string {
 func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
+}
+
+// Runtime validations for the PrometheusAgent Daemonset mode.
+func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
+
+	if p.Spec.Replicas != nil {
+		return fmt.Errorf("replicas cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.Storage != nil {
+		return fmt.Errorf("storage cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.Shards != nil {
+		return fmt.Errorf("shards cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.PersistentVolumeClaimRetentionPolicy != nil {
+		return fmt.Errorf("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
+	}
+
+	return nil
 }
