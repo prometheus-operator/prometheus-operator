@@ -132,6 +132,11 @@ type ProbeSpec struct {
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
+
+	// The parameters for the scrape
+	// +optional
+	// +kubebuilder:validation:MinProperties=1
+	Params map[string][]string `json:"params,omitempty"`
 }
 
 // ProbeTargets defines how to discover the probed targets.

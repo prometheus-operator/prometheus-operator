@@ -597,6 +597,17 @@
                     ],
                     "type": "object"
                   },
+                  "params": {
+                    "additionalProperties": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "description": "The parameters for the scrape",
+                    "minProperties": 1,
+                    "type": "object"
+                  },
                   "prober": {
                     "description": "Specification for the prober to use for probing targets.\nThe prober.URL parameter is required. Targets cannot be probed if left empty.",
                     "properties": {

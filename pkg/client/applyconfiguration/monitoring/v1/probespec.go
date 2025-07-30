@@ -45,8 +45,9 @@ type ProbeSpecApplyConfiguration struct {
 	LabelNameLengthLimit                    *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                   *uint64                              `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64 `json:"keepDroppedTargets,omitempty"`
-	ScrapeClassName                         *string `json:"scrapeClass,omitempty"`
+	KeepDroppedTargets                      *uint64             `json:"keepDroppedTargets,omitempty"`
+	ScrapeClassName                         *string             `json:"scrapeClass,omitempty"`
+	Params                                  map[string][]string `json:"params,omitempty"`
 }
 
 // ProbeSpecApplyConfiguration constructs a declarative configuration of the ProbeSpec type for use with
@@ -259,5 +260,19 @@ func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *Prob
 // If called multiple times, the ScrapeClassName field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithScrapeClassName(value string) *ProbeSpecApplyConfiguration {
 	b.ScrapeClassName = &value
+	return b
+}
+
+// WithParams puts the entries into the Params field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the Params field,
+// overwriting an existing map entries in Params field with the same key.
+func (b *ProbeSpecApplyConfiguration) WithParams(entries map[string][]string) *ProbeSpecApplyConfiguration {
+	if b.Params == nil && len(entries) > 0 {
+		b.Params = make(map[string][]string, len(entries))
+	}
+	for k, v := range entries {
+		b.Params[k] = v
+	}
 	return b
 }

@@ -656,6 +656,14 @@ spec:
                 - clientSecret
                 - tokenUrl
                 type: object
+              params:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: The parameters for the scrape
+                minProperties: 1
+                type: object
               prober:
                 description: |-
                   Specification for the prober to use for probing targets.

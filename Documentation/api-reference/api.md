@@ -1695,6 +1695,18 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+map[string][]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The parameters for the scrape</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -12758,6 +12770,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+map[string][]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The parameters for the scrape</p>
 </td>
 </tr>
 </tbody>
