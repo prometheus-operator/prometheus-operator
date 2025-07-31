@@ -1844,6 +1844,11 @@ func (in *OAuth2) DeepCopyInto(out *OAuth2) {
 	*out = *in
 	in.ClientID.DeepCopyInto(&out.ClientID)
 	in.ClientSecret.DeepCopyInto(&out.ClientSecret)
+	if in.ClientSecretFile != nil {
+		in, out := &in.ClientSecretFile, &out.ClientSecretFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Scopes != nil {
 		in, out := &in.Scopes, &out.Scopes
 		*out = make([]string, len(*in))
