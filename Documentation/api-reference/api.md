@@ -11442,6 +11442,18 @@ client&rsquo;s secret.</p>
 </tr>
 <tr>
 <td>
+<code>clientSecretFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><code>clientSecret</code> specifies a key of a Secret containing the OAuth2
+client&rsquo;s secret.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tokenUrl</code><br/>
 <em>
 string

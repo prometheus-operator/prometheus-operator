@@ -338,6 +338,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -566,6 +570,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -1276,6 +1281,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -1504,6 +1513,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -1962,6 +1972,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -2190,6 +2204,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -2707,6 +2722,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -2935,6 +2954,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -3459,6 +3479,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -3687,6 +3711,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -4212,6 +4237,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -4440,6 +4469,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -5059,6 +5089,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -5287,6 +5321,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -5757,6 +5792,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -5985,6 +6024,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -6526,6 +6566,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -6754,6 +6798,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -7246,6 +7291,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -7474,6 +7523,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -7915,6 +7965,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -8143,6 +8197,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -8575,6 +8630,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -8803,6 +8862,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
@@ -9289,6 +9349,10 @@
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
+                                  clientSecretFile: {
+                                    description: "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    type: 'string',
+                                  },
                                   endpointParams: {
                                     additionalProperties: {
                                       type: 'string',
@@ -9517,6 +9581,7 @@
                                 required: [
                                   'clientId',
                                   'clientSecret',
+                                  'clientSecretFile',
                                   'tokenUrl',
                                 ],
                                 type: 'object',
