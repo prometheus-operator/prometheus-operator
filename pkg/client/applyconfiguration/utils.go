@@ -138,6 +138,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.PodMonitorSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Probe"):
 		return &monitoringv1.ProbeApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ProbeParam"):
+		return &monitoringv1.ProbeParamApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProberSpec"):
 		return &monitoringv1.ProberSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProbeSpec"):

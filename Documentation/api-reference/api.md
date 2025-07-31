@@ -1699,7 +1699,9 @@ string
 <td>
 <code>params</code><br/>
 <em>
-map[string][]string
+<a href="#monitoring.coreos.com/v1.ProbeParam">
+[]ProbeParam
+</a>
 </em>
 </td>
 <td>
@@ -12418,6 +12420,46 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ProbeParam">ProbeParam
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
+</p>
+<div>
+<p>ProbeParam defines specification of extra parameters for a Probe.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The parameter name</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>The parameter values</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ProbeSpec">ProbeSpec
 </h3>
 <p>
@@ -12776,7 +12818,9 @@ string
 <td>
 <code>params</code><br/>
 <em>
-map[string][]string
+<a href="#monitoring.coreos.com/v1.ProbeParam">
+[]ProbeParam
+</a>
 </em>
 </td>
 <td>

@@ -45,9 +45,9 @@ type ProbeSpecApplyConfiguration struct {
 	LabelNameLengthLimit                    *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                   *uint64                              `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64             `json:"keepDroppedTargets,omitempty"`
-	ScrapeClassName                         *string             `json:"scrapeClass,omitempty"`
-	Params                                  map[string][]string `json:"params,omitempty"`
+	KeepDroppedTargets                      *uint64                        `json:"keepDroppedTargets,omitempty"`
+	ScrapeClassName                         *string                        `json:"scrapeClass,omitempty"`
+	Params                                  []ProbeParamApplyConfiguration `json:"params,omitempty"`
 }
 
 // ProbeSpecApplyConfiguration constructs a declarative configuration of the ProbeSpec type for use with
@@ -263,16 +263,15 @@ func (b *ProbeSpecApplyConfiguration) WithScrapeClassName(value string) *ProbeSp
 	return b
 }
 
-// WithParams puts the entries into the Params field in the declarative configuration
+// WithParams adds the given value to the Params field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, the entries provided by each call will be put on the Params field,
-// overwriting an existing map entries in Params field with the same key.
-func (b *ProbeSpecApplyConfiguration) WithParams(entries map[string][]string) *ProbeSpecApplyConfiguration {
-	if b.Params == nil && len(entries) > 0 {
-		b.Params = make(map[string][]string, len(entries))
-	}
-	for k, v := range entries {
-		b.Params[k] = v
+// If called multiple times, values provided by each call will be appended to the Params field.
+func (b *ProbeSpecApplyConfiguration) WithParams(values ...*ProbeParamApplyConfiguration) *ProbeSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithParams")
+		}
+		b.Params = append(b.Params, *values[i])
 	}
 	return b
 }

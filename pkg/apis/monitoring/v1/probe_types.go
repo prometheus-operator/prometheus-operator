@@ -135,8 +135,20 @@ type ProbeSpec struct {
 
 	// The parameters for the scrape
 	// +optional
-	// +kubebuilder:validation:MinProperties=1
-	Params map[string][]string `json:"params,omitempty"`
+	// +kubebuilder:validation:MinItems=1
+	Params []ProbeParam `json:"params,omitempty"`
+}
+
+// ProbeParam defines specification of extra parameters for a Probe.
+// +k8s:openapi-gen=true
+type ProbeParam struct {
+	// The parameter name
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name,omitempty"`
+	// The parameter values
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	Values []string `json:"values,omitempty"`
 }
 
 // ProbeTargets defines how to discover the probed targets.
