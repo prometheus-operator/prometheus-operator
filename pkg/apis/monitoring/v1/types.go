@@ -700,6 +700,10 @@ type OAuth2 struct {
 	// client's secret.
 	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
 
+	// `clientSecret` specifies a key of a Secret containing the OAuth2
+	// client's secret.
+	ClientSecretFile *string `json:"clientSecretFile"`
+
 	// `tokenURL` configures the URL to fetch the token from.
 	//
 	// +kubebuilder:validation:MinLength=1
