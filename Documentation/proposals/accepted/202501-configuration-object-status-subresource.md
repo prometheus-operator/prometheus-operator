@@ -9,7 +9,7 @@
 * **Other docs:**
   * https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
   * https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
-  * [workload status subresource proposal](202409-status-subresource.md)
+  * [workload status subresource proposal](../implemented/202409-status-subresource.md)
 
 > This proposal outlines the implementation of a Status subresource field extension to the Prometheus operator's configuration-based Custom Resource Definitions (CRDs).
 
