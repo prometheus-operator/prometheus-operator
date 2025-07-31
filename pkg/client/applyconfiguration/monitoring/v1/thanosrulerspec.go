@@ -87,6 +87,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	Web                                *ThanosRulerWebSpecApplyConfiguration           `json:"web,omitempty"`
 	RemoteWrite                        []RemoteWriteSpecApplyConfiguration             `json:"remoteWrite,omitempty"`
 	TerminationGracePeriodSeconds      *int64                                          `json:"terminationGracePeriodSeconds,omitempty"`
+	EnableFeatures                     []monitoringv1.EnableFeature                    `json:"enableFeatures,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerSpec type for use with
@@ -645,5 +646,15 @@ func (b *ThanosRulerSpecApplyConfiguration) WithRemoteWrite(values ...*RemoteWri
 // If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *ThanosRulerSpecApplyConfiguration {
 	b.TerminationGracePeriodSeconds = &value
+	return b
+}
+
+// WithEnableFeatures adds the given value to the EnableFeatures field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EnableFeatures field.
+func (b *ThanosRulerSpecApplyConfiguration) WithEnableFeatures(values ...monitoringv1.EnableFeature) *ThanosRulerSpecApplyConfiguration {
+	for i := range values {
+		b.EnableFeatures = append(b.EnableFeatures, values[i])
+	}
 	return b
 }

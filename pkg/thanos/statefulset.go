@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -181,6 +182,14 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	if tr.Spec.ResendDelay != nil && len(*tr.Spec.ResendDelay) > 0 {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "resend-delay", Value: string(*tr.Spec.ResendDelay)})
+	}
+
+	if version.GTE(semver.MustParse("0.39.0")) && len(tr.Spec.EnableFeatures) > 0 {
+		efs := make([]string, len(tr.Spec.EnableFeatures))
+		for i := range tr.Spec.EnableFeatures {
+			efs[i] = string(tr.Spec.EnableFeatures[i])
+		}
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
 	}
 
 	trEnvVars := []v1.EnvVar{

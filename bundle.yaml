@@ -63712,6 +63712,22 @@ spec:
                 - Default
                 - None
                 type: string
+              enableFeatures:
+                description: |-
+                  Enable access to Thanos Ruler feature flags. By default, no features are enabled.
+
+                  Enabling features which are disabled by default is entirely outside the
+                  scope of what the maintainers will support and by doing so, you accept
+                  that this behaviour may break at any time without notice.
+
+                  For more information see https://thanos.io/tip/components/rule.md/
+
+                  It requires Thanos >= 0.39.0.
+                items:
+                  minLength: 1
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
               enableServiceLinks:
                 description: Indicates whether information about services should be
                   injected into pod's environment variables

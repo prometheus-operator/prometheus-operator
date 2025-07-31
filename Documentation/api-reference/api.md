@@ -5165,6 +5165,25 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 <p>Defaults to 120 seconds.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
+<p>It requires Thanos &gt;= 0.39.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -9935,7 +9954,7 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 <h3 id="monitoring.coreos.com/v1.EnableFeature">EnableFeature
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 </div>
@@ -19046,6 +19065,25 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
+<p>It requires Thanos &gt;= 0.39.0.</p>
 </td>
 </tr>
 </tbody>
