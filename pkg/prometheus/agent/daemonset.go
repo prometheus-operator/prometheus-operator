@@ -59,7 +59,7 @@ func makeDaemonSet(
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
 			prompkg.PrometheusNameLabelName: objMeta.GetName(),
-			prompkg.PrometheusModeLabeLName: prometheusMode,
+			prompkg.PrometheusModeLabelName: prometheusMode,
 		}),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),

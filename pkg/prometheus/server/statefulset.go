@@ -77,7 +77,7 @@ func makeStatefulSet(
 		operator.WithLabels(map[string]string{
 			prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
 			prompkg.PrometheusNameLabelName: objMeta.GetName(),
-			prompkg.PrometheusModeLabeLName: prometheusMode,
+			prompkg.PrometheusModeLabelName: prometheusMode,
 		}),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
