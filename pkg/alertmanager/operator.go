@@ -274,7 +274,9 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
