@@ -1030,6 +1030,24 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
+// updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	if len(resources.sMons) == 0 {
+		return nil
+	}
+	
+	smonconfigResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
+	if err := smonconfigResourceSyncer.AddStatus(ctx, p, resources.sMons); err!=nil{
+		return err
+	}
+
+	return nil
+}
+
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
 // For now, shouldRetain just returns the appropriate boolean based on the retention type.
 func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {

@@ -320,4 +320,3 @@ func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Objec
 	}
 	return nil
 }
-
