@@ -995,6 +995,27 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
+	if err := c.updateConfigResourcesStatus(ctx, p, logger, *resources); err != nil {
+		return err
+	}
+	return nil
+}
+
+// updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	if len(resources.sMons) == 0 {
+		return nil
+	}
+
+	smonconfigResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
+	if err := smonconfigResourceSyncer.AddStatus(ctx, p, resources.sMons); err != nil {
+		return err
+	}
+
 	return nil
 }
 
