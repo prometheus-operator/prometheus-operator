@@ -68,13 +68,24 @@ type ResourceSelector struct {
 	eventRecorder record.EventRecorder
 }
 
-// ResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
-// The map's key is the full resource name in the "<namespace>/<name>" form.
-type ResourcesSelection[T configurationResource] map[string]struct {
+
+// Resource is a generic type that holds a configuration resource with its validation status.
+type Resource[T configurationResource] struct {
 	resource T
 	err      error  // error encountered during selection or validation (nil if valid).
 	reason   string // Reason for rejection; empty if accepted.
 }
+
+func NewResource[T configurationResource](resource T, err error, reason string) Resource[T] {
+	return Resource[T]{
+		resource: resource,
+		err:      err,
+		reason:   reason,
+	}
+}
+
+// ResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
+type ResourcesSelection[T configurationResource] map[string]Resource[T]
 
 // ValidResources returns only the resources which the operator considers to be valid.
 // The keys of the returned map identify the resources using the `<namespace>/<name>` format.
@@ -186,11 +197,7 @@ func selectObjects[T configurationResource](
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		}
-		res[namespaceAndName] = struct {
-			resource T
-			err      error
-			reason   string
-		}{
+		res[namespaceAndName] = Resource[T]{
 			resource: o,
 			err:      err,
 			reason:   reason,
