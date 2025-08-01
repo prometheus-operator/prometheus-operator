@@ -91,6 +91,7 @@ type Operator struct {
 
 	alrtInfs    *informers.ForResource
 	alrtCfgInfs *informers.ForResource
+	cmapInfs    *informers.ForResource
 	secrInfs    *informers.ForResource
 	ssetInfs    *informers.ForResource
 
@@ -226,9 +227,17 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 		return fmt.Errorf("error creating alertmanagerconfig informers: %w", err)
 	}
 
+	allowList := config.Namespaces.AlertmanagerConfigAllowList
+	if config.WatchObjectRefsInAllNamespaces {
+		allowList = operator.MergeAllowLists(
+			config.Namespaces.AlertmanagerAllowList,
+			config.Namespaces.AlertmanagerConfigAllowList,
+		)
+	}
+
 	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			config.Namespaces.AlertmanagerConfigAllowList,
+			allowList,
 			config.Namespaces.DenyList,
 			c.mdClient,
 			resyncPeriod,
@@ -237,11 +246,26 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 				options.LabelSelector = config.SecretListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource("secrets"),
-		informers.PartialObjectMetadataStrip,
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
 		return fmt.Errorf("error creating secret informers: %w", err)
+	}
+
+	c.cmapInfs, err = informers.NewInformersForResourceWithTransform(
+		informers.NewMetadataInformerFactory(
+			allowList,
+			config.Namespaces.DenyList,
+			c.mdClient,
+			resyncPeriod,
+			nil,
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
+	)
+	if err != nil {
+		return fmt.Errorf("error creating configmap informers: %w", err)
 	}
 
 	c.ssetInfs, err = informers.NewInformersForResource(
@@ -306,6 +330,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"Alertmanager", c.alrtInfs},
 		{"AlertmanagerConfig", c.alrtCfgInfs},
 		{"Secret", c.secrInfs},
+		{"ConfigMap", c.cmapInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
@@ -345,12 +370,26 @@ func (c *Operator) addHandlers() {
 		c.enqueueForNamespace,
 	))
 
+	hasRefFunc := operator.HasReferenceFunc(
+		c.alrtInfs,
+		c.reconciliations,
+	)
 	c.secrInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
 		c.enqueueForNamespace,
+		operator.WithFilter(hasRefFunc),
+	))
+
+	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		"ConfigMap",
+		c.enqueueForNamespace,
+		operator.WithFilter(hasRefFunc),
 	))
 
 	// The controller needs to watch the namespaces in which the
@@ -420,6 +459,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.alrtInfs.Start(ctx.Done())
 	go c.alrtCfgInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
+	go c.cmapInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
 	go c.nsAlrtCfgInf.Run(ctx.Done())
 	if c.nsAlrtInf != c.nsAlrtCfgInf {
@@ -551,6 +591,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
+	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsShardedSecret, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, c.newTLSAssetSecret(am))
 	if err != nil {

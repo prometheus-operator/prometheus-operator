@@ -1,5 +1,7 @@
 ## Unreleased
 
+* [CHANGE/BUGFIX] Add the `--watch-referenced-objects-in-all-namespaces` CLI argument. When enabled, the operator watches for secrets and configmaps in both workload and configuration resources. It ensures that reconciliation happens when a referenced secret/configmap is updated. #7615
+
 ## 0.84.0 / 2025-07-14
 
 * [FEATURE] Add `telegram` field to AlertManager CRD global configuration. #7631

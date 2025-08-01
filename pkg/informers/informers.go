@@ -83,24 +83,12 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 	}, nil
 }
 
-// PartialObjectMetadataStrip removes the following fields from PartialObjectMetadata objects:
-// * Annotations
-// * Labels
-// * ManagedFields
-// * Finalizers
-// * OwnerReferences.
-//
-// If the passed object isn't of type *v1.PartialObjectMetadata, it is returned unmodified.
-//
-// It matches the cache.TransformFunc type and can be used by informers
-// watching PartialObjectMetadata objects to reduce memory consumption.
-// See https://pkg.go.dev/k8s.io/client-go@v0.29.1/tools/cache#TransformFunc for details.
-func PartialObjectMetadataStrip(obj interface{}) (interface{}, error) {
+func partialObjectMetadataStrip(obj interface{}) (*v1.PartialObjectMetadata, error) {
 	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
 	if !ok {
 		// Don't do anything if the cast isn't successful.
 		// The object might be of type "cache.DeletedFinalStateUnknown".
-		return obj, nil
+		return nil, fmt.Errorf("invalid object type: %T", obj)
 	}
 
 	partialMeta.Annotations = nil
@@ -110,6 +98,37 @@ func PartialObjectMetadataStrip(obj interface{}) (interface{}, error) {
 	partialMeta.OwnerReferences = nil
 
 	return partialMeta, nil
+}
+
+// PartialObjectMetadataStrip removes the following fields from PartialObjectMetadata objects:
+// * Annotations
+// * Labels
+// * ManagedFields
+// * Finalizers
+// * OwnerReferences.
+//
+// It also sets the TypeMeta field on the PartialObjectMetadata objects so
+// consumers can introspect the object's type.
+//
+// If the passed object isn't of type *v1.PartialObjectMetadata, it is returned unmodified.
+//
+// It matches the cache.TransformFunc type and can be used by informers
+// watching PartialObjectMetadata objects to reduce memory consumption.
+// See https://pkg.go.dev/k8s.io/client-go@v0.29.1/tools/cache#TransformFunc for details.
+func PartialObjectMetadataStrip(gvk schema.GroupVersionKind) cache.TransformFunc {
+	return func(obj interface{}) (interface{}, error) {
+		partialMeta, err := partialObjectMetadataStrip(obj)
+		if err != nil {
+			return obj, nil
+		}
+
+		partialMeta.TypeMeta = v1.TypeMeta{
+			Kind:       gvk.Kind,
+			APIVersion: gvk.GroupVersion().String(),
+		}
+
+		return partialMeta, nil
+	}
 }
 
 // Start starts all underlying informers, passing the given stop channel to each of them.
