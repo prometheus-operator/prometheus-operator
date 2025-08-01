@@ -227,7 +227,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			c.Namespaces.DenyList,
 			o.kclient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)

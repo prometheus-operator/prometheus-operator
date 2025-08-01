@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"fmt"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,6 +27,10 @@ const (
 	managedByOperatorLabel      = "managed-by"
 	managedByOperatorLabelValue = "prometheus-operator"
 )
+
+func ManagedByOperatorLabelSelector() string {
+	return fmt.Sprintf("%s in (%s)", managedByOperatorLabel, managedByOperatorLabelValue)
+}
 
 type ObjectOption func(metav1.Object)
 
