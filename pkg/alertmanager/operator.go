@@ -368,6 +368,12 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		monitoringv1alpha1.AlertmanagerConfigKind,
 		c.enqueueForNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	hasRefFunc := operator.HasReferenceFunc(
@@ -378,8 +384,9 @@ func (c *Operator) addHandlers() {
 		c.logger,
 		c.accessor,
 		c.metrics,
-		"Secret",
+		operator.SecretGVK().Kind,
 		c.enqueueForNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
 
@@ -387,8 +394,9 @@ func (c *Operator) addHandlers() {
 		c.logger,
 		c.accessor,
 		c.metrics,
-		"ConfigMap",
+		operator.ConfigMapGVK().Kind,
 		c.enqueueForNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
 

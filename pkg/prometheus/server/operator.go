@@ -450,6 +450,12 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		monitoringv1.ServiceMonitorsKind,
 		c.enqueueForMonitorNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	c.pmonInfs.AddEventHandler(operator.NewEventHandler(
@@ -458,6 +464,12 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		monitoringv1.PodMonitorsKind,
 		c.enqueueForMonitorNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	c.probeInfs.AddEventHandler(operator.NewEventHandler(
@@ -466,6 +478,12 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		monitoringv1.ProbesKind,
 		c.enqueueForMonitorNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	if c.sconInfs != nil {
@@ -475,6 +493,12 @@ func (c *Operator) addHandlers() {
 			c.metrics,
 			monitoringv1alpha1.ScrapeConfigsKind,
 			c.enqueueForMonitorNamespace,
+			operator.WithFilter(
+				operator.AnyFilter(
+					operator.GenerationChanged,
+					operator.LabelsChanged,
+				),
+			),
 		))
 	}
 
@@ -484,6 +508,12 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		monitoringv1.PrometheusRuleKind,
 		c.enqueueForMonitorNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	hasRefFunc := operator.HasReferenceFunc(
@@ -494,8 +524,9 @@ func (c *Operator) addHandlers() {
 		c.logger,
 		c.accessor,
 		c.metrics,
-		"ConfigMap",
+		operator.ConfigMapGVK().Kind,
 		c.enqueueForPrometheusNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
 
@@ -503,8 +534,9 @@ func (c *Operator) addHandlers() {
 		c.logger,
 		c.accessor,
 		c.metrics,
-		"Secret",
+		operator.SecretGVK().Kind,
 		c.enqueueForPrometheusNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
 

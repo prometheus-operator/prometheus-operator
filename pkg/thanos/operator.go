@@ -317,8 +317,9 @@ func (o *Operator) addHandlers() {
 		o.logger,
 		o.accessor,
 		o.metrics,
-		"ConfigMap",
+		operator.ConfigMapGVK().Kind,
 		o.enqueueForThanosRulerNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
 	))
 
 	o.ruleInfs.AddEventHandler(operator.NewEventHandler(
@@ -327,6 +328,12 @@ func (o *Operator) addHandlers() {
 		o.metrics,
 		monitoringv1.PrometheusRuleKind,
 		o.enqueueForRulesNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	// The controller needs to watch the namespaces in which the rules live
