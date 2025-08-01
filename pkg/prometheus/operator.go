@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strconv"
 	"strings"
@@ -27,9 +28,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -51,6 +54,20 @@ type StatusReporter struct {
 	Reconciliations *operator.ReconciliationTracker
 	SsetInfs        *informers.ForResource
 	Rr              *operator.ResourceReconciler
+}
+
+type ConfigResourceSyncer[T configurationResource] struct {
+	gvr     schema.GroupVersionResource
+	mclient monitoringclient.Interface
+	logger  *slog.Logger
+}
+
+func NewConfigResourceSyncer[T configurationResource](gvr schema.GroupVersionResource, mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
+	return &ConfigResourceSyncer[T]{
+		gvr:     gvr,
+		mclient: mclient,
+		logger:  logger,
+	}
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -247,3 +264,60 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 
 	return &pStatus, nil
 }
+
+// AddStatus add the latest status in serviceMonitor, podMonitor, probes and scrapeConfig
+// resources selected by the Prometheus or PrometheusAgent.
+func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
+	for key, res := range resources {
+		condition := monitoringv1.ConfigResourceCondition{
+			Type:               monitoringv1.Accepted,
+			Status:             monitoringv1.ConditionTrue,
+			LastTransitionTime: metav1.Now(),
+			Reason:             res.reason,
+		}
+
+		if res.err != nil {
+			condition.Status = monitoringv1.ConditionFalse
+			condition.Message = res.err.Error()
+		}
+
+		binding := monitoringv1.WorkloadBinding{
+			Namespace:  p.GetNamespace(),
+			Name:       p.GetName(),
+			Resource:   ru.gvr.Resource,
+			Group:      ru.gvr.Group,
+			Conditions: []monitoringv1.ConfigResourceCondition{condition},
+		}
+		switch r := any(res.resource).(type) {
+		case *monitoringv1.ServiceMonitor:
+			condition.ObservedGeneration = r.GetGeneration()
+			var found bool
+			for i := range r.Status.Bindings {
+				binding := &r.Status.Bindings[i]
+				if binding.Namespace == p.GetNamespace() &&
+					binding.Name == p.GetName() &&
+					binding.Resource == monitoringv1.PrometheusName {
+					if binding.Conditions[0].ObservedGeneration != condition.ObservedGeneration {
+						binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
+					}
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
+				r.Status.Bindings = append(r.Status.Bindings, binding)
+			}
+			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			if err != nil {
+				ru.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported resource type %T", r)
+		}
+	}
+	return nil
+}
+
