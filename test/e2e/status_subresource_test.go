@@ -17,9 +17,14 @@ package e2e
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -51,4 +56,56 @@ func testFinalizerWhenStatusForConfigResourcesEnabled(t *testing.T) {
 	require.NotEmpty(t, finalizers, "finalizers list should not be empty")
 	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err, "failed to delete Prometheus with status-cleanup finalizer")
+}
+
+// testServiceMonitorStatusSubresource validates ServiceMonitor status updates upon Prometheus selection.
+func testServiceMonitorStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+	name := "servicemonitor-status-subresource-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceMonitorSelector = &v1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": name,
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+	smon := framework.MakeBasicServiceMonitor(name)
+	smon.ObjectMeta.Labels = map[string]string{
+		"app": name,
+	}
+	smon.Spec.Selector = v1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "testing",
+		},
+	}
+	smon.Spec.Endpoints = []monitoringv1.Endpoint{
+		{
+			Port:       "web",
+			Path:       "/metrics",
+			TargetPort: ptr.To(intstr.FromString("80")),
+			Interval:   monitoringv1.Duration("30s"),
+			Scheme:     "http",
+		},
+	}
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	time.Sleep(1 * time.Minute)
+	require.NotEmpty(t, sm.Status.Bindings)
 }
