@@ -17,20 +17,102 @@ package operator
 import (
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
-type FilterFunc func(interface{}) bool
+// EventPayload represents the object(s) being notified.
+//
+// It contains both the raw object and the object's metadata to avoid redundant
+// type-casting.
+//
+// The Old and OldMeta fields are only set for update events.
+type EventPayload struct {
+	EventType   EventType
+	Old         interface{}
+	OldMeta     metav1.Object
+	Current     interface{}
+	CurrentMeta metav1.Object
+}
 
+// EventType reports whether the event is a creation, update or deletion.
+type EventType int
+
+const (
+	// EventTypeOnAdd represents a creation event.
+	EventTypeOnAdd EventType = iota
+
+	// EventTypeOnUpdate represents an update event.
+	EventTypeOnUpdate
+
+	// EventTypeOnDelete represents a deletion event.
+	EventTypeOnDelete
+)
+
+// FilterFunc is a function that gets an EventPayload and returns true if the
+// object should trigger a reconciliation.
+type FilterFunc func(EventPayload) bool
+
+// AnyFilter returns a FilterFunc which calls the filters sequentially and
+// returns true as soon as one filter returns true.
+func AnyFilter(filters ...FilterFunc) FilterFunc {
+	return func(ep EventPayload) bool {
+		for _, filter := range filters {
+			if filter(ep) {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
+// ResourceVersionChanged returns true if the old and current objects don't
+// have the same resource version.
+//
+// It always returns true for creation and deletion events.
+func ResourceVersionChanged(ep EventPayload) bool {
+	if ep.EventType != EventTypeOnUpdate {
+		return true
+	}
+
+	return ep.OldMeta.GetResourceVersion() != ep.CurrentMeta.GetResourceVersion()
+}
+
+// GenerationChanged returns true if the old and current objects don't have the
+// same generation.
+//
+// It always returns true for creation and deletion events.
+func GenerationChanged(ep EventPayload) bool {
+	if ep.EventType != EventTypeOnUpdate {
+		return true
+	}
+
+	return ep.OldMeta.GetGeneration() != ep.CurrentMeta.GetGeneration()
+}
+
+// LabelsChanged returns true if the old and current objects don't have the
+// same labels.
+//
+// It always returns true for creation and deletion events.
+func LabelsChanged(ep EventPayload) bool {
+	if ep.EventType != EventTypeOnUpdate {
+		return true
+	}
+
+	return !reflect.DeepEqual(ep.OldMeta.GetLabels(), ep.CurrentMeta.GetLabels())
+}
+
+// EventHandlerOption allows to configure the event handler.
 type EventHandlerOption func(*EventHandler)
 
-// The object is enqueued only if FilterFunc returns true.
+// WithFilter adds a filter function to the event handler.
 func WithFilter(filter FilterFunc) EventHandlerOption {
-	return func(eh *EventHandler) {
-		eh.filterFuncs = append(eh.filterFuncs, filter)
+	return func(e *EventHandler) {
+		e.filterFuncs = append(e.filterFuncs, filter)
 	}
 }
 
@@ -47,6 +129,7 @@ type EventHandler struct {
 
 var _ = cache.ResourceEventHandler(&EventHandler{})
 
+// NewEventHandler returns a new event handler.
 func NewEventHandler(
 	logger *slog.Logger,
 	accessor *Accessor,
@@ -55,7 +138,7 @@ func NewEventHandler(
 	enqueueFunc func(ns string),
 	options ...EventHandlerOption,
 ) *EventHandler {
-	eh := &EventHandler{
+	e := &EventHandler{
 		logger:      logger,
 		accessor:    accessor,
 		metrics:     metrics,
@@ -64,12 +147,13 @@ func NewEventHandler(
 	}
 
 	for _, opt := range options {
-		opt(eh)
+		opt(e)
 	}
 
-	return eh
+	return e
 }
 
+// OnAdd implements the k8s.io/tools/cache.ResourceEventHandler interface.
 func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 	o, ok := e.accessor.ObjectMetadata(obj)
 	if !ok {
@@ -77,7 +161,11 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 	}
 
 	for _, fn := range e.filterFuncs {
-		if !fn(obj) {
+		if !fn(EventPayload{
+			EventType:   EventTypeOnAdd,
+			Current:     obj,
+			CurrentMeta: o,
+		}) {
 			return
 		}
 	}
@@ -86,23 +174,35 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 	e.enqueueFunc(o.GetNamespace())
 }
 
+// OnUpdate implements the k8s.io/tools/cache.ResourceEventHandler interface.
 func (e *EventHandler) OnUpdate(old, cur interface{}) {
-	if old.(metav1.Object).GetResourceVersion() == cur.(metav1.Object).GetResourceVersion() {
+	oldMeta, ok := e.accessor.ObjectMetadata(old)
+	if !ok {
+		return
+	}
+
+	curMeta, ok := e.accessor.ObjectMetadata(cur)
+	if !ok {
 		return
 	}
 
 	for _, fn := range e.filterFuncs {
-		if !fn(cur) {
+		if !fn(EventPayload{
+			EventType:   EventTypeOnUpdate,
+			Old:         old,
+			OldMeta:     oldMeta,
+			Current:     cur,
+			CurrentMeta: curMeta,
+		}) {
 			return
 		}
 	}
 
-	if o, ok := e.accessor.ObjectMetadata(cur); ok {
-		e.recordEvent(UpdateEvent, o)
-		e.enqueueFunc(o.GetNamespace())
-	}
+	e.recordEvent(UpdateEvent, curMeta)
+	e.enqueueFunc(curMeta.GetNamespace())
 }
 
+// OnDelete implements the k8s.io/tools/cache.ResourceEventHandler interface.
 func (e *EventHandler) OnDelete(obj interface{}) {
 	o, ok := e.accessor.ObjectMetadata(obj)
 	if !ok {
@@ -110,7 +210,11 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 	}
 
 	for _, fn := range e.filterFuncs {
-		if !fn(obj) {
+		if !fn(EventPayload{
+			EventType:   EventTypeOnDelete,
+			Current:     obj,
+			CurrentMeta: o,
+		}) {
 			return
 		}
 	}

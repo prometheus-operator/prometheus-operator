@@ -44,8 +44,8 @@ func HasReferenceFunc(
 	informerGetter InformerGetter,
 	refResolver RefResolver,
 ) FilterFunc {
-	return func(obj interface{}) bool {
-		partialObjMeta, ok := obj.(*metav1.PartialObjectMetadata)
+	return func(ep EventPayload) bool {
+		partialObjMeta, ok := ep.Current.(*metav1.PartialObjectMetadata)
 		if !ok {
 			return false
 		}
