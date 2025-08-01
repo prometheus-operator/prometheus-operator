@@ -68,7 +68,6 @@ type ResourceSelector struct {
 	eventRecorder record.EventRecorder
 }
 
-
 // Resource is a generic type that holds a configuration resource with its validation status.
 type Resource[T configurationResource] struct {
 	resource T
