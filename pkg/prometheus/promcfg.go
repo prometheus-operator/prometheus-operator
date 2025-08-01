@@ -1178,11 +1178,11 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 
 func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]string) {
 	podAnnotations := map[string]string{
-		"kubectl.kubernetes.io/default-container": "prometheus",
+		operator.DefaultContainerAnnotationKey: "prometheus",
 	}
 
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
+		operator.ApplicationVersionLabelKey: cg.version.String(),
 	}
 
 	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata

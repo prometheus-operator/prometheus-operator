@@ -40,15 +40,14 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -895,12 +894,19 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(name))
-	if err != nil {
-		t.Fatal(err)
-	}
-	res := pods.Items[0].Spec.Containers[0].Resources
+	podSelector := fields.SelectorFromSet(fields.Set(map[string]string{
+		operator.ApplicationNameLabelKey:     "prometheus",
+		operator.ApplicationInstanceLabelKey: name,
+	})).String()
+	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
+		context.Background(),
+		metav1.ListOptions{
+			LabelSelector: podSelector,
+		},
+	)
+	require.NoError(t, err)
 
+	res := pods.Items[0].Spec.Containers[0].Resources
 	if !reflect.DeepEqual(res, p.Spec.Resources) {
 		t.Fatalf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
 	}
@@ -919,31 +925,35 @@ func testPromResourceUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
+	var pollErr error
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: podSelector,
+			},
+		)
 		if err != nil {
-			return false, err
+			pollErr = err
+			return false, nil
 		}
 
 		if len(pods.Items) != 1 {
+			pollErr = fmt.Errorf("expected 1 pod, got %d", len(pods.Items))
 			return false, nil
 		}
 
 		res = pods.Items[0].Spec.Containers[0].Resources
 		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			pollErr = fmt.Errorf("resources don't match\ngot: %#+v\nwant: %#+v", res, p.Spec.Resources)
 			return false, nil
 		}
 
 		return true, nil
 	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err, fmt.Sprintf("%s: %s", err, pollErr))
 }
 
 func testPromStorageLabelsAnnotations(t *testing.T) {
@@ -5495,13 +5505,23 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+					operator.ApplicationNameLabelKey:     "alertmanager",
+					operator.ApplicationInstanceLabelKey: alertmanagerName,
+				})).String(),
+			},
+		)
 		if err != nil {
 			return false, err
 		}
+
 		if 3 != len(pods.Items) {
 			return false, nil
 		}
+
 		expectedAlertmanagerTargets := []string{}
 		for _, p := range pods.Items {
 			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v2/alerts", p.Status.PodIP))

@@ -28,7 +28,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
@@ -51,8 +50,9 @@ import (
 )
 
 const (
-	resyncPeriod   = 5 * time.Minute
-	controllerName = "prometheus-controller"
+	resyncPeriod              = 5 * time.Minute
+	controllerName            = "prometheus-controller"
+	applicationNameLabelValue = "prometheus"
 
 	unmanagedConfigurationReason         = "ConfigurationUnmanaged"
 	unmanagedConfigurationMessage string = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead."
@@ -880,7 +880,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		// Reconcile the default governing service.
 		svc := prompkg.BuildStatefulSetService(
 			governingServiceName,
-			map[string]string{"app.kubernetes.io/name": "prometheus"},
+			map[string]string{
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
+			},
 			p,
 			c.config,
 		)
@@ -957,7 +959,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
+		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 			logger.Debug("new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -965,7 +967,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger.Debug(
 			"updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationName],
+			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -1187,15 +1189,6 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 	return fmt.Sprintf("%d", hash), nil
 }
 
-func ListOptions(name string) metav1.ListOptions {
-	return metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app.kubernetes.io/name": "prometheus",
-			"prometheus":             name,
-		})).String(),
-	}
-}
-
 // getSeletedConfigResources returns all the configuration resources (PodMonitor, ServiceMonitor, Probes and ScrapeConfigs) selected by the Prometheus.
 func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, store *assets.StoreBuilder) (*selectedConfigResources, error) {
 	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
@@ -1376,11 +1369,11 @@ func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *moni
 
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/managed-by":  "prometheus-operator",
-		"app.kubernetes.io/name":        "prometheus",
-		"app.kubernetes.io/instance":    name,
-		prompkg.PrometheusNameLabelName: name,
-		"prometheus":                    name,
+		operator.ManagedByLabelKey:           operator.ManagedByLabelValue,
+		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
+		operator.ApplicationInstanceLabelKey: name,
+		prompkg.PrometheusNameLabelName:      name,
+		"prometheus":                         name,
 	}
 }
 

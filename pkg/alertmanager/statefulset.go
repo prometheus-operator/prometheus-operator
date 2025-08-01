@@ -180,7 +180,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 	svc := &v1.Service{
 		Spec: v1.ServiceSpec{
-			ClusterIP:                "None",
+			ClusterIP:                v1.ClusterIPNone,
 			PublishNotReadyAddresses: true,
 			Ports: []v1.ServicePort{
 				{
@@ -203,7 +203,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "alertmanager",
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
 			},
 		},
 	}
@@ -376,7 +376,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": version.String(),
+		operator.ApplicationVersionLabelKey: version.String(),
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
@@ -395,7 +395,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		podLabels[k] = v
 	}
 
-	podAnnotations["kubectl.kubernetes.io/default-container"] = "alertmanager"
+	podAnnotations[operator.DefaultContainerAnnotationKey] = "alertmanager"
 
 	var operatorInitContainers []v1.Container
 

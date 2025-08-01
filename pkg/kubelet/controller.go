@@ -37,6 +37,8 @@ import (
 )
 
 const (
+	applicationNameLabelValue = "kubelet"
+
 	maxEndpointsPerSlice = 512
 
 	endpointsLabel     = "endpoints"
@@ -422,9 +424,9 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 			Name:        c.kubeletObjectName,
 			Annotations: c.annotations,
 			Labels: c.labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"k8s-app":                        applicationNameLabelValue,
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
+				operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 			}),
 		},
 		//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
@@ -476,9 +478,9 @@ func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
 			Name:        c.kubeletObjectName,
 			Annotations: c.annotations,
 			Labels: c.labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"k8s-app":                        applicationNameLabelValue,
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
+				operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 			}),
 		},
 		Spec: v1.ServiceSpec{
@@ -608,11 +610,11 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 					GenerateName: c.kubeletObjectName + "-",
 					Annotations:  c.annotations,
 					Labels: c.labels.Merge(map[string]string{
-						discoveryv1.LabelServiceName:   c.kubeletObjectName,
-						discoveryv1.LabelManagedBy:     "prometheus-operator",
-						"k8s-app":                      "kubelet",
-						"app.kubernetes.io/name":       "kubelet",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
+						discoveryv1.LabelServiceName:     c.kubeletObjectName,
+						discoveryv1.LabelManagedBy:       operator.ManagedByLabelValue,
+						"k8s-app":                        applicationNameLabelValue,
+						operator.ApplicationNameLabelKey: applicationNameLabelValue,
+						operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 					}),
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         "v1",

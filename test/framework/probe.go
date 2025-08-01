@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
@@ -37,7 +38,7 @@ func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "blackbox-exporter",
+				operator.ApplicationNameLabelKey: "blackbox-exporter",
 			},
 			Ports: []v1.ServicePort{
 				{
@@ -88,13 +89,13 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ctx context.Con
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/name": "blackbox-exporter",
+					operator.ApplicationNameLabelKey: "blackbox-exporter",
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app.kubernetes.io/name": "blackbox-exporter",
+						operator.ApplicationNameLabelKey: "blackbox-exporter",
 					},
 				},
 				Spec: v1.PodSpec{

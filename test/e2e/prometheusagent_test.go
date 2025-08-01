@@ -33,13 +33,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -420,7 +420,15 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			appPodsIPs = append(appPodsIPs, pod.Status.PodIP)
 		}
 
-		paPods, err = framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+		paPods, err = framework.KubeClient.CoreV1().Pods(ns).List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+					operator.ApplicationNameLabelKey:     "prometheus-agent",
+					operator.ApplicationInstanceLabelKey: name,
+				})).String(),
+			},
+		)
 		if err != nil {
 			pollErr = fmt.Errorf("can't list prometheus agent pods: %w", err)
 			return false, nil

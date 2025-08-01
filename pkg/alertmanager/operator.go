@@ -32,7 +32,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
@@ -57,8 +56,9 @@ import (
 )
 
 const (
-	resyncPeriod   = 5 * time.Minute
-	controllerName = "alertmanager-controller"
+	resyncPeriod              = 5 * time.Minute
+	controllerName            = "alertmanager-controller"
+	applicationNameLabelValue = "alertmanager"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -658,7 +658,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
@@ -774,10 +774,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name":       "alertmanager",
-		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   name,
-		"alertmanager":                 name,
+		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
+		operator.ManagedByLabelKey:           operator.ManagedByLabelValue,
+		operator.ApplicationInstanceLabelKey: name,
+		"alertmanager":                       name,
 	}
 }
 
@@ -1832,15 +1832,6 @@ func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
 
 	if a.Spec.SHA != "" {
 		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
-	}
-}
-
-func ListOptions(name string) metav1.ListOptions {
-	return metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app.kubernetes.io/name": "alertmanager",
-			"alertmanager":           name,
-		})).String(),
 	}
 }
 
