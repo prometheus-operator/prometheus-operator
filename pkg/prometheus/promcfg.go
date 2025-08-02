@@ -1576,7 +1576,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 
 	for _, p := range m.Spec.Params {
-		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: p.Name, Value: p.Values})
+		if p.Name != "module" {
+			paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: p.Name, Value: p.Values})
+		}
 	}
 
 	if len(paramsMapSlice) != 0 {
