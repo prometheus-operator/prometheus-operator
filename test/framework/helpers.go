@@ -244,7 +244,7 @@ func (f *Framework) EnsureMetricsFromService(ctx context.Context, protocol, ns, 
 }
 
 func getMetricValue(b []byte, metricName string) (float64, error) {
-	parser := textparse.NewPromParser(b, labels.NewSymbolTable())
+	parser := textparse.NewPromParser(b, labels.NewSymbolTable(), false)
 
 	for {
 		entry, err := parser.Next()
