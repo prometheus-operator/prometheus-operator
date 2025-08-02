@@ -26,6 +26,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -124,6 +125,7 @@ var (
 	nodeAddressPriority  operator.NodeAddressPriority
 	kubeletEndpoints     bool
 	kubeletEndpointSlice bool
+	kubeletSyncPeriod    time.Duration
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -145,6 +147,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&nodeAddressPriority, "kubelet-node-address-priority", "Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.")
 	fs.BoolVar(&kubeletEndpointSlice, "kubelet-endpointslice", false, "Create EndpointSlice objects for kubelet targets.")
 	fs.BoolVar(&kubeletEndpoints, "kubelet-endpoints", true, "Create Endpoints objects for kubelet targets.")
+	fs.DurationVar(&kubeletSyncPeriod, "kubelet-sync-period", 3*time.Minute, "How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m).")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -531,7 +534,10 @@ func run(fs *flag.FlagSet) int {
 
 	var kec *kubelet.Controller
 	if kubeletObject != "" {
-		opts := []kubelet.ControllerOption{kubelet.WithNodeAddressPriority(nodeAddressPriority.String())}
+		opts := []kubelet.ControllerOption{
+			kubelet.WithNodeAddressPriority(nodeAddressPriority.String()),
+			kubelet.WithSyncPeriod(kubeletSyncPeriod),
+		}
 
 		kubeletService := strings.Split(kubeletObject, "/")
 		if len(kubeletService) != 2 {

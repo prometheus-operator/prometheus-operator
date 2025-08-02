@@ -37,8 +37,6 @@ import (
 )
 
 const (
-	resyncPeriod = 3 * time.Minute
-
 	maxEndpointsPerSlice = 512
 
 	endpointsLabel     = "endpoints"
@@ -73,6 +71,7 @@ type Controller struct {
 
 	manageEndpointSlice bool
 	manageEndpoints     bool
+	syncPeriod          time.Duration
 }
 
 type ControllerOption func(*Controller)
@@ -98,6 +97,12 @@ func WithEndpoints() ControllerOption {
 func WithNodeAddressPriority(s string) ControllerOption {
 	return func(c *Controller) {
 		c.nodeAddressPriority = s
+	}
+}
+
+func WithSyncPeriod(d time.Duration) ControllerOption {
+	return func(c *Controller) {
+		c.syncPeriod = d
 	}
 }
 
@@ -206,7 +211,7 @@ func New(
 func (c *Controller) Run(ctx context.Context) error {
 	c.logger.Info("Starting controller")
 
-	ticker := time.NewTicker(resyncPeriod)
+	ticker := time.NewTicker(c.syncPeriod)
 	defer ticker.Stop()
 	for {
 		c.sync(ctx)
