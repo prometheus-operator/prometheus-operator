@@ -2531,6 +2531,10 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
+                  "hostUsers": {
+                    "description": "HostUsers supports the user space in Kubernetes.\nThe UserNamespacesSupport feature gate must be enabled.\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\nIt requires Kubernetes >= 1.25",
+                    "type": "boolean"
+                  },
                   "image": {
                     "description": "Thanos container image URL.",
                     "type": "string"

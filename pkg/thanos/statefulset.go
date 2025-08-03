@@ -523,6 +523,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(tr.Spec.HostAliases),
 				EnableServiceLinks:            tr.Spec.EnableServiceLinks,
+				HostUsers:                     tr.Spec.HostUsers,
 			},
 		},
 	}
