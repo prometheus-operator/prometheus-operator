@@ -5900,7 +5900,7 @@ func TestProbeSpecConfig(t *testing.T) {
 			},
 		},
 		{
-			name:   "module_config_with_params",
+			name:   "module_config_with_params_skip_module",
 			golden: "ProbeSpecConfig_module_config_with_params_skip_module.golden",
 			pbSpec: monitoringv1.ProbeSpec{
 				Module: "http_2xx",
