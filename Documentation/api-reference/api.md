@@ -1706,7 +1706,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The parameters for the scrape</p>
+<p>The parameters for the scrape
+Please note that the <code>module</code> param added under this variable will be skipped.
+The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
 </table>
@@ -12825,7 +12827,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The parameters for the scrape</p>
+<p>The parameters for the scrape
+Please note that the <code>module</code> param added under this variable will be skipped.
+The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
 </tbody>

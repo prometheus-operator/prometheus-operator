@@ -134,6 +134,8 @@ type ProbeSpec struct {
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
 	// The parameters for the scrape
+	// Please note that the `module` param added under this variable will be skipped.
+	// The module name must be added using Module under ProbeSpec.
 	// +optional
 	// +kubebuilder:validation:MinItems=1
 	Params []ProbeParam `json:"params,omitempty"`

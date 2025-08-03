@@ -657,7 +657,10 @@ spec:
                 - tokenUrl
                 type: object
               params:
-                description: The parameters for the scrape
+                description: |-
+                  The parameters for the scrape
+                  Please note that the `module` param added under this variable will be skipped.
+                  The module name must be added using Module under ProbeSpec.
                 items:
                   description: ProbeParam defines specification of extra parameters
                     for a Probe.
