@@ -4377,6 +4377,13 @@ spec:
                 x-kubernetes-list-map-keys:
                 - ip
                 x-kubernetes-list-type: map
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+                  The UserNamespacesSupport feature gate must be enabled.
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+                  It requires Kubernetes >= 1.25
+                type: boolean
               image:
                 description: |-
                   Image if specified has precedence over baseImage, tag and sha

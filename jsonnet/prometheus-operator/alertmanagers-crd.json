@@ -3941,6 +3941,10 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
+                  "hostUsers": {
+                    "description": "HostUsers supports the user space in Kubernetes.\nThe UserNamespacesSupport feature gate must be enabled.\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\nIt requires Kubernetes >= 1.25",
+                    "type": "boolean"
+                  },
                   "image": {
                     "description": "Image if specified has precedence over baseImage, tag and sha\ncombinations. Specifying the version is still necessary to ensure the\nPrometheus Operator knows what version of Alertmanager is being\nconfigured.",
                     "type": "string"

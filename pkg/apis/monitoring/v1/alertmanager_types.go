@@ -321,6 +321,14 @@ type AlertmanagerSpec struct {
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+
+	// HostUsers supports the user space in Kubernetes.
+	// The UserNamespacesSupport feature gate must be enabled.
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	// It requires Kubernetes >= 1.25
+	//
+	// +optional
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
