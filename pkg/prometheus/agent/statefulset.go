@@ -288,6 +288,7 @@ func makeStatefulSetSpec(
 		HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 		HostNetwork:                   cpf.HostNetwork,
 		EnableServiceLinks:            cpf.EnableServiceLinks,
+		HostUsers:                     cpf.HostUsers,
 	}
 
 	if cpf.HostNetwork {
