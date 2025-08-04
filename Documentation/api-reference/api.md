@@ -1706,8 +1706,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The parameters for the scrape
-Please note that the <code>module</code> param added under this variable will be skipped.
+<p>The list of HTTP query parameters for the scrape.
+Please note that the <code>.spec.module</code> field takes precedence over the <code>module</code> parameter from this list when both are defined.
 The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
@@ -12827,8 +12827,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The parameters for the scrape
-Please note that the <code>module</code> param added under this variable will be skipped.
+<p>The list of HTTP query parameters for the scrape.
+Please note that the <code>.spec.module</code> field takes precedence over the <code>module</code> parameter from this list when both are defined.
 The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>

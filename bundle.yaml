@@ -22239,8 +22239,8 @@ spec:
                 type: object
               params:
                 description: |-
-                  The parameters for the scrape
-                  Please note that the `module` param added under this variable will be skipped.
+                  The list of HTTP query parameters for the scrape.
+                  Please note that the `.spec.module` field takes precedence over the `module` parameter from this list when both are defined.
                   The module name must be added using Module under ProbeSpec.
                 items:
                   description: ProbeParam defines specification of extra parameters
@@ -22260,6 +22260,9 @@ spec:
                   type: object
                 minItems: 1
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               prober:
                 description: |-
                   Specification for the prober to use for probing targets.
