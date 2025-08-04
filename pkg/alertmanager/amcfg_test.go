@@ -5680,7 +5680,7 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "rocketchat_configs with send_resolved",
+			name:           "rocketchat_config with send_resolved",
 			againstVersion: versionRocketChatAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -5694,7 +5694,7 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "rocketchat_configs_with_send_resolved.golden",
+			golden: "rocketchat_config_with_send_resolved.golden",
 		},
 		{
 			name:           "rocketchat_configs allows for supported versions",
