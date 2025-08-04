@@ -1581,7 +1581,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}
 
 		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: p.Name, Value: p.Values})
-		}
 	}
 
 	if len(paramsMapSlice) != 0 {
