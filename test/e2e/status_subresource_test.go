@@ -21,10 +21,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -78,31 +75,11 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	name := "servicemonitor-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorSelector = &v1.LabelSelector{
-		MatchLabels: map[string]string{
-			"app": name,
-		},
-	}
+	
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
 	smon := framework.MakeBasicServiceMonitor(name)
-	smon.ObjectMeta.Labels = map[string]string{
-		"app": name,
-	}
-	smon.Spec.Selector = v1.LabelSelector{
-		MatchLabels: map[string]string{
-			"app": "testing",
-		},
-	}
-	smon.Spec.Endpoints = []monitoringv1.Endpoint{
-		{
-			Port:       "web",
-			Path:       "/metrics",
-			TargetPort: ptr.To(intstr.FromString("80")),
-			Interval:   monitoringv1.Duration("30s"),
-			Scheme:     "http",
-		},
-	}
+	
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 
