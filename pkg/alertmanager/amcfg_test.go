@@ -5680,6 +5680,23 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:           "rocketchat_configs with send_resolved",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:       "http://example.com",
+								SendResolved: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "rocketchat_configs_with_send_resolved.golden",
+		},
+		{
 			name:           "rocketchat_configs allows for supported versions",
 			againstVersion: versionRocketChatAllowed,
 			in: &alertmanagerConfig{
