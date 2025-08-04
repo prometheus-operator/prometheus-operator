@@ -72,6 +72,8 @@ Usage of ./operator:
     	Label selector to filter nodes.
   -kubelet-service string
     	Service/Endpoints object to write kubelets into in format "namespace/name"
+  -kubelet-sync-period duration
+    	How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m). (default 3m0s)
   -labels value
     	Labels to be add to all resources created by the operator
   -localhost string
