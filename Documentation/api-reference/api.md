@@ -3341,6 +3341,21 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </tr>
 <tr>
 <td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.
+The UserNamespacesSupport feature gate must be enabled.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
+It requires Kubernetes &gt;= 1.25</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -9117,6 +9132,21 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 <p>Defaults to 600 seconds.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.
+The UserNamespacesSupport feature gate must be enabled.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
+It requires Kubernetes &gt;= 1.25</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -14766,6 +14796,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.
+The UserNamespacesSupport feature gate must be enabled.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
+It requires Kubernetes &gt;= 1.25</p>
 </td>
 </tr>
 <tr>
@@ -22047,6 +22092,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.
+The UserNamespacesSupport feature gate must be enabled.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
+It requires Kubernetes &gt;= 1.25</p>
 </td>
 </tr>
 </table>
@@ -30499,6 +30559,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.
+The UserNamespacesSupport feature gate must be enabled.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
+It requires Kubernetes &gt;= 1.25</p>
 </td>
 </tr>
 </tbody>

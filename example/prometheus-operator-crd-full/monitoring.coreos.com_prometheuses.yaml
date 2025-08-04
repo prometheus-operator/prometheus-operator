@@ -3999,6 +3999,13 @@ spec:
                   `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
                   to a different value).
                 type: boolean
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+                  The UserNamespacesSupport feature gate must be enabled.
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+                  It requires Kubernetes >= 1.25
+                type: boolean
               ignoreNamespaceSelectors:
                 description: |-
                   When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
