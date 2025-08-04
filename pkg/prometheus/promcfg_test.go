@@ -5920,7 +5920,6 @@ func TestProbeSpecConfig(t *testing.T) {
 			name:   "module_config_with_params_define_module_in_param",
 			golden: "ProbeSpecConfig_module_config_with_params_define_module_in_param.golden",
 			pbSpec: monitoringv1.ProbeSpec{
-				Module: "http_2xx",
 				Params: []monitoringv1.ProbeParam{
 					{
 						Name:   "foo",
