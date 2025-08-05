@@ -48,7 +48,7 @@ const (
 	invalidConfiguration = "InvalidConfiguration"
 )
 
-// ConfigResource is a type constraint that permits only the specific pointer types for configuration resources
+// TypedConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
 type TypedConfigurationResource interface {
 	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
@@ -68,7 +68,7 @@ type ResourceSelector struct {
 	eventRecorder record.EventRecorder
 }
 
-// Resource is a generic type that holds a configuration resource with its validation status.
+// ConfigurationResource is a generic type that holds a configuration resource with its validation status.
 type ConfigurationResource[T TypedConfigurationResource] struct {
 	resource T
 	err      error  // error encountered during selection or validation (nil if valid).
