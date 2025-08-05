@@ -4001,55 +4001,31 @@ func testPromMinReadySeconds(t *testing.T) {
 
 	kubeClient := framework.KubeClient
 
-	var setMinReadySecondsInitial uint32 = 5
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
-	prom.Spec.MinReadySeconds = &setMinReadySecondsInitial
+	prom.Spec.MinReadySeconds = ptr.To(int32(5))
 
 	prom, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
-	if err != nil {
-		t.Fatal("Creating prometheus failed: ", err)
-	}
+	require.NoError(t, err)
 
 	promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(5), promSS.Spec.MinReadySeconds)
 
-	if promSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, promSS.Spec.MinReadySeconds)
-	}
-
-	var updated uint32 = 10
-	var got int32
-	if _, err = framework.PatchPrometheusAndWaitUntilReady(
+	_, err = framework.PatchPrometheusAndWaitUntilReady(
 		context.Background(),
 		prom.Name,
 		ns,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				MinReadySeconds: &updated,
+				MinReadySeconds: ptr.To(int32(10)),
 			},
 		},
-	); err != nil {
-		t.Fatal("Updating prometheus failed: ", err)
-	}
+	)
+	require.NoError(t, err)
 
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
-		promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if promSS.Spec.MinReadySeconds != int32(updated) {
-			got = promSS.Spec.MinReadySeconds
-			return false, nil
-		}
-		return true, nil
-	})
-
-	if err != nil {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, got)
-	}
+	promSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, int32(10), promSS.Spec.MinReadySeconds)
 }
 
 // testPromEnforcedNamespaceLabel checks that the enforcedNamespaceLabel field

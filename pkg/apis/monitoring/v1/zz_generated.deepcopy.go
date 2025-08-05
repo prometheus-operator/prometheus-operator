@@ -480,7 +480,7 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 	out.AlertmanagerConfigMatcherStrategy = in.AlertmanagerConfigMatcherStrategy
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
-		*out = new(uint32)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.HostAliases != nil {
@@ -1061,7 +1061,7 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	}
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
-		*out = new(uint32)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.HostAliases != nil {
@@ -3912,7 +3912,7 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 	}
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
-		*out = new(uint32)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.AlertRelabelConfigs != nil {

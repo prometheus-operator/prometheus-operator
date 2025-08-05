@@ -762,15 +762,14 @@ process incoming alerts.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -2968,16 +2967,14 @@ It requires Prometheus &gt;= v3.5.0.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -5039,15 +5036,14 @@ Maps to the &lsquo;&ndash;alert.query-url&rsquo; CLI arg.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -6757,15 +6753,14 @@ process incoming alerts.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -8746,16 +8741,14 @@ It requires Prometheus &gt;= v3.5.0.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -14397,16 +14390,14 @@ It requires Prometheus &gt;= v3.5.0.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -18941,15 +18932,14 @@ Maps to the &lsquo;&ndash;alert.query-url&rsquo; CLI arg.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -21678,16 +21668,14 @@ It requires Prometheus &gt;= v3.5.0.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -30130,16 +30118,14 @@ It requires Prometheus &gt;= v3.5.0.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>

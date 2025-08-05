@@ -1090,21 +1090,19 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
-	replicas := int32(3)
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = &replicas
+	a.Spec.Replicas = ptr.To(int32(3))
 
 	// assert defaults to zero if nil
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(0), statefulSet.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
+	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	var expect uint32 = 5
-	a.Spec.MinReadySeconds = &expect
+	a.Spec.MinReadySeconds = ptr.To(int32(5))
 	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(expect), statefulSet.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
 }
 
 func TestPodTemplateConfig(t *testing.T) {
