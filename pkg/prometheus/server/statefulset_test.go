@@ -2318,7 +2318,7 @@ func TestPodTemplateConfig(t *testing.T) {
 				ImagePullPolicy:    imagePullPolicy,
 				ImagePullSecrets:   imagePullSecrets,
 				HostNetwork:        hostNetwork,
-				HostUsers:          &hostUsers,
+				HostUsers:          ptr.To(true),
 			},
 		},
 	})
