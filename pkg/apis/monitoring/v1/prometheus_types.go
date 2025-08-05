@@ -931,7 +931,7 @@ type CommonPrometheusFields struct {
 	//
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
 	//
-	// 
+	//
 	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
 	// Starting Kubernetes 1.33, the feature is enabled by default.
 	//
