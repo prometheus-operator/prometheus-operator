@@ -900,6 +900,14 @@ func (b *PrometheusSpecApplyConfiguration) WithTerminationGracePeriodSeconds(val
 	return b
 }
 
+// WithHostUsers sets the HostUsers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HostUsers field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithHostUsers(value bool) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.HostUsers = &value
+	return b
+}
+
 // WithBaseImage sets the BaseImage field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BaseImage field is set to the value of the last call.

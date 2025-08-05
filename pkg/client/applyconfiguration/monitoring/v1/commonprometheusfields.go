@@ -123,6 +123,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
 	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
+	HostUsers                            *bool                                                   `json:"hostUsers,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs a declarative configuration of the CommonPrometheusFields type for use with
@@ -970,5 +971,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithRuntime(value *RuntimeCon
 // If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.TerminationGracePeriodSeconds = &value
+	return b
+}
+
+// WithHostUsers sets the HostUsers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HostUsers field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithHostUsers(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.HostUsers = &value
 	return b
 }
