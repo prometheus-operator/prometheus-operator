@@ -676,6 +676,8 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                  required:
+                  - name
                   type: object
                 minItems: 1
                 type: array

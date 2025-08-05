@@ -148,6 +148,7 @@ type ProbeSpec struct {
 type ProbeParam struct {
 	// The parameter name
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name,omitempty"`
 	// The parameter values
 	// +kubebuilder:validation:MinItems=1

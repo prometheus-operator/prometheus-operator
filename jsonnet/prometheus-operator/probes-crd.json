@@ -617,6 +617,9 @@
                           "type": "array"
                         }
                       },
+                      "required": [
+                        "name"
+                      ],
                       "type": "object"
                     },
                     "minItems": 1,
