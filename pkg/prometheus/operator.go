@@ -297,9 +297,7 @@ func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Objec
 				if binding.Namespace == p.GetNamespace() &&
 					binding.Name == p.GetName() &&
 					binding.Resource == monitoringv1.PrometheusName {
-					if binding.Conditions[0].ObservedGeneration != condition.ObservedGeneration {
-						binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
-					}
+					binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
 					found = true
 					break
 				}
