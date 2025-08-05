@@ -46,56 +46,59 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	operatorMetrics := []string{
+		// Kubernetes client metrics.
 		"prometheus_operator_kubernetes_client_http_requests_total",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_count",
 		"prometheus_operator_kubernetes_client_http_request_duration_seconds_sum",
 		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_count",
 		"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds_sum",
+
+		// Operator's info metrics.
 		"prometheus_operator_build_info",
 		"prometheus_operator_feature_gate",
 		"prometheus_operator_kubelet_managed_resource",
+
 		"prometheus_operator_list_operations_failed_total",
 		"prometheus_operator_list_operations_total",
 		"prometheus_operator_node_address_lookup_errors_total",
 		"prometheus_operator_node_syncs_failed_total",
 		"prometheus_operator_node_syncs_total",
 		"prometheus_operator_ready",
+
+		// Resource reconciler metrics.
 		"prometheus_operator_reconcile_duration_seconds_bucket",
 		"prometheus_operator_reconcile_duration_seconds_count",
 		"prometheus_operator_reconcile_duration_seconds_sum",
 		"prometheus_operator_reconcile_errors_total",
 		"prometheus_operator_reconcile_operations_total",
 		"prometheus_operator_reconcile_sts_delete_create_total",
+
+		// Kubernetes work queue metrics.
+		"prometheus_operator_workqueue_depth",
+		"prometheus_operator_workqueue_adds_total",
+		"prometheus_operator_workqueue_latency_seconds_bucket",
+		"prometheus_operator_workqueue_latency_seconds_count",
+		"prometheus_operator_workqueue_latency_seconds_sum",
+		"prometheus_operator_workqueue_work_duration_seconds_bucket",
+		"prometheus_operator_workqueue_work_duration_seconds_count",
+		"prometheus_operator_workqueue_work_duration_seconds_sum",
+		"prometheus_operator_workqueue_unfinished_work_seconds",
+		"prometheus_operator_workqueue_longest_running_processor_seconds",
+		"prometheus_operator_workqueue_retries_total",
+
 		"prometheus_operator_status_update_errors_total",
 		"prometheus_operator_status_update_operations_total",
 		"prometheus_operator_syncs",
 		"prometheus_operator_triggered_total",
 		"prometheus_operator_watch_operations_failed_total",
 		"prometheus_operator_watch_operations_total",
-	}
-	operatorOperationalMetrics := []string{
+
 		"prometheus_operator_managed_resources",
 		"prometheus_operator_spec_replicas",
 		"prometheus_operator_spec_shards",
 	}
 
-	ctx := context.Background()
-	err := framework.WaitForServiceReady(ctx, namespace, prometheusOperatorServiceName)
-	require.NoError(t, err)
-
-	err = framework.EnsureMetricsFromService(
-		ctx,
-		"https",
-		namespace,
-		prometheusOperatorServiceName,
-		"https",
-		operatorMetrics...,
-	)
-
-	require.NoError(t, err)
-
 	name := "test"
-
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prometheusCRD.Namespace = ns
 
@@ -103,13 +106,13 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		t.Fatal(err)
 	}
 
-	err = framework.EnsureMetricsFromService(
-		ctx,
+	err := framework.EnsureMetricsFromService(
+		context.Background(),
 		"https",
 		namespace,
 		prometheusOperatorServiceName,
 		"https",
-		operatorOperationalMetrics...,
+		operatorMetrics...,
 	)
 
 	require.NoError(t, err)
