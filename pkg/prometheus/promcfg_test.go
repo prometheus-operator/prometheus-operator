@@ -5886,6 +5886,52 @@ func TestProbeSpecConfig(t *testing.T) {
 				Module: "http_2xx",
 			},
 		},
+		{
+			name:   "module_config_with_params",
+			golden: "ProbeSpecConfig_module_config_with_params.golden",
+			pbSpec: monitoringv1.ProbeSpec{
+				Module: "http_2xx",
+				Params: []monitoringv1.ProbeParam{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+				},
+			},
+		},
+		{
+			name:   "module_config_with_params_skip_module",
+			golden: "ProbeSpecConfig_module_config_with_params_skip_module.golden",
+			pbSpec: monitoringv1.ProbeSpec{
+				Module: "http_2xx",
+				Params: []monitoringv1.ProbeParam{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+					{
+						Name:   "module",
+						Values: []string{"tcp_connect"},
+					},
+				},
+			},
+		},
+		{
+			name:   "module_config_with_params_define_module_in_param",
+			golden: "ProbeSpecConfig_module_config_with_params_define_module_in_param.golden",
+			pbSpec: monitoringv1.ProbeSpec{
+				Params: []monitoringv1.ProbeParam{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+					{
+						Name:   "module",
+						Values: []string{"tcp_connect"},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pbs := map[string]*monitoringv1.Probe{
