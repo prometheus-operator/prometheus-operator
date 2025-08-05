@@ -120,12 +120,13 @@ var (
 	disableUnmanagedPrometheusConfiguration bool
 
 	// Parameters for the kubelet endpoints controller.
-	kubeletObject        string
-	kubeletSelector      operator.LabelSelector
-	nodeAddressPriority  operator.NodeAddressPriority
-	kubeletEndpoints     bool
-	kubeletEndpointSlice bool
-	kubeletSyncPeriod    time.Duration
+	kubeletObject              string
+	kubeletSelector            operator.LabelSelector
+	nodeAddressPriority        operator.NodeAddressPriority
+	kubeletEndpoints           bool
+	kubeletEndpointSlice       bool
+	kubeletSyncPeriod          time.Duration
+	alertmanagerReconcileDelay time.Duration
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -148,6 +149,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&kubeletEndpointSlice, "kubelet-endpointslice", false, "Create EndpointSlice objects for kubelet targets.")
 	fs.BoolVar(&kubeletEndpoints, "kubelet-endpoints", true, "Create Endpoints objects for kubelet targets.")
 	fs.DurationVar(&kubeletSyncPeriod, "kubelet-sync-period", 3*time.Minute, "How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m).")
+	fs.DurationVar(&alertmanagerReconcileDelay, "alertmanagerreconcile-delay", 0, "Delay alertmanager reconciliation by this duration  (e.g., 30s, 1m, 2m30s)")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to

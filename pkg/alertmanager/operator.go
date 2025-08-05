@@ -107,6 +107,7 @@ type Operator struct {
 	config Config
 
 	configResourcesStatusEnabled bool
+	reconcileDelay               time.Duration
 }
 
 type ControllerOption func(*Operator)
@@ -165,6 +166,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                       c.Labels,
 		},
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		reconcileDelay:               c.AlertmanagerReconcileDelay,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -565,6 +567,11 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
+	// Add delay if configured
+	if c.reconcileDelay > 0 {
+		time.Sleep(c.reconcileDelay)
+	}
+
 	am, err := operator.GetObjectFromKey[*monitoringv1.Alertmanager](c.alrtInfs, key)
 	if err != nil {
 		return err
