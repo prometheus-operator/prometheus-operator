@@ -689,7 +689,7 @@ func (b *PrometheusSpecApplyConfiguration) WithScrapeClassicHistograms(value boo
 // WithMinReadySeconds sets the MinReadySeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinReadySeconds field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithMinReadySeconds(value uint32) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithMinReadySeconds(value int32) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.MinReadySeconds = &value
 	return b
 }

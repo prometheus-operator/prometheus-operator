@@ -4730,8 +4730,9 @@
                     "type": "integer"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created Pod should be ready\nwithout any of its container crashing for it to be considered available.\nDefaults to 0 (pod will be considered available as soon as it is ready)\n\nThis is an alpha field from kubernetes 1.22 until 1.24 which requires\nenabling the StatefulSetMinReadySeconds feature gate.",
+                    "description": "Minimum number of seconds for which a newly created Pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
                     "format": "int32",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "nameEscapingScheme": {

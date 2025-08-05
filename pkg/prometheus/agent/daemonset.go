@@ -133,11 +133,6 @@ func makeDaemonSetSpec(
 
 	var watchedDirectories []string
 
-	var minReadySeconds int32
-	if cpf.MinReadySeconds != nil {
-		minReadySeconds = int32(*cpf.MinReadySeconds)
-	}
-
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
 			p,
@@ -200,7 +195,7 @@ func makeDaemonSetSpec(
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(cpf.MinReadySeconds, 0),
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,

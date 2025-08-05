@@ -2355,24 +2355,22 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	var setMinReadySecondsInitial uint32 = 5
 	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
-	am.Spec.MinReadySeconds = &setMinReadySecondsInitial
+	am.Spec.MinReadySeconds = ptr.To(int32(5))
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	require.NoError(t, err)
 
 	amSS, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
 	require.NoError(t, err)
 
-	require.Equal(t, int32(setMinReadySecondsInitial), amSS.Spec.MinReadySeconds)
+	require.Equal(t, int32(5), amSS.Spec.MinReadySeconds)
 
-	var updated uint32 = 10
-	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: &updated})
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: ptr.To(int32(10))})
 	require.NoError(t, err)
 
 	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
 	require.NoError(t, err)
-	require.Equal(t, int32(updated), amSS.Spec.MinReadySeconds)
+	require.Equal(t, int32(10), amSS.Spec.MinReadySeconds)
 }
 
 func testAlertmanagerCRDValidation(t *testing.T) {

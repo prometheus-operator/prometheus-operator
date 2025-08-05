@@ -836,11 +836,10 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	var expect uint32 = 5
-	tr.Spec.MinReadySeconds = &expect
+	tr.Spec.MinReadySeconds = ptr.To(int32(5))
 	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(expect), statefulSet.MinReadySeconds)
+	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
 }
 
 func TestStatefulSetServiceName(t *testing.T) {

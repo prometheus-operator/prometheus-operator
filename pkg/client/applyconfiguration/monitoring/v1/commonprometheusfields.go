@@ -99,7 +99,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	NameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions                 `json:"nameEscapingScheme,omitempty"`
 	ConvertClassicHistogramsToNHCB       *bool                                                   `json:"convertClassicHistogramsToNHCB,omitempty"`
 	ScrapeClassicHistograms              *bool                                                   `json:"scrapeClassicHistograms,omitempty"`
-	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
+	MinReadySeconds                      *int32                                                  `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
 	WALCompression                       *bool                                                   `json:"walCompression,omitempty"`
@@ -762,7 +762,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClassicHistograms(v
 // WithMinReadySeconds sets the MinReadySeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinReadySeconds field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithMinReadySeconds(value uint32) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithMinReadySeconds(value int32) *CommonPrometheusFieldsApplyConfiguration {
 	b.MinReadySeconds = &value
 	return b
 }

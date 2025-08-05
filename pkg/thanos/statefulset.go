@@ -486,15 +486,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	var minReadySeconds int32
-	if tr.Spec.MinReadySeconds != nil {
-		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
-	}
-
 	spec := appsv1.StatefulSetSpec{
 		ServiceName:     ptr.Deref(tr.Spec.ServiceName, governingServiceName),
 		Replicas:        tr.Spec.Replicas,
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(tr.Spec.MinReadySeconds, 0),
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,

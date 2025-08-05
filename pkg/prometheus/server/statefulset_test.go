@@ -1823,19 +1823,18 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	require.NoError(t, err)
 
 	// assert defaults to zero if nil
-	require.Equal(t, int32(0), sset.Spec.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", sset.Spec.MinReadySeconds)
+	require.Equal(t, int32(0), sset.Spec.MinReadySeconds)
 
-	var expect uint32 = 5
 	sset, err = makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				MinReadySeconds: &expect,
+				MinReadySeconds: ptr.To(int32(5)),
 			},
 		},
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, int32(expect), sset.Spec.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, sset.Spec.MinReadySeconds)
+	require.Equal(t, int32(5), sset.Spec.MinReadySeconds)
 }
 
 func TestConfigReloader(t *testing.T) {
