@@ -50,7 +50,7 @@ const (
 
 // ConfigResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
-type configurationResource interface {
+type TypedConfigurationResource interface {
 	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
 }
 
@@ -69,22 +69,14 @@ type ResourceSelector struct {
 }
 
 // Resource is a generic type that holds a configuration resource with its validation status.
-type Resource[T configurationResource] struct {
+type ConfigurationResource[T TypedConfigurationResource] struct {
 	resource T
 	err      error  // error encountered during selection or validation (nil if valid).
 	reason   string // Reason for rejection; empty if accepted.
 }
 
-func NewResource[T configurationResource](resource T, err error, reason string) Resource[T] {
-	return Resource[T]{
-		resource: resource,
-		err:      err,
-		reason:   reason,
-	}
-}
-
 // ResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
-type ResourcesSelection[T configurationResource] map[string]Resource[T]
+type ResourcesSelection[T TypedConfigurationResource] map[string]ConfigurationResource[T]
 
 // ValidResources returns only the resources which the operator considers to be valid.
 // The keys of the returned map identify the resources using the `<namespace>/<name>` format.
@@ -126,7 +118,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T configurationResource](
+func selectObjects[T TypedConfigurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
@@ -196,7 +188,7 @@ func selectObjects[T configurationResource](
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		}
-		res[namespaceAndName] = Resource[T]{
+		res[namespaceAndName] = ConfigurationResource[T]{
 			resource: o,
 			err:      err,
 			reason:   reason,

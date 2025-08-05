@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -75,11 +75,11 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	name := "servicemonitor-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	
+
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
 	smon := framework.MakeBasicServiceMonitor(name)
-	
+
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 

@@ -56,13 +56,13 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
-type ConfigResourceSyncer[T configurationResource] struct {
+type ConfigResourceSyncer[T TypedConfigurationResource] struct {
 	gvr     schema.GroupVersionResource
 	mclient monitoringclient.Interface
 	logger  *slog.Logger
 }
 
-func NewConfigResourceSyncer[T configurationResource](gvr schema.GroupVersionResource, mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
+func NewConfigResourceSyncer[T TypedConfigurationResource](gvr schema.GroupVersionResource, mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
 	return &ConfigResourceSyncer[T]{
 		gvr:     gvr,
 		mclient: mclient,
