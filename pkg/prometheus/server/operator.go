@@ -1042,8 +1042,12 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return
 	}
 
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
-	prompkg.AddServiceMonitorStatus(ctx, p, configResourceSyncer, resources.sMons)
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient)
+	for key, sm := range resources.sMons {
+       if err := prompkg.AddServiceMonitorStatus(ctx, p, configResourceSyncer, sm); err != nil {
+		 c.logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
+	   }
+	}
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
