@@ -284,6 +284,7 @@ func (r *ConfigurationResource[T]) condition(observedGeneration int64) []monitor
 
 // AddServiceMonitorStatus add the latest status in serviceMonitors resources selected by the Prometheus or PrometheusAgent.
 func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[*monitoringv1.ServiceMonitor]) {
+	fmt.Println("Adding ServiceMonitor status for Smon", p.GetName())
 	for key, res := range resources {
 
 		smon := res.resource
@@ -310,9 +311,11 @@ func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigReso
 				Conditions: conditions,
 			})
 		}
+		fmt.Println("---Updating ServiceMonitor status for key", key, "in namespace", smon.Namespace)
 		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 		if err != nil {
 			c.logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
 		}
+		fmt.Println("Updated ServiceMonitor status for key done", key, "in namespace", smon.Namespace)
 	}
 }
