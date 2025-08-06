@@ -1027,28 +1027,23 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	if err := c.updateConfigResourcesStatus(ctx, p, logger, *resources); err != nil {
-		return err
-	}
+	c.updateConfigResourcesStatus(ctx, p, logger, *resources)
+
 	return nil
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
-func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) error {
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
 	if !c.configResourcesStatusEnabled {
-		return nil
+		return
 	}
 
 	if len(resources.sMons) == 0 {
-		return nil
+		return
 	}
 
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
-	if err := prompkg.AddStatus(ctx, p, configResourceSyncer, resources.sMons); err != nil {
-		return err
-	}
-
-	return nil
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, c.logger)
+	prompkg.AddStatus(ctx, p, configResourceSyncer, resources.sMons)
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.

@@ -267,7 +267,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 
 // AddStatus add the latest status in serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
-func AddStatus[T TypedConfigurationResource](ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[T]) error {
+func AddStatus[T TypedConfigurationResource](ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[T]) {
 	for key, res := range resources {
 		condition := monitoringv1.ConfigResourceCondition{
 			Type:               monitoringv1.Accepted,
@@ -309,12 +309,11 @@ func AddStatus[T TypedConfigurationResource](ctx context.Context, p metav1.Objec
 			}
 			_, err := c.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 			if err != nil {
-				c.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
-				return err
+				c.logger.Warn("failed to update ServiceMonitor status", "key", key)
 			}
 		default:
-			return fmt.Errorf("unsupported resource type %T", r)
+			c.logger.Warn("unsupported resource type %T", r)
+			return
 		}
 	}
-	return nil
 }
