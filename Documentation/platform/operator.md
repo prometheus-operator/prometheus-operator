@@ -23,6 +23,8 @@ Usage of ./operator:
     	Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.
   -alertmanager-instance-selector value
     	Label selector to filter Alertmanager Custom Resources to watch.
+  -alertmanagerreconcile-delay duration
+    	Delay alertmanager reconciliation by this duration  (e.g., 30s, 1m, 2m30s)
   -annotations value
     	Annotations to be add to all resources created by the operator
   -apiserver string
