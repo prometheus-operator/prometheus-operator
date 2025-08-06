@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:
@@ -13,4 +13,4 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus-operator-admission-webhook
-      app.kubernetes.io/version: 0.84.0
+      app.kubernetes.io/version: 0.84.1
