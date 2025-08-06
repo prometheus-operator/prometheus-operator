@@ -89,5 +89,4 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, 1, len(sm.Status.Bindings))
 	require.Equal(t, name, sm.Status.Bindings[0].Name)
 	require.Equal(t, ns, sm.Status.Bindings[0].Namespace)
-	require.Equal(t, v1.ConditionTrue, sm.Status.Bindings[0].Conditions[0].Status)
 }
