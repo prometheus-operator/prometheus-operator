@@ -210,3 +210,29 @@ func TestDaemonSetenableServiceLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestHostUsersForDaemonSet(t *testing.T) {
+	for _, tc := range []struct {
+		hostUsers *bool
+	}{
+		{
+			hostUsers: ptr.To(true),
+		},
+		{
+			hostUsers: ptr.To(false),
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			dset, err := makeDaemonSetFromPrometheus(
+				monitoringv1alpha1.PrometheusAgent{
+					Spec: monitoringv1alpha1.PrometheusAgentSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							HostUsers: tc.hostUsers,
+						},
+					}},
+			)
+			require.NoError(t, err)
+			require.Equal(t, tc.hostUsers, dset.Spec.Template.Spec.HostUsers)
+		})
+	}
+}
