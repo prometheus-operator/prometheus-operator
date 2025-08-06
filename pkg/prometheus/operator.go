@@ -274,9 +274,9 @@ func (r *ConfigurationResource[T]) condition() monitoringv1.ConfigResourceCondit
 	}
 
 	if r.err != nil {
-			condition.Status = monitoringv1.ConditionFalse
-			condition.Message = r.err.Error()
-		}
+		condition.Status = monitoringv1.ConditionFalse
+		condition.Message = r.err.Error()
+	}
 
 	return condition
 }
