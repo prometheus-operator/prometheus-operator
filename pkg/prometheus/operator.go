@@ -314,6 +314,7 @@ func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigReso
 		fmt.Println("---Updating ServiceMonitor status for key", key, "in namespace", smon.Namespace)
 		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 		if err != nil {
+			fmt.Println("Failed to update serviceMonitor status for key", key, "in namespace", smon.Namespace, "error:", err)
 			c.logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
 		}
 		fmt.Println("Updated ServiceMonitor status for key done", key, "in namespace", smon.Namespace)
