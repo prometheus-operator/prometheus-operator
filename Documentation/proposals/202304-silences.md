@@ -2,68 +2,100 @@
 
 * Owners:
   * [mcbenjemaa](https://github.com/mcbenjemaa)
+  * [danielmellado](https://github.com/danielmellado)
 * Related Tickets:
   * [#5452](https://github.com/prometheus-operator/prometheus-operator/issues/5452)
   * [#2398](https://github.com/prometheus-operator/prometheus-operator/issues/2398)
 * Other docs:
   * n/a
 
-This document describes the creation of `Silence` Custom Resource Definition that defines Alertmanager silences.
+This document describes the creation of `Silence` Custom Resource Definition
+that defines Alertmanager silences.
 
 # Why
 
-Prometheus-operator does not provide a way to automate the management of Alertmanager silences and there is no current standard/best practice way to do that.
-Moreover, setting an automation to manage silences has been reported as cumbersome by multiple users.
-or an additional operator that does the job e.g. [silence-operator](https://github.com/giantswarm/silence-operator).
+Prometheus-operator does not provide a way to automate the management of
+Alertmanager silences and there is no current standard/best practice way to do
+that.
 
-* Users using CI/CD jobs to manage silences have reported that this is cumbersome, since they need to either expose
-  Alertmanager via an ingress behind an authentication mechanism, or using a service account to connect to the cluster, and this is even more complicated
-  in a multi-cluster setup as they need to configure alertmanagers from different clusters in one tool.
-  In addition to the fact that CI jobs cost money to run, as well as there is no reconcilition loop unless ci runs which is expensive in the end.
-* However, there are folks that use a Kubernetes Job to add Silences,
-  In both situations, a CI/CD pipeline is needed in order to automate the execution, this includes managing the secrets and/or deprecation of code
-  Using Kubernetes Jobs, teams need to build and deploy a container and monitor its status, which is an additional effort.
-  CI/CD pipeline is not the best option in multi-cluster setups, teams need to manage k8s access, secrets, and configs.
+Moreover, setting an automation to manage silences has been reported as
+cumbersome by multiple users.
+
+There's even an additional operator that does the job e.g.
+[silence-operator](https://github.com/giantswarm/silence-operator).
+
+* Users using CI/CD jobs to manage silences have reported that this is
+  cumbersome, since they need to either expose Alertmanager via an ingress
+  behind an authentication mechanism or using a service account to connect to
+  the cluster, and this is even more complicated in a multi-cluster setup as
+  they need to configure alertmanagers from different clusters in one tool.  In
+  addition to the fact that CI jobs cost money to run, as well as there is no
+  reconciliation loop unless ci runs which is expensive in the end.
+* However, there are folks that use a Kubernetes Job to add Silences, In both
+  situations, a CI/CD pipeline is needed to automate the execution,
+  this includes managing the secrets and/or deprecation of code Using Kubernetes
+  Jobs, teams need to build and deploy a container and monitor its status, which
+  is an additional effort. CI/CD pipeline is not the best option in
+  multi-cluster setups, teams need to manage k8s access, secrets, and configs.
   Essentially, both solutions have drawbacks with cost and reconciliation loop.
 
 ![CI/CD K8s Job Approach](../img/CICD-k8s-job.png "CI/CD K8s Job Approach")
 
-* There are few folks that stick in creating silences manually in Alertmanager UI, which means that developers need access to alertmanagers
-  and add silences manually, but again, there's no reconciliation loop.
+* There are a few folks that stick to create silences manually in Alertmanager
+  UI, which means that developers need access to alertmanagers and add silences
+  manually, but again, there's no reconciliation loop.
 
-* Users that use a standalone operator that implements a Silence CRD are in a better situation,
-  for example, users have reported that they are using GitOps to fully manage the life cycle of Silences Custom resources,
-  which in fact brings benefits to the whole team because having a history and revisions in Git as well as constancy to manage the silences in a multi-tenant environment.
+* Users that use a standalone operator that implements a Silence CRD are in a
+  better situation. For example, users have reported that they are using GitOps
+  to fully manage the life cycle of Silences Custom resources, which in fact
+  brings benefits to the whole team because having a history and revisions in
+  Git as well as constancy to manage the silences in a multi-tenant environment.
 
-Additionally, having a new component in the stack and keeping it maintained is not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
-because that requires managing an extra component +CRDs on top of the Prometheus operator.
-Moreover, this project doesn't have a lot of community support, and it's reached by small amount of users.
-Having the Silence CRD as part of prometheus-operator provides users with a better experience: there is no need to install another operator or build a system on top of it to provide that functionality.
+Additionally, having a new component in the stack and keeping it maintained is
+not always ideal (said the folks at [Giant Swarm](https://giantswarm.io) the
+owners of [silence-operator](https://github.com/giantswarm/silence-operator)),
+because that requires managing an extra component +CRDs on top of the Prometheus
+operator. Moreover, this project doesn't have a lot of community support, and
+it's reached by small amount of users. Having the Silence CRD as part of
+prometheus-operator provides users with a better experience: there is no need to
+install another operator or build a system on top of it to provide that
+functionality.
 
-Adding support for `Silence` CRD in the Prometheus-operator will provide more flexibility to users in terms of choosing the tool to deploy their silences and will free users from managing a standalone component within the stack.
+Adding support for `Silence` CRD in the Prometheus-operator will provide more
+flexibility to users in terms of choosing the tool to deploy their silences and
+will free users from managing a standalone component within the stack.
 
 ## Pitfalls of the current solution
 
 Using Alertmanager API Directly comes with drawbacks:
 
 * Teams have to build an automation to add silences in a centralized manner
-* There is no input validation in CI, which can lead to an invalid silence configuration
+* There is no input validation in CI, which can lead to an invalid silence
+  configuration
 * Teams need to manage expiration on their own
 * If a silence was deleted by accident, it will be permanent.
 
 # Goals
 
-* Provide a way for users to manage Alertmanager silences with a Custom Resource Definition (CRD).
-* Enable the management of Alertmanager silences in a GitOps fashion (ArgoCD, Flux, ...).
-* Access to the Silence custom resources can be controlled by Kubernetes RBAC authorization.
-* Provide better community support and reduce fragmentation as Giant Swarm's silence operator are added to prometheus-operator
-* Improve user experience when managing silences, so users can use the same tools to manage their monitoring pipeline (kyverno, cr validations).
+* Provide a way for users to manage Alertmanager silences with a Custom Resource
+  Definition (CRD).
+* Enable the management of Alertmanager silences in a GitOps fashion (ArgoCD,
+  Flux, ...).
+* Access to the Silence custom resources can be controlled by Kubernetes RBAC
+  authorization.
+* Provide better community support and reduce fragmentation as Giant Swarm's
+  silence operator is added to prometheus-operator
+* Improve user experience when managing silences, so users can use the same
+  tools to manage their monitoring pipeline (kyverno, cr validations).
 
 ## Audience
 
-* Users who use the Prometheus operator to offer monitoring-as-a-service to developers.
-* Users who want to manage silences the same way as for services running within the Kubernetes cluster.
-* Users who want a supported GitOps way of silences outside the Kubernetes cluster
+* Users who use the Prometheus operator to offer monitoring-as-a-service to
+  developers.
+* Users who want to manage silences the same way as for services running within
+  the Kubernetes cluster.
+* Users who want a supported GitOps way of silences outside the Kubernetes
+  cluster
 
 # Non-Goals
 
@@ -73,7 +105,8 @@ Using Alertmanager API Directly comes with drawbacks:
 
 # How
 
-We will create a new namespaced Silence CRD that will act as an interface by adding silences via the Alertmanager API.
+We will create a new namespaced Silence CRD that will act as an interface by
+adding silences via the Alertmanager API.
 
 A typical `Silence` resource could look like the following:
 
@@ -93,21 +126,32 @@ spec:
       value: test-ns
 ```
 
-The above resource will result in creating a silence in the Alertmanager that has the appropriate selector.
+The above resource will result in creating a silence in the Alertmanager that
+has the appropriate selector.
 
 * `expiresAt` to define the expiration of the silence.
-  - If a silence has `expiredAt` defined, it'll expire at the time defined and the CR will have to be manually removed.
-  - If a silence doesn't have `expiredAt`, it'll be kept active as long as the CR exists and removed as soon as the CR is gone
-* `matchers` field corresponds to the Alertmanager silence matchers each of which consists of:
+  - If a silence has `expiredAt` defined, it'll expire at the time defined and
+    the CR will have to be manually removed.
+  - If a silence doesn't have `expiredAt`, it'll be kept active as long as the
+    CR exists and removed as soon as the CR is gone
+* `matchers` field corresponds to the Alertmanager silence matchers each of
+  which consists of:
   - `name` - name of tag on an alert to match
-  - `value` - fixed string or expression to match against the value of the tag named by name above on an alert
-  - `matchType` - Match operation available with AlertManager >= v0.22.0 and takes precedence over Regex (deprecated) if non-empty.
-  - `regex` - Whether to match on equality (false) or regular-expression (true). Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType instead.
+  - `value` - fixed string or expression to match against the value of the tag
+    named by name above on an alert
+  - `matchType` - Match operation available with AlertManager >= v0.22.0 and
+    takes precedence over Regex (deprecated) if non-empty.
+  - `regex` - Whether to match on equality (false) or regular-expression (true).
+    Deprecated as of AlertManager >= v0.22.0 where a user should use MatchType
+    instead.
 
-This example doesn't list all the fields that are offered by Alertmanager. The implementation of all the fields will be
-done in an iterative process and as such, the expectation is not for all of them to be implemented in the first version.
+This example doesn't list all the fields that are offered by Alertmanager. The
+implementation of all the fields will be done in an iterative process and as
+such, the expectation is not for all of them to be implemented in the first
+version.
 
-Also, to help select `Silences`, a new field will be added to the Alertmanager CRD:
+Also, to help select `Silences`, a new field will be added to the Alertmanager
+CRD:
 
 ```yaml
 [...]
@@ -116,8 +160,9 @@ spec:
   silenceNamespaceSelector: ...
 ```
 
-Additionally, the silence-controller will handle `Silences` overwrites.
-After having successfully created a silence, the silence id will be kept in the status sub-resource:
+Additionally, the silence-controller will handle `Silences` overwrites.  After
+having successfully created a silence, the silence id will be kept in the status
+sub-resource:
 
 ```yaml
 [...]
@@ -133,4 +178,5 @@ status:
 # Action Plan
 
 1. Create the `Silence` CRD, covering `matchers` and `expiresAt`.
-2. Once released, add other mechanisms to the CRD and complete the implementation.
+2. Once released, add other mechanisms to the CRD and complete the
+   implementation.
