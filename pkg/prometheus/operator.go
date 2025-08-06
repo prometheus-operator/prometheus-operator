@@ -70,6 +70,23 @@ func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoring
 	}
 }
 
+func (r *ConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+	condition := monitoringv1.ConfigResourceCondition{
+		Type:               monitoringv1.Accepted,
+		Status:             monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Now(),
+		Reason:             r.reason,
+		ObservedGeneration: observedGeneration,
+	}
+
+	if r.err != nil {
+		condition.Status = monitoringv1.ConditionFalse
+		condition.Message = r.err.Error()
+	}
+
+	return []monitoringv1.ConfigResourceCondition{condition}
+}
+
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
@@ -265,29 +282,12 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
-func (r *ConfigurationResource[T]) condition(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
-	condition := monitoringv1.ConfigResourceCondition{
-		Type:               monitoringv1.Accepted,
-		Status:             monitoringv1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-		Reason:             r.reason,
-		ObservedGeneration: observedGeneration,
-	}
-
-	if r.err != nil {
-		condition.Status = monitoringv1.ConditionFalse
-		condition.Message = r.err.Error()
-	}
-
-	return []monitoringv1.ConfigResourceCondition{condition}
-}
-
 // AddServiceMonitorStatus add the latest status in serviceMonitors resources selected by the Prometheus or PrometheusAgent.
 func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[*monitoringv1.ServiceMonitor]) {
 	for key, res := range resources {
 
 		smon := res.resource
-		conditions := res.condition(smon.Generation)
+		conditions := res.conditions(smon.Generation)
 
 		var found bool
 		for i := range smon.Status.Bindings {
