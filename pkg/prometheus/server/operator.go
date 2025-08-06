@@ -1044,8 +1044,8 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient)
 	for key, sm := range resources.sMons {
-		if err := prompkg.AddServiceMonitorStatus(ctx, p, configResourceSyncer, sm); err != nil {
-			c.logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
+		if err := prompkg.UpdateServiceMonitorStatus(ctx, p, configResourceSyncer, sm); err != nil {
+			logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
 		}
 	}
 }

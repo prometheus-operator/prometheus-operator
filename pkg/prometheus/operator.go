@@ -279,8 +279,8 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
-// AddServiceMonitorStatus add the latest status in serviceMonitor selected by the Prometheus or PrometheusAgent.
-func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, res ConfigurationResource[*monitoringv1.ServiceMonitor]) error {
+// UpdateServiceMonitorStatus add the latest status in serviceMonitor selected by the Prometheus or PrometheusAgent.
+func UpdateServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, res ConfigurationResource[*monitoringv1.ServiceMonitor]) error {
 	smon := res.resource
 	conditions := res.conditions(smon.Generation)
 
