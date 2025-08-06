@@ -193,6 +193,7 @@ func TestAllNS(t *testing.T) {
 	t.Run("TestServerTLS", func(t *testing.T) {
 		testServerTLS(t, ns)
 	})
+
 	t.Run("TestPrometheusOperatorMetrics", func(t *testing.T) {
 		t.Helper()
 		testPrometheusOperatorMetrics(t, ns)
