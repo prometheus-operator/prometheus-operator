@@ -67,7 +67,7 @@ func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoring
 	}
 }
 
-func (r *ConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+func (r *TypedConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
 	condition := monitoringv1.ConfigResourceCondition{
 		Type:               monitoringv1.Accepted,
 		Status:             monitoringv1.ConditionTrue,
@@ -280,7 +280,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 }
 
 // UpdateServiceMonitorStatus add the latest status in serviceMonitor selected by the Prometheus or PrometheusAgent.
-func UpdateServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, res ConfigurationResource[*monitoringv1.ServiceMonitor]) error {
+func UpdateServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
 	smon := res.resource
 	conditions := res.conditions(smon.Generation)
 

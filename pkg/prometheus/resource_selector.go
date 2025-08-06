@@ -48,9 +48,9 @@ const (
 	invalidConfiguration = "InvalidConfiguration"
 )
 
-// TypedConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
+// ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
-type TypedConfigurationResource interface {
+type ConfigurationResource interface {
 	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
 }
 
@@ -68,19 +68,19 @@ type ResourceSelector struct {
 	eventRecorder record.EventRecorder
 }
 
-// ConfigurationResource is a generic type that holds a configuration resource with its validation status.
-type ConfigurationResource[T TypedConfigurationResource] struct {
+// TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
+type TypedConfigurationResource[T ConfigurationResource] struct {
 	resource T
 	err      error  // error encountered during selection or validation (nil if valid).
 	reason   string // Reason for rejection; empty if accepted.
 }
 
-// ResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
-type ResourcesSelection[T TypedConfigurationResource] map[string]ConfigurationResource[T]
+// TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
+type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
 
 // ValidResources returns only the resources which the operator considers to be valid.
 // The keys of the returned map identify the resources using the `<namespace>/<name>` format.
-func (resources ResourcesSelection[T]) ValidResources() map[string]T {
+func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
 	validRes := make(map[string]T)
 	for k, res := range resources {
 		if res.err == nil {
@@ -118,7 +118,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T TypedConfigurationResource](
+func selectObjects[T ConfigurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
@@ -127,7 +127,7 @@ func selectObjects[T TypedConfigurationResource](
 	nsSelector *metav1.LabelSelector,
 	listFn ListAllByNamespaceFn,
 	checkFn func(context.Context, T) error,
-) (ResourcesSelection[T], error) {
+) (TypedResourcesSelection[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
 	namespaces := []string{}
@@ -177,7 +177,7 @@ func selectObjects[T TypedConfigurationResource](
 	}
 
 	var rejected int
-	res := make(ResourcesSelection[T], len(objects))
+	res := make(TypedResourcesSelection[T], len(objects))
 	for namespaceAndName, obj := range objects {
 		var reason string
 		o := obj.(T)
@@ -188,7 +188,7 @@ func selectObjects[T TypedConfigurationResource](
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		}
-		res[namespaceAndName] = ConfigurationResource[T]{
+		res[namespaceAndName] = TypedConfigurationResource[T]{
 			resource: o,
 			err:      err,
 			reason:   reason,
@@ -212,7 +212,7 @@ func selectObjects[T TypedConfigurationResource](
 // SelectServiceMonitors returns the ServiceMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.ServiceMonitor], error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -456,7 +456,7 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 // SelectPodMonitors returns the PodMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.PodMonitor], error) {
+func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -533,7 +533,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 // SelectProbes returns the probes matching the selectors specified in the Prometheus CR.
 // This function also populates authentication stores and performs
 // validations against scrape intervals, relabel configs and Probe URLs.
-func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1.Probe], error) {
+func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -643,7 +643,7 @@ func validateServer(server string) error {
 
 // SelectScrapeConfigs returns the ScrapeConfigs which match the selectors in the
 // Prometheus CR and filters them returning all the configuration.
-func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (ResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
