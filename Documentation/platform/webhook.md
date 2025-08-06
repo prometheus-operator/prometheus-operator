@@ -86,7 +86,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator-admission-webhook
   namespace: default
 ```
@@ -97,7 +97,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:
@@ -114,7 +114,7 @@ spec:
         kubectl.kubernetes.io/default-container: prometheus-operator-admission-webhook
       labels:
         app.kubernetes.io/name: prometheus-operator-admission-webhook
-        app.kubernetes.io/version: 0.84.0
+        app.kubernetes.io/version: 0.84.1
     spec:
       affinity:
         podAntiAffinity:
@@ -131,7 +131,7 @@ spec:
         - --web.enable-tls=true
         - --web.cert-file=/etc/tls/private/tls.crt
         - --web.key-file=/etc/tls/private/tls.key
-        image: quay.io/prometheus-operator/admission-webhook:v0.84.0
+        image: quay.io/prometheus-operator/admission-webhook:v0.84.1
         name: prometheus-operator-admission-webhook
         ports:
         - containerPort: 8443
@@ -179,7 +179,7 @@ kind: Service
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:
