@@ -80,9 +80,11 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.NoError(t, err, "failed to create Prometheus")
 	smon := framework.MakeBasicServiceMonitor(name)
 
-	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	time.Sleep(5 * time.Minute)
+	time.Sleep(1 * time.Minute)
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Get(ctx, smon.Name, v1.GetOptions{})
+	require.NoError(t, err)
 	require.NotEmpty(t, sm.Status.Bindings)
 }
