@@ -309,7 +309,7 @@ func AddStatus[T TypedConfigurationResource](ctx context.Context, p metav1.Objec
 			}
 			_, err := c.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 			if err != nil {
-				c.logger.Warn("failed to update ServiceMonitor status", "key", key)
+				c.logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
 			}
 		default:
 			c.logger.Warn("unsupported resource type %T", r)
