@@ -265,12 +265,13 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
-func (r *ConfigurationResource[T]) condition() monitoringv1.ConfigResourceCondition {
+func (r *ConfigurationResource[T]) condition(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
 	condition := monitoringv1.ConfigResourceCondition{
 		Type:               monitoringv1.Accepted,
 		Status:             monitoringv1.ConditionTrue,
 		LastTransitionTime: metav1.Now(),
 		Reason:             r.reason,
+		ObservedGeneration: observedGeneration,
 	}
 
 	if r.err != nil {
@@ -278,39 +279,36 @@ func (r *ConfigurationResource[T]) condition() monitoringv1.ConfigResourceCondit
 		condition.Message = r.err.Error()
 	}
 
-	return condition
+	return []monitoringv1.ConfigResourceCondition{condition}
 }
 
 // AddServiceMonitorStatus add the latest status in serviceMonitors resources selected by the Prometheus or PrometheusAgent.
 func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[*monitoringv1.ServiceMonitor]) {
 	for key, res := range resources {
-		condition := res.condition()
-
-		binding := monitoringv1.WorkloadBinding{
-			Namespace:  p.GetNamespace(),
-			Name:       p.GetName(),
-			Resource:   c.gvr.Resource,
-			Group:      c.gvr.Group,
-			Conditions: []monitoringv1.ConfigResourceCondition{condition},
-		}
 
 		smon := res.resource
-		condition.ObservedGeneration = smon.GetGeneration()
+		conditions := res.condition(smon.Generation)
+
 		var found bool
 		for i := range smon.Status.Bindings {
 			binding := &smon.Status.Bindings[i]
 			if binding.Namespace == p.GetNamespace() &&
 				binding.Name == p.GetName() &&
 				binding.Resource == monitoringv1.PrometheusName {
-				binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
+				binding.Conditions = conditions
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
-			smon.Status.Bindings = append(smon.Status.Bindings, binding)
+			smon.Status.Bindings = append(smon.Status.Bindings, monitoringv1.WorkloadBinding{
+				Namespace:  p.GetNamespace(),
+				Name:       p.GetName(),
+				Resource:   c.gvr.Resource,
+				Group:      c.gvr.Group,
+				Conditions: conditions,
+			})
 		}
 		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 		if err != nil {
