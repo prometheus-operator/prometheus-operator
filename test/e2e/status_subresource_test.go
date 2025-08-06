@@ -86,5 +86,8 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	time.Sleep(10 * time.Second)
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Get(ctx, smon.Name, v1.GetOptions{})
 	require.NoError(t, err)
-	require.NotEmpty(t, sm.Status.Bindings)
+	require.Equal(t, 1, len(sm.Status.Bindings))
+	require.Equal(t, name, sm.Status.Bindings[0].Name)
+	require.Equal(t, ns, sm.Status.Bindings[0].Namespace)
+	require.Equal(t, true, sm.Status.Bindings[0].Conditions[0].Status)
 }
