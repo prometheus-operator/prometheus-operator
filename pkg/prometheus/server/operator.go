@@ -1042,7 +1042,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return
 	}
 
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, c.logger)
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
 	prompkg.AddServiceMonitorStatus(ctx, p, configResourceSyncer, resources.sMons)
 }
 
