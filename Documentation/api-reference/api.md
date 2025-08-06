@@ -5193,10 +5193,10 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>HostUsers supports the user space in Kubernetes.
-The UserNamespacesSupport feature gate must be enabled.
-More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
-It requires Kubernetes &gt;= 1.25</p>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </table>
@@ -19110,10 +19110,10 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>HostUsers supports the user space in Kubernetes.
-The UserNamespacesSupport feature gate must be enabled.
-More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a>
-It requires Kubernetes &gt;= 1.25</p>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </tbody>
