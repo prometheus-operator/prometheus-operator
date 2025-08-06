@@ -1032,20 +1032,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
+// updateConfigResourcesStatus updates the status of the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
 	if !c.configResourcesStatusEnabled {
-		return
-	}
-
-	if len(resources.sMons) == 0 {
 		return
 	}
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient)
 	for key, sm := range resources.sMons {
 		if err := prompkg.UpdateServiceMonitorStatus(ctx, p, configResourceSyncer, sm); err != nil {
-			logger.Warn("Failed to update serviceMonitor status", "error", err, "key", key)
+			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
 		}
 	}
 }

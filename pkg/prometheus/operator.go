@@ -280,7 +280,11 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 }
 
 // UpdateServiceMonitorStatus add the latest status in serviceMonitor selected by the Prometheus or PrometheusAgent.
-func UpdateServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
+func UpdateServiceMonitorStatus(
+	ctx context.Context,
+	p metav1.Object,
+	c *ConfigResourceSyncer,
+	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
 	smon := res.resource
 	conditions := res.conditions(smon.Generation)
 
@@ -289,7 +293,7 @@ func UpdateServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigR
 		binding := &smon.Status.Bindings[i]
 		if binding.Namespace == p.GetNamespace() &&
 			binding.Name == p.GetName() &&
-			binding.Resource == monitoringv1.PrometheusName {
+			binding.Resource == c.gvr.Resource {
 			binding.Conditions = conditions
 			found = true
 			break
