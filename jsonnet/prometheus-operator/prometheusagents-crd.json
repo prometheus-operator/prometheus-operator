@@ -5893,7 +5893,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "scrapeClassicHistograms": {
-                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v3.5.0.",
+                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\n\nNotice: `ScrapeClassicHistograms` is an alias for `AlwaysScrapeClassicHistograms`.\n\nIt requires Prometheus >= v3.5.0.",
                     "type": "boolean"
                   },
                   "scrapeConfigNamespaceSelector": {
