@@ -3942,7 +3942,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "hostUsers": {
-                    "description": "HostUsers supports the user space in Kubernetes.\nThe UserNamespacesSupport feature gate must be enabled.\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\nIt requires Kubernetes >= 1.25",
+                    "description": "HostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
                     "type": "boolean"
                   },
                   "image": {

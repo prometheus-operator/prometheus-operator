@@ -1163,7 +1163,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
-			HostUsers:          &hostUsers,
+			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
