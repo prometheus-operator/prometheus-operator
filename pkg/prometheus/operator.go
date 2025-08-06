@@ -56,14 +56,14 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
-type ConfigResourceSyncer[T TypedConfigurationResource] struct {
+type ConfigResourceSyncer struct {
 	gvr     schema.GroupVersionResource
 	mclient monitoringclient.Interface
 	logger  *slog.Logger
 }
 
-func NewConfigResourceSyncer[T TypedConfigurationResource](gvr schema.GroupVersionResource, mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer[T] {
-	return &ConfigResourceSyncer[T]{
+func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoringclient.Interface, logger *slog.Logger) *ConfigResourceSyncer {
+	return &ConfigResourceSyncer{
 		gvr:     gvr,
 		mclient: mclient,
 		logger:  logger,
@@ -267,7 +267,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 
 // AddStatus add the latest status in serviceMonitor, podMonitor, probes and scrapeConfig
 // resources selected by the Prometheus or PrometheusAgent.
-func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Object, resources ResourcesSelection[T]) error {
+func AddStatus[T TypedConfigurationResource](ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[T]) error {
 	for key, res := range resources {
 		condition := monitoringv1.ConfigResourceCondition{
 			Type:               monitoringv1.Accepted,
@@ -284,8 +284,8 @@ func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Objec
 		binding := monitoringv1.WorkloadBinding{
 			Namespace:  p.GetNamespace(),
 			Name:       p.GetName(),
-			Resource:   ru.gvr.Resource,
-			Group:      ru.gvr.Group,
+			Resource:   c.gvr.Resource,
+			Group:      c.gvr.Group,
 			Conditions: []monitoringv1.ConfigResourceCondition{condition},
 		}
 		switch r := any(res.resource).(type) {
@@ -307,9 +307,9 @@ func (ru *ConfigResourceSyncer[T]) AddStatus(ctx context.Context, p metav1.Objec
 				binding.Conditions = []monitoringv1.ConfigResourceCondition{condition}
 				r.Status.Bindings = append(r.Status.Bindings, binding)
 			}
-			_, err := ru.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+			_, err := c.mclient.MonitoringV1().ServiceMonitors(r.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(r), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 			if err != nil {
-				ru.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
+				c.logger.Debug("Failed to update serviceMonitor status", "error", err, "key", key)
 				return err
 			}
 		default:

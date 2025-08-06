@@ -1043,8 +1043,8 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return nil
 	}
 
-	smonconfigResourceSyncer := prompkg.NewConfigResourceSyncer[*monitoringv1.ServiceMonitor](monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
-	if err := smonconfigResourceSyncer.AddStatus(ctx, p, resources.sMons); err != nil {
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
+	if err := prompkg.AddStatus(ctx, p, configResourceSyncer, resources.sMons); err != nil {
 		return err
 	}
 
