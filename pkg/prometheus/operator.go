@@ -265,20 +265,26 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
+func (r *ConfigurationResource[T]) condition() monitoringv1.ConfigResourceCondition {
+	condition := monitoringv1.ConfigResourceCondition{
+		Type:               monitoringv1.Accepted,
+		Status:             monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Now(),
+		Reason:             r.reason,
+	}
+
+	if r.err != nil {
+			condition.Status = monitoringv1.ConditionFalse
+			condition.Message = r.err.Error()
+		}
+
+	return condition
+}
+
 // AddServiceMonitorStatus add the latest status in serviceMonitors resources selected by the Prometheus or PrometheusAgent.
 func AddServiceMonitorStatus(ctx context.Context, p metav1.Object, c *ConfigResourceSyncer, resources ResourcesSelection[*monitoringv1.ServiceMonitor]) {
 	for key, res := range resources {
-		condition := monitoringv1.ConfigResourceCondition{
-			Type:               monitoringv1.Accepted,
-			Status:             monitoringv1.ConditionTrue,
-			LastTransitionTime: metav1.Now(),
-			Reason:             res.reason,
-		}
-
-		if res.err != nil {
-			condition.Status = monitoringv1.ConditionFalse
-			condition.Message = res.err.Error()
-		}
+		condition := res.condition()
 
 		binding := monitoringv1.WorkloadBinding{
 			Namespace:  p.GetNamespace(),
