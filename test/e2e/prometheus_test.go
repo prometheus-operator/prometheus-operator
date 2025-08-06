@@ -1042,6 +1042,11 @@ func testPromStorageUpdate(t *testing.T) {
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+							Labels: map[string]string{
+								"test": "testPromStorageUpdate",
+							},
+						},
 						Spec: v1.PersistentVolumeClaimSpec{
 							AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 							Resources: v1.VolumeResourceRequirements{
@@ -1055,35 +1060,12 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(p.Name))
-		if err != nil {
-			return false, err
-		}
-
-		if len(pods.Items) != 1 {
-			return false, nil
-		}
-
-		for _, volume := range pods.Items[0].Spec.Volumes {
-			if volume.Name == "prometheus-"+p.Name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
-				return true, nil
-			}
-		}
-
-		return false, nil
-	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	err = framework.WaitForBoundPVC(context.Background(), ns, "test=testPromStorageUpdate", 1)
+	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
-
 	_, err = framework.PatchPrometheus(
 		context.Background(),
 		p.Name,
@@ -1092,6 +1074,11 @@ func testPromStorageUpdate(t *testing.T) {
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+							Labels: map[string]string{
+								"test": "testPromStorageUpdate",
+							},
+						},
 						Spec: v1.PersistentVolumeClaimSpec{
 							StorageClassName: ptr.To("unknown-storage-class"),
 							Resources: v1.VolumeResourceRequirements{
@@ -1105,9 +1092,7 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var loopError error
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
