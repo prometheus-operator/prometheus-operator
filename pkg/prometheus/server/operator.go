@@ -1027,6 +1027,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
+	fmt.Println("selected config resources:", resources)
 	c.updateConfigResourcesStatus(ctx, p, logger, *resources)
 
 	return nil
@@ -1035,13 +1036,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 // updateConfigResourcesStatus updates the status of the selected configuration resources (serviceMonitor, podMonitor, scrapeClass and podMonitor).
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
 	if !c.configResourcesStatusEnabled {
+		fmt.Println("config resources status is disabled, skipping update")
 		return
 	}
 
 	if len(resources.sMons) == 0 {
+		fmt.Println("no ServiceMonitors selected, skipping update")
 		return
 	}
 
+	fmt.Println("updating config resources status for Prometheus", p.Name)
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, logger)
 	prompkg.AddServiceMonitorStatus(ctx, p, configResourceSyncer, resources.sMons)
 }
