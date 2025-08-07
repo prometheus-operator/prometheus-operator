@@ -56,14 +56,16 @@ type StatusReporter struct {
 }
 
 type ConfigResourceSyncer struct {
-	gvr     schema.GroupVersionResource
-	mclient monitoringclient.Interface
+	gvr      schema.GroupVersionResource
+	mclient  monitoringclient.Interface
+	workload metav1.Object // Workload resource (Prometheus and PrometheusAgent) selecting the configuration resources.
 }
 
-func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoringclient.Interface) *ConfigResourceSyncer {
+func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoringclient.Interface, workload metav1.Object) *ConfigResourceSyncer {
 	return &ConfigResourceSyncer{
-		gvr:     gvr,
-		mclient: mclient,
+		gvr:      gvr,
+		mclient:  mclient,
+		workload: workload,
 	}
 }
 
@@ -265,7 +267,6 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 // UpdateServiceMonitorStatus updates the status binding of the serviceMonitor for the given workload.
 func UpdateServiceMonitorStatus(
 	ctx context.Context,
-	p metav1.Object,
 	c *ConfigResourceSyncer,
 	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
 	smon := res.resource
@@ -274,8 +275,8 @@ func UpdateServiceMonitorStatus(
 	var found bool
 	for i := range smon.Status.Bindings {
 		binding := &smon.Status.Bindings[i]
-		if binding.Namespace == p.GetNamespace() &&
-			binding.Name == p.GetName() &&
+		if binding.Namespace == c.workload.GetNamespace() &&
+			binding.Name == c.workload.GetName() &&
 			binding.Resource == c.gvr.Resource {
 			binding.Conditions = conditions
 			found = true
@@ -285,8 +286,8 @@ func UpdateServiceMonitorStatus(
 
 	if !found {
 		smon.Status.Bindings = append(smon.Status.Bindings, monitoringv1.WorkloadBinding{
-			Namespace:  p.GetNamespace(),
-			Name:       p.GetName(),
+			Namespace:  c.workload.GetNamespace(),
+			Name:       c.workload.GetName(),
 			Resource:   c.gvr.Resource,
 			Group:      c.gvr.Group,
 			Conditions: conditions,
