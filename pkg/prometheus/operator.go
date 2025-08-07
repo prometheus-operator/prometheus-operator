@@ -279,7 +279,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
-// UpdateServiceMonitorStatus add the latest status in serviceMonitor selected by the Prometheus or PrometheusAgent.
+// UpdateServiceMonitorStatus updates the status binding of the serviceMonitor for the given workload.
 func UpdateServiceMonitorStatus(
 	ctx context.Context,
 	p metav1.Object,
