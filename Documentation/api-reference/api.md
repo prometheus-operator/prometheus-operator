@@ -1201,6 +1201,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -1638,6 +1639,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -2990,8 +2992,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -4107,6 +4110,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -8809,8 +8813,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -11332,6 +11337,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -12418,6 +12424,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -12846,6 +12853,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -14529,8 +14537,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -17694,6 +17703,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -21837,8 +21847,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -22954,6 +22965,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -30302,8 +30314,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
@@ -32610,6 +32623,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
