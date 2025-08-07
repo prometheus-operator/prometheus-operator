@@ -988,7 +988,7 @@ type NativeHistogramConfig struct {
 	// Whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
 	//
-	// Notice: When Prometheus >= v3.0.0, `ScrapeClassicHistograms` is an alias for `AlwaysScrapeClassicHistograms`.
+	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
 	//
 	// +optional
 	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
