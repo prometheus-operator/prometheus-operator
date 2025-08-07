@@ -70,15 +70,14 @@ func makeStatefulSet(
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(name),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
+		operator.WithInputHashAnnotation(inputHash),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
-			prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
-			prompkg.PrometheusNameLabelName: objMeta.GetName(),
 			prompkg.PrometheusModeLabelName: prometheusMode,
 		}),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
 		operator.WithoutKubectlAnnotations(),

@@ -110,10 +110,11 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(prefixedName(am.Name)),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(am.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
+		operator.WithInputHashAnnotation(inputHash),
 		operator.WithLabels(am.GetLabels()),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(am),
 		operator.WithoutKubectlAnnotations(),

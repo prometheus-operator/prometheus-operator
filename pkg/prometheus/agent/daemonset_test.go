@@ -156,22 +156,27 @@ func TestDaemonSetLabelingAndAnnotations(t *testing.T) {
 	}
 
 	expectedDaemonSetLabels := map[string]string{
-		"testlabel":                   "testlabelvalue",
-		"operator.prometheus.io/name": "",
-		"operator.prometheus.io/mode": "agent",
-		"managed-by":                  "prometheus-operator",
+		"testlabel":                    "testlabelvalue",
+		"operator.prometheus.io/name":  "test",
+		"operator.prometheus.io/mode":  "agent",
+		"managed-by":                   "prometheus-operator",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "prometheus-agent",
 	}
 
 	expectedPodLabels := map[string]string{
 		"app.kubernetes.io/name":       "prometheus-agent",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   "",
-		"operator.prometheus.io/name":  "",
+		"app.kubernetes.io/instance":   "test",
+		"operator.prometheus.io/name":  "test",
 	}
 
 	dset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},

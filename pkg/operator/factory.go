@@ -105,6 +105,23 @@ func WithLabels(labels map[string]string) ObjectOption {
 	}
 }
 
+// WithSelectorLabels merges the labels from the selector with the existing
+// object's labels.
+// The selector's labels take precedence over the existing ones.
+func WithSelectorLabels(selector *metav1.LabelSelector) ObjectOption {
+	return func(o metav1.Object) {
+		if selector == nil {
+			return
+		}
+
+		l := Map{}
+		l = l.Merge(selector.MatchLabels)
+		l = l.Merge(o.GetLabels())
+
+		o.SetLabels(l)
+	}
+}
+
 // WithAnnotations merges the given annotations with the existing object's annotations.
 // The given annotations take precedence over the existing ones.
 func WithAnnotations(annotations map[string]string) ObjectOption {

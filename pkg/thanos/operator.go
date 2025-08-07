@@ -227,6 +227,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			o.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
+				// TODO(simonpasquier): use a more restrictive label selector
+				// selecting only ThanosRuler statefulsets (e.g.
+				// "app.kubernetes.io/name in (thanos-ruler)").
+				//
+				// We need to wait for a couple of releases after [1] to ensure
+				// that the expected labels have been propagated to the
+				// ThanosRuler statefulsets otherwise the informer won't select
+				// any object.
+				//
+				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
 				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
 			},
 		),
