@@ -67,23 +67,6 @@ func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoring
 	}
 }
 
-func (r *TypedConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
-	condition := monitoringv1.ConfigResourceCondition{
-		Type:               monitoringv1.Accepted,
-		Status:             monitoringv1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-		Reason:             r.reason,
-		ObservedGeneration: observedGeneration,
-	}
-
-	if r.err != nil {
-		condition.Status = monitoringv1.ConditionFalse
-		condition.Message = r.err.Error()
-	}
-
-	return []monitoringv1.ConfigResourceCondition{condition}
-}
-
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))

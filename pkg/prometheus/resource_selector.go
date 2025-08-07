@@ -75,6 +75,23 @@ type TypedConfigurationResource[T ConfigurationResource] struct {
 	reason   string // Reason for rejection; empty if accepted.
 }
 
+func (r *TypedConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+	condition := monitoringv1.ConfigResourceCondition{
+		Type:               monitoringv1.Accepted,
+		Status:             monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Now(),
+		Reason:             r.reason,
+		ObservedGeneration: observedGeneration,
+	}
+
+	if r.err != nil {
+		condition.Status = monitoringv1.ConditionFalse
+		condition.Message = r.err.Error()
+	}
+
+	return []monitoringv1.ConfigResourceCondition{condition}
+}
+
 // TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
 type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
 
