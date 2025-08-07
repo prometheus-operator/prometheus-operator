@@ -106,10 +106,10 @@ type ControllerOption func(*Operator)
 // selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes and scrapeConfig)
 // selected by Prometheus.
 type selectedConfigResources struct {
-	sMons         prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor]
-	pMons         prompkg.ResourcesSelection[*monitoringv1.PodMonitor]
-	bMons         prompkg.ResourcesSelection[*monitoringv1.Probe]
-	scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	sMons         prompkg.TypedResourcesSelection[*monitoringv1.ServiceMonitor]
+	pMons         prompkg.TypedResourcesSelection[*monitoringv1.PodMonitor]
+	bMons         prompkg.TypedResourcesSelection[*monitoringv1.Probe]
+	scrapeConfigs prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 }
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
@@ -1029,7 +1029,23 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
+	c.updateConfigResourcesStatus(ctx, p, logger, *resources)
+
 	return nil
+}
+
+// updateConfigResourcesStatus updates the status of the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
+	if !c.configResourcesStatusEnabled {
+		return
+	}
+
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
+	for key, sm := range resources.sMons {
+		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
+			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
+		}
+	}
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
@@ -1218,7 +1234,7 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 		return nil, fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
-	var scrapeConfigs prompkg.ResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	var scrapeConfigs prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {
