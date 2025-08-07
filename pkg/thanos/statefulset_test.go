@@ -749,6 +749,8 @@ func TestPodTemplateConfig(t *testing.T) {
 		{Name: "additional.arg", Value: "additional-arg-value"},
 	}
 
+	hostUsers := true
+
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
@@ -763,6 +765,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
+			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
@@ -775,6 +778,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
 	require.Equal(t, len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	require.Equal(t, hostUsers, *sset.Spec.Template.Spec.HostUsers)
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, imagePullPolicy, initContainer.ImagePullPolicy)
 	}

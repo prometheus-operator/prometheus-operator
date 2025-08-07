@@ -5226,6 +5226,21 @@ that this behaviour may break at any time without notice.</p>
 <p>It requires Thanos &gt;= 0.39.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -19221,6 +19236,21 @@ scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
 <p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
 <p>It requires Thanos &gt;= 0.39.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </tbody>

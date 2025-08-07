@@ -491,6 +491,17 @@ type ThanosRulerSpec struct {
 	// +listType:=set
 	// +optional
 	EnableFeatures []EnableFeature `json:"enableFeatures,omitempty"`
+
+	// HostUsers supports the user space in Kubernetes.
+	//
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	//
+	//
+	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+	// Starting Kubernetes 1.33, the feature is enabled by default.
+	//
+	// +optional
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 // ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.

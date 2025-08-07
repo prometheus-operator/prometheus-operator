@@ -88,6 +88,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	RemoteWrite                        []RemoteWriteSpecApplyConfiguration             `json:"remoteWrite,omitempty"`
 	TerminationGracePeriodSeconds      *int64                                          `json:"terminationGracePeriodSeconds,omitempty"`
 	EnableFeatures                     []monitoringv1.EnableFeature                    `json:"enableFeatures,omitempty"`
+	HostUsers                          *bool                                           `json:"hostUsers,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerSpec type for use with
@@ -656,5 +657,13 @@ func (b *ThanosRulerSpecApplyConfiguration) WithEnableFeatures(values ...monitor
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}
+	return b
+}
+
+// WithHostUsers sets the HostUsers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HostUsers field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithHostUsers(value bool) *ThanosRulerSpecApplyConfiguration {
+	b.HostUsers = &value
 	return b
 }
