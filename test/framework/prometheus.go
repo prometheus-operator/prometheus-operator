@@ -552,6 +552,27 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 	return current, nil
 }
 
+func (f *Framework) WaitForServiceMonitorStatus(ctx context.Context, sm *monitoringv1.ServiceMonitor, timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
+	var current *monitoringv1.ServiceMonitor
+	var getErr error
+	if err := f.WaitForConfigResourceStatusAvailable(
+		ctx,
+		func(ctx context.Context) (configResourceStatus, error) {
+			current, getErr = f.MonClientV1.ServiceMonitors(sm.Namespace).Get(ctx, sm.Name, metav1.GetOptions{})
+			if getErr != nil {
+				return configResourceStatus{}, getErr
+			}
+			return configResourceStatus{
+				bindings: current.Status.Bindings,
+			}, nil
+		},
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("serviceMonitor status %v/%v failed to become available: %w", sm.Namespace, sm.Name, err)
+	}
+	return current, nil
+}
+
 func listOptionsForPrometheus(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
