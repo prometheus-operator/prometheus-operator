@@ -803,6 +803,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
+	
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+
+	if c.rr.DeletionInProgress(p) {
+		resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+		if err != nil {
+			return err
+		}
+		c.updateConfigResourcesStatus(ctx, p, logger, *resources)
+	}
 
 	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
@@ -834,8 +844,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err != nil {
 		return err
 	}
-
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
