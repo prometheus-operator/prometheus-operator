@@ -803,7 +803,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
-	
+
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	if c.rr.DeletionInProgress(p) {
