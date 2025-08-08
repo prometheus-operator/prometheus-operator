@@ -1044,6 +1044,12 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 	for key, sm := range resources.sMons {
+		if c.rr.DeletionInProgress(p) {
+			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm); err != nil {
+				logger.Warn("Failed to remove ServiceMonitor status workload binding", "error", err, "key", key)
+			}
+			continue
+		}
 		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
 			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
 		}
