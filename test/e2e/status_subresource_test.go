@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -92,4 +94,18 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, p.Namespace, sm.Status.Bindings[0].Namespace)
 	require.Equal(t, monitoringv1.PrometheusName, sm.Status.Bindings[0].Resource)
 	require.Equal(t, monitoringv1.ConditionTrue, sm.Status.Bindings[0].Conditions[0].Status)
+
+	templateSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+		},
+		Data: map[string][]byte{
+			"username": []byte("dXNlcg=="),
+			"password": []byte("cGFzc3dvcmQ="),
+		},
+	}
+
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 }
