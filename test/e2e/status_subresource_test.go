@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,6 +80,14 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.NoError(t, err, "failed to create Prometheus")
 	smon := framework.MakeBasicServiceMonitor(name)
 
-	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, 1*time.Minute)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(sm.Status.Bindings))
+	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
+	require.Equal(t, p.Name, sm.Status.Bindings[0].Name)
+	require.Equal(t, p.Namespace, sm.Status.Bindings[0].Namespace)
+	require.Equal(t, "prometheuses", sm.Status.Bindings[0].Resource)
 }
