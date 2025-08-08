@@ -59,7 +59,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		defaultTestConfig,
 		cg,
 		nil,
-		"",
+		"abc",
 		0,
 		&operator.ShardedSecret{})
 }
@@ -73,33 +73,40 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"kubectl.kubernetes.io/last-applied-configuration": "something",
 		"kubectl.kubernetes.io/something":                  "something",
 	}
+
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedStatefulSetAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "abc",
 		"testannotation":                 "testannotationvalue",
 	}
 
 	expectedStatefulSetLabels := map[string]string{
 		"testlabel":                    "testlabelvalue",
-		"operator.prometheus.io/name":  "",
+		"operator.prometheus.io/name":  "test",
 		"operator.prometheus.io/shard": "0",
 		"operator.prometheus.io/mode":  "server",
 		"managed-by":                   "prometheus-operator",
+		"prometheus":                   "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "prometheus",
 	}
 
 	expectedPodLabels := map[string]string{
-		"prometheus":                   "",
+		"prometheus":                   "test",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   "",
-		"operator.prometheus.io/name":  "",
+		"app.kubernetes.io/instance":   "test",
+		"operator.prometheus.io/name":  "test",
 		"operator.prometheus.io/shard": "0",
 	}
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},
@@ -2925,13 +2932,13 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "test",
-						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						"prometheus":                    "test",
-						prompkg.ShardLabelName:          "0",
-						prompkg.PrometheusNameLabelName: "test",
-						prompkg.PrometheusK8sLabelName:  "prometheus",
+						"app":                            "prometheus",
+						"app.kubernetes.io/instance":     "test",
+						"app.kubernetes.io/managed-by":   "prometheus-operator",
+						"prometheus":                     "test",
+						prompkg.ShardLabelName:           "0",
+						prompkg.PrometheusNameLabelName:  "test",
+						operator.ApplicationNameLabelKey: "prometheus",
 					},
 				},
 			},
@@ -2963,12 +2970,12 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "test",
-						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						"prometheus":                    "test",
-						prompkg.PrometheusNameLabelName: "test",
-						prompkg.PrometheusK8sLabelName:  "prometheus",
+						"app":                            "prometheus",
+						"app.kubernetes.io/instance":     "test",
+						"app.kubernetes.io/managed-by":   "prometheus-operator",
+						"prometheus":                     "test",
+						prompkg.PrometheusNameLabelName:  "test",
+						operator.ApplicationNameLabelKey: "prometheus",
 					},
 				},
 			},

@@ -68,8 +68,6 @@ var (
 	// PrometheusModeLabelName is the statefulset's label identifying whether the owning resource is a Prometheus or PrometheusAgent.
 	PrometheusModeLabelName = "operator.prometheus.io/mode"
 
-	PrometheusK8sLabelName = "app.kubernetes.io/name"
-
 	ProbeTimeoutSeconds int32 = 3
 	LabelPrometheusName       = "prometheus-name"
 )

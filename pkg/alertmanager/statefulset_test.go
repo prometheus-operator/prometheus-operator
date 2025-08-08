@@ -54,29 +54,35 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedStatefulSetAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "abc",
 		"testannotation":                 "testannotationvalue",
 	}
 
 	expectedStatefulSetLabels := map[string]string{
-		"testlabel":  "testlabelvalue",
-		"managed-by": "prometheus-operator",
+		"testlabel":                    "testlabelvalue",
+		"managed-by":                   "prometheus-operator",
+		"alertmanager":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "alertmanager",
 	}
 
 	expectedPodLabels := map[string]string{
-		"alertmanager":                 "",
+		"alertmanager":                 "test",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultAlertmanagerVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   "",
+		"app.kubernetes.io/instance":   "test",
 	}
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "abc", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 

@@ -75,10 +75,11 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(prefixedName(tr.Name)),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(tr.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
+		operator.WithInputHashAnnotation(inputHash),
 		operator.WithLabels(tr.GetLabels()),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(tr),
 		operator.WithoutKubectlAnnotations(),
@@ -428,7 +429,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	finalLabels := config.Labels.Merge(podLabels)
 	maps.Copy(finalLabels, selectorLabels)
 
-	podAnnotations["kubectl.kubernetes.io/default-container"] = "thanos-ruler"
+	podAnnotations[operator.DefaultContainerAnnotationKey] = "thanos-ruler"
 
 	storageVolName := volumeName(tr.Name)
 	if tr.Spec.Storage != nil {
@@ -552,7 +553,7 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": thanosRulerLabel,
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
 			},
 		},
 	}

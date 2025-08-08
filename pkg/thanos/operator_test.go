@@ -89,10 +89,3 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 		})
 	}
 }
-
-func TestListOptions(t *testing.T) {
-	for i := 0; i < 1000; i++ {
-		o := ListOptions("test")
-		require.True(t, o.LabelSelector == "app.kubernetes.io/name=thanos-ruler,thanos-ruler=test" || o.LabelSelector == "thanos-ruler=test,app.kubernetes.io/name=thanos-ruler")
-	}
-}

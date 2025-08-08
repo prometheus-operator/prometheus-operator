@@ -1,6 +1,7 @@
 ## 0.84.1 / 2025-08-06
 
 * [CHANGE/BUGFIX] Add the `--watch-referenced-objects-in-all-namespaces` CLI argument. When enabled, the operator watches for secrets and configmaps in both workload and configuration resources. It ensures that reconciliation happens when a referenced secret/configmap is updated. #7615
+* [ENHANCEMENT] Add well-known Kubernetes labels to workload objects managed by the operator (StatefulSet and DaemonSet). #7786
 
 ## 0.84.1 / 2025-08-06
 

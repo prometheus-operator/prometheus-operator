@@ -27,7 +27,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -49,8 +48,9 @@ import (
 )
 
 const (
-	resyncPeriod   = 5 * time.Minute
-	controllerName = "prometheusagent-controller"
+	resyncPeriod              = 5 * time.Minute
+	controllerName            = "prometheusagent-controller"
+	applicationNameLabelValue = "prometheus-agent"
 )
 
 // Operator manages life cycle of Prometheus agent deployments and
@@ -746,7 +746,9 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	} else {
 		svc := prompkg.BuildStatefulSetService(
 			governingServiceName,
-			map[string]string{"app.kubernetes.io/name": "prometheus-agent"},
+			map[string]string{
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
+			},
 			p,
 			c.config,
 		)
@@ -814,14 +816,14 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
+		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 			logger.Debug("new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
 
 		logger.Debug("updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationName],
+			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -1210,22 +1212,12 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	}
 }
 
-func ListOptions(name string) metav1.ListOptions {
-	return metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app.kubernetes.io/name":       "prometheus-agent",
-			"app.kubernetes.io/managed-by": "prometheus-operator",
-			"app.kubernetes.io/instance":   name,
-		})).String(),
-	}
-}
-
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name":        "prometheus-agent",
-		"app.kubernetes.io/managed-by":  "prometheus-operator",
-		"app.kubernetes.io/instance":    name,
-		prompkg.PrometheusNameLabelName: name,
+		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
+		operator.ManagedByLabelKey:           operator.ManagedByLabelValue,
+		operator.ApplicationInstanceLabelKey: name,
+		prompkg.PrometheusNameLabelName:      name,
 	}
 }
 
