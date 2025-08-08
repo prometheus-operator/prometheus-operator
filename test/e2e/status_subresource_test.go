@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -89,5 +90,6 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
 	require.Equal(t, p.Name, sm.Status.Bindings[0].Name)
 	require.Equal(t, p.Namespace, sm.Status.Bindings[0].Namespace)
-	require.Equal(t, "prometheuses", sm.Status.Bindings[0].Resource)
+	require.Equal(t, monitoringv1.PrometheusName, sm.Status.Bindings[0].Resource)
+	require.Equal(t, monitoringv1.ConditionTrue, sm.Status.Bindings[0].Conditions[0].Status)
 }
