@@ -101,11 +101,30 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 			Namespace: ns,
 		},
 		Data: map[string][]byte{
-			"username": []byte("dXNlcg=="),
+			"usernames": []byte("dXNlcg=="),
 			"password": []byte("cGFzc3dvcmQ="),
 		},
 	}
 
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
+
+	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+            Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, smon, v1.UpdateOptions{})
+	require.NoError(t, err)
+	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, 1*time.Minute)
+	require.NoError(t, err) 
+	require.Equal(t, 1, len(sm.Status.Bindings))
+	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
+	require.Equal(t, p.Name, sm.Status.Bindings[0].Name)
+	require.Equal(t, p.Namespace, sm.Status.Bindings[0].Namespace)
+	require.Equal(t, monitoringv1.PrometheusName, sm.Status.Bindings[0].Resource)
+	require.Equal(t, monitoringv1.ConditionFalse, sm.Status.Bindings[0].Conditions[0].Status)
 }
