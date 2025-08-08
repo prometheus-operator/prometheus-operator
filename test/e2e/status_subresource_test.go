@@ -97,7 +97,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 
 	templateSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name: name,
 		},
 		Data: map[string][]byte{
 			"usernames": []byte("dXNlcg=="),
@@ -108,8 +108,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	smon = framework.MakeBasicServiceMonitor(name)
-	smon.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
 		Username: corev1.SecretKeySelector{
 			Key: "username",
 			LocalObjectReference: corev1.LocalObjectReference{
@@ -117,7 +116,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 			},
 		},
 	}
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, smon, v1.UpdateOptions{})
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
 	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, 1*time.Minute)
 	require.NoError(t, err)
