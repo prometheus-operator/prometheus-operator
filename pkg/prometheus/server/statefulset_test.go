@@ -1566,7 +1566,7 @@ func TestTSDBAllowOverlappingBlocks(t *testing.T) {
 }
 
 func TestTSDBAllowOverlappingCompaction(t *testing.T) {
-	expectedArg := "--storage.tsdb.allow-overlapping-compaction"
+	expectedArg := "--no-storage.tsdb.allow-overlapping-compaction"
 	tests := []struct {
 		name                    string
 		version                 string
