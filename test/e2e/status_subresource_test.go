@@ -102,7 +102,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 		},
 		Data: map[string][]byte{
 			"usernames": []byte("dXNlcg=="),
-			"password": []byte("cGFzc3dvcmQ="),
+			"password":  []byte("cGFzc3dvcmQ="),
 		},
 	}
 
@@ -111,7 +111,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 
 	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
 		Username: corev1.SecretKeySelector{
-            Key: "username",
+			Key: "username",
 			LocalObjectReference: corev1.LocalObjectReference{
 				Name: name,
 			},
@@ -120,7 +120,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, smon, v1.UpdateOptions{})
 	require.NoError(t, err)
 	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, 1*time.Minute)
-	require.NoError(t, err) 
+	require.NoError(t, err)
 	require.Equal(t, 1, len(sm.Status.Bindings))
 	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
 	require.Equal(t, p.Name, sm.Status.Bindings[0].Name)
