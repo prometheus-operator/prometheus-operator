@@ -244,7 +244,7 @@ generate-tls-certs:
 	(cd scripts && GOOS=$(OS) GOARCH=$(GOARCH) go run -v ./certs/.)
 
 .PHONY: generate-docs
-generate-docs: $(shell find Documentation -type f)
+generate-docs: gen-v1-docs gen-v1alpha1-docs gen-v1beta1-docs \ $(shell find Documentation -type f)
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
@@ -281,7 +281,7 @@ example/admission-webhook: scripts/generate/vendor scripts/generate/admission-we
 example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
-FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
+FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/api-reference/v1.md Documentation/api-reference/v1alpha1.md Documentation/api-reference/v1beta1.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
 
 Documentation/platform/operator.md: operator
 	$(MDOX_BINARY) fmt $@
@@ -291,6 +291,18 @@ Documentation/getting-started/compatibility.md: pkg/operator/defaults.go
 
 Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
 	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/api.md"
+
+.PHONY: gen-v1-docs
+gen-v1-docs: $(API_DOC_GEN_BINARY)
+	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/v1.md"
+
+.PHONY: gen-v1alpha1-docs
+gen-v1alpha1-docs: $(API_DOC_GEN_BINARY)
+	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/v1alpha1.md"
+
+.PHONY: gen-v1beta1-docs
+gen-v1beta1-docs: $(API_DOC_GEN_BINARY)
+	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/v1beta1.md"
 
 ##############
 # Formatting #
