@@ -405,7 +405,7 @@ bool
 </td>
 <td>
 <p>If set to true all actions on the underlying managed objects are not
-goint to be performed, except for delete actions.</p>
+going to be performed, except for delete actions.</p>
 </td>
 </tr>
 <tr>
@@ -762,15 +762,14 @@ process incoming alerts.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -904,6 +903,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </table>
@@ -1187,6 +1201,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -1624,6 +1639,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -1693,6 +1709,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ProbeParam">
+[]ProbeParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The list of HTTP query parameters for the scrape.
+Please note that the <code>.spec.module</code> field takes precedence over the <code>module</code> parameter from this list when both are defined.
+The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
 </table>
@@ -2960,24 +2992,23 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -3337,6 +3368,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -4064,6 +4110,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -4789,6 +4836,20 @@ Duration
 </tr>
 <tr>
 <td>
+<code>resendDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ruleOutageTolerance</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -4828,6 +4889,22 @@ int32
 <em>(Optional)</em>
 <p>How many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleGracePeriod</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
+It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -5009,15 +5086,14 @@ Maps to the &lsquo;&ndash;alert.query-url&rsquo; CLI arg.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -5133,6 +5209,40 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
+<p>It requires Thanos &gt;= 0.39.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </table>
@@ -6351,7 +6461,7 @@ bool
 </td>
 <td>
 <p>If set to true all actions on the underlying managed objects are not
-goint to be performed, except for delete actions.</p>
+going to be performed, except for delete actions.</p>
 </td>
 </tr>
 <tr>
@@ -6708,15 +6818,14 @@ process incoming alerts.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -6850,6 +6959,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </tbody>
@@ -8689,24 +8813,23 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -9066,6 +9189,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </tbody>
@@ -9905,7 +10043,7 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 <h3 id="monitoring.coreos.com/v1.EnableFeature">EnableFeature
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 </div>
@@ -11199,6 +11337,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -11451,6 +11590,34 @@ string
 <tbody>
 <tr>
 <td>
+<code>promoteAllResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Promote all resource attributes to metric labels except the ones defined in <code>ignoreResourceAttributes</code>.</p>
+<p>Cannot be true when <code>promoteResourceAttributes</code> is defined.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ignoreResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of OpenTelemetry resource attributes to ignore when <code>promoteAllResourceAttributes</code> is true.</p>
+<p>It requires <code>promoteAllResourceAttributes</code> to be true.
+It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>promoteResourceAttributes</code><br/>
 <em>
 []string
@@ -11458,7 +11625,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
+<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+Cannot be defined when <code>promoteAllResourceAttributes</code> is true.</p>
 </td>
 </tr>
 <tr>
@@ -12256,6 +12424,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -12357,6 +12526,46 @@ ByteSize
 <p>When defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ProbeParam">ProbeParam
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
+</p>
+<div>
+<p>ProbeParam defines specification of extra parameters for a Probe.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The parameter name</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>The parameter values</p>
 </td>
 </tr>
 </tbody>
@@ -12644,6 +12853,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -12713,6 +12923,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ProbeParam">
+[]ProbeParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The list of HTTP query parameters for the scrape.
+Please note that the <code>.spec.module</code> field takes precedence over the <code>module</code> parameter from this list when both are defined.
+The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
 </tbody>
@@ -14311,24 +14537,23 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -14688,6 +14913,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 <tr>
@@ -17463,6 +17703,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -18613,6 +18854,20 @@ Duration
 </tr>
 <tr>
 <td>
+<code>resendDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ruleOutageTolerance</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -18652,6 +18907,22 @@ int32
 <em>(Optional)</em>
 <p>How many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleGracePeriod</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
+It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -18833,15 +19104,14 @@ Maps to the &lsquo;&ndash;alert.query-url&rsquo; CLI arg.</p>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)
-This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -18957,6 +19227,40 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
+<p>Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>For more information see <a href="https://thanos.io/tip/components/rule.md/">https://thanos.io/tip/components/rule.md/</a></p>
+<p>It requires Thanos &gt;= 0.39.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </tbody>
@@ -21543,24 +21847,23 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -21920,6 +22223,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </table>
@@ -22647,6 +22965,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>
@@ -29995,24 +30314,23 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
-It requires Prometheus &gt;= v3.5.0.</p>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
+<p>It requires Prometheus &gt;= v3.5.0.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>minReadySeconds</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Minimum number of seconds for which a newly created Pod should be ready
-without any of its container crashing for it to be considered available.
-Defaults to 0 (pod will be considered available as soon as it is ready)</p>
-<p>This is an alpha field from kubernetes 1.22 until 1.24 which requires
-enabling the StatefulSetMinReadySeconds feature gate.</p>
+without any of its container crashing for it to be considered available.</p>
+<p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
 </tr>
 <tr>
@@ -30372,6 +30690,21 @@ int64
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 600 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostUsers supports the user space in Kubernetes.</p>
+<p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
+<p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
+Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
 </tbody>
@@ -32290,6 +32623,7 @@ bool
 <em>(Optional)</em>
 <p>Whether to scrape a classic histogram that is also exposed as a native histogram.
 It requires Prometheus &gt;= v2.45.0.</p>
+<p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 </td>
 </tr>
 <tr>

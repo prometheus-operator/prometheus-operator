@@ -54,29 +54,35 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedStatefulSetAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "abc",
 		"testannotation":                 "testannotationvalue",
 	}
 
 	expectedStatefulSetLabels := map[string]string{
-		"testlabel":  "testlabelvalue",
-		"managed-by": "prometheus-operator",
+		"testlabel":                    "testlabelvalue",
+		"managed-by":                   "prometheus-operator",
+		"alertmanager":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "alertmanager",
 	}
 
 	expectedPodLabels := map[string]string{
-		"alertmanager":                 "",
+		"alertmanager":                 "test",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultAlertmanagerVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   "",
+		"app.kubernetes.io/instance":   "test",
 	}
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "abc", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -1090,21 +1096,19 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
-	replicas := int32(3)
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = &replicas
+	a.Spec.Replicas = ptr.To(int32(3))
 
 	// assert defaults to zero if nil
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(0), statefulSet.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
+	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	var expect uint32 = 5
-	a.Spec.MinReadySeconds = &expect
+	a.Spec.MinReadySeconds = ptr.To(int32(5))
 	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(expect), statefulSet.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
 }
 
 func TestPodTemplateConfig(t *testing.T) {
@@ -1149,6 +1153,7 @@ func TestPodTemplateConfig(t *testing.T) {
 		},
 	}
 	imagePullPolicy := v1.PullAlways
+	hostUsers := true
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -1162,6 +1167,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
+			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
@@ -1174,6 +1180,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, sset.Spec.Template.Spec.ServiceAccountName, serviceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
 	require.Equal(t, len(sset.Spec.Template.Spec.HostAliases), len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets, "expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	require.Equal(t, *sset.Spec.Template.Spec.HostUsers, hostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)
 
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, initContainer.ImagePullPolicy, imagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)

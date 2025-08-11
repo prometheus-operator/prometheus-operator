@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.84.0"
+      "operator.prometheus.io/version": "0.84.1"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -2717,6 +2717,10 @@
                     "description": "Use the host's network namespace if true.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/ ).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set\nto a different value).",
                     "type": "boolean"
                   },
+                  "hostUsers": {
+                    "description": "HostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
+                    "type": "boolean"
+                  },
                   "ignoreNamespaceSelectors": {
                     "description": "When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor\nand Probe objects will be ignored. They will only discover targets\nwithin the namespace of the PodMonitor, ServiceMonitor and Probe\nobject.",
                     "type": "boolean"
@@ -4071,8 +4075,9 @@
                     "type": "integer"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created Pod should be ready\nwithout any of its container crashing for it to be considered available.\nDefaults to 0 (pod will be considered available as soon as it is ready)\n\nThis is an alpha field from kubernetes 1.22 until 1.24 which requires\nenabling the StatefulSetMinReadySeconds feature gate.",
+                    "description": "Minimum number of seconds for which a newly created Pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
                     "format": "int32",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "mode": {
@@ -4115,12 +4120,26 @@
                         "description": "Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.\nIt requires Prometheus >= v3.4.0.",
                         "type": "boolean"
                       },
+                      "ignoreResourceAttributes": {
+                        "description": "List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.\n\nIt requires `promoteAllResourceAttributes` to be true.\nIt requires Prometheus >= v3.5.0.",
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
+                      },
                       "keepIdentifyingResourceAttributes": {
                         "description": "Enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",
                         "type": "boolean"
                       },
+                      "promoteAllResourceAttributes": {
+                        "description": "Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.\n\nCannot be true when `promoteResourceAttributes` is defined.\nIt requires Prometheus >= v3.5.0.",
+                        "type": "boolean"
+                      },
                       "promoteResourceAttributes": {
-                        "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
+                        "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.\nCannot be defined when `promoteAllResourceAttributes` is true.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -5874,7 +5893,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "scrapeClassicHistograms": {
-                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v3.5.0.",
+                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.\n\nIt requires Prometheus >= v3.5.0.",
                     "type": "boolean"
                   },
                   "scrapeConfigNamespaceSelector": {
@@ -8921,6 +8940,10 @@
                   {
                     "message": "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet",
                     "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.persistentVolumeClaimRetentionPolicy))"
+                  },
+                  {
+                    "message": "scrapeConfigSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigSelector))"
                   }
                 ]
               },

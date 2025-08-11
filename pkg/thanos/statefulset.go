@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -74,10 +75,11 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(prefixedName(tr.Name)),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(tr.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
+		operator.WithInputHashAnnotation(inputHash),
 		operator.WithLabels(tr.GetLabels()),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(tr),
 		operator.WithoutKubectlAnnotations(),
@@ -173,6 +175,22 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	if version.GTE(semver.MustParse("0.30.0")) && tr.Spec.RuleOutageTolerance != nil && len(*tr.Spec.RuleOutageTolerance) > 0 {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "for-outage-tolerance", Value: string(*tr.Spec.RuleOutageTolerance)})
+	}
+
+	if version.GTE(semver.MustParse("0.30.0")) && tr.Spec.RuleGracePeriod != nil && len(*tr.Spec.RuleGracePeriod) > 0 {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "for-grace-period", Value: string(*tr.Spec.RuleGracePeriod)})
+	}
+
+	if tr.Spec.ResendDelay != nil && len(*tr.Spec.ResendDelay) > 0 {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "resend-delay", Value: string(*tr.Spec.ResendDelay)})
+	}
+
+	if version.GTE(semver.MustParse("0.39.0")) && len(tr.Spec.EnableFeatures) > 0 {
+		efs := make([]string, len(tr.Spec.EnableFeatures))
+		for i := range tr.Spec.EnableFeatures {
+			efs[i] = string(tr.Spec.EnableFeatures[i])
+		}
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
 	}
 
 	trEnvVars := []v1.EnvVar{
@@ -411,7 +429,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	finalLabels := config.Labels.Merge(podLabels)
 	maps.Copy(finalLabels, selectorLabels)
 
-	podAnnotations["kubectl.kubernetes.io/default-container"] = "thanos-ruler"
+	podAnnotations[operator.DefaultContainerAnnotationKey] = "thanos-ruler"
 
 	storageVolName := volumeName(tr.Name)
 	if tr.Spec.Storage != nil {
@@ -469,15 +487,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	var minReadySeconds int32
-	if tr.Spec.MinReadySeconds != nil {
-		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
-	}
-
 	spec := appsv1.StatefulSetSpec{
 		ServiceName:     ptr.Deref(tr.Spec.ServiceName, governingServiceName),
 		Replicas:        tr.Spec.Replicas,
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(tr.Spec.MinReadySeconds, 0),
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,
@@ -506,6 +519,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(tr.Spec.HostAliases),
 				EnableServiceLinks:            tr.Spec.EnableServiceLinks,
+				HostUsers:                     tr.Spec.HostUsers,
 			},
 		},
 	}
@@ -539,7 +553,7 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": thanosRulerLabel,
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
 			},
 		},
 	}

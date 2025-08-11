@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.84.0"
+      "operator.prometheus.io/version": "0.84.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -11655,7 +11655,7 @@
                     "type": "string"
                   },
                   "scrapeClassicHistograms": {
-                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
+                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.",
                     "type": "boolean"
                   },
                   "scrapeInterval": {

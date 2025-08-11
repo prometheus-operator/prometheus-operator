@@ -9,7 +9,7 @@ webhooks:
         namespace: default
         path: /admission-prometheusrules/validate
     failurePolicy: Fail
-    name: prometheusrulemutate.monitoring.coreos.com
+    name: prometheusrulevalidate.monitoring.coreos.com
     namespaceSelector:
       matchExpressions:
       - key: excludeFromWebhook

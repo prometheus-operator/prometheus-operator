@@ -28,6 +28,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -37,7 +38,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 )
 
 const (
@@ -423,7 +423,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "thanos-query",
+				operator.ApplicationNameLabelKey: "thanos-query",
 			},
 		},
 	}
@@ -552,6 +552,15 @@ func (f *Framework) WaitForPrometheusReady(ctx context.Context, p *monitoringv1.
 	return current, nil
 }
 
+func listOptionsForPrometheus(name string) metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+			operator.ApplicationNameLabelKey: "prometheus",
+			"prometheus":                     name,
+		})).String(),
+	}
+}
+
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ctx context.Context, ns, name string) error {
 	_, err := f.MonClientV1.Prometheuses(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -567,7 +576,7 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(ctx context.Context, ns, na
 		ns,
 		f.DefaultTimeout,
 		0,
-		prometheus.ListOptions(name),
+		listOptionsForPrometheus(name),
 	); err != nil {
 		return fmt.Errorf("waiting for Prometheus custom resource (%s) to vanish timed out: %w", name, err)
 	}
@@ -576,15 +585,22 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(ctx context.Context, ns, na
 }
 
 func (f *Framework) WaitForPrometheusRunImageAndReady(ctx context.Context, ns string, p *monitoringv1.Prometheus) error {
-	if err := f.WaitForPodsRunImage(ctx, ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
+	if err := f.WaitForPodsRunImage(
+		ctx,
+		ns,
+		int(*p.Spec.Replicas),
+		promImage(p.Spec.Version),
+		listOptionsForPrometheus(p.Name),
+	); err != nil {
 		return err
 	}
+
 	return f.WaitForPodsReady(
 		ctx,
 		ns,
 		f.DefaultTimeout,
 		int(*p.Spec.Replicas),
-		prometheus.ListOptions(p.Name),
+		listOptionsForPrometheus(p.Name),
 	)
 }
 
@@ -645,7 +661,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 	var loopErr error
 
 	err := wait.PollUntilContextTimeout(ctx, time.Second, 5*f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(prometheusName))
+		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(ctx, listOptionsForPrometheus(prometheusName))
 		if loopErr != nil {
 			return false, loopErr
 		}

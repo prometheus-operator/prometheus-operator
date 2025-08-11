@@ -44,28 +44,36 @@ var (
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	labels := map[string]string{
-		"testlabel":  "testlabelvalue",
-		"managed-by": "prometheus-operator",
+		"testlabel":                    "testlabelvalue",
+		"managed-by":                   "prometheus-operator",
+		"thanos-ruler":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "thanos-ruler",
 	}
+
 	annotations := map[string]string{
 		"testannotation": "testannotationvalue",
 		"kubectl.kubernetes.io/last-applied-configuration": "something",
 		"kubectl.kubernetes.io/something":                  "something",
 	}
+
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "abc",
 		"testannotation":                 "testannotationvalue",
 	}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},
 		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "abc", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -749,6 +757,8 @@ func TestPodTemplateConfig(t *testing.T) {
 		{Name: "additional.arg", Value: "additional-arg-value"},
 	}
 
+	hostUsers := true
+
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
@@ -763,6 +773,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
+			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
@@ -775,6 +786,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
 	require.Equal(t, len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	require.Equal(t, hostUsers, *sset.Spec.Template.Spec.HostUsers)
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, imagePullPolicy, initContainer.ImagePullPolicy)
 	}
@@ -836,11 +848,10 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	var expect uint32 = 5
-	tr.Spec.MinReadySeconds = &expect
+	tr.Spec.MinReadySeconds = ptr.To(int32(5))
 	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(expect), statefulSet.MinReadySeconds)
+	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
 }
 
 func TestStatefulSetServiceName(t *testing.T) {
@@ -1217,6 +1228,169 @@ func TestRuleOutageTolerance(t *testing.T) {
 			}
 
 			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}
+
+func TestRuleGracePeriod(t *testing.T) {
+	ruleGracePeriod := monitoringv1.Duration("10m")
+
+	tt := []struct {
+		scenario        string
+		version         string
+		ruleGracePeriod *monitoringv1.Duration
+		shouldHaveArg   bool
+	}{{
+		scenario:        "version >= 0.30.0 with rule query offset",
+		version:         "0.30.0",
+		ruleGracePeriod: &ruleGracePeriod,
+		shouldHaveArg:   true,
+	}, {
+		scenario:        "version < 0.30.0 with rule query offset",
+		version:         "0.29.0",
+		ruleGracePeriod: &ruleGracePeriod,
+		shouldHaveArg:   false,
+	}, {
+		scenario:        "version >= 0.30.0 without rule query offset",
+		version:         "0.30.0",
+		ruleGracePeriod: nil,
+		shouldHaveArg:   false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:         &version,
+					RuleGracePeriod: ts.ruleGracePeriod,
+					QueryEndpoints:  emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--for-grace-period=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}
+
+func TestRuleResendDelay(t *testing.T) {
+	tt := []struct {
+		scenario      string
+		resendDelay   *monitoringv1.Duration
+		shouldHaveArg bool
+	}{{
+		scenario:      "resend delay defined",
+		resendDelay:   ptr.To(monitoringv1.Duration("1h")),
+		shouldHaveArg: true,
+	}, {
+		scenario:      "resend-delay is nil",
+		resendDelay:   nil,
+		shouldHaveArg: false,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					ResendDelay:    ts.resendDelay,
+					QueryEndpoints: emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--resend-delay=") {
+					found = true
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+		})
+	}
+}
+
+func TestEnableFeatures(t *testing.T) {
+	tt := []struct {
+		scenario       string
+		version        string
+		enableFeatures []monitoringv1.EnableFeature
+		shouldHaveArg  bool
+		expectedValue  string
+	}{{
+		scenario:       "version >= 0.39.0 with single feature",
+		version:        "0.39.0",
+		enableFeatures: []monitoringv1.EnableFeature{"promql-experimental-functions"},
+		shouldHaveArg:  true,
+		expectedValue:  "promql-experimental-functions",
+	}, {
+		scenario:       "version < 0.39.0 with features",
+		version:        "0.38.0",
+		enableFeatures: []monitoringv1.EnableFeature{"promql-experimental-functions"},
+		shouldHaveArg:  false,
+		expectedValue:  "",
+	}, {
+		scenario:       "version >= 0.39.0 with empty features",
+		version:        "0.39.0",
+		enableFeatures: []monitoringv1.EnableFeature{},
+		shouldHaveArg:  false,
+		expectedValue:  "",
+	}, {
+		scenario:       "version >= 0.39.0 with nil features",
+		version:        "0.39.0",
+		enableFeatures: nil,
+		shouldHaveArg:  false,
+		expectedValue:  "",
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			version := ts.version
+
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:        &version,
+					EnableFeatures: ts.enableFeatures,
+					QueryEndpoints: emptyQueryEndpoints,
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+
+			found := false
+			var actualValue string
+			for _, flag := range trArgs {
+				if strings.HasPrefix(flag, "--enable-feature=") {
+					found = true
+					actualValue = strings.TrimPrefix(flag, "--enable-feature=")
+					break
+				}
+			}
+
+			require.Equal(t, ts.shouldHaveArg, found)
+			if ts.shouldHaveArg {
+				require.Equal(t, ts.expectedValue, actualValue)
+			}
 		})
 	}
 }

@@ -72,6 +72,8 @@ Usage of ./operator:
     	Label selector to filter nodes.
   -kubelet-service string
     	Service/Endpoints object to write kubelets into in format "namespace/name"
+  -kubelet-sync-period duration
+    	How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m). (default 3m0s)
   -labels value
     	Labels to be add to all resources created by the operator
   -localhost string
@@ -83,7 +85,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.84.0")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.84.1")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
@@ -106,6 +108,11 @@ Usage of ./operator:
     	- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.
   -version
     	Prints current version.
+  -watch-referenced-objects-in-all-namespaces
+    	When true the operator watches for configmaps and secrets in both workload and configuration resource namespaces.
+    	When false (default), the operator will only watch for secrets and configmaps in:
+    	* Workload namespaces for Prometheus and PrometheusAgent resources.
+    	* Configuration namespaces for Alertmanager resources.
   -web.cert-file string
     	Certficate file to be used for the web server. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string

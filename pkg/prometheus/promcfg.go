@@ -1178,11 +1178,11 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 
 func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]string) {
 	podAnnotations := map[string]string{
-		"kubectl.kubernetes.io/default-container": "prometheus",
+		operator.DefaultContainerAnnotationKey: "prometheus",
 	}
 
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
+		operator.ApplicationVersionLabelKey: cg.version.String(),
 	}
 
 	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata
@@ -1570,10 +1570,21 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
 
+	var paramsMapSlice yaml.MapSlice
 	if m.Spec.Module != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
-			{Key: "module", Value: []string{m.Spec.Module}},
-		}})
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: "module", Value: []string{m.Spec.Module}})
+	}
+
+	for _, p := range m.Spec.Params {
+		if m.Spec.Module != "" && p.Name == "module" {
+			continue
+		}
+
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: p.Name, Value: p.Values})
+	}
+
+	if len(paramsMapSlice) != 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: paramsMapSlice})
 	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -4769,6 +4780,13 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
 	}
 
+	if cg.version.GTE(semver.MustParse("3.5.0")) {
+		err := otlpConfig.Validate()
+		if err != nil {
+			return cfg, err
+		}
+	}
+
 	otlp := yaml.MapSlice{}
 
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {
@@ -4793,6 +4811,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.4.0").AppendMapItem(otlp,
 			"convert_histograms_to_nhcb",
 			otlpConfig.ConvertHistogramsToNHCB)
+	}
+
+	if otlpConfig.PromoteAllResourceAttributes != nil {
+		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
+			"promote_all_resource_attributes",
+			otlpConfig.PromoteAllResourceAttributes)
+	}
+
+	if len(otlpConfig.IgnoreResourceAttributes) > 0 {
+		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
+			"ignore_resource_attributes",
+			otlpConfig.IgnoreResourceAttributes)
 	}
 
 	if len(otlp) == 0 {

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -10805,7 +10805,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -15178,6 +15178,15 @@ spec:
                 x-kubernetes-list-map-keys:
                 - ip
                 x-kubernetes-list-type: map
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+
+                  The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+                  Starting Kubernetes 1.33, the feature is enabled by default.
+                type: boolean
               image:
                 description: |-
                   Image if specified has precedence over baseImage, tag and sha
@@ -16700,9 +16709,10 @@ spec:
                 description: |-
                   Minimum number of seconds for which a newly created pod should be ready
                   without any of its container crashing for it to be considered available.
-                  Defaults to 0 (pod will be considered available as soon as it is ready)
-                  This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.
+
+                  If unset, pods will be considered available as soon as they are ready.
                 format: int32
+                minimum: 0
                 type: integer
               nodeSelector:
                 additionalProperties:
@@ -16712,7 +16722,7 @@ spec:
               paused:
                 description: |-
                   If set to true all actions on the underlying managed objects are not
-                  goint to be performed, except for delete actions.
+                  going to be performed, except for delete actions.
                 type: boolean
               persistentVolumeClaimRetentionPolicy:
                 description: |-
@@ -20325,7 +20335,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -21478,6 +21488,8 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
+
+                  Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
                 type: boolean
               scrapeProtocols:
                 description: |-
@@ -21585,7 +21597,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -22237,6 +22249,34 @@ spec:
                 - clientSecret
                 - tokenUrl
                 type: object
+              params:
+                description: |-
+                  The list of HTTP query parameters for the scrape.
+                  Please note that the `.spec.module` field takes precedence over the `module` parameter from this list when both are defined.
+                  The module name must be added using Module under ProbeSpec.
+                items:
+                  description: ProbeParam defines specification of extra parameters
+                    for a Probe.
+                  properties:
+                    name:
+                      description: The parameter name
+                      minLength: 1
+                      type: string
+                    values:
+                      description: The parameter values
+                      items:
+                        minLength: 1
+                        type: string
+                      minItems: 1
+                      type: array
+                  required:
+                  - name
+                  type: object
+                minItems: 1
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               prober:
                 description: |-
                   Specification for the prober to use for probing targets.
@@ -22328,6 +22368,8 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
+
+                  Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
                 type: boolean
               scrapeProtocols:
                 description: |-
@@ -22814,7 +22856,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -26030,6 +26072,15 @@ spec:
                   `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
                   to a different value).
                 type: boolean
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+
+                  The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+                  Starting Kubernetes 1.33, the feature is enabled by default.
+                type: boolean
               ignoreNamespaceSelectors:
                 description: |-
                   When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
@@ -27596,11 +27647,10 @@ spec:
                 description: |-
                   Minimum number of seconds for which a newly created Pod should be ready
                   without any of its container crashing for it to be considered available.
-                  Defaults to 0 (pod will be considered available as soon as it is ready)
 
-                  This is an alpha field from kubernetes 1.22 until 1.24 which requires
-                  enabling the StatefulSetMinReadySeconds feature gate.
+                  If unset, pods will be considered available as soon as they are ready.
                 format: int32
+                minimum: 0
                 type: integer
               mode:
                 description: |-
@@ -27648,6 +27698,18 @@ spec:
                       Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
                       It requires Prometheus >= v3.4.0.
                     type: boolean
+                  ignoreResourceAttributes:
+                    description: |-
+                      List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+
+                      It requires `promoteAllResourceAttributes` to be true.
+                      It requires Prometheus >= v3.5.0.
+                    items:
+                      minLength: 1
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
                   keepIdentifyingResourceAttributes:
                     description: |-
                       Enables adding `service.name`, `service.namespace` and `service.instance.id`
@@ -27655,9 +27717,17 @@ spec:
 
                       It requires Prometheus >= v3.1.0.
                     type: boolean
+                  promoteAllResourceAttributes:
+                    description: |-
+                      Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+
+                      Cannot be true when `promoteResourceAttributes` is defined.
+                      It requires Prometheus >= v3.5.0.
+                    type: boolean
                   promoteResourceAttributes:
-                    description: List of OpenTelemetry Attributes that should be promoted
-                      to metric labels, defaults to none.
+                    description: |-
+                      List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+                      Cannot be defined when `promoteAllResourceAttributes` is true.
                     items:
                       minLength: 1
                       type: string
@@ -29687,6 +29757,9 @@ spec:
               scrapeClassicHistograms:
                 description: |-
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
+
+                  Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+
                   It requires Prometheus >= v3.5.0.
                 type: boolean
               scrapeConfigNamespaceSelector:
@@ -33620,6 +33693,8 @@ spec:
             - message: persistentVolumeClaimRetentionPolicy cannot be set when mode
                 is DaemonSet
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.persistentVolumeClaimRetentionPolicy))'
+            - message: scrapeConfigSelector cannot be set when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.scrapeConfigSelector))'
           status:
             description: |-
               Most recent observed status of the Prometheus cluster. Read-only.
@@ -33772,7 +33847,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -37768,6 +37843,15 @@ spec:
                   `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
                   to a different value).
                 type: boolean
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+
+                  The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+                  Starting Kubernetes 1.33, the feature is enabled by default.
+                type: boolean
               ignoreNamespaceSelectors:
                 description: |-
                   When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
@@ -39334,11 +39418,10 @@ spec:
                 description: |-
                   Minimum number of seconds for which a newly created Pod should be ready
                   without any of its container crashing for it to be considered available.
-                  Defaults to 0 (pod will be considered available as soon as it is ready)
 
-                  This is an alpha field from kubernetes 1.22 until 1.24 which requires
-                  enabling the StatefulSetMinReadySeconds feature gate.
+                  If unset, pods will be considered available as soon as they are ready.
                 format: int32
+                minimum: 0
                 type: integer
               nameEscapingScheme:
                 description: |-
@@ -39377,6 +39460,18 @@ spec:
                       Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
                       It requires Prometheus >= v3.4.0.
                     type: boolean
+                  ignoreResourceAttributes:
+                    description: |-
+                      List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+
+                      It requires `promoteAllResourceAttributes` to be true.
+                      It requires Prometheus >= v3.5.0.
+                    items:
+                      minLength: 1
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
                   keepIdentifyingResourceAttributes:
                     description: |-
                       Enables adding `service.name`, `service.namespace` and `service.instance.id`
@@ -39384,9 +39479,17 @@ spec:
 
                       It requires Prometheus >= v3.1.0.
                     type: boolean
+                  promoteAllResourceAttributes:
+                    description: |-
+                      Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+
+                      Cannot be true when `promoteResourceAttributes` is defined.
+                      It requires Prometheus >= v3.5.0.
+                    type: boolean
                   promoteResourceAttributes:
-                    description: List of OpenTelemetry Attributes that should be promoted
-                      to metric labels, defaults to none.
+                    description: |-
+                      List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+                      Cannot be defined when `promoteAllResourceAttributes` is true.
                     items:
                       minLength: 1
                       type: string
@@ -42354,6 +42457,9 @@ spec:
               scrapeClassicHistograms:
                 description: |-
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
+
+                  Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+
                   It requires Prometheus >= v3.5.0.
                 type: boolean
               scrapeConfigNamespaceSelector:
@@ -46985,7 +47091,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -47145,7 +47251,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -59440,6 +59546,8 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
+
+                  Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
                 type: boolean
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
@@ -59691,7 +59799,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -60858,6 +60966,8 @@ spec:
                 description: |-
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
+
+                  Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
                 type: boolean
               scrapeProtocols:
                 description: |-
@@ -61068,7 +61178,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    operator.prometheus.io/version: 0.84.0
+    operator.prometheus.io/version: 0.84.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -63670,6 +63780,22 @@ spec:
                 - Default
                 - None
                 type: string
+              enableFeatures:
+                description: |-
+                  Enable access to Thanos Ruler feature flags. By default, no features are enabled.
+
+                  Enabling features which are disabled by default is entirely outside the
+                  scope of what the maintainers will support and by doing so, you accept
+                  that this behaviour may break at any time without notice.
+
+                  For more information see https://thanos.io/tip/components/rule.md/
+
+                  It requires Thanos >= 0.39.0.
+                items:
+                  minLength: 1
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
               enableServiceLinks:
                 description: Indicates whether information about services should be
                   injected into pod's environment variables
@@ -63929,6 +64055,15 @@ spec:
                 x-kubernetes-list-map-keys:
                 - ip
                 x-kubernetes-list-type: map
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+
+                  The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+                  Starting Kubernetes 1.33, the feature is enabled by default.
+                type: boolean
               image:
                 description: Thanos container image URL.
                 type: string
@@ -65434,9 +65569,10 @@ spec:
                 description: |-
                   Minimum number of seconds for which a newly created pod should be ready
                   without any of its container crashing for it to be considered available.
-                  Defaults to 0 (pod will be considered available as soon as it is ready)
-                  This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.
+
+                  If unset, pods will be considered available as soon as they are ready.
                 format: int32
+                minimum: 0
                 type: integer
               nodeSelector:
                 additionalProperties:
@@ -66704,6 +66840,11 @@ spec:
                 description: Number of thanos ruler instances to deploy.
                 format: int32
                 type: integer
+              resendDelay:
+                description: Minimum amount of time to wait before resending an alert
+                  to Alertmanager.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               resources:
                 description: |-
                   Resources defines the resource requirements for single Pods.
@@ -66787,6 +66928,13 @@ spec:
                 format: int32
                 minimum: 1
                 type: integer
+              ruleGracePeriod:
+                description: |-
+                  Minimum duration between alert and restored "for" state.
+                  This is maintained only for alerts with configured "for" time greater than grace period.
+                  It requires Thanos >= v0.30.0.
+                pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               ruleNamespaceSelector:
                 description: |-
                   Namespaces to be selected for Rules discovery. If unspecified, only
@@ -70356,7 +70504,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -70373,7 +70521,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -70482,7 +70630,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -70498,19 +70646,19 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.84.0
+        app.kubernetes.io/version: 0.84.1
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.84.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.84.1
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.84.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.84.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -70544,7 +70692,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator
   namespace: default
 ---
@@ -70554,7 +70702,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.84.0
+    app.kubernetes.io/version: 0.84.1
   name: prometheus-operator
   namespace: default
 spec:

@@ -106,6 +106,114 @@ const (
 	controllerIDAnnotation = "operator.prometheus.io/controller-id"
 )
 
+type workQueueMetricsProvider struct {
+	depth                          *prometheus.GaugeVec
+	addsTotal                      *prometheus.CounterVec
+	latency                        *prometheus.HistogramVec
+	workDuration                   *prometheus.HistogramVec
+	unfinishedWorkSeconds          *prometheus.GaugeVec
+	longestRunningProcessorSeconds *prometheus.GaugeVec
+	retriesTotal                   *prometheus.CounterVec
+}
+
+var _ = workqueue.MetricsProvider(&workQueueMetricsProvider{})
+
+func newWorkQueueMetricsProvider(reg prometheus.Registerer) *workQueueMetricsProvider {
+	mp := &workQueueMetricsProvider{
+		depth: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_workqueue_depth",
+				Help: "Depth of the queue",
+			},
+			[]string{"name"},
+		),
+		addsTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "prometheus_operator_workqueue_adds_total",
+				Help: "Total number of additions to the queue",
+			},
+			[]string{"name"},
+		),
+		latency: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "prometheus_operator_workqueue_latency_seconds",
+				Help:    "Histogram of latency for the queue",
+				Buckets: []float64{.1, .5, 1, 5, 10},
+			},
+			[]string{"name"},
+		),
+		workDuration: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "prometheus_operator_workqueue_work_duration_seconds",
+				Help:    "Histogram of work duration for the queue",
+				Buckets: []float64{.1, .5, 1, 5, 10},
+			},
+			[]string{"name"},
+		),
+		unfinishedWorkSeconds: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_workqueue_unfinished_work_seconds",
+				Help: "How many seconds has been spent by processing work which is not yet finished. A growing number indicates a stuck thread.",
+			},
+			[]string{"name"},
+		),
+		longestRunningProcessorSeconds: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_workqueue_longest_running_processor_seconds",
+				Help: "How many seconds has the longest running (unfinished) processor spent.",
+			},
+			[]string{"name"},
+		),
+		retriesTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "prometheus_operator_workqueue_retries_total",
+				Help: "Total number of retries",
+			},
+			[]string{"name"},
+		),
+	}
+
+	reg.MustRegister(
+		mp.depth,
+		mp.addsTotal,
+		mp.latency,
+		mp.workDuration,
+		mp.unfinishedWorkSeconds,
+		mp.longestRunningProcessorSeconds,
+		mp.retriesTotal,
+	)
+
+	return mp
+}
+
+func (mp *workQueueMetricsProvider) NewDepthMetric(name string) workqueue.GaugeMetric {
+	return mp.depth.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewAddsMetric(name string) workqueue.CounterMetric {
+	return mp.addsTotal.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewLatencyMetric(name string) workqueue.HistogramMetric {
+	return mp.latency.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewWorkDurationMetric(name string) workqueue.HistogramMetric {
+	return mp.workDuration.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
+	return mp.unfinishedWorkSeconds.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewLongestRunningProcessorSecondsMetric(name string) workqueue.SettableGaugeMetric {
+	return mp.longestRunningProcessorSeconds.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewRetriesMetric(name string) workqueue.CounterMetric {
+	return mp.retriesTotal.WithLabelValues(name)
+}
+
 // NewResourceReconciler returns a reconciler for the "kind" resource.
 func NewResourceReconciler(
 	l *slog.Logger,
@@ -143,6 +251,7 @@ func NewResourceReconciler(
 	})
 
 	reg.MustRegister(reconcileTotal, reconcileErrors, reconcileDuration, statusTotal, statusErrors)
+	mp := newWorkQueueMetricsProvider(reg)
 
 	qname := strings.ToLower(kind)
 
@@ -167,8 +276,20 @@ func NewResourceReconciler(
 		metrics:           metrics,
 		controllerID:      controllerID,
 
-		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname}),
-		statusQ:    workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname + "_status"}),
+		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](
+			workqueue.DefaultTypedControllerRateLimiter[string](),
+			workqueue.TypedRateLimitingQueueConfig[string]{
+				Name:            qname,
+				MetricsProvider: mp,
+			},
+		),
+		statusQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](
+			workqueue.DefaultTypedControllerRateLimiter[string](),
+			workqueue.TypedRateLimitingQueueConfig[string]{
+				Name:            qname + "_status",
+				MetricsProvider: mp,
+			},
+		),
 	}
 }
 

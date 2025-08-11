@@ -74,7 +74,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AlertmanagerConfigSelector           *metav1.LabelSelectorApplyConfiguration                 `json:"alertmanagerConfigSelector,omitempty"`
 	AlertmanagerConfigNamespaceSelector  *metav1.LabelSelectorApplyConfiguration                 `json:"alertmanagerConfigNamespaceSelector,omitempty"`
 	AlertmanagerConfigMatcherStrategy    *AlertmanagerConfigMatcherStrategyApplyConfiguration    `json:"alertmanagerConfigMatcherStrategy,omitempty"`
-	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
+	MinReadySeconds                      *int32                                                  `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
 	Limits                               *AlertmanagerLimitsSpecApplyConfiguration               `json:"limits,omitempty"`
@@ -84,6 +84,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
 	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
+	HostUsers                            *bool                                                   `json:"hostUsers,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -505,7 +506,7 @@ func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfigMatcherStrate
 // WithMinReadySeconds sets the MinReadySeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinReadySeconds field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithMinReadySeconds(value uint32) *AlertmanagerSpecApplyConfiguration {
+func (b *AlertmanagerSpecApplyConfiguration) WithMinReadySeconds(value int32) *AlertmanagerSpecApplyConfiguration {
 	b.MinReadySeconds = &value
 	return b
 }
@@ -591,5 +592,13 @@ func (b *AlertmanagerSpecApplyConfiguration) WithAdditionalArgs(values ...*Argum
 // If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *AlertmanagerSpecApplyConfiguration {
 	b.TerminationGracePeriodSeconds = &value
+	return b
+}
+
+// WithHostUsers sets the HostUsers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HostUsers field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithHostUsers(value bool) *AlertmanagerSpecApplyConfiguration {
+	b.HostUsers = &value
 	return b
 }
