@@ -380,7 +380,7 @@ type CommonPrometheusFields struct {
 	// Volumes allows the configuration of additional volumes on the output
 	// StatefulSet definition. Volumes specified will be appended to other
 	// volumes that are generated as a result of StorageSpec objects.
-	Volumes []v1.Volume `json:"volumes,omitempty"`
+	Volumes []EmbeddedVolume `json:"volumes,omitempty"`
 	// VolumeMounts allows the configuration of additional VolumeMounts.
 	//
 	// VolumeMounts will be appended to other VolumeMounts in the 'prometheus'

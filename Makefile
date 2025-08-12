@@ -19,7 +19,7 @@ TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//")
 
-CRD_OPTIONS ?= "crd:crdVersions=v1,generateEmbeddedObjectMeta=true"
+CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 KIND_CONTEXT ?= e2e
 

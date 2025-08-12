@@ -6304,32 +6304,6 @@
                             "properties": {
                               "metadata": {
                                 "description": "May contain labels and annotations that will be copied into the PVC\nwhen creating it. No other fields are allowed and will be rejected during\nvalidation.",
-                                "properties": {
-                                  "annotations": {
-                                    "additionalProperties": {
-                                      "type": "string"
-                                    },
-                                    "type": "object"
-                                  },
-                                  "finalizers": {
-                                    "items": {
-                                      "type": "string"
-                                    },
-                                    "type": "array"
-                                  },
-                                  "labels": {
-                                    "additionalProperties": {
-                                      "type": "string"
-                                    },
-                                    "type": "object"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "namespace": {
-                                    "type": "string"
-                                  }
-                                },
                                 "type": "object"
                               },
                               "spec": {
@@ -7264,7 +7238,7 @@
                   "volumes": {
                     "description": "Volumes allows the configuration of additional volumes on the output\nStatefulSet definition. Volumes specified will be appended to other\nvolumes that are generated as a result of StorageSpec objects.",
                     "items": {
-                      "description": "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
+                      "description": "EmbeddedVolume is an embedded version of k8s.io/api/core/v1.Volume",
                       "properties": {
                         "awsElasticBlockStore": {
                           "description": "awsElasticBlockStore represents an AWS Disk resource that is attached to a\nkubelet's host machine and then exposed to the pod.\nDeprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree\nawsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
@@ -7636,24 +7610,18 @@
                                       "additionalProperties": {
                                         "type": "string"
                                       },
+                                      "description": "Annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
                                       "type": "object"
-                                    },
-                                    "finalizers": {
-                                      "items": {
-                                        "type": "string"
-                                      },
-                                      "type": "array"
                                     },
                                     "labels": {
                                       "additionalProperties": {
                                         "type": "string"
                                       },
+                                      "description": "Map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
                                       "type": "object"
                                     },
                                     "name": {
-                                      "type": "string"
-                                    },
-                                    "namespace": {
+                                      "description": "Name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
                                       "type": "string"
                                     }
                                   },
