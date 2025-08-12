@@ -29,6 +29,7 @@ type OTLPConfigApplyConfiguration struct {
 	TranslationStrategy               *monitoringv1.TranslationStrategyOption `json:"translationStrategy,omitempty"`
 	KeepIdentifyingResourceAttributes *bool                                   `json:"keepIdentifyingResourceAttributes,omitempty"`
 	ConvertHistogramsToNHCB           *bool                                   `json:"convertHistogramsToNHCB,omitempty"`
+	PromoteScopeMetadata              *bool                                   `json:"promoteScopeMetadata,omitempty"`
 }
 
 // OTLPConfigApplyConfiguration constructs a declarative configuration of the OTLPConfig type for use with
@@ -86,5 +87,13 @@ func (b *OTLPConfigApplyConfiguration) WithKeepIdentifyingResourceAttributes(val
 // If called multiple times, the ConvertHistogramsToNHCB field is set to the value of the last call.
 func (b *OTLPConfigApplyConfiguration) WithConvertHistogramsToNHCB(value bool) *OTLPConfigApplyConfiguration {
 	b.ConvertHistogramsToNHCB = &value
+	return b
+}
+
+// WithPromoteScopeMetadata sets the PromoteScopeMetadata field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PromoteScopeMetadata field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithPromoteScopeMetadata(value bool) *OTLPConfigApplyConfiguration {
+	b.PromoteScopeMetadata = &value
 	return b
 }
