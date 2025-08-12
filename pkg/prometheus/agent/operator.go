@@ -1207,5 +1207,13 @@ func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 		return fmt.Errorf("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
 	}
 
+	if p.Spec.ProbeSelector != nil {
+		return fmt.Errorf("probeSelector cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.ScrapeConfigSelector != nil {
+		return fmt.Errorf("scrapeConfigSelector cannot be set when mode is DaemonSet")
+	}
+
 	return nil
 }

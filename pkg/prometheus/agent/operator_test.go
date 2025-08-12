@@ -90,6 +90,34 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			expectedError: ptr.To("persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet"),
 		},
 		{
+			name: "invalid: configuring probeSelector in the daemonset mode",
+			spec: monitoringv1alpha1.PrometheusAgentSpec{
+				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"probe": "test",
+						},
+					},
+				},
+			},
+			expectedError: ptr.To("probeSelector cannot be set when mode is DaemonSet"),
+		},
+		{
+			name: "invalid: configuring scrapeConfigSelector in the daemonset mode",
+			spec: monitoringv1alpha1.PrometheusAgentSpec{
+				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ScrapeConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"scrape": "test",
+						},
+					},
+				},
+			},
+			expectedError: ptr.To("scrapeConfigSelector cannot be set when mode is DaemonSet"),
+		},
+		{
 			name: "valid daemonset configuration",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
