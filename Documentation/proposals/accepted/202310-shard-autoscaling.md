@@ -1,10 +1,20 @@
-# Shard Autoscaling
+---
+weight: 506
+toc: true
+title: Shard Autoscaling
+menu:
+    docs:
+        parent: proposals
+lead: ""
+images: []
+draft: false
+---
 
 * Owners:
   * [Arthur Sens](https://github.com/ArthurSens)
   * [Nicolas Takashi](https://github.com/nicolastakashi)
 * Status:
-  * `Implemented`
+  * `Accepted`
 * Related Tickets:
   * [#4927](https://github.com/prometheus-operator/prometheus-operator/issues/4727)
   * [#4946](https://github.com/prometheus-operator/prometheus-operator/issues/4946)

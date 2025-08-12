@@ -172,7 +172,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 		promRuleSpec.Groups[i].PartialResponseStrategy = ""
 
 		// Empty durations need to be translated to nil to be omitted from the
-		// YAML ouptut otherwise the generated configuration will not be valid.
+		// YAML output otherwise the generated configuration will not be valid.
 		if promRuleSpec.Groups[i].Interval != nil && *promRuleSpec.Groups[i].Interval == "" {
 			promRuleSpec.Groups[i].Interval = nil
 		}

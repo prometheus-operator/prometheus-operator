@@ -80,6 +80,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ConfigResourceCondition"):
 		return &monitoringv1.ConfigResourceConditionApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ConfigResourceStatus"):
+		return &monitoringv1.ConfigResourceStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
@@ -136,6 +138,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.PodMonitorSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Probe"):
 		return &monitoringv1.ProbeApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ProbeParam"):
+		return &monitoringv1.ProbeParamApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProberSpec"):
 		return &monitoringv1.ProberSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProbeSpec"):
@@ -198,8 +202,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ServiceMonitorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitorSpec"):
 		return &monitoringv1.ServiceMonitorSpecApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("ServiceMonitorStatus"):
-		return &monitoringv1.ServiceMonitorStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardRetentionPolicy"):
 		return &monitoringv1.ShardRetentionPolicyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardStatus"):

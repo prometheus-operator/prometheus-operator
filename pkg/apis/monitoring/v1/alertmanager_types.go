@@ -170,7 +170,7 @@ type AlertmanagerSpec struct {
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// If set to true all actions on the underlying managed objects are not
-	// goint to be performed, except for delete actions.
+	// going to be performed, except for delete actions.
 	Paused bool `json:"paused,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
@@ -266,10 +266,12 @@ type AlertmanagerSpec struct {
 
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing for it to be considered available.
-	// Defaults to 0 (pod will be considered available as soon as it is ready)
-	// This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.
+	//
+	// If unset, pods will be considered available as soon as they are ready.
+	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 	// Pods' hostAliases configuration
 	// +listType=map
 	// +listMapKey=ip
@@ -321,6 +323,17 @@ type AlertmanagerSpec struct {
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+
+	// HostUsers supports the user space in Kubernetes.
+	//
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	//
+	//
+	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+	// Starting Kubernetes 1.33, the feature is enabled by default.
+	//
+	// +optional
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {

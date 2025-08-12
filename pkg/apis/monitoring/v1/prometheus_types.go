@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"fmt"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -717,6 +718,9 @@ type CommonPrometheusFields struct {
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
 	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	//
+	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+	//
 	// It requires Prometheus >= v3.5.0.
 	//
 	// +optional
@@ -724,13 +728,12 @@ type CommonPrometheusFields struct {
 
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
-	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	//
-	// This is an alpha field from kubernetes 1.22 until 1.24 which requires
-	// enabling the StatefulSetMinReadySeconds feature gate.
+	// If unset, pods will be considered available as soon as they are ready.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 
 	// Optional list of hosts and IPs that will be injected into the Pod's
 	// hosts file if specified.
@@ -925,6 +928,17 @@ type CommonPrometheusFields struct {
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+
+	// HostUsers supports the user space in Kubernetes.
+	//
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	//
+	//
+	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+	// Starting Kubernetes 1.33, the feature is enabled by default.
+	//
+	// +optional
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 // Specifies the validation scheme for metric and label names.
@@ -2350,7 +2364,25 @@ const (
 //
 // +k8s:openapi-gen=true
 type OTLPConfig struct {
+	// Promote all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+	//
+	// Cannot be true when `promoteResourceAttributes` is defined.
+	// It requires Prometheus >= v3.5.0.
+	// +optional
+	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"`
+
+	// List of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+	//
+	// It requires `promoteAllResourceAttributes` to be true.
+	// It requires Prometheus >= v3.5.0.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
+
 	// List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+	// Cannot be defined when `promoteAllResourceAttributes` is true.
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
@@ -2375,4 +2407,21 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.4.0.
 	// +optional
 	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
+}
+
+// Validate semantically validates the given OTLPConfig section.
+func (c *OTLPConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.PromoteResourceAttributes) > 0 && c.PromoteAllResourceAttributes != nil && *c.PromoteAllResourceAttributes {
+		return fmt.Errorf("'promoteAllResourceAttributes' cannot be set to 'true' simultaneously with 'promoteResourceAttributes'")
+	}
+
+	if len(c.IgnoreResourceAttributes) > 0 && (c.PromoteAllResourceAttributes == nil || !*c.PromoteAllResourceAttributes) {
+		return fmt.Errorf("'ignoreResourceAttributes' can only be set when 'promoteAllResourceAttributes' is true")
+	}
+
+	return nil
 }

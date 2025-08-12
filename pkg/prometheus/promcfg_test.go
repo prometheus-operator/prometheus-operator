@@ -5886,6 +5886,52 @@ func TestProbeSpecConfig(t *testing.T) {
 				Module: "http_2xx",
 			},
 		},
+		{
+			name:   "module_config_with_params",
+			golden: "ProbeSpecConfig_module_config_with_params.golden",
+			pbSpec: monitoringv1.ProbeSpec{
+				Module: "http_2xx",
+				Params: []monitoringv1.ProbeParam{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+				},
+			},
+		},
+		{
+			name:   "module_config_with_params_skip_module",
+			golden: "ProbeSpecConfig_module_config_with_params_skip_module.golden",
+			pbSpec: monitoringv1.ProbeSpec{
+				Module: "http_2xx",
+				Params: []monitoringv1.ProbeParam{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+					{
+						Name:   "module",
+						Values: []string{"tcp_connect"},
+					},
+				},
+			},
+		},
+		{
+			name:   "module_config_with_params_define_module_in_param",
+			golden: "ProbeSpecConfig_module_config_with_params_define_module_in_param.golden",
+			pbSpec: monitoringv1.ProbeSpec{
+				Params: []monitoringv1.ProbeParam{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+					{
+						Name:   "module",
+						Values: []string{"tcp_connect"},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pbs := map[string]*monitoringv1.Probe{
@@ -9728,6 +9774,56 @@ func TestOTLPConfig(t *testing.T) {
 				ConvertHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
+		},
+		{
+			name:    "Config IgnoreResourceAttributes and PromoteAllResourceAttributes true",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				IgnoreResourceAttributes:     []string{"aa", "bb", "cc"},
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_ignore_resource_attributes_and_promote_all_resource_attributes.golden",
+		},
+		{
+			name:    "Config IgnoreResourceAttributes with old prometheus version",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				IgnoreResourceAttributes: []string{"aa", "bb", "cc"},
+			},
+			golden: "OTLPConfig_Config_ignore_resource_attributes_wrong_prom.golden",
+		},
+		{
+			name:    "Config IgnoreResourceAttributes with correct prometheus version but missing PromoteAllResourceAttributes ",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				IgnoreResourceAttributes: []string{"aa", "bb", "cc"},
+			},
+			expectedErr: true,
+		},
+		{
+			name:    "Config PromoteAllResourceAttributes with correct prometheus version",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_all_resource_attributes.golden",
+		},
+		{
+			name:    "Config PromoteAllResourceAttributes and PromoteResourceAttributes",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes:    []string{"aa", "bb", "cc"},
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			expectedErr: true,
+		},
+		{
+			name:    "Config PromoteAllResourceAttributes with old prometheus version",
+			version: "v3.4.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteAllResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
 		},
 	}
 	for _, tc := range testCases {

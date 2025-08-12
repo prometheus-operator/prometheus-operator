@@ -59,13 +59,29 @@ const (
 )
 
 var (
-	ShardLabelName                = "operator.prometheus.io/shard"
-	PrometheusNameLabelName       = "operator.prometheus.io/name"
-	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
-	PrometheusK8sLabelName        = "app.kubernetes.io/name"
-	ProbeTimeoutSeconds     int32 = 3
-	LabelPrometheusName           = "prometheus-name"
+	// ShardLabelName is the statefulset's label identifying the Prometheus/PrometheusAgent resource's shard.
+	ShardLabelName = "operator.prometheus.io/shard"
+
+	// PrometheusNameLabelName is the statefulset's label identifying the Prometheus/PrometheusAgent resource.
+	PrometheusNameLabelName = "operator.prometheus.io/name"
+
+	// PrometheusModeLabelName is the statefulset's label identifying whether the owning resource is a Prometheus or PrometheusAgent.
+	PrometheusModeLabelName = "operator.prometheus.io/mode"
+
+	ProbeTimeoutSeconds int32 = 3
+	LabelPrometheusName       = "prometheus-name"
 )
+
+// LabelSelectorForStatefulSets returns a label selector which selects statefulsets deployed with the server or agent mode.
+func LabelSelectorForStatefulSets(mode string) string {
+	return fmt.Sprintf(
+		"%s,%s,%s,%s in (%s)",
+		operator.ManagedByOperatorLabelSelector(),
+		ShardLabelName,
+		PrometheusNameLabelName,
+		PrometheusModeLabelName, mode,
+	)
+}
 
 func ExpectedStatefulSetShardNames(
 	p monitoringv1.PrometheusInterface,

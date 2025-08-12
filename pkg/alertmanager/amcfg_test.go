@@ -5478,6 +5478,25 @@ func TestSanitizeJiraConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:           "jira_configs with send_resolved",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:       "http://issues.example.com",
+								Project:      "Monitoring",
+								IssueType:    "Bug",
+								SendResolved: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_configs_with_send_resolved.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -5659,6 +5678,23 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "rocketchat_config with send_resolved",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:       "http://example.com",
+								SendResolved: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "rocketchat_config_with_send_resolved.golden",
 		},
 		{
 			name:           "rocketchat_configs allows for supported versions",

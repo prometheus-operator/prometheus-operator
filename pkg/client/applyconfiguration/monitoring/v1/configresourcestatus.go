@@ -16,22 +16,22 @@
 
 package v1
 
-// ServiceMonitorStatusApplyConfiguration represents a declarative configuration of the ServiceMonitorStatus type for use
+// ConfigResourceStatusApplyConfiguration represents a declarative configuration of the ConfigResourceStatus type for use
 // with apply.
-type ServiceMonitorStatusApplyConfiguration struct {
+type ConfigResourceStatusApplyConfiguration struct {
 	Bindings []WorkloadBindingApplyConfiguration `json:"bindings,omitempty"`
 }
 
-// ServiceMonitorStatusApplyConfiguration constructs a declarative configuration of the ServiceMonitorStatus type for use with
+// ConfigResourceStatusApplyConfiguration constructs a declarative configuration of the ConfigResourceStatus type for use with
 // apply.
-func ServiceMonitorStatus() *ServiceMonitorStatusApplyConfiguration {
-	return &ServiceMonitorStatusApplyConfiguration{}
+func ConfigResourceStatus() *ConfigResourceStatusApplyConfiguration {
+	return &ConfigResourceStatusApplyConfiguration{}
 }
 
 // WithBindings adds the given value to the Bindings field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Bindings field.
-func (b *ServiceMonitorStatusApplyConfiguration) WithBindings(values ...*WorkloadBindingApplyConfiguration) *ServiceMonitorStatusApplyConfiguration {
+func (b *ConfigResourceStatusApplyConfiguration) WithBindings(values ...*WorkloadBindingApplyConfiguration) *ConfigResourceStatusApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithBindings")

@@ -677,7 +677,7 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClassicHistograms(valu
 // WithMinReadySeconds sets the MinReadySeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinReadySeconds field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithMinReadySeconds(value uint32) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithMinReadySeconds(value int32) *PrometheusAgentSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.MinReadySeconds = &value
 	return b
 }
@@ -885,5 +885,13 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithRuntime(value *v1.RuntimeCon
 // If called multiple times, the TerminationGracePeriodSeconds field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithTerminationGracePeriodSeconds(value int64) *PrometheusAgentSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.TerminationGracePeriodSeconds = &value
+	return b
+}
+
+// WithHostUsers sets the HostUsers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HostUsers field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithHostUsers(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.HostUsers = &value
 	return b
 }
