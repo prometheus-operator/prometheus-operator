@@ -4829,6 +4829,12 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 			otlpConfig.IgnoreResourceAttributes)
 	}
 
+	if otlpConfig.PromoteScopeMetadata != nil {
+		otlp = cg.WithMinimumVersion("3.6.0").AppendMapItem(otlp,
+			"promote_scope_metadata",
+			otlpConfig.PromoteScopeMetadata)
+	}
+
 	if len(otlp) == 0 {
 		return cfg, nil
 	}
