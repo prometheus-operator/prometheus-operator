@@ -9824,6 +9824,22 @@ func TestOTLPConfig(t *testing.T) {
 			},
 			golden: "OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
 		},
+		{
+			name:    "Config Empty translation strategy with supported UnderscoreEscapingWithoutSuffixes",
+			version: "v3.6.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithoutSuffixes),
+			},
+			golden: "OTLPConfig_Config_translation_strategy_with_supported_UnderscoreEscapingWithoutSuffixes.golden",
+		},
+		{
+			name:    "Config Empty translation strategy no support for UnderscoreEscapingWithoutSuffixes",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithoutSuffixes),
+			},
+			expectedErr: true,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

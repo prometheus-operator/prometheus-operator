@@ -4781,7 +4781,11 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 	}
 
 	if cg.version.LT(semver.MustParse("3.4.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoTranslation {
-		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
+		return cfg, fmt.Errorf("NoTranslation %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
+	}
+
+	if cg.version.LT(semver.MustParse("3.6.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.UnderscoreEscapingWithoutSuffixes {
+		return cfg, fmt.Errorf("UnderscoreEscapingWithoutSuffixes %q is only supported from Prometheus version 3.6.0 ", monitoringv1.UnderscoreEscapingWithoutSuffixes)
 	}
 
 	if cg.version.GTE(semver.MustParse("3.5.0")) {

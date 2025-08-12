@@ -2470,12 +2470,14 @@ type ScrapeClass struct {
 // * `NoUTF8EscapingWithSuffixes`
 // * `UnderscoreEscapingWithSuffixes`
 // * `NoTranslation`
-// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;NoTranslation
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;UnderscoreEscapingWithoutSuffixes;NoTranslation
 type TranslationStrategyOption string
 
 const (
 	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
 	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+	// It requires Prometheus >= v3.6.0.
+	UnderscoreEscapingWithoutSuffixes TranslationStrategyOption = "UnderscoreEscapingWithoutSuffixes"
 	// It requires Prometheus >= v3.4.0.
 	NoTranslation TranslationStrategyOption = "NoTranslation"
 )

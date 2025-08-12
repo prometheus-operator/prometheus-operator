@@ -20413,6 +20413,9 @@ Supported values are:
 <td></td>
 </tr><tr><td><p>&#34;UnderscoreEscapingWithSuffixes&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;UnderscoreEscapingWithoutSuffixes&#34;</p></td>
+<td><p>It requires Prometheus &gt;= v3.6.0.</p>
+</td>
 </tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.URL">URL
