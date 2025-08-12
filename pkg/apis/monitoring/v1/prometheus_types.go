@@ -2469,6 +2469,7 @@ type ScrapeClass struct {
 // Supported values are:
 // * `NoUTF8EscapingWithSuffixes`
 // * `UnderscoreEscapingWithSuffixes`
+// * `UnderscoreEscapingWithoutSuffixes`
 // * `NoTranslation`
 // +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;UnderscoreEscapingWithoutSuffixes;NoTranslation
 type TranslationStrategyOption string
