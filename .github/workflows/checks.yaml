@@ -22,7 +22,7 @@ jobs:
           - ubuntu-latest
     name: Generate and format
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Comment PR
         uses: thollander/actions-comment-pull-request@v3
         with:
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Check Documentation formatting and links
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Comment PR
         uses: thollander/actions-comment-pull-request@v3
         with:
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Golang linter
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Import environment variables from file
         run: cat ".github/env" >> "$GITHUB_ENV"
       - uses: actions/setup-go@v5
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Check prometheus metrics
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
@@ -119,7 +119,7 @@ jobs:
           - ubuntu-latest
     name: Build operator binary
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
@@ -132,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
