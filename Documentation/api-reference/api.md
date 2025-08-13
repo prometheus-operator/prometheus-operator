@@ -11951,7 +11951,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>PromoteScopeMetadata controls whether to promote OTel scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
-As per OTel spec, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
+As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
 It requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
