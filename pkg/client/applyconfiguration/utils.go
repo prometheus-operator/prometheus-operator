@@ -242,6 +242,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.AlertmanagerConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfigSpec"):
 		return &monitoringv1alpha1.AlertmanagerConfigSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerRef"):
+		return &monitoringv1alpha1.AlertmanagerRefApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AttachMetadata"):
 		return &monitoringv1alpha1.AttachMetadataApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AzureSDConfig"):
@@ -338,6 +340,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.ScrapeConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfigSpec"):
 		return &monitoringv1alpha1.ScrapeConfigSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("Silence"):
+		return &monitoringv1alpha1.SilenceApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceCondition"):
+		return &monitoringv1alpha1.SilenceConditionApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceMatcher"):
+		return &monitoringv1alpha1.SilenceMatcherApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceSpec"):
+		return &monitoringv1alpha1.SilenceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceStatus"):
+		return &monitoringv1alpha1.SilenceStatusApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SlackAction"):
 		return &monitoringv1alpha1.SlackActionApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SlackConfig"):

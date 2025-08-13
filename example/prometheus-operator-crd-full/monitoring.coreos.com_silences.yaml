@@ -1,0 +1,190 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: silences.monitoring.coreos.com
+spec:
+  group: monitoring.coreos.com
+  names:
+    categories:
+    - prometheus-operator
+    kind: Silence
+    listKind: SilenceList
+    plural: silences
+    shortNames:
+    - sil
+    singular: silence
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type == 'Ready')].status
+      name: Status
+      type: string
+    - jsonPath: .spec.expiresAt
+      name: Expires At
+      type: string
+    - jsonPath: .spec.alertmanagerRef.name
+      name: Alertmanager
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          Silence enables GitOps-friendly management of Alertmanager silences through
+          Kubernetes resources by extending the existing Alertmanager controller.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Specification of the desired behavior of the Silence.
+            properties:
+              alertmanagerRef:
+                description: |-
+                  AlertmanagerRef references a specific Alertmanager instance to apply this silence to.
+                  If not specified, the silence applies to all Alertmanager instances in the namespace.
+                properties:
+                  name:
+                    description: Name of the target Alertmanager instance
+                    minLength: 1
+                    type: string
+                  namespace:
+                    description: |-
+                      Namespace of the target Alertmanager instance.
+                      Defaults to the namespace of the Silence object if not specified.
+                    type: string
+                required:
+                - name
+                type: object
+              comment:
+                description: |-
+                  Comment provides context about the silence, typically explaining
+                  the reason for creating it (e.g., "Scheduled maintenance window").
+                type: string
+              expiresAt:
+                description: |-
+                  ExpiresAt specifies when the silence expires and alert notifications
+                  resume. This field is required to prevent indefinite silences.
+                format: date-time
+                type: string
+              matchers:
+                description: |-
+                  Matchers define the alert matching rules for this silence.
+                  An alert is silenced only if all matchers match the alert's labels.
+                items:
+                  description: |-
+                    SilenceMatcher defines a single matcher for alert labels in a silence.
+                    Matchers follow Alertmanager's label matching semantics.
+                  properties:
+                    matchType:
+                      default: =
+                      description: |-
+                        MatchType defines how the matcher compares the label value.
+                        "=" for exact equality, "!=" for inequality,
+                        "=~" for regex match, "!~" for regex non-match.
+                      enum:
+                      - =
+                      - '!='
+                      - =~
+                      - '!~'
+                      type: string
+                    name:
+                      description: Name specifies the alert label name to match against.
+                      minLength: 1
+                      type: string
+                    value:
+                      description: Value specifies the alert label value to match
+                        against.
+                      type: string
+                  required:
+                  - matchType
+                  - name
+                  - value
+                  type: object
+                minItems: 1
+                type: array
+            required:
+            - expiresAt
+            - matchers
+            type: object
+          status:
+            description: Most recently observed status of the Silence.
+            properties:
+              conditions:
+                description: |-
+                  Conditions represent the latest available observations of the silence's state
+                  using standard Kubernetes condition semantics.
+                items:
+                  description: |-
+                    SilenceCondition represents the state of a silence at a certain point using
+                    standard Kubernetes condition semantics for status reporting.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time the condition
+                        transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message is a human-readable message indicating
+                        details about the last transition.
+                      type: string
+                    reason:
+                      description: Reason is a unique, one-word, CamelCase reason
+                        for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of the condition (Ready, Synced, Failed).
+                      enum:
+                      - Ready
+                      - Synced
+                      - Failed
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              observedGeneration:
+                description: |-
+                  ObservedGeneration represents the .metadata.generation that was last processed
+                  by the controller to track if updates are needed.
+                format: int64
+                type: integer
+              silenceID:
+                description: |-
+                  SilenceID contains the Alertmanager-assigned unique identifier for this silence.
+                  Set once the silence is successfully created via Alertmanager REST API v2.
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
