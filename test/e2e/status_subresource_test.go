@@ -51,7 +51,7 @@ func testFinalizerWhenStatusForConfigResourcesEnabled(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	pm, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
-	require.NoError(t, err, "failed to create Prometheus")
+	require.NoError(t, err)
 	finalizers := pm.GetFinalizers()
 	require.NotEmpty(t, finalizers, "finalizers list should not be empty")
 	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)

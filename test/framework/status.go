@@ -141,7 +141,7 @@ func (f *Framework) WaitForConfigResourceStatusAvailable(ctx context.Context, ge
 		}
 		return true, nil
 	}); err != nil {
-		return fmt.Errorf("%v: %w", pollErr, err)
+		return fmt.Errorf("%v: %w", err, pollErr)
 	}
 
 	return nil
