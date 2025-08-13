@@ -1,0 +1,47 @@
+// Copyright 2016 The prometheus-operator Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package framework
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
+func (f *Framework) WaitForServiceMonitorStatus(ctx context.Context, sm *monitoringv1.ServiceMonitor, acceptedStatus monitoringv1.ConditionStatus ,timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
+	var current *monitoringv1.ServiceMonitor
+	var getErr error
+	if err := f.WaitForConfigResourceStatusAvailable(
+		ctx,
+		func(ctx context.Context) (configResourceStatus, error) {
+			current, getErr = f.MonClientV1.ServiceMonitors(sm.Namespace).Get(ctx, sm.Name, metav1.GetOptions{})
+			if getErr != nil {
+				return configResourceStatus{}, getErr
+			}
+			return configResourceStatus{
+				bindings: current.Status.Bindings,
+			}, nil
+		},
+		acceptedStatus,
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("serviceMonitor status %v/%v failed to become available: %w", sm.Namespace, sm.Name, err)
+	}
+	return current, nil
+}

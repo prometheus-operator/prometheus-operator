@@ -86,7 +86,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, 1*time.Minute)
+	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, monitoringv1.ConditionTrue ,1*time.Minute)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(sm.Status.Bindings))
 	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
@@ -118,7 +118,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
-	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, 1*time.Minute)
+	sm, err = framework.WaitForServiceMonitorStatus(ctx, sm, monitoringv1.ConditionFalse ,1*time.Minute)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(sm.Status.Bindings))
 	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
