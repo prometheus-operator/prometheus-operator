@@ -256,85 +256,16 @@ To use DaemonSet mode, you need to:
      - '*'
    ```
 
-## Configuration Examples
-
-### StatefulSet Mode (Default)
-
-```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: PrometheusAgent
-metadata:
-  name: prometheus-agent-statefulset
-spec:
-  # mode: StatefulSet (default, can be omitted)
-  replicas: 2
-  serviceAccountName: prometheus-agent
-  storage:
-    volumeClaimTemplate:
-      spec:
-        storageClassName: fast-ssd
-        resources:
-          requests:
-            storage: 10Gi
-  serviceMonitorSelector:
-    matchLabels:
-      team: frontend
-```
-
-### DaemonSet Mode
-
-```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: PrometheusAgent
-metadata:
-  name: prometheus-agent-daemonset
-spec:
-  mode: DaemonSet
-  serviceAccountName: prometheus-agent
-  # Note: replicas, storage, shards, and persistentVolumeClaimRetentionPolicy
-  # are not allowed in DaemonSet mode
-  podMonitorSelector:
-    matchLabels:
-      team: frontend
-  resources:
-    limits:
-      memory: 1Gi
-      cpu: 500m
-    requests:
-      memory: 512Mi
-      cpu: 100m
-```
-
-### DaemonSet Mode with Node Selection
-
-```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: PrometheusAgent
-metadata:
-  name: prometheus-agent-workers
-spec:
-  mode: DaemonSet
-  serviceAccountName: prometheus-agent
-  nodeSelector:
-    node-role.kubernetes.io/worker: "true"
-  tolerations:
-  - key: "monitoring"
-    operator: "Equal"
-    value: "true"
-    effect: "NoSchedule"
-  podMonitorSelector:
-    matchLabels:
-      environment: production
-```
-
 ## Field Restrictions in DaemonSet Mode
 
 When using DaemonSet mode, the following fields are **not allowed** and will be rejected by CEL validation:
 
-- `replicas`: DaemonSets automatically manage one pod per node
-- `storage`: DaemonSets use ephemeral storage only
-- `shards`: Cannot be greater than 1 in DaemonSet mode
-- `persistentVolumeClaimRetentionPolicy`: Not applicable without persistent storage
+- `replicas`
+- `storage`
+- `shards`
+- `persistentVolumeClaimRetentionPolicy`
+- `scrapeConfigSelector`
+- `probeSelector`
 
 ### Example of Invalid Configuration
 
@@ -353,12 +284,15 @@ spec:
         resources:
           requests:
             storage: 10Gi
+  scrapeConfigSelector:  # ❌ Not allowed in DaemonSet mode
+    matchLabels:
+      scrape: "true"
   serviceAccountName: prometheus-agent
 ```
 
 ## Target Discovery in DaemonSet Mode
 
-### Recommended: PodMonitor
+### PodMonitor
 
 DaemonSet mode works best with `PodMonitor` resources since each agent naturally discovers and scrapes pods running on the same node:
 
@@ -375,13 +309,6 @@ spec:
   - port: metrics
     path: /metrics
 ```
-
-### ServiceMonitor Considerations
-
-While `ServiceMonitor` can be used with DaemonSet mode, it may result in some inefficiency since:
-- Multiple agents might attempt to scrape the same service endpoints
-- Load balancing behavior depends on the service configuration
-- Node-local targeting is not guaranteed
 
 ## Best Practices
 
@@ -402,22 +329,3 @@ Choose StatefulSet mode when you need:
 - Complex sharding strategies
 - Integration with existing StatefulSet-based workflows
 - Predictable resource allocation
-
-### Resource Management
-
-For DaemonSet mode, consider:
-- Setting appropriate resource limits to prevent node resource exhaustion
-- Using node selectors to target specific node types
-- Implementing proper tolerations for specialized nodes
-- Monitoring per-node resource usage
-
-## Migration Between Modes
-
-When migrating between deployment modes:
-
-1. **StatefulSet to DaemonSet**: Remove storage, replicas, and sharding configuration
-2. **DaemonSet to StatefulSet**: Add replica count and storage configuration if needed
-3. **Consider monitoring gaps**: Plan for potential gaps in metric collection during migration
-4. **Test thoroughly**: Validate target discovery and metric collection in non-production first
-
-Continue with the [Getting Started page]({{<ref "docs/developer/getting-started.md">}}) to learn how to monitor applications running on Kubernetes.
