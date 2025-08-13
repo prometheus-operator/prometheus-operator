@@ -145,6 +145,23 @@ type AlertmanagerSpec struct {
 	// receiver (effectively dropping alert notifications).
 	// +optional
 	ConfigSecret string `json:"configSecret,omitempty"`
+	// silenceSelector defines label selector for Silence resources that should
+	// be applied to this Alertmanager instance. If empty, no Silence resources
+	// are selected.
+	// +optional
+	SilenceSelector *metav1.LabelSelector `json:"silenceSelector,omitempty"`
+	// silenceNamespaceSelector defines label selector for namespaces containing
+	// Silence resources that should be applied to this Alertmanager instance.
+	// If empty, Silence resources from all namespaces (that match silenceSelector)
+	// are selected.
+	// +optional
+	SilenceNamespaceSelector *metav1.LabelSelector `json:"silenceNamespaceSelector,omitempty"`
+	// namespaceInjection enables automatic injection of namespace matchers into
+	// silences created from Silence resources. When enabled, the controller
+	// automatically adds a "namespace=<silence-namespace>" matcher to all silences,
+	// ensuring tenant isolation in multi-tenant environments.
+	// +optional
+	NamespaceInjection *bool `json:"namespaceInjection,omitempty"`
 	// logLevel for Alertmanager to be configured with.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional

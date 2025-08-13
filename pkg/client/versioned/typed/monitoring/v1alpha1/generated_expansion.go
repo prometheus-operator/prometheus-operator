@@ -21,3 +21,5 @@ type AlertmanagerConfigExpansion interface{}
 type PrometheusAgentExpansion interface{}
 
 type ScrapeConfigExpansion interface{}
+
+type SilenceExpansion interface{}

@@ -37,6 +37,9 @@ type AlertmanagerSpecApplyConfiguration struct {
 	Secrets                              []string                                                `json:"secrets,omitempty"`
 	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
 	ConfigSecret                         *string                                                 `json:"configSecret,omitempty"`
+	SilenceSelector                      *metav1.LabelSelectorApplyConfiguration                 `json:"silenceSelector,omitempty"`
+	SilenceNamespaceSelector             *metav1.LabelSelectorApplyConfiguration                 `json:"silenceNamespaceSelector,omitempty"`
+	NamespaceInjection                   *bool                                                   `json:"namespaceInjection,omitempty"`
 	LogLevel                             *string                                                 `json:"logLevel,omitempty"`
 	LogFormat                            *string                                                 `json:"logFormat,omitempty"`
 	Replicas                             *int32                                                  `json:"replicas,omitempty"`
@@ -184,6 +187,30 @@ func (b *AlertmanagerSpecApplyConfiguration) WithConfigMaps(values ...string) *A
 // If called multiple times, the ConfigSecret field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithConfigSecret(value string) *AlertmanagerSpecApplyConfiguration {
 	b.ConfigSecret = &value
+	return b
+}
+
+// WithSilenceSelector sets the SilenceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SilenceSelector field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithSilenceSelector(value *metav1.LabelSelectorApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.SilenceSelector = value
+	return b
+}
+
+// WithSilenceNamespaceSelector sets the SilenceNamespaceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SilenceNamespaceSelector field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithSilenceNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.SilenceNamespaceSelector = value
+	return b
+}
+
+// WithNamespaceInjection sets the NamespaceInjection field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NamespaceInjection field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithNamespaceInjection(value bool) *AlertmanagerSpecApplyConfiguration {
+	b.NamespaceInjection = &value
 	return b
 }
 
