@@ -127,7 +127,7 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 
 // WaitForConfigResourceStatusAvailable waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to report their status.
 // If the status isn't available within the given timeout, it returns an error.
-func (f *Framework) WaitForConfigResourceStatusAvailable(ctx context.Context, getConfigResourceStatus func(context.Context) (configResourceStatus, error), acceptedStatus monitoringv1.ConditionStatus ,timeout time.Duration) error {
+func (f *Framework) WaitForConfigResourceStatusAvailable(ctx context.Context, getConfigResourceStatus func(context.Context) (configResourceStatus, error), acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
 	var pollErr error
 	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		var status configResourceStatus
@@ -140,7 +140,7 @@ func (f *Framework) WaitForConfigResourceStatusAvailable(ctx context.Context, ge
 			return false, nil
 		}
 
-		if(status.bindings[0].Conditions[0].Status != acceptedStatus) {
+		if status.bindings[0].Conditions[0].Status != acceptedStatus {
 			return false, nil
 		}
 
