@@ -86,14 +86,8 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, monitoringv1.ConditionTrue, 1*time.Minute)
+	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(sm.Status.Bindings))
-	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
-	require.Equal(t, p.Name, sm.Status.Bindings[0].Name)
-	require.Equal(t, p.Namespace, sm.Status.Bindings[0].Namespace)
-	require.Equal(t, monitoringv1.PrometheusName, sm.Status.Bindings[0].Resource)
-	require.Equal(t, monitoringv1.ConditionTrue, sm.Status.Bindings[0].Conditions[0].Status)
 
 	templateSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -114,12 +108,6 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
-	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, monitoringv1.ConditionFalse, 1*time.Minute)
+	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(sm.Status.Bindings))
-	require.Equal(t, 1, len(sm.Status.Bindings[0].Conditions))
-	require.Equal(t, p.Name, sm.Status.Bindings[0].Name)
-	require.Equal(t, p.Namespace, sm.Status.Bindings[0].Namespace)
-	require.Equal(t, monitoringv1.PrometheusName, sm.Status.Bindings[0].Resource)
-	require.Equal(t, monitoringv1.ConditionFalse, sm.Status.Bindings[0].Conditions[0].Status)
 }

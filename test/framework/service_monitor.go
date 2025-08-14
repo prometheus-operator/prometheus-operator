@@ -24,7 +24,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-func (f *Framework) WaitForServiceMonitorAcceptedCondition(ctx context.Context, sm *monitoringv1.ServiceMonitor, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
+func (f *Framework) WaitForServiceMonitorAcceptedCondition(ctx context.Context, sm *monitoringv1.ServiceMonitor, workload metav1.Object, resource string, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
 	var current *monitoringv1.ServiceMonitor
 	var getErr error
 	if err := f.WaitForConfigResourceAcceptedCondition(
@@ -36,6 +36,8 @@ func (f *Framework) WaitForServiceMonitorAcceptedCondition(ctx context.Context, 
 			}
 			return current.Status.Bindings, nil
 		},
+		workload,
+		resource,
 		acceptedStatus,
 		timeout,
 	); err != nil {

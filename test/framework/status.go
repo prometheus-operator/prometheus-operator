@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -123,7 +124,7 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 
 // WaitForConfigResourceAcceptedCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to report their status.
 // If the status isn't available within the given timeout, it returns an error.
-func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
+func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
 	var pollErr error
 	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
 		bindings, pollErr := getConfigResourceStatus(ctx)
@@ -133,6 +134,13 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 
 		if len(bindings) == 0 || len(bindings[0].Conditions) == 0 {
 			pollErr = fmt.Errorf("expected at least one binding with conditions")
+			return false, nil
+		}
+
+		if bindings[0].Resource != resource || bindings[0].Name != workload.GetName() || bindings[0].Namespace != workload.GetNamespace() {
+			pollErr = fmt.Errorf("expected binding for resource %q with name %q in namespace %q, got %q with name %q in namespace %q",
+				resource, workload.GetName(), workload.GetNamespace(),
+				bindings[0].Resource, bindings[0].Name, bindings[0].Namespace)
 			return false, nil
 		}
 
