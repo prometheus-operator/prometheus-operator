@@ -1,4 +1,4 @@
-// Copyright 2024 The prometheus-operator Authors
+// Copyright 2025 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// mockSyncer implements the Syncer interface for testing
+// mockSyncer implements the Syncer interface for testing.
 type mockSyncer struct {
 	mu               sync.Mutex
 	syncFunc         func(context.Context, string) error
@@ -74,7 +74,7 @@ func (m *mockGetter) Get(key string) (runtime.Object, error) {
 	return nil, nil
 }
 
-// mockReconcilerMetrics implements the ReconcilerMetrics interface for testing
+// mockReconcilerMetrics implements the ReconcilerMetrics interface for testing.
 type mockReconcilerMetrics struct{}
 
 func (m *mockReconcilerMetrics) TriggerByCounter(string, HandlerEvent) prometheus.Counter {
