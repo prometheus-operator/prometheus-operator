@@ -126,8 +126,9 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 // If the status isn't available within the given timeout, it returns an error.
 func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
 	var pollErr error
+	var bindings []monitoringv1.WorkloadBinding
 	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
-		bindings, pollErr := getConfigResourceStatus(ctx)
+		bindings, pollErr = getConfigResourceStatus(ctx)
 		if pollErr != nil {
 			return false, nil
 		}
