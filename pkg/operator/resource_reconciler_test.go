@@ -62,7 +62,7 @@ func (m *mockSyncer) getSyncCallCount() int {
 	return len(m.syncCalls)
 }
 
-// mockGetter implements the OwnedResourceOwner interface for testing
+// mockGetter implements the OwnedResourceOwner interface for testing.
 type mockGetter struct {
 	getFunc func(string) (runtime.Object, error)
 }
@@ -324,7 +324,6 @@ func TestDelayIntegrationWithWorkQueue(t *testing.T) {
 	}, 100*time.Millisecond, 10*time.Millisecond, "Second sync should happen after delay")
 }
 
-// Helper function to create a time pointer
 func timePtr(t time.Time) *time.Time {
 	return &t
 }
