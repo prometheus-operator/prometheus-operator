@@ -226,6 +226,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.controllerID,
 	)
 
+	o.rr.SetReconcileDelay(c.PrometheusReconcileDelay)
+
 	o.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.Namespaces.AllowList,

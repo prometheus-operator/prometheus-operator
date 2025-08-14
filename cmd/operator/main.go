@@ -126,6 +126,10 @@ var (
 	kubeletEndpoints     bool
 	kubeletEndpointSlice bool
 	kubeletSyncPeriod    time.Duration
+	// Reconciliation delay settings.
+	alertmanagerReconcileDelay time.Duration
+	prometheusReconcileDelay   time.Duration
+	thanosRulerReconcileDelay  time.Duration
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -188,9 +192,16 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
-
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
+
+	// Reconciliation delay flags
+	fs.DurationVar(&alertmanagerReconcileDelay, "alertmanager-reconcile-delay", 0,
+		"Delay Alertmanager reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)")
+	fs.DurationVar(&prometheusReconcileDelay, "prometheus-reconcile-delay", 0,
+		"Delay Prometheus reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)")
+	fs.DurationVar(&thanosRulerReconcileDelay, "thanos-ruler-reconcile-delay", 0,
+		"Delay ThanosRuler reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)")
 
 	// No need to check for errors because Parse would exit on error.
 	_ = fs.Parse(os.Args[1:])
@@ -214,6 +225,10 @@ func run(fs *flag.FlagSet) int {
 		logger.Error("failed to update feature gates", "error", err)
 		return 1
 	}
+
+	cfg.AlertmanagerReconcileDelay = alertmanagerReconcileDelay
+	cfg.PrometheusReconcileDelay = prometheusReconcileDelay
+	cfg.ThanosRulerReconcileDelay = thanosRulerReconcileDelay
 
 	logger.Info("Starting Prometheus Operator", "version", version.Info(), "build_context", version.BuildContext(), "feature_gates", cfg.Gates.String())
 	logger.Info("Operator's configuration",

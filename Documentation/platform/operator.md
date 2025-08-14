@@ -23,6 +23,8 @@ Usage of ./operator:
     	Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.
   -alertmanager-instance-selector value
     	Label selector to filter Alertmanager Custom Resources to watch.
+  -alertmanager-reconcile-delay duration
+    	Delay Alertmanager reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)
   -annotations value
     	Annotations to be add to all resources created by the operator
   -apiserver string
@@ -92,6 +94,8 @@ Usage of ./operator:
     	Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.
   -prometheus-instance-selector value
     	Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.
+  -prometheus-reconcile-delay duration
+    	Delay Prometheus reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)
   -secret-field-selector value
     	Field selector to filter Secrets to watch
   -secret-label-selector value
@@ -104,6 +108,8 @@ Usage of ./operator:
     	Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.
   -thanos-ruler-instance-selector value
     	Label selector to filter ThanosRuler Custom Resources to watch.
+  -thanos-ruler-reconcile-delay duration
+    	Delay ThanosRuler reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)
   -tls-insecure
     	- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.
   -version

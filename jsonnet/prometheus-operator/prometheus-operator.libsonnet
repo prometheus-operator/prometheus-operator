@@ -30,6 +30,9 @@ local defaults = {
   kubeletService: 'kube-system/kubelet',
   kubeletEndpointsEnabled: true,
   kubeletEndpointSliceEnabled: false,
+  alertmanagerReconcileDelay: '0s',
+  prometheusReconcileDelay: '0s',
+  thanosRulerReconcileDelay: '0s',
 };
 
 function(params) {
@@ -186,6 +189,8 @@ function(params) {
       if value != '' then [arg + '=' + value] else [];
     local enableReloaderProbesArg(value) =
       if value == true then ['--enable-config-reloader-probes=true'] else [];
+    local reconcileDelayArg(flag, value) =
+      if value != '0s' && value != '' then [flag + '=' + value] else [];
 
     local container = {
       name: po.config.name,
@@ -200,7 +205,10 @@ function(params) {
             reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
             reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
             reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory) +
-            enableReloaderProbesArg(po.config.enableReloaderProbes),
+            enableReloaderProbesArg(po.config.enableReloaderProbes) +
+            reconcileDelayArg('--alertmanager-reconcile-delay', po.config.alertmanagerReconcileDelay) +
+            reconcileDelayArg('--prometheus-reconcile-delay', po.config.prometheusReconcileDelay) +
+            reconcileDelayArg('--thanos-ruler-reconcile-delay', po.config.thanosRulerReconcileDelay),
       ports: [{
         containerPort: po.config.port,
         name: 'http',
