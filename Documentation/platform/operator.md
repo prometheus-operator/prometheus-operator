@@ -92,6 +92,8 @@ Usage of ./operator:
     	Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.
   -prometheus-instance-selector value
     	Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.
+  -reconcile-delay duration
+    	Delay reconciliation by this duration to reduce API calls (e.g., 30s, 2m, 5m). Default: 0 (disabled)
   -secret-field-selector value
     	Field selector to filter Secrets to watch
   -secret-label-selector value

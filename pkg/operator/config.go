@@ -21,6 +21,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
 	v1 "k8s.io/api/core/v1"
@@ -73,6 +74,8 @@ type Config struct {
 	Gates *FeatureGates
 
 	WatchObjectRefsInAllNamespaces bool
+
+	ReconcileDelay time.Duration
 }
 
 // DefaultConfig returns a default operator configuration.
