@@ -41,7 +41,7 @@ func (f *Framework) WaitForServiceMonitorAcceptedCondition(ctx context.Context, 
 		acceptedStatus,
 		timeout,
 	); err != nil {
-		return nil, fmt.Errorf("serviceMonitor status %v/%v failed to become available: %w", sm.Namespace, sm.Name, err)
+		return nil, fmt.Errorf("serviceMonitor status %v/%v failed to reach expected condition: %w", sm.Namespace, sm.Name, err)
 	}
 	return current, nil
 }
