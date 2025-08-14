@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -116,6 +117,46 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		return true, nil
 	}); err != nil {
 		return fmt.Errorf("%v: %w", pollErr, err)
+	}
+
+	return nil
+}
+
+// WaitForConfigResourceAcceptedCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to meet the expected Accepted condition.
+// If the condition isn't met within the given timeout, it returns an error.
+func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+		var bindings []monitoringv1.WorkloadBinding
+		bindings, pollErr = getConfigResourceStatus(ctx)
+		if pollErr != nil {
+			return false, nil
+		}
+
+		var bindingFound bool
+		for _, binding := range bindings {
+			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
+				bindingFound = true
+				if len(binding.Conditions) == 0 {
+					pollErr = fmt.Errorf("expected binding for resource %q with name %q in namespace %q to have conditions, but got none", resource, workload.GetName(), workload.GetNamespace())
+					return false, nil
+				}
+				if binding.Conditions[0].Status != acceptedStatus {
+					pollErr = fmt.Errorf("expected binding condition status to be %q, got %q", acceptedStatus, bindings[0].Conditions[0].Status)
+					return false, nil
+				}
+				break
+			}
+		}
+
+		if !bindingFound {
+			pollErr = fmt.Errorf("no binding found for resource %q with name %q in namespace %q", resource, workload.GetName(), workload.GetNamespace())
+			return false, nil
+		}
+
+		return true, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", err, pollErr)
 	}
 
 	return nil
