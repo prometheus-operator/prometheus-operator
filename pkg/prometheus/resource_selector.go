@@ -377,10 +377,13 @@ func (lcv *LabelConfigValidator) Validate(rcs []monitoringv1.RelabelConfig) erro
 }
 
 func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
-	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+	relabelTargetLegacy := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+	relabelTargetUTF8 := regexp.MustCompile(`^(?:(?:[^\${}]|\$(?:\{[^\${}]+\}|[^\${}]+))+[^\${}]*)+$`) // All UTF-8 chars, but ${}.
 
 	minimumVersionCaseActions := lcv.v.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := lcv.v.GTE(semver.MustParse("2.41.0"))
+	utf8Supported := lcv.v.GTE(semver.MustParse("3.0.0"))
+
 	if rc.Action == "" {
 		rc.Action = string(relabel.Replace)
 	}
@@ -406,7 +409,11 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if utf8Supported && (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTargetUTF8.MatchString(rc.TargetLabel) {
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if !utf8Supported && (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTargetLegacy.MatchString(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -415,13 +422,23 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 	}
 
 	if action == string(relabel.LabelMap) {
-		if rc.Replacement != nil && !relabelTarget.MatchString(*rc.Replacement) {
+		if utf8Supported && rc.Replacement != nil && !relabelTargetUTF8.MatchString(*rc.Replacement) {
+			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
+		}
+		if !utf8Supported && rc.Replacement != nil && !relabelTargetLegacy.MatchString(*rc.Replacement) {
 			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 		}
 	}
 
-	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
-		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	if action == string(relabel.HashMod) {
+		if !utf8Supported && !model.LabelName(rc.TargetLabel).IsValidLegacy() {
+			return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		}
+
+		if utf8Supported && !model.LabelName(rc.TargetLabel).IsValid() {
+			return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+
+		}
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
@@ -1422,9 +1439,15 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
+	utf8Supported := rs.version.GTE(semver.MustParse("3.0.0"))
+
 	for i, config := range sc.Spec.StaticConfigs {
 		for labelName := range config.Labels {
-			if !model.LabelName(labelName).IsValid() {
+			if utf8Supported && !model.LabelName(labelName).IsValid() {
+				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
+			}
+
+			if !utf8Supported && !model.LabelName(labelName).IsValidLegacy() {
 				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 			}
 		}
