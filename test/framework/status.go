@@ -132,10 +132,12 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 		}
 
 		if len(bindings) == 0 || len(bindings[0].Conditions) == 0 {
+			pollErr = fmt.Errorf("expected at least one binding with conditions")
 			return false, nil
 		}
 
 		if bindings[0].Conditions[0].Status != acceptedStatus {
+			pollErr = fmt.Errorf("expected binding condition status to be %q, got %q", acceptedStatus, bindings[0].Conditions[0].Status)
 			return false, nil
 		}
 
