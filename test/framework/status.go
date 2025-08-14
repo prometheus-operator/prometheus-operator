@@ -133,20 +133,20 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 			return false, nil
 		}
 
-		if len(bindings) == 0 || len(bindings[0].Conditions) == 0 {
-			pollErr = fmt.Errorf("expected at least one binding with conditions")
-			return false, nil
+		var bindingFound bool
+		for _, binding := range bindings {
+			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
+				bindingFound = true
+				if binding.Conditions[0].Status != acceptedStatus {
+					pollErr = fmt.Errorf("expected binding condition status to be %q, got %q", acceptedStatus, bindings[0].Conditions[0].Status)
+					return false, nil
+				}
+				break
+			}
 		}
 
-		if bindings[0].Resource != resource || bindings[0].Name != workload.GetName() || bindings[0].Namespace != workload.GetNamespace() {
-			pollErr = fmt.Errorf("expected binding for resource %q with name %q in namespace %q, got %q with name %q in namespace %q",
-				resource, workload.GetName(), workload.GetNamespace(),
-				bindings[0].Resource, bindings[0].Name, bindings[0].Namespace)
-			return false, nil
-		}
-
-		if bindings[0].Conditions[0].Status != acceptedStatus {
-			pollErr = fmt.Errorf("expected binding condition status to be %q, got %q", acceptedStatus, bindings[0].Conditions[0].Status)
+		if !bindingFound {
+			pollErr = fmt.Errorf("no binding found for resource %q with name %q in namespace %q", resource, workload.GetName(), workload.GetNamespace())
 			return false, nil
 		}
 
