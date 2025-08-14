@@ -8944,6 +8944,10 @@
                   {
                     "message": "scrapeConfigSelector cannot be set when mode is DaemonSet",
                     "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigSelector))"
+                  },
+                  {
+                    "message": "probeSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeSelector))"
                   }
                 ]
               },
