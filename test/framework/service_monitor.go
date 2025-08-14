@@ -27,16 +27,14 @@ import (
 func (f *Framework) WaitForServiceMonitorAcceptedCondition(ctx context.Context, sm *monitoringv1.ServiceMonitor, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
 	var current *monitoringv1.ServiceMonitor
 	var getErr error
-	if err := f.WaitForConfigResourceStatusAvailable(
+	if err := f.WaitForConfigResourceAcceptedCondition(
 		ctx,
-		func(ctx context.Context) (configResourceStatus, error) {
+		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
 			current, getErr = f.MonClientV1.ServiceMonitors(sm.Namespace).Get(ctx, sm.Name, metav1.GetOptions{})
 			if getErr != nil {
-				return configResourceStatus{}, getErr
+				return []monitoringv1.WorkloadBinding{}, getErr
 			}
-			return configResourceStatus{
-				bindings: current.Status.Bindings,
-			}, nil
+			return current.Status.Bindings, nil
 		},
 		acceptedStatus,
 		timeout,

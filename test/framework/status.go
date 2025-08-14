@@ -31,10 +31,6 @@ type resourceStatus struct {
 	conditions       []monitoringv1.Condition
 }
 
-type configResourceStatus struct {
-	bindings []monitoringv1.WorkloadBinding
-}
-
 func (f *Framework) AssertCondition(conds []monitoringv1.Condition, expectedType monitoringv1.ConditionType, expectedStatus monitoringv1.ConditionStatus) error {
 	for _, c := range conds {
 		if c.Type != expectedType {
@@ -125,22 +121,21 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 	return nil
 }
 
-// WaitForConfigResourceStatusAvailable waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to report their status.
+// WaitForConfigResourceAcceptedCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to report their status.
 // If the status isn't available within the given timeout, it returns an error.
-func (f *Framework) WaitForConfigResourceStatusAvailable(ctx context.Context, getConfigResourceStatus func(context.Context) (configResourceStatus, error), acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
+func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
 	var pollErr error
 	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
-		var status configResourceStatus
-		status, pollErr = getConfigResourceStatus(ctx)
+		bindings, pollErr := getConfigResourceStatus(ctx)
 		if pollErr != nil {
 			return false, nil
 		}
 
-		if len(status.bindings) == 0 || len(status.bindings[0].Conditions) == 0 {
+		if len(bindings) == 0 || len(bindings[0].Conditions) == 0 {
 			return false, nil
 		}
 
-		if status.bindings[0].Conditions[0].Status != acceptedStatus {
+		if bindings[0].Conditions[0].Status != acceptedStatus {
 			return false, nil
 		}
 
