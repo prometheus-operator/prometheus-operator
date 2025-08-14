@@ -38,6 +38,10 @@ func (c *FakeMonitoringV1alpha1) ScrapeConfigs(namespace string) v1alpha1.Scrape
 	return newFakeScrapeConfigs(c, namespace)
 }
 
+func (c *FakeMonitoringV1alpha1) Silences(namespace string) v1alpha1.SilenceInterface {
+	return newFakeSilences(c, namespace)
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeMonitoringV1alpha1) RESTClient() rest.Interface {
