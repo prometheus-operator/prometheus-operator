@@ -99,10 +99,6 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Data: map[string][]byte{
-			"usernames": []byte("dXNlcg=="),
-			"password":  []byte("cGFzc3dvcmQ="),
-		},
 	}
 
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{})
