@@ -26,7 +26,7 @@ import (
 
 func (f *Framework) WaitForServiceMonitorAcceptedCondition(ctx context.Context, sm *monitoringv1.ServiceMonitor, workload metav1.Object, resource string, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
 	var current *monitoringv1.ServiceMonitor
-	
+
 	if err := f.WaitForConfigResourceAcceptedCondition(
 		ctx,
 		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
