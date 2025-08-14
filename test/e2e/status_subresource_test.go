@@ -21,7 +21,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -75,8 +74,8 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-	name := "servicemonitor-status-subresource-test"
 
+	name := "servicemonitor-status-subresource-test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
@@ -86,16 +85,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionTrue, 1*time.Minute)
-	require.NoError(t, err)
-
-	templateSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-	}
-
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{})
+	_, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
 	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
@@ -108,6 +98,6 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
-	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionFalse, 1*time.Minute)
+	_, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
 }
