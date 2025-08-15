@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -25,10 +26,10 @@ import (
 // KumaSDConfigApplyConfiguration represents a declarative configuration of the KumaSDConfig type for use
 // with apply.
 type KumaSDConfigApplyConfiguration struct {
-	Server                                     *string      `json:"server,omitempty"`
-	ClientID                                   *string      `json:"clientID,omitempty"`
-	RefreshInterval                            *v1.Duration `json:"refreshInterval,omitempty"`
-	FetchTimeout                               *v1.Duration `json:"fetchTimeout,omitempty"`
+	Server                                     *monitoringv1alpha1.URL `json:"server,omitempty"`
+	ClientID                                   *string                 `json:"clientID,omitempty"`
+	RefreshInterval                            *v1.Duration            `json:"refreshInterval,omitempty"`
+	FetchTimeout                               *v1.Duration            `json:"fetchTimeout,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
@@ -47,7 +48,7 @@ func KumaSDConfig() *KumaSDConfigApplyConfiguration {
 // WithServer sets the Server field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Server field is set to the value of the last call.
-func (b *KumaSDConfigApplyConfiguration) WithServer(value string) *KumaSDConfigApplyConfiguration {
+func (b *KumaSDConfigApplyConfiguration) WithServer(value monitoringv1alpha1.URL) *KumaSDConfigApplyConfiguration {
 	b.Server = &value
 	return b
 }
