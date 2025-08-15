@@ -242,8 +242,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.AlertmanagerConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfigSpec"):
 		return &monitoringv1alpha1.AlertmanagerConfigSpecApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("AttachMetadata"):
-		return &monitoringv1alpha1.AttachMetadataApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AzureSDConfig"):
 		return &monitoringv1alpha1.AzureSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ConsulSDConfig"):
