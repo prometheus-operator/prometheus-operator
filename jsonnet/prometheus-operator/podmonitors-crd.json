@@ -47,6 +47,10 @@
                   "attachMetadata": {
                     "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.35.0.",
                     "properties": {
+                      "namespace": {
+                        "description": "When set to true, Prometheus attaches namespace metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Namespaces` objects.\n\nOnly valid for pod, endpoints, endpointslice, service, ingress.\n\nIt requires Prometheus >= v3.6.0.",
+                        "type": "boolean"
+                      },
                       "node": {
                         "description": "When set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
                         "type": "boolean"

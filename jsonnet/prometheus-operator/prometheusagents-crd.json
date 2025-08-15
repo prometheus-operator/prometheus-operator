@@ -5505,6 +5505,10 @@
                         "attachMetadata": {
                           "description": "AttachMetadata configures additional metadata to the discovered targets.\nWhen the scrape object defines its own configuration, it takes\nprecedence over the scrape class configuration.",
                           "properties": {
+                            "namespace": {
+                              "description": "When set to true, Prometheus attaches namespace metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Namespaces` objects.\n\nOnly valid for pod, endpoints, endpointslice, service, ingress.\n\nIt requires Prometheus >= v3.6.0.",
+                              "type": "boolean"
+                            },
                             "node": {
                               "description": "When set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
                               "type": "boolean"
