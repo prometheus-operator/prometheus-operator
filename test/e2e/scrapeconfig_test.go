@@ -1399,7 +1399,7 @@ var K8STestCases = []scrapeCRDTestCase{
 			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 				{
 					Role:           "Pod",
-					AttachMetadata: &monitoringv1alpha1.AttachMetadata{Node: new(true)},
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 			},
 		},
