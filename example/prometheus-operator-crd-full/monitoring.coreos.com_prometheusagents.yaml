@@ -5295,7 +5295,9 @@ spec:
                             Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
-                              description: The client id
+                              description: |-
+                                The client id to be used with Azure AD Managed Identity
+                                For Prometheus >= 3.5.0, this field is allowed to be empty to support system assigned managed identity.
                               type: string
                           type: object
                         oauth:

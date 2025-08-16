@@ -11143,7 +11143,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The client id</p>
+<p>The client id to be used with Azure AD Managed Identity
+For Prometheus &gt;= 3.5.0, this field is allowed to be empty to support system assigned managed identity.</p>
 </td>
 </tr>
 </tbody>
