@@ -1814,8 +1814,8 @@ type AzureOAuth struct {
 // +k8s:openapi-gen=true
 type ManagedIdentity struct {
 	// The client id
-	// +required
-	ClientID string `json:"clientId"`
+	// +optional
+	ClientID *string `json:"clientId,omitempty"`
 }
 
 // AzureSDK is used to store azure SDK config values.

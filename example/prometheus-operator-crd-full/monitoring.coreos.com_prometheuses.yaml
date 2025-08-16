@@ -6863,8 +6863,6 @@ spec:
                             clientId:
                               description: The client id
                               type: string
-                          required:
-                          - clientId
                           type: object
                         oauth:
                           description: |-

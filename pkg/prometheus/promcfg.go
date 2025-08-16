@@ -2715,11 +2715,25 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			azureAd := yaml.MapSlice{}
 
 			if spec.AzureAD.ManagedIdentity != nil {
-				azureAd = append(azureAd,
-					yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
-						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-					}},
-				)
+				if cg.version.GTE(semver.MustParse("3.5.0")) {
+					clientID := ""
+					if spec.AzureAD.ManagedIdentity.ClientID != nil {
+						clientID = *spec.AzureAD.ManagedIdentity.ClientID
+					}
+					azureAd = append(azureAd,
+						yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
+							{Key: "client_id", Value: clientID},
+						}},
+					)
+				} else {
+					if spec.AzureAD.ManagedIdentity.ClientID != nil {
+						azureAd = append(azureAd,
+							yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
+								{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
+							}},
+						)
+					}
+				}
 			}
 
 			if spec.AzureAD.OAuth != nil {

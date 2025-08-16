@@ -4056,9 +4056,6 @@
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "clientId"
-                              ],
                               "type": "object"
                             },
                             "oauth": {

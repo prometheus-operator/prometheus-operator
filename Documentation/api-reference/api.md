@@ -11142,6 +11142,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The client id</p>
 </td>
 </tr>
