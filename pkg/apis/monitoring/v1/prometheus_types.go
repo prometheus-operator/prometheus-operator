@@ -1815,7 +1815,7 @@ type AzureOAuth struct {
 type ManagedIdentity struct {
 	// The client id
 	// +optional
-	ClientID *string `json:"clientId,omitempty"`
+	ClientID string `json:"clientId"`
 }
 
 // AzureSDK is used to store azure SDK config values.
