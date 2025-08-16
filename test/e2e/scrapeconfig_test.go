@@ -3317,7 +3317,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: true,
+		expectedError: false,
 	},
 }
 var ScalewaySDTestCases = []scrapeCRDTestCase{
