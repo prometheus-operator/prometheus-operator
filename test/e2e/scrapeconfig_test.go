@@ -3777,11 +3777,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 					Host: "127.0.0.1",
 					Filters: []monitoringv1alpha1.Filter{
 						{
-							Name: "health",
-							Values: []string{
-								"healthy",
-								"starting",
-							},
+							Name:   "health",
+							Values: []string{"healthy", "starting"},
 						},
 					},
 				},
@@ -3807,15 +3804,32 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Invalid Filter Name",
+		name: "Invalid Filter Empty String Value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
 					Host: "127.0.0.1",
 					Filters: []monitoringv1alpha1.Filter{
 						{
-							Name:   "",
-							Values: []string{"healthy"},
+							Name:   "health",
+							Values: []string{""},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Repeated Value Items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "healthy"},
 						},
 					},
 				},
