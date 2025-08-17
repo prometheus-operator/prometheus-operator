@@ -2447,6 +2447,7 @@ spec:
                     hostNetworkingHost:
                       description: The host to use if the container is in host networking
                         mode.
+                      minLength: 1
                       type: string
                     matchFirstNetwork:
                       description: |-
@@ -2792,6 +2793,9 @@ spec:
                       type: object
                     port:
                       description: The port to scrape metrics from.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     proxyConnectHeader:
                       additionalProperties:
