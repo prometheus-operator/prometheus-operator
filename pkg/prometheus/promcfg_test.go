@@ -8668,7 +8668,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						},
 						FollowRedirects:    ptr.To(true),
 						EnableHTTP2:        ptr.To(true),
-						Port:               ptr.To(9100),
+						Port:               ptr.To(int32(9100)),
 						RefreshInterval:    ptr.To(monitoringv1.Duration("30s")),
 						HostNetworkingHost: ptr.To("localhost"),
 						Filters: []monitoringv1alpha1.Filter{
