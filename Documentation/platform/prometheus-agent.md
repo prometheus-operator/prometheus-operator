@@ -227,8 +227,8 @@ DaemonSet mode works best with `PodMonitor` resources since each agent naturally
 
 | Feature               | StatefulSet Mode            | DaemonSet Mode            |
 |-----------------------|-----------------------------|---------------------------|
-| **Scaling**           | Manual shard management   | Automatic with node count |
-| **Scraping scope** | Cluster-wide scraping       | Node-local scraping       |
+| **Scaling**           | Manual shard management     | Automatic with node count |
+| **Scraping scope**    | Cluster-wide scraping       | Node-local scraping       |
 | **Storage**           | Supports persistent storage | Ephemeral storage only    |
 | **Target Discovery**  | ServiceMonitor & PodMonitor | PodMonitor recommended    |
 | **Resource Usage**    | Higher memory usage         | Lower memory per pod      |
@@ -286,4 +286,5 @@ spec:
   - port: metrics
     path: /metrics
 ```
+
 Continue with the [Getting Started page]({{<ref "docs/developer/getting-started.md">}}) to learn how to monitor applications running on Kubernetes.
