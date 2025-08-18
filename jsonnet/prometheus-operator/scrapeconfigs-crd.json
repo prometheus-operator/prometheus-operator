@@ -10531,21 +10531,11 @@
                           "type": "string"
                         },
                         "service": {
-                          "allOf": [
-                            {
-                              "enum": [
-                                "VPS",
-                                "DedicatedServer"
-                              ]
-                            },
-                            {
-                              "enum": [
-                                "VPS",
-                                "DedicatedServer"
-                              ]
-                            }
-                          ],
                           "description": "Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.",
+                          "enum": [
+                            "VPS",
+                            "DedicatedServer"
+                          ],
                           "type": "string"
                         }
                       },

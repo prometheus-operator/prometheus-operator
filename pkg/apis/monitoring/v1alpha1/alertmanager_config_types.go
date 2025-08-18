@@ -47,9 +47,10 @@ const (
 // AlertmanagerConfig configures the Prometheus Alertmanager,
 // specifying how alerts should be grouped, inhibited and notified to external systems.
 type AlertmanagerConfig struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
+	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
 }
 
@@ -126,6 +127,7 @@ type Route struct {
 	// +optional
 	Continue bool `json:"continue,omitempty"`
 	// Child routes.
+	// +optional
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
 	// Note: this comment applies to the field definition above but appears
 	// below otherwise it gets included in the generated manifest.
@@ -161,37 +163,51 @@ func (r *Route) ChildRoutes() ([]Route, error) {
 type Receiver struct {
 	// Name of the receiver. Must be unique across all items from the list.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
 	// List of OpsGenie configurations.
+	// +optional
 	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
 	// List of PagerDuty configurations.
+	// +optional
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// List of Discord configurations.
 	// +optional
 	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// List of Slack configurations.
+	// +optional
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
+	// +optional
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// List of WeChat configurations.
+	// +optional
 	WeChatConfigs []WeChatConfig `json:"wechatConfigs,omitempty"`
 	// List of Email configurations.
+	// +optional
 	EmailConfigs []EmailConfig `json:"emailConfigs,omitempty"`
 	// List of VictorOps configurations.
+	// +optional
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
 	// List of Pushover configurations.
+	// +optional
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
 	// List of SNS configurations
+	// +optional
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// List of Telegram configurations.
+	// +optional
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 	// List of Webex configurations.
+	// +optional
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
+	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 	// List of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
+	// +optional
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 }
 
@@ -391,8 +407,10 @@ func (sc *SlackConfig) Validate() error {
 // https://api.slack.com/docs/message-buttons for more information.
 type SlackAction struct {
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Type string `json:"type"`
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Text string `json:"text"`
 	// +optional
 	URL string `json:"url,omitempty"`
@@ -436,6 +454,7 @@ func (sa *SlackAction) Validate() error {
 // for more information.
 type SlackConfirmationField struct {
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Text string `json:"text"`
 	// +optional
 	Title string `json:"title,omitempty"`
@@ -459,8 +478,10 @@ func (scf *SlackConfirmationField) Validate() error {
 // See https://api.slack.com/docs/message-attachments#fields for more information.
 type SlackField struct {
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Title string `json:"title"`
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Value string `json:"value"`
 	// +optional
 	Short *bool `json:"short,omitempty"`
@@ -587,6 +608,7 @@ type OpsGenieConfigResponder struct {
 	Username string `json:"username,omitempty"`
 	// Type of responder.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Type string `json:"type"`
 }
 
@@ -705,6 +727,7 @@ type WeChatConfig struct {
 	// +optional
 	ToTag string `json:"toTag,omitempty"`
 	// API request data as defined by the WeChat API.
+	// +optional
 	Message string `json:"message,omitempty"`
 	// +optional
 	MessageType string `json:"messageType,omitempty"`
@@ -736,16 +759,19 @@ type EmailConfig struct {
 	// The secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// +optional
 	AuthPassword *v1.SecretKeySelector `json:"authPassword,omitempty"`
 	// The secret's key that contains the CRAM-MD5 secret.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// +optional
 	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
 	// The identity to use for authentication.
 	// +optional
 	AuthIdentity string `json:"authIdentity,omitempty"`
 	// Further headers email header key/value pairs. Overrides any headers
 	// previously set by the notification implementation.
+	// +optional
 	Headers []KeyValue `json:"headers,omitempty"`
 	// The HTML body of the email notification.
 	// +optional
@@ -924,7 +950,7 @@ type TelegramConfig struct {
 	//
 	// Either `botToken` or `botTokenFile` is required.
 	//
-	//+optional
+	// +optional
 	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
 	// File to read the Telegram bot token from. It is mutually exclusive with `botToken`.
 	// Either `botToken` or `botTokenFile` is required.
@@ -962,7 +988,7 @@ type MSTeamsConfig struct {
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// MSTeams webhook URL.
-	// +kubebuilder:validation:Required
+	// +required
 	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
 	// Message title template.
 	// +optional
@@ -1008,13 +1034,16 @@ type MSTeamsV2Config struct {
 type InhibitRule struct {
 	// Matchers that have to be fulfilled in the alerts to be muted. The
 	// operator enforces that the alert matches the resource's namespace.
+	// +optional
 	TargetMatch []Matcher `json:"targetMatch,omitempty"`
 	// Matchers for which one or more alerts have to exist for the inhibition
 	// to take effect. The operator enforces that the alert matches the
 	// resource's namespace.
+	// +optional
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
+	// +optional
 	Equal []string `json:"equal,omitempty"`
 }
 
@@ -1022,8 +1051,10 @@ type InhibitRule struct {
 type KeyValue struct {
 	// Key of the tuple.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Key string `json:"key"`
 	// Value of the tuple.
+	// +required
 	Value string `json:"value"`
 }
 
@@ -1031,6 +1062,7 @@ type KeyValue struct {
 type Matcher struct {
 	// Label to match.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
 	// Label value to match.
 	// +optional
@@ -1121,9 +1153,10 @@ func openMetricsEscape(s string) string {
 // MuteTimeInterval specifies the periods in time when notifications will be muted
 type MuteTimeInterval struct {
 	// Name of the time interval
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name,omitempty"`
 	// TimeIntervals is a list of TimeInterval
+	// +optional
 	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
 }
 
@@ -1153,8 +1186,10 @@ type Time string
 // TimeRange defines a start and end time in 24hr format
 type TimeRange struct {
 	// StartTime is the start time in 24hr format.
+	// +optional
 	StartTime Time `json:"startTime,omitempty"`
 	// EndTime is the end time in 24hr format.
+	// +optional
 	EndTime Time `json:"endTime,omitempty"`
 }
 
@@ -1168,10 +1203,12 @@ type DayOfMonthRange struct {
 	// Start of the inclusive range
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
+	// +optional
 	Start int `json:"start,omitempty"`
 	// End of the inclusive range
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
+	// +optional
 	End int `json:"end,omitempty"`
 }
 

@@ -39,10 +39,12 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
 type ServiceMonitor struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Service selection for target discovery by
 	// Prometheus.
+	// +required
 	Spec ServiceMonitorSpec `json:"spec"`
 	// This Status subresource is under active development and is updated only when the
 	// "StatusForConfigurationResources" feature gate is enabled.
@@ -72,6 +74,7 @@ type ServiceMonitorSpec struct {
 	// If the value of this field is empty or if the label doesn't exist for
 	// the given Service, the `job` label of the metrics defaults to the name
 	// of the associated Kubernetes `Service`.
+	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 
 	// `targetLabels` defines the labels which are transferred from the
@@ -88,9 +91,11 @@ type ServiceMonitorSpec struct {
 	// List of endpoints part of this ServiceMonitor.
 	// Defines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.
 	// In most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.
+	// +required
 	Endpoints []Endpoint `json:"endpoints"`
 
 	// Label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
+	// +required
 	Selector metav1.LabelSelector `json:"selector"`
 
 	// Mechanism used to select the endpoints to scrape.
@@ -105,6 +110,7 @@ type ServiceMonitorSpec struct {
 
 	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the services.
 	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
+	// +optional
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
@@ -155,6 +161,7 @@ type ServiceMonitorSpec struct {
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
+	// +optional
 	NativeHistogramConfig `json:",inline"`
 
 	// Per-scrape limit on the number of targets dropped by relabeling
@@ -193,8 +200,10 @@ type ServiceMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors
+	// +required
 	Items []ServiceMonitor `json:"items"`
 }
 

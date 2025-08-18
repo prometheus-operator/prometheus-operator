@@ -96,6 +96,9 @@ jobs:
         with:
           version: '${{ env.golangci-lint-version }}'
           args: --timeout 10m0s
+          install-mode: goinstall
+      - name: Lint API
+        run: make check-golang
 
   check-metrics:
     runs-on: ubuntu-latest

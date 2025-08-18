@@ -57,14 +57,17 @@ func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 //
 // The CRD is very similar to the `Prometheus` CRD except for features which aren't available in agent mode like rule evaluation, persistent storage and Thanos sidecar.
 type PrometheusAgent struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus agent. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +required
 	Spec PrometheusAgentSpec `json:"spec"`
 	// Most recent observed status of the Prometheus cluster. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
 	Status monitoringv1.PrometheusStatus `json:"status,omitempty"`
 }
 

@@ -73,10 +73,10 @@ type GoDuration string
 // pod's hosts file.
 type HostAlias struct {
 	// IP address of the host file entry.
-	// +kubebuilder:validation:Required
+	// +required
 	IP string `json:"ip"`
 	// Hostnames for the above IP address.
-	// +kubebuilder:validation:Required
+	// +required
 	Hostnames []string `json:"hostnames"`
 }
 
@@ -85,8 +85,10 @@ type HostAlias struct {
 // namespace label for alerts and metrics.
 type PrometheusRuleExcludeConfig struct {
 	// Namespace of the excluded PrometheusRule object.
+	// +required
 	RuleNamespace string `json:"ruleNamespace"`
 	// Name of the excluded PrometheusRule object.
+	// +required
 	RuleName string `json:"ruleName"`
 }
 
@@ -174,12 +176,12 @@ type ObjectReference struct {
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	Group string `json:"group"`
 	// Resource of the referent.
-	// +kubebuilder:validation:Required
+	// +required
 	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes;scrapeconfigs
 	Resource string `json:"resource"`
 	// Namespace of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-	// +kubebuilder:validation:Required
+	// +required
 	// +kubebuilder:validation:MinLength=1
 	Namespace string `json:"namespace"`
 	// Name of the referent. When not set, all resources in the namespace are matched.
@@ -219,6 +221,7 @@ func (obj *ObjectReference) getGroup() string {
 // request by Prometheus to a malicious target. Denying the above would prevent the
 // attack, users can instead use the BearerTokenSecret field.
 type ArbitraryFSAccessThroughSMsConfig struct {
+	// +optional
 	Deny bool `json:"deny,omitempty"`
 }
 
@@ -246,6 +249,7 @@ type Condition struct {
 	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
 	// condition is out of date with respect to the current state of the
 	// instance.
+	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
@@ -293,6 +297,7 @@ type EmbeddedPersistentVolumeClaim struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// EmbeddedMetadata contains metadata relevant to an EmbeddedResource.
+	// +optional
 	EmbeddedObjectMetadata `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Defines the desired characteristics of a volume requested by a pod author.
@@ -336,8 +341,10 @@ type EmbeddedObjectMetadata struct {
 // +k8s:deepcopy-gen=true
 type WebConfigFileFields struct {
 	// Defines the TLS parameters for HTTPS.
+	// +optional
 	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
 	// Defines HTTP parameters for web server.
+	// +optional
 	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
 }
 
@@ -347,8 +354,10 @@ type WebHTTPConfig struct {
 	// Enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.
 	// When TLSConfig is not configured, HTTP/2 will be disabled.
 	// Whenever the value of the field changes, a rolling update will be triggered.
+	// +optional
 	HTTP2 *bool `json:"http2,omitempty"`
 	// List of headers that can be added to HTTP responses.
+	// +optional
 	Headers *WebHTTPHeaders `json:"headers,omitempty"`
 }
 
@@ -357,20 +366,24 @@ type WebHTTPConfig struct {
 type WebHTTPHeaders struct {
 	// Set the Content-Security-Policy header to HTTP responses.
 	// Unset if blank.
+	// +optional
 	ContentSecurityPolicy string `json:"contentSecurityPolicy,omitempty"`
 	// Set the X-Frame-Options header to HTTP responses.
 	// Unset if blank. Accepted values are deny and sameorigin.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
-	//+kubebuilder:validation:Enum="";Deny;SameOrigin
+	// +kubebuilder:validation:Enum="";Deny;SameOrigin
+	// +optional
 	XFrameOptions string `json:"xFrameOptions,omitempty"`
 	// Set the X-Content-Type-Options header to HTTP responses.
 	// Unset if blank. Accepted value is nosniff.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
-	//+kubebuilder:validation:Enum="";NoSniff
+	// +kubebuilder:validation:Enum="";NoSniff
+	// +optional
 	XContentTypeOptions string `json:"xContentTypeOptions,omitempty"`
 	// Set the X-XSS-Protection header to all responses.
 	// Unset if blank.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+	// +optional
 	XXSSProtection string `json:"xXSSProtection,omitempty"`
 	// Set the Strict-Transport-Security header to HTTP responses.
 	// Unset if blank.
@@ -378,6 +391,7 @@ type WebHTTPHeaders struct {
 	// browsers to load Prometheus and the other applications hosted on the same
 	// domain and subdomains over HTTPS.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+	// +optional
 	StrictTransportSecurity string `json:"strictTransportSecurity,omitempty"`
 }
 
@@ -533,6 +547,7 @@ type Endpoint struct {
 	// Name of the Service port which this endpoint refers to.
 	//
 	// It takes precedence over `targetPort`.
+	// +optional
 	Port string `json:"port,omitempty"`
 
 	// Name or number of the target port of the `Pod` object behind the
@@ -544,6 +559,7 @@ type Endpoint struct {
 	// HTTP path from which to scrape for metrics.
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
+	// +optional
 	Path string `json:"path,omitempty"`
 
 	// HTTP scheme to use for scraping.
@@ -554,14 +570,17 @@ type Endpoint struct {
 	// If empty, Prometheus uses the default value `http`.
 	//
 	// +kubebuilder:validation:Enum=http;https
+	// +optional
 	Scheme string `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
+	// +optional
 	Params map[string][]string `json:"params,omitempty"`
 
 	// Interval at which Prometheus scrapes the metrics from the target.
 	//
 	// If empty, Prometheus uses the global scrape interval.
+	// +optional
 	Interval Duration `json:"interval,omitempty"`
 
 	// Timeout after which Prometheus considers the scrape to be failed.
@@ -569,6 +588,7 @@ type Endpoint struct {
 	// If empty, Prometheus uses the global scrape timeout unless it is less
 	// than the target's scrape interval value in which the latter is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// TLS configuration to use when scraping the target.
@@ -579,6 +599,7 @@ type Endpoint struct {
 	// File to read bearer token for scraping the target.
 	//
 	// Deprecated: use `authorization` instead.
+	// +optional
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// `bearerTokenSecret` specifies a key of a Secret containing the bearer
@@ -600,6 +621,7 @@ type Endpoint struct {
 
 	// When true, `honorLabels` preserves the metric's labels when they collide
 	// with the target's labels.
+	// +optional
 	HonorLabels bool `json:"honorLabels,omitempty"`
 
 	// `honorTimestamps` controls whether Prometheus preserves the timestamps
@@ -694,15 +716,18 @@ type AttachMetadata struct {
 type OAuth2 struct {
 	// `clientId` specifies a key of a Secret or ConfigMap containing the
 	// OAuth2 client's ID.
+	// +required
 	ClientID SecretOrConfigMap `json:"clientId"`
 
 	// `clientSecret` specifies a key of a Secret containing the OAuth2
 	// client's secret.
+	// +required
 	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
 
 	// `tokenURL` configures the URL to fetch the token from.
 	//
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	TokenURL string `json:"tokenUrl"`
 
 	// `scopes` defines the OAuth2 scopes used for the token request.
@@ -730,6 +755,7 @@ type OAuth2 struct {
 }
 
 type OAuth2ValidationError struct {
+	// +optional
 	err string
 }
 
@@ -767,18 +793,22 @@ func (o *OAuth2) Validate() error {
 type BasicAuth struct {
 	// `username` specifies a key of a Secret containing the username for
 	// authentication.
+	// +optional
 	Username v1.SecretKeySelector `json:"username,omitempty"`
 
 	// `password` specifies a key of a Secret containing the password for
 	// authentication.
+	// +optional
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 
 // SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
 type SecretOrConfigMap struct {
 	// Secret containing data to use for the targets.
+	// +optional
 	Secret *v1.SecretKeySelector `json:"secret,omitempty"`
 	// ConfigMap containing data to use for the targets.
+	// +optional
 	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
 }
 
@@ -824,12 +854,15 @@ const (
 // +k8s:openapi-gen=true
 type SafeTLSConfig struct {
 	// Certificate authority used when verifying server certificates.
+	// +optional
 	CA SecretOrConfigMap `json:"ca,omitempty"`
 
 	// Client certificate to present when doing client-authentication.
+	// +optional
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
 
 	// Secret containing the client key file for the targets.
+	// +optional
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
 
 	// Used to verify the hostname for the targets.
@@ -889,12 +922,16 @@ func (c *SafeTLSConfig) Validate() error {
 // TLSConfig extends the safe TLS configuration with file parameters.
 // +k8s:openapi-gen=true
 type TLSConfig struct {
+	// +optional
 	SafeTLSConfig `json:",inline"`
 	// Path to the CA cert in the Prometheus container to use for the targets.
+	// +optional
 	CAFile string `json:"caFile,omitempty"`
 	// Path to the client cert file in the Prometheus container for the targets.
+	// +optional
 	CertFile string `json:"certFile,omitempty"`
 	// Path to the client key file in the Prometheus container for the targets.
+	// +optional
 	KeyFile string `json:"keyFile,omitempty"`
 }
 
@@ -953,8 +990,10 @@ func (c *TLSConfig) Validate() error {
 type NamespaceSelector struct {
 	// Boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
+	// +optional
 	Any bool `json:"any,omitempty"`
 	// List of namespace names to select from.
+	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
 
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
@@ -967,8 +1006,10 @@ type NamespaceSelector struct {
 type Argument struct {
 	// Name of the argument, e.g. "scrape.discovery-reload-interval".
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
 	// Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
+	// +optional
 	Value string `json:"value,omitempty"`
 }
 
@@ -1082,5 +1123,6 @@ type ConfigResourceCondition struct {
 	// condition was set based upon. For instance, if `.metadata.generation` is
 	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
 	// condition is out of date with respect to the current state of the object.
+	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
