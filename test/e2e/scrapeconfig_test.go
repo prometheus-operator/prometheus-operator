@@ -3920,7 +3920,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Role: "Services",
 				},
 			},
@@ -3932,7 +3932,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Role: "Services",
 					Port: ptr.To(int32(80)),
 				},
@@ -3945,7 +3945,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Role: "Services",
 					Port: ptr.To(int32(-1)),
 				},
@@ -3958,7 +3958,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Role: "Services",
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -3976,7 +3976,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Role: "Services",
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -3994,7 +3994,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4011,7 +4011,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host: "docker-swarm",
+					Host: "tcp://localhost",
 					Role: "Services",
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -4029,7 +4029,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host:            "docker-swarm",
+					Host:            "tcp://localhost",
 					Role:            "Services",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
@@ -4042,7 +4042,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host:            "docker-swarm",
+					Host:            "tcp://localhost",
 					Role:            "Services",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
@@ -4055,7 +4055,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host:            "docker-swarm",
+					Host:            "tcp://localhost",
 					Role:            "Services",
 					FollowRedirects: ptr.To(true),
 				},
@@ -4068,7 +4068,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host:            "docker-swarm",
+					Host:            "tcp://localhost",
 					Role:            "Services",
 					FollowRedirects: ptr.To(false),
 				},
@@ -4081,7 +4081,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host:        "docker-swarm",
+					Host:        "tcp://localhost",
 					Role:        "Services",
 					EnableHTTP2: ptr.To(true),
 				},
@@ -4094,7 +4094,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
 				{
-					Host:        "docker-swarm",
+					Host:        "tcp://localhost",
 					Role:        "Services",
 					EnableHTTP2: ptr.To(false),
 				},
