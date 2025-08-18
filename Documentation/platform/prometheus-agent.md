@@ -202,13 +202,13 @@ spec:
 
 ## Deployment Modes
 
-PrometheusAgent supports two deployment modes that determine how the Prometheus Agent pods are deployed and managed:
+PrometheusAgent supports two deployment modes that determine how the Prometheus Agent pods are deployed and managed.
 
 ### StatefulSet Mode (Default)
 
 This is the default deployment mode where PrometheusAgent is deployed as a StatefulSet. This mode is suitable for:
 
-- **Cluster-wide monitoring**: One or more high-availability Prometheus Agents scrape metrics from the entire cluster
+- **Cluster-wide monitoring**: One or more high-availability Prometheus Agents scrape metrics from the entire cluster.
 - **Persistent storage requirements**: When you need persistent volumes for WAL (Write-Ahead Log) storage
 - **Centralized management**: Easier to manage fewer agent instances with predictable scaling
 
@@ -218,17 +218,17 @@ This is the default deployment mode where PrometheusAgent is deployed as a State
 
 In DaemonSet mode, PrometheusAgent is deployed as a DaemonSet, running one pod per node. This mode is ideal for:
 
-- **Node-local monitoring**: Each agent only scrapes metrics from targets on the same node
+- **Node-local monitoring**: Each agent only scrapes metrics from targets on the same node.
 - **Automatic scalability**: Agents automatically scale with node additions/removals
 - **Load distribution**: Load is naturally distributed across nodes
 - **Resource efficiency**: Lower memory usage and no persistent storage requirements
 
-## Comparison of Deployment Modes
+### Comparison of Deployment Modes
 
 | Feature               | StatefulSet Mode            | DaemonSet Mode            |
 |-----------------------|-----------------------------|---------------------------|
-| **Scaling**           | Manual replica management   | Automatic with node count |
-| **Load Distribution** | Cluster-wide scraping       | Node-local scraping       |
+| **Scaling**           | Manual shard management   | Automatic with node count |
+| **Scraping scope** | Cluster-wide scraping       | Node-local scraping       |
 | **Storage**           | Supports persistent storage | Ephemeral storage only    |
 | **Target Discovery**  | ServiceMonitor & PodMonitor | PodMonitor recommended    |
 | **Resource Usage**    | Higher memory usage         | Lower memory per pod      |
