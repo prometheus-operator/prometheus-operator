@@ -633,6 +633,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("DockerSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, DockerSDTestCases)
 	})
+	t.Run("DockerSwarmSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, DockerSwarmSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -3903,6 +3906,196 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
 					Host:        "127.0.0.1",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var DockerSwarmSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Minimum Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Role: "Services",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Role: "Services",
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Role: "Services",
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Filter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Role: "Services",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "starting"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filter No Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Role: "Services",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Empty String Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{""},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Repeated Value Items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "docker-swarm",
+					Role: "Services",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "healthy"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "docker-swarm",
+					Role:            "Services",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "docker-swarm",
+					Role:            "Services",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "docker-swarm",
+					Role:            "Services",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "docker-swarm",
+					Role:            "Services",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:        "docker-swarm",
+					Role:        "Services",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:        "docker-swarm",
+					Role:        "Services",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
