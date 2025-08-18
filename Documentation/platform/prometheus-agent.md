@@ -209,19 +209,19 @@ PrometheusAgent supports two deployment modes that determine how the Prometheus 
 This is the default deployment mode where PrometheusAgent is deployed as a StatefulSet. This mode is suitable for:
 
 - **Cluster-wide monitoring**: One or more high-availability Prometheus Agents scrape metrics from the entire cluster.
-- **Persistent storage requirements**: When you need persistent volumes for WAL (Write-Ahead Log) storage
-- **Centralized management**: Easier to manage fewer agent instances with predictable scaling
+- **Persistent storage requirements**: When you need persistent volumes for WAL (Write-Ahead Log) storage.
+- **Centralized management**: Easier to manage fewer agent instances with predictable scaling.
 
 ### DaemonSet Mode (Alpha)
-
-{{< alert icon="🚨" text="DaemonSet mode is currently in Alpha and requires the PrometheusAgentDaemonSet feature gate to be enabled."/>}}
 
 In DaemonSet mode, PrometheusAgent is deployed as a DaemonSet, running one pod per node. This mode is ideal for:
 
 - **Node-local monitoring**: Each agent only scrapes metrics from targets on the same node.
-- **Automatic scalability**: Agents automatically scale with node additions/removals
-- **Load distribution**: Load is naturally distributed across nodes
-- **Resource efficiency**: Lower memory usage and no persistent storage requirements
+- **Automatic scalability**: Agents automatically scale with node additions/removals.
+- **Load distribution**: Load is naturally distributed across nodes.
+- **Resource efficiency**: Lower memory usage and no persistent storage requirements.
+
+DaemonSet mode works best with `PodMonitor` resources since each agent naturally discovers and scrapes pods running on the same node.
 
 ### Comparison of Deployment Modes
 
@@ -266,35 +266,12 @@ When using DaemonSet mode, the following fields are **not allowed** and will be 
 - `persistentVolumeClaimRetentionPolicy`
 - `scrapeConfigSelector`
 - `probeSelector`
-
-### Example of Invalid Configuration
-
-```yaml
-# This configuration will be rejected
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: PrometheusAgent
-metadata:
-  name: invalid-daemonset-config
-spec:
-  mode: DaemonSet
-  replicas: 3  # ❌ Not allowed in DaemonSet mode
-  storage:     # ❌ Not allowed in DaemonSet mode
-    volumeClaimTemplate:
-      spec:
-        resources:
-          requests:
-            storage: 10Gi
-  scrapeConfigSelector:  # ❌ Not allowed in DaemonSet mode
-    matchLabels:
-      scrape: "true"
-  serviceAccountName: prometheus-agent
-```
+- `scrapeConfigNamespaceSelector`
+- `probeNamespaceSelector`
 
 ## Target Discovery in DaemonSet Mode
 
 ### PodMonitor
-
-DaemonSet mode works best with `PodMonitor` resources since each agent naturally discovers and scrapes pods running on the same node:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -309,23 +286,3 @@ spec:
   - port: metrics
     path: /metrics
 ```
-
-## Best Practices
-
-### When to Use DaemonSet Mode
-
-Choose DaemonSet mode when you have:
-- Large clusters with many nodes
-- Node-specific workloads that need monitoring
-- Resource constraints requiring distributed load
-- No requirement for persistent metric storage
-- Preference for automatic scaling with cluster size
-
-### When to Use StatefulSet Mode
-
-Choose StatefulSet mode when you need:
-- Centralized metric collection and management
-- Persistent storage for the Write-Ahead Log
-- Complex sharding strategies
-- Integration with existing StatefulSet-based workflows
-- Predictable resource allocation
