@@ -27,7 +27,7 @@ jobs:
           - suite: operatorUpgrade
             target: test-e2e-operator-upgrade
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Setup E2E environment
       uses: ./.github/actions/setup-e2e  # composite action with your setup steps
