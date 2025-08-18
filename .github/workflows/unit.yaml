@@ -21,7 +21,7 @@ jobs:
     needs: changed-files
     if: ${{ needs.changed-files.outputs.non-markdown-files }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
@@ -35,7 +35,7 @@ jobs:
     needs: changed-files
     if: ${{ needs.changed-files.outputs.non-markdown-files }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
