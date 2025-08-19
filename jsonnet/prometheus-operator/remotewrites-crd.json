@@ -1,0 +1,1185 @@
+{
+  "apiVersion": "apiextensions.k8s.io/v1",
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "annotations": {
+      "controller-gen.kubebuilder.io/version": "v0.18.0",
+      "operator.prometheus.io/version": "0.84.1"
+    },
+    "name": "remotewrites.monitoring.coreos.com"
+  },
+  "spec": {
+    "group": "monitoring.coreos.com",
+    "names": {
+      "categories": [
+        "common",
+        "giantswarm"
+      ],
+      "kind": "RemoteWrite",
+      "listKind": "RemoteWriteList",
+      "plural": "remotewrites",
+      "singular": "remotewrite"
+    },
+    "scope": "Namespaced",
+    "versions": [
+      {
+        "name": "v1alpha1",
+        "schema": {
+          "openAPIV3Schema": {
+            "description": "RemoteWrite represents schema for managed RemoteWrites in Prometheus. Reconciled by prometheus-meta-operator.",
+            "properties": {
+              "apiVersion": {
+                "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                "type": "string"
+              },
+              "kind": {
+                "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "spec": {
+                "properties": {
+                  "clusterSelector": {
+                    "description": "A label selector is a label query over a set of resources. The result of matchLabels and\nmatchExpressions are ANDed. An empty label selector matches all objects. A null\nlabel selector matches no objects.",
+                    "properties": {
+                      "matchExpressions": {
+                        "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                        "items": {
+                          "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                          "properties": {
+                            "key": {
+                              "description": "key is the label key that the selector applies to.",
+                              "type": "string"
+                            },
+                            "operator": {
+                              "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                              "type": "string"
+                            },
+                            "values": {
+                              "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "operator"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
+                      },
+                      "matchLabels": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                        "type": "object"
+                      }
+                    },
+                    "type": "object",
+                    "x-kubernetes-map-type": "atomic"
+                  },
+                  "remoteWrite": {
+                    "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus\nto a remote endpoint.",
+                    "properties": {
+                      "authorization": {
+                        "description": "Authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
+                        "properties": {
+                          "credentials": {
+                            "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "credentialsFile": {
+                            "description": "File to read a secret from, mutually exclusive with `credentials`.",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "azureAd": {
+                        "description": "AzureAD for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
+                        "properties": {
+                          "cloud": {
+                            "description": "The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
+                            "enum": [
+                              "AzureChina",
+                              "AzureGovernment",
+                              "AzurePublic"
+                            ],
+                            "type": "string"
+                          },
+                          "managedIdentity": {
+                            "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
+                            "properties": {
+                              "clientId": {
+                                "description": "The client id",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "clientId"
+                            ],
+                            "type": "object"
+                          },
+                          "oauth": {
+                            "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
+                            "properties": {
+                              "clientId": {
+                                "description": "`clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.",
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "clientSecret": {
+                                "description": "`clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "tenantId": {
+                                "description": "`tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
+                                "minLength": 1,
+                                "pattern": "^[0-9a-zA-Z-.]+$",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "clientId",
+                              "clientSecret",
+                              "tenantId"
+                            ],
+                            "type": "object"
+                          },
+                          "sdk": {
+                            "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
+                            "properties": {
+                              "tenantId": {
+                                "description": "`tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.",
+                                "pattern": "^[0-9a-zA-Z-.]+$",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "basicAuth": {
+                        "description": "BasicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
+                        "properties": {
+                          "password": {
+                            "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "username": {
+                            "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "bearerToken": {
+                        "description": "*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*\n\nDeprecated: this will be removed in a future release.",
+                        "type": "string"
+                      },
+                      "bearerTokenFile": {
+                        "description": "File from which to read bearer token for the URL.\n\nDeprecated: this will be removed in a future release. Prefer using `authorization`.",
+                        "type": "string"
+                      },
+                      "enableHTTP2": {
+                        "description": "Whether to enable HTTP2.",
+                        "type": "boolean"
+                      },
+                      "followRedirects": {
+                        "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
+                        "type": "boolean"
+                      },
+                      "headers": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "description": "Custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.",
+                        "type": "object"
+                      },
+                      "messageVersion": {
+                        "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.",
+                        "enum": [
+                          "V1.0",
+                          "V2.0"
+                        ],
+                        "type": "string"
+                      },
+                      "metadataConfig": {
+                        "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
+                        "properties": {
+                          "maxSamplesPerSend": {
+                            "description": "MaxSamplesPerSend is the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
+                            "format": "int32",
+                            "minimum": -1,
+                            "type": "integer"
+                          },
+                          "send": {
+                            "description": "Defines whether metric metadata is sent to the remote storage or not.",
+                            "type": "boolean"
+                          },
+                          "sendInterval": {
+                            "description": "Defines how frequently metric metadata is sent to the remote storage.",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "name": {
+                        "description": "The name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.",
+                        "type": "string"
+                      },
+                      "noProxy": {
+                        "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                        "type": "string"
+                      },
+                      "oauth2": {
+                        "description": "OAuth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
+                        "properties": {
+                          "clientId": {
+                            "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "clientSecret": {
+                            "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "endpointParams": {
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
+                            "type": "object"
+                          },
+                          "noProxy": {
+                            "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                            "type": "string"
+                          },
+                          "proxyConnectHeader": {
+                            "additionalProperties": {
+                              "items": {
+                                "description": "SecretKeySelector selects a key of a Secret.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "type": "array"
+                            },
+                            "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "proxyFromEnvironment": {
+                            "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                            "type": "boolean"
+                          },
+                          "proxyUrl": {
+                            "description": "`proxyURL` defines the HTTP proxy server to use.",
+                            "pattern": "^(http|https|socks5)://.+$",
+                            "type": "string"
+                          },
+                          "scopes": {
+                            "description": "`scopes` defines the OAuth2 scopes used for the token request.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "tlsConfig": {
+                            "description": "TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
+                            "properties": {
+                              "ca": {
+                                "description": "Certificate authority used when verifying server certificates.",
+                                "properties": {
+                                  "configMap": {
+                                    "description": "ConfigMap containing data to use for the targets.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "The key to select.",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                        "type": "string"
+                                      },
+                                      "optional": {
+                                        "description": "Specify whether the ConfigMap or its key must be defined",
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ],
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "secret": {
+                                    "description": "Secret containing data to use for the targets.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                        "type": "string"
+                                      },
+                                      "optional": {
+                                        "description": "Specify whether the Secret or its key must be defined",
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ],
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "cert": {
+                                "description": "Client certificate to present when doing client-authentication.",
+                                "properties": {
+                                  "configMap": {
+                                    "description": "ConfigMap containing data to use for the targets.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "The key to select.",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                        "type": "string"
+                                      },
+                                      "optional": {
+                                        "description": "Specify whether the ConfigMap or its key must be defined",
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ],
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "secret": {
+                                    "description": "Secret containing data to use for the targets.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                        "type": "string"
+                                      },
+                                      "optional": {
+                                        "description": "Specify whether the Secret or its key must be defined",
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ],
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "insecureSkipVerify": {
+                                "description": "Disable target certificate validation.",
+                                "type": "boolean"
+                              },
+                              "keySecret": {
+                                "description": "Secret containing the client key file for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "maxVersion": {
+                                "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                "enum": [
+                                  "TLS10",
+                                  "TLS11",
+                                  "TLS12",
+                                  "TLS13"
+                                ],
+                                "type": "string"
+                              },
+                              "minVersion": {
+                                "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                "enum": [
+                                  "TLS10",
+                                  "TLS11",
+                                  "TLS12",
+                                  "TLS13"
+                                ],
+                                "type": "string"
+                              },
+                              "serverName": {
+                                "description": "Used to verify the hostname for the targets.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "tokenUrl": {
+                            "description": "`tokenURL` configures the URL to fetch the token from.",
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "clientId",
+                          "clientSecret",
+                          "tokenUrl"
+                        ],
+                        "type": "object"
+                      },
+                      "proxyConnectHeader": {
+                        "additionalProperties": {
+                          "items": {
+                            "description": "SecretKeySelector selects a key of a Secret.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "type": "array"
+                        },
+                        "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                        "type": "object",
+                        "x-kubernetes-map-type": "atomic"
+                      },
+                      "proxyFromEnvironment": {
+                        "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                        "type": "boolean"
+                      },
+                      "proxyUrl": {
+                        "description": "`proxyURL` defines the HTTP proxy server to use.",
+                        "pattern": "^(http|https|socks5)://.+$",
+                        "type": "string"
+                      },
+                      "queueConfig": {
+                        "description": "QueueConfig allows tuning of the remote write queue parameters.",
+                        "properties": {
+                          "batchSendDeadline": {
+                            "description": "BatchSendDeadline is the maximum time a sample will wait in buffer.",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          },
+                          "capacity": {
+                            "description": "Capacity is the number of samples to buffer per shard before we start\ndropping them.",
+                            "type": "integer"
+                          },
+                          "maxBackoff": {
+                            "description": "MaxBackoff is the maximum retry delay.",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          },
+                          "maxRetries": {
+                            "description": "MaxRetries is the maximum number of times to retry a batch on recoverable errors.",
+                            "type": "integer"
+                          },
+                          "maxSamplesPerSend": {
+                            "description": "MaxSamplesPerSend is the maximum number of samples per send.",
+                            "type": "integer"
+                          },
+                          "maxShards": {
+                            "description": "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
+                            "type": "integer"
+                          },
+                          "minBackoff": {
+                            "description": "MinBackoff is the initial retry delay. Gets doubled for every retry.",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          },
+                          "minShards": {
+                            "description": "MinShards is the minimum number of shards, i.e. amount of concurrency.",
+                            "type": "integer"
+                          },
+                          "retryOnRateLimit": {
+                            "description": "Retry upon receiving a 429 status code from the remote-write storage.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                            "type": "boolean"
+                          },
+                          "sampleAgeLimit": {
+                            "description": "SampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "remoteTimeout": {
+                        "description": "Timeout for requests to the remote write endpoint.",
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                        "type": "string"
+                      },
+                      "roundRobinDNS": {
+                        "description": "When enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.",
+                        "type": "boolean"
+                      },
+                      "sendExemplars": {
+                        "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.",
+                        "type": "boolean"
+                      },
+                      "sendNativeHistograms": {
+                        "description": "Enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.",
+                        "type": "boolean"
+                      },
+                      "sigv4": {
+                        "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
+                        "properties": {
+                          "accessKey": {
+                            "description": "AccessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "profile": {
+                            "description": "Profile is the named AWS profile used to authenticate.",
+                            "type": "string"
+                          },
+                          "region": {
+                            "description": "Region is the AWS region. If blank, the region from the default credentials chain used.",
+                            "type": "string"
+                          },
+                          "roleArn": {
+                            "description": "RoleArn is the named AWS profile used to authenticate.",
+                            "type": "string"
+                          },
+                          "secretKey": {
+                            "description": "SecretKey is the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "tlsConfig": {
+                        "description": "TLS Config to use for the URL.",
+                        "properties": {
+                          "ca": {
+                            "description": "Certificate authority used when verifying server certificates.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "caFile": {
+                            "description": "Path to the CA cert in the Prometheus container to use for the targets.",
+                            "type": "string"
+                          },
+                          "cert": {
+                            "description": "Client certificate to present when doing client-authentication.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "certFile": {
+                            "description": "Path to the client cert file in the Prometheus container for the targets.",
+                            "type": "string"
+                          },
+                          "insecureSkipVerify": {
+                            "description": "Disable target certificate validation.",
+                            "type": "boolean"
+                          },
+                          "keyFile": {
+                            "description": "Path to the client key file in the Prometheus container for the targets.",
+                            "type": "string"
+                          },
+                          "keySecret": {
+                            "description": "Secret containing the client key file for the targets.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "maxVersion": {
+                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                            "enum": [
+                              "TLS10",
+                              "TLS11",
+                              "TLS12",
+                              "TLS13"
+                            ],
+                            "type": "string"
+                          },
+                          "minVersion": {
+                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                            "enum": [
+                              "TLS10",
+                              "TLS11",
+                              "TLS12",
+                              "TLS13"
+                            ],
+                            "type": "string"
+                          },
+                          "serverName": {
+                            "description": "Used to verify the hostname for the targets.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "url": {
+                        "description": "The URL of the endpoint to send samples to.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "writeRelabelConfigs": {
+                        "description": "The list of remote write relabel configurations.",
+                        "items": {
+                          "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                          "properties": {
+                            "action": {
+                              "default": "replace",
+                              "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                              "enum": [
+                                "replace",
+                                "Replace",
+                                "keep",
+                                "Keep",
+                                "drop",
+                                "Drop",
+                                "hashmod",
+                                "HashMod",
+                                "labelmap",
+                                "LabelMap",
+                                "labeldrop",
+                                "LabelDrop",
+                                "labelkeep",
+                                "LabelKeep",
+                                "lowercase",
+                                "Lowercase",
+                                "uppercase",
+                                "Uppercase",
+                                "keepequal",
+                                "KeepEqual",
+                                "dropequal",
+                                "DropEqual"
+                              ],
+                              "type": "string"
+                            },
+                            "modulus": {
+                              "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                              "format": "int64",
+                              "type": "integer"
+                            },
+                            "regex": {
+                              "description": "Regular expression against which the extracted value is matched.",
+                              "type": "string"
+                            },
+                            "replacement": {
+                              "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                              "type": "string"
+                            },
+                            "separator": {
+                              "description": "Separator is the string between concatenated SourceLabels.",
+                              "type": "string"
+                            },
+                            "sourceLabels": {
+                              "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                              "items": {
+                                "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
+                                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "targetLabel": {
+                              "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ],
+                    "type": "object"
+                  },
+                  "secrets": {
+                    "description": "Secrets data to be created along with the configured Prometheus resource.\nThis provides the data for any v1.SecretKeySelector used in the subsequent RemoteWrite field.\nProvided name and keys should match values in v1.SecretKeySelector fields.",
+                    "items": {
+                      "properties": {
+                        "data": {
+                          "additionalProperties": {
+                            "format": "byte",
+                            "type": "string"
+                          },
+                          "type": "object"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "clusterSelector",
+                  "remoteWrite"
+                ],
+                "type": "object"
+              },
+              "status": {
+                "properties": {
+                  "configuredPrometheuses": {
+                    "items": {
+                      "description": "ObjectReference contains enough information to let you inspect or modify the referred object.",
+                      "properties": {
+                        "apiVersion": {
+                          "description": "API version of the referent.",
+                          "type": "string"
+                        },
+                        "fieldPath": {
+                          "description": "If referring to a piece of an object instead of an entire object, this string\nshould contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].\nFor example, if the object reference is to a container within a pod, this would take on a value like:\n\"spec.containers{name}\" (where \"name\" refers to the name of the container that triggered\nthe event) or if no container name is specified \"spec.containers[2]\" (container with\nindex 2 in this pod). This syntax is chosen only to have some well-defined way of\nreferencing a part of an object.",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "description": "Kind of the referent.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+                          "type": "string"
+                        },
+                        "resourceVersion": {
+                          "description": "Specific resourceVersion to which this reference is made, if any.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency",
+                          "type": "string"
+                        },
+                        "uid": {
+                          "description": "UID of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "x-kubernetes-map-type": "atomic"
+                    },
+                    "type": "array"
+                  },
+                  "syncedSecrets": {
+                    "items": {
+                      "description": "ObjectReference contains enough information to let you inspect or modify the referred object.",
+                      "properties": {
+                        "apiVersion": {
+                          "description": "API version of the referent.",
+                          "type": "string"
+                        },
+                        "fieldPath": {
+                          "description": "If referring to a piece of an object instead of an entire object, this string\nshould contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].\nFor example, if the object reference is to a container within a pod, this would take on a value like:\n\"spec.containers{name}\" (where \"name\" refers to the name of the container that triggered\nthe event) or if no container name is specified \"spec.containers[2]\" (container with\nindex 2 in this pod). This syntax is chosen only to have some well-defined way of\nreferencing a part of an object.",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "description": "Kind of the referent.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                          "type": "string"
+                        },
+                        "namespace": {
+                          "description": "Namespace of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+                          "type": "string"
+                        },
+                        "resourceVersion": {
+                          "description": "Specific resourceVersion to which this reference is made, if any.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency",
+                          "type": "string"
+                        },
+                        "uid": {
+                          "description": "UID of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "x-kubernetes-map-type": "atomic"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "metadata",
+              "spec"
+            ],
+            "type": "object"
+          }
+        },
+        "served": true,
+        "storage": true,
+        "subresources": {
+          "status": {}
+        }
+      }
+    ]
+  }
+}
