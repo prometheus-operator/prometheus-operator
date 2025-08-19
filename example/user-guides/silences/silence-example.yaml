@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: Silence
+metadata:
+  name: maintenance-silence
+  namespace: monitoring
+  labels:
+    app: example-app
+    purpose: maintenance
+spec:
+  # Comment provides context about why this silence was created
+  comment: "Scheduled maintenance window for application upgrade"
+
+  # When the silence expires
+  expiresAt: "2025-08-13T16:00:00Z"
+
+  # Matchers define which alerts to silence
+  matchers:
+    - name: alertname
+      value: HighMemoryUsage
+      matchType: "="
+    - name: instance
+      value: app-.*
+      matchType: "=~"  # Regex match
+    - name: severity
+      value: info
+      matchType: "!="  # Not equal
+
+  # Optional: Target specific Alertmanager instance
+  # If not specified, applies to all Alertmanager instances in the namespace
+  alertmanagerRef:
+    name: main
+    namespace: monitoring

@@ -28,6 +28,8 @@ type Interface interface {
 	PrometheusAgents() PrometheusAgentInformer
 	// ScrapeConfigs returns a ScrapeConfigInformer.
 	ScrapeConfigs() ScrapeConfigInformer
+	// Silences returns a SilenceInformer.
+	Silences() SilenceInformer
 }
 
 type version struct {
@@ -54,4 +56,9 @@ func (v *version) PrometheusAgents() PrometheusAgentInformer {
 // ScrapeConfigs returns a ScrapeConfigInformer.
 func (v *version) ScrapeConfigs() ScrapeConfigInformer {
 	return &scrapeConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Silences returns a SilenceInformer.
+func (v *version) Silences() SilenceInformer {
+	return &silenceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

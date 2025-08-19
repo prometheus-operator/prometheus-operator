@@ -39,3 +39,11 @@ type ScrapeConfigListerExpansion interface{}
 // ScrapeConfigNamespaceListerExpansion allows custom methods to be added to
 // ScrapeConfigNamespaceLister.
 type ScrapeConfigNamespaceListerExpansion interface{}
+
+// SilenceListerExpansion allows custom methods to be added to
+// SilenceLister.
+type SilenceListerExpansion interface{}
+
+// SilenceNamespaceListerExpansion allows custom methods to be added to
+// SilenceNamespaceLister.
+type SilenceNamespaceListerExpansion interface{}

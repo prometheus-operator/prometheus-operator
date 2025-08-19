@@ -20451,6 +20451,8 @@ Resource Types:
 <a href="#monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent</a>
 </li><li>
 <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig</a>
+</li><li>
+<a href="#monitoring.coreos.com/v1alpha1.Silence">Silence</a>
 </li></ul>
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
@@ -23142,6 +23144,140 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Silence">Silence
+</h3>
+<div>
+<p>Silence enables GitOps-friendly management of Alertmanager silences through
+Kubernetes resources by extending the existing Alertmanager controller.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>Silence</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SilenceSpec">
+SilenceSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of the desired behavior of the Silence.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>comment</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Comment provides context about the silence, typically explaining
+the reason for creating it (e.g., &ldquo;Scheduled maintenance window&rdquo;).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>expiresAt</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>ExpiresAt specifies when the silence expires and alert notifications
+resume. This field is required to prevent indefinite silences.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SilenceMatcher">
+[]SilenceMatcher
+</a>
+</em>
+</td>
+<td>
+<p>Matchers define the alert matching rules for this silence.
+An alert is silenced only if all matchers match the alert&rsquo;s labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.AlertmanagerRef">
+AlertmanagerRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AlertmanagerRef references a specific Alertmanager instance to apply this silence to.
+If not specified, the silence applies to all Alertmanager instances in the namespace.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SilenceStatus">
+SilenceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Most recently observed status of the Silence.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfigSpec">AlertmanagerConfigSpec
 </h3>
 <p>
@@ -23220,6 +23356,48 @@ the resource&rsquo;s namespace.</p>
 <td>
 <em>(Optional)</em>
 <p>List of MuteTimeInterval specifying when the routes should be muted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerRef">AlertmanagerRef
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.SilenceSpec">SilenceSpec</a>)
+</p>
+<div>
+<p>AlertmanagerRef references a specific Alertmanager instance for targeted silence application</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the target Alertmanager instance</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Namespace of the target Alertmanager instance.
+Defaults to the namespace of the Silence object if not specified.</p>
 </td>
 </tr>
 </tbody>
@@ -32793,6 +32971,302 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.SilenceCondition">SilenceCondition
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.SilenceStatus">SilenceStatus</a>)
+</p>
+<div>
+<p>SilenceCondition represents the state of a silence at a certain point using
+standard Kubernetes condition semantics for status reporting.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SilenceConditionType">
+SilenceConditionType
+</a>
+</em>
+</td>
+<td>
+<p>Type of the condition (Ready, Synced, Failed).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#conditionstatus-v1-meta">
+Kubernetes meta/v1.ConditionStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the condition, one of True, False, Unknown.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lastTransitionTime</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LastTransitionTime is the last time the condition transitioned from one status to another.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Reason is a unique, one-word, CamelCase reason for the condition&rsquo;s last transition.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>message</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message is a human-readable message indicating details about the last transition.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.SilenceConditionType">SilenceConditionType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.SilenceCondition">SilenceCondition</a>)
+</p>
+<div>
+<p>SilenceConditionType represents the type of condition for a Silence.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Failed&#34;</p></td>
+<td><p>SilenceFailed indicates an error occurred during Alertmanager API interaction.</p>
+</td>
+</tr><tr><td><p>&#34;Ready&#34;</p></td>
+<td><p>SilenceReady indicates the silence has been successfully created/updated via Alertmanager REST API.</p>
+</td>
+</tr><tr><td><p>&#34;Synced&#34;</p></td>
+<td><p>SilenceSynced indicates the silence is synchronized across all target Alertmanager instances.</p>
+</td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.SilenceMatcher">SilenceMatcher
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.SilenceSpec">SilenceSpec</a>)
+</p>
+<div>
+<p>SilenceMatcher defines a single matcher for alert labels in a silence.
+Matchers follow Alertmanager&rsquo;s label matching semantics.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name specifies the alert label name to match against.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value specifies the alert label value to match against.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>MatchType defines how the matcher compares the label value.
+&ldquo;=&rdquo; for exact equality, &ldquo;!=&rdquo; for inequality,
+&ldquo;=~&rdquo; for regex match, &ldquo;!~&rdquo; for regex non-match.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.SilenceSpec">SilenceSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Silence">Silence</a>)
+</p>
+<div>
+<p>SilenceSpec defines the desired state of Silence</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>comment</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Comment provides context about the silence, typically explaining
+the reason for creating it (e.g., &ldquo;Scheduled maintenance window&rdquo;).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>expiresAt</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>ExpiresAt specifies when the silence expires and alert notifications
+resume. This field is required to prevent indefinite silences.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SilenceMatcher">
+[]SilenceMatcher
+</a>
+</em>
+</td>
+<td>
+<p>Matchers define the alert matching rules for this silence.
+An alert is silenced only if all matchers match the alert&rsquo;s labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.AlertmanagerRef">
+AlertmanagerRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AlertmanagerRef references a specific Alertmanager instance to apply this silence to.
+If not specified, the silence applies to all Alertmanager instances in the namespace.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.SilenceStatus">SilenceStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Silence">Silence</a>)
+</p>
+<div>
+<p>SilenceStatus tracks the synchronization state across multiple Alertmanager instances</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.SilenceCondition">
+[]SilenceCondition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions represent the latest available observations of the silence&rsquo;s state
+using standard Kubernetes condition semantics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>silenceID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SilenceID contains the Alertmanager-assigned unique identifier for this silence.
+Set once the silence is successfully created via Alertmanager REST API v2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>observedGeneration</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ObservedGeneration represents the .metadata.generation that was last processed
+by the controller to track if updates are needed.</p>
 </td>
 </tr>
 </tbody>
