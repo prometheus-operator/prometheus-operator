@@ -141,7 +141,16 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 					pollErr = fmt.Errorf("expected binding for resource %q with name %q in namespace %q to have conditions, but got none", resource, workload.GetName(), workload.GetNamespace())
 					return false, nil
 				}
-				if binding.Conditions[0].Status != acceptedStatus {
+
+				var foundCondition bool
+				for _, cond := range binding.Conditions {
+					if cond.Status == acceptedStatus {
+						foundCondition = true
+						break
+					}
+				}
+
+				if !foundCondition {
 					pollErr = fmt.Errorf("expected binding condition status to be %q, got %q", acceptedStatus, bindings[0].Conditions[0].Status)
 					return false, nil
 				}
