@@ -1199,7 +1199,7 @@ type DockerSwarmSDConfig struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int32 `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 	// Optional filters to limit the discovery process to a subset of available
 	// resources.
 	// The available filters are listed in the upstream documentation:
