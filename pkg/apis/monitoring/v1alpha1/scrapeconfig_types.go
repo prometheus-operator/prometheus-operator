@@ -1020,9 +1020,12 @@ type DockerSDConfig struct {
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// The port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port,omitempty"`
+	Port *int32 `json:"port,omitempty"`
 	// The host to use if the container is in host networking mode.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Configure whether to match the first network if the container has multiple networks defined.
@@ -1196,7 +1199,7 @@ type DockerSwarmSDConfig struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int32 `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 	// Optional filters to limit the discovery process to a subset of available
 	// resources.
 	// The available filters are listed in the upstream documentation:

@@ -4376,6 +4376,15 @@ spec:
                 x-kubernetes-list-map-keys:
                 - ip
                 x-kubernetes-list-type: map
+              hostUsers:
+                description: |-
+                  HostUsers supports the user space in Kubernetes.
+
+                  More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+
+                  The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+                  Starting Kubernetes 1.33, the feature is enabled by default.
+                type: boolean
               image:
                 description: |-
                   Image if specified has precedence over baseImage, tag and sha
@@ -5898,9 +5907,10 @@ spec:
                 description: |-
                   Minimum number of seconds for which a newly created pod should be ready
                   without any of its container crashing for it to be considered available.
-                  Defaults to 0 (pod will be considered available as soon as it is ready)
-                  This is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.
+
+                  If unset, pods will be considered available as soon as they are ready.
                 format: int32
+                minimum: 0
                 type: integer
               nodeSelector:
                 additionalProperties:

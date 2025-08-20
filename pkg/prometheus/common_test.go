@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -279,6 +280,30 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 
 			require.Equal(t, tc.expectedOTLPReceiverFlag, argsEnabled)
 			require.Equal(t, tc.expectedOTLPFeatureEnabled, featureEnabled)
+		})
+	}
+}
+
+func TestLabelSelectorForStatefulSets(t *testing.T) {
+	for _, tc := range []struct {
+		mode string
+		exp  string
+	}{
+		{
+			mode: "server",
+			exp:  "managed-by in (prometheus-operator),operator.prometheus.io/shard,operator.prometheus.io/name,operator.prometheus.io/mode in (server)",
+		},
+		{
+			mode: "agent",
+			exp:  "managed-by in (prometheus-operator),operator.prometheus.io/shard,operator.prometheus.io/name,operator.prometheus.io/mode in (agent)",
+		},
+	} {
+		t.Run(tc.mode, func(t *testing.T) {
+			ls := LabelSelectorForStatefulSets(tc.mode)
+			require.Equal(t, tc.exp, ls)
+
+			_, err := labels.Parse(ls)
+			require.NoError(t, err)
 		})
 	}
 }

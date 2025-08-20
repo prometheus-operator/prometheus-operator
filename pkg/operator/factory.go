@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"fmt"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,9 +24,17 @@ import (
 )
 
 const (
-	managedByOperatorLabel      = "managed-by"
-	managedByOperatorLabelValue = "prometheus-operator"
+	// managedByOperatorLabel is the legacy label key.
+	// It is redundant with ManagedByLabelKey but preserved for historical
+	// reasons.
+	managedByOperatorLabel = "managed-by"
 )
+
+// ManagedByOperatorLabelSelector returns a label selector which selects
+// objects managed by this operator.
+func ManagedByOperatorLabelSelector() string {
+	return fmt.Sprintf("%s in (%s)", managedByOperatorLabel, ManagedByLabelValue)
+}
 
 type ObjectOption func(metav1.Object)
 
@@ -34,7 +43,7 @@ type Owner interface {
 	schema.ObjectKind
 }
 
-// WithOwner adds the given owner to the list of owner references.
+// WithOwner adds the given object to the list of owner references.
 func WithOwner(owner Owner) ObjectOption {
 	return func(o metav1.Object) {
 		o.SetOwnerReferences(
@@ -51,7 +60,7 @@ func WithOwner(owner Owner) ObjectOption {
 	}
 }
 
-// WithManagingOwner adds the given owner as a managing controller.
+// WithManagingOwner adds the given object as the managing object.
 func WithManagingOwner(owner Owner) ObjectOption {
 	return func(o metav1.Object) {
 		o.SetOwnerReferences(
@@ -96,6 +105,23 @@ func WithLabels(labels map[string]string) ObjectOption {
 	}
 }
 
+// WithSelectorLabels merges the labels from the selector with the existing
+// object's labels.
+// The selector's labels take precedence over the existing ones.
+func WithSelectorLabels(selector *metav1.LabelSelector) ObjectOption {
+	return func(o metav1.Object) {
+		if selector == nil {
+			return
+		}
+
+		l := Map{}
+		l = l.Merge(selector.MatchLabels)
+		l = l.Merge(o.GetLabels())
+
+		o.SetLabels(l)
+	}
+}
+
 // WithAnnotations merges the given annotations with the existing object's annotations.
 // The given annotations take precedence over the existing ones.
 func WithAnnotations(annotations map[string]string) ObjectOption {
@@ -108,10 +134,6 @@ func WithAnnotations(annotations map[string]string) ObjectOption {
 	}
 }
 
-// InputHashAnnotationName is the name of the annotation used to store the
-// operator's computed hash value.
-const InputHashAnnotationName = "prometheus-operator-input-hash"
-
 // WithInputHashAnnotation records the given hash string in the object's
 // annotations.
 func WithInputHashAnnotation(h string) ObjectOption {
@@ -120,7 +142,7 @@ func WithInputHashAnnotation(h string) ObjectOption {
 		if a == nil {
 			a = map[string]string{}
 		}
-		a[InputHashAnnotationName] = h
+		a[InputHashAnnotationKey] = h
 		o.SetAnnotations(a)
 	}
 }
@@ -141,9 +163,13 @@ func WithoutKubectlAnnotations() ObjectOption {
 	}
 }
 
-// UpdateObject updates the object with the provided options.
+// UpdateObject updates the object's metadata with the provided options.
+// It automatically injects the "managed-by" label which identifies the
+// operator as the managing entity.
 func UpdateObject(o metav1.Object, opts ...ObjectOption) {
-	WithLabels(map[string]string{managedByOperatorLabel: managedByOperatorLabelValue})(o)
+	WithLabels(map[string]string{
+		managedByOperatorLabel: ManagedByLabelValue,
+	})(o)
 
 	for _, opt := range opts {
 		opt(o)

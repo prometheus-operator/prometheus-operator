@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.84.0"
+      "operator.prometheus.io/version": "0.84.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -2260,6 +2260,15 @@
                     ],
                     "type": "string"
                   },
+                  "enableFeatures": {
+                    "description": "Enable access to Thanos Ruler feature flags. By default, no features are enabled.\n\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nFor more information see https://thanos.io/tip/components/rule.md/\n\nIt requires Thanos >= 0.39.0.",
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
+                  },
                   "enableServiceLinks": {
                     "description": "Indicates whether information about services should be injected into pod's environment variables",
                     "type": "boolean"
@@ -2521,6 +2530,10 @@
                       "ip"
                     ],
                     "x-kubernetes-list-type": "map"
+                  },
+                  "hostUsers": {
+                    "description": "HostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
+                    "type": "boolean"
                   },
                   "image": {
                     "description": "Thanos container image URL.",
@@ -3853,8 +3866,9 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\nDefaults to 0 (pod will be considered available as soon as it is ready)\nThis is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
+                    "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
                     "format": "int32",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "nodeSelector": {
@@ -4959,6 +4973,11 @@
                     "format": "int32",
                     "type": "integer"
                   },
+                  "resendDelay": {
+                    "description": "Minimum amount of time to wait before resending an alert to Alertmanager.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                    "type": "string"
+                  },
                   "resources": {
                     "description": "Resources defines the resource requirements for single Pods.\nIf not provided, no requests/limits will be set",
                     "properties": {
@@ -5037,6 +5056,11 @@
                     "format": "int32",
                     "minimum": 1,
                     "type": "integer"
+                  },
+                  "ruleGracePeriod": {
+                    "description": "Minimum duration between alert and restored \"for\" state.\nThis is maintained only for alerts with configured \"for\" time greater than grace period.\nIt requires Thanos >= v0.30.0.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                    "type": "string"
                   },
                   "ruleNamespaceSelector": {
                     "description": "Namespaces to be selected for Rules discovery. If unspecified, only\nthe same namespace as the ThanosRuler object is in is used.",

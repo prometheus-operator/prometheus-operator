@@ -718,6 +718,9 @@ type CommonPrometheusFields struct {
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
 	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	//
+	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+	//
 	// It requires Prometheus >= v3.5.0.
 	//
 	// +optional
@@ -725,13 +728,12 @@ type CommonPrometheusFields struct {
 
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
-	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	//
-	// This is an alpha field from kubernetes 1.22 until 1.24 which requires
-	// enabling the StatefulSetMinReadySeconds feature gate.
+	// If unset, pods will be considered available as soon as they are ready.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	MinReadySeconds *uint32 `json:"minReadySeconds,omitempty"`
+	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 
 	// Optional list of hosts and IPs that will be injected into the Pod's
 	// hosts file if specified.
@@ -926,6 +928,17 @@ type CommonPrometheusFields struct {
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+
+	// HostUsers supports the user space in Kubernetes.
+	//
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	//
+	//
+	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+	// Starting Kubernetes 1.33, the feature is enabled by default.
+	//
+	// +optional
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 // Specifies the validation scheme for metric and label names.

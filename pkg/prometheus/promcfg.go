@@ -1178,11 +1178,11 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 
 func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]string) {
 	podAnnotations := map[string]string{
-		"kubectl.kubernetes.io/default-container": "prometheus",
+		operator.DefaultContainerAnnotationKey: "prometheus",
 	}
 
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
+		operator.ApplicationVersionLabelKey: cg.version.String(),
 	}
 
 	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata
@@ -1570,10 +1570,21 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
 
+	var paramsMapSlice yaml.MapSlice
 	if m.Spec.Module != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
-			{Key: "module", Value: []string{m.Spec.Module}},
-		}})
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: "module", Value: []string{m.Spec.Module}})
+	}
+
+	for _, p := range m.Spec.Params {
+		if m.Spec.Module != "" && p.Name == "module" {
+			continue
+		}
+
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: p.Name, Value: p.Values})
+	}
+
+	if len(paramsMapSlice) != 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: paramsMapSlice})
 	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()

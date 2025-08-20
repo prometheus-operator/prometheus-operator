@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.84.0"
+      "operator.prometheus.io/version": "0.84.1"
     },
     "name": "alertmanagers.monitoring.coreos.com"
   },
@@ -3941,6 +3941,10 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
+                  "hostUsers": {
+                    "description": "HostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
+                    "type": "boolean"
+                  },
                   "image": {
                     "description": "Image if specified has precedence over baseImage, tag and sha\ncombinations. Specifying the version is still necessary to ensure the\nPrometheus Operator knows what version of Alertmanager is being\nconfigured.",
                     "type": "string"
@@ -5282,8 +5286,9 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\nDefaults to 0 (pod will be considered available as soon as it is ready)\nThis is an alpha field from kubernetes 1.22 until 1.24 which requires enabling the StatefulSetMinReadySeconds feature gate.",
+                    "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
                     "format": "int32",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "nodeSelector": {

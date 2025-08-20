@@ -61,6 +61,11 @@ const (
 	alertmanagerConfigFileCompressed   = "alertmanager.yaml.gz"
 	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
 
+	alertmanagerWebPort         = 9093
+	alertmanagerMeshPort        = 9094
+	alertmanagerMeshUDPPortName = "mesh-udp"
+	alertmanagerMeshTCPPortName = "mesh-tcp"
+
 	alertmanagerStorageDir = "/alertmanager"
 
 	defaultTerminationGracePeriodSeconds = int64(120)
@@ -110,10 +115,11 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(prefixedName(am.Name)),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(am.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
+		operator.WithInputHashAnnotation(inputHash),
 		operator.WithLabels(am.GetLabels()),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(am),
 		operator.WithoutKubectlAnnotations(),
@@ -180,30 +186,30 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 	svc := &v1.Service{
 		Spec: v1.ServiceSpec{
-			ClusterIP:                "None",
+			ClusterIP:                v1.ClusterIPNone,
 			PublishNotReadyAddresses: true,
 			Ports: []v1.ServicePort{
 				{
 					Name:       a.Spec.PortName,
-					Port:       9093,
+					Port:       alertmanagerWebPort,
 					TargetPort: intstr.FromString(a.Spec.PortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
 					Name:       "tcp-mesh",
-					Port:       9094,
-					TargetPort: intstr.FromInt(9094),
+					Port:       alertmanagerMeshPort,
+					TargetPort: intstr.FromString(alertmanagerMeshTCPPortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
 					Name:       "udp-mesh",
-					Port:       9094,
-					TargetPort: intstr.FromInt(9094),
+					Port:       alertmanagerMeshPort,
+					TargetPort: intstr.FromString(alertmanagerMeshUDPPortName),
 					Protocol:   v1.ProtocolUDP,
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "alertmanager",
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
 			},
 		},
 	}
@@ -376,7 +382,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": version.String(),
+		operator.ApplicationVersionLabelKey: version.String(),
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
@@ -395,7 +401,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		podLabels[k] = v
 	}
 
-	podAnnotations["kubectl.kubernetes.io/default-container"] = "alertmanager"
+	podAnnotations[operator.DefaultContainerAnnotationKey] = "alertmanager"
 
 	var operatorInitContainers []v1.Container
 
@@ -419,13 +425,13 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	ports := []v1.ContainerPort{
 		{
-			Name:          "mesh-tcp",
-			ContainerPort: 9094,
+			Name:          alertmanagerMeshTCPPortName,
+			ContainerPort: alertmanagerMeshPort,
 			Protocol:      v1.ProtocolTCP,
 		},
 		{
-			Name:          "mesh-udp",
-			ContainerPort: 9094,
+			Name:          alertmanagerMeshUDPPortName,
+			ContainerPort: alertmanagerMeshPort,
 			Protocol:      v1.ProtocolUDP,
 		},
 	}
@@ -433,7 +439,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		ports = append([]v1.ContainerPort{
 			{
 				Name:          a.Spec.PortName,
-				ContainerPort: 9093,
+				ContainerPort: alertmanagerWebPort,
 				Protocol:      v1.ProtocolTCP,
 			},
 		}, ports...)
@@ -745,11 +751,6 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	var minReadySeconds int32
-	if a.Spec.MinReadySeconds != nil {
-		minReadySeconds = int32(*a.Spec.MinReadySeconds)
-	}
-
 	operatorInitContainers = append(operatorInitContainers,
 		operator.CreateConfigReloader(
 			"init-config-reloader",
@@ -774,7 +775,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	spec := appsv1.StatefulSetSpec{
 		ServiceName:     getServiceName(a),
 		Replicas:        a.Spec.Replicas,
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(a.Spec.MinReadySeconds, 0),
 		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,
@@ -804,6 +805,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
 				EnableServiceLinks:            a.Spec.EnableServiceLinks,
+				HostUsers:                     a.Spec.HostUsers,
 			},
 		},
 	}

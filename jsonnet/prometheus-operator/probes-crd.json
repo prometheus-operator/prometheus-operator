@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.84.0"
+      "operator.prometheus.io/version": "0.84.1"
     },
     "name": "probes.monitoring.coreos.com"
   },
@@ -597,6 +597,38 @@
                     ],
                     "type": "object"
                   },
+                  "params": {
+                    "description": "The list of HTTP query parameters for the scrape.\nPlease note that the `.spec.module` field takes precedence over the `module` parameter from this list when both are defined.\nThe module name must be added using Module under ProbeSpec.",
+                    "items": {
+                      "description": "ProbeParam defines specification of extra parameters for a Probe.",
+                      "properties": {
+                        "name": {
+                          "description": "The parameter name",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "The parameter values",
+                          "items": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "minItems": 1,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
+                  },
                   "prober": {
                     "description": "Specification for the prober to use for probing targets.\nThe prober.URL parameter is required. Targets cannot be probed if left empty.",
                     "properties": {
@@ -678,7 +710,7 @@
                     "type": "string"
                   },
                   "scrapeClassicHistograms": {
-                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
+                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.",
                     "type": "boolean"
                   },
                   "scrapeProtocols": {

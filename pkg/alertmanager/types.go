@@ -428,6 +428,7 @@ type msTeamsV2Config struct {
 
 type jiraConfig struct {
 	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty"`
+	SendResolved      *bool             `yaml:"send_resolved,omitempty"`
 	APIURL            string            `yaml:"api_url,omitempty"`
 	Project           string            `yaml:"project,omitempty"`
 	Summary           string            `yaml:"summary,omitempty"`
@@ -461,11 +462,13 @@ type rocketchatAttachmentAction struct {
 }
 
 type rocketChatConfig struct {
-	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
-	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
-	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
-	TokenID       *string           `yaml:"token_id,omitempty" json:"token_id,omitempty"`
-	Token         *string           `yaml:"token,omitempty" json:"token,omitempty"`
+	SendResolved *bool             `yaml:"send_resolved,omitempty"`
+	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
+	APIURL       string            `yaml:"api_url,omitempty"`
+	TokenID      *string           `yaml:"token_id,omitempty"`
+	TokenIDFile  string            `yaml:"token_id_file,omitempty"`
+	Token        *string           `yaml:"token,omitempty"`
+	TokenFile    string            `yaml:"token_file,omitempty"`
 	// RocketChat channel override, (like #other-channel or @username).
 	Channel     string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Color       string                        `yaml:"color,omitempty" json:"color,omitempty"`

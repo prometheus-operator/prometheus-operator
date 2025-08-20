@@ -58,9 +58,9 @@ func makeDaemonSet(
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
-			prompkg.PrometheusNameLabelName: objMeta.GetName(),
-			prompkg.PrometheusModeLabeLName: prometheusMode,
+			prompkg.PrometheusModeLabelName: prometheusMode,
 		}),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
 		operator.WithoutKubectlAnnotations(),
@@ -133,11 +133,6 @@ func makeDaemonSetSpec(
 
 	var watchedDirectories []string
 
-	var minReadySeconds int32
-	if cpf.MinReadySeconds != nil {
-		minReadySeconds = int32(*cpf.MinReadySeconds)
-	}
-
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
 			p,
@@ -200,7 +195,7 @@ func makeDaemonSetSpec(
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(cpf.MinReadySeconds, 0),
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
@@ -223,6 +218,7 @@ func makeDaemonSetSpec(
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
 				EnableServiceLinks:            cpf.EnableServiceLinks,
+				HostUsers:                     cpf.HostUsers,
 			},
 		},
 	}

@@ -96,6 +96,8 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.storage))",message="storage cannot be set when mode is DaemonSet"
 // +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.shards) && self.shards > 1)",message="shards cannot be greater than 1 when mode is DaemonSet"
 // +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.persistentVolumeClaimRetentionPolicy))",message="persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet"
+// +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigSelector))",message="scrapeConfigSelector cannot be set when mode is DaemonSet"
+// +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeSelector))",message="probeSelector cannot be set when mode is DaemonSet"
 type PrometheusAgentSpec struct {
 	// Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
 	//

@@ -30,7 +30,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -52,10 +51,10 @@ import (
 )
 
 const (
-	resyncPeriod     = 5 * time.Minute
-	thanosRulerLabel = "thanos-ruler"
-	controllerName   = "thanos-controller"
-	rwConfigFile     = "remote-write.yaml"
+	resyncPeriod              = 5 * time.Minute
+	applicationNameLabelValue = "thanos-ruler"
+	controllerName            = "thanos-controller"
+	rwConfigFile              = "remote-write.yaml"
 )
 
 var minRemoteWriteVersion = semver.MustParse("0.24.0")
@@ -227,7 +226,19 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			c.Namespaces.DenyList,
 			o.kclient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				// TODO(simonpasquier): use a more restrictive label selector
+				// selecting only ThanosRuler statefulsets (e.g.
+				// "app.kubernetes.io/name in (thanos-ruler)").
+				//
+				// We need to wait for a couple of releases after [1] to ensure
+				// that the expected labels have been propagated to the
+				// ThanosRuler statefulsets otherwise the informer won't select
+				// any object.
+				//
+				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
+				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
@@ -317,8 +328,9 @@ func (o *Operator) addHandlers() {
 		o.logger,
 		o.accessor,
 		o.metrics,
-		"ConfigMap",
+		operator.ConfigMapGVK().Kind,
 		o.enqueueForThanosRulerNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
 	))
 
 	o.ruleInfs.AddEventHandler(operator.NewEventHandler(
@@ -327,6 +339,12 @@ func (o *Operator) addHandlers() {
 		o.metrics,
 		monitoringv1.PrometheusRuleKind,
 		o.enqueueForRulesNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
 	// The controller needs to watch the namespaces in which the rules live
@@ -538,12 +556,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
 		return nil
 	}
 
-	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationName])
+	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationKey])
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 	sErr, ok := err.(*apierrors.StatusError)
@@ -662,15 +680,6 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *opera
 	}
 
 	return fmt.Sprintf("%d", hash), nil
-}
-
-func ListOptions(name string) metav1.ListOptions {
-	return metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app.kubernetes.io/name": thanosRulerLabel,
-			thanosRulerLabel:         name,
-		})).String(),
-	}
 }
 
 func (o *Operator) enqueueForThanosRulerNamespace(nsName string) {
@@ -808,10 +817,10 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 // The requirement to make a change here should be carefully evaluated.
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name":       "thanos-ruler",
-		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   name,
-		"thanos-ruler":                 name,
+		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
+		operator.ManagedByLabelKey:           operator.ManagedByLabelValue,
+		operator.ApplicationInstanceLabelKey: name,
+		"thanos-ruler":                       name,
 	}
 }
 

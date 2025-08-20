@@ -40,15 +40,14 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -895,12 +894,19 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), prometheus.ListOptions(name))
-	if err != nil {
-		t.Fatal(err)
-	}
-	res := pods.Items[0].Spec.Containers[0].Resources
+	podSelector := fields.SelectorFromSet(fields.Set(map[string]string{
+		operator.ApplicationNameLabelKey:     "prometheus",
+		operator.ApplicationInstanceLabelKey: name,
+	})).String()
+	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
+		context.Background(),
+		metav1.ListOptions{
+			LabelSelector: podSelector,
+		},
+	)
+	require.NoError(t, err)
 
+	res := pods.Items[0].Spec.Containers[0].Resources
 	if !reflect.DeepEqual(res, p.Spec.Resources) {
 		t.Fatalf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
 	}
@@ -919,31 +925,35 @@ func testPromResourceUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
+	var pollErr error
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: podSelector,
+			},
+		)
 		if err != nil {
-			return false, err
+			pollErr = err
+			return false, nil
 		}
 
 		if len(pods.Items) != 1 {
+			pollErr = fmt.Errorf("expected 1 pod, got %d", len(pods.Items))
 			return false, nil
 		}
 
 		res = pods.Items[0].Spec.Containers[0].Resources
 		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			pollErr = fmt.Errorf("resources don't match\ngot: %#+v\nwant: %#+v", res, p.Spec.Resources)
 			return false, nil
 		}
 
 		return true, nil
 	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err, fmt.Sprintf("%s: %s", err, pollErr))
 }
 
 func testPromStorageLabelsAnnotations(t *testing.T) {
@@ -1042,6 +1052,11 @@ func testPromStorageUpdate(t *testing.T) {
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+							Labels: map[string]string{
+								"test": "testPromStorageUpdate",
+							},
+						},
 						Spec: v1.PersistentVolumeClaimSpec{
 							AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 							Resources: v1.VolumeResourceRequirements{
@@ -1055,35 +1070,12 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, prometheus.ListOptions(p.Name))
-		if err != nil {
-			return false, err
-		}
-
-		if len(pods.Items) != 1 {
-			return false, nil
-		}
-
-		for _, volume := range pods.Items[0].Spec.Volumes {
-			if volume.Name == "prometheus-"+p.Name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
-				return true, nil
-			}
-		}
-
-		return false, nil
-	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	err = framework.WaitForBoundPVC(context.Background(), ns, "test=testPromStorageUpdate", 1)
+	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
-
 	_, err = framework.PatchPrometheus(
 		context.Background(),
 		p.Name,
@@ -1092,6 +1084,11 @@ func testPromStorageUpdate(t *testing.T) {
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+						EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+							Labels: map[string]string{
+								"test": "testPromStorageUpdate",
+							},
+						},
 						Spec: v1.PersistentVolumeClaimSpec{
 							StorageClassName: ptr.To("unknown-storage-class"),
 							Resources: v1.VolumeResourceRequirements{
@@ -1105,9 +1102,7 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var loopError error
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
@@ -4001,55 +3996,31 @@ func testPromMinReadySeconds(t *testing.T) {
 
 	kubeClient := framework.KubeClient
 
-	var setMinReadySecondsInitial uint32 = 5
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
-	prom.Spec.MinReadySeconds = &setMinReadySecondsInitial
+	prom.Spec.MinReadySeconds = ptr.To(int32(5))
 
 	prom, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
-	if err != nil {
-		t.Fatal("Creating prometheus failed: ", err)
-	}
+	require.NoError(t, err)
 
 	promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(5), promSS.Spec.MinReadySeconds)
 
-	if promSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, promSS.Spec.MinReadySeconds)
-	}
-
-	var updated uint32 = 10
-	var got int32
-	if _, err = framework.PatchPrometheusAndWaitUntilReady(
+	_, err = framework.PatchPrometheusAndWaitUntilReady(
 		context.Background(),
 		prom.Name,
 		ns,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				MinReadySeconds: &updated,
+				MinReadySeconds: ptr.To(int32(10)),
 			},
 		},
-	); err != nil {
-		t.Fatal("Updating prometheus failed: ", err)
-	}
+	)
+	require.NoError(t, err)
 
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
-		promSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(ctx, "prometheus-basic-prometheus", metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		if promSS.Spec.MinReadySeconds != int32(updated) {
-			got = promSS.Spec.MinReadySeconds
-			return false, nil
-		}
-		return true, nil
-	})
-
-	if err != nil {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, got)
-	}
+	promSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "prometheus-basic-prometheus", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, int32(10), promSS.Spec.MinReadySeconds)
 }
 
 // testPromEnforcedNamespaceLabel checks that the enforcedNamespaceLabel field
@@ -5426,15 +5397,131 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 	}
 }
 
+// testPrometheusReconciliationOnSecretChanges ensures that the operator
+// reconciles the configureation whenever a secret referenced by a service
+// monitor gets added/deleted in another namespace than the workload.
+func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)  // where Prometheus is deployed.
+	ns2 := framework.CreateNamespace(ctx, t, testCtx) // where the service monitor is deployed.
+	name := "test-secret-changes"
+
+	// Deploy the example application + service.
+	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
+	require.NoError(t, err)
+
+	framework.CreateDeployment(context.Background(), ns2, simple)
+	require.NoError(t, err)
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Selector: simple.Spec.Template.ObjectMeta.Labels,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 8080,
+				},
+			},
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Services(ns2).Create(ctx, svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints[0].Interval = monitoringv1.Duration("1s")
+	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: v1.SecretKeySelector{
+			Key: "user",
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "auth",
+			},
+		},
+		Password: v1.SecretKeySelector{
+			Key: "pass",
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: "auth",
+			},
+		},
+	}
+
+	sm, err = framework.MonClientV1.ServiceMonitors(ns2).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBACGlobal(ctx, t, testCtx, ns)
+	require.NoError(t, err)
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"kubernetes.io/metadata.name": ns2,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// There should be no target because the service monitor references a
+	// secret which doesn't exist so it won't be selected.
+	targets, err := framework.GetActiveTargets(ctx, ns, "prometheus-operated")
+	require.NoError(t, err)
+	require.Empty(t, targets)
+
+	// Create the secret and wait for the target to be discovered.
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "auth",
+			Namespace: ns2,
+		},
+		StringData: map[string]string{
+			"user": "user",
+			"pass": "pass",
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+
+	secret, err = framework.KubeClient.CoreV1().Secrets(ns2).Create(ctx, secret, metav1.CreateOptions{})
+	require.NoError(t, err)
+	t.Logf("secret %s/%s created", secret.GetNamespace(), secret.GetName())
+
+	err = framework.WaitForHealthyTargets(ctx, ns, "prometheus-operated", 1)
+	require.NoError(t, err)
+
+	err = framework.KubeClient.CoreV1().Secrets(ns2).Delete(ctx, secret.Name, metav1.DeleteOptions{})
+	require.NoError(t, err)
+
+	err = framework.WaitForActiveTargets(ctx, ns, "prometheus-operated", 0)
+	require.NoError(t, err)
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+					operator.ApplicationNameLabelKey:     "alertmanager",
+					operator.ApplicationInstanceLabelKey: alertmanagerName,
+				})).String(),
+			},
+		)
 		if err != nil {
 			return false, err
 		}
+
 		if 3 != len(pods.Items) {
 			return false, nil
 		}
+
 		expectedAlertmanagerTargets := []string{}
 		for _, p := range pods.Items {
 			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v2/alerts", p.Status.PodIP))

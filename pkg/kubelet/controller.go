@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	resyncPeriod = 3 * time.Minute
+	applicationNameLabelValue = "kubelet"
 
 	maxEndpointsPerSlice = 512
 
@@ -73,6 +73,7 @@ type Controller struct {
 
 	manageEndpointSlice bool
 	manageEndpoints     bool
+	syncPeriod          time.Duration
 }
 
 type ControllerOption func(*Controller)
@@ -98,6 +99,12 @@ func WithEndpoints() ControllerOption {
 func WithNodeAddressPriority(s string) ControllerOption {
 	return func(c *Controller) {
 		c.nodeAddressPriority = s
+	}
+}
+
+func WithSyncPeriod(d time.Duration) ControllerOption {
+	return func(c *Controller) {
+		c.syncPeriod = d
 	}
 }
 
@@ -206,7 +213,7 @@ func New(
 func (c *Controller) Run(ctx context.Context) error {
 	c.logger.Info("Starting controller")
 
-	ticker := time.NewTicker(resyncPeriod)
+	ticker := time.NewTicker(c.syncPeriod)
 	defer ticker.Stop()
 	for {
 		c.sync(ctx)
@@ -417,9 +424,9 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 			Name:        c.kubeletObjectName,
 			Annotations: c.annotations,
 			Labels: c.labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"k8s-app":                        applicationNameLabelValue,
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
+				operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 			}),
 		},
 		//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
@@ -471,9 +478,9 @@ func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
 			Name:        c.kubeletObjectName,
 			Annotations: c.annotations,
 			Labels: c.labels.Merge(map[string]string{
-				"k8s-app":                      "kubelet",
-				"app.kubernetes.io/name":       "kubelet",
-				"app.kubernetes.io/managed-by": "prometheus-operator",
+				"k8s-app":                        applicationNameLabelValue,
+				operator.ApplicationNameLabelKey: applicationNameLabelValue,
+				operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 			}),
 		},
 		Spec: v1.ServiceSpec{
@@ -603,11 +610,11 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 					GenerateName: c.kubeletObjectName + "-",
 					Annotations:  c.annotations,
 					Labels: c.labels.Merge(map[string]string{
-						discoveryv1.LabelServiceName:   c.kubeletObjectName,
-						discoveryv1.LabelManagedBy:     "prometheus-operator",
-						"k8s-app":                      "kubelet",
-						"app.kubernetes.io/name":       "kubelet",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
+						discoveryv1.LabelServiceName:     c.kubeletObjectName,
+						discoveryv1.LabelManagedBy:       operator.ManagedByLabelValue,
+						"k8s-app":                        applicationNameLabelValue,
+						operator.ApplicationNameLabelKey: applicationNameLabelValue,
+						operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 					}),
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         "v1",

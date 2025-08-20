@@ -14,7 +14,7 @@ draft: false
   * [Arthur Sens](https://github.com/ArthurSens)
   * [Nicolas Takashi](https://github.com/nicolastakashi)
 * Status:
-  * `Implemented`
+  * `Accepted`
 * Related Tickets:
   * [#4927](https://github.com/prometheus-operator/prometheus-operator/issues/4727)
   * [#4946](https://github.com/prometheus-operator/prometheus-operator/issues/4946)

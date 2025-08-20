@@ -59,7 +59,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		defaultTestConfig,
 		cg,
 		nil,
-		"",
+		"abc",
 		0,
 		&operator.ShardedSecret{})
 }
@@ -73,33 +73,40 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"kubectl.kubernetes.io/last-applied-configuration": "something",
 		"kubectl.kubernetes.io/something":                  "something",
 	}
+
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedStatefulSetAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "abc",
 		"testannotation":                 "testannotationvalue",
 	}
 
 	expectedStatefulSetLabels := map[string]string{
 		"testlabel":                    "testlabelvalue",
-		"operator.prometheus.io/name":  "",
+		"operator.prometheus.io/name":  "test",
 		"operator.prometheus.io/shard": "0",
 		"operator.prometheus.io/mode":  "server",
 		"managed-by":                   "prometheus-operator",
+		"prometheus":                   "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "prometheus",
 	}
 
 	expectedPodLabels := map[string]string{
-		"prometheus":                   "",
+		"prometheus":                   "test",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   "",
-		"operator.prometheus.io/name":  "",
+		"app.kubernetes.io/instance":   "test",
+		"operator.prometheus.io/name":  "test",
 		"operator.prometheus.io/shard": "0",
 	}
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},
@@ -1566,7 +1573,7 @@ func TestTSDBAllowOverlappingBlocks(t *testing.T) {
 }
 
 func TestTSDBAllowOverlappingCompaction(t *testing.T) {
-	expectedArg := "--storage.tsdb.allow-overlapping-compaction"
+	expectedArg := "--no-storage.tsdb.allow-overlapping-compaction"
 	tests := []struct {
 		name                    string
 		version                 string
@@ -1823,19 +1830,18 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	require.NoError(t, err)
 
 	// assert defaults to zero if nil
-	require.Equal(t, int32(0), sset.Spec.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", sset.Spec.MinReadySeconds)
+	require.Equal(t, int32(0), sset.Spec.MinReadySeconds)
 
-	var expect uint32 = 5
 	sset, err = makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				MinReadySeconds: &expect,
+				MinReadySeconds: ptr.To(int32(5)),
 			},
 		},
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, int32(expect), sset.Spec.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, sset.Spec.MinReadySeconds)
+	require.Equal(t, int32(5), sset.Spec.MinReadySeconds)
 }
 
 func TestConfigReloader(t *testing.T) {
@@ -2302,6 +2308,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 
 	hostNetwork := false
+	hostUsers := true
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -2317,6 +2324,7 @@ func TestPodTemplateConfig(t *testing.T) {
 				ImagePullPolicy:    imagePullPolicy,
 				ImagePullSecrets:   imagePullSecrets,
 				HostNetwork:        hostNetwork,
+				HostUsers:          ptr.To(true),
 			},
 		},
 	})
@@ -2329,6 +2337,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, priorityClassName, sset.Spec.Template.Spec.PriorityClassName, "expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
 	require.Equal(t, serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
 	require.Len(t, sset.Spec.Template.Spec.HostAliases, len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
+	require.Equal(t, hostUsers, *sset.Spec.Template.Spec.HostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, imagePullPolicy, initContainer.ImagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, initContainer.ImagePullPolicy)
 	}
@@ -2923,13 +2932,13 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "test",
-						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						"prometheus":                    "test",
-						prompkg.ShardLabelName:          "0",
-						prompkg.PrometheusNameLabelName: "test",
-						prompkg.PrometheusK8sLabelName:  "prometheus",
+						"app":                            "prometheus",
+						"app.kubernetes.io/instance":     "test",
+						"app.kubernetes.io/managed-by":   "prometheus-operator",
+						"prometheus":                     "test",
+						prompkg.ShardLabelName:           "0",
+						prompkg.PrometheusNameLabelName:  "test",
+						operator.ApplicationNameLabelKey: "prometheus",
 					},
 				},
 			},
@@ -2961,12 +2970,12 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				WhenUnsatisfiable: v1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						"app":                           "prometheus",
-						"app.kubernetes.io/instance":    "test",
-						"app.kubernetes.io/managed-by":  "prometheus-operator",
-						"prometheus":                    "test",
-						prompkg.PrometheusNameLabelName: "test",
-						prompkg.PrometheusK8sLabelName:  "prometheus",
+						"app":                            "prometheus",
+						"app.kubernetes.io/instance":     "test",
+						"app.kubernetes.io/managed-by":   "prometheus-operator",
+						"prometheus":                     "test",
+						prompkg.PrometheusNameLabelName:  "test",
+						operator.ApplicationNameLabelKey: "prometheus",
 					},
 				},
 			},
