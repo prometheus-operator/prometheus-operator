@@ -108,7 +108,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		}
 
 		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - reciever %s: %w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 	}
