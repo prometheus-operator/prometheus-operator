@@ -4103,3 +4103,148 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 }
+
+var HetznerSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Hcloud",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Server",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Follo Redirect True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Follo Redirect False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:        "Hcloud",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:        "Hcloud",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Hcloud",
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Hcloud",
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid LabelSelector",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:          "Hcloud",
+					LabelSelector: ptr.To("foo"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid LabelSelector",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:          "Hcloud",
+					LabelSelector: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}

@@ -1027,7 +1027,7 @@ func (in *HetznerSDConfig) DeepCopyInto(out *HetznerSDConfig) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.RefreshInterval != nil {
