@@ -779,7 +779,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 
 func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitoringv1alpha1.RocketChatConfig, crKey types.NamespacedName) (*rocketChatConfig, error) {
 	out := &rocketChatConfig{
-		VSendResolved: in.SendResolved,
+		SendResolved: in.SendResolved,
 	}
 
 	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
