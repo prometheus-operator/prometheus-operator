@@ -636,6 +636,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("DockerSwarmSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, DockerSwarmSDTestCases)
 	})
+	t.Run("HetznerSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, HetznerSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
