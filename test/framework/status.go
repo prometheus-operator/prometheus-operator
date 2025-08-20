@@ -142,19 +142,11 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 					return false, nil
 				}
 
-				var foundCondition bool
 				for _, cond := range binding.Conditions {
 					if cond.Status == acceptedStatus {
-						foundCondition = true
-						break
+						return true, nil
 					}
 				}
-
-				if !foundCondition {
-					pollErr = fmt.Errorf("expected binding condition status to be %q, got %q", acceptedStatus, bindings[0].Conditions[0].Status)
-					return false, nil
-				}
-				break
 			}
 		}
 
@@ -163,7 +155,8 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 			return false, nil
 		}
 
-		return true, nil
+		pollErr = fmt.Errorf("expected binding condition not found for resource %q with name %q in namespace %q", resource, workload.GetName(), workload.GetNamespace())
+		return false, nil
 	}); err != nil {
 		return fmt.Errorf("%v: %w", err, pollErr)
 	}
