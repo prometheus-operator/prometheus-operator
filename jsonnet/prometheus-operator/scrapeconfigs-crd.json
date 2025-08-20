@@ -7251,7 +7251,8 @@
                           "type": "object"
                         },
                         "clientID": {
-                          "description": "Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.",
+                          "description": "Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.\nIt requires Prometheus >= v2.50.0.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "enableHTTP2": {
@@ -7628,7 +7629,7 @@
                         },
                         "server": {
                           "description": "Address of the Kuma Control Plane's MADS xDS server.",
-                          "minLength": 1,
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         },
                         "tlsConfig": {
