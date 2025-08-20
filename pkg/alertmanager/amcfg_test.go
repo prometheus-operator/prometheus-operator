@@ -5679,57 +5679,57 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
-{
-    name:           "rocketchat_config with send_resolved",
-    againstVersion: versionRocketChatAllowed,
-    in: &alertmanagerConfig{
-        Receivers: []*receiver{
-            {
-                RocketChatConfigs: []*rocketChatConfig{
-                    {
-                        APIURL:       "http://example.com",
-                        SendResolved: ptr.To(true),
-                    },
-                },
-            },
-        },
-    },
-    golden: "rocketchat_config_with_send_resolved.golden",
-},
-{
-    name:           "rocketchat_configs token_id not set",
-    againstVersion: versionRocketChatAllowed,
-    in: &alertmanagerConfig{
-        Receivers: []*receiver{
-            {
-                RocketChatConfigs: []*rocketChatConfig{
-                    {
-                        APIURL: "http://example.com",
-                        Token:  ptr.To("aaaa-bbbb-cccc-dddd"),
-                    },
-                },
-            },
-        },
-    },
-    expectErr: true,
-},
-{
-    name:           "rocketchat_configs allows for supported versions",
-    againstVersion: versionRocketChatAllowed,
-    in: &alertmanagerConfig{
-        Receivers: []*receiver{
-            {
-                RocketChatConfigs: []*rocketChatConfig{
-                    {
-                        APIURL: "http://example.com",
-                        Token:  ptr.To("aaaa-bbbb-cccc-dddd"),
-                    },
-                },
-            },
-        },
-    },
-    expectErr: true,
-},
+		{
+			name:           "rocketchat_config with send_resolved",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:       "http://example.com",
+								SendResolved: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "rocketchat_config_with_send_resolved.golden",
+		},
+		{
+			name:           "rocketchat_configs token_id not set",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "http://example.com",
+								Token:  ptr.To("aaaa-bbbb-cccc-dddd"),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs allows for supported versions",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "http://example.com",
+								Token:  ptr.To("aaaa-bbbb-cccc-dddd"),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 
 		{
 			name:           "rocketchat_configs token not set",
