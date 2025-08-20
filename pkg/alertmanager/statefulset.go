@@ -61,8 +61,10 @@ const (
 	alertmanagerConfigFileCompressed   = "alertmanager.yaml.gz"
 	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
 
-	alertmanagerWebPort  = 9093
-	alertmanagerMeshPort = 9094
+	alertmanagerWebPort         = 9093
+	alertmanagerMeshPort        = 9094
+	alertmanagerMeshUDPPortName = "mesh-udp"
+	alertmanagerMeshTCPPortName = "mesh-tcp"
 
 	alertmanagerStorageDir = "/alertmanager"
 
@@ -196,13 +198,13 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 				{
 					Name:       "tcp-mesh",
 					Port:       alertmanagerMeshPort,
-					TargetPort: intstr.FromString("mesh-tcp"),
+					TargetPort: intstr.FromString(alertmanagerMeshTCPPortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
 					Name:       "udp-mesh",
 					Port:       alertmanagerMeshPort,
-					TargetPort: intstr.FromString("mesh-udp"),
+					TargetPort: intstr.FromString(alertmanagerMeshUDPPortName),
 					Protocol:   v1.ProtocolUDP,
 				},
 			},
@@ -423,12 +425,12 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	ports := []v1.ContainerPort{
 		{
-			Name:          "mesh-tcp",
+			Name:          alertmanagerMeshTCPPortName,
 			ContainerPort: alertmanagerMeshPort,
 			Protocol:      v1.ProtocolTCP,
 		},
 		{
-			Name:          "mesh-udp",
+			Name:          alertmanagerMeshUDPPortName,
 			ContainerPort: alertmanagerMeshPort,
 			Protocol:      v1.ProtocolUDP,
 		},

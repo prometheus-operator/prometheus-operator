@@ -291,6 +291,14 @@ func TestListenLocal(t *testing.T) {
 	require.Nil(t, sset.Spec.Template.Spec.Containers[0].LivenessProbe, "Alertmanager readiness probe expected to be empty")
 
 	require.Len(t, sset.Spec.Template.Spec.Containers[0].Ports, 2, "Alertmanager container should only have one port defined")
+	for _, port := range sset.Spec.Template.Spec.Containers[0].Ports {
+		require.Condition(
+			t,
+			func() bool {
+				return port.Name == alertmanagerMeshUDPPortName || port.Name == alertmanagerMeshTCPPortName
+			},
+		)
+	}
 }
 
 func TestListenTLS(t *testing.T) {
