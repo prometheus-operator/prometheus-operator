@@ -272,39 +272,28 @@ func UpdateServiceMonitorStatus(
 	smon := res.resource
 	conditions := res.conditions(smon.Generation)
 
+	var found bool
 	for i := range smon.Status.Bindings {
 		binding := &smon.Status.Bindings[i]
 		if binding.Namespace == c.workload.GetNamespace() &&
 			binding.Name == c.workload.GetName() &&
 			binding.Resource == c.gvr.Resource {
 			binding.Conditions = conditions
-
-			applyCfg := ApplyConfigurationFromServiceMonitor(smon, func(binding monitoringv1.WorkloadBinding) bool {
-				return binding.Namespace == c.workload.GetNamespace() && binding.Name == c.workload.GetName() && binding.Resource == c.gvr.Resource
-			})
-
-			_, err := c.mclient.MonitoringV1().
-				ServiceMonitors(smon.Namespace).
-				ApplyStatus(ctx, applyCfg, metav1.ApplyOptions{
-					FieldManager: operator.PrometheusOperatorFieldManager,
-					Force:        true,
-				})
-
-			return err
+			found = true
+			break
 		}
 	}
 
-	smon.Status.Bindings = append(smon.Status.Bindings, monitoringv1.WorkloadBinding{
-		Namespace:  c.workload.GetNamespace(),
-		Name:       c.workload.GetName(),
-		Resource:   c.gvr.Resource,
-		Group:      c.gvr.Group,
-		Conditions: conditions,
-	})
-
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon, nil), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	if err != nil {
-		return err
+	if !found {
+		smon.Status.Bindings = append(smon.Status.Bindings, monitoringv1.WorkloadBinding{
+			Namespace:  c.workload.GetNamespace(),
+			Name:       c.workload.GetName(),
+			Resource:   c.gvr.Resource,
+			Group:      c.gvr.Group,
+			Conditions: conditions,
+		})
 	}
-	return nil
+
+	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+	return err
 }
