@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -116,6 +117,43 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		return true, nil
 	}); err != nil {
 		return fmt.Errorf("%v: %w", pollErr, err)
+	}
+
+	return nil
+}
+
+// WaitForConfigResourceCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to meet the expected condition.
+// If the condition isn't met within the given timeout, it returns an error.
+func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+		var bindings []monitoringv1.WorkloadBinding
+		bindings, pollErr = getConfigResourceStatus(ctx)
+		if pollErr != nil {
+			return false, nil
+		}
+
+		var bindingFound bool
+		for _, binding := range bindings {
+			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
+				bindingFound = true
+				for _, cond := range binding.Conditions {
+					if cond.Status == conditionStatus && cond.Type == conditionType {
+						return true, nil
+					}
+				}
+			}
+		}
+
+		if !bindingFound {
+			pollErr = fmt.Errorf("no binding found for resource %q with name %q in namespace %q", resource, workload.GetName(), workload.GetNamespace())
+			return false, nil
+		}
+
+		pollErr = fmt.Errorf("expected binding condition not found for resource %q with name %q in namespace %q", resource, workload.GetName(), workload.GetNamespace())
+		return false, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", err, pollErr)
 	}
 
 	return nil
