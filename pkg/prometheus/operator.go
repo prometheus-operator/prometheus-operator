@@ -293,9 +293,7 @@ func UpdateServiceMonitorStatus(
 			Conditions: conditions,
 		})
 	}
+
 	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
