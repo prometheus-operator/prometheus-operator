@@ -71,17 +71,30 @@ func prometheusStatusApplyConfigurationFromPrometheusStatus(status *monitoringv1
 	return psac
 }
 
-// ApplyConfigurationFromServiceMonitor updates the ServiceMonitor Status subresource.
-func ApplyConfigurationFromServiceMonitor(sm *monitoringv1.ServiceMonitor) *monitoringv1ac.ServiceMonitorApplyConfiguration {
-	smsac := configResourceStatusApplyConfigurationFromConfigResourceStatus(&sm.Status)
+// ApplyConfigurationFromServiceMonitor builds an ApplyConfiguration for the ServiceMonitor Status subresource.
+// If filter is nil, it includes all bindings. If filter is provided, it only includes bindings for which filter(binding) returns true.
+func ApplyConfigurationFromServiceMonitor(
+	sm *monitoringv1.ServiceMonitor,
+	filter func(binding monitoringv1.WorkloadBinding) bool,
+) *monitoringv1ac.ServiceMonitorApplyConfiguration {
+
+	smsac := configResourceStatusApplyConfigurationFromConfigResourceStatus(&sm.Status, filter)
 	return monitoringv1ac.ServiceMonitor(sm.Name, sm.Namespace).
 		WithStatus(smsac)
 }
 
-func configResourceStatusApplyConfigurationFromConfigResourceStatus(status *monitoringv1.ConfigResourceStatus) *monitoringv1ac.ConfigResourceStatusApplyConfiguration {
+func configResourceStatusApplyConfigurationFromConfigResourceStatus(
+	status *monitoringv1.ConfigResourceStatus,
+	filter func(binding monitoringv1.WorkloadBinding) bool,
+) *monitoringv1ac.ConfigResourceStatusApplyConfiguration {
+
 	crsac := monitoringv1ac.ConfigResourceStatus()
 
 	for _, binding := range status.Bindings {
+		if filter != nil && !filter(binding) {
+			continue
+		}
+
 		bg := monitoringv1ac.WorkloadBinding().
 			WithGroup(binding.Group).
 			WithName(binding.Name).
