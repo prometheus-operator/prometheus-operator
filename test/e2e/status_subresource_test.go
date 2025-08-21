@@ -85,7 +85,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionTrue, 1*time.Minute)
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
 	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
@@ -98,6 +98,6 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
-	_, err = framework.WaitForServiceMonitorAcceptedCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.ConditionFalse, 1*time.Minute)
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
 }

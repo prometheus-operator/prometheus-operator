@@ -122,9 +122,9 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 	return nil
 }
 
-// WaitForConfigResourceAcceptedCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to meet the expected Accepted condition.
+// WaitForConfigResourceCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to meet the expected condition.
 // If the condition isn't met within the given timeout, it returns an error.
-func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, acceptedStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
+func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
 	var pollErr error
 	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
 		var bindings []monitoringv1.WorkloadBinding
@@ -137,13 +137,8 @@ func (f *Framework) WaitForConfigResourceAcceptedCondition(ctx context.Context, 
 		for _, binding := range bindings {
 			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
 				bindingFound = true
-				if len(binding.Conditions) == 0 {
-					pollErr = fmt.Errorf("expected binding for resource %q with name %q in namespace %q to have conditions, but got none", resource, workload.GetName(), workload.GetNamespace())
-					return false, nil
-				}
-
 				for _, cond := range binding.Conditions {
-					if cond.Status == acceptedStatus {
+					if cond.Status == conditionStatus && cond.Type == conditionType {
 						return true, nil
 					}
 				}
