@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
