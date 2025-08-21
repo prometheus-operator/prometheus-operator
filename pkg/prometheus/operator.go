@@ -278,6 +278,12 @@ func UpdateServiceMonitorStatus(
 		if binding.Namespace == c.workload.GetNamespace() &&
 			binding.Name == c.workload.GetName() &&
 			binding.Resource == c.gvr.Resource {
+			if binding.Conditions[0].ObservedGeneration == conditions[0].ObservedGeneration &&
+				binding.Conditions[0].Status == conditions[0].Status &&
+				binding.Conditions[0].Reason == conditions[0].Reason &&
+				binding.Conditions[0].Message == conditions[0].Message {
+				return nil
+			}
 			binding.Conditions = conditions
 			found = true
 			break
