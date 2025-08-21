@@ -193,6 +193,9 @@ type Receiver struct {
 	// List of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
+	// List of RocketChat configurations.
+	// It requires Alertmanager >= 0.28.0.
+	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -1000,6 +1003,104 @@ type MSTeamsV2Config struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// RocketChatConfig configures notifications via RocketChat.
+// It requires Alertmanager >= 0.28.0.
+type RocketChatConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The API URL for RocketChat.
+	// Defaults to https://open.rocket.chat/ if not specified.
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+	// The channel to send alerts to.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Channel *string `json:"channel,omitempty"`
+	// The sender token.
+	// +required
+	Token v1.SecretKeySelector `json:"token,omitempty"`
+	// The sender token ID.
+	// +required
+	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
+	// The message color.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Color *string `json:"color,omitempty"`
+	// If provided, the avatar will be displayed as an emoji.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Emoji *string `json:"emoji,omitempty"`
+	// Icon URL for the message.
+	// +optional
+	IconURL *URL `json:"iconURL,omitempty"`
+	// The message text to send, it is optional because of attachments.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// The message title.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// The title link for the message.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	TitleLink *string `json:"titleLink,omitempty"`
+	// Additional fields for the message.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
+	// Whether to use short fields.
+	// +optional
+	ShortFields *bool `json:"shortFields,omitempty"`
+	// Image URL for the message.
+	// +optional
+	ImageURL *URL `json:"imageURL,omitempty"`
+	// Thumbnail URL for the message.
+	// +optional
+	ThumbURL *URL `json:"thumbURL,omitempty"`
+	// Whether to enable link names.
+	// +optional
+	LinkNames *bool `json:"linkNames,omitempty"`
+	// Actions to include in the message.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// RocketChatFieldConfig defines additional fields for RocketChat messages.
+type RocketChatFieldConfig struct {
+	// The title of this field.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// The value of this field, displayed underneath the title value.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Value *string `json:"value,omitempty"`
+	// Whether this field should be a short field.
+	// +optional
+	Short *bool `json:"short,omitempty"`
+}
+
+// RocketChatActionConfig defines actions for RocketChat messages.
+type RocketChatActionConfig struct {
+	// The button text.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// The URL the button links to.
+	// +optional
+	URL *URL `json:"url,omitempty"`
+	// The message to send when the button is clicked.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Msg *string `json:"msg,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
