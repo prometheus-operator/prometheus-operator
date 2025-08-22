@@ -278,14 +278,8 @@ func UpdateServiceMonitorStatus(
 		if binding.Namespace == c.workload.GetNamespace() &&
 			binding.Name == c.workload.GetName() &&
 			binding.Resource == c.gvr.Resource {
-
-			for _, cond := range binding.Conditions {
-				if cond.ObservedGeneration == conditions[0].ObservedGeneration &&
-					cond.Status == conditions[0].Status &&
-					cond.Reason == conditions[0].Reason &&
-					cond.Message == conditions[0].Message {
-					return nil
-				}
+			if configResStatusConditionsEqual(binding.Conditions, conditions) {
+				return nil
 			}
 			binding.Conditions = conditions
 			found = true
@@ -307,4 +301,21 @@ func UpdateServiceMonitorStatus(
 		return err
 	}
 	return nil
+}
+
+func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i].Type != b[i].Type ||
+			a[i].Status != b[i].Status ||
+			a[i].Reason != b[i].Reason ||
+			a[i].Message != b[i].Message ||
+			a[i].ObservedGeneration != b[i].ObservedGeneration {
+			return false
+		}
+	}
+	return true
 }
