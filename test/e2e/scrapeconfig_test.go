@@ -4120,11 +4120,11 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Invalid Role",
+		name: "Invalid Empty Role",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
-					Role: "Server",
+					Role: "",
 				},
 			},
 		},
