@@ -1156,6 +1156,19 @@ func (in Matcher) Validate() error {
 		return errors.New("matcher 'name' is required")
 	}
 
+	matcherStr := in.String()
+	if matcherStr != "" {
+		if in.MatchType == "" {
+			in.MatchType = MatchEqual
+			// v1beta1.Matcher has no explicit Regex field, unlike v1alpha1.
+			matcherStr = in.String()
+		}
+		_, err := ParseMatcher(matcherStr)
+		if err != nil {
+			return fmt.Errorf("invalid matcher '%s': %w", matcherStr, err)
+		}
+	}
+
 	return nil
 }
 
@@ -1202,6 +1215,33 @@ var validMatchTypes = map[MatchType]bool{
 	MatchNotEqual:  true,
 	MatchRegexp:    true,
 	MatchNotRegexp: true,
+}
+
+// '=~' has to come before '=' because otherwise only the '='
+// will be consumed, and the '~' will be part of the 3rd token.
+var re = regexp.MustCompile(`^\s*([a-zA-Z_:][a-zA-Z0-9_:]*)\s*(=~|=|!=|!~)\s*((?s).*?)\s*$`)
+
+var typeMap = map[string]MatchType{
+	"=":  MatchEqual,
+	"!=": MatchNotEqual,
+	"=~": MatchRegexp,
+	"!~": MatchNotRegexp,
+}
+
+// NewMatcher returns a matcher object.
+func NewMatcher(t MatchType, n, v string) (*Matcher, error) {
+	m := &Matcher{
+		MatchType: t,
+		Name:      n,
+		Value:     v,
+	}
+	if t == MatchRegexp || t == MatchNotRegexp {
+		_, err := regexp.Compile("^(?:" + v + ")$")
+		if err != nil {
+			return nil, err
+		}
+	}
+	return m, nil
 }
 
 // openMetricsEscape is similar to the usual string escaping, but more

@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 func (hc *HTTPConfig) Validate() error {
@@ -351,4 +352,85 @@ func parseRange(in string) (start, end string, err error) {
 		return start, end, fmt.Errorf("invalid range provided %s", in)
 	}
 	return parts[0], parts[1], nil
+}
+
+// Upstream alertmanager@v0.26.0: pkg/labels/parse.go (at the time of this commit).
+
+// ParseMatcher parses a matcher with a syntax inspired by PromQL and
+// OpenMetrics. This syntax is convenient to describe filters and selectors in
+// UIs and config files. To support the interactive nature of the use cases, the
+// parser is in various aspects fairly tolerant.
+//
+// The syntax of a matcher consists of three tokens: (1) A valid Prometheus
+// label name. (2) One of '=', '!=', '=~', or '!~', with the same meaning as
+// known from PromQL selectors. (3) A UTF-8 string, which may be enclosed in
+// double quotes. Before or after each token, there may be any amount of
+// whitespace, which will be discarded. The 3rd token may be the empty
+// string. Within the 3rd token, OpenMetrics escaping rules apply: '\"' for a
+// double-quote, '\n' for a line feed, '\\' for a literal backslash. Unescaped
+// '"' must not occur inside the 3rd token (only as the 1st or last
+// character). However, literal line feed characters are tolerated, as are
+// single '\' characters not followed by '\', 'n', or '"'. They act as a literal
+// backslash in that case.
+func ParseMatcher(s string) (*Matcher, error) {
+	ms := re.FindStringSubmatch(s)
+	if len(ms) == 0 {
+		return nil, fmt.Errorf("bad matcher format: %s", s)
+	}
+
+	var (
+		rawValue            = ms[3]
+		value               strings.Builder
+		escaped             bool
+		expectTrailingQuote bool
+	)
+
+	if strings.HasPrefix(rawValue, "\"") {
+		rawValue = strings.TrimPrefix(rawValue, "\"")
+		expectTrailingQuote = true
+	}
+
+	if !utf8.ValidString(rawValue) {
+		return nil, fmt.Errorf("matcher value not valid UTF-8: %s", ms[3])
+	}
+
+	// Unescape the rawValue:
+	for i, r := range rawValue {
+		if escaped {
+			escaped = false
+			switch r {
+			case 'n':
+				value.WriteByte('\n')
+			case '"', '\\':
+				value.WriteRune(r)
+			default:
+				// This was a spurious escape, so treat the '\' as literal.
+				value.WriteByte('\\')
+				value.WriteRune(r)
+			}
+			continue
+		}
+		switch r {
+		case '\\':
+			if i < len(rawValue)-1 {
+				escaped = true
+				continue
+			}
+			// '\' encountered as last byte. Treat it as literal.
+			value.WriteByte('\\')
+		case '"':
+			if !expectTrailingQuote || i < len(rawValue)-1 {
+				return nil, fmt.Errorf("matcher value contains unescaped double quote: %s", ms[3])
+			}
+			expectTrailingQuote = false
+		default:
+			value.WriteRune(r)
+		}
+	}
+
+	if expectTrailingQuote {
+		return nil, fmt.Errorf("matcher value contains unescaped double quote: %s", ms[3])
+	}
+
+	return NewMatcher(typeMap[ms[2]], ms[1], value.String())
 }

@@ -1150,6 +1150,7 @@ type Matcher struct {
 // String returns Matcher as a string
 // Use only for MatchType Matcher
 func (in Matcher) String() string {
+	// Similar format as the `foo=bar` substring here: https://github.com/prometheus/alertmanager/blob/v0.26.0/pkg/labels/parse_test.go#L211 (which is valid).
 	return fmt.Sprintf(`%s%s"%s"`, in.Name, in.MatchType, openMetricsEscape(in.Value))
 }
 
@@ -1167,6 +1168,21 @@ func (in Matcher) Validate() error {
 
 	if strings.TrimSpace(in.Name) == "" {
 		return errors.New("matcher 'name' is required")
+	}
+
+	matcherStr := in.String()
+	if matcherStr != "" {
+		if in.MatchType == "" {
+			in.MatchType = MatchEqual
+			if in.Regex {
+				in.MatchType = MatchRegexp
+			}
+			matcherStr = in.String()
+		}
+		_, err := ParseMatcher(matcherStr)
+		if err != nil {
+			return fmt.Errorf("invalid matcher '%s': %w", matcherStr, err)
+		}
 	}
 
 	return nil
@@ -1197,6 +1213,33 @@ const (
 	MatchRegexp    MatchType = "=~"
 	MatchNotRegexp MatchType = "!~"
 )
+
+// '=~' has to come before '=' because otherwise only the '='
+// will be consumed, and the '~' will be part of the 3rd token.
+var re = regexp.MustCompile(`^\s*([a-zA-Z_:][a-zA-Z0-9_:]*)\s*(=~|=|!=|!~)\s*((?s).*?)\s*$`)
+
+var typeMap = map[string]MatchType{
+	"=":  MatchEqual,
+	"!=": MatchNotEqual,
+	"=~": MatchRegexp,
+	"!~": MatchNotRegexp,
+}
+
+// NewMatcher returns a matcher object.
+func NewMatcher(t MatchType, n, v string) (*Matcher, error) {
+	m := &Matcher{
+		MatchType: t,
+		Name:      n,
+		Value:     v,
+	}
+	if t == MatchRegexp || t == MatchNotRegexp {
+		_, err := regexp.Compile("^(?:" + v + ")$")
+		if err != nil {
+			return nil, err
+		}
+	}
+	return m, nil
+}
 
 var validMatchTypes = map[MatchType]bool{
 	MatchEqual:     true,
