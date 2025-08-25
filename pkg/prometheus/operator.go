@@ -297,3 +297,12 @@ func UpdateServiceMonitorStatus(
 	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 	return err
 }
+
+func IsBindingPresent(bindings []monitoringv1.WorkloadBinding, p metav1.Object, resource string) bool {
+	for _, binding := range bindings {
+		if binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == resource {
+			return true
+		}
+	}
+	return false
+}
