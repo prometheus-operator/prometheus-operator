@@ -1048,6 +1048,22 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
 		}
 	}
+
+	var invalidSmons prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor]
+	err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		k, ok := c.accessor.MetaNamespaceKey(obj)
+		if !ok {
+			return
+		}
+		_, ok = resources.sMons[k]
+		if ok {
+			return
+		}
+		s := obj.(*monitoringv1.ServiceMonitor)
+		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
+			invalidSmons[k] = prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
+		}
+	})
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
