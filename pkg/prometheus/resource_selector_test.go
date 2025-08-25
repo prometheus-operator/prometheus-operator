@@ -4711,7 +4711,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			valid:       false,
+			promVersion: "3.5.0",
 		},
 		{
 			scenario: "StackitSDconfig with invalid proxy config with missing proxyurl and noproxy not defined",
@@ -4734,7 +4735,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			valid:       false,
+			promVersion: "3.5.0",
 		},
 		{
 			scenario: "StackitSDconfig with valid proxy settings",
@@ -4793,7 +4795,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			valid:       false,
+			promVersion: "3.5.0",
 		},
 		{
 			scenario: "StackitSDconfig with invalid secret ref",
@@ -4811,7 +4814,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			valid:       false,
+			promVersion: "3.5.0",
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
