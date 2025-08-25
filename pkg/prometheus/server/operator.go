@@ -804,6 +804,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+
+	if c.rr.DeletionInProgress(p) {
+		resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+		if err != nil {
+			return err
+		}
+		c.updateConfigResourcesStatus(ctx, p, logger, *resources)
+	}
+
 	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
@@ -834,8 +844,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err != nil {
 		return err
 	}
-
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
@@ -1044,6 +1052,12 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 	for key, sm := range resources.sMons {
+		if c.rr.DeletionInProgress(p) {
+			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm); err != nil {
+				logger.Warn("Failed to remove ServiceMonitor status workload binding", "error", err, "key", key)
+			}
+			continue
+		}
 		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
 			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
 		}
