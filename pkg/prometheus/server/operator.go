@@ -1049,7 +1049,6 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
-	var invalidSmons prompkg.ResourcesSelection[*monitoringv1.ServiceMonitor]
 	err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		k, ok := c.accessor.MetaNamespaceKey(obj)
 		if !ok {

@@ -328,3 +328,13 @@ func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition)
 	}
 	return true
 }
+
+func IsBindingPresent(bindings []monitoringv1.WorkloadBinding, p metav1.Object, resource string) bool {
+	for _, binding := range bindings {
+		if binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == resource {
+			return true
+		}
+	}
+	return false
+}
+
