@@ -266,17 +266,15 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			b: []monitoringv1.ConfigResourceCondition{
 				{
 					Type:               "Accepted",
-					Status:             "False",
+					Status:             "False", // different
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			expected: false,
@@ -290,7 +288,6 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			b: []monitoringv1.ConfigResourceCondition{
@@ -298,9 +295,8 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Type:               "Accepted",
 					Status:             "False",
 					Reason:             "OK",
-					Message:            "Issue detected",
+					Message:            "Issue detected", // different
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			expected: false,
@@ -314,7 +310,6 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			b: []monitoringv1.ConfigResourceCondition{
@@ -323,8 +318,7 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Status:             "False",
 					Reason:             "OK",
 					Message:            "all good",
-					ObservedGeneration: 2,
-					LastTransitionTime: now,
+					ObservedGeneration: 2, // different
 				},
 			},
 			expected: false,
@@ -338,17 +332,15 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			b: []monitoringv1.ConfigResourceCondition{
 				{
 					Type:               "Accepted",
 					Status:             "False",
-					Reason:             "Issue",
+					Reason:             "Issue", // different
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			expected: false,
@@ -362,17 +354,15 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			b: []monitoringv1.ConfigResourceCondition{
 				{
-					Type:               "Ready",
+					Type:               "Ready", // different
 					Status:             "False",
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			expected: false,
@@ -386,7 +376,6 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 					Reason:             "OK",
 					Message:            "all good",
 					ObservedGeneration: 1,
-					LastTransitionTime: now,
 				},
 			},
 			b:        []monitoringv1.ConfigResourceCondition{},

@@ -309,22 +309,19 @@ func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition)
 		return false
 	}
 
-	ac := append([]monitoringv1.ConfigResourceCondition(nil), a...)
-	bc := append([]monitoringv1.ConfigResourceCondition(nil), b...)
-
-	sort.Slice(ac, func(i, j int) bool {
-		return ac[i].LastTransitionTime.After(ac[j].LastTransitionTime.Time)
+	sort.Slice(a, func(i, j int) bool {
+		return a[i].Type < a[j].Type
 	})
-	sort.Slice(bc, func(i, j int) bool {
-		return bc[i].LastTransitionTime.After(bc[j].LastTransitionTime.Time)
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].Type < b[j].Type
 	})
 
-	for i := range ac {
-		if ac[i].Type != bc[i].Type ||
-			ac[i].Status != bc[i].Status ||
-			ac[i].Reason != bc[i].Reason ||
-			ac[i].Message != bc[i].Message ||
-			ac[i].ObservedGeneration != bc[i].ObservedGeneration {
+	for i := range a {
+		if a[i].Type != b[i].Type ||
+			a[i].Status != b[i].Status ||
+			a[i].Reason != b[i].Reason ||
+			a[i].Message != b[i].Message ||
+			a[i].ObservedGeneration != b[i].ObservedGeneration {
 			return false
 		}
 	}
