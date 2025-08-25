@@ -4276,7 +4276,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "Valid Port",
