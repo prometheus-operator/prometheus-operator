@@ -4889,6 +4889,7 @@ spec:
                     enum:
                     - NoUTF8EscapingWithSuffixes
                     - UnderscoreEscapingWithSuffixes
+                    - UnderscoreEscapingWithoutSuffixes
                     - NoTranslation
                     type: string
                 type: object
