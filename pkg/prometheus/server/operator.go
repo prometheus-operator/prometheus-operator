@@ -1060,9 +1060,14 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 		s := obj.(*monitoringv1.ServiceMonitor)
 		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
-			invalidSmons[k] = prompkg.NewResource[*monitoringv1.ServiceMonitor](s, nil, "")
+			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
+				logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", k)
+			}
 		}
 	})
+	if err != nil {
+		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
+	}
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
