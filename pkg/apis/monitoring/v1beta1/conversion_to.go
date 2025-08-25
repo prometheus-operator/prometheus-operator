@@ -93,6 +93,7 @@ func convertTimeIntervalsTo(in []TimePeriod) []v1alpha1.TimeInterval {
 			doms = make([]v1alpha1.DayOfMonthRange, 0, len(ti.DaysOfMonth))
 			mrs  = make([]v1alpha1.MonthRange, 0, len(ti.Months))
 			yrs  = make([]v1alpha1.YearRange, 0, len(ti.Years))
+			loc  string
 		)
 
 		for _, tr := range ti.Times {
@@ -115,6 +116,8 @@ func convertTimeIntervalsTo(in []TimePeriod) []v1alpha1.TimeInterval {
 			yrs = append(yrs, v1alpha1.YearRange(yr))
 		}
 
+		loc = ti.Location
+
 		out = append(
 			out,
 			v1alpha1.TimeInterval{
@@ -123,6 +126,7 @@ func convertTimeIntervalsTo(in []TimePeriod) []v1alpha1.TimeInterval {
 				DaysOfMonth: doms,
 				Months:      mrs,
 				Years:       yrs,
+				Location:    loc,
 			},
 		)
 	}
