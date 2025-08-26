@@ -642,6 +642,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("LinodeSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, LinodeSDTestCases)
 	})
+	t.Run("NomadSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, NomadSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -4371,6 +4374,163 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var NomadSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "No Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					// No Server
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AllowStale True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:     "localhost",
+					AllowStale: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "AllowStale False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:     "localhost",
+					AllowStale: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Namespace",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:    "localhost",
+					Namespace: ptr.To("default"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+					Region: ptr.To("us-east"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid TagSeparator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:       "localhost",
+					TagSeparator: ptr.To(","),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:      "localhost",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:      "localhost",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
