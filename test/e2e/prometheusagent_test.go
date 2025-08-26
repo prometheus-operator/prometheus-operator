@@ -1009,3 +1009,48 @@ func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "additionalScrapeConfigs cannot be set when mode is DaemonSet")
 }
+
+func testPrometheusAgentDaemonSetWithVolumes(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-agent-with-volumes"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// Add a simple volume and volumeMount to reproduce the bug
+	p.Spec.Volumes = []v1.Volume{
+		{
+			Name: "test-vol",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+
+	p.Spec.VolumeMounts = []v1.VolumeMount{
+		{
+			Name:      "test-vol",
+			MountPath: "/test-mount",
+		},
+	}
+
+	// This should fail with the bug: "Not found: test-vol"
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Not found: \"test-vol\"")
+}
