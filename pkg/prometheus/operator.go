@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -278,6 +279,9 @@ func UpdateServiceMonitorStatus(
 		if binding.Namespace == c.workload.GetNamespace() &&
 			binding.Name == c.workload.GetName() &&
 			binding.Resource == c.gvr.Resource {
+			if configResStatusConditionsEqual(binding.Conditions, conditions) {
+				return nil
+			}
 			binding.Conditions = conditions
 			found = true
 			break
@@ -296,4 +300,31 @@ func UpdateServiceMonitorStatus(
 
 	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
 	return err
+}
+
+func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	ac := append([]monitoringv1.ConfigResourceCondition(nil), a...)
+	bc := append([]monitoringv1.ConfigResourceCondition(nil), b...)
+
+	sort.Slice(ac, func(i, j int) bool {
+		return ac[i].Type < ac[j].Type
+	})
+	sort.Slice(bc, func(i, j int) bool {
+		return bc[i].Type < bc[j].Type
+	})
+
+	for i := range ac {
+		if ac[i].Type != bc[i].Type ||
+			ac[i].Status != bc[i].Status ||
+			ac[i].Reason != bc[i].Reason ||
+			ac[i].Message != bc[i].Message ||
+			ac[i].ObservedGeneration != bc[i].ObservedGeneration {
+			return false
+		}
+	}
+	return true
 }
