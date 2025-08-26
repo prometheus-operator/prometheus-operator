@@ -639,6 +639,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("HetznerSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, HetznerSDTestCases)
 	})
+	t.Run("LinodeSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, LinodeSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -4249,5 +4252,129 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
+	},
+}
+
+var LinodeSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Region: ptr.To("us-east"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Empty Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid TagSeperator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					TagSeparator: ptr.To(","),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
 	},
 }
