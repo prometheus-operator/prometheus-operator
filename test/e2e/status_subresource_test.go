@@ -140,3 +140,41 @@ func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
 	require.NoError(t, err)
 }
+
+// testRmServiceMonitorBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource when workload is deleted.
+func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "workload-delete-smon-status-binding-cleanup-test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+	smon := framework.MakeBasicServiceMonitor(name)
+
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
