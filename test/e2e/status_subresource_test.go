@@ -101,3 +101,42 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
 }
+
+// testInvalidBindingCleanupFromSmonStatus validates ServiceMonitor status removes Prometheus refrence when the selectors are changed.
+func testInvalidBindingCleanupFromSmonStatus(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "smon-status-binding-cleanup-test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+	smon := framework.MakeBasicServiceMonitor(name)
+
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	sm.Labels = map[string]string{}
+
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
+	require.NoError(t, err)
+	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}

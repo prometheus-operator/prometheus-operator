@@ -161,7 +161,6 @@ func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfi
 	return nil
 }
 
-
 // WaitForConfigResWorkloadBindingCleanup waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to remove the expected workload binding from the status.
 // If the binding isn't removed within the given timeout, it returns an error.
 func (f *Framework) WaitForConfigResWorkloadBindingCleanup(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, timeout time.Duration) error {
