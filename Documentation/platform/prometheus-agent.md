@@ -256,13 +256,28 @@ To use DaemonSet mode, you need to:
      - '*'
    ```
 
+3. **Set the mode field** in your PrometheusAgent spec:
+
+   ```yaml
+   apiVersion: monitoring.coreos.com/v1alpha1
+   kind: PrometheusAgent
+   metadata:
+     name: prometheus-agent-daemonset
+   spec:
+     mode: DaemonSet
+     serviceAccountName: prometheus-agent
+     serviceMonitorSelector:
+       matchLabels:
+         team: frontend
+   ```
+
 ## Field Restrictions in DaemonSet Mode
 
 When using DaemonSet mode, the following fields are **not allowed** and will be rejected by CEL validation:
 
 - `replicas`
 - `storage`
-- `shards`
+- `shards` (cannot be greater than 1)
 - `persistentVolumeClaimRetentionPolicy`
 - `scrapeConfigSelector`
 - `probeSelector`
@@ -271,6 +286,26 @@ When using DaemonSet mode, the following fields are **not allowed** and will be 
 
 ## Target Discovery in DaemonSet Mode
 
+### PrometheusAgent Configuration
+
+Here's a minimal PrometheusAgent configuration for DaemonSet mode:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: prometheus-agent-daemonset
+spec:
+  mode: DaemonSet
+  serviceAccountName: prometheus-agent
+  podMonitorSelector:
+    matchLabels:
+      team: backend
+  podMonitorNamespaceSelector:
+    matchLabels:
+      monitoring: enabled
+```
+
 ### PodMonitor
 
 ```yaml
@@ -278,6 +313,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: app-podmonitor
+  namespace: default
 spec:
   selector:
     matchLabels:
