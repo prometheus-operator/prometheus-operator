@@ -645,6 +645,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("NomadSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, NomadSDTestCases)
 	})
+	t.Run("PuppetDBSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, PuppetDBSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -4531,6 +4534,197 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
 					Server:      "localhost",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var PuppetDBSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:   "https://puppetdb.example.com",
+					Query: "nodes { certname = \"macbook-pro.local\" }",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Missing URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					Query: "nodes { certname = \"macbook-pro.local\" }",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:   "",
+					Query: "nodes { certname = \"macbook-pro.local\" }",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing Query",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL: "https://puppetdb.example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty Query",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:   "https://puppetdb.example.com",
+					Query: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "IncludeParameters True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:               "https://puppetdb.example.com",
+					Query:             "nodes { certname = \"macbook-pro.local\" }",
+					IncludeParameters: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "IncludeParameters False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:               "https://puppetdb.example.com",
+					Query:             "nodes { certname = \"macbook-pro.local\" }",
+					IncludeParameters: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:             "https://puppetdb.example.com",
+					Query:           "nodes { certname = \"macbook-pro.local\" }",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:             "https://puppetdb.example.com",
+					Query:           "nodes { certname = \"macbook-pro.local\" }",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:   "https://puppetdb.example.com",
+					Query: "nodes { certname = \"macbook-pro.local\" }",
+					Port:  ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:   "https://puppetdb.example.com",
+					Query: "nodes { certname = \"macbook-pro.local\" }",
+					Port:  ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:             "https://puppetdb.example.com",
+					Query:           "nodes { certname = \"macbook-pro.local\" }",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:             "https://puppetdb.example.com",
+					Query:           "nodes { certname = \"macbook-pro.local\" }",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:         "https://puppetdb.example.com",
+					Query:       "nodes { certname = \"macbook-pro.local\" }",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
+				{
+					URL:         "https://puppetdb.example.com",
+					Query:       "nodes { certname = \"macbook-pro.local\" }",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
