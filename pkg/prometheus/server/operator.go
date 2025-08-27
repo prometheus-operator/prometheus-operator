@@ -810,16 +810,16 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	statusCleanup := func() {
-		c.configResStatusCleanup(ctx, p, c.logger, *resources)
+	statusCleanup := func() (bool, error) {
+		return c.configResStatusCleanup(ctx, p, c.logger, *resources)
 	}
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup, logger, c.rr.DeletionInProgress(p))
+	reconcile, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
 
-	if finalizersChanged {
+	if reconcile {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
@@ -1074,17 +1074,24 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 }
 
 // configResStatusCleanup removes prometheus bindings from the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
-func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
-	if !c.configResourcesStatusEnabled {
-		return
-	}
-
+func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) (bool, error) {
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
+
+	var reconcie bool
+	var count int
 	for key, sm := range resources.sMons {
-		if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm.Resource()); err != nil {
-			logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", key)
+		if prompkg.IsBindingPresent(sm.Resource().Status.Bindings, p, monitoringv1.PrometheusName) {
+			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm.Resource()); err != nil {
+				return true, fmt.Errorf("failed to remove Prometheus binding from %s status: %w", key, err)
+			}
+			count++
+			reconcie = true
+			if count > 5 {
+				break
+			}
 		}
 	}
+	return reconcie, nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
