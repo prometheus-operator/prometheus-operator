@@ -1031,21 +1031,37 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	c.updateConfigResourcesStatus(ctx, p, logger, *resources)
-
+	reconcile, err := c.updateConfigResourcesStatus(ctx, p, logger, *resources)
+	if err != nil {
+		return err
+	}
+	if reconcile {
+		c.rr.EnqueueForReconciliation(p)
+	}
 	return nil
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
-func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) (bool, error) {
 	if !c.configResourcesStatusEnabled {
-		return
+		return false, nil
 	}
+
+	var reconcile bool
+	var count int
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 	for key, sm := range resources.sMons {
-		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
-			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
+		changed, err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm)
+		if err != nil {
+			return true, fmt.Errorf("failed to update %s status: %w", key, err)
+		}
+		if changed {
+			count++
+		}
+		if count > 5 {
+			reconcile = true
+			break
 		}
 	}
 
@@ -1068,6 +1084,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err != nil {
 		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
 	}
+	return reconcile, nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
