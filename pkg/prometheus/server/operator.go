@@ -811,7 +811,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	statusCleanup := func() (bool, error) {
-		return c.configResStatusCleanup(ctx, p, c.logger, *resources)
+		return c.configResStatusCleanup(ctx, p, *resources)
 	}
 
 	reconcile, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup, logger, c.rr.DeletionInProgress(p))
@@ -1075,7 +1075,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 // configResStatusCleanup removes prometheus bindings from the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
 // It returns true if another reconciliation is needed to complete the cleanup and and an error if the cleanup fails.
-func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) (bool, error) {
+func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus, resources selectedConfigResources) (bool, error) {
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 
 	var reconcie bool
