@@ -159,7 +159,7 @@ func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "workload-delete-smon-status-binding-cleanup-test"
+	name := "workload-del-smon-test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
