@@ -160,3 +160,31 @@ func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfi
 
 	return nil
 }
+
+
+// WaitForConfigResWorkloadBindingCleanup waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to remove the expected workload binding from the status.
+// If the binding isn't removed within the given timeout, it returns an error.
+func (f *Framework) WaitForConfigResWorkloadBindingCleanup(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, timeout time.Duration) error {
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+		var bindings []monitoringv1.WorkloadBinding
+		bindings, pollErr = getConfigResourceStatus(ctx)
+		if pollErr != nil {
+			return false, nil
+		}
+
+		for _, binding := range bindings {
+			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
+
+				pollErr = fmt.Errorf("binding for resource %q with name %q in namespace %q still exists", resource, workload.GetName(), workload.GetNamespace())
+				return false, nil
+			}
+		}
+
+		return true, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", err, pollErr)
+	}
+
+	return nil
+}
