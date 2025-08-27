@@ -811,10 +811,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	statusCleanup := func() {
-		c.configResStatusCleanup(ctx, p, c.logger ,*resources)
-	} 
+		c.configResStatusCleanup(ctx, p, c.logger, *resources)
+	}
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup ,logger, c.rr.DeletionInProgress(p))
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup, logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
@@ -1080,7 +1080,6 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	}
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
-	
 	for key, sm := range resources.sMons {
 		if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm.Resource()); err != nil {
 			logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", key)
