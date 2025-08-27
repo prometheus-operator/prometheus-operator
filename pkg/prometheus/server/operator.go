@@ -804,7 +804,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+	if err != nil {
+		return err
+	}
+
+	statusCleanup := func() {
+		c.configResStatusCleanup(ctx, p, c.logger ,*resources)
+	} 
+
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup ,logger, c.rr.DeletionInProgress(p))
 	if err != nil {
 		return err
 	}
@@ -835,18 +845,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
-
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
-	if err != nil {
-		return err
-	}
-
-	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
 		return err
 	}
@@ -1067,6 +1070,21 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	})
 	if err != nil {
 		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
+	}
+}
+
+// configResStatusCleanup removes prometheus bindings from the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
+	if !c.configResourcesStatusEnabled {
+		return
+	}
+
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
+	
+	for key, sm := range resources.sMons {
+		if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm.Resource()); err != nil {
+			logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", key)
+		}
 	}
 }
 
