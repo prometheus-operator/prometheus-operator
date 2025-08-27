@@ -102,8 +102,8 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// testInvalidBindingCleanupFromSmonStatus validates ServiceMonitor status removes Prometheus refrence when the selectors are changed.
-func testInvalidBindingCleanupFromSmonStatus(t *testing.T) {
+// testGarbageCollectionOfServiceMonitorBinding validates that the operator removes the reference to the Prometheus resource when the ServiceMonitor isn't selected anymore by the workload.
+func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)

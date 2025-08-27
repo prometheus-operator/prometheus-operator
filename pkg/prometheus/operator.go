@@ -329,7 +329,7 @@ func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition)
 	return true
 }
 
-// RemoveStatus remove the Prometheus or PrometheusAgent binding from the status
+// RemoveServiceMonitorBinding removes the Prometheus or PrometheusAgent binding from the status remove the Prometheus or PrometheusAgent binding from the status
 // subresource of status in serviceMonitor.
 func RemoveServiceMonitorBinding(
 	ctx context.Context,
