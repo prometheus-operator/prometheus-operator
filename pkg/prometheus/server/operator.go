@@ -1031,11 +1031,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	reconcile, err := c.updateConfigResourcesStatus(ctx, p, *resources)
+	rcon, err := c.updateConfigResourcesStatus(ctx, p, *resources)
 	if err != nil {
 		return err
 	}
-	if reconcile {
+	if rcon {
 		c.rr.EnqueueForReconciliation(p)
 	}
 	return nil
