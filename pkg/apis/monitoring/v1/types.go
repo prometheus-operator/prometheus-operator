@@ -1069,6 +1069,11 @@ const (
 // +k8s:openapi-gen=true
 type ConfigResourceStatus struct {
 	// The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.
+	// +listType=map
+	// +listMapKey=group
+	// +listMapKey=resource
+	// +listMapKey=name
+	// +listMapKey=namespace
 	// +optional
 	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }

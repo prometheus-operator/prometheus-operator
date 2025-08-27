@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.18.0",
-      "operator.prometheus.io/version": "0.84.1"
+      "operator.prometheus.io/version": "0.85.0"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -8944,6 +8944,10 @@
                   {
                     "message": "scrapeConfigSelector cannot be set when mode is DaemonSet",
                     "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigSelector))"
+                  },
+                  {
+                    "message": "probeSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeSelector))"
                   }
                 ]
               },

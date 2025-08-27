@@ -1236,6 +1236,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkRocketChatConfigs(ctx, receiver.RocketChatConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1349,6 +1354,48 @@ func checkDiscordConfigs(
 		}
 		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
 			return fmt.Errorf("failed to validate API URL: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func checkRocketChatConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.RocketChatConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+	}
+
+	for _, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+
+		if config.APIURL != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.APIURL))); err != nil {
+				return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
+			}
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.Token); err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
 	}
 

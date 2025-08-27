@@ -106,6 +106,11 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsConfig' - receiver %s: %w", receiver.Name, err)
 		}
+
+		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - reciever %s: %w", receiver.Name, err)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -328,6 +333,22 @@ func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 
 func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) error {
+	for _, config := range configs {
+		if config.APIURL != nil && *config.APIURL != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return fmt.Errorf("invalid 'apiURL': %w", err)
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

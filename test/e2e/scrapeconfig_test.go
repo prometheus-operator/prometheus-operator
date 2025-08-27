@@ -630,6 +630,21 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("ScalewaySD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
 	})
+	t.Run("DockerSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, DockerSDTestCases)
+	})
+	t.Run("DockerSwarmSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, DockerSwarmSDTestCases)
+	})
+	t.Run("HetznerSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, HetznerSDTestCases)
+	})
+	t.Run("LinodeSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, LinodeSDTestCases)
+	})
+	t.Run("NomadSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, NomadSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -3668,5 +3683,858 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
+	},
+}
+
+var DockerSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Host",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Host",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid HostNetworkingHost",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:               "127.0.0.1",
+					HostNetworkingHost: ptr.To("localhost"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid HostNetworkingHost",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:               "127.0.0.1",
+					HostNetworkingHost: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "MatchFirstNetwork True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:              "127.0.0.1",
+					MatchFirstNetwork: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "MatchFirstNetwork False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:              "127.0.0.1",
+					MatchFirstNetwork: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Filter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "starting"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filter No Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Empty String Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{""},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Repeated Value Items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "127.0.0.1",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "healthy"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:            "127.0.0.1",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:            "127.0.0.1",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:            "127.0.0.1",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:            "127.0.0.1",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:        "127.0.0.1",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host:        "127.0.0.1",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var DockerSwarmSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Minimum Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Role: "Services",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Role: "Services",
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Role: "Services",
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Filter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Role: "Services",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "starting"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filter No Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Role: "Services",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Empty String Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{""},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filter Repeated Value Items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host: "tcp://localhost",
+					Role: "Services",
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "health",
+							Values: []string{"healthy", "healthy"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "tcp://localhost",
+					Role:            "Services",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh Interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "tcp://localhost",
+					Role:            "Services",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "tcp://localhost",
+					Role:            "Services",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:            "tcp://localhost",
+					Role:            "Services",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:        "tcp://localhost",
+					Role:        "Services",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+				{
+					Host:        "tcp://localhost",
+					Role:        "Services",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var HetznerSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Hcloud",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Empty Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Follo Redirect True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Follo Redirect False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:        "Hcloud",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:        "Hcloud",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Hcloud",
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role: "Hcloud",
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:            "Hcloud",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid LabelSelector",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:          "Hcloud",
+					LabelSelector: ptr.To("foo"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid LabelSelector",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
+				{
+					Role:          "Hcloud",
+					LabelSelector: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var LinodeSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Region: ptr.To("us-east"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Empty Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid TagSeperator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					TagSeparator: ptr.To(","),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var NomadSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "No Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					// No Server
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AllowStale True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:     "localhost",
+					AllowStale: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "AllowStale False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:     "localhost",
+					AllowStale: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Namespace",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:    "localhost",
+					Namespace: ptr.To("default"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+					Region: ptr.To("us-east"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid TagSeparator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:       "localhost",
+					TagSeparator: ptr.To(","),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:          "localhost",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:      "localhost",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:      "localhost",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
 	},
 }
