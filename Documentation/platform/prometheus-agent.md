@@ -280,9 +280,12 @@ When using DaemonSet mode, the following fields are **not allowed** and will be 
 - `shards` (cannot be greater than 1)
 - `persistentVolumeClaimRetentionPolicy`
 - `scrapeConfigSelector`
-- `probeSelector`
 - `scrapeConfigNamespaceSelector`
+- `probeSelector`
 - `probeNamespaceSelector`
+- `serviceMonitorSelector`
+- `serviceMonitorNamespaceSelector`
+- `additionalScrapeConfigs`
 
 ## Target Discovery in DaemonSet Mode
 
