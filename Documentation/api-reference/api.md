@@ -31959,6 +31959,7 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of RocketChat configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
@@ -37380,6 +37381,7 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>List of RocketChat configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>

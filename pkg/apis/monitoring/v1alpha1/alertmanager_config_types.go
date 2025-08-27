@@ -211,6 +211,7 @@ type Receiver struct {
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 	// List of RocketChat configurations.
 	// It requires Alertmanager >= 0.28.0.
+	// +optional
 	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
 
