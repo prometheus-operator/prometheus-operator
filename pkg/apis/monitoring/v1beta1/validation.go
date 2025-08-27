@@ -100,9 +100,10 @@ func (ti TimeInterval) Validate() error {
 				return fmt.Errorf("year range at %d is invalid: %w", i, err)
 			}
 		}
-		_, err := time.LoadLocation(ti.Location)
-		if err != nil {
-			return fmt.Errorf("location is invalid: %w", err)
+		if ti.Location != nil {
+			if _, err := time.LoadLocation(*ti.Location); err != nil {
+				return fmt.Errorf("time zone location at %d is invalid: %w", i, err)
+			}
 		}
 
 	}

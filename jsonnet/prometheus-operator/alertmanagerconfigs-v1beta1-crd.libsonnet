@@ -9886,6 +9886,7 @@
                           },
                           location: {
                             description: 'Location is the time zone for the time interval',
+                            minLength: 1,
                             type: 'string',
                           },
                           months: {

@@ -1550,11 +1550,13 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 			})
 		}
 
-		loc, err := time.LoadLocation(timeInterval.Location)
-		if err != nil {
-			return nil, err
+		if timeInterval.Location != nil {
+			loc, err := time.LoadLocation(*timeInterval.Location)
+			if err != nil {
+				return nil, err
+			}
+			ti.Location = &timeinterval.Location{Location: loc}
 		}
-		ti.Location = &timeinterval.Location{Location: loc}
 
 		muteTimeInterval.Name = makeNamespacedString(in.Name, crKey)
 		muteTimeInterval.TimeIntervals = append(muteTimeInterval.TimeIntervals, ti)
