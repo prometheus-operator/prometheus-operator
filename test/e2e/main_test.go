@@ -435,6 +435,7 @@ func TestGatedFeatures(t *testing.T) {
 		"FinalizerWhenStatusForConfigResourcesEnabled": testFinalizerWhenStatusForConfigResourcesEnabled,
 		"PrometheusAgentDaemonSetCELValidations":       testPrometheusAgentDaemonSetCELValidations,
 		"ServiceMonitorStatusSubresource":              testServiceMonitorStatusSubresource,
+		"GarbageCollectionOfServiceMonitorBinding":     testGarbageCollectionOfServiceMonitorBinding,
 	}
 
 	for name, f := range testFuncs {
