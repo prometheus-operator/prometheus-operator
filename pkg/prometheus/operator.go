@@ -345,18 +345,13 @@ func RemoveServiceMonitorBinding(
 		}
 	}
 
-	var err error
 	if len(smon.Status.Bindings) == 0 {
-		_, err = c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).UpdateStatus(ctx, smon, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
-	} else {
-		_, err = c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	}
-
-	if err != nil {
+		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).UpdateStatus(ctx, smon, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
 		return err
 	}
 
-	return nil
+	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+	return err
 }
 
 func IsBindingPresent(bindings []monitoringv1.WorkloadBinding, p metav1.Object, resource string) bool {
