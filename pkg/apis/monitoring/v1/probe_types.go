@@ -38,9 +38,11 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
 type Probe struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Ingress selection for target discovery by Prometheus.
+	// +required
 	Spec ProbeSpec `json:"spec"`
 }
 
@@ -53,37 +55,49 @@ func (l *Probe) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type ProbeSpec struct {
 	// The job name assigned to scraped metrics by default.
+	// +optional
 	JobName string `json:"jobName,omitempty"`
 	// Specification for the prober to use for probing targets.
 	// The prober.URL parameter is required. Targets cannot be probed if left empty.
+	// +optional
 	ProberSpec ProberSpec `json:"prober,omitempty"`
 	// The module to use for probing specifying how to probe the target.
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
+	// +optional
 	Module string `json:"module,omitempty"`
 	// Targets defines a set of static or dynamically discovered targets to probe.
+	// +optional
 	Targets ProbeTargets `json:"targets,omitempty"`
 	// Interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
+	// +optional
 	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	// If not specified, the Prometheus global scrape timeout is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
+	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
 	// needs to be in the same namespace as the probe and accessible by
 	// the Prometheus Operator.
+	// +optional
 	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
+	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
+	// +optional
 	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 	// Authorization section for this endpoint
+	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 	// +optional
@@ -119,6 +133,7 @@ type ProbeSpec struct {
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
+	// +optional
 	NativeHistogramConfig `json:",inline"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
@@ -153,6 +168,7 @@ type ProbeParam struct {
 	// The parameter values
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
+	// +optional
 	Values []string `json:"values,omitempty"`
 }
 
@@ -165,10 +181,12 @@ type ProbeTargets struct {
 	// relabeling configuration.
 	// If `ingress` is also defined, `staticConfig` takes precedence.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
+	// +optional
 	StaticConfig *ProbeTargetStaticConfig `json:"staticConfig,omitempty"`
 	// ingress defines the Ingress objects to probe and the relabeling
 	// configuration.
 	// If `staticConfig` is also defined, `staticConfig` takes precedence.
+	// +optional
 	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
 }
 
@@ -185,6 +203,7 @@ func (it *ProbeTargets) Validate() error {
 // on semantically invalid configurations.
 // +k8s:openapi-gen=false
 type ProbeTargetsValidationError struct {
+	// +optional
 	err string
 }
 
@@ -196,12 +215,15 @@ func (e *ProbeTargetsValidationError) Error() string {
 // +k8s:openapi-gen=true
 type ProbeTargetStaticConfig struct {
 	// The list of hosts to probe.
+	// +optional
 	Targets []string `json:"static,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
+	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 	// RelabelConfigs to apply to the label set of the targets before it gets
 	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
@@ -210,8 +232,10 @@ type ProbeTargetStaticConfig struct {
 // +k8s:openapi-gen=true
 type ProbeTargetIngress struct {
 	// Selector to select the Ingress objects.
+	// +optional
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
 	// From which namespaces to select Ingress objects.
+	// +optional
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 	// RelabelConfigs to apply to the label set of the target before it gets
 	// scraped.
@@ -220,6 +244,7 @@ type ProbeTargetIngress struct {
 	// probed URL.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
@@ -227,15 +252,18 @@ type ProbeTargetIngress struct {
 // +k8s:openapi-gen=true
 type ProberSpec struct {
 	// Mandatory URL of the prober.
+	// +required
 	URL string `json:"url"`
 	// HTTP scheme to use for scraping.
 	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
 	// If empty, Prometheus uses the default value `http`.
 	// +kubebuilder:validation:Enum=http;https
+	// +optional
 	Scheme string `json:"scheme,omitempty"`
 	// Path to collect metrics from.
 	// Defaults to `/probe`.
 	// +kubebuilder:default:="/probe"
+	// +optional
 	Path string `json:"path,omitempty"`
 
 	// +optional
@@ -248,8 +276,10 @@ type ProbeList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Probes
+	// +required
 	Items []Probe `json:"items"`
 }
 

@@ -102,7 +102,7 @@ type CoreV1TopologySpreadConstraint v1.TopologySpreadConstraint
 type TopologySpreadConstraint struct {
 	CoreV1TopologySpreadConstraint `json:",inline"`
 
-	//+optional
+	// +optional
 	// Defines what Prometheus Operator managed labels should be added to labelSelector on the topologySpreadConstraint.
 	AdditionalLabelSelectors *AdditionalLabelSelectors `json:"additionalLabelSelectors,omitempty"`
 }
@@ -124,6 +124,7 @@ type CommonPrometheusFields struct {
 	// * "operator.prometheus.io/name" label, set to the name of the Prometheus object.
 	// * "operator.prometheus.io/shard" label, set to the shard number of the Prometheus object.
 	// * "kubectl.kubernetes.io/default-container" annotation, set to "prometheus".
+	// +optional
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 
 	// ServiceMonitors to be selected for target discovery. An empty label
@@ -137,10 +138,12 @@ type CommonPrometheusFields struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
+	// +optional
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Namespaces to match for ServicedMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
+	// +optional
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
 	// PodMonitors to be selected for target discovery. An empty label selector
@@ -154,10 +157,12 @@ type CommonPrometheusFields struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
+	// +optional
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespaces to match for PodMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
+	// +optional
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 
 	// Probes to be selected for target discovery. An empty label selector
@@ -171,10 +176,12 @@ type CommonPrometheusFields struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
+	// +optional
 	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
 	// Namespaces to match for Probe discovery. An empty label
 	// selector matches all namespaces. A null label selector matches the
 	// current namespace only.
+	// +optional
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
 
 	// ScrapeConfigs to be selected for target discovery. An empty label
@@ -208,10 +215,12 @@ type CommonPrometheusFields struct {
 	// If not specified, the operator assumes the latest upstream version of
 	// Prometheus available at the time when the version of the operator was
 	// released.
+	// +optional
 	Version string `json:"version,omitempty"`
 
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
+	// +optional
 	Paused bool `json:"paused,omitempty"`
 
 	// Container image name for Prometheus. If specified, it takes precedence
@@ -229,10 +238,12 @@ type CommonPrometheusFields struct {
 	// Image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
 	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
 	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
+	// +optional
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// An optional list of references to Secrets in the same namespace
 	// to use for pulling images from registries.
 	// See http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	// +optional
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// Number of replicas of each shard to deploy for a Prometheus deployment.
@@ -269,6 +280,7 @@ type CommonPrometheusFields struct {
 	// You can also disable sharding on a specific target by setting the
 	// `__tmp_disable_sharding` label with relabeling configuration. When
 	// the label value isn't empty, all Prometheus shards will scrape the target.
+	// +optional
 	Shards *int32 `json:"shards,omitempty"`
 
 	// Name of Prometheus external label used to denote the replica name.
@@ -288,18 +300,22 @@ type CommonPrometheusFields struct {
 
 	// Log level for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
+	// +optional
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Log level for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
+	// +optional
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Interval between consecutive scrapes.
 	//
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
+	// +optional
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait until a scrape request times out.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// The protocols to negotiate during a scrape. It tells clients the
@@ -319,6 +335,7 @@ type CommonPrometheusFields struct {
 	// external systems (federation, remote storage, Alertmanager).
 	// Labels defined by `spec.replicaExternalLabelName` and
 	// `spec.prometheusExternalLabelName` take precedence over this list.
+	// +optional
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
 
 	// Enable Prometheus to be used as a receiver for the Prometheus remote
@@ -331,6 +348,7 @@ type CommonPrometheusFields struct {
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
 	//
 	// It requires Prometheus >= v2.33.0.
+	// +optional
 	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
 
 	// Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.
@@ -366,6 +384,7 @@ type CommonPrometheusFields struct {
 	// The external URL under which the Prometheus service is externally
 	// available. This is necessary to generate correct URLs (for instance if
 	// Prometheus is accessible behind an Ingress resource).
+	// +optional
 	ExternalURL string `json:"externalUrl,omitempty"`
 	// The route prefix Prometheus registers HTTP handlers for.
 	//
@@ -373,19 +392,23 @@ type CommonPrometheusFields struct {
 	// HTTP routes of a request, and the actual ExternalURL is still true, but
 	// the server serves requests under a different route prefix. For example
 	// for use with `kubectl proxy`.
+	// +optional
 	RoutePrefix string `json:"routePrefix,omitempty"`
 
 	// Storage defines the storage used by Prometheus.
+	// +optional
 	Storage *StorageSpec `json:"storage,omitempty"`
 
 	// Volumes allows the configuration of additional volumes on the output
 	// StatefulSet definition. Volumes specified will be appended to other
 	// volumes that are generated as a result of StorageSpec objects.
+	// +optional
 	Volumes []v1.Volume `json:"volumes,omitempty"`
 	// VolumeMounts allows the configuration of additional VolumeMounts.
 	//
 	// VolumeMounts will be appended to other VolumeMounts in the 'prometheus'
 	// container, that are generated as a result of StorageSpec objects.
+	// +optional
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 
 	// The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
@@ -397,16 +420,20 @@ type CommonPrometheusFields struct {
 	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
 
 	// Defines the configuration of the Prometheus web server.
+	// +optional
 	Web *PrometheusWebSpec `json:"web,omitempty"`
 
 	// Defines the resources requests and limits of the 'prometheus' container.
+	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 
 	// Defines on which Nodes the Pods are scheduled.
+	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
+	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
@@ -422,11 +449,13 @@ type CommonPrometheusFields struct {
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
 	// +listType:=set
+	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
+	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
 
 	// Defines the Pods' affinity scheduling rules if specified.
@@ -437,7 +466,7 @@ type CommonPrometheusFields struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 
 	// Defines the pod's topology spread constraints if specified.
-	//+optional
+	// +optional
 	TopologySpreadConstraints []TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 
 	// Defines the list of remote write configurations.
@@ -465,6 +494,8 @@ type CommonPrometheusFields struct {
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 	// When true, the Prometheus server listens on the loopback address
 	// instead of the Pod IP's address.
+	//
+	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// Indicates whether information about services should be injected into pod's environment variables
@@ -529,10 +560,12 @@ type CommonPrometheusFields struct {
 	APIServerConfig *APIServerConfig `json:"apiserverConfig,omitempty"`
 
 	// Priority class assigned to the Pods.
+	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// Port name used for the pods and governing service.
 	// Default: "web"
 	// +kubebuilder:default:="web"
+	// +optional
 	PortName string `json:"portName,omitempty"`
 
 	// When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
@@ -545,6 +578,7 @@ type CommonPrometheusFields struct {
 	// `spec.arbitraryFSAccessThroughSM` to 'true' would prevent the attack.
 	// Users should instead provide the credentials using the
 	// `spec.bearerTokenSecret` field.
+	// +optional
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 
 	// When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
@@ -552,16 +586,19 @@ type CommonPrometheusFields struct {
 	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
 	// In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
 	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
+	// +optional
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 	// When true, Prometheus ignores the timestamps for all the targets created
 	// from service and pod monitors.
 	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
+	// +optional
 	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
 
 	// When true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
 	// and Probe objects will be ignored. They will only discover targets
 	// within the namespace of the PodMonitor, ServiceMonitor and Probe
 	// object.
+	// +optional
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 
 	// When not empty, a label will be added to:
@@ -576,6 +613,7 @@ type CommonPrometheusFields struct {
 	// The label's name is this field's value.
 	// The label's value is the namespace of the `ServiceMonitor`,
 	// `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
+	// +optional
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 
 	// When defined, enforcedSampleLimit specifies a global limit on the number
@@ -691,6 +729,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 	// * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
 	//
+	// +optional
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// Specifies the validation scheme for metric and label names.
@@ -782,6 +821,8 @@ type CommonPrometheusFields struct {
 	// When hostNetwork is enabled, this will set the DNS policy to
 	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
 	// to a different value).
+	//
+	// +optional
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// PodTargetLabels are appended to the `spec.podTargetLabels` field of all
@@ -875,6 +916,7 @@ type CommonPrometheusFields struct {
 	//
 	// +listType=map
 	// +listMapKey=name
+	// +optional
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
 	// Defines the service discovery role used to discover targets from
@@ -1040,14 +1082,17 @@ func (cpf *CommonPrometheusFields) WebRoutePrefix() string {
 //
 // The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.
 type Prometheus struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +required
 	Spec PrometheusSpec `json:"spec"`
 	// Most recent observed status of the Prometheus cluster. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
 	Status PrometheusStatus `json:"status,omitempty"`
 }
 
@@ -1062,6 +1107,7 @@ type PrometheusList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses
 	Items []Prometheus `json:"items"`
@@ -1076,20 +1122,26 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
+	// +optional
 	CommonPrometheusFields `json:",inline"`
 
 	// Deprecated: use 'spec.image' instead.
+	// +optional
 	BaseImage string `json:"baseImage,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
+	// +optional
 	Tag string `json:"tag,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
+	// +optional
 	SHA string `json:"sha,omitempty"`
 
 	// How long to retain the Prometheus data.
 	//
 	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
+	// +optional
 	Retention Duration `json:"retention,omitempty"`
 	// Maximum number of bytes used by the Prometheus data.
+	// +optional
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// ShardRetentionPolicy defines the retention policy for the Prometheus shards.
@@ -1105,9 +1157,11 @@ type PrometheusSpec struct {
 	// When true, the Prometheus compaction is disabled.
 	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
 	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
+	// +optional
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
 	// Defines the configuration of the Prometheus rules' engine.
+	// +optional
 	Rules Rules `json:"rules,omitempty"`
 	// Defines the list of PrometheusRule objects to which the namespace label
 	// enforcement doesn't apply.
@@ -1186,12 +1240,14 @@ type PrometheusSpec struct {
 	// Alternatively, the location can be set to a standard I/O stream, e.g.
 	// `/dev/stdout`, to log query information to the default Prometheus log
 	// stream.
+	// +optional
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 
 	// AllowOverlappingBlocks enables vertical compaction and vertical query
 	// merge in Prometheus.
 	//
 	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
+	// +optional
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 
 	// Exemplars related settings that are runtime reloadable.
@@ -1202,6 +1258,7 @@ type PrometheusSpec struct {
 	// Interval between rule evaluations.
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
+	// +optional
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
 	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
@@ -1218,6 +1275,7 @@ type PrometheusSpec struct {
 	//
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+	// +optional
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 }
 
@@ -1292,17 +1350,22 @@ type PrometheusTracingConfig struct {
 type PrometheusStatus struct {
 	// Represents whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
+	// +required
 	Paused bool `json:"paused"`
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
+	// +required
 	Replicas int32 `json:"replicas"`
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// that have the desired version spec.
+	// +required
 	UpdatedReplicas int32 `json:"updatedReplicas"`
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Prometheus deployment.
+	// +required
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this Prometheus deployment.
+	// +required
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The current state of the Prometheus deployment.
 	// +listType=map
@@ -1315,8 +1378,10 @@ type PrometheusStatus struct {
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 	// Shards is the most recently observed number of shards.
+	// +optional
 	Shards int32 `json:"shards,omitempty"`
 	// The selector used to match the pods targeted by this Prometheus resource.
+	// +optional
 	Selector string `json:"selector,omitempty"`
 }
 
@@ -1324,6 +1389,7 @@ type PrometheusStatus struct {
 // +k8s:openapi-gen=true
 type AlertingSpec struct {
 	// Alertmanager endpoints where Prometheus should send alerts to.
+	// +required
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
@@ -1338,19 +1404,23 @@ type AlertingSpec struct {
 // +k8s:openapi-gen=true
 type StorageSpec struct {
 	// Deprecated: subPath usage will be removed in a future release.
+	// +optional
 	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
 	// EmptyDirVolumeSource to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
+	// +optional
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
 	// EphemeralVolumeSource to be used by the StatefulSet.
 	// This is a beta field in k8s 1.21 and GA in 1.15.
 	// For lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
 	// More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes
+	// +optional
 	Ephemeral *v1.EphemeralVolumeSource `json:"ephemeral,omitempty"`
 	// Defines the PVC spec to be used by the Prometheus StatefulSets.
 	// The easiest way to use a volume that cannot be automatically provisioned
 	// is to use a label selector alongside manually created PersistentVolumes.
+	// +optional
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
@@ -1377,6 +1447,7 @@ type QuerySpec struct {
 // PrometheusWebSpec defines the configuration of the Prometheus web server.
 // +k8s:openapi-gen=true
 type PrometheusWebSpec struct {
+	// +optional
 	WebConfigFileFields `json:",inline"`
 
 	// The prometheus web page title.
@@ -1428,6 +1499,7 @@ type ThanosSpec struct {
 	BaseImage *string `json:"baseImage,omitempty"`
 
 	// Defines the resources requests and limits of the Thanos sidecar.
+	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 
 	// Defines the Thanos sidecar's configuration to upload TSDB blocks to object storage.
@@ -1446,18 +1518,21 @@ type ThanosSpec struct {
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 
 	// Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
+	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// When true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the gRPC endpoints.
 	//
 	// It has no effect if `listenLocal` is true.
+	// +optional
 	GRPCListenLocal bool `json:"grpcListenLocal,omitempty"`
 
 	// When true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the HTTP endpoints.
 	//
 	// It has no effect if `listenLocal` is true.
+	// +optional
 	HTTPListenLocal bool `json:"httpListenLocal,omitempty"`
 
 	// Defines the tracing configuration for the Thanos sidecar.
@@ -1479,6 +1554,7 @@ type ThanosSpec struct {
 	//
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
+	// +optional
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 
 	// Configures the TLS parameters for the gRPC server providing the StoreAPI.
@@ -1490,15 +1566,18 @@ type ThanosSpec struct {
 
 	// Log level for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
+	// +optional
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
+	// +optional
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Defines the start of time range limit served by the Thanos sidecar's StoreAPI.
 	// The field's value should be a constant time in RFC3339 format or a time
 	// duration relative to current time, such as -1d or 2h45m. Valid duration
 	// units are ms, s, m, h, d, w, y.
+	// +optional
 	MinTime string `json:"minTime,omitempty"`
 
 	// BlockDuration controls the size of TSDB blocks produced by Prometheus.
@@ -1511,14 +1590,18 @@ type ThanosSpec struct {
 	// example, 30s * 120 = 1h.
 	//
 	// +kubebuilder:default:="2h"
+	// +optional
 	BlockDuration Duration `json:"blockSize,omitempty"`
 
 	// ReadyTimeout is the maximum time that the Thanos sidecar will wait for
 	// Prometheus to start.
+	// +optional
 	ReadyTimeout Duration `json:"readyTimeout,omitempty"`
 	// How often to retrieve the Prometheus configuration.
+	// +optional
 	GetConfigInterval Duration `json:"getConfigInterval,omitempty"`
 	// Maximum time to wait when retrieving the Prometheus configuration.
+	// +optional
 	GetConfigTimeout Duration `json:"getConfigTimeout,omitempty"`
 
 	// VolumeMounts allows configuration of additional VolumeMounts for Thanos.
@@ -1551,7 +1634,7 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
 	//
-	//+optional
+	// +optional
 	Name *string `json:"name,omitempty"`
 
 	// The Remote Write message's version to use when writing to the endpoint.
@@ -1621,6 +1704,7 @@ type RemoteWriteSpec struct {
 	// File from which to read bearer token for the URL.
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	// +optional
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for the URL.
@@ -1654,6 +1738,7 @@ type RemoteWriteSpec struct {
 	// in clear-text. Prefer using `authorization`.*
 	//
 	// Deprecated: this will be removed in a future release.
+	// +optional
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// TLS Config to use for the URL.
@@ -1716,17 +1801,22 @@ const (
 type QueueConfig struct {
 	// Capacity is the number of samples to buffer per shard before we start
 	// dropping them.
+	// +optional
 	Capacity int `json:"capacity,omitempty"`
+	// +optional
 	// MinShards is the minimum number of shards, i.e. amount of concurrency.
 	MinShards int `json:"minShards,omitempty"`
 	// MaxShards is the maximum number of shards, i.e. amount of concurrency.
+	// +optional
 	MaxShards int `json:"maxShards,omitempty"`
 	// MaxSamplesPerSend is the maximum number of samples per send.
+	// +optional
 	MaxSamplesPerSend int `json:"maxSamplesPerSend,omitempty"`
 	// BatchSendDeadline is the maximum time a sample will wait in buffer.
 	// +optional
 	BatchSendDeadline *Duration `json:"batchSendDeadline,omitempty"`
 	// MaxRetries is the maximum number of times to retry a batch on recoverable errors.
+	// +optional
 	MaxRetries int `json:"maxRetries,omitempty"`
 	// MinBackoff is the initial retry delay. Gets doubled for every retry.
 	// +optional
@@ -1738,6 +1828,7 @@ type QueueConfig struct {
 	//
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
+	// +optional
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
 	// SampleAgeLimit drops samples older than the limit.
 	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
@@ -1751,6 +1842,7 @@ type QueueConfig struct {
 // +k8s:openapi-gen=true
 type Sigv4 struct {
 	// Region is the AWS region. If blank, the region from the default credentials chain used.
+	// +optional
 	Region string `json:"region,omitempty"`
 	// AccessKey is the AWS API key. If not specified, the environment variable
 	// `AWS_ACCESS_KEY_ID` is used.
@@ -1761,8 +1853,10 @@ type Sigv4 struct {
 	// +optional
 	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
 	// Profile is the named AWS profile used to authenticate.
+	// +optional
 	Profile string `json:"profile,omitempty"`
 	// RoleArn is the named AWS profile used to authenticate.
+	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
 }
 
@@ -1831,6 +1925,7 @@ type AzureSDK struct {
 // +k8s:openapi-gen=true
 type RemoteReadSpec struct {
 	// The URL of the endpoint to query from.
+	// +required
 	URL string `json:"url"`
 
 	// The name of the remote read queue, it must be unique if specified. The
@@ -1839,6 +1934,7 @@ type RemoteReadSpec struct {
 	//
 	// It requires Prometheus >= v2.15.0.
 	//
+	// +optional
 	Name string `json:"name,omitempty"`
 
 	// An optional list of equality matchers which have to be present
@@ -1858,6 +1954,7 @@ type RemoteReadSpec struct {
 
 	// Whether reads should be made for queries for time ranges that
 	// the local storage should have complete data for.
+	// +optional
 	ReadRecent bool `json:"readRecent,omitempty"`
 
 	// OAuth2 configuration for the URL.
@@ -1877,6 +1974,7 @@ type RemoteReadSpec struct {
 	// File from which to read the bearer token for the URL.
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	// +optional
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// Authorization section for the URL.
 	//
@@ -1891,6 +1989,7 @@ type RemoteReadSpec struct {
 	// in clear-text. Prefer using `authorization`.*
 	//
 	// Deprecated: this will be removed in a future release.
+	// +optional
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// TLS Config to use for the URL.
@@ -1931,6 +2030,7 @@ type RelabelConfig struct {
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
 
 	// Separator is the string between concatenated SourceLabels.
+	// +optional
 	Separator *string `json:"separator,omitempty"`
 
 	// Label to which the resulting string is written in a replacement.
@@ -1939,14 +2039,17 @@ type RelabelConfig struct {
 	// `KeepEqual` and `DropEqual` actions.
 	//
 	// Regex capture groups are available.
+	// +optional
 	TargetLabel string `json:"targetLabel,omitempty"`
 
 	// Regular expression against which the extracted value is matched.
+	// +optional
 	Regex string `json:"regex,omitempty"`
 
 	// Modulus to take of the hash of the source label values.
 	//
 	// Only applicable when the action is `HashMod`.
+	// +optional
 	Modulus uint64 `json:"modulus,omitempty"`
 
 	// Replacement value against which a Replace action is performed if the
@@ -1954,7 +2057,7 @@ type RelabelConfig struct {
 	//
 	// Regex capture groups are available.
 	//
-	//+optional
+	// +optional
 	Replacement *string `json:"replacement,omitempty"`
 
 	// Action to perform based on the regex matching.
@@ -1966,6 +2069,7 @@ type RelabelConfig struct {
 	//
 	// +kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
 	// +kubebuilder:default=replace
+	// +optional
 	Action string `json:"action,omitempty"`
 }
 
@@ -1977,6 +2081,7 @@ type RelabelConfig struct {
 type APIServerConfig struct {
 	// Kubernetes API address consisting of a hostname or IP address followed
 	// by an optional port number.
+	// +required
 	Host string `json:"host"`
 
 	// BasicAuth configuration for the API server.
@@ -1992,6 +2097,7 @@ type APIServerConfig struct {
 	// Cannot be set at the same time as `basicAuth`, `authorization`, or `bearerToken`.
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	// +optional
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// TLS Config to use for the API server.
@@ -2011,6 +2117,7 @@ type APIServerConfig struct {
 	// in clear-text. Prefer using `authorization`.*
 	//
 	// Deprecated: this will be removed in a future release.
+	// +optional
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// Optional ProxyConfig.
@@ -2046,12 +2153,15 @@ type AlertmanagerEndpoints struct {
 	Name string `json:"name"`
 
 	// Port on which the Alertmanager API is exposed.
+	// +required
 	Port intstr.IntOrString `json:"port"`
 
 	// Scheme to use when firing alerts.
+	// +optional
 	Scheme string `json:"scheme,omitempty"`
 
 	// Prefix for the HTTP path alerts are pushed to.
+	// +optional
 	PathPrefix string `json:"pathPrefix,omitempty"`
 
 	// TLS Config to use for Alertmanager.
@@ -2071,6 +2181,7 @@ type AlertmanagerEndpoints struct {
 	// Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`.
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	// +optional
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for Alertmanager.
@@ -2090,6 +2201,7 @@ type AlertmanagerEndpoints struct {
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// ProxyConfig
+	// +optional
 	ProxyConfig `json:",inline"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
@@ -2126,6 +2238,7 @@ type Rules struct {
 	// Defines the parameters of the Prometheus rules' engine.
 	//
 	// Any update to these parameters trigger a restart of the pods.
+	// +optional
 	Alert RulesAlert `json:"alert,omitempty"`
 }
 
@@ -2133,16 +2246,19 @@ type Rules struct {
 type RulesAlert struct {
 	// Max time to tolerate prometheus outage for restoring 'for' state of
 	// alert.
+	// +optional
 	ForOutageTolerance string `json:"forOutageTolerance,omitempty"`
 
 	// Minimum duration between alert and restored 'for' state.
 	//
 	// This is maintained only for alerts with a configured 'for' time greater
 	// than the grace period.
+	// +optional
 	ForGracePeriod string `json:"forGracePeriod,omitempty"`
 
 	// Minimum amount of time to wait before resending an alert to
 	// Alertmanager.
+	// +optional
 	ResendDelay string `json:"resendDelay,omitempty"`
 }
 
@@ -2151,9 +2267,11 @@ type RulesAlert struct {
 // +k8s:openapi-gen=true
 type MetadataConfig struct {
 	// Defines whether metric metadata is sent to the remote storage or not.
+	// +optional
 	Send bool `json:"send,omitempty"`
 
 	// Defines how frequently metric metadata is sent to the remote storage.
+	// +optional
 	SendInterval Duration `json:"sendInterval,omitempty"`
 
 	// MaxSamplesPerSend is the maximum number of metadata samples per send.
@@ -2170,14 +2288,18 @@ type ShardStatus struct {
 	// +required
 	ShardID string `json:"shardID"`
 	// Total number of pods targeted by this shard.
+	// +required
 	Replicas int32 `json:"replicas"`
 	// Total number of non-terminated pods targeted by this shard
 	// that have the desired spec.
+	// +required
 	UpdatedReplicas int32 `json:"updatedReplicas"`
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this shard.
+	// +required
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this shard.
+	// +required
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
@@ -2220,9 +2342,11 @@ type SafeAuthorization struct {
 	// "Basic" is not a supported value.
 	//
 	// Default: "Bearer"
+	// +optional
 	Type string `json:"type,omitempty"`
 
 	// Selects a key of a Secret in the namespace that contains the credentials for authentication.
+	// +optional
 	Credentials *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
@@ -2244,9 +2368,11 @@ func (c *SafeAuthorization) Validate() error {
 }
 
 type Authorization struct {
+	// +optional
 	SafeAuthorization `json:",inline"`
 
 	// File to read a secret from, mutually exclusive with `credentials`.
+	// +optional
 	CredentialsFile string `json:"credentialsFile,omitempty"`
 }
 
@@ -2271,6 +2397,7 @@ func (c *Authorization) Validate() error {
 // on semantically invalid configurations.
 // +k8s:openapi-gen=false
 type AuthorizationValidationError struct {
+	// +optional
 	err string
 }
 

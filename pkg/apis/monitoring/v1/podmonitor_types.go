@@ -40,9 +40,11 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
 type PodMonitor struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Pod selection for target discovery by Prometheus.
+	// +required
 	Spec PodMonitorSpec `json:"spec"`
 }
 
@@ -64,11 +66,13 @@ type PodMonitorSpec struct {
 	//
 	// If the value of this field is empty, the `job` label of the metrics
 	// defaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).
+	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 
 	// `podTargetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
 	//
+	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// Defines how to scrape metrics from the selected pods.
@@ -77,6 +81,7 @@ type PodMonitorSpec struct {
 	PodMetricsEndpoints []PodMetricsEndpoint `json:"podMetricsEndpoints"`
 
 	// Label selector to select the Kubernetes `Pod` objects to scrape metrics from.
+	// +required
 	Selector metav1.LabelSelector `json:"selector"`
 
 	// Mechanism used to select the endpoints to scrape.
@@ -91,6 +96,7 @@ type PodMonitorSpec struct {
 
 	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.
 	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
+	// +optional
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
@@ -210,11 +216,13 @@ type PodMetricsEndpoint struct {
 	// port must be specified with container port property.
 	//
 	// Deprecated: use 'port' or 'portNumber' instead.
+	// +optional
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 
 	// HTTP path from which to scrape for metrics.
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
+	// +optional
 	Path string `json:"path,omitempty"`
 
 	// HTTP scheme to use for scraping.
@@ -225,14 +233,17 @@ type PodMetricsEndpoint struct {
 	// If empty, Prometheus uses the default value `http`.
 	//
 	// +kubebuilder:validation:Enum=http;https
+	// +optional
 	Scheme string `json:"scheme,omitempty"`
 
 	// `params` define optional HTTP URL parameters.
+	// +optional
 	Params map[string][]string `json:"params,omitempty"`
 
 	// Interval at which Prometheus scrapes the metrics from the target.
 	//
 	// If empty, Prometheus uses the global scrape interval.
+	// +optional
 	Interval Duration `json:"interval,omitempty"`
 
 	// Timeout after which Prometheus considers the scrape to be failed.
@@ -240,6 +251,7 @@ type PodMetricsEndpoint struct {
 	// If empty, Prometheus uses the global scrape timeout unless it is less
 	// than the target's scrape interval value in which the latter is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// TLS configuration to use when scraping the target.
@@ -258,6 +270,7 @@ type PodMetricsEndpoint struct {
 
 	// When true, `honorLabels` preserves the metric's labels when they collide
 	// with the target's labels.
+	// +optional
 	HonorLabels bool `json:"honorLabels,omitempty"`
 
 	// `honorTimestamps` controls whether Prometheus preserves the timestamps
