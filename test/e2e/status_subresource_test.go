@@ -80,15 +80,41 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
-	smon := framework.MakeBasicServiceMonitor(name)
 
-	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	// Create a first service monitor to check that the operator only updates the binding when needed.
+	sm1 := framework.MakeBasicServiceMonitor("smon1")
+	sm1.Labels["group"] = name
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm1, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	// Record the lastTransitionTime value.
+	sm1, err = framework.WaitForServiceMonitorCondition(ctx, sm1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(sm1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second service monitor to check that the operator updates the binding when the condition changes.
+	sm2 := framework.MakeBasicServiceMonitor("smon2")
+	sm2.Labels["group"] = name
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm2, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+	sm2, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first service monitor. A label update doesn't
+	// change the status of the service monitor and the observed timetstamp
+	// should be the same as before.
+	sm1.Labels["test"] = "test"
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second service monitor to reference an non-existing Secret.
+	sm2.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
 		Username: corev1.SecretKeySelector{
 			Key: "username",
 			LocalObjectReference: corev1.LocalObjectReference{
@@ -96,10 +122,21 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 			},
 		},
 	}
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm2, v1.UpdateOptions{})
 	require.NoError(t, err)
-	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+
+	// The second ServiceMonitor should change to Accepted=False.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
+
+	// The first ServiceMonitor should remain unchanged.
+	sm1, err = framework.WaitForServiceMonitorCondition(ctx, sm1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sm1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
 // testGarbageCollectionOfServiceMonitorBinding validates that the operator removes the reference to the Prometheus resource when the ServiceMonitor isn't selected anymore by the workload.
