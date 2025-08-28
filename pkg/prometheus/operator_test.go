@@ -385,7 +385,7 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := configResStatusConditionsEqual(tt.a, tt.b)
+			result := equalConfigResourceConditions(tt.a, tt.b)
 			require.Equal(t, tt.expected, result)
 		})
 	}

@@ -80,9 +80,9 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
-	smon := framework.MakeBasicServiceMonitor(name)
 
-	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, v1.CreateOptions{})
 	require.NoError(t, err)
 
 	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -98,6 +98,31 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
-	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
+
+	// A label update doesn't change the status of the service monitor and the
+	// observed timetstamp should be the same as before.
+	binding, err := framework.GetWorkloadBinding(sm.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	sm.Labels["test"] = "test"
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// We should wait for a few seconds to ensure that the operator didn't update the timestamp field.
+	time.Sleep(5)
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+
 }
