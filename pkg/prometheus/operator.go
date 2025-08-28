@@ -266,10 +266,11 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 }
 
 // UpdateServiceMonitorStatus updates the status binding of the serviceMonitor for the given workload.
+// Returns true if an update was made to the status. false otherwise.
 func UpdateServiceMonitorStatus(
 	ctx context.Context,
 	c *ConfigResourceSyncer,
-	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
+	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) (bool, error) {
 	smon := res.resource
 	conditions := res.conditions(smon.Generation)
 
@@ -280,7 +281,7 @@ func UpdateServiceMonitorStatus(
 			binding.Name == c.workload.GetName() &&
 			binding.Resource == c.gvr.Resource {
 			if configResStatusConditionsEqual(binding.Conditions, conditions) {
-				return nil
+				return false, nil
 			}
 			binding.Conditions = conditions
 			found = true
@@ -299,7 +300,7 @@ func UpdateServiceMonitorStatus(
 	}
 
 	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	return err
+	return true, err
 }
 
 func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition) bool {

@@ -1031,25 +1031,44 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	c.updateConfigResourcesStatus(ctx, p, logger, *resources)
-
+	rcon, err := c.updateConfigResourcesStatus(ctx, p, *resources)
+	if err != nil {
+		return err
+	}
+	if rcon {
+		c.rr.EnqueueForReconciliation(p)
+	}
 	return nil
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
-func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
+// It returns true if another reconciliation is needed to avoid updating too many resources at once.
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, resources selectedConfigResources) (bool, error) {
 	if !c.configResourcesStatusEnabled {
-		return
+		return false, nil
 	}
 
+	var count int
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 	for key, sm := range resources.sMons {
-		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
-			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
+		changed, err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm)
+		if err != nil {
+			return true, fmt.Errorf("failed to update %s status: %w", key, err)
+		}
+		if changed {
+			count++
+		}
+		if count > 5 {
+			return true, nil
 		}
 	}
 
+	var reconcile bool
+	var retErr error
 	err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		if retErr != nil || count > 5 {
+			return
+		}
 		k, ok := c.accessor.MetaNamespaceKey(obj)
 		if !ok {
 			return
@@ -1061,13 +1080,18 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		s := obj.(*monitoringv1.ServiceMonitor)
 		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
 			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
-				logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", k)
+				retErr = fmt.Errorf("failed to remove Prometheus binding from  %s status: %w", k, err)
+			}
+			count++
+			if count > 5 {
+				reconcile = true
 			}
 		}
 	})
 	if err != nil {
-		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
+		return true, fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
+	return reconcile, nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
