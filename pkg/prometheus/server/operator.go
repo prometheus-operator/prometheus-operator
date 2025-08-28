@@ -1048,9 +1048,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return false, nil
 	}
 
-	var reconcile bool
 	var count int
-
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 	for key, sm := range resources.sMons {
 		changed, err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm)
@@ -1061,15 +1059,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			count++
 		}
 		if count > 5 {
-			reconcile = true
-			break
+			return true, nil
 		}
 	}
 
-	if count > 5 {
-		return reconcile, nil
-	}
-
+	var reconcile bool
 	var retErr error
 	err := c.smonInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		if retErr != nil || count > 5 {
