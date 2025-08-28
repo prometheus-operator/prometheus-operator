@@ -7230,7 +7230,7 @@ string
 <h3 id="monitoring.coreos.com/v1.AttachMetadata">AttachMetadata
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
 </p>
 <div>
 </div>
@@ -7255,6 +7255,23 @@ bool
 targets.</p>
 <p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
 permissions on the <code>Nodes</code> objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When set to true, Prometheus attaches namespace metadata to the discovered
+targets.</p>
+<p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
+permissions on the <code>Namespaces</code> objects.</p>
+<p>Only valid for pod, endpoints, endpointslice, service, ingress.</p>
+<p>It requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
 </tbody>
@@ -23226,9 +23243,6 @@ the resource&rsquo;s namespace.</p>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.AttachMetadata">AttachMetadata
 </h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
-</p>
 <div>
 </div>
 <table>
@@ -23249,9 +23263,24 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Attaches node metadata to discovered targets.
-When set to true, Prometheus must have the <code>get</code> permission on the
+When set to true, Prometheus must have the <code>list/watch</code> permission on the
 <code>Nodes</code> objects.
 Only valid for Pod, Endpoint and Endpointslice roles.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Attaches namespace metadata to discovered targets.
+When set to true, Prometheus must have permissions to list/watch Namespaces.
+Only valid for pod, endpoints, endpointslice, service, ingress.</p>
+<p>It requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
 </tbody>
@@ -26581,7 +26610,7 @@ NamespaceDiscovery
 <td>
 <code>attachMetadata</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.AttachMetadata">
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
 AttachMetadata
 </a>
 </em>
@@ -26589,8 +26618,9 @@ AttachMetadata
 <td>
 <em>(Optional)</em>
 <p>Optional metadata to attach to discovered targets.
-It requires Prometheus &gt;= v2.35.0 when using the <code>Pod</code> role and
-Prometheus &gt;= v2.37.0 for <code>Endpoints</code> and <code>Endpointslice</code> roles.</p>
+It requires Prometheus &gt;= v2.35.0 when using the <code>Pod</code> role,
+Prometheus &gt;= v2.37.0 for <code>Endpoints</code> and <code>Endpointslice</code> roles and
+Prometheus &gt;= v3.6.0 for <code>Service</code> and <code>Ingress</code> roles.</p>
 </td>
 </tr>
 <tr>
