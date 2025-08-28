@@ -184,6 +184,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.controllerID,
 	)
 
+	o.rr.SetReconcileDelay(c.ReconcileDelay)
 	return o, nil
 }
 
