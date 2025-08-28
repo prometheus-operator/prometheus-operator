@@ -648,7 +648,7 @@ type HTTPConfig struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// OAuth2 client credentials used to fetch a token for the targets.
 	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+	OAuth2 *OAuth2V2 `json:"oauth2,omitempty"`
 	// The secret's key that contains the bearer token to be used by the client
 	// for authentication.
 	// The secret needs to be in the same namespace as the Alertmanager

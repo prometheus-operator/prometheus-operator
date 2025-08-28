@@ -1411,7 +1411,6 @@
                                 "required": [
                                   "clientId",
                                   "clientSecret",
-                                  "clientSecretFile",
                                   "tokenUrl"
                                 ],
                                 "type": "object"

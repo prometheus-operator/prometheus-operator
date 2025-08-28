@@ -5556,7 +5556,6 @@
                           "required": [
                             "clientId",
                             "clientSecret",
-                            "clientSecretFile",
                             "tokenUrl"
                           ],
                           "type": "object"
@@ -6350,7 +6349,6 @@
                           "required": [
                             "clientId",
                             "clientSecret",
-                            "clientSecretFile",
                             "tokenUrl"
                           ],
                           "type": "object"

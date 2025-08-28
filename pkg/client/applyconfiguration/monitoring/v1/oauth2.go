@@ -25,7 +25,6 @@ import (
 type OAuth2ApplyConfiguration struct {
 	ClientID                      *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
 	ClientSecret                  *corev1.SecretKeySelector            `json:"clientSecret,omitempty"`
-	ClientSecretFile              *string                              `json:"clientSecretFile,omitempty"`
 	TokenURL                      *string                              `json:"tokenUrl,omitempty"`
 	Scopes                        []string                             `json:"scopes,omitempty"`
 	EndpointParams                map[string]string                    `json:"endpointParams,omitempty"`
@@ -52,14 +51,6 @@ func (b *OAuth2ApplyConfiguration) WithClientID(value *SecretOrConfigMapApplyCon
 // If called multiple times, the ClientSecret field is set to the value of the last call.
 func (b *OAuth2ApplyConfiguration) WithClientSecret(value corev1.SecretKeySelector) *OAuth2ApplyConfiguration {
 	b.ClientSecret = &value
-	return b
-}
-
-// WithClientSecretFile sets the ClientSecretFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ClientSecretFile field is set to the value of the last call.
-func (b *OAuth2ApplyConfiguration) WithClientSecretFile(value string) *OAuth2ApplyConfiguration {
-	b.ClientSecretFile = &value
 	return b
 }
 

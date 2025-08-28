@@ -5847,7 +5847,6 @@ spec:
                       required:
                       - clientId
                       - clientSecret
-                      - clientSecretFile
                       - tokenUrl
                       type: object
                     proxyConnectHeader:

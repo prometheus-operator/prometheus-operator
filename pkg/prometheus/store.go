@@ -33,7 +33,7 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
-		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2); err != nil {
+		if err := store.AddOAuth2V2(ctx, namespace, remote.OAuth2); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
@@ -68,7 +68,7 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 
-		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2); err != nil {
+		if err := store.AddOAuth2V2(ctx, namespace, remote.OAuth2); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 

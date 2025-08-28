@@ -417,11 +417,6 @@ spec:
                     - key
                     type: object
                     x-kubernetes-map-type: atomic
-                  clientSecretFile:
-                    description: |-
-                      `clientSecret` specifies a key of a Secret containing the OAuth2
-                      client's secret.
-                    type: string
                   endpointParams:
                     additionalProperties:
                       type: string
@@ -659,7 +654,6 @@ spec:
                 required:
                 - clientId
                 - clientSecret
-                - clientSecretFile
                 - tokenUrl
                 type: object
               params:
