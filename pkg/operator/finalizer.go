@@ -50,9 +50,9 @@ func NewFinalizerSyncer(
 // Sync ensures the `monitoring.coreos.com/status-cleanup` finalizer is correctly set on the given workload resource
 // (Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler). It adds the finalizer if necessary, or removes it when appropriate.
 //
-// Returns true if the finalizer list was modified, otherwise false.
+// Returns true if another reconciliation is needed.
 // The second return value indicates any error encountered during the operation.
-func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slog.Logger, deletionInProgress bool) (bool, error) {
+func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, statusCleanup func() (bool, error), logger *slog.Logger, deletionInProgress bool) (bool, error) {
 	if !s.configResourcesStatusEnabled {
 		return false, nil
 	}
@@ -74,6 +74,17 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slo
 			return false, fmt.Errorf("failed to add %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
 		logger.Debug("added finalizer to object")
+		return true, nil
+	}
+
+	// Remove the workload bindings from the status of config resources.
+	rec, err := statusCleanup()
+
+	if err != nil {
+		return true, err
+	}
+
+	if rec {
 		return true, nil
 	}
 

@@ -804,12 +804,22 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
 		return err
 	}
 
-	if finalizersChanged {
+	statusCleanup := func() (bool, error) {
+		return c.configResStatusCleanup(ctx, p, *resources)
+	}
+
+	reconcile, err := c.finalizerSyncer.Sync(ctx, p, statusCleanup, logger, c.rr.DeletionInProgress(p))
+	if err != nil {
+		return err
+	}
+
+	if reconcile {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
@@ -835,18 +845,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
-
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
-	if err != nil {
-		return err
-	}
-
-	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
 		return err
 	}
@@ -1068,6 +1071,28 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err != nil {
 		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
 	}
+}
+
+// configResStatusCleanup removes prometheus bindings from the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+// It returns true if another reconciliation is needed to complete the cleanup and and an error if the cleanup fails.
+func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus, resources selectedConfigResources) (bool, error) {
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
+
+	var reconcie bool
+	var count int
+	for key, sm := range resources.sMons {
+		if prompkg.IsBindingPresent(sm.Resource().Status.Bindings, p, monitoringv1.PrometheusName) {
+			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, sm.Resource()); err != nil {
+				return true, fmt.Errorf("failed to remove Prometheus binding from %s status: %w", key, err)
+			}
+			count++
+			reconcie = true
+			if count > 5 {
+				break
+			}
+		}
+	}
+	return reconcie, nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
