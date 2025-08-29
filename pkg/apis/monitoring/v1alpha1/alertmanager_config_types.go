@@ -1245,7 +1245,13 @@ type TimeInterval struct {
 	// Years is a list of YearRange
 	// +optional
 	Years []YearRange `json:"years,omitempty"`
+	// Location maps time instants to the zone in use at that time
+	// +optional
+	Location Location `json:"location,omitempty"`
 }
+
+// Location defines the location in string.
+type Location string
 
 // Time defines a time in 24hr format
 // +kubebuilder:validation:Pattern=`^((([01][0-9])|(2[0-3])):[0-5][0-9])$|(^24:00$)`

@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (hc *HTTPConfig) Validate() error {
@@ -99,6 +100,9 @@ func (mti MuteTimeInterval) Validate() error {
 			if err := year.Validate(); err != nil {
 				return fmt.Errorf("year range at %d is invalid: %w", i, err)
 			}
+		}
+		if err := ti.Location.Validate(); err != nil {
+			return fmt.Errorf("location at %d is invalid: %w", i, err)
 		}
 	}
 	return nil
@@ -299,6 +303,21 @@ func (mr MonthRange) Parse() (*ParsedRange, error) {
 		Start: start,
 		End:   end,
 	}, nil
+}
+
+// Validate the Location
+func (l Location) Validate() error {
+	_, err := l.Parse()
+	return err
+}
+
+// Parse returns parsed time.Location
+func (l Location) Parse() (*time.Location, error) {
+	loc, err := time.LoadLocation(string(l))
+	if err != nil {
+		return nil, err
+	}
+	return loc, err
 }
 
 // ParsedRange is an integer representation of a range

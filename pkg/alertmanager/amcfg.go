@@ -19,12 +19,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log/slog"
-	"net"
-	"net/url"
-	"path"
-	"strings"
-
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
@@ -33,6 +27,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	"log/slog"
+	"net"
+	"net/url"
+	"path"
+	"strings"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -1587,7 +1586,11 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 				},
 			})
 		}
-
+		loc, err := timeInterval.Location.Parse()
+		if err != nil {
+			return nil, fmt.Errorf("parse location: %w", err)
+		}
+		ti.Location = &timeinterval.Location{Location: loc}
 		muteTimeInterval.Name = makeNamespacedString(in.Name, crKey)
 		muteTimeInterval.TimeIntervals = append(muteTimeInterval.TimeIntervals, ti)
 	}
