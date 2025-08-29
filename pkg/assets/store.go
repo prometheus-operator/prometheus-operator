@@ -189,6 +189,41 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	return nil
 }
 
+func (s *StoreBuilder) AddOAuth2V2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2V2) error {
+	if oauth2 == nil {
+		return nil
+	}
+
+	if err := oauth2.Validate(); err != nil {
+		return err
+	}
+
+	_, err := s.GetKey(ctx, ns, oauth2.ClientID)
+	if err != nil {
+		return fmt.Errorf("failed to get oauth2 client id: %w", err)
+	}
+
+	if oauth2.ClientSecretFile != nil {
+	} else {
+		_, err = s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
+		if err != nil {
+			return fmt.Errorf("failed to get oauth2 client secret: %w", err)
+		}
+	}
+
+	err = s.AddProxyConfig(ctx, ns, oauth2.ProxyConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get oauth2 proxyConfig: %w", err)
+	}
+
+	err = s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
+	}
+
+	return nil
+}
+
 func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil

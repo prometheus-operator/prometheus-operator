@@ -1609,7 +1609,7 @@ type RemoteWriteSpec struct {
 	//
 	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
 	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+	OAuth2 *OAuth2V2 `json:"oauth2,omitempty"`
 
 	// BasicAuth configuration for the URL.
 	//
@@ -1867,7 +1867,7 @@ type RemoteReadSpec struct {
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
 	//
 	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+	OAuth2 *OAuth2V2 `json:"oauth2,omitempty"`
 	// BasicAuth configuration for the URL.
 	//
 	// Cannot be set at the same time as `authorization`, or `oauth2`.

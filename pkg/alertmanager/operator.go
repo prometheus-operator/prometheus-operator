@@ -1793,7 +1793,7 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 
-	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2)
+	return store.AddOAuth2V2(ctx, namespace, httpConfig.OAuth2)
 }
 
 func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {

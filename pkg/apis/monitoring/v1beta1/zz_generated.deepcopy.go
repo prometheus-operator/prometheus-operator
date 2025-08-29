@@ -243,7 +243,7 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 	}
 	if in.OAuth2 != nil {
 		in, out := &in.OAuth2, &out.OAuth2
-		*out = new(monitoringv1.OAuth2)
+		*out = new(monitoringv1.OAuth2V2)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.BearerTokenSecret != nil {
