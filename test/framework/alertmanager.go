@@ -238,7 +238,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 	// Check that all pods report the expected number of peers.
 	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
 
-	for i := 0; i < replicas; i++ {
+	for i := range replicas {
 		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
 		if err := f.WaitForAlertmanagerPodInitialized(ctx, a.Namespace, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
 			return nil, fmt.Errorf(

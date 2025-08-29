@@ -318,11 +318,11 @@ func TestPartialObjectMetadataStripOnDeletedFinalStateUnknown(t *testing.T) {
 		delReceived = make(chan struct{})
 	)
 	infs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
+		AddFunc: func(obj any) {
 			t.Logf("added object %T", obj)
 			addCount.Add(1)
 		},
-		DeleteFunc: func(obj interface{}) {
+		DeleteFunc: func(obj any) {
 			t.Logf("deleted object %T", obj)
 			close(delReceived)
 		},

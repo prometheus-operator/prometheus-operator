@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"path"
 	"strings"
 	"time"
@@ -439,7 +440,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Alertmanager instances in the namespace.
 		am := obj.(*monitoringv1.Alertmanager)
 		if am.Namespace == nsName {
@@ -491,7 +492,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing Alertmanager objects.
-	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		c.RefreshStatusFor(obj.(*monitoringv1.Alertmanager))
 	})
 
@@ -507,7 +508,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := c.alrtInfs.ListAll(labels.Everything(), func(o any) {
 		a := o.(*monitoringv1.Alertmanager)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
@@ -525,7 +526,7 @@ func alertmanagerKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/alertmanager-" + keyParts[1]
 }
 
-func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+func (c *Operator) handleNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -541,7 +542,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
-	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		a := obj.(*monitoringv1.Alertmanager)
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
@@ -980,9 +981,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 		operator.WithName(generatedConfigSecretName(am.Name)),
 	)
 
-	for k, v := range additionalData {
-		generatedConfigSecret.Data[k] = v
-	}
+	maps.Copy(generatedConfigSecret.Data, additionalData)
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, conf); err != nil {
@@ -1013,7 +1012,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			return nil, err
 		}
 
-		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
+		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj any) {
 			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
 		})
 		if err != nil {
@@ -1032,7 +1031,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj any) {
 			k, ok := c.accessor.MetaNamespaceKey(obj)
 			if !ok {
 				return

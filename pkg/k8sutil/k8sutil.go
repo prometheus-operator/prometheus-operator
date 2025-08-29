@@ -611,7 +611,7 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 		return []byte{}, nil
 	}
 	if len(finalizers) == 0 {
-		patch := []map[string]interface{}{
+		patch := []map[string]any{
 			{
 				"op":    "add",
 				"path":  "/metadata/finalizers",
@@ -620,7 +620,7 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 		}
 		return json.Marshal(patch)
 	}
-	patch := []map[string]interface{}{
+	patch := []map[string]any{
 		{
 			"op":    "add",
 			"path":  "/metadata/finalizers/-",
@@ -635,7 +635,7 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
 	for i, f := range finalizers {
 		if f == finalizerName {
-			patch := []map[string]interface{}{
+			patch := []map[string]any{
 				{
 					"op":   "remove",
 					"path": fmt.Sprintf("/metadata/finalizers/%d", i),

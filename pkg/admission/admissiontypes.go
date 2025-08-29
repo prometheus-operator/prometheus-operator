@@ -38,6 +38,6 @@ type RuleGroup struct {
 }
 
 type Rule struct {
-	Labels      map[string]interface{} `json:"labels,omitempty"`
-	Annotations map[string]interface{} `json:"annotations,omitempty"`
+	Labels      map[string]any `json:"labels,omitempty"`
+	Annotations map[string]any `json:"annotations,omitempty"`
 }

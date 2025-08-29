@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"maps"
 	"path"
 	"path/filepath"
 
@@ -209,9 +210,7 @@ func makeStatefulSetSpec(
 	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
 	podSelectorLabels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 
-	for k, v := range podSelectorLabels {
-		podLabels[k] = v
-	}
+	maps.Copy(podLabels, podSelectorLabels)
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)

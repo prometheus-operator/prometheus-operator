@@ -205,7 +205,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
-		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj interface{}) {
+		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj any) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
 				prs.logger.Error("failed to set rule type information", "namespace", ns, "err", err)

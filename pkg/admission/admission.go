@@ -214,7 +214,7 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 	}
 	pt := v1.PatchTypeJSONPatch
 	reviewResponse.PatchType = &pt
-	reviewResponse.Patch = []byte(fmt.Sprintf("[%s]", strings.Join(patches, ",")))
+	reviewResponse.Patch = fmt.Appendf(nil, "[%s]", strings.Join(patches, ","))
 	return reviewResponse
 }
 
@@ -257,7 +257,7 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		return toAdmissionResponseFailure("Unexpected resource kind", alertManagerConfigResource, []error{err})
 	}
 
-	var amConf interface{}
+	var amConf any
 	switch ar.Request.Resource.Version {
 	case monitoringv1alpha1.Version:
 		amConf = &monitoringv1alpha1.AlertmanagerConfig{}

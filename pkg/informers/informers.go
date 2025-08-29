@@ -83,7 +83,7 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 	}, nil
 }
 
-func partialObjectMetadataStrip(obj interface{}) (*v1.PartialObjectMetadata, error) {
+func partialObjectMetadataStrip(obj any) (*v1.PartialObjectMetadata, error) {
 	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
 	if !ok {
 		// Don't do anything if the cast isn't successful.
@@ -116,7 +116,7 @@ func partialObjectMetadataStrip(obj interface{}) (*v1.PartialObjectMetadata, err
 // watching PartialObjectMetadata objects to reduce memory consumption.
 // See https://pkg.go.dev/k8s.io/client-go@v0.29.1/tools/cache#TransformFunc for details.
 func PartialObjectMetadataStrip(gvk schema.GroupVersionKind) cache.TransformFunc {
-	return func(obj interface{}) (interface{}, error) {
+	return func(obj any) (any, error) {
 		partialMeta, err := partialObjectMetadataStrip(obj)
 		if err != nil {
 			return obj, nil

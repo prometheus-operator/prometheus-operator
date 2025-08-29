@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -708,7 +709,6 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			success: true,
 		},
 	} {
-		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			// The sub-test deploys the following setup:
@@ -1135,7 +1135,6 @@ func testPromReloadConfig(t *testing.T) {
 			reloadStrategy: monitoringv1.ProcessSignalReloadStrategyType,
 		},
 	} {
-		tc := tc
 		t.Run(fmt.Sprintf("%s reload strategy", tc.reloadStrategy), func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
@@ -1554,7 +1553,7 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	prometheusRules := []*monitoringv1.PrometheusRule{}
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		rule := generateHugePrometheusRule(ns, strconv.Itoa(i))
 		rule, err := framework.CreateRule(context.Background(), ns, rule)
 		if err != nil {
@@ -1697,7 +1696,7 @@ func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusR
 		},
 	}
 	// One rule marshaled as yaml is ~34 bytes long, the max is ~524288 bytes.
-	for i := 0; i < 12000; i++ {
+	for range 12000 {
 		groups[0].Rules = append(groups[0].Rules, monitoringv1.Rule{
 			Alert: alertName + "-" + identifier,
 			Expr:  intstr.FromString("vector(1)"),
@@ -1735,7 +1734,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	resourceDefinitions := []struct {
 		Name               string
 		Getter             func(prometheusName string) (versionedResource, error)
-		Versions           map[string]interface{}
+		Versions           map[string]any
 		MaxExpectedChanges int
 	}{
 		{
@@ -1812,7 +1811,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 
 	// Init Versions maps
 	for i := range resourceDefinitions {
-		resourceDefinitions[i].Versions = map[string]interface{}{}
+		resourceDefinitions[i].Versions = map[string]any{}
 	}
 
 	errc := make(chan error, 1)
@@ -1887,7 +1886,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 
 	for _, resource := range resourceDefinitions {
 		if len(resource.Versions) > resource.MaxExpectedChanges || len(resource.Versions) < 1 {
-			var previous interface{}
+			var previous any
 			for _, version := range resource.Versions {
 				if previous == nil {
 					previous = version
@@ -2081,9 +2080,7 @@ func mergeMap(a, b map[string]string) map[string]string {
 	if a == nil {
 		a = make(map[string]string, len(b))
 	}
-	for k, v := range b {
-		a[k] = v
-	}
+	maps.Copy(a, b)
 	return a
 }
 
@@ -2646,7 +2643,7 @@ func testThanos(t *testing.T) {
 
 		d := struct {
 			Data struct {
-				Result []map[string]interface{} `json:"result"`
+				Result []map[string]any `json:"result"`
 			} `json:"data"`
 		}{}
 
@@ -2734,7 +2731,6 @@ func testPromGetAuthSecret(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -3123,7 +3119,6 @@ func testPromArbitraryFSAcc(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -3612,7 +3607,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -4851,7 +4845,6 @@ func testPrometheusCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -4957,7 +4950,6 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.scenario, func(t *testing.T) {
 			t.Parallel()

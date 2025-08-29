@@ -40,7 +40,7 @@ func generatePatchesForNonStringLabelsAnnotations(content []byte) ([]string, err
 	return *patches, nil
 }
 
-func patchIfNotString(patches *[]string, gi, ri int, typ, key string, val interface{}) {
+func patchIfNotString(patches *[]string, gi, ri int, typ, key string, val any) {
 	if _, ok := val.(string); ok || val == nil {
 		// Kubernetes does not let nil values get this far.
 		// Keeping it here for the sake of clarity of behavior.

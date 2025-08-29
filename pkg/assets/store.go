@@ -48,7 +48,7 @@ type StoreBuilder struct {
 
 // NewTestStoreBuilder returns a *StoreBuilder already initialized with the
 // provided objects. It is only used in tests.
-func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
+func NewTestStoreBuilder(objects ...any) *StoreBuilder {
 	sb := newStoreBuilder()
 
 	for _, o := range objects {
@@ -78,7 +78,7 @@ func newStoreBuilder() *StoreBuilder {
 }
 
 // assetKeyFunc returns a unique key for a ConfigMap, a Secret or a runtime.Object.
-func assetKeyFunc(obj interface{}) (string, error) {
+func assetKeyFunc(obj any) (string, error) {
 	switch v := obj.(type) {
 	case *v1.ConfigMap:
 		return configMapKey(v), nil
@@ -421,7 +421,7 @@ func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConf
 	}
 }
 
-func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
+func (cos *cacheOnlyStore) TLSAsset(sel any) string {
 	var k tlsAssetKey
 
 	switch v := sel.(type) {
@@ -438,7 +438,7 @@ func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
 
 // AddObject adds an object to the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-func (s *StoreBuilder) AddObject(obj interface{}) error {
+func (s *StoreBuilder) AddObject(obj any) error {
 	if obj == nil {
 		return errors.New("object cannot be nil")
 	}
@@ -452,7 +452,7 @@ func (s *StoreBuilder) AddObject(obj interface{}) error {
 
 // GetObject retrieves an object from the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-func (s *StoreBuilder) GetObject(obj interface{}) (interface{}, bool, error) {
+func (s *StoreBuilder) GetObject(obj any) (any, bool, error) {
 	if obj == nil {
 		return nil, false, errors.New("object cannot be nil")
 	}
@@ -471,7 +471,7 @@ func (s *StoreBuilder) GetObject(obj interface{}) (interface{}, bool, error) {
 
 // UpdateObject updates the object in the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-func (s *StoreBuilder) UpdateObject(obj interface{}) error {
+func (s *StoreBuilder) UpdateObject(obj any) error {
 	if obj == nil {
 		return errors.New("object cannot be nil")
 	}
@@ -485,7 +485,7 @@ func (s *StoreBuilder) UpdateObject(obj interface{}) error {
 
 // DeleteObject deletes the object in the underlying store.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
-func (s *StoreBuilder) DeleteObject(obj interface{}) error {
+func (s *StoreBuilder) DeleteObject(obj any) error {
 	if obj == nil {
 		return errors.New("object cannot be nil")
 	}

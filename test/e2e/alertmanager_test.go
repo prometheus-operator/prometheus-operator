@@ -320,7 +320,7 @@ func testAMClusterInitialization(t *testing.T) {
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService)
 	require.NoError(t, err)
 
-	for i := 0; i < amClusterSize; i++ {
+	for i := range amClusterSize {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
 		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
 		require.NoError(t, err)
@@ -347,7 +347,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 	alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
 
-	for i := 0; i < amClusterSize; i++ {
+	for i := range amClusterSize {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
 		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
 		require.NoError(t, err)
@@ -782,7 +782,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
 		Data: map[string][]byte{
-			"alertmanager.yaml": []byte(fmt.Sprintf(`
+			"alertmanager.yaml": fmt.Appendf(nil, `
 global:
   resolve_timeout: 5m
 
@@ -802,7 +802,7 @@ inhibit_rules:
     target_match:
       severity: 'warning'
     equal: ['alertname', 'dev', 'instance']
-`, whsvc.Name, ns)),
+`, whsvc.Name, ns),
 		},
 	}
 
@@ -2520,7 +2520,6 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
