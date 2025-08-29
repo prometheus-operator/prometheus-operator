@@ -1026,20 +1026,12 @@ func TestThanosObjectStorage(t *testing.T) {
 	require.True(t, containsEnvVar, "Thanos sidecar is missing expected OBJSTORE_CONFIG env var with correct value")
 
 	{
-		var containsArg bool
 		const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
-		if slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, expectedArg) {
-			containsArg = true
-		}
-		require.True(t, containsArg, "Thanos sidecar is missing expected argument: %s", expectedArg)
+		require.True(t, slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, expectedArg), "Thanos sidecar is missing expected argument: %s", expectedArg)
 	}
 	{
-		var containsArg bool
 		const expectedArg = "--storage.tsdb.max-block-duration=2h"
-		if slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg) {
-			containsArg = true
-		}
-		require.True(t, containsArg, "Prometheus is missing expected argument: %s", expectedArg)
+		require.True(t, slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg), "Prometheus is missing expected argument: %s", expectedArg)
 	}
 
 	{
@@ -1078,29 +1070,25 @@ func TestThanosObjectStorageFile(t *testing.T) {
 	require.NoError(t, err)
 
 	{
-		var containsArg bool
 		expectedArg := "--objstore.config-file=" + testPath
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-sidecar" {
-				if slices.Contains(container.Args, expectedArg) {
-					containsArg = true
-				}
+				require.True(t, slices.Contains(container.Args, expectedArg),
+					"Thanos sidecar is missing expected argument: %s", expectedArg)
+				break
 			}
 		}
-		require.True(t, containsArg, "Thanos sidecar is missing expected argument: %s", expectedArg)
 	}
 
 	{
-		var containsArg bool
 		const expectedArg = "--storage.tsdb.max-block-duration=2h"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "prometheus" {
-				if slices.Contains(container.Args, expectedArg) {
-					containsArg = true
-				}
+				require.True(t, slices.Contains(container.Args, expectedArg),
+					"Prometheus is missing expected argument: %s", expectedArg)
+				break
 			}
 		}
-		require.True(t, containsArg, "Prometheus is missing expected argument: %s", expectedArg)
 	}
 
 	{
@@ -1231,12 +1219,8 @@ func TestThanosTracing(t *testing.T) {
 	require.True(t, containsEnvVar, "Thanos sidecar is missing expected TRACING_CONFIG env var with correct value")
 
 	{
-		var containsArg bool
 		const expectedArg = "--tracing.config=$(TRACING_CONFIG)"
-		if slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, expectedArg) {
-			containsArg = true
-		}
-		require.True(t, containsArg, "Thanos sidecar is missing expected argument: %s", expectedArg)
+		require.True(t, slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, expectedArg), "Thanos sidecar is missing expected argument: %s", expectedArg)
 	}
 }
 
@@ -1509,9 +1493,7 @@ func TestWALCompression(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := slices.Contains(promArgs, test.expectedArg)
-
-		require.Equal(t, test.shouldContain, found)
+		require.Equal(t, test.shouldContain, slices.Contains(promArgs, test.expectedArg))
 	}
 }
 
@@ -1540,9 +1522,7 @@ func TestTSDBAllowOverlappingBlocks(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := slices.Contains(promArgs, expectedArg)
-
-		require.Equal(t, test.shouldContain, found)
+		require.Equal(t, test.shouldContain, slices.Contains(promArgs, expectedArg))
 	}
 }
 
@@ -1600,9 +1580,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 			require.NoError(t, err)
 
 			promArgs := sset.Spec.Template.Spec.Containers[0].Args
-			found := slices.Contains(promArgs, expectedArg)
-
-			require.Equal(t, test.shouldContain, found)
+			require.Equal(t, test.shouldContain, slices.Contains(promArgs, expectedArg))
 		})
 	}
 }

@@ -858,12 +858,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 				return fmt.Errorf("[%d]: invalid role: %q, expecting one of: pod, service, endpoints, endpointslice, node or ingress", i, s.Role)
 			}
 
-			var allowed bool
-
-			if slices.Contains(allowedSelectors[configRole], strings.ToLower(string(s.Role))) {
-				allowed = true
-			}
-			if !allowed {
+			if !slices.Contains(allowedSelectors[configRole], strings.ToLower(string(s.Role))) {
 				return fmt.Errorf("[%d] : %s role supports only %s selectors", i, config.Role, strings.Join(allowedSelectors[configRole], ", "))
 			}
 		}
