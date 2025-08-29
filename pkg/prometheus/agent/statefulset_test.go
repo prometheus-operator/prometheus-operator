@@ -79,8 +79,7 @@ func TestWALCompression(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := slices.Contains(promArgs, test.expectedArg)
-		require.Equal(t, test.shouldContain, found)
+		require.Equal(t, test.shouldContain, slices.Contains(promArgs, test.expectedArg))
 	}
 }
 
@@ -106,8 +105,7 @@ func TestPrometheusAgentCommandLineFlag(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := slices.Contains(promArgs, test.expectedArg)
-		require.Equal(t, test.shouldContain, found)
+		require.Equal(t, test.shouldContain, slices.Contains(promArgs, test.expectedArg))
 	}
 }
 

@@ -665,14 +665,10 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
 	require.NoError(t, err)
 
-	found := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 	// Expected: --cluster.peer=alertmanager-<name>-0.<serviceName>.<namespace>.svc.<clusterDomain>.:9094
 	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated.monitoring.svc.custom.cluster.:9094"
-	if slices.Contains(amArgs, expectedArg) {
-		found = true
-	}
-	require.True(t, found, "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedArg), "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
@@ -702,8 +698,7 @@ func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
 	// Check cluster.peer arguments
 	amArgs := spec.Template.Spec.Containers[0].Args
 	expectedPeerArg := fmt.Sprintf("--cluster.peer=alertmanager-%s-0.%s.%s.svc.%s.:9094", am.Name, customServiceName, am.Namespace, cfg.ClusterDomain)
-	foundPeerArg := slices.Contains(amArgs, expectedPeerArg)
-	require.True(t, foundPeerArg, "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedPeerArg), "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
@@ -734,8 +729,7 @@ func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
 	// 2. Check cluster.peer arguments
 	amArgs := spec.Template.Spec.Containers[0].Args
 	expectedPeerArg := fmt.Sprintf("--cluster.peer=alertmanager-%s-0.%s.%s.svc.%s.:9094", am.Name, defaultServiceName, am.Namespace, cfg.ClusterDomain)
-	foundPeerArg := slices.Contains(amArgs, expectedPeerArg)
-	require.True(t, foundPeerArg, "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedPeerArg), "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
@@ -956,9 +950,8 @@ func TestRetention(t *testing.T) {
 
 		amArgs := sset.Spec.Template.Spec.Containers[0].Args
 		expectedRetentionArg := fmt.Sprintf("--data.retention=%s", test.expectedRetention)
-		found := slices.Contains(amArgs, expectedRetentionArg)
 
-		require.True(t, found, "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
+		require.True(t, slices.Contains(amArgs, expectedRetentionArg), "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
 	}
 }
 

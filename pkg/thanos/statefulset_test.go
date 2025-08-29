@@ -688,10 +688,7 @@ func TestRetention(t *testing.T) {
 			require.NoError(t, err)
 
 			trArgs := sset.Spec.Template.Spec.Containers[0].Args
-			expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", tc.expectedRetention)
-			found := slices.Contains(trArgs, expectedRetentionArg)
-
-			require.True(t, found)
+			require.True(t, slices.Contains(trArgs, fmt.Sprintf("--tsdb.retention=%s", tc.expectedRetention)))
 		})
 	}
 }
