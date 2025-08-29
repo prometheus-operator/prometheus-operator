@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/url"
 	"path"
 	"strings"
@@ -390,16 +391,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := makeSelectorLabels(a.GetObjectMeta().GetName())
 	if a.Spec.PodMetadata != nil {
-		for k, v := range a.Spec.PodMetadata.Labels {
-			podLabels[k] = v
-		}
-		for k, v := range a.Spec.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
+		maps.Copy(podLabels, a.Spec.PodMetadata.Labels)
+		maps.Copy(podAnnotations, a.Spec.PodMetadata.Annotations)
 	}
-	for k, v := range podSelectorLabels {
-		podLabels[k] = v
-	}
+	maps.Copy(podLabels, podSelectorLabels)
 
 	podAnnotations[operator.DefaultContainerAnnotationKey] = "alertmanager"
 

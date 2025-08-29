@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -1027,22 +1028,16 @@ func TestThanosObjectStorage(t *testing.T) {
 	{
 		var containsArg bool
 		const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
-		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
-			}
+		if slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, expectedArg) {
+			containsArg = true
 		}
 		require.True(t, containsArg, "Thanos sidecar is missing expected argument: %s", expectedArg)
 	}
 	{
 		var containsArg bool
 		const expectedArg = "--storage.tsdb.max-block-duration=2h"
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
-			}
+		if slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg) {
+			containsArg = true
 		}
 		require.True(t, containsArg, "Prometheus is missing expected argument: %s", expectedArg)
 	}
@@ -1087,11 +1082,8 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		expectedArg := "--objstore.config-file=" + testPath
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-sidecar" {
-				for _, arg := range container.Args {
-					if arg == expectedArg {
-						containsArg = true
-						break
-					}
+				if slices.Contains(container.Args, expectedArg) {
+					containsArg = true
 				}
 			}
 		}
@@ -1103,11 +1095,8 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		const expectedArg = "--storage.tsdb.max-block-duration=2h"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "prometheus" {
-				for _, arg := range container.Args {
-					if arg == expectedArg {
-						containsArg = true
-						break
-					}
+				if slices.Contains(container.Args, expectedArg) {
+					containsArg = true
 				}
 			}
 		}
@@ -1244,11 +1233,8 @@ func TestThanosTracing(t *testing.T) {
 	{
 		var containsArg bool
 		const expectedArg = "--tracing.config=$(TRACING_CONFIG)"
-		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
-			}
+		if slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, expectedArg) {
+			containsArg = true
 		}
 		require.True(t, containsArg, "Thanos sidecar is missing expected argument: %s", expectedArg)
 	}
@@ -1523,13 +1509,7 @@ func TestWALCompression(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
-		for _, flag := range promArgs {
-			if flag == test.expectedArg {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(promArgs, test.expectedArg)
 
 		require.Equal(t, test.shouldContain, found)
 	}
@@ -1560,13 +1540,7 @@ func TestTSDBAllowOverlappingBlocks(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
-		for _, flag := range promArgs {
-			if flag == expectedArg {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(promArgs, expectedArg)
 
 		require.Equal(t, test.shouldContain, found)
 	}
@@ -1626,13 +1600,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 			require.NoError(t, err)
 
 			promArgs := sset.Spec.Template.Spec.Containers[0].Args
-			found := false
-			for _, flag := range promArgs {
-				if flag == expectedArg {
-					found = true
-					break
-				}
-			}
+			found := slices.Contains(promArgs, expectedArg)
 
 			require.Equal(t, test.shouldContain, found)
 		})
@@ -1689,11 +1657,8 @@ func TestThanosListenLocal(t *testing.T) {
 
 			for _, exp := range tc.expected {
 				var found bool
-				for _, flag := range sset.Spec.Template.Spec.Containers[2].Args {
-					if flag == exp {
-						found = true
-						break
-					}
+				if slices.Contains(sset.Spec.Template.Spec.Containers[2].Args, exp) {
+					found = true
 				}
 
 				require.True(t, found, "Expecting argument %q but not found in %v", exp, sset.Spec.Template.Spec.Containers[2].Args)

@@ -106,7 +106,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
 func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	var nonNilFields []string
-	for k, v := range map[string]interface{}{
+	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
 		"oauth2":        spec.OAuth2,
 		"authorization": spec.Authorization,

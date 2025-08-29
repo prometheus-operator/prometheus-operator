@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -174,7 +175,7 @@ func selectObjects[T ConfigurationResource](
 	)
 
 	for _, ns := range namespaces {
-		err := listFn(ns, labelSelector, func(o interface{}) {
+		err := listFn(ns, labelSelector, func(o any) {
 			k, ok := rs.accessor.MetaNamespaceKey(o)
 			if !ok {
 				return
@@ -859,11 +860,8 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 
 			var allowed bool
 
-			for _, role := range allowedSelectors[configRole] {
-				if role == strings.ToLower(string(s.Role)) {
-					allowed = true
-					break
-				}
+			if slices.Contains(allowedSelectors[configRole], strings.ToLower(string(s.Role))) {
+				allowed = true
 			}
 			if !allowed {
 				return fmt.Errorf("[%d] : %s role supports only %s selectors", i, config.Role, strings.Join(allowedSelectors[configRole], ", "))

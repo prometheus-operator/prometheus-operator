@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -255,10 +256,5 @@ func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 }
 
 func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, str)
 }

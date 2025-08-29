@@ -15,6 +15,7 @@
 package prometheusagent
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -63,13 +64,7 @@ func makeSpecForTestListenTLS() monitoringv1alpha1.PrometheusAgentSpec {
 
 func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Container) {
 	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
-	reloadURLFound := false
-	for _, arg := range actualArgs {
-		if arg == expectedConfigReloaderReloadURL {
-			reloadURLFound = true
-			break
-		}
-	}
+	reloadURLFound := slices.Contains(actualArgs, expectedConfigReloaderReloadURL)
 	require.True(t, reloadURLFound)
 
 	expectedArgsConfigReloader := []string{

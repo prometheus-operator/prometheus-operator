@@ -15,6 +15,7 @@
 package prometheusagent
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -73,13 +74,7 @@ func TestPrometheusAgentCommandLineFlagForDaemonSet(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
-		for _, flag := range promArgs {
-			if flag == test.expectedArg {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(promArgs, test.expectedArg)
 		require.Equal(t, test.shouldContain, found)
 	}
 }

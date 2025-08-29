@@ -36,7 +36,7 @@ func NewAccessor(l *slog.Logger) *Accessor {
 // MetaNamespaceKey returns a key from the object's metadata.
 // For namespaced objects, the format is `<namespace>/<name>`, otherwise
 // `name`.
-func (a *Accessor) MetaNamespaceKey(obj interface{}) (string, bool) {
+func (a *Accessor) MetaNamespaceKey(obj any) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
 		a.logger.Error("failed to retrieve object's key", "err", err)
@@ -48,7 +48,7 @@ func (a *Accessor) MetaNamespaceKey(obj interface{}) (string, bool) {
 
 // ObjectMetadata returns the object's metadata and bool indicating if the
 // conversion succeeded.
-func (a *Accessor) ObjectMetadata(obj interface{}) (metav1.Object, bool) {
+func (a *Accessor) ObjectMetadata(obj any) (metav1.Object, bool) {
 	ts, ok := obj.(cache.DeletedFinalStateUnknown)
 	if ok {
 		obj = ts.Obj
