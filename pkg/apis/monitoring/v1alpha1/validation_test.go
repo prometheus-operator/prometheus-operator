@@ -516,3 +516,48 @@ func TestOpsGenieConfigResponder_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestLocation_Validate(t *testing.T) {
+	testCases := []struct {
+		name        string
+		in          Location
+		expectedErr bool
+	}{
+		{
+			name: "Test empty",
+			in:   Location(""),
+		},
+		{
+			name: "Test UTC",
+			in:   Location("UTC"),
+		},
+		{
+			name: "Test Amsterdam",
+			in:   Location("Europe/Amsterdam"),
+		},
+		{
+			name:        "Test Invalid",
+			in:          Location("Foo/Bar"),
+			expectedErr: true,
+		},
+		{
+			name:        "Test Invalid Numbers",
+			in:          Location("001"),
+			expectedErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.Validate()
+			if tc.expectedErr {
+				if err == nil {
+					t.Fatal("expected err but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
