@@ -27395,6 +27395,14 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Location">Location
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.TimeInterval">TimeInterval</a>)
+</p>
+<div>
+<p>Location defines the location in string.</p>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig
 </h3>
 <p>
@@ -33957,6 +33965,20 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>Years is a list of YearRange</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>location</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.Location">
+Location
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Location maps time instants to the zone in use at that time</p>
 </td>
 </tr>
 </tbody>

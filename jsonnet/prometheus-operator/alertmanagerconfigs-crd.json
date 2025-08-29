@@ -169,6 +169,10 @@
                                 },
                                 "type": "array"
                               },
+                              "location": {
+                                "description": "Location maps time instants to the zone in use at that time",
+                                "type": "string"
+                              },
                               "months": {
                                 "description": "Months is a list of MonthRange",
                                 "items": {
