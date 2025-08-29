@@ -15,10 +15,11 @@
 package prometheus
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -68,6 +69,36 @@ func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoring
 		mclient:  mclient,
 		workload: workload,
 	}
+}
+
+// UpdateBindingConditions returns the bindings slice with the conditions updated for the workload.
+// The 2nd return value indicates if the slice has been updated.
+func (crs *ConfigResourceSyncer) UpdateBindingConditions(bindings []monitoringv1.WorkloadBinding, conditions []monitoringv1.ConfigResourceCondition) ([]monitoringv1.WorkloadBinding, bool) {
+	updated := monitoringv1.WorkloadBinding{
+		Namespace:  crs.workload.GetNamespace(),
+		Name:       crs.workload.GetName(),
+		Resource:   crs.gvr.Resource,
+		Group:      crs.gvr.Group,
+		Conditions: conditions,
+	}
+	for i, binding := range bindings {
+		if binding.Namespace != updated.Namespace ||
+			binding.Name != updated.Name ||
+			binding.Group != updated.Group ||
+			binding.Resource != updated.Resource {
+			continue
+		}
+
+		// No need to update the binding if the conditions haven't changed
+		if equalConfigResourceConditions(binding.Conditions, updated.Conditions) {
+			return nil, false
+		}
+
+		bindings[i] = updated
+		return bindings, true
+	}
+
+	return append(bindings, updated), true
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -265,68 +296,50 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	return &pStatus, nil
 }
 
-// UpdateServiceMonitorStatus updates the status binding of the serviceMonitor for the given workload.
+// UpdateServiceMonitorStatus updates the status binding of the serviceMonitor
+// for the given workload.
 func UpdateServiceMonitorStatus(
 	ctx context.Context,
 	c *ConfigResourceSyncer,
 	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
 	smon := res.resource
-	conditions := res.conditions(smon.Generation)
 
-	var found bool
-	for i := range smon.Status.Bindings {
-		binding := &smon.Status.Bindings[i]
-		if binding.Namespace == c.workload.GetNamespace() &&
-			binding.Name == c.workload.GetName() &&
-			binding.Resource == c.gvr.Resource {
-			if configResStatusConditionsEqual(binding.Conditions, conditions) {
-				return nil
-			}
-			binding.Conditions = conditions
-			found = true
-			break
-		}
+	bindings, updated := c.UpdateBindingConditions(smon.Status.Bindings, res.conditions(smon.Generation))
+	if !updated {
+		return nil
 	}
+	smon.Status.Bindings = bindings
 
-	if !found {
-		smon.Status.Bindings = append(smon.Status.Bindings, monitoringv1.WorkloadBinding{
-			Namespace:  c.workload.GetNamespace(),
-			Name:       c.workload.GetName(),
-			Resource:   c.gvr.Resource,
-			Group:      c.gvr.Group,
-			Conditions: conditions,
-		})
-	}
-
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(
+		ctx,
+		ApplyConfigurationFromServiceMonitor(smon),
+		metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true},
+	)
 	return err
 }
 
-func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition) bool {
+// equalConfigResourceConditions returns true when both slices are equal semantically.
+func equalConfigResourceConditions(a, b []monitoringv1.ConfigResourceCondition) bool {
 	if len(a) != len(b) {
 		return false
 	}
 
-	ac := append([]monitoringv1.ConfigResourceCondition(nil), a...)
-	bc := append([]monitoringv1.ConfigResourceCondition(nil), b...)
+	ac, bc := slices.Clone(a), slices.Clone(b)
 
-	sort.Slice(ac, func(i, j int) bool {
-		return ac[i].Type < ac[j].Type
+	slices.SortFunc(ac, func(a, b monitoringv1.ConfigResourceCondition) int {
+		return cmp.Compare(a.Type, b.Type)
 	})
-	sort.Slice(bc, func(i, j int) bool {
-		return bc[i].Type < bc[j].Type
+	slices.SortFunc(bc, func(a, b monitoringv1.ConfigResourceCondition) int {
+		return cmp.Compare(a.Type, b.Type)
 	})
 
-	for i := range ac {
-		if ac[i].Type != bc[i].Type ||
-			ac[i].Status != bc[i].Status ||
-			ac[i].Reason != bc[i].Reason ||
-			ac[i].Message != bc[i].Message ||
-			ac[i].ObservedGeneration != bc[i].ObservedGeneration {
-			return false
-		}
-	}
-	return true
+	return slices.EqualFunc(ac, bc, func(a, b monitoringv1.ConfigResourceCondition) bool {
+		return a.Type == b.Type &&
+			a.Status == b.Status &&
+			a.Reason == b.Reason &&
+			a.Message == b.Message &&
+			a.ObservedGeneration == b.ObservedGeneration
+	})
 }
 
 // RemoveServiceMonitorBinding removes the Prometheus or PrometheusAgent binding from the status remove the Prometheus or PrometheusAgent binding from the status
