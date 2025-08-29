@@ -3107,6 +3107,87 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Mute_Time_Intervals.golden",
 		},
 		{
+			name:    "CR with Mute Time Intervals with a Location",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURLFile: "/etc/test",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver:          "test",
+							MuteTimeIntervals: []string{"test"},
+						},
+						MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+							{
+								Name: "test",
+								TimeIntervals: []monitoringv1alpha1.TimeInterval{
+									{
+										Times: []monitoringv1alpha1.TimeRange{
+											{
+												StartTime: "08:00",
+												EndTime:   "17:00",
+											},
+										},
+										Weekdays: []monitoringv1alpha1.WeekdayRange{
+											monitoringv1alpha1.WeekdayRange("Saturday"),
+											monitoringv1alpha1.WeekdayRange("Sunday"),
+										},
+										Months: []monitoringv1alpha1.MonthRange{
+											"January:March",
+										},
+										DaysOfMonth: []monitoringv1alpha1.DayOfMonthRange{
+											{
+												Start: 1,
+												End:   10,
+											},
+										},
+										Years: []monitoringv1alpha1.YearRange{
+											"2030:2050",
+										},
+										Location: "Europe/Amsterdam",
+									},
+								},
+							},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "text",
+										},
+									},
+								},
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "value",
+									},
+								},
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Mute_Time_Intervals_Location.golden",
+		},
+		{
 			name:    "CR with Active Time Intervals",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{

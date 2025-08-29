@@ -1382,6 +1382,43 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
+	// A valid AlertmanagerConfig resource with active time intervals with location defined.
+	configCR = &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "e2e-test-amconfig-active-ti-location",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver:            "e2e",
+				Matchers:            []monitoringv1alpha1.Matcher{},
+				ActiveTimeIntervals: []string{"weekend"},
+				Continue:            true,
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+					URL: func(s string) *string {
+						return &s
+					}("http://test.url"),
+				}},
+			}},
+			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+				{
+					Name: "weekend",
+					TimeIntervals: []monitoringv1alpha1.TimeInterval{
+						{
+							Weekdays: []monitoringv1alpha1.WeekdayRange{
+								"Saturday",
+								"Sunday",
+							},
+							Location: "Europe/Amsterdam",
+						},
+					},
+				},
+			},
+		},
+	}
+
 	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
 	require.NoError(t, err)
 
