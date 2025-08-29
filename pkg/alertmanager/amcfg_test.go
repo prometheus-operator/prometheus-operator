@@ -3107,8 +3107,9 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Mute_Time_Intervals.golden",
 		},
 		{
-			name:    "CR with Mute Time Intervals with a Location",
-			kclient: fake.NewSimpleClientset(),
+			name:      "CR with Mute Time Intervals with a Location",
+			amVersion: &version27,
+			kclient:   fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
