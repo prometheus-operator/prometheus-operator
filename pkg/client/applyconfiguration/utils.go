@@ -84,10 +84,18 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ConfigResourceStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("EmbeddedEphemeralVolumeSource"):
+		return &monitoringv1.EmbeddedEphemeralVolumeSourceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
 		return &monitoringv1.EmbeddedObjectMetadataApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedPersistentVolumeClaim"):
 		return &monitoringv1.EmbeddedPersistentVolumeClaimApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("EmbeddedPersistentVolumeClaimTemplate"):
+		return &monitoringv1.EmbeddedPersistentVolumeClaimTemplateApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("EmbeddedVolume"):
+		return &monitoringv1.EmbeddedVolumeApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("EmbeddedVolumeSource"):
+		return &monitoringv1.EmbeddedVolumeSourceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Endpoint"):
 		return &monitoringv1.EndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Exemplars"):

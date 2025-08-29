@@ -8940,8 +8940,7 @@ spec:
                   StatefulSet definition. Volumes specified will be appended to other
                   volumes that are generated as a result of StorageSpec objects.
                 items:
-                  description: Volume represents a named volume in a pod that may
-                    be accessed by any container in the pod.
+                  description: EmbeddedVolume is an embedded version of k8s.io/api/core/v1.Volume
                   properties:
                     awsElasticBlockStore:
                       description: |-
@@ -9423,6 +9422,34 @@ spec:
                                 May contain labels and annotations that will be copied into the PVC
                                 when creating it. No other fields are allowed and will be rejected during
                                 validation.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: |-
+                                    Annotations is an unstructured key value map stored with a resource that may be
+                                    set by external tools to store and retrieve arbitrary metadata. They are not
+                                    queryable and should be preserved when modifying objects.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: |-
+                                    Map of string keys and values that can be used to organize and categorize
+                                    (scope and select) objects. May match selectors of replication controllers
+                                    and services.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+                                  type: object
+                                name:
+                                  description: |-
+                                    Name must be unique within a namespace. Is required when creating resources, although
+                                    some resources may allow a client to request the generation of an appropriate name
+                                    automatically. Name is primarily intended for creation idempotence and configuration
+                                    definition.
+                                    Cannot be updated.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+                                  type: string
                               type: object
                             spec:
                               description: |-
