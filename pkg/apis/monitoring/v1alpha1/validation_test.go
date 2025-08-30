@@ -545,6 +545,16 @@ func TestLocation_Validate(t *testing.T) {
 			in:          Location("001"),
 			expectedErr: true,
 		},
+		{
+			name:        "Test whitespace",
+			in:          Location("  "),
+			expectedErr: true,
+		},
+		{
+			name:        "Test partial valid",
+			in:          Location("Europe/"),
+			expectedErr: true,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
