@@ -73,6 +73,7 @@ type ConfigGenerator struct {
 	scrapeClasses              map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName     string
 	daemonSet                  bool
+	daemonSetServiceMonitor    bool // Whether ServiceMonitor is enabled for DaemonSet mode using EndpointSlice.
 	prometheusTopologySharding bool
 	inlineTLSConfig            bool
 
@@ -91,6 +92,12 @@ func WithEndpointSliceSupport() ConfigGeneratorOption {
 func WithDaemonSet() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.daemonSet = true
+	}
+}
+
+func WithDaemonSetServiceMonitor() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.daemonSetServiceMonitor = true
 	}
 }
 
@@ -234,6 +241,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		scrapeClasses:              cg.scrapeClasses,
 		defaultScrapeClassName:     cg.defaultScrapeClassName,
 		daemonSet:                  cg.daemonSet,
+		daemonSetServiceMonitor:    cg.daemonSetServiceMonitor,
 		prometheusTopologySharding: cg.prometheusTopologySharding,
 		inlineTLSConfig:            cg.inlineTLSConfig,
 		bypassVersionCheck:         cg.bypassVersionCheck,
@@ -259,6 +267,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			scrapeClasses:              cg.scrapeClasses,
 			defaultScrapeClassName:     cg.defaultScrapeClassName,
 			daemonSet:                  cg.daemonSet,
+			daemonSetServiceMonitor:    cg.daemonSetServiceMonitor,
 			prometheusTopologySharding: cg.prometheusTopologySharding,
 			inlineTLSConfig:            cg.inlineTLSConfig,
 			bypassVersionCheck:         cg.bypassVersionCheck,
@@ -287,6 +296,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			scrapeClasses:              cg.scrapeClasses,
 			defaultScrapeClassName:     cg.defaultScrapeClassName,
 			daemonSet:                  cg.daemonSet,
+			daemonSetServiceMonitor:    cg.daemonSetServiceMonitor,
 			prometheusTopologySharding: cg.prometheusTopologySharding,
 			inlineTLSConfig:            cg.inlineTLSConfig,
 			bypassVersionCheck:         cg.bypassVersionCheck,
