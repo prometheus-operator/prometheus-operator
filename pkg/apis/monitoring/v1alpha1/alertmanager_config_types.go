@@ -1250,7 +1250,20 @@ type TimeInterval struct {
 	Location Location `json:"location,omitempty"`
 }
 
-// Location defines the location in string.
+// Location defines the time zone to use for evaluating time intervals.
+//
+// The value must be a valid IANA time zone name (e.g., "UTC", "Europe/Amsterdam").
+// This affects how time-based conditions (such as mute or active intervals) are interpreted.
+//
+// If not set or left empty, the default is "UTC".
+//
+// Examples:
+//
+//	Location: "UTC"
+//	Location: "Europe/Amsterdam"
+//
+// Invalid values will be rejected during resource validation.
+// For a list of valid time zone names, see: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 type Location string
 
 // Time defines a time in 24hr format

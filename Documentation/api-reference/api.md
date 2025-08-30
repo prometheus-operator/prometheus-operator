@@ -27401,7 +27401,15 @@ bool
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.TimeInterval">TimeInterval</a>)
 </p>
 <div>
-<p>Location defines the location in string.</p>
+<p>Location defines the time zone to use for evaluating time intervals.</p>
+<p>The value must be a valid IANA time zone name (e.g., &ldquo;UTC&rdquo;, &ldquo;Europe/Amsterdam&rdquo;).
+This affects how time-based conditions (such as mute or active intervals) are interpreted.</p>
+<p>If not set or left empty, the default is &ldquo;UTC&rdquo;.</p>
+<p>Examples:
+Location: &ldquo;UTC&rdquo;
+Location: &ldquo;Europe/Amsterdam&rdquo;</p>
+<p>Invalid values will be rejected during resource validation.
+For a list of valid time zone names, see: <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">https://en.wikipedia.org/wiki/List_of_tz_database_time_zones</a></p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig
 </h3>
