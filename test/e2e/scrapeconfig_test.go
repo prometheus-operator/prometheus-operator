@@ -4775,7 +4775,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:8761/eureka",
 					FollowRedirects: ptr.To(true),
 				},
 			},
@@ -4787,7 +4787,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:8761/eureka",
 					FollowRedirects: ptr.To(false),
 				},
 			},
@@ -4799,7 +4799,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server:      "localhost",
+					Server:      "http://localhost:8761/eureka",
 					EnableHTTP2: ptr.To(true),
 				},
 			},
@@ -4811,7 +4811,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server:      "localhost",
+					Server:      "http://localhost:8761/eureka",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
@@ -4823,7 +4823,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:8761/eureka",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4835,7 +4835,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:8761/eureka",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
