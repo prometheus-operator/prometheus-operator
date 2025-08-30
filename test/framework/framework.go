@@ -282,14 +282,14 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	clusterRole.Name = fmt.Sprintf("%s-%x", clusterRole.Name, xxh.Sum64())
 
 	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
-	if slices.Contains(opts.EnabledFeatureGates, operator.PrometheusAgentDaemonSetFeature) {
-		daemonsetRule := rbacv1.PolicyRule{
-			APIGroups: []string{"apps"},
-			Resources: []string{"daemonsets"},
-			Verbs:     []string{"*"},
-		}
-		clusterRole.Rules = append(clusterRole.Rules, daemonsetRule)
+
+	// Always include DaemonSet RBAC rules for PrometheusAgent DaemonSet mode
+	daemonsetRule := rbacv1.PolicyRule{
+		APIGroups: []string{"apps"},
+		Resources: []string{"daemonsets"},
+		Verbs:     []string{"*"},
 	}
+	clusterRole.Rules = append(clusterRole.Rules, daemonsetRule)
 
 	clusterRole, err = f.CreateOrUpdateClusterRole(ctx, clusterRole)
 	if err != nil {

@@ -101,8 +101,6 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 type PrometheusAgentSpec struct {
 	// Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
 	//
-	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
-	//
 	// +optional
 	Mode *PrometheusAgentMode `json:"mode,omitempty"`
 
