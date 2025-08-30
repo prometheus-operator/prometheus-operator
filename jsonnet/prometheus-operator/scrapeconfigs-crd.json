@@ -4316,6 +4316,7 @@
                         "server": {
                           "description": "The URL to connect to the Eureka server.",
                           "minLength": 1,
+                          "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
                         "tlsConfig": {
