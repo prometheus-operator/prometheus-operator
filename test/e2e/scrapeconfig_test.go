@@ -648,6 +648,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("PuppetDBSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, PuppetDBSDTestCases)
 	})
+	t.Run("EurekaSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, EurekaSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -4726,6 +4729,20 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 					URL:         "https://puppetdb.example.com",
 					Query:       "nodes { certname = \"macbook-pro.local\" }",
 					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var EurekaSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server: "localhost",
 				},
 			},
 		},
