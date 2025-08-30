@@ -4742,11 +4742,22 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
-					Server: "localhost",
+					Server: "http://localhost:8761/eureka",
 				},
 			},
 		},
 		expectedError: false,
+	},
+	{
+		name: "Invalid Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server: "localhost:8761",
+				},
+			},
+		},
+		expectedError: true,
 	},
 	{
 		name: "Empty Server",
