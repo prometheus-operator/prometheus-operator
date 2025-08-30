@@ -4748,4 +4748,87 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: false,
 	},
+	{
+		name: "Empty Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "localhost",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "localhost",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:      "localhost",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:      "localhost",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "localhost",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "localhost",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
 }
