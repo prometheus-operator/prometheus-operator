@@ -146,6 +146,34 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			expectedError: ptr.To("scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet"),
 		},
 		{
+			name: "invalid: configuring serviceMonitorSelector in the daemonset mode",
+			spec: monitoringv1alpha1.PrometheusAgentSpec{
+				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"service": "test",
+						},
+					},
+				},
+			},
+			expectedError: ptr.To("serviceMonitorSelector cannot be set when mode is DaemonSet"),
+		},
+		{
+			name: "invalid: configuring serviceMonitorNamespaceSelector in the daemonset mode",
+			spec: monitoringv1alpha1.PrometheusAgentSpec{
+				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ServiceMonitorNamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"service-namespace": "test",
+						},
+					},
+				},
+			},
+			expectedError: ptr.To("serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet"),
+		},
+		{
 			name: "valid daemonset configuration",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),

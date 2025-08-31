@@ -1264,5 +1264,13 @@ func validateDaemonSetModeSpec(p *monitoringv1alpha1.PrometheusAgent) error {
 		return fmt.Errorf("scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet")
 	}
 
+	if p.Spec.ServiceMonitorSelector != nil {
+		return fmt.Errorf("serviceMonitorSelector cannot be set when mode is DaemonSet")
+	}
+
+	if p.Spec.ServiceMonitorNamespaceSelector != nil {
+		return fmt.Errorf("serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet")
+	}
+
 	return nil
 }
