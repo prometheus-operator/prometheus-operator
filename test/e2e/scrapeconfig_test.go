@@ -647,6 +647,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("PuppetDBSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, PuppetDBSDTestCases)
 	})
+	t.Run("EurekaSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, EurekaSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -4729,5 +4732,113 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
+	},
+}
+
+var EurekaSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Minimal Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server: "http://localhost:8761/eureka",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server: "localhost:8761",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "http://localhost:8761/eureka",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "http://localhost:8761/eureka",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:      "http://localhost:8761/eureka",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:      "http://localhost:8761/eureka",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "http://localhost:8761/eureka",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+				{
+					Server:          "http://localhost:8761/eureka",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
 	},
 }

@@ -973,6 +973,7 @@ type KumaSDConfig struct {
 // +k8s:openapi-gen=true
 type EurekaSDConfig struct {
 	// The URL to connect to the Eureka server.
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
