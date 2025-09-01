@@ -375,7 +375,7 @@ func (o *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing ThanosRuler objects.
-	_ = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		o.rr.EnqueueForStatus(obj.(*monitoringv1.ThanosRuler))
 	})
 
@@ -391,7 +391,7 @@ func (o *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := o.thanosRulerInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := o.thanosRulerInfs.ListAll(labels.Everything(), func(o any) {
 		a := o.(*monitoringv1.ThanosRuler)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
@@ -409,7 +409,7 @@ func thanosKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/thanos-ruler-" + keyParts[1]
 }
 
-func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+func (o *Operator) handleNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -424,7 +424,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	o.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for ThanosRuler instances selecting PrometheusRules in the namespace.
-	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		tr := obj.(*monitoringv1.ThanosRuler)
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, tr.Spec.RuleNamespaceSelector)
@@ -708,7 +708,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {

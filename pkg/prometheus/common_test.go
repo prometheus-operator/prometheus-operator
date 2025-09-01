@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -269,11 +270,8 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 					argsEnabled = true
 				case "enable-feature":
 					feats := strings.Split(arg.Value, ",")
-					for _, feat := range feats {
-						if feat == "otlp-write-receiver" {
-							featureEnabled = true
-							break
-						}
+					if slices.Contains(feats, "otlp-write-receiver") {
+						featureEnabled = true
 					}
 				}
 			}

@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 
@@ -82,9 +83,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 
 	currentRules := map[string]string{}
 	for _, cm := range currentConfigMaps {
-		for ruleFileName, ruleFile := range cm.Data {
-			currentRules[ruleFileName] = ruleFile
-		}
+		maps.Copy(currentRules, cm.Data)
 	}
 
 	equal := reflect.DeepEqual(newRules, currentRules)

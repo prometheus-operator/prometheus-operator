@@ -16,6 +16,7 @@ package prometheusagent
 
 import (
 	"fmt"
+	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -196,9 +197,7 @@ func makeStatefulSetSpec(
 	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
 	podSelectorLabels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 
-	for k, v := range podSelectorLabels {
-		podLabels[k] = v
-	}
+	maps.Copy(podLabels, podSelectorLabels)
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)

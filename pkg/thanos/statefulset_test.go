@@ -16,6 +16,7 @@ package thanos
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -305,11 +306,8 @@ func TestTracing(t *testing.T) {
 	{
 		const expectedArg = "--tracing.config-file=" + fullPath
 		var containsArg bool
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
-			}
+		if slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg) {
+			containsArg = true
 		}
 		require.True(t, containsArg)
 	}
@@ -400,11 +398,8 @@ func TestObjectStorage(t *testing.T) {
 	{
 		const expectedArg = "--objstore.config-file=" + fullPath
 		var containsArg bool
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
-			}
+		if slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg) {
+			containsArg = true
 		}
 		require.True(t, containsArg)
 	}
@@ -495,11 +490,8 @@ func TestAlertRelabel(t *testing.T) {
 	{
 		const expectedArg = "--alert.relabel-config-file=" + fullPath
 		var containsArg bool
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
-			}
+		if slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg) {
+			containsArg = true
 		}
 		require.True(t, containsArg)
 	}
@@ -620,10 +612,10 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 			require.Equal(t, "thanos-ruler", ruler.Name)
 
 			for _, arg := range ruler.Args {
-				if strings.HasPrefix(arg, labelPrefix) {
-					actualLabels = append(actualLabels, strings.TrimPrefix(arg, labelPrefix))
-				} else if strings.HasPrefix(arg, alertDropLabelPrefix) {
-					actualDropLabels = append(actualDropLabels, strings.TrimPrefix(arg, alertDropLabelPrefix))
+				if after, ok := strings.CutPrefix(arg, labelPrefix); ok {
+					actualLabels = append(actualLabels, after)
+				} else if after, ok := strings.CutPrefix(arg, alertDropLabelPrefix); ok {
+					actualDropLabels = append(actualDropLabels, after)
 				}
 			}
 			require.Equal(t, tc.ExpectedLabels, actualLabels)
@@ -696,16 +688,7 @@ func TestRetention(t *testing.T) {
 			require.NoError(t, err)
 
 			trArgs := sset.Spec.Template.Spec.Containers[0].Args
-			expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", tc.expectedRetention)
-			found := false
-			for _, flag := range trArgs {
-				if flag == expectedRetentionArg {
-					found = true
-					break
-				}
-			}
-
-			require.True(t, found)
+			require.True(t, slices.Contains(trArgs, fmt.Sprintf("--tsdb.retention=%s", tc.expectedRetention)))
 		})
 	}
 }
@@ -808,10 +791,8 @@ func TestExternalQueryURL(t *testing.T) {
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
 
 	const expectedArg = "--alert.query-url=https://example.com/"
-	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-		if arg == expectedArg {
-			return
-		}
+	if slices.Contains(sset.Spec.Template.Spec.Containers[0].Args, expectedArg) {
+		return
 	}
 	require.FailNow(t, "Thanos ruler is missing expected argument: %s", expectedArg)
 }
