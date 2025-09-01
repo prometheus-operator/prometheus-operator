@@ -328,3 +328,37 @@ func configResStatusConditionsEqual(a, b []monitoringv1.ConfigResourceCondition)
 	}
 	return true
 }
+
+// RemoveServiceMonitorBinding removes the Prometheus or PrometheusAgent binding from the status remove the Prometheus or PrometheusAgent binding from the status
+// subresource of status in serviceMonitor.
+func RemoveServiceMonitorBinding(
+	ctx context.Context,
+	c *ConfigResourceSyncer,
+	smon *monitoringv1.ServiceMonitor) error {
+	for i := range smon.Status.Bindings {
+		binding := &smon.Status.Bindings[i]
+		if binding.Namespace == c.workload.GetNamespace() &&
+			binding.Name == c.workload.GetName() &&
+			binding.Resource == c.gvr.Resource {
+			smon.Status.Bindings = append(smon.Status.Bindings[:i], smon.Status.Bindings[i+1:]...)
+			break
+		}
+	}
+
+	if len(smon.Status.Bindings) == 0 {
+		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).UpdateStatus(ctx, smon, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
+		return err
+	}
+
+	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
+	return err
+}
+
+func IsBindingPresent(bindings []monitoringv1.WorkloadBinding, p metav1.Object, resource string) bool {
+	for _, binding := range bindings {
+		if binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == resource {
+			return true
+		}
+	}
+	return false
+}

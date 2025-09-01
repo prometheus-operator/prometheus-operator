@@ -41,7 +41,7 @@ func TestMarshallScrapeConfig(t *testing.T) {
 			},
 		},
 	}
-	expected := `{"metadata":{"name":"test","namespace":"default","creationTimestamp":null,"labels":{"group":"group1"}},"spec":{"staticConfigs":[{"targets":["test"]}]}}`
+	expected := `{"metadata":{"name":"test","namespace":"default","labels":{"group":"group1"}},"spec":{"staticConfigs":[{"targets":["test"]}]}}`
 
 	r, err := json.Marshal(sm)
 	if err != nil {

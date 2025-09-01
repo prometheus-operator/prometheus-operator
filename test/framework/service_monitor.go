@@ -47,3 +47,25 @@ func (f *Framework) WaitForServiceMonitorCondition(ctx context.Context, sm *moni
 	}
 	return current, nil
 }
+
+func (f *Framework) WaitForServiceMonitorWorkloadBindingCleanup(ctx context.Context, sm *monitoringv1.ServiceMonitor, workload metav1.Object, resource string, timeout time.Duration) (*monitoringv1.ServiceMonitor, error) {
+	var current *monitoringv1.ServiceMonitor
+
+	if err := f.WaitForConfigResWorkloadBindingCleanup(
+		ctx,
+		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
+			var err error
+			current, err = f.MonClientV1.ServiceMonitors(sm.Namespace).Get(ctx, sm.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			return current.Status.Bindings, nil
+		},
+		workload,
+		resource,
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("serviceMonitor status %v/%v failed to reach expected condition: %w", sm.Namespace, sm.Name, err)
+	}
+	return current, nil
+}
