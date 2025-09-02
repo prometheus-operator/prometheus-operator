@@ -93,10 +93,6 @@ func DefaultConfig(cpu, memory string) Config {
 			ThanosRulerAllowList:        StringSet{},
 		},
 		Gates: &FeatureGates{
-			PrometheusAgentDaemonSetFeature: FeatureGate{
-				description: "Enables the DaemonSet mode for PrometheusAgent",
-				enabled:     false,
-			},
 			PrometheusTopologyShardingFeature: FeatureGate{
 				description: "Enables the zone aware sharding for Prometheus",
 				enabled:     false,

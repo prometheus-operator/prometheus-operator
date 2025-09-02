@@ -56,7 +56,6 @@ Usage of ./operator:
   -feature-gates value
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
-    	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
     	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
     	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)

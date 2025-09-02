@@ -20644,7 +20644,6 @@ PrometheusAgentMode
 <td>
 <em>(Optional)</em>
 <p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).</p>
-<p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
 <tr>
@@ -29111,7 +29110,6 @@ PrometheusAgentMode
 <td>
 <em>(Optional)</em>
 <p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).</p>
-<p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
 <tr>

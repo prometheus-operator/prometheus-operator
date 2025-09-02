@@ -94,7 +94,6 @@ type Operator struct {
 
 	statusReporter prompkg.StatusReporter
 
-	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
 }
 
@@ -317,30 +316,26 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("error creating statefulset informers: %w", err)
 	}
 
-	if c.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
-		o.daemonSetFeatureGateEnabled = true
-
-		o.dsetInfs, err = informers.NewInformersForResource(
-			informers.NewKubeInformerFactories(
-				c.Namespaces.PrometheusAllowList,
-				c.Namespaces.DenyList,
-				o.kclient,
-				resyncPeriod,
-				func(options *metav1.ListOptions) {
-					options.LabelSelector = fmt.Sprintf(
-						"%s,%s,%s in (%s)",
-						operator.ManagedByOperatorLabelSelector(),
-						prompkg.PrometheusNameLabelName,
-						prompkg.PrometheusModeLabelName,
-						prometheusMode,
-					)
-				},
-			),
-			appsv1.SchemeGroupVersion.WithResource("daemonsets"),
-		)
-		if err != nil {
-			return nil, fmt.Errorf("error creating daemonset informers: %w", err)
-		}
+	o.dsetInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			c.Namespaces.PrometheusAllowList,
+			c.Namespaces.DenyList,
+			o.kclient,
+			resyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = fmt.Sprintf(
+					"%s,%s,%s in (%s)",
+					operator.ManagedByOperatorLabelSelector(),
+					prompkg.PrometheusNameLabelName,
+					prompkg.PrometheusModeLabelName,
+					prometheusMode,
+				)
+			},
+		),
+		appsv1.SchemeGroupVersion.WithResource("daemonsets"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error creating daemonset informers: %w", err)
 	}
 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
@@ -625,10 +620,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger.Info("sync prometheusagent")
-
-	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
-		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
-	}
 
 	// Generate the configuration data.
 	var (

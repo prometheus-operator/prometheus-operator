@@ -76,7 +76,7 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -206,7 +206,7 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -278,7 +278,7 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -343,7 +343,7 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -373,7 +373,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -671,7 +671,7 @@ func testDaemonSetInvalidReplicas(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -699,7 +699,7 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -738,7 +738,7 @@ func testDaemonSetInvalidShards(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -766,7 +766,7 @@ func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -797,7 +797,7 @@ func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
@@ -829,7 +829,7 @@ func testDaemonSetInvalidProbeSelector(t *testing.T) {
 		ctx, testFramework.PrometheusOperatorOpts{
 			Namespace:           ns,
 			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+			EnabledFeatureGates: []operator.FeatureGateName{},
 		},
 	)
 	require.NoError(t, err)
