@@ -121,7 +121,31 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 	return nil
 }
 
-// WaitForConfigResourceCondition waits for a configuration resource (serviceMonitor, podMonitor, scrapeConfig and probes) to meet the expected condition.
+// GetWorkloadBinding returns the binding matching the workload.
+func (f *Framework) GetWorkloadBinding(bindings []monitoringv1.WorkloadBinding, workload metav1.Object, resource string) (monitoringv1.WorkloadBinding, error) {
+	for _, binding := range bindings {
+		if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
+			return binding, nil
+		}
+	}
+
+	return monitoringv1.WorkloadBinding{}, fmt.Errorf("binding not found")
+}
+
+// GetConfigResourceCondition returns the condition type.
+func (f *Framework) GetConfigResourceCondition(conditions []monitoringv1.ConfigResourceCondition, conditionType monitoringv1.ConditionType) (monitoringv1.ConfigResourceCondition, error) {
+	for _, cond := range conditions {
+		if cond.Type == conditionType {
+			return cond, nil
+		}
+	}
+
+	return monitoringv1.ConfigResourceCondition{}, fmt.Errorf("condition %q not found", conditionType)
+}
+
+// WaitForConfigResourceCondition waits for a configuration resource
+// (serviceMonitor, podMonitor, scrapeConfig and probes) to meet the expected
+// condition.
 // If the condition isn't met within the given timeout, it returns an error.
 func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) error {
 	var pollErr error
@@ -132,29 +156,28 @@ func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfi
 			return false, nil
 		}
 
-		for _, binding := range bindings {
-			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
-				for _, cond := range binding.Conditions {
-					if cond.Type == conditionType {
-						if cond.Status == conditionStatus {
-							return true, nil
-						}
-						pollErr = fmt.Errorf(
-							"got condition %q for resource %q with name %q in namespace %q with status %q, expected %q",
-							conditionType, resource, workload.GetName(), workload.GetNamespace(), cond.Status, conditionStatus)
-						return false, nil
-					}
-				}
-
-				pollErr = fmt.Errorf("condition %q not found for resource %q with name %q in namespace %q", conditionType, resource, workload.GetName(), workload.GetNamespace())
-				return false, nil
-			}
+		var binding monitoringv1.WorkloadBinding
+		binding, pollErr = f.GetWorkloadBinding(bindings, workload, resource)
+		if pollErr != nil {
+			return false, nil
 		}
 
-		pollErr = fmt.Errorf("binding not found for resource %q with name %q in namespace %q", resource, workload.GetName(), workload.GetNamespace())
-		return false, nil
+		var cond monitoringv1.ConfigResourceCondition
+		cond, pollErr = f.GetConfigResourceCondition(binding.Conditions, conditionType)
+		if pollErr != nil {
+			return false, nil
+		}
+
+		if cond.Status != conditionStatus {
+			pollErr = fmt.Errorf(
+				"expected condition %q with status %q, got %q",
+				conditionType, conditionStatus, cond.Status)
+			return false, nil
+		}
+
+		return true, nil
 	}); err != nil {
-		return fmt.Errorf("%v: %w", err, pollErr)
+		return fmt.Errorf("%v: resource %q %s/%s: %w", err, resource, workload.GetNamespace(), workload.GetName(), pollErr)
 	}
 
 	return nil
