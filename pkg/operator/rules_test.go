@@ -291,7 +291,8 @@ func shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion(t *testing.T) {
 }
 
 func shouldAcceptRuleWithLimitPrometheus(t *testing.T) {
-	limit := 50
+	limit := int32(50)
+
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -314,7 +315,7 @@ func shouldAcceptRuleWithLimitPrometheus(t *testing.T) {
 }
 
 func shouldAcceptRuleWithLimitThanos(t *testing.T) {
-	limit := 50
+	limit := int32(50)
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -364,7 +365,7 @@ func shouldAcceptRuleWithQueryOffsetPrometheus(t *testing.T) {
 }
 
 func shouldDropLimitFieldForUnsupportedPrometheusVersion(t *testing.T) {
-	limit := 50
+	limit := int32(50)
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -387,7 +388,7 @@ func shouldDropLimitFieldForUnsupportedPrometheusVersion(t *testing.T) {
 }
 
 func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
-	limit := 50
+	limit := int32(50)
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{

@@ -110,12 +110,12 @@ func TestGlobalSettings(t *testing.T) {
 	var (
 		expectedBodySizeLimit         monitoringv1.ByteSize = "1000MB"
 		expectedRuleQueryOffset       monitoringv1.Duration = "30s"
-		expectedSampleLimit           uint64                = 10000
-		expectedTargetLimit           uint64                = 1000
-		expectedLabelLimit            uint64                = 50
-		expectedLabelNameLengthLimit  uint64                = 40
-		expectedLabelValueLengthLimit uint64                = 30
-		expectedkeepDroppedTargets    uint64                = 50
+		expectedSampleLimit           int64                 = 10000
+		expectedTargetLimit           int64                 = 1000
+		expectedLabelLimit            int64                 = 50
+		expectedLabelNameLengthLimit  int64                 = 40
+		expectedLabelValueLengthLimit int64                 = 30
+		expectedkeepDroppedTargets    int64                 = 50
 	)
 
 	for _, tc := range []struct {
@@ -132,12 +132,12 @@ func TestGlobalSettings(t *testing.T) {
 		ScrapeFailureLogFile        *string
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
-		SampleLimit                 *uint64
-		TargetLimit                 *uint64
-		LabelLimit                  *uint64
-		LabelNameLengthLimit        *uint64
-		LabelValueLengthLimit       *uint64
-		KeepDroppedTargets          *uint64
+		SampleLimit                 *int64
+		TargetLimit                 *int64
+		LabelLimit                  *int64
+		LabelNameLengthLimit        *int64
+		LabelValueLengthLimit       *int64
+		KeepDroppedTargets          *int64
 		ExpectError                 bool
 		Golden                      string
 	}{
@@ -3497,7 +3497,7 @@ func TestSampleLimits(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			if tc.globalLimit >= 0 {
-				p.Spec.SampleLimit = ptr.To(uint64(tc.globalLimit))
+				p.Spec.SampleLimit = ptr.To(int64(tc.globalLimit))
 			}
 
 			if tc.golden == "SampleLimits_GlobalLimit1000_Enforce2000.golden" {
@@ -3505,7 +3505,7 @@ func TestSampleLimits(t *testing.T) {
 			}
 
 			if tc.enforcedLimit >= 0 {
-				i := uint64(tc.enforcedLimit)
+				i := int64(tc.enforcedLimit)
 				p.Spec.EnforcedSampleLimit = &i
 			}
 
@@ -3527,7 +3527,7 @@ func TestSampleLimits(t *testing.T) {
 				},
 			}
 			if tc.limit >= 0 {
-				sampleLimit := uint64(tc.limit)
+				sampleLimit := int64(tc.limit)
 				serviceMonitor.Spec.SampleLimit = &sampleLimit
 			}
 
@@ -3614,7 +3614,7 @@ func TestTargetLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLimit >= 0 {
-				i := uint64(tc.enforcedLimit)
+				i := int64(tc.enforcedLimit)
 				p.Spec.EnforcedTargetLimit = &i
 			}
 
@@ -3636,7 +3636,7 @@ func TestTargetLimits(t *testing.T) {
 				},
 			}
 			if tc.limit >= 0 {
-				limit := uint64(tc.limit)
+				limit := int64(tc.limit)
 				serviceMonitor.Spec.TargetLimit = &limit
 			}
 
@@ -4507,7 +4507,7 @@ func TestLabelLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelLimit >= 0 {
-				p.Spec.EnforcedLabelLimit = ptr.To(uint64(tc.enforcedLabelLimit))
+				p.Spec.EnforcedLabelLimit = ptr.To(int64(tc.enforcedLabelLimit))
 			}
 
 			serviceMonitor := monitoringv1.ServiceMonitor{
@@ -4528,7 +4528,7 @@ func TestLabelLimits(t *testing.T) {
 				},
 			}
 			if tc.labelLimit >= 0 {
-				labelLimit := uint64(tc.labelLimit)
+				labelLimit := int64(tc.labelLimit)
 				serviceMonitor.Spec.LabelLimit = &labelLimit
 			}
 
@@ -4614,7 +4614,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelNameLengthLimit >= 0 {
-				p.Spec.EnforcedLabelNameLengthLimit = ptr.To(uint64(tc.enforcedLabelNameLengthLimit))
+				p.Spec.EnforcedLabelNameLengthLimit = ptr.To(int64(tc.enforcedLabelNameLengthLimit))
 			}
 
 			podMonitor := monitoringv1.PodMonitor{
@@ -4635,7 +4635,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 				},
 			}
 			if tc.labelNameLengthLimit >= 0 {
-				labelNameLengthLimit := uint64(tc.labelNameLengthLimit)
+				labelNameLengthLimit := int64(tc.labelNameLengthLimit)
 				podMonitor.Spec.LabelNameLengthLimit = &labelNameLengthLimit
 			}
 
@@ -4721,7 +4721,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelValueLengthLimit >= 0 {
-				p.Spec.EnforcedLabelValueLengthLimit = ptr.To(uint64(tc.enforcedLabelValueLengthLimit))
+				p.Spec.EnforcedLabelValueLengthLimit = ptr.To(int64(tc.enforcedLabelValueLengthLimit))
 			}
 
 			probe := monitoringv1.Probe{
@@ -4768,7 +4768,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				},
 			}
 			if tc.labelValueLengthLimit >= 0 {
-				labelValueLengthLimit := uint64(tc.labelValueLengthLimit)
+				labelValueLengthLimit := int64(tc.labelValueLengthLimit)
 				probe.Spec.LabelValueLengthLimit = &labelValueLengthLimit
 			}
 
@@ -4808,26 +4808,26 @@ func TestLabelValueLengthLimits(t *testing.T) {
 func TestKeepDroppedTargets(t *testing.T) {
 	for _, tc := range []struct {
 		version                    string
-		enforcedKeepDroppedTargets *uint64
-		keepDroppedTargets         *uint64
+		enforcedKeepDroppedTargets *int64
+		keepDroppedTargets         *int64
 		golden                     string
 	}{
 		{
 			version:                    "v2.46.0",
-			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
-			keepDroppedTargets:         ptr.To(uint64(50)),
+			enforcedKeepDroppedTargets: ptr.To(int64(1000)),
+			keepDroppedTargets:         ptr.To(int64(50)),
 			golden:                     "KeepDroppedTargetsNotAddedInConfig.golden",
 		},
 		{
 			version:                    "v2.47.0",
-			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
-			keepDroppedTargets:         ptr.To(uint64(2000)),
+			enforcedKeepDroppedTargets: ptr.To(int64(1000)),
+			keepDroppedTargets:         ptr.To(int64(2000)),
 			golden:                     "KeepDroppedTargetsOverridedWithEnforcedValue.golden",
 		},
 		{
 			version:                    "v2.47.0",
-			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
-			keepDroppedTargets:         ptr.To(uint64(500)),
+			enforcedKeepDroppedTargets: ptr.To(int64(1000)),
+			keepDroppedTargets:         ptr.To(int64(500)),
 			golden:                     "KeepDroppedTargets.golden",
 		},
 	} {
@@ -4887,7 +4887,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 		{
 			version: "v3.0.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				NativeHistogramBucketLimit:     ptr.To(int64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
@@ -4897,7 +4897,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 		{
 			version: "v2.54.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				NativeHistogramBucketLimit:     ptr.To(int64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
@@ -4907,7 +4907,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 		{
 			version: "v2.46.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				NativeHistogramBucketLimit:     ptr.To(int64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
@@ -4917,7 +4917,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 		{
 			version: "v2.44.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				NativeHistogramBucketLimit:     ptr.To(int64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
@@ -4927,7 +4927,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 		{
 			version: "3.0.0-rc.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				NativeHistogramBucketLimit:     ptr.To(int64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
@@ -6341,11 +6341,11 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "limits",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				SampleLimit:           ptr.To(uint64(10000)),
-				TargetLimit:           ptr.To(uint64(1000)),
-				LabelLimit:            ptr.To(uint64(50)),
-				LabelNameLengthLimit:  ptr.To(uint64(40)),
-				LabelValueLengthLimit: ptr.To(uint64(30)),
+				SampleLimit:           ptr.To(int64(10000)),
+				TargetLimit:           ptr.To(int64(1000)),
+				LabelLimit:            ptr.To(int64(50)),
+				LabelNameLengthLimit:  ptr.To(int64(40)),
+				LabelValueLengthLimit: ptr.To(int64(30)),
 			},
 			golden: "ScrapeConfigSpecConfig_Limits.golden",
 		},

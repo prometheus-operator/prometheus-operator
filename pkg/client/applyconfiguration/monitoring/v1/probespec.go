@@ -37,13 +37,13 @@ type ProbeSpecApplyConfiguration struct {
 	OAuth2                                  *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	MetricRelabelConfigs                    []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
 	Authorization                           *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	SampleLimit                             *uint64                              `json:"sampleLimit,omitempty"`
-	TargetLimit                             *uint64                              `json:"targetLimit,omitempty"`
+	SampleLimit                             *int64                               `json:"sampleLimit,omitempty"`
+	TargetLimit                             *int64                               `json:"targetLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
 	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol         `json:"fallbackScrapeProtocol,omitempty"`
-	LabelLimit                              *uint64                              `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                    *uint64                              `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                   *uint64                              `json:"labelValueLengthLimit,omitempty"`
+	LabelLimit                              *int64                               `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                    *int64                               `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *int64                               `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
 	KeepDroppedTargets                      *uint64                        `json:"keepDroppedTargets,omitempty"`
 	ScrapeClassName                         *string                        `json:"scrapeClass,omitempty"`
@@ -160,7 +160,7 @@ func (b *ProbeSpecApplyConfiguration) WithAuthorization(value *SafeAuthorization
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -168,7 +168,7 @@ func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value uint64) *ProbeSpecAp
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithTargetLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithTargetLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -194,7 +194,7 @@ func (b *ProbeSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitorin
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithLabelLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithLabelLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -202,7 +202,7 @@ func (b *ProbeSpecApplyConfiguration) WithLabelLimit(value uint64) *ProbeSpecApp
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -210,7 +210,7 @@ func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *Pr
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -226,7 +226,7 @@ func (b *ProbeSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *P
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }

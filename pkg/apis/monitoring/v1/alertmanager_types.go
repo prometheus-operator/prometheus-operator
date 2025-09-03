@@ -545,11 +545,11 @@ type AlertmanagerWebSpec struct {
 	// Maximum number of GET requests processed concurrently. This corresponds to the
 	// Alertmanager's `--web.get-concurrency` flag.
 	// +optional
-	GetConcurrency *uint32 `json:"getConcurrency,omitempty"`
+	GetConcurrency *int32 `json:"getConcurrency,omitempty"`
 	// Timeout for HTTP requests. This corresponds to the Alertmanager's
 	// `--web.timeout` flag.
 	// +optional
-	Timeout *uint32 `json:"timeout,omitempty"`
+	Timeout *int32 `json:"timeout,omitempty"`
 }
 
 // AlertmanagerLimitsSpec defines the limits command line flags when starting Alertmanager.

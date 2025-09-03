@@ -186,7 +186,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
