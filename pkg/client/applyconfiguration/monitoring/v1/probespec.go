@@ -45,7 +45,7 @@ type ProbeSpecApplyConfiguration struct {
 	LabelNameLengthLimit                    *int64                               `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                   *int64                               `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64                        `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets                      *int64                         `json:"keepDroppedTargets,omitempty"`
 	ScrapeClassName                         *string                        `json:"scrapeClass,omitempty"`
 	Params                                  []ProbeParamApplyConfiguration `json:"params,omitempty"`
 }
@@ -250,7 +250,7 @@ func (b *ProbeSpecApplyConfiguration) WithConvertClassicHistogramsToNHCB(value b
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *ProbeSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }

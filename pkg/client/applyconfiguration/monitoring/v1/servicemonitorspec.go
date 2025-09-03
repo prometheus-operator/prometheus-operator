@@ -32,15 +32,15 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
 	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
-	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
+	SampleLimit                             *int64                                  `json:"sampleLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
 	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
-	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
-	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
+	TargetLimit                             *int64                                  `json:"targetLimit,omitempty"`
+	LabelLimit                              *int64                                  `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                    *int64                                  `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *int64                                  `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64                           `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets                      *int64                            `json:"keepDroppedTargets,omitempty"`
 	AttachMetadata                          *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 	ScrapeClassName                         *string                           `json:"scrapeClass,omitempty"`
 	BodySizeLimit                           *monitoringv1.ByteSize            `json:"bodySizeLimit,omitempty"`
@@ -120,7 +120,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithNamespaceSelector(value *Name
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -146,7 +146,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value 
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -154,7 +154,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *Se
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -162,7 +162,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *Ser
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -170,7 +170,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value ui
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -210,7 +210,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithConvertClassicHistogramsToNHC
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }
