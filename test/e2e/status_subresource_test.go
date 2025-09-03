@@ -49,12 +49,14 @@ func testFinalizerWhenStatusForConfigResourcesEnabled(t *testing.T) {
 	name := "status-cleanup-finalizer-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	pm, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	p, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
-	finalizers := pm.GetFinalizers()
-	require.NotEmpty(t, finalizers, "finalizers list should not be empty")
+
+	finalizers := p.GetFinalizers()
+	require.NotEmpty(t, finalizers)
+
 	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
-	require.NoError(t, err, "failed to delete Prometheus with status-cleanup finalizer")
+	require.NoError(t, err)
 }
 
 // testServiceMonitorStatusSubresource validates ServiceMonitor status updates upon Prometheus selection.
@@ -76,10 +78,10 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	name := "servicemonitor-status-subresource-test"
-	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
-	require.NoError(t, err, "failed to create Prometheus")
+	require.NoError(t, err)
 
 	// Create a first service monitor to check that the operator only updates the binding when needed.
 	sm1 := framework.MakeBasicServiceMonitor("smon1")
@@ -161,19 +163,62 @@ func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
-	require.NoError(t, err, "failed to create Prometheus")
-	smon := framework.MakeBasicServiceMonitor(name)
+	require.NoError(t, err)
 
-	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, v1.CreateOptions{})
 	require.NoError(t, err)
 
 	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
+	// Update the ServiceMonitor's labels, Prometheus doesn't select the resource anymore.
 	sm.Labels = map[string]string{}
-
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
 	require.NoError(t, err)
+
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+func testServiceMonitorStatusWithMultipleWorkloads(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "servicemonitor-status-multiple-workloads"
+	p1 := framework.MakeBasicPrometheus(ns, "server1", name, 1)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p1)
+	require.NoError(t, err)
+
+	p2 := framework.MakeBasicPrometheus(ns, "server2", name, 1)
+	// Forbid access to the container's filesystem.
+	p2.Spec.ArbitraryFSAccessThroughSMs.Deny = true
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p2)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints[0].BearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// The ServiceMonitor should be accepted by the Prometheus "server1" resource.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p1, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// ServiceMonitor should be rejected by the Prometheus "server2" resource because it wants to access the SA token file.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p2, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
 }
