@@ -2273,7 +2273,7 @@
                     "description": "Defines the DNS configuration for the pods.",
                     "properties": {
                       "nameservers": {
-                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
+                        "description": "nameservers list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -2282,17 +2282,17 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "options": {
-                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
+                        "description": "options list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
                         "items": {
                           "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
                           "properties": {
                             "name": {
-                              "description": "Name is required and must be unique.",
+                              "description": "name is required and must be unique.",
                               "minLength": 1,
                               "type": "string"
                             },
                             "value": {
-                              "description": "Value is optional.",
+                              "description": "value is optional.",
                               "type": "string"
                             }
                           },
@@ -2308,7 +2308,7 @@
                         "x-kubernetes-list-type": "map"
                       },
                       "searches": {
-                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
+                        "description": "searches list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -4138,10 +4138,10 @@
                       "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus\nto a remote endpoint.",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4168,17 +4168,17 @@
                               "type": "string"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "azureAd": {
-                          "description": "AzureAD for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
+                          "description": "azureAd for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
                           "properties": {
                             "cloud": {
-                              "description": "The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
+                              "description": "cloud defines the Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
                               "enum": [
                                 "AzureChina",
                                 "AzureGovernment",
@@ -4187,10 +4187,10 @@
                               "type": "string"
                             },
                             "managedIdentity": {
-                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
+                              "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
-                                  "description": "The client id",
+                                  "description": "clientId",
                                   "type": "string"
                                 }
                               },
@@ -4200,15 +4200,15 @@
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
+                              "description": "oauth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
                               "properties": {
                                 "clientId": {
-                                  "description": "`clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "clientId is the clientId of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
                                   "type": "string"
                                 },
                                 "clientSecret": {
-                                  "description": "`clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "clientSecret specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4231,7 +4231,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "tenantId": {
-                                  "description": "`tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "tenantId is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
                                   "pattern": "^[0-9a-zA-Z-.]+$",
                                   "type": "string"
@@ -4245,10 +4245,10 @@
                               "type": "object"
                             },
                             "sdk": {
-                              "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
+                              "description": "sdk defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
                               "properties": {
                                 "tenantId": {
-                                  "description": "`tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.",
+                                  "description": "tenantId is the tenant ID of the azure active directory application that is being used to authenticate.",
                                   "pattern": "^[0-9a-zA-Z-.]+$",
                                   "type": "string"
                                 }
@@ -4259,7 +4259,7 @@
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
+                          "description": "basicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "password": {
                               "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
@@ -4311,30 +4311,30 @@
                           "type": "object"
                         },
                         "bearerToken": {
-                          "description": "*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*\n\nDeprecated: this will be removed in a future release.",
+                          "description": "bearerToken is deprecated: this will be removed in a future release.\n*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
                           "type": "string"
                         },
                         "bearerTokenFile": {
-                          "description": "File from which to read bearer token for the URL.\n\nDeprecated: this will be removed in a future release. Prefer using `authorization`.",
+                          "description": "bearerTokenFile defines the file from which to read bearer token for the URL.\n\nDeprecated: this will be removed in a future release. Prefer using `authorization`.",
                           "type": "string"
                         },
                         "enableHTTP2": {
-                          "description": "Whether to enable HTTP2.",
+                          "description": "enableHTTP2 defines whether to enable HTTP2.",
                           "type": "boolean"
                         },
                         "followRedirects": {
-                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
+                          "description": "followRedirects configure whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
                         "headers": {
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.",
+                          "description": "headers defines the custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.",
                           "type": "object"
                         },
                         "messageVersion": {
-                          "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.",
+                          "description": "messageVersion defines the Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.",
                           "enum": [
                             "V1.0",
                             "V2.0"
@@ -4342,20 +4342,20 @@
                           "type": "string"
                         },
                         "metadataConfig": {
-                          "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
+                          "description": "metadataConfig configures the sending of series metadata to the remote storage.",
                           "properties": {
                             "maxSamplesPerSend": {
-                              "description": "MaxSamplesPerSend is the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
+                              "description": "maxSamplesPerSend is the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
                               "format": "int32",
                               "minimum": -1,
                               "type": "integer"
                             },
                             "send": {
-                              "description": "Defines whether metric metadata is sent to the remote storage or not.",
+                              "description": "send defines whether metric metadata is sent to the remote storage or not.",
                               "type": "boolean"
                             },
                             "sendInterval": {
-                              "description": "Defines how frequently metric metadata is sent to the remote storage.",
+                              "description": "sendInterval defines how frequently metric metadata is sent to the remote storage.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
@@ -4363,7 +4363,7 @@
                           "type": "object"
                         },
                         "name": {
-                          "description": "The name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.",
+                          "description": "name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.",
                           "type": "string"
                         },
                         "noProxy": {
@@ -4371,7 +4371,7 @@
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "OAuth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
+                          "description": "oauth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
                           "properties": {
                             "clientId": {
                               "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -4721,49 +4721,49 @@
                           "type": "string"
                         },
                         "queueConfig": {
-                          "description": "QueueConfig allows tuning of the remote write queue parameters.",
+                          "description": "queueConfig allows tuning of the remote write queue parameters.",
                           "properties": {
                             "batchSendDeadline": {
-                              "description": "BatchSendDeadline is the maximum time a sample will wait in buffer.",
+                              "description": "batchSendDeadline is the maximum time a sample will wait in buffer.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "capacity": {
-                              "description": "Capacity is the number of samples to buffer per shard before we start\ndropping them.",
+                              "description": "capacity is the number of samples to buffer per shard before we start\ndropping them.",
                               "type": "integer"
                             },
                             "maxBackoff": {
-                              "description": "MaxBackoff is the maximum retry delay.",
+                              "description": "maxBackoff is the maximum retry delay.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "maxRetries": {
-                              "description": "MaxRetries is the maximum number of times to retry a batch on recoverable errors.",
+                              "description": "maxRetries is the maximum number of times to retry a batch on recoverable errors.",
                               "type": "integer"
                             },
                             "maxSamplesPerSend": {
-                              "description": "MaxSamplesPerSend is the maximum number of samples per send.",
+                              "description": "maxSamplesPerSend is the maximum number of samples per send.",
                               "type": "integer"
                             },
                             "maxShards": {
-                              "description": "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
+                              "description": "maxShards is the maximum number of shards, i.e. amount of concurrency.",
                               "type": "integer"
                             },
                             "minBackoff": {
-                              "description": "MinBackoff is the initial retry delay. Gets doubled for every retry.",
+                              "description": "minBackoff is the initial retry delay. Gets doubled for every retry.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "minShards": {
-                              "description": "MinShards is the minimum number of shards, i.e. amount of concurrency.",
+                              "description": "minShards is the minimum number of shards, i.e. amount of concurrency.",
                               "type": "integer"
                             },
                             "retryOnRateLimit": {
-                              "description": "Retry upon receiving a 429 status code from the remote-write storage.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                              "description": "retryOnRateLimit defines the retry upon receiving a 429 status code from the remote-write storage.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                               "type": "boolean"
                             },
                             "sampleAgeLimit": {
-                              "description": "SampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.",
+                              "description": "sampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
@@ -4771,27 +4771,27 @@
                           "type": "object"
                         },
                         "remoteTimeout": {
-                          "description": "Timeout for requests to the remote write endpoint.",
+                          "description": "remoteTimeout defines the timeout for requests to the remote write endpoint.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "roundRobinDNS": {
-                          "description": "When enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.",
+                          "description": " roundRobinDNS\n when enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.",
                           "type": "boolean"
                         },
                         "sendExemplars": {
-                          "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.",
+                          "description": "sendExemplars enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
                         "sendNativeHistograms": {
-                          "description": "Enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.",
+                          "description": "sendNativeHistograms enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.",
                           "type": "boolean"
                         },
                         "sigv4": {
-                          "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "sigv4 allows to configures AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "accessKey": {
-                              "description": "AccessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",
+                              "description": "accessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4814,19 +4814,19 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "profile": {
-                              "description": "Profile is the named AWS profile used to authenticate.",
+                              "description": "profile is the named AWS profile used to authenticate.",
                               "type": "string"
                             },
                             "region": {
-                              "description": "Region is the AWS region. If blank, the region from the default credentials chain used.",
+                              "description": "region is the AWS region. If blank, the region from the default credentials chain used.",
                               "type": "string"
                             },
                             "roleArn": {
-                              "description": "RoleArn is the named AWS profile used to authenticate.",
+                              "description": "roleArn is the named AWS profile used to authenticate.",
                               "type": "string"
                             },
                             "secretKey": {
-                              "description": "SecretKey is the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.",
+                              "description": "secretKey is the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4852,7 +4852,7 @@
                           "type": "object"
                         },
                         "tlsConfig": {
-                          "description": "TLS Config to use for the URL.",
+                          "description": "tlsConfig to use for the URL.",
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",
@@ -5025,18 +5025,18 @@
                           "type": "object"
                         },
                         "url": {
-                          "description": "The URL of the endpoint to send samples to.",
+                          "description": "url defines the URL of the endpoint to send samples to.",
                           "minLength": 1,
                           "type": "string"
                         },
                         "writeRelabelConfigs": {
-                          "description": "The list of remote write relabel configurations.",
+                          "description": "writeRelabelConfigs defines the list of remote write relabel configurations.",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
                               "action": {
                                 "default": "replace",
-                                "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
                                 "enum": [
                                   "replace",
                                   "Replace",
@@ -5064,24 +5064,24 @@
                                 "type": "string"
                               },
                               "modulus": {
-                                "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                                "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
                                 "type": "integer"
                               },
                               "regex": {
-                                "description": "Regular expression against which the extracted value is matched.",
+                                "description": "regex defines the regular expression against which the extracted value is matched.",
                                 "type": "string"
                               },
                               "replacement": {
-                                "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                                "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
                                 "type": "string"
                               },
                               "separator": {
-                                "description": "Separator is the string between concatenated SourceLabels.",
+                                "description": "separator is the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
                               "sourceLabels": {
-                                "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                                "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
                                   "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
@@ -5090,7 +5090,7 @@
                                 "type": "array"
                               },
                               "targetLabel": {
-                                "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                                "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
                                 "type": "string"
                               }
                             },
@@ -5460,11 +5460,11 @@
                     "description": "Storage spec to specify how storage shall be used.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "Deprecated: subPath usage will be removed in a future release.",
+                        "description": "disableMountSubPath eprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
-                        "description": "EmptyDirVolumeSource to be used by the StatefulSet.\nIf specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
+                        "description": "emptyDir to be used by the StatefulSet.\nIf specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
                         "properties": {
                           "medium": {
                             "description": "medium represents what type of storage medium should back this directory.\nThe default is \"\" which means to use the node's default medium.\nMust be an empty string (default) or Memory.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
@@ -5487,7 +5487,7 @@
                         "type": "object"
                       },
                       "ephemeral": {
-                        "description": "EphemeralVolumeSource to be used by the StatefulSet.\nThis is a beta field in k8s 1.21 and GA in 1.15.\nFor lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.\nMore info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes",
+                        "description": "ephemeral to be used by the StatefulSet.\nThis is a beta field in k8s 1.21 and GA in 1.15.\nFor lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.\nMore info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes",
                         "properties": {
                           "volumeClaimTemplate": {
                             "description": "Will be used to create a stand-alone PVC to provision the volume.\nThe pod in which this EphemeralVolumeSource is embedded will be the\nowner of the PVC, i.e. the PVC will be deleted together with the\npod.  The name of the PVC will be `<pod name>-<volume name>` where\n`<volume name>` is the name from the `PodSpec.Volumes` array\nentry. Pod validation will reject the pod if the concatenated name\nis not valid for a PVC (for example, too long).\n\nAn existing PVC with that name that is not owned by the pod\nwill *not* be used for the pod to avoid using an unrelated\nvolume by mistake. Starting the pod is then blocked until\nthe unrelated PVC is removed. If such a pre-created PVC is\nmeant to be used by the pod, the PVC has to updated with an\nowner reference to the pod once the pod exists. Normally\nthis should not be necessary, but it may be useful when\nmanually reconstructing a broken cluster.\n\nThis field is read-only and no changes will be made by Kubernetes\nto the PVC after it has been created.\n\nRequired, must not be nil.",
@@ -5668,7 +5668,7 @@
                         "type": "object"
                       },
                       "volumeClaimTemplate": {
-                        "description": "Defines the PVC spec to be used by the Prometheus StatefulSets.\nThe easiest way to use a volume that cannot be automatically provisioned\nis to use a label selector alongside manually created PersistentVolumes.",
+                        "description": "volumeClaimTemplate defines the PVC spec to be used by the Prometheus StatefulSets.\nThe easiest way to use a volume that cannot be automatically provisioned\nis to use a label selector alongside manually created PersistentVolumes.",
                         "properties": {
                           "apiVersion": {
                             "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

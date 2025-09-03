@@ -101,8 +101,8 @@ spec:
                         Cannot be set at the same time as `basicAuth`, or `oauth2`.
                       properties:
                         credentials:
-                          description: Selects a key of a Secret in the namespace
-                            that contains the credentials for authentication.
+                          description: credentials selects a key of a Secret in the
+                            namespace that contains the credentials for authentication.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -127,7 +127,7 @@ spec:
                           x-kubernetes-map-type: atomic
                         type:
                           description: |-
-                            Defines the authentication type. The value is case-insensitive.
+                            type defines the authentication type. The value is case-insensitive.
 
                             "Basic" is not a supported value.
 
@@ -278,7 +278,7 @@ spec:
                           action:
                             default: replace
                             description: |-
-                              Action to perform based on the regex matching.
+                              action to perform based on the regex matching.
 
                               `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
                               `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
@@ -310,29 +310,29 @@ spec:
                             type: string
                           modulus:
                             description: |-
-                              Modulus to take of the hash of the source label values.
+                              modulus to take of the hash of the source label values.
 
                               Only applicable when the action is `HashMod`.
                             format: int64
                             type: integer
                           regex:
-                            description: Regular expression against which the extracted
-                              value is matched.
+                            description: regex defines the regular expression against
+                              which the extracted value is matched.
                             type: string
                           replacement:
                             description: |-
-                              Replacement value against which a Replace action is performed if the
+                              replacement value against which a Replace action is performed if the
                               regular expression matches.
 
                               Regex capture groups are available.
                             type: string
                           separator:
-                            description: Separator is the string between concatenated
+                            description: separator is the string between concatenated
                               SourceLabels.
                             type: string
                           sourceLabels:
                             description: |-
-                              The source labels select values from existing labels. Their content is
+                              sourceLabels defines the source labels select values from existing labels. Their content is
                               concatenated using the configured Separator and matched against the
                               configured regular expression.
                             items:
@@ -344,7 +344,7 @@ spec:
                             type: array
                           targetLabel:
                             description: |-
-                              Label to which the resulting string is written in a replacement.
+                              targetLabel defines the label to which the resulting string is written in a replacement.
 
                               It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
                               `KeepEqual` and `DropEqual` actions.
@@ -775,7 +775,7 @@ spec:
                           action:
                             default: replace
                             description: |-
-                              Action to perform based on the regex matching.
+                              action to perform based on the regex matching.
 
                               `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
                               `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
@@ -807,29 +807,29 @@ spec:
                             type: string
                           modulus:
                             description: |-
-                              Modulus to take of the hash of the source label values.
+                              modulus to take of the hash of the source label values.
 
                               Only applicable when the action is `HashMod`.
                             format: int64
                             type: integer
                           regex:
-                            description: Regular expression against which the extracted
-                              value is matched.
+                            description: regex defines the regular expression against
+                              which the extracted value is matched.
                             type: string
                           replacement:
                             description: |-
-                              Replacement value against which a Replace action is performed if the
+                              replacement value against which a Replace action is performed if the
                               regular expression matches.
 
                               Regex capture groups are available.
                             type: string
                           separator:
-                            description: Separator is the string between concatenated
+                            description: separator is the string between concatenated
                               SourceLabels.
                             type: string
                           sourceLabels:
                             description: |-
-                              The source labels select values from existing labels. Their content is
+                              sourceLabels defines the source labels select values from existing labels. Their content is
                               concatenated using the configured Separator and matched against the
                               configured regular expression.
                             items:
@@ -841,7 +841,7 @@ spec:
                             type: array
                           targetLabel:
                             description: |-
-                              Label to which the resulting string is written in a replacement.
+                              targetLabel defines the label to which the resulting string is written in a replacement.
 
                               It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
                               `KeepEqual` and `DropEqual` actions.

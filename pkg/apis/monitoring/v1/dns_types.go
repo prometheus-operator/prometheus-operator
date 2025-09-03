@@ -16,21 +16,21 @@ package v1
 // PodDNSConfig defines the DNS parameters of a pod in addition to
 // those generated from DNSPolicy.
 type PodDNSConfig struct {
-	// A list of DNS name server IP addresses.
+	// nameservers list of DNS name server IP addresses.
 	// This will be appended to the base nameservers generated from DNSPolicy.
 	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
 	Nameservers []string `json:"nameservers,omitempty"`
 
-	// A list of DNS search domains for host-name lookup.
+	// searches list of DNS search domains for host-name lookup.
 	// This will be appended to the base search paths generated from DNSPolicy.
 	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
 	Searches []string `json:"searches,omitempty"`
 
-	// A list of DNS resolver options.
+	// options list of DNS resolver options.
 	// This will be merged with the base options generated from DNSPolicy.
 	// Resolution options given in Options
 	// will override those that appear in the base DNSPolicy.
@@ -42,12 +42,12 @@ type PodDNSConfig struct {
 
 // PodDNSConfigOption defines DNS resolver options of a pod.
 type PodDNSConfigOption struct {
-	// Name is required and must be unique.
+	// name is required and must be unique.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
 
-	// Value is optional.
+	// value is optional.
 	// +optional
 	Value *string `json:"value,omitempty"`
 }

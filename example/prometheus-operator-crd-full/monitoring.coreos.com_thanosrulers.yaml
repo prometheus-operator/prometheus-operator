@@ -2648,7 +2648,7 @@ spec:
                 properties:
                   nameservers:
                     description: |-
-                      A list of DNS name server IP addresses.
+                      nameservers list of DNS name server IP addresses.
                       This will be appended to the base nameservers generated from DNSPolicy.
                     items:
                       minLength: 1
@@ -2657,7 +2657,7 @@ spec:
                     x-kubernetes-list-type: set
                   options:
                     description: |-
-                      A list of DNS resolver options.
+                      options list of DNS resolver options.
                       This will be merged with the base options generated from DNSPolicy.
                       Resolution options given in Options
                       will override those that appear in the base DNSPolicy.
@@ -2666,11 +2666,11 @@ spec:
                         of a pod.
                       properties:
                         name:
-                          description: Name is required and must be unique.
+                          description: name is required and must be unique.
                           minLength: 1
                           type: string
                         value:
-                          description: Value is optional.
+                          description: value is optional.
                           type: string
                       required:
                       - name
@@ -2681,7 +2681,7 @@ spec:
                     x-kubernetes-list-type: map
                   searches:
                     description: |-
-                      A list of DNS search domains for host-name lookup.
+                      searches list of DNS search domains for host-name lookup.
                       This will be appended to the base search paths generated from DNSPolicy.
                     items:
                       minLength: 1
@@ -4760,15 +4760,15 @@ spec:
                   properties:
                     authorization:
                       description: |-
-                        Authorization section for the URL.
+                        authorization section for the URL.
 
                         It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 
                         Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
                       properties:
                         credentials:
-                          description: Selects a key of a Secret in the namespace
-                            that contains the credentials for authentication.
+                          description: credentials selects a key of a Secret in the
+                            namespace that contains the credentials for authentication.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -4797,7 +4797,7 @@ spec:
                           type: string
                         type:
                           description: |-
-                            Defines the authentication type. The value is case-insensitive.
+                            type defines the authentication type. The value is case-insensitive.
 
                             "Basic" is not a supported value.
 
@@ -4806,15 +4806,15 @@ spec:
                       type: object
                     azureAd:
                       description: |-
-                        AzureAD for the URL.
+                        azureAd for the URL.
 
                         It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
 
                         Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
                       properties:
                         cloud:
-                          description: The Azure Cloud. Options are 'AzurePublic',
-                            'AzureChina', or 'AzureGovernment'.
+                          description: cloud defines the Azure Cloud. Options are
+                            'AzurePublic', 'AzureChina', or 'AzureGovernment'.
                           enum:
                           - AzureChina
                           - AzureGovernment
@@ -4822,32 +4822,31 @@ spec:
                           type: string
                         managedIdentity:
                           description: |-
-                            ManagedIdentity defines the Azure User-assigned Managed identity.
+                            managedIdentity defines the Azure User-assigned Managed identity.
                             Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
-                              description: The client id
+                              description: clientId
                               type: string
                           required:
                           - clientId
                           type: object
                         oauth:
                           description: |-
-                            OAuth defines the oauth config that is being used to authenticate.
+                            oauth defines the oauth config that is being used to authenticate.
                             Cannot be set at the same time as `managedIdentity` or `sdk`.
 
                             It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
                           properties:
                             clientId:
-                              description: '`clientID` is the clientId of the Azure
-                                Active Directory application that is being used to
-                                authenticate.'
+                              description: clientId is the clientId of the Azure Active
+                                Directory application that is being used to authenticate.
                               minLength: 1
                               type: string
                             clientSecret:
-                              description: '`clientSecret` specifies a key of a Secret
+                              description: clientSecret specifies a key of a Secret
                                 containing the client secret of the Azure Active Directory
-                                application that is being used to authenticate.'
+                                application that is being used to authenticate.
                               properties:
                                 key:
                                   description: The key of the secret to select from.  Must
@@ -4871,9 +4870,9 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             tenantId:
-                              description: '`tenantId` is the tenant ID of the Azure
+                              description: tenantId is the tenant ID of the Azure
                                 Active Directory application that is being used to
-                                authenticate.'
+                                authenticate.
                               minLength: 1
                               pattern: ^[0-9a-zA-Z-.]+$
                               type: string
@@ -4884,23 +4883,23 @@ spec:
                           type: object
                         sdk:
                           description: |-
-                            SDK defines the Azure SDK config that is being used to authenticate.
+                            sdk defines the Azure SDK config that is being used to authenticate.
                             See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
                             Cannot be set at the same time as `oauth` or `managedIdentity`.
 
                             It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
                           properties:
                             tenantId:
-                              description: '`tenantId` is the tenant ID of the azure
+                              description: tenantId is the tenant ID of the azure
                                 active directory application that is being used to
-                                authenticate.'
+                                authenticate.
                               pattern: ^[0-9a-zA-Z-.]+$
                               type: string
                           type: object
                       type: object
                     basicAuth:
                       description: |-
-                        BasicAuth configuration for the URL.
+                        basicAuth configuration for the URL.
 
                         Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
                       properties:
@@ -4959,23 +4958,22 @@ spec:
                       type: object
                     bearerToken:
                       description: |-
+                        bearerToken is deprecated: this will be removed in a future release.
                         *Warning: this field shouldn't be used because the token value appears
                         in clear-text. Prefer using `authorization`.*
-
-                        Deprecated: this will be removed in a future release.
                       type: string
                     bearerTokenFile:
                       description: |-
-                        File from which to read bearer token for the URL.
+                        bearerTokenFile defines the file from which to read bearer token for the URL.
 
                         Deprecated: this will be removed in a future release. Prefer using `authorization`.
                       type: string
                     enableHTTP2:
-                      description: Whether to enable HTTP2.
+                      description: enableHTTP2 defines whether to enable HTTP2.
                       type: boolean
                     followRedirects:
                       description: |-
-                        Configure whether HTTP requests follow HTTP 3xx redirects.
+                        followRedirects configure whether HTTP requests follow HTTP 3xx redirects.
 
                         It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
                       type: boolean
@@ -4983,14 +4981,14 @@ spec:
                       additionalProperties:
                         type: string
                       description: |-
-                        Custom HTTP headers to be sent along with each remote write request.
+                        headers defines the custom HTTP headers to be sent along with each remote write request.
                         Be aware that headers that are set by Prometheus itself can't be overwritten.
 
                         It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
                       type: object
                     messageVersion:
                       description: |-
-                        The Remote Write message's version to use when writing to the endpoint.
+                        messageVersion defines the Remote Write message's version to use when writing to the endpoint.
 
                         `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.
                         `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.
@@ -5007,30 +5005,30 @@ spec:
                       - V2.0
                       type: string
                     metadataConfig:
-                      description: MetadataConfig configures the sending of series
+                      description: metadataConfig configures the sending of series
                         metadata to the remote storage.
                       properties:
                         maxSamplesPerSend:
                           description: |-
-                            MaxSamplesPerSend is the maximum number of metadata samples per send.
+                            maxSamplesPerSend is the maximum number of metadata samples per send.
 
                             It requires Prometheus >= v2.29.0.
                           format: int32
                           minimum: -1
                           type: integer
                         send:
-                          description: Defines whether metric metadata is sent to
-                            the remote storage or not.
+                          description: send defines whether metric metadata is sent
+                            to the remote storage or not.
                           type: boolean
                         sendInterval:
-                          description: Defines how frequently metric metadata is sent
-                            to the remote storage.
+                          description: sendInterval defines how frequently metric
+                            metadata is sent to the remote storage.
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                       type: object
                     name:
                       description: |-
-                        The name of the remote write queue, it must be unique if specified. The
+                        name of the remote write queue, it must be unique if specified. The
                         name is used in metrics and logging in order to differentiate queues.
 
                         It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
@@ -5045,7 +5043,7 @@ spec:
                       type: string
                     oauth2:
                       description: |-
-                        OAuth2 configuration for the URL.
+                        oauth2 configuration for the URL.
 
                         It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 
@@ -5419,65 +5417,67 @@ spec:
                       pattern: ^(http|https|socks5)://.+$
                       type: string
                     queueConfig:
-                      description: QueueConfig allows tuning of the remote write queue
+                      description: queueConfig allows tuning of the remote write queue
                         parameters.
                       properties:
                         batchSendDeadline:
-                          description: BatchSendDeadline is the maximum time a sample
+                          description: batchSendDeadline is the maximum time a sample
                             will wait in buffer.
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         capacity:
                           description: |-
-                            Capacity is the number of samples to buffer per shard before we start
+                            capacity is the number of samples to buffer per shard before we start
                             dropping them.
                           type: integer
                         maxBackoff:
-                          description: MaxBackoff is the maximum retry delay.
+                          description: maxBackoff is the maximum retry delay.
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         maxRetries:
-                          description: MaxRetries is the maximum number of times to
+                          description: maxRetries is the maximum number of times to
                             retry a batch on recoverable errors.
                           type: integer
                         maxSamplesPerSend:
-                          description: MaxSamplesPerSend is the maximum number of
+                          description: maxSamplesPerSend is the maximum number of
                             samples per send.
                           type: integer
                         maxShards:
-                          description: MaxShards is the maximum number of shards,
+                          description: maxShards is the maximum number of shards,
                             i.e. amount of concurrency.
                           type: integer
                         minBackoff:
-                          description: MinBackoff is the initial retry delay. Gets
+                          description: minBackoff is the initial retry delay. Gets
                             doubled for every retry.
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         minShards:
-                          description: MinShards is the minimum number of shards,
+                          description: minShards is the minimum number of shards,
                             i.e. amount of concurrency.
                           type: integer
                         retryOnRateLimit:
                           description: |-
-                            Retry upon receiving a 429 status code from the remote-write storage.
+                            retryOnRateLimit defines the retry upon receiving a 429 status code from the remote-write storage.
 
                             This is an *experimental feature*, it may change in any upcoming release
                             in a breaking way.
                           type: boolean
                         sampleAgeLimit:
                           description: |-
-                            SampleAgeLimit drops samples older than the limit.
+                            sampleAgeLimit drops samples older than the limit.
                             It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                       type: object
                     remoteTimeout:
-                      description: Timeout for requests to the remote write endpoint.
+                      description: remoteTimeout defines the timeout for requests
+                        to the remote write endpoint.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     roundRobinDNS:
-                      description: |-
-                        When enabled:
+                      description: |2-
+                         roundRobinDNS
+                         when enabled:
                             - The remote-write mechanism will resolve the hostname via DNS.
                             - It will randomly select one of the resolved IP addresses and connect to it.
 
@@ -5492,7 +5492,7 @@ spec:
                       type: boolean
                     sendExemplars:
                       description: |-
-                        Enables sending of exemplars over remote write. Note that
+                        sendExemplars enables sending of exemplars over remote write. Note that
                         exemplar-storage itself must be enabled using the `spec.enableFeatures`
                         option for exemplars to be scraped in the first place.
 
@@ -5500,14 +5500,14 @@ spec:
                       type: boolean
                     sendNativeHistograms:
                       description: |-
-                        Enables sending of native histograms, also known as sparse histograms
+                        sendNativeHistograms enables sending of native histograms, also known as sparse histograms
                         over remote write.
 
                         It requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.
                       type: boolean
                     sigv4:
                       description: |-
-                        Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
+                        sigv4 allows to configures AWS's Signature Verification 4 for the URL.
 
                         It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 
@@ -5515,7 +5515,7 @@ spec:
                       properties:
                         accessKey:
                           description: |-
-                            AccessKey is the AWS API key. If not specified, the environment variable
+                            accessKey is the AWS API key. If not specified, the environment variable
                             `AWS_ACCESS_KEY_ID` is used.
                           properties:
                             key:
@@ -5540,18 +5540,18 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         profile:
-                          description: Profile is the named AWS profile used to authenticate.
+                          description: profile is the named AWS profile used to authenticate.
                           type: string
                         region:
-                          description: Region is the AWS region. If blank, the region
+                          description: region is the AWS region. If blank, the region
                             from the default credentials chain used.
                           type: string
                         roleArn:
-                          description: RoleArn is the named AWS profile used to authenticate.
+                          description: roleArn is the named AWS profile used to authenticate.
                           type: string
                         secretKey:
                           description: |-
-                            SecretKey is the AWS API secret. If not specified, the environment
+                            secretKey is the AWS API secret. If not specified, the environment
                             variable `AWS_SECRET_ACCESS_KEY` is used.
                           properties:
                             key:
@@ -5577,7 +5577,7 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     tlsConfig:
-                      description: TLS Config to use for the URL.
+                      description: tlsConfig to use for the URL.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
@@ -5751,11 +5751,13 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: The URL of the endpoint to send samples to.
+                      description: url defines the URL of the endpoint to send samples
+                        to.
                       minLength: 1
                       type: string
                     writeRelabelConfigs:
-                      description: The list of remote write relabel configurations.
+                      description: writeRelabelConfigs defines the list of remote
+                        write relabel configurations.
                       items:
                         description: |-
                           RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -5766,7 +5768,7 @@ spec:
                           action:
                             default: replace
                             description: |-
-                              Action to perform based on the regex matching.
+                              action to perform based on the regex matching.
 
                               `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
                               `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
@@ -5798,29 +5800,29 @@ spec:
                             type: string
                           modulus:
                             description: |-
-                              Modulus to take of the hash of the source label values.
+                              modulus to take of the hash of the source label values.
 
                               Only applicable when the action is `HashMod`.
                             format: int64
                             type: integer
                           regex:
-                            description: Regular expression against which the extracted
-                              value is matched.
+                            description: regex defines the regular expression against
+                              which the extracted value is matched.
                             type: string
                           replacement:
                             description: |-
-                              Replacement value against which a Replace action is performed if the
+                              replacement value against which a Replace action is performed if the
                               regular expression matches.
 
                               Regex capture groups are available.
                             type: string
                           separator:
-                            description: Separator is the string between concatenated
+                            description: separator is the string between concatenated
                               SourceLabels.
                             type: string
                           sourceLabels:
                             description: |-
-                              The source labels select values from existing labels. Their content is
+                              sourceLabels defines the source labels select values from existing labels. Their content is
                               concatenated using the configured Separator and matched against the
                               configured regular expression.
                             items:
@@ -5832,7 +5834,7 @@ spec:
                             type: array
                           targetLabel:
                             description: |-
-                              Label to which the resulting string is written in a replacement.
+                              targetLabel defines the label to which the resulting string is written in a replacement.
 
                               It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
                               `KeepEqual` and `DropEqual` actions.
@@ -6305,12 +6307,12 @@ spec:
                 description: Storage spec to specify how storage shall be used.
                 properties:
                   disableMountSubPath:
-                    description: 'Deprecated: subPath usage will be removed in a future
-                      release.'
+                    description: 'disableMountSubPath eprecated: subPath usage will
+                      be removed in a future release.'
                     type: boolean
                   emptyDir:
                     description: |-
-                      EmptyDirVolumeSource to be used by the StatefulSet.
+                      emptyDir to be used by the StatefulSet.
                       If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
                       More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
                     properties:
@@ -6337,7 +6339,7 @@ spec:
                     type: object
                   ephemeral:
                     description: |-
-                      EphemeralVolumeSource to be used by the StatefulSet.
+                      ephemeral to be used by the StatefulSet.
                       This is a beta field in k8s 1.21 and GA in 1.15.
                       For lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.
                       More info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes
@@ -6582,7 +6584,7 @@ spec:
                     type: object
                   volumeClaimTemplate:
                     description: |-
-                      Defines the PVC spec to be used by the Prometheus StatefulSets.
+                      volumeClaimTemplate defines the PVC spec to be used by the Prometheus StatefulSets.
                       The easiest way to use a volume that cannot be automatically provisioned
                       is to use a label selector alongside manually created PersistentVolumes.
                     properties:
