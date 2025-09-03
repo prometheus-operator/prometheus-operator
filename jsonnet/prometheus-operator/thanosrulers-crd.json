@@ -4730,6 +4730,7 @@
                             },
                             "capacity": {
                               "description": "Capacity is the number of samples to buffer per shard before we start\ndropping them.",
+                              "format": "int64",
                               "type": "integer"
                             },
                             "maxBackoff": {
@@ -4739,14 +4740,17 @@
                             },
                             "maxRetries": {
                               "description": "MaxRetries is the maximum number of times to retry a batch on recoverable errors.",
+                              "format": "int32",
                               "type": "integer"
                             },
                             "maxSamplesPerSend": {
                               "description": "MaxSamplesPerSend is the maximum number of samples per send.",
+                              "format": "int64",
                               "type": "integer"
                             },
                             "maxShards": {
                               "description": "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
+                              "format": "int32",
                               "type": "integer"
                             },
                             "minBackoff": {
@@ -4756,6 +4760,7 @@
                             },
                             "minShards": {
                               "description": "MinShards is the minimum number of shards, i.e. amount of concurrency.",
+                              "format": "int32",
                               "type": "integer"
                             },
                             "retryOnRateLimit": {

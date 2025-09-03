@@ -575,12 +575,12 @@ func (in *AlertmanagerWebSpec) DeepCopyInto(out *AlertmanagerWebSpec) {
 	in.WebConfigFileFields.DeepCopyInto(&out.WebConfigFileFields)
 	if in.GetConcurrency != nil {
 		in, out := &in.GetConcurrency, &out.GetConcurrency
-		*out = new(uint32)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
-		*out = new(uint32)
+		*out = new(int32)
 		**out = **in
 	}
 }
@@ -1016,32 +1016,32 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	out.ArbitraryFSAccessThroughSMs = in.ArbitraryFSAccessThroughSMs
 	if in.EnforcedSampleLimit != nil {
 		in, out := &in.EnforcedSampleLimit, &out.EnforcedSampleLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.EnforcedTargetLimit != nil {
 		in, out := &in.EnforcedTargetLimit, &out.EnforcedTargetLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.EnforcedLabelLimit != nil {
 		in, out := &in.EnforcedLabelLimit, &out.EnforcedLabelLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.EnforcedLabelNameLengthLimit != nil {
 		in, out := &in.EnforcedLabelNameLengthLimit, &out.EnforcedLabelNameLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.EnforcedLabelValueLengthLimit != nil {
 		in, out := &in.EnforcedLabelValueLengthLimit, &out.EnforcedLabelValueLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.EnforcedKeepDroppedTargets != nil {
 		in, out := &in.EnforcedKeepDroppedTargets, &out.EnforcedKeepDroppedTargets
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.NameValidationScheme != nil {
@@ -1108,32 +1108,32 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	}
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.TargetLimit != nil {
 		in, out := &in.TargetLimit, &out.TargetLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelNameLengthLimit != nil {
 		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.ReloadStrategy != nil {
@@ -1814,7 +1814,7 @@ func (in *NativeHistogramConfig) DeepCopyInto(out *NativeHistogramConfig) {
 	}
 	if in.NativeHistogramBucketLimit != nil {
 		in, out := &in.NativeHistogramBucketLimit, &out.NativeHistogramBucketLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.NativeHistogramMinBucketFactor != nil {
@@ -2174,12 +2174,12 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.TargetLimit != nil {
 		in, out := &in.TargetLimit, &out.TargetLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.ScrapeProtocols != nil {
@@ -2194,23 +2194,23 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelNameLengthLimit != nil {
 		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.AttachMetadata != nil {
@@ -2337,12 +2337,12 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 	}
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.TargetLimit != nil {
 		in, out := &in.TargetLimit, &out.TargetLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.ScrapeProtocols != nil {
@@ -2357,23 +2357,23 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelNameLengthLimit != nil {
 		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.ScrapeClassName != nil {
@@ -3227,7 +3227,7 @@ func (in *RuleGroup) DeepCopyInto(out *RuleGroup) {
 	}
 	if in.Limit != nil {
 		in, out := &in.Limit, &out.Limit
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 }
@@ -3506,7 +3506,7 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.ScrapeProtocols != nil {
@@ -3521,28 +3521,28 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 	}
 	if in.TargetLimit != nil {
 		in, out := &in.TargetLimit, &out.TargetLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelNameLengthLimit != nil {
 		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.AttachMetadata != nil {

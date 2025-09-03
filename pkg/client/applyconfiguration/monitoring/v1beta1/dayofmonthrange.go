@@ -19,8 +19,8 @@ package v1beta1
 // DayOfMonthRangeApplyConfiguration represents a declarative configuration of the DayOfMonthRange type for use
 // with apply.
 type DayOfMonthRangeApplyConfiguration struct {
-	Start *int `json:"start,omitempty"`
-	End   *int `json:"end,omitempty"`
+	Start *int32 `json:"start,omitempty"`
+	End   *int32 `json:"end,omitempty"`
 }
 
 // DayOfMonthRangeApplyConfiguration constructs a declarative configuration of the DayOfMonthRange type for use with
@@ -32,7 +32,7 @@ func DayOfMonthRange() *DayOfMonthRangeApplyConfiguration {
 // WithStart sets the Start field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Start field is set to the value of the last call.
-func (b *DayOfMonthRangeApplyConfiguration) WithStart(value int) *DayOfMonthRangeApplyConfiguration {
+func (b *DayOfMonthRangeApplyConfiguration) WithStart(value int32) *DayOfMonthRangeApplyConfiguration {
 	b.Start = &value
 	return b
 }
@@ -40,7 +40,7 @@ func (b *DayOfMonthRangeApplyConfiguration) WithStart(value int) *DayOfMonthRang
 // WithEnd sets the End field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the End field is set to the value of the last call.
-func (b *DayOfMonthRangeApplyConfiguration) WithEnd(value int) *DayOfMonthRangeApplyConfiguration {
+func (b *DayOfMonthRangeApplyConfiguration) WithEnd(value int32) *DayOfMonthRangeApplyConfiguration {
 	b.End = &value
 	return b
 }

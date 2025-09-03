@@ -633,7 +633,7 @@ type CommonPrometheusFields struct {
 	//
 	//
 	// +optional
-	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
+	EnforcedSampleLimit *int64 `json:"enforcedSampleLimit,omitempty"`
 	// When defined, enforcedTargetLimit specifies a global limit on the number
 	// of scraped targets. The value overrides any `spec.targetLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.targetLimit` is
@@ -650,7 +650,7 @@ type CommonPrometheusFields struct {
 	//
 	//
 	// +optional
-	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
+	EnforcedTargetLimit *int64 `json:"enforcedTargetLimit,omitempty"`
 	// When defined, enforcedLabelLimit specifies a global limit on the number
 	// of labels per sample. The value overrides any `spec.labelLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelLimit` is
@@ -666,7 +666,7 @@ type CommonPrometheusFields struct {
 	//
 	//
 	// +optional
-	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
+	EnforcedLabelLimit *int64 `json:"enforcedLabelLimit,omitempty"`
 	// When defined, enforcedLabelNameLengthLimit specifies a global limit on the length
 	// of labels name per sample. The value overrides any `spec.labelNameLengthLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelNameLengthLimit` is
@@ -682,7 +682,7 @@ type CommonPrometheusFields struct {
 	//
 	//
 	// +optional
-	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
+	EnforcedLabelNameLengthLimit *int64 `json:"enforcedLabelNameLengthLimit,omitempty"`
 	// When not null, enforcedLabelValueLengthLimit defines a global limit on the length
 	// of labels value per sample. The value overrides any `spec.labelValueLengthLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelValueLengthLimit` is
@@ -698,7 +698,7 @@ type CommonPrometheusFields struct {
 	//
 	//
 	// +optional
-	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	EnforcedLabelValueLengthLimit *int64 `json:"enforcedLabelValueLengthLimit,omitempty"`
 	// When defined, enforcedKeepDroppedTargets specifies a global limit on the number of targets
 	// dropped by relabeling that will be kept in memory. The value overrides
 	// any `spec.keepDroppedTargets` set by
@@ -715,7 +715,7 @@ type CommonPrometheusFields struct {
 	//
 	//
 	// +optional
-	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
+	EnforcedKeepDroppedTargets *int64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// When defined, enforcedBodySizeLimit specifies a global limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	// Targets responding with a body larger than this many bytes will cause
@@ -853,7 +853,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
 	//
 	// +optional
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -861,7 +861,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
 	//
 	// +optional
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -869,7 +869,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
 	//
 	// +optional
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// Per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -877,7 +877,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
 	//
 	// +optional
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -885,7 +885,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
 	//
 	// +optional
-	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -895,7 +895,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
 	//
 	// +optional
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 
 	// Defines the strategy used to reload the Prometheus configuration.
 	// If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.
@@ -1802,22 +1802,22 @@ type QueueConfig struct {
 	// Capacity is the number of samples to buffer per shard before we start
 	// dropping them.
 	// +optional
-	Capacity int `json:"capacity,omitempty"`
+	Capacity int64 `json:"capacity,omitempty"`
 	// +optional
 	// MinShards is the minimum number of shards, i.e. amount of concurrency.
-	MinShards int `json:"minShards,omitempty"`
+	MinShards int32 `json:"minShards,omitempty"`
 	// MaxShards is the maximum number of shards, i.e. amount of concurrency.
 	// +optional
-	MaxShards int `json:"maxShards,omitempty"`
+	MaxShards int32 `json:"maxShards,omitempty"`
 	// MaxSamplesPerSend is the maximum number of samples per send.
 	// +optional
-	MaxSamplesPerSend int `json:"maxSamplesPerSend,omitempty"`
+	MaxSamplesPerSend int64 `json:"maxSamplesPerSend,omitempty"`
 	// BatchSendDeadline is the maximum time a sample will wait in buffer.
 	// +optional
 	BatchSendDeadline *Duration `json:"batchSendDeadline,omitempty"`
 	// MaxRetries is the maximum number of times to retry a batch on recoverable errors.
 	// +optional
-	MaxRetries int `json:"maxRetries,omitempty"`
+	MaxRetries int32 `json:"maxRetries,omitempty"`
 	// MinBackoff is the initial retry delay. Gets doubled for every retry.
 	// +optional
 	MinBackoff *Duration `json:"minBackoff,omitempty"`
@@ -2050,7 +2050,7 @@ type RelabelConfig struct {
 	//
 	// Only applicable when the action is `HashMod`.
 	// +optional
-	Modulus uint64 `json:"modulus,omitempty"`
+	Modulus int64 `json:"modulus,omitempty"`
 
 	// Replacement value against which a Replace action is performed if the
 	// regular expression matches.

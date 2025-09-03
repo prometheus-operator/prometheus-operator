@@ -1149,7 +1149,7 @@ By default, the pods are discovered in the same namespace as the <code>PodMonito
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1162,7 +1162,7 @@ that will be accepted.</p>
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1207,7 +1207,7 @@ ScrapeProtocol
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1220,7 +1220,7 @@ uint64
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1233,7 +1233,7 @@ uint64
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1260,7 +1260,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1303,7 +1303,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1602,7 +1602,7 @@ SafeAuthorization
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1614,7 +1614,7 @@ uint64
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1658,7 +1658,7 @@ ScrapeProtocol
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1671,7 +1671,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1684,7 +1684,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1711,7 +1711,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -1754,7 +1754,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -2892,7 +2892,7 @@ The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
 <td>
 <code>enforcedSampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -2915,7 +2915,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> i
 <td>
 <code>enforcedTargetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -2937,7 +2937,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> i
 <td>
 <code>enforcedLabelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -2958,7 +2958,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is
 <td>
 <code>enforcedLabelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -2979,7 +2979,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit
 <td>
 <code>enforcedLabelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3000,7 +3000,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimi
 <td>
 <code>enforcedKeepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3248,7 +3248,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3263,7 +3263,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3278,7 +3278,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3293,7 +3293,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3308,7 +3308,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -3323,7 +3323,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4129,7 +4129,7 @@ By default, the services are discovered in the same namespace as the <code>Servi
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4174,7 +4174,7 @@ ScrapeProtocol
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4187,7 +4187,7 @@ be accepted.</p>
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4200,7 +4200,7 @@ uint64
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4213,7 +4213,7 @@ uint64
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4240,7 +4240,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -4283,7 +4283,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -7337,7 +7337,7 @@ WebHTTPConfig
 <td>
 <code>getConcurrency</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
@@ -7350,7 +7350,7 @@ Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.</p>
 <td>
 <code>timeout</code><br/>
 <em>
-uint32
+int32
 </em>
 </td>
 <td>
@@ -8864,7 +8864,7 @@ The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
 <td>
 <code>enforcedSampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -8887,7 +8887,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> i
 <td>
 <code>enforcedTargetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -8909,7 +8909,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> i
 <td>
 <code>enforcedLabelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -8930,7 +8930,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is
 <td>
 <code>enforcedLabelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -8951,7 +8951,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit
 <td>
 <code>enforcedLabelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -8972,7 +8972,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimi
 <td>
 <code>enforcedKeepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -9220,7 +9220,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -9235,7 +9235,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -9250,7 +9250,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -9265,7 +9265,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -9280,7 +9280,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -9295,7 +9295,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -11614,7 +11614,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12605,7 +12605,7 @@ By default, the pods are discovered in the same namespace as the <code>PodMonito
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12618,7 +12618,7 @@ that will be accepted.</p>
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12663,7 +12663,7 @@ ScrapeProtocol
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12676,7 +12676,7 @@ uint64
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12689,7 +12689,7 @@ uint64
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12716,7 +12716,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -12759,7 +12759,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13049,7 +13049,7 @@ SafeAuthorization
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13061,7 +13061,7 @@ uint64
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13105,7 +13105,7 @@ ScrapeProtocol
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13118,7 +13118,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13131,7 +13131,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13158,7 +13158,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -13201,7 +13201,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -14681,7 +14681,7 @@ The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
 <td>
 <code>enforcedSampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -14704,7 +14704,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> i
 <td>
 <code>enforcedTargetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -14726,7 +14726,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> i
 <td>
 <code>enforcedLabelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -14747,7 +14747,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is
 <td>
 <code>enforcedLabelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -14768,7 +14768,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit
 <td>
 <code>enforcedLabelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -14789,7 +14789,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimi
 <td>
 <code>enforcedKeepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -15037,7 +15037,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -15052,7 +15052,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -15067,7 +15067,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -15082,7 +15082,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -15097,7 +15097,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -15112,7 +15112,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -16128,7 +16128,7 @@ This object is referenced in the RemoteWriteSpec object.</p>
 <td>
 <code>capacity</code><br/>
 <em>
-int
+int64
 </em>
 </td>
 <td>
@@ -16141,7 +16141,7 @@ dropping them.</p>
 <td>
 <code>minShards</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -16153,7 +16153,7 @@ int
 <td>
 <code>maxShards</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -16165,7 +16165,7 @@ int
 <td>
 <code>maxSamplesPerSend</code><br/>
 <em>
-int
+int64
 </em>
 </td>
 <td>
@@ -16191,7 +16191,7 @@ Duration
 <td>
 <code>maxRetries</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -16335,7 +16335,7 @@ string
 <td>
 <code>modulus</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -17317,7 +17317,7 @@ More info: <a href="https://github.com/thanos-io/thanos/blob/main/docs/component
 <td>
 <code>limit</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -17999,7 +17999,7 @@ By default, the services are discovered in the same namespace as the <code>Servi
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -18044,7 +18044,7 @@ ScrapeProtocol
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -18057,7 +18057,7 @@ be accepted.</p>
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -18070,7 +18070,7 @@ uint64
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -18083,7 +18083,7 @@ uint64
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -18110,7 +18110,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -18153,7 +18153,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22136,7 +22136,7 @@ The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
 <td>
 <code>enforcedSampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22159,7 +22159,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> i
 <td>
 <code>enforcedTargetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22181,7 +22181,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> i
 <td>
 <code>enforcedLabelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22202,7 +22202,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is
 <td>
 <code>enforcedLabelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22223,7 +22223,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit
 <td>
 <code>enforcedLabelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22244,7 +22244,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimi
 <td>
 <code>enforcedKeepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22492,7 +22492,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22507,7 +22507,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22522,7 +22522,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22537,7 +22537,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22552,7 +22552,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -22567,7 +22567,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23392,7 +23392,7 @@ SafeTLSConfig
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23404,7 +23404,7 @@ uint64
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23416,7 +23416,7 @@ uint64
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23429,7 +23429,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23442,7 +23442,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23469,7 +23469,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -23512,7 +23512,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -24516,7 +24516,7 @@ Ignored for SRV records</p>
 <td>
 <code>start</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -24528,7 +24528,7 @@ int
 <td>
 <code>end</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -29549,7 +29549,7 @@ string
 <td>
 <code>start</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -29561,7 +29561,7 @@ int
 <td>
 <code>end</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -30657,7 +30657,7 @@ The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
 <td>
 <code>enforcedSampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -30680,7 +30680,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> i
 <td>
 <code>enforcedTargetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -30702,7 +30702,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> i
 <td>
 <code>enforcedLabelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -30723,7 +30723,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is
 <td>
 <code>enforcedLabelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -30744,7 +30744,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit
 <td>
 <code>enforcedLabelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -30765,7 +30765,7 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimi
 <td>
 <code>enforcedKeepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -31013,7 +31013,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -31028,7 +31028,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -31043,7 +31043,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -31058,7 +31058,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -31073,7 +31073,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -31088,7 +31088,7 @@ If you want to enforce a maximum limit for all scrape objects, refer to enforced
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33494,7 +33494,7 @@ SafeTLSConfig
 <td>
 <code>sampleLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33506,7 +33506,7 @@ uint64
 <td>
 <code>targetLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33518,7 +33518,7 @@ uint64
 <td>
 <code>labelLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33531,7 +33531,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelNameLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33544,7 +33544,7 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 <td>
 <code>labelValueLengthLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33571,7 +33571,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramBucketLimit</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -33614,7 +33614,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <td>
 <code>keepDroppedTargets</code><br/>
 <em>
-uint64
+int64
 </em>
 </td>
 <td>
@@ -35342,7 +35342,7 @@ the resource&rsquo;s namespace.</p>
 <td>
 <code>start</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -35354,7 +35354,7 @@ int
 <td>
 <code>end</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -36879,7 +36879,7 @@ string
 <td>
 <code>start</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -36891,7 +36891,7 @@ int
 <td>
 <code>end</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>

@@ -1306,12 +1306,12 @@ type DayOfMonthRange struct {
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
 	// +optional
-	Start int `json:"start,omitempty"`
+	Start int32 `json:"start,omitempty"`
 	// End of the inclusive range
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
 	// +optional
-	End int `json:"end,omitempty"`
+	End int32 `json:"end,omitempty"`
 }
 
 // MonthRange is an inclusive range of months of the year beginning in January

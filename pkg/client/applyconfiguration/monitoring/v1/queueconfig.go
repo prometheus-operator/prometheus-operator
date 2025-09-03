@@ -23,12 +23,12 @@ import (
 // QueueConfigApplyConfiguration represents a declarative configuration of the QueueConfig type for use
 // with apply.
 type QueueConfigApplyConfiguration struct {
-	Capacity          *int                   `json:"capacity,omitempty"`
-	MinShards         *int                   `json:"minShards,omitempty"`
-	MaxShards         *int                   `json:"maxShards,omitempty"`
-	MaxSamplesPerSend *int                   `json:"maxSamplesPerSend,omitempty"`
+	Capacity          *int64                 `json:"capacity,omitempty"`
+	MinShards         *int32                 `json:"minShards,omitempty"`
+	MaxShards         *int32                 `json:"maxShards,omitempty"`
+	MaxSamplesPerSend *int64                 `json:"maxSamplesPerSend,omitempty"`
 	BatchSendDeadline *monitoringv1.Duration `json:"batchSendDeadline,omitempty"`
-	MaxRetries        *int                   `json:"maxRetries,omitempty"`
+	MaxRetries        *int32                 `json:"maxRetries,omitempty"`
 	MinBackoff        *monitoringv1.Duration `json:"minBackoff,omitempty"`
 	MaxBackoff        *monitoringv1.Duration `json:"maxBackoff,omitempty"`
 	RetryOnRateLimit  *bool                  `json:"retryOnRateLimit,omitempty"`
@@ -44,7 +44,7 @@ func QueueConfig() *QueueConfigApplyConfiguration {
 // WithCapacity sets the Capacity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Capacity field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithCapacity(value int) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithCapacity(value int64) *QueueConfigApplyConfiguration {
 	b.Capacity = &value
 	return b
 }
@@ -52,7 +52,7 @@ func (b *QueueConfigApplyConfiguration) WithCapacity(value int) *QueueConfigAppl
 // WithMinShards sets the MinShards field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinShards field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithMinShards(value int) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithMinShards(value int32) *QueueConfigApplyConfiguration {
 	b.MinShards = &value
 	return b
 }
@@ -60,7 +60,7 @@ func (b *QueueConfigApplyConfiguration) WithMinShards(value int) *QueueConfigApp
 // WithMaxShards sets the MaxShards field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxShards field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithMaxShards(value int) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithMaxShards(value int32) *QueueConfigApplyConfiguration {
 	b.MaxShards = &value
 	return b
 }
@@ -68,7 +68,7 @@ func (b *QueueConfigApplyConfiguration) WithMaxShards(value int) *QueueConfigApp
 // WithMaxSamplesPerSend sets the MaxSamplesPerSend field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxSamplesPerSend field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithMaxSamplesPerSend(value int) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithMaxSamplesPerSend(value int64) *QueueConfigApplyConfiguration {
 	b.MaxSamplesPerSend = &value
 	return b
 }
@@ -84,7 +84,7 @@ func (b *QueueConfigApplyConfiguration) WithBatchSendDeadline(value monitoringv1
 // WithMaxRetries sets the MaxRetries field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxRetries field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithMaxRetries(value int) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithMaxRetries(value int32) *QueueConfigApplyConfiguration {
 	b.MaxRetries = &value
 	return b
 }

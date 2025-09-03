@@ -160,11 +160,13 @@ spec:
                               properties:
                                 end:
                                   description: End of the inclusive range
+                                  format: int32
                                   maximum: 31
                                   minimum: -31
                                   type: integer
                                 start:
                                   description: Start of the inclusive range
+                                  format: int32
                                   maximum: 31
                                   minimum: -31
                                   type: integer
@@ -23025,11 +23027,13 @@ spec:
                               properties:
                                 end:
                                   description: End of the inclusive range
+                                  format: int32
                                   maximum: 31
                                   minimum: -31
                                   type: integer
                                 start:
                                   description: Start of the inclusive range
+                                  format: int32
                                   maximum: 31
                                   minimum: -31
                                   type: integer

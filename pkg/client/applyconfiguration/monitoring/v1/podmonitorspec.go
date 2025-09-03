@@ -31,15 +31,15 @@ type PodMonitorSpecApplyConfiguration struct {
 	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
 	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
-	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
-	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
+	SampleLimit                             *int64                                  `json:"sampleLimit,omitempty"`
+	TargetLimit                             *int64                                  `json:"targetLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
 	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
-	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
+	LabelLimit                              *int64                                  `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                    *int64                                  `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *int64                                  `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64                           `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets                      *int64                            `json:"keepDroppedTargets,omitempty"`
 	AttachMetadata                          *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 	ScrapeClassName                         *string                           `json:"scrapeClass,omitempty"`
 	BodySizeLimit                           *monitoringv1.ByteSize            `json:"bodySizeLimit,omitempty"`
@@ -109,7 +109,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithNamespaceSelector(value *Namespac
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithSampleLimit(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithSampleLimit(value int64) *PodMonitorSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -117,7 +117,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithSampleLimit(value uint64) *PodMon
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithTargetLimit(value int64) *PodMonitorSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -143,7 +143,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value moni
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithLabelLimit(value int64) *PodMonitorSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -151,7 +151,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *PodMoni
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *PodMonitorSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -159,7 +159,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *PodMonitorSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -175,7 +175,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value boo
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *PodMonitorSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
@@ -199,7 +199,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithConvertClassicHistogramsToNHCB(va
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *PodMonitorSpecApplyConfiguration {
+func (b *PodMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *PodMonitorSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }

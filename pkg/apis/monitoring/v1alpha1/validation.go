@@ -131,8 +131,8 @@ func (tr TimeRange) Parse() (*ParsedRange, error) {
 		return nil, fmt.Errorf("start time %d cannot be equal or greater than end time %d", start, end)
 	}
 	return &ParsedRange{
-		Start: start,
-		End:   end,
+		Start: int32(start),
+		End:   int32(end),
 	}, nil
 }
 
@@ -169,7 +169,10 @@ func (wr WeekdayRange) Parse() (*ParsedRange, error) {
 	if end < 0 || end > 6 {
 		return nil, fmt.Errorf("%s is not a valid day of the week: out of range", endStr)
 	}
-	return &ParsedRange{Start: start, End: end}, nil
+	return &ParsedRange{
+		Start: int32(start),
+		End:   int32(end),
+	}, nil
 }
 
 // Validate the YearRange
@@ -198,7 +201,10 @@ func (yr YearRange) Parse() (*ParsedRange, error) {
 	if start > end {
 		return nil, fmt.Errorf("end year %d is before start year %d", end, start)
 	}
-	return &ParsedRange{Start: start, End: end}, nil
+	return &ParsedRange{
+		Start: int32(start),
+		End:   int32(end),
+	}, nil
 }
 
 // Int returns an integer, which is the canonical representation
@@ -296,8 +302,8 @@ func (mr MonthRange) Parse() (*ParsedRange, error) {
 		return nil, fmt.Errorf("end month %s is before start month %s", endStr, startStr)
 	}
 	return &ParsedRange{
-		Start: start,
-		End:   end,
+		Start: int32(start),
+		End:   int32(end),
 	}, nil
 }
 
@@ -306,10 +312,10 @@ func (mr MonthRange) Parse() (*ParsedRange, error) {
 type ParsedRange struct {
 	// Start is the beginning of the range
 	// +optional
-	Start int `json:"start,omitempty"`
+	Start int32 `json:"start,omitempty"`
 	// End of the range
 	// +optional
-	End int `json:"end,omitempty"`
+	End int32 `json:"end,omitempty"`
 }
 
 var (

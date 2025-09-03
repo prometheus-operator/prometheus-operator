@@ -27,7 +27,7 @@ type RelabelConfigApplyConfiguration struct {
 	Separator    *string                  `json:"separator,omitempty"`
 	TargetLabel  *string                  `json:"targetLabel,omitempty"`
 	Regex        *string                  `json:"regex,omitempty"`
-	Modulus      *uint64                  `json:"modulus,omitempty"`
+	Modulus      *int64                   `json:"modulus,omitempty"`
 	Replacement  *string                  `json:"replacement,omitempty"`
 	Action       *string                  `json:"action,omitempty"`
 }
@@ -75,7 +75,7 @@ func (b *RelabelConfigApplyConfiguration) WithRegex(value string) *RelabelConfig
 // WithModulus sets the Modulus field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Modulus field is set to the value of the last call.
-func (b *RelabelConfigApplyConfiguration) WithModulus(value uint64) *RelabelConfigApplyConfiguration {
+func (b *RelabelConfigApplyConfiguration) WithModulus(value int64) *RelabelConfigApplyConfiguration {
 	b.Modulus = &value
 	return b
 }
