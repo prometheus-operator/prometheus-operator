@@ -14,7 +14,6 @@ require (
 	github.com/yeya24/promlinter v0.3.0
 	k8s.io/code-generator v0.34.0
 	sigs.k8s.io/controller-tools v0.18.0
-	sigs.k8s.io/kube-api-linter v0.0.0-20250808120943-48643eb2563d
 )
 
 require (
