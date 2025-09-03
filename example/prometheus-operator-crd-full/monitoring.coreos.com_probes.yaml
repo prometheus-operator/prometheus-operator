@@ -987,6 +987,11 @@ spec:
                       If `ingress` is also defined, `staticConfig` takes precedence.
                       More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
                     properties:
+                      hosts:
+                        description: The list of hosts to probe.
+                        items:
+                          type: string
+                        type: array
                       labels:
                         additionalProperties:
                           type: string
@@ -1084,7 +1089,9 @@ spec:
                           type: object
                         type: array
                       static:
-                        description: The list of hosts to probe.
+                        description: |-
+                          The list of hosts to probe.
+                          Deprecated: Use `hosts` instead.
                         items:
                           type: string
                         type: array
