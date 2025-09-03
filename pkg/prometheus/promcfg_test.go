@@ -2730,7 +2730,6 @@ func TestEndpointOAuth2(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			p := defaultPrometheus()
 
@@ -8719,7 +8718,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						},
 						FollowRedirects:    ptr.To(true),
 						EnableHTTP2:        ptr.To(true),
-						Port:               ptr.To(9100),
+						Port:               ptr.To(int32(9100)),
 						RefreshInterval:    ptr.To(monitoringv1.Duration("30s")),
 						HostNetworkingHost: ptr.To("localhost"),
 						Filters: []monitoringv1alpha1.Filter{
@@ -9278,7 +9277,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 					},
 				},
@@ -9309,7 +9308,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 						LabelSelector:   ptr.To("label_value"),
 					},
@@ -9341,7 +9340,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 						LabelSelector:   ptr.To("label_value"),
 					},

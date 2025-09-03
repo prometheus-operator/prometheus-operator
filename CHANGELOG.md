@@ -1,7 +1,19 @@
-## 0.84.1 / 2025-08-06
+## 0.85.0 / 2025-08-21
 
 * [CHANGE/BUGFIX] Add the `--watch-referenced-objects-in-all-namespaces` CLI argument. When enabled, the operator watches for secrets and configmaps in both workload and configuration resources. It ensures that reconciliation happens when a referenced secret/configmap is updated. #7615
+* [FEATURE] Add `resendDelay` field to the ThanosRuler CRD. #7753
+* [FEATURE] Add `ruleGracePeriod` field to the ThanosRuler CRD. #7750
+* [FEATURE] Add `enableFeatures` field to the ThanosRuler CRD for enabling feature flags. #7754
+* [FEATURE] Add `params` field to the Probe CRD. #7755
+* [FEATURE] Add `hostUsers` field to the Prometheus, PrometheusAgent, Alertmanager and ThanosRuler CRDs. #7768 #7769 #7771
+* [FEATURE] Add `promoteAllResourceAttributes` and `ignoreResourceAttributes` fields to Prometheus and PrometheusAgent CRDs. #7669
+* [FEATURE] Add `-kubelet-sync-period` argument to customize the kubelet controller's synchronization interval. #7762
+* [FEATURE] Add Rocket.Chat receiver to AlertmanagerConfig CRD. #7328
 * [ENHANCEMENT] Add well-known Kubernetes labels to workload objects managed by the operator (StatefulSet and DaemonSet). #7786
+* [ENHANCEMENT] Add workqueue metrics. #7776
+* [ENHANCEMENT] Optimize statefulset informers. #7766
+* [BUGFIX] Use named ports for the managed Alertmanager service. #7517
+* [BUGFIX] Support `send_resolved` field for JIRA and RocketChat receivers in the Alertmanager configuration. #7772
 
 ## 0.84.1 / 2025-08-06
 

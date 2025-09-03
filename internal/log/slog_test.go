@@ -38,7 +38,7 @@ func TestReplaceAttributes(t *testing.T) {
 
 	l.Info("test")
 
-	var m map[string]interface{}
+	var m map[string]any
 	err := json.Unmarshal(buf.Bytes(), &m)
 	require.NoError(t, err)
 

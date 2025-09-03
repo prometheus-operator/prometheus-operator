@@ -884,7 +884,7 @@ type prometheusTargetAPIResponse struct {
 
 type PrometheusQueryResult struct {
 	Metric map[string]string `json:"metric"`
-	Value  []interface{}     `json:"value"`
+	Value  []any             `json:"value"`
 }
 
 type PrometheusQueryData struct {

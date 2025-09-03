@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"testing"
@@ -312,12 +313,8 @@ func TestMergeMetadata(t *testing.T) {
 				svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
 
 				modifiedSvc := service.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedSvc.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedSvc.Annotations[a] = v
-				}
+				maps.Copy(modifiedSvc.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedSvc.Annotations, tc.modifiedAnnotations)
 				_, err := svcClient.Update(context.Background(), modifiedSvc, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -352,12 +349,8 @@ func TestMergeMetadata(t *testing.T) {
 				endpointsClient := fake.NewSimpleClientset(endpoints).CoreV1().Endpoints(namespace)
 
 				modifiedEndpoints := endpoints.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedEndpoints.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedEndpoints.Annotations[a] = v
-				}
+				maps.Copy(modifiedEndpoints.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedEndpoints.Annotations, tc.modifiedAnnotations)
 				_, err := endpointsClient.Update(context.Background(), modifiedEndpoints, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -392,12 +385,8 @@ func TestMergeMetadata(t *testing.T) {
 				ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
 
 				modifiedSset := sset.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedSset.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedSset.Annotations[a] = v
-				}
+				maps.Copy(modifiedSset.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedSset.Annotations, tc.modifiedAnnotations)
 				_, err := ssetClient.Update(context.Background(), modifiedSset, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -432,12 +421,8 @@ func TestMergeMetadata(t *testing.T) {
 				sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets(namespace)
 
 				modifiedSecret := secret.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedSecret.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedSecret.Annotations[a] = v
-				}
+				maps.Copy(modifiedSecret.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedSecret.Annotations, tc.modifiedAnnotations)
 				_, err := sClient.Update(context.Background(), modifiedSecret, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -564,14 +549,14 @@ func TestFinalizerAddPatch(t *testing.T) {
 		name          string
 		finalizers    []string
 		finalizerName string
-		expectedPatch []map[string]interface{}
+		expectedPatch []map[string]any
 		expectEmpty   bool
 	}{
 		{
 			name:          "empty finalizers",
 			finalizers:    []string{},
 			finalizerName: finalizerName,
-			expectedPatch: []map[string]interface{}{
+			expectedPatch: []map[string]any{
 				{"op": "add", "path": "/metadata/finalizers", "value": []string{finalizerName}},
 			},
 		},
@@ -579,7 +564,7 @@ func TestFinalizerAddPatch(t *testing.T) {
 			name:          "finalizer not present",
 			finalizers:    []string{"a", "b"},
 			finalizerName: finalizerName,
-			expectedPatch: []map[string]interface{}{
+			expectedPatch: []map[string]any{
 				{"op": "add", "path": "/metadata/finalizers/-", "value": finalizerName},
 			},
 		},
@@ -643,7 +628,7 @@ func TestFinalizerDeletePatch(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.expectPatch {
-				expected := []map[string]interface{}{
+				expected := []map[string]any{
 					{"op": "remove", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex)},
 				}
 				expectedBytes, err := json.Marshal(expected)

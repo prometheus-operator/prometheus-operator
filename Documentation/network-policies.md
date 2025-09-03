@@ -13,7 +13,7 @@ To keep your cluster safer, it's strongly recommended to enable network policies
 This example will close all inbound communication on the namespace monitoring, and allow only necessary traffic.
 **This example has only been tested with the calico provider.**
 
-First, follow the instructions to [add Calico to an existing Kubernetes cluster](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/).
+First, follow the instructions to [add Calico to an existing Kubernetes cluster](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart)
 
 Next, use the following configuration to deny all the ingress (inbound) traffic.
 

@@ -18,6 +18,7 @@ import (
 	"cmp"
 	"fmt"
 	"log/slog"
+	"maps"
 	"math"
 	"net/url"
 	"path"
@@ -224,7 +225,7 @@ func (cg *ConfigGenerator) Version() semver.Version {
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
-func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
+func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 	return &ConfigGenerator{
 		logger:                     cg.logger.With(keyvals...),
 		version:                    cg.version,
@@ -298,7 +299,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
 // the updated slice.
-func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v any) yaml.MapSlice {
 	if cg.notCompatible {
 		cg.Warn(k)
 		return m
@@ -1187,13 +1188,9 @@ func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]str
 
 	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata
 	if podMetadata != nil {
-		for k, v := range podMetadata.Labels {
-			podLabels[k] = v
-		}
+		maps.Copy(podLabels, podMetadata.Labels)
 
-		for k, v := range podMetadata.Annotations {
-			podAnnotations[k] = v
-		}
+		maps.Copy(podAnnotations, podMetadata.Annotations)
 	}
 
 	return podAnnotations, podLabels
@@ -2487,7 +2484,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				otherConfigItems = append(otherConfigItems, mapItem)
 				continue
 			}
-			values, ok := mapItem.Value.([]interface{})
+			values, ok := mapItem.Value.([]any)
 			if !ok {
 				return nil, fmt.Errorf("error parsing relabel configs: %w", err)
 			}

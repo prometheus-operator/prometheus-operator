@@ -23,7 +23,7 @@ import (
 type RefTracker map[string]struct{}
 
 // insert records the object in the tracker.
-func (r RefTracker) insert(obj interface{}) {
+func (r RefTracker) insert(obj any) {
 	key, err := assetKeyFunc(obj)
 	if err != nil {
 		return

@@ -577,7 +577,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing Prometheus objects.
-	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		c.RefreshStatusFor(obj.(*monitoringv1.Prometheus))
 	})
 
@@ -593,7 +593,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := c.promInfs.ListAll(labels.Everything(), func(o any) {
 		p := o.(*monitoringv1.Prometheus)
 		processFn(p, p.Status.Conditions)
 	}); err != nil {
@@ -633,7 +633,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
@@ -727,7 +727,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
+func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -744,7 +744,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 
 	// Check for Prometheus instances selecting ServiceMonitors, PodMonitors,
 	// Probes and PrometheusRules in the namespace.
-	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1.Prometheus)
 
 		for name, selector := range map[string]*metav1.LabelSelector{
@@ -1001,7 +1001,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj interface{}) {
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
@@ -1047,6 +1047,26 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
 			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
 		}
+	}
+
+	err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
+		k, ok := c.accessor.MetaNamespaceKey(obj)
+		if !ok {
+			return
+		}
+		_, ok = resources.sMons[k]
+		if ok {
+			return
+		}
+		s := obj.(*monitoringv1.ServiceMonitor)
+		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
+			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
+				logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", k)
+			}
+		}
+	})
+	if err != nil {
+		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
 	}
 }
 
@@ -1401,7 +1421,7 @@ func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.A
 		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
 	}
 
-	for k, v := range map[string]interface{}{
+	for k, v := range map[string]any{
 		"basicAuth":     am.BasicAuth,
 		"authorization": am.Authorization,
 		"sigv4":         am.Sigv4,

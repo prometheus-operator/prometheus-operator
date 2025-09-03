@@ -2447,6 +2447,7 @@ spec:
                     hostNetworkingHost:
                       description: The host to use if the container is in host networking
                         mode.
+                      minLength: 1
                       type: string
                     matchFirstNetwork:
                       description: |-
@@ -2792,6 +2793,9 @@ spec:
                       type: object
                     port:
                       description: The port to scrape metrics from.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     proxyConnectHeader:
                       additionalProperties:
@@ -4566,6 +4570,7 @@ spec:
                     server:
                       description: The URL to connect to the Eureka server.
                       minLength: 1
+                      pattern: ^http(s)?://.+$
                       type: string
                     tlsConfig:
                       description: TLS configuration applying to the target HTTP endpoint.
@@ -5290,6 +5295,9 @@ spec:
                       type: object
                     port:
                       description: The port to scrape metrics from.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     proxyConnectHeader:
                       additionalProperties:
@@ -11136,15 +11144,11 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     service:
-                      allOf:
-                      - enum:
-                        - VPS
-                        - DedicatedServer
-                      - enum:
-                        - VPS
-                        - DedicatedServer
                       description: Service of the targets to retrieve. Must be `VPS`
                         or `DedicatedServer`.
+                      enum:
+                      - VPS
+                      - DedicatedServer
                       type: string
                   required:
                   - applicationKey

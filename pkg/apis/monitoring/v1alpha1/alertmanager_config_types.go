@@ -47,9 +47,10 @@ const (
 // AlertmanagerConfig configures the Prometheus Alertmanager,
 // specifying how alerts should be grouped, inhibited and notified to external systems.
 type AlertmanagerConfig struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
+	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
 }
 
@@ -126,6 +127,7 @@ type Route struct {
 	// +optional
 	Continue bool `json:"continue,omitempty"`
 	// Child routes.
+	// +optional
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
 	// Note: this comment applies to the field definition above but appears
 	// below otherwise it gets included in the generated manifest.
@@ -161,38 +163,56 @@ func (r *Route) ChildRoutes() ([]Route, error) {
 type Receiver struct {
 	// Name of the receiver. Must be unique across all items from the list.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
 	// List of OpsGenie configurations.
+	// +optional
 	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
 	// List of PagerDuty configurations.
+	// +optional
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// List of Discord configurations.
 	// +optional
 	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// List of Slack configurations.
+	// +optional
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
+	// +optional
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// List of WeChat configurations.
+	// +optional
 	WeChatConfigs []WeChatConfig `json:"wechatConfigs,omitempty"`
 	// List of Email configurations.
+	// +optional
 	EmailConfigs []EmailConfig `json:"emailConfigs,omitempty"`
 	// List of VictorOps configurations.
+	// +optional
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
 	// List of Pushover configurations.
+	// +optional
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
 	// List of SNS configurations
+	// +optional
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// List of Telegram configurations.
+	// +optional
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 	// List of Webex configurations.
+	// +optional
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
+	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 	// List of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
+	// +optional
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
+	// List of RocketChat configurations.
+	// It requires Alertmanager >= 0.28.0.
+	// +optional
+	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -391,8 +411,10 @@ func (sc *SlackConfig) Validate() error {
 // https://api.slack.com/docs/message-buttons for more information.
 type SlackAction struct {
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Type string `json:"type"`
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Text string `json:"text"`
 	// +optional
 	URL string `json:"url,omitempty"`
@@ -436,6 +458,7 @@ func (sa *SlackAction) Validate() error {
 // for more information.
 type SlackConfirmationField struct {
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Text string `json:"text"`
 	// +optional
 	Title string `json:"title,omitempty"`
@@ -459,8 +482,10 @@ func (scf *SlackConfirmationField) Validate() error {
 // See https://api.slack.com/docs/message-attachments#fields for more information.
 type SlackField struct {
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Title string `json:"title"`
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Value string `json:"value"`
 	// +optional
 	Short *bool `json:"short,omitempty"`
@@ -587,6 +612,7 @@ type OpsGenieConfigResponder struct {
 	Username string `json:"username,omitempty"`
 	// Type of responder.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Type string `json:"type"`
 }
 
@@ -705,6 +731,7 @@ type WeChatConfig struct {
 	// +optional
 	ToTag string `json:"toTag,omitempty"`
 	// API request data as defined by the WeChat API.
+	// +optional
 	Message string `json:"message,omitempty"`
 	// +optional
 	MessageType string `json:"messageType,omitempty"`
@@ -736,16 +763,19 @@ type EmailConfig struct {
 	// The secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// +optional
 	AuthPassword *v1.SecretKeySelector `json:"authPassword,omitempty"`
 	// The secret's key that contains the CRAM-MD5 secret.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// +optional
 	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
 	// The identity to use for authentication.
 	// +optional
 	AuthIdentity string `json:"authIdentity,omitempty"`
 	// Further headers email header key/value pairs. Overrides any headers
 	// previously set by the notification implementation.
+	// +optional
 	Headers []KeyValue `json:"headers,omitempty"`
 	// The HTML body of the email notification.
 	// +optional
@@ -924,7 +954,7 @@ type TelegramConfig struct {
 	//
 	// Either `botToken` or `botTokenFile` is required.
 	//
-	//+optional
+	// +optional
 	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
 	// File to read the Telegram bot token from. It is mutually exclusive with `botToken`.
 	// Either `botToken` or `botTokenFile` is required.
@@ -962,7 +992,7 @@ type MSTeamsConfig struct {
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// MSTeams webhook URL.
-	// +kubebuilder:validation:Required
+	// +required
 	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
 	// Message title template.
 	// +optional
@@ -1002,19 +1032,120 @@ type MSTeamsV2Config struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
+// RocketChatConfig configures notifications via RocketChat.
+// It requires Alertmanager >= 0.28.0.
+type RocketChatConfig struct {
+	// Whether to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The API URL for RocketChat.
+	// Defaults to https://open.rocket.chat/ if not specified.
+	// +optional
+	APIURL *URL `json:"apiURL,omitempty"`
+	// The channel to send alerts to.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Channel *string `json:"channel,omitempty"`
+	// The sender token.
+	// +required
+	Token v1.SecretKeySelector `json:"token,omitempty"`
+	// The sender token ID.
+	// +required
+	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
+	// The message color.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Color *string `json:"color,omitempty"`
+	// If provided, the avatar will be displayed as an emoji.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Emoji *string `json:"emoji,omitempty"`
+	// Icon URL for the message.
+	// +optional
+	IconURL *URL `json:"iconURL,omitempty"`
+	// The message text to send, it is optional because of attachments.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// The message title.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// The title link for the message.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	TitleLink *string `json:"titleLink,omitempty"`
+	// Additional fields for the message.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
+	// Whether to use short fields.
+	// +optional
+	ShortFields *bool `json:"shortFields,omitempty"`
+	// Image URL for the message.
+	// +optional
+	ImageURL *URL `json:"imageURL,omitempty"`
+	// Thumbnail URL for the message.
+	// +optional
+	ThumbURL *URL `json:"thumbURL,omitempty"`
+	// Whether to enable link names.
+	// +optional
+	LinkNames *bool `json:"linkNames,omitempty"`
+	// Actions to include in the message.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// RocketChatFieldConfig defines additional fields for RocketChat messages.
+type RocketChatFieldConfig struct {
+	// The title of this field.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// The value of this field, displayed underneath the title value.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Value *string `json:"value,omitempty"`
+	// Whether this field should be a short field.
+	// +optional
+	Short *bool `json:"short,omitempty"`
+}
+
+// RocketChatActionConfig defines actions for RocketChat messages.
+type RocketChatActionConfig struct {
+	// The button text.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Text *string `json:"text,omitempty"`
+	// The URL the button links to.
+	// +optional
+	URL *URL `json:"url,omitempty"`
+	// The message to send when the button is clicked.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Msg *string `json:"msg,omitempty"`
+}
+
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
 // alerts are already firing.
 // See https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule
 type InhibitRule struct {
 	// Matchers that have to be fulfilled in the alerts to be muted. The
 	// operator enforces that the alert matches the resource's namespace.
+	// +optional
 	TargetMatch []Matcher `json:"targetMatch,omitempty"`
 	// Matchers for which one or more alerts have to exist for the inhibition
 	// to take effect. The operator enforces that the alert matches the
 	// resource's namespace.
+	// +optional
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
+	// +optional
 	Equal []string `json:"equal,omitempty"`
 }
 
@@ -1022,8 +1153,10 @@ type InhibitRule struct {
 type KeyValue struct {
 	// Key of the tuple.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Key string `json:"key"`
 	// Value of the tuple.
+	// +required
 	Value string `json:"value"`
 }
 
@@ -1031,6 +1164,7 @@ type KeyValue struct {
 type Matcher struct {
 	// Label to match.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
 	// Label value to match.
 	// +optional
@@ -1121,9 +1255,10 @@ func openMetricsEscape(s string) string {
 // MuteTimeInterval specifies the periods in time when notifications will be muted
 type MuteTimeInterval struct {
 	// Name of the time interval
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name,omitempty"`
 	// TimeIntervals is a list of TimeInterval
+	// +optional
 	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
 }
 
@@ -1153,8 +1288,10 @@ type Time string
 // TimeRange defines a start and end time in 24hr format
 type TimeRange struct {
 	// StartTime is the start time in 24hr format.
+	// +optional
 	StartTime Time `json:"startTime,omitempty"`
 	// EndTime is the end time in 24hr format.
+	// +optional
 	EndTime Time `json:"endTime,omitempty"`
 }
 
@@ -1168,10 +1305,12 @@ type DayOfMonthRange struct {
 	// Start of the inclusive range
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
+	// +optional
 	Start int `json:"start,omitempty"`
 	// End of the inclusive range
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
+	// +optional
 	End int `json:"end,omitempty"`
 }
 

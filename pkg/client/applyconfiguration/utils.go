@@ -26,7 +26,7 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	testing "k8s.io/client-go/testing"
+	managedfields "k8s.io/apimachinery/pkg/util/managedfields"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
@@ -328,6 +328,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PushoverConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Receiver"):
 		return &monitoringv1alpha1.ReceiverApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatActionConfig"):
+		return &monitoringv1alpha1.RocketChatActionConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatConfig"):
+		return &monitoringv1alpha1.RocketChatConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatFieldConfig"):
+		return &monitoringv1alpha1.RocketChatFieldConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1alpha1.RouteApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScalewaySDConfig"):
@@ -400,6 +406,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.PushoverConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Receiver"):
 		return &monitoringv1beta1.ReceiverApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("RocketChatActionConfig"):
+		return &monitoringv1beta1.RocketChatActionConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("RocketChatConfig"):
+		return &monitoringv1beta1.RocketChatConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("RocketChatFieldConfig"):
+		return &monitoringv1beta1.RocketChatFieldConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1beta1.RouteApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("SecretKeySelector"):
@@ -435,6 +447,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 	return nil
 }
 
-func NewTypeConverter(scheme *runtime.Scheme) *testing.TypeConverter {
-	return &testing.TypeConverter{Scheme: scheme, TypeResolver: internal.Parser()}
+func NewTypeConverter(scheme *runtime.Scheme) managedfields.TypeConverter {
+	return managedfields.NewSchemeTypeConverter(scheme, internal.Parser())
 }

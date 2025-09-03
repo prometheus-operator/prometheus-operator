@@ -332,13 +332,13 @@ func testTRAlertmanagerConfig(t *testing.T) {
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			configKey: []byte(fmt.Sprintf(`
+			configKey: fmt.Appendf(nil, `
 alertmanagers:
 - scheme: http
   api_version: v2
   static_configs:
     - dnssrv+_web._tcp.%s.%s.svc.cluster.local
-`, amSVC.Name, ns)),
+`, amSVC.Name, ns),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trAmConfigSecret, metav1.CreateOptions{})
@@ -406,11 +406,11 @@ func testTRQueryConfig(t *testing.T) {
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			configKey: []byte(fmt.Sprintf(`
+			configKey: fmt.Appendf(nil, `
 - scheme: http
   static_configs:
   - %s.%s.svc:%d
-`, querierSvc.Name, ns, querierSvc.Spec.Ports[0].Port)),
+`, querierSvc.Name, ns, querierSvc.Spec.Ports[0].Port),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trQueryConfSecret, metav1.CreateOptions{})
@@ -589,11 +589,11 @@ func testThanosRulerStateless(t *testing.T) {
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			configKey: []byte(fmt.Sprintf(`
+			configKey: fmt.Appendf(nil, `
 - scheme: http
   static_configs:
   - %s.%s.svc:%d
-`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
+`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, trQueryConfSecret, metav1.CreateOptions{})
