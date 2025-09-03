@@ -311,9 +311,12 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithStorage(value *v1.StorageSpe
 // WithVolumes adds the given value to the Volumes field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Volumes field.
-func (b *PrometheusAgentSpecApplyConfiguration) WithVolumes(values ...corev1.Volume) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithVolumes(values ...*v1.EmbeddedVolumeApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
 	for i := range values {
-		b.CommonPrometheusFieldsApplyConfiguration.Volumes = append(b.CommonPrometheusFieldsApplyConfiguration.Volumes, values[i])
+		if values[i] == nil {
+			panic("nil value passed to WithVolumes")
+		}
+		b.CommonPrometheusFieldsApplyConfiguration.Volumes = append(b.CommonPrometheusFieldsApplyConfiguration.Volumes, *values[i])
 	}
 	return b
 }

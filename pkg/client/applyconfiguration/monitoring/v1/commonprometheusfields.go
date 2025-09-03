@@ -57,7 +57,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
 	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
 	Storage                              *StorageSpecApplyConfiguration                          `json:"storage,omitempty"`
-	Volumes                              []corev1.Volume                                         `json:"volumes,omitempty"`
+	Volumes                              []EmbeddedVolumeApplyConfiguration                      `json:"volumes,omitempty"`
 	VolumeMounts                         []corev1.VolumeMount                                    `json:"volumeMounts,omitempty"`
 	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
 	Web                                  *PrometheusWebSpecApplyConfiguration                    `json:"web,omitempty"`
@@ -397,9 +397,12 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithStorage(value *StorageSpe
 // WithVolumes adds the given value to the Volumes field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Volumes field.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithVolumes(values ...corev1.Volume) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithVolumes(values ...*EmbeddedVolumeApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	for i := range values {
-		b.Volumes = append(b.Volumes, values[i])
+		if values[i] == nil {
+			panic("nil value passed to WithVolumes")
+		}
+		b.Volumes = append(b.Volumes, *values[i])
 	}
 	return b
 }
