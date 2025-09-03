@@ -294,13 +294,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: fullPath})
 	}
 
-	//	trVolumes = append(trVolumes, tlsSecrets.Volume("thanos-ruler-config"))
-	//	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
-	//		Name:      "thanos-ruler-config",
-	//		ReadOnly:  true,
-	//		MountPath: tlsAssetsDir,
-	//	})
-
 	trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
 	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
 		Name:      "tls-assets",
