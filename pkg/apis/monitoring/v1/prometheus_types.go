@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -2357,11 +2358,11 @@ func (c *SafeAuthorization) Validate() error {
 	}
 
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
-		return &AuthorizationValidationError{`Authorization type cannot be set to "basic", use "basic_auth" instead`}
+		return errors.New("authorization type cannot be set to \"basic\", use \"basicAuth\" instead")
 	}
 
 	if c.Credentials == nil {
-		return &AuthorizationValidationError{"Authorization credentials are required"}
+		return errors.New("authorization credentials are required")
 	}
 
 	return nil
@@ -2383,26 +2384,14 @@ func (c *Authorization) Validate() error {
 	}
 
 	if c.Credentials != nil && c.CredentialsFile != "" {
-		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
+		return errors.New("authorization can not specify both \"credentials\" and \"credentialsFile\"")
 	}
 
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
-		return &AuthorizationValidationError{"Authorization type cannot be set to \"basic\", use \"basic_auth\" instead"}
+		return errors.New("authorization type cannot be set to \"basic\", use \"basicAuth\" instead")
 	}
 
 	return nil
-}
-
-// AuthorizationValidationError is returned by Authorization.Validate()
-// on semantically invalid configurations.
-// +k8s:openapi-gen=false
-type AuthorizationValidationError struct {
-	// +optional
-	err string
-}
-
-func (e *AuthorizationValidationError) Error() string {
-	return e.err
 }
 
 type ScrapeClass struct {

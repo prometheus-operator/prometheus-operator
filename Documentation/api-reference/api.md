@@ -7527,33 +7527,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.AuthorizationValidationError">AuthorizationValidationError
-</h3>
-<div>
-<p>AuthorizationValidationError is returned by Authorization.Validate()
-on semantically invalid configurations.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.AzureAD">AzureAD
 </h3>
 <p>
@@ -11818,31 +11791,6 @@ proxies during CONNECT requests.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.OAuth2ValidationError">OAuth2ValidationError
-</h3>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.OTLPConfig">OTLPConfig
 </h3>
 <p>
@@ -13415,33 +13363,6 @@ ProbeTargetIngress
 <p>ingress defines the Ingress objects to probe and the relabeling
 configuration.
 If <code>staticConfig</code> is also defined, <code>staticConfig</code> takes precedence.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.ProbeTargetsValidationError">ProbeTargetsValidationError
-</h3>
-<div>
-<p>ProbeTargetsValidationError is returned by ProbeTargets.Validate()
-on semantically invalid configurations.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
 </td>
 </tr>
 </tbody>
