@@ -1351,22 +1351,22 @@ type PrometheusTracingConfig struct {
 type PrometheusStatus struct {
 	// Represents whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
-	// +required
+	// +optional
 	Paused bool `json:"paused"`
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
-	// +required
+	// +optional
 	Replicas int32 `json:"replicas"`
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// that have the desired version spec.
-	// +required
+	// +optional
 	UpdatedReplicas int32 `json:"updatedReplicas"`
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Prometheus deployment.
-	// +required
+	// +optional
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this Prometheus deployment.
-	// +required
+	// +optional
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The current state of the Prometheus deployment.
 	// +listType=map
