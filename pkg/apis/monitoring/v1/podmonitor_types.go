@@ -40,10 +40,10 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
 type PodMonitor struct {
-	// TypeMeta is the embedded type metadata
+	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// metadata is the embedded object metadata
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// spec of desired Pod selection for target discovery by Prometheus.
@@ -185,11 +185,10 @@ type PodMonitorSpec struct {
 // PodMonitorList is a list of PodMonitors.
 // +k8s:openapi-gen=true
 type PodMonitorList struct {
-	// TypeMeta is the embedded type metadata
+	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// metadata standard list
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of PodMonitors
 	Items []PodMonitor `json:"items"`

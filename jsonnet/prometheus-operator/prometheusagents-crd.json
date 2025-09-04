@@ -84,7 +84,7 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of the desired behavior of the Prometheus agent. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "spec defines the specification of the desired behavior of the Prometheus agent. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "additionalArgs": {
                     "description": "additionalArgs allows setting additional arguments for the 'prometheus' container.\n\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nPrometheus container which may cause issues if they are invalid or not supported\nby the given Prometheus version.\n\nIn case of an argument conflict (e.g. an argument which is already set by the\noperator itself) or when providing an invalid argument, the reconciliation will\nfail and an error will be logged.",
@@ -6646,7 +6646,7 @@
                             "type": "string"
                           },
                           "metadata": {
-                            "description": "EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
+                            "description": "metadata defines EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
                             "properties": {
                               "annotations": {
                                 "additionalProperties": {
@@ -6670,7 +6670,7 @@
                             "type": "object"
                           },
                           "spec": {
-                            "description": "Defines the desired characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+                            "description": "spec defines the specification of the  characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the desired access modes the volume should have.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -6832,7 +6832,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "Deprecated: this field is never set.",
+                            "description": "status is eprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -9125,7 +9125,7 @@
                 ]
               },
               "status": {
-                "description": "Most recent observed status of the Prometheus cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "status defines the most recent observed status of the Prometheus cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "availableReplicas": {
                     "description": "availableReplicas defines the total number of available pods (ready for at least minReadySeconds)\ntargeted by this Prometheus deployment.",

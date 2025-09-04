@@ -115,9 +115,12 @@ type K8SSelectorConfig struct {
 // ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across
 // multiple namespaces into the Prometheus configuration.
 type ScrapeConfig struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// spec defines the specification of ScrapeConfigSpec.
 	// +required
 	Spec ScrapeConfigSpec `json:"spec"`
 }
@@ -130,9 +133,9 @@ func (l *ScrapeConfig) DeepCopyObject() runtime.Object {
 // ScrapeConfigList is a list of ScrapeConfigs.
 // +k8s:openapi-gen=true
 type ScrapeConfigList struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ScrapeConfigs
@@ -360,12 +363,12 @@ type ScrapeConfigSpec struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
 // +k8s:openapi-gen=true
 type StaticConfig struct {
-	// List of targets for this static configuration.
+	// targets defines the list of targets for this static configuration.
 	// +kubebuilder:validation:MinItems:=1
 	// +listType=set
 	// +required
 	Targets []Target `json:"targets"`
-	// Labels assigned to all metrics scraped from the targets.
+	// labels defines labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`

@@ -74,12 +74,12 @@ spec:
             type: object
           spec:
             description: |-
-              Specification of the desired behavior of the ThanosRuler cluster. More info:
+              spec defines the specification of the desired behavior of the ThanosRuler cluster. More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
               additionalArgs:
                 description: |-
-                  AdditionalArgs allows setting additional arguments for the ThanosRuler container.
+                  additionalArgs defines how to add additional arguments for the ThanosRuler container.
                   It is intended for e.g. activating hidden flags which are not supported by
                   the dedicated configuration options yet. The arguments are passed as-is to the
                   ThanosRuler container which may cause issues if they are invalid or not supported
@@ -103,7 +103,8 @@ spec:
                   type: object
                 type: array
               affinity:
-                description: If specified, the pod's scheduling constraints.
+                description: affinity defines when specified, the pod's scheduling
+                  constraints.
                 properties:
                   nodeAffinity:
                     description: Describes node affinity scheduling rules for the
@@ -1016,7 +1017,7 @@ spec:
                 type: object
               alertDropLabels:
                 description: |-
-                  Configures the label names which should be dropped in Thanos Ruler
+                  alertDropLabels defines the label names which should be dropped in Thanos Ruler
                   alerts.
 
                   The replica label `thanos_ruler_replica` will always be dropped from the alerts.
@@ -1025,13 +1026,13 @@ spec:
                 type: array
               alertQueryUrl:
                 description: |-
-                  The external Query URL the Thanos Ruler will set in the 'Source' field
+                  TalertQueryUrl defines how Thanos Ruler will set in the 'Source' field
                   of all alerts.
                   Maps to the '--alert.query-url' CLI arg.
                 type: string
               alertRelabelConfigFile:
                 description: |-
-                  Configures the path to the alert relabeling configuration file.
+                  alertRelabelConfigFile defines the path to the alert relabeling configuration file.
 
                   Alert relabel configuration must have the form as specified in the
                   official Prometheus documentation:
@@ -1043,7 +1044,7 @@ spec:
                 type: string
               alertRelabelConfigs:
                 description: |-
-                  Configures alert relabeling in Thanos Ruler.
+                  alertRelabelConfigs defines the alert relabeling in Thanos Ruler.
 
                   Alert relabel configuration must have the form as specified in the
                   official Prometheus documentation:
@@ -1075,7 +1076,7 @@ spec:
                 x-kubernetes-map-type: atomic
               alertmanagersConfig:
                 description: |-
-                  Configures the list of Alertmanager endpoints to send alerts to.
+                  alertmanagersConfig defines the list of Alertmanager endpoints to send alerts to.
 
                   The configuration format is defined at https://thanos.io/tip/components/rule.md/#alertmanager.
 
@@ -1107,7 +1108,7 @@ spec:
                 x-kubernetes-map-type: atomic
               alertmanagersUrl:
                 description: |-
-                  Configures the list of Alertmanager endpoints to send alerts to.
+                  alertmanagersUrl defines the list of Alertmanager endpoints to send alerts to.
 
                   For Thanos >= v0.10.0, it is recommended to use `alertmanagersConfig` instead.
 
@@ -1117,7 +1118,7 @@ spec:
                 type: array
               containers:
                 description: |-
-                  Containers allows injecting additional containers or modifying operator generated
+                  containers allows injecting additional containers or modifying operator generated
                   containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
                   to change the behavior of an operator generated container. Containers described here modify
                   an operator generated container if they share the same name and modifications are done via a
@@ -2644,7 +2645,8 @@ spec:
                   type: object
                 type: array
               dnsConfig:
-                description: Defines the DNS configuration for the pods.
+                description: dnsConfig defines Defines the DNS configuration for the
+                  pods.
                 properties:
                   nameservers:
                     description: |-
@@ -2690,7 +2692,7 @@ spec:
                     x-kubernetes-list-type: set
                 type: object
               dnsPolicy:
-                description: Defines the DNS policy for the pods.
+                description: dnsPolicy defines the DNS policy for the pods.
                 enum:
                 - ClusterFirstWithHostNet
                 - ClusterFirst
@@ -2699,7 +2701,7 @@ spec:
                 type: string
               enableFeatures:
                 description: |-
-                  Enable access to Thanos Ruler feature flags. By default, no features are enabled.
+                  enableFeatures defines how to setup Thanos Ruler feature flags. By default, no features are enabled.
 
                   Enabling features which are disabled by default is entirely outside the
                   scope of what the maintainers will support and by doing so, you accept
@@ -2714,23 +2716,24 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               enableServiceLinks:
-                description: Indicates whether information about services should be
-                  injected into pod's environment variables
+                description: enableServiceLinks defines whether information about
+                  services should be injected into pod's environment variables
                 type: boolean
               enforcedNamespaceLabel:
                 description: |-
-                  EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
+                  enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
                   and metric that is user created. The label value will always be the namespace of the object that is
                   being created.
                 type: string
               evaluationInterval:
                 default: 15s
-                description: Interval between consecutive evaluations.
+                description: evaluationInterval defines the interval between consecutive
+                  evaluations.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               excludedFromEnforcement:
                 description: |-
-                  List of references to PrometheusRule objects
+                  excludedFromEnforcement defines the list of references to PrometheusRule objects
                   to be excluded from enforcing a namespace label of origin.
                   Applies only if enforcedNamespaceLabel set to true.
                 items:
@@ -2770,13 +2773,13 @@ spec:
                 type: array
               externalPrefix:
                 description: |-
-                  The external URL the Thanos Ruler instances will be available under. This is
+                  externalPrefix defines the Thanos Ruler instances will be available under. This is
                   necessary to generate correct URLs. This is necessary if Thanos Ruler is not
                   served from root of a DNS name.
                 type: string
               grpcServerTlsConfig:
                 description: |-
-                  GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
+                  grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
                   recorded rule data.
                   Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
                   Maps to the '--grpc-server-tls-*' CLI args.
@@ -2950,7 +2953,7 @@ spec:
                     type: string
                 type: object
               hostAliases:
-                description: Pods' hostAliases configuration
+                description: hostAliases defines pods' hostAliases configuration
                 items:
                   description: |-
                     HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
@@ -2974,7 +2977,7 @@ spec:
                 x-kubernetes-list-type: map
               hostUsers:
                 description: |-
-                  HostUsers supports the user space in Kubernetes.
+                  hostUsers supports the user space in Kubernetes.
 
                   More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
 
@@ -2982,11 +2985,11 @@ spec:
                   Starting Kubernetes 1.33, the feature is enabled by default.
                 type: boolean
               image:
-                description: Thanos container image URL.
+                description: image defines Thanos container image URL.
                 type: string
               imagePullPolicy:
                 description: |-
-                  Image pull policy for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.
+                  imagePullPolicy defines for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.
                   See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
                 enum:
                 - ""
@@ -2996,7 +2999,7 @@ spec:
                 type: string
               imagePullSecrets:
                 description: |-
-                  An optional list of references to secrets in the same namespace
+                  imagePullSecrets defines an optional list of references to secrets in the same namespace
                   to use for pulling thanos images from registries
                   see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
                 items:
@@ -3018,7 +3021,7 @@ spec:
                 type: array
               initContainers:
                 description: |-
-                  InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
+                  initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
                   fetch secrets for injection into the ThanosRuler configuration from external sources. Any
                   errors during the execution of an initContainer will lead to a restart of the Pod.
                   More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
@@ -4548,25 +4551,25 @@ spec:
                 additionalProperties:
                   type: string
                 description: |-
-                  Configures the external label pairs of the ThanosRuler resource.
+                  labels defines the external label pairs of the ThanosRuler resource.
 
                   A default replica label `thanos_ruler_replica` will be always added as a
                   label with the value of the pod's name.
                 type: object
               listenLocal:
                 description: |-
-                  ListenLocal makes the Thanos ruler listen on loopback, so that it
+                  listenLocal defines the Thanos ruler listen on loopback, so that it
                   does not bind against the Pod IP.
                 type: boolean
               logFormat:
-                description: Log format for ThanosRuler to be configured with.
+                description: logFormat for ThanosRuler to be configured with.
                 enum:
                 - ""
                 - logfmt
                 - json
                 type: string
               logLevel:
-                description: Log level for ThanosRuler to be configured with.
+                description: logLevel for ThanosRuler to be configured with.
                 enum:
                 - ""
                 - debug
@@ -4576,7 +4579,7 @@ spec:
                 type: string
               minReadySeconds:
                 description: |-
-                  Minimum number of seconds for which a newly created pod should be ready
+                  minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
                   without any of its container crashing for it to be considered available.
 
                   If unset, pods will be considered available as soon as they are ready.
@@ -4586,11 +4589,12 @@ spec:
               nodeSelector:
                 additionalProperties:
                   type: string
-                description: Define which Nodes the Pods are scheduled on.
+                description: nodeSelector defines which Nodes the Pods are scheduled
+                  on.
                 type: object
               objectStorageConfig:
                 description: |-
-                  Configures object storage.
+                  objectStorageConfig
 
                   The configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage
 
@@ -4620,7 +4624,7 @@ spec:
                 x-kubernetes-map-type: atomic
               objectStorageConfigFile:
                 description: |-
-                  Configures the path of the object storage configuration file.
+                  objectStorageConfigFile defines the path of the object storage configuration file.
 
                   The configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage
 
@@ -4630,12 +4634,12 @@ spec:
                 type: string
               paused:
                 description: |-
-                  When a ThanosRuler deployment is paused, no actions except for deletion
+                  paused defines when a ThanosRuler deployment is paused, no actions except for deletion
                   will be performed on the underlying objects.
                 type: boolean
               podMetadata:
                 description: |-
-                  PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.
+                  podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.
 
                   The following items are reserved and cannot be overridden:
                   * "app.kubernetes.io/name" label, set to "thanos-ruler".
@@ -4675,15 +4679,16 @@ spec:
               portName:
                 default: web
                 description: |-
-                  Port name used for the pods and governing service.
+                  portName defines the port name used for the pods and governing service.
                   Defaults to `web`.
                 type: string
               priorityClassName:
-                description: Priority class assigned to the Pods
+                description: priorityClassName defines the priority class assigned
+                  to the Pods
                 type: string
               prometheusRulesExcludedFromEnforce:
                 description: |-
-                  PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing
+                  prometheusRulesExcludedFromEnforce defines a list of Prometheus rules to be excluded from enforcing
                   of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
                   Make sure both ruleNamespace and ruleName are set for each pair
                   Deprecated: use excludedFromEnforcement instead.
@@ -4706,7 +4711,7 @@ spec:
                 type: array
               queryConfig:
                 description: |-
-                  Configures the list of Thanos Query endpoints from which to query metrics.
+                  queryConfig defines the list of Thanos Query endpoints from which to query metrics.
 
                   The configuration format is defined at https://thanos.io/tip/components/rule.md/#query-api
 
@@ -4738,7 +4743,7 @@ spec:
                 x-kubernetes-map-type: atomic
               queryEndpoints:
                 description: |-
-                  Configures the list of Thanos Query endpoints from which to query metrics.
+                  queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.
 
                   For Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.
 
@@ -4748,7 +4753,7 @@ spec:
                 type: array
               remoteWrite:
                 description: |-
-                  Defines the list of remote write configurations.
+                  specification defines the list of remote write configurations.
 
                   When the list isn't empty, the ruler is configured with stateless mode.
 
@@ -5848,17 +5853,18 @@ spec:
                   type: object
                 type: array
               replicas:
-                description: Number of thanos ruler instances to deploy.
+                description: replicas defines the number of thanos ruler instances
+                  to deploy.
                 format: int32
                 type: integer
               resendDelay:
-                description: Minimum amount of time to wait before resending an alert
-                  to Alertmanager.
+                description: resendDelay defines the minimum amount of time to wait
+                  before resending an alert to Alertmanager.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               resources:
                 description: |-
-                  Resources defines the resource requirements for single Pods.
+                  resources defines the resource requirements for single Pods.
                   If not provided, no requests/limits will be set
                 properties:
                   claims:
@@ -5920,7 +5926,7 @@ spec:
               retention:
                 default: 24h
                 description: |-
-                  Time duration ThanosRuler shall retain data for. Default is '24h', and
+                  retention defines the time duration ThanosRuler shall retain data for. Default is '24h', and
                   must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds
                   seconds minutes hours days weeks years).
 
@@ -5934,21 +5940,21 @@ spec:
                 type: string
               ruleConcurrentEval:
                 description: |-
-                  How many rules can be evaluated concurrently.
+                  ruleConcurrentEval defines how many rules can be evaluated concurrently.
                   It requires Thanos >= v0.37.0.
                 format: int32
                 minimum: 1
                 type: integer
               ruleGracePeriod:
                 description: |-
-                  Minimum duration between alert and restored "for" state.
+                  ruleGracePeriod defines the minimum duration between alert and restored "for" state.
                   This is maintained only for alerts with configured "for" time greater than grace period.
                   It requires Thanos >= v0.30.0.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               ruleNamespaceSelector:
                 description: |-
-                  Namespaces to be selected for Rules discovery. If unspecified, only
+                  ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only
                   the same namespace as the ThanosRuler object is in is used.
                 properties:
                   matchExpressions:
@@ -5996,19 +6002,19 @@ spec:
                 x-kubernetes-map-type: atomic
               ruleOutageTolerance:
                 description: |-
-                  Max time to tolerate prometheus outage for restoring "for" state of alert.
+                  ruleOutageTolerance defines the max time to tolerate prometheus outage for restoring "for" state of alert.
                   It requires Thanos >= v0.30.0.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               ruleQueryOffset:
                 description: |-
-                  The default rule group's query offset duration to use.
+                  ruleQueryOffset defines the default rule group's query offset duration to use.
                   It requires Thanos >= v0.38.0.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               ruleSelector:
                 description: |-
-                  PrometheusRule objects to be selected for rule evaluation. An empty
+                  ruleSelector defines the PrometheusRule objects to be selected for rule evaluation. An empty
                   label selector matches all objects. A null label selector matches no
                   objects.
                 properties:
@@ -6057,7 +6063,7 @@ spec:
                 x-kubernetes-map-type: atomic
               securityContext:
                 description: |-
-                  SecurityContext holds pod-level security attributes and common container settings.
+                  securityContext defines the pod-level security attributes and common container settings.
                   This defaults to the default PodSecurityContext.
                 properties:
                   appArmorProfile:
@@ -6291,12 +6297,12 @@ spec:
                 type: object
               serviceAccountName:
                 description: |-
-                  ServiceAccountName is the name of the ServiceAccount to use to run the
+                  serviceAccountName defines the name of the ServiceAccount to use to run the
                   Thanos Ruler Pods.
                 type: string
               serviceName:
                 description: |-
-                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
                   If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
                   If empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.
                   When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
@@ -6304,7 +6310,8 @@ spec:
                 minLength: 1
                 type: string
               storage:
-                description: Storage spec to specify how storage shall be used.
+                description: storage defines the specification of how storage shall
+                  be used.
                 properties:
                   disableMountSubPath:
                     description: 'disableMountSubPath eprecated: subPath usage will
@@ -6604,8 +6611,8 @@ spec:
                           More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                         type: string
                       metadata:
-                        description: EmbeddedMetadata contains metadata relevant to
-                          an EmbeddedResource.
+                        description: metadata defines EmbeddedMetadata contains metadata
+                          relevant to an EmbeddedResource.
                         properties:
                           annotations:
                             additionalProperties:
@@ -6637,7 +6644,7 @@ spec:
                         type: object
                       spec:
                         description: |-
-                          Defines the desired characteristics of a volume requested by a pod author.
+                          spec defines the specification of the  characteristics of a volume requested by a pod author.
                           More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
                         properties:
                           accessModes:
@@ -6833,7 +6840,7 @@ spec:
                             type: string
                         type: object
                       status:
-                        description: 'Deprecated: this field is never set.'
+                        description: 'status is eprecated: this field is never set.'
                         properties:
                           accessModes:
                             description: |-
@@ -7018,7 +7025,7 @@ spec:
                 type: object
               terminationGracePeriodSeconds:
                 description: |-
-                  Optional duration in seconds the pod needs to terminate gracefully.
+                  terminationGracePeriodSeconds defines the optional duration in seconds the pod needs to terminate gracefully.
                   Value must be non-negative integer. The value zero indicates stop immediately via
                   the kill signal (no opportunity to shut down) which may lead to data corruption.
 
@@ -7027,7 +7034,7 @@ spec:
                 minimum: 0
                 type: integer
               tolerations:
-                description: If specified, the pod's tolerations.
+                description: tolerations defines when specified, the pod's tolerations.
                 items:
                   description: |-
                     The pod this Toleration is attached to tolerates any taint that matches
@@ -7241,7 +7248,7 @@ spec:
                 type: array
               tracingConfig:
                 description: |-
-                  Configures tracing.
+                  tracingConfig defines the tracing configuration.
 
                   The configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration
 
@@ -7274,7 +7281,7 @@ spec:
                 x-kubernetes-map-type: atomic
               tracingConfigFile:
                 description: |-
-                  Configures the path of the tracing configuration file.
+                  tracingConfigFile defines the path of the tracing configuration file.
 
                   The configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration
 
@@ -7286,11 +7293,11 @@ spec:
                   This field takes precedence over `tracingConfig`.
                 type: string
               version:
-                description: Version of Thanos to be deployed.
+                description: version of Thanos to be deployed.
                 type: string
               volumeMounts:
                 description: |-
-                  VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+                  volumeMounts defines how configuration of additional VolumeMounts on the output StatefulSet definition.
                   VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
                   that are generated as a result of StorageSpec objects.
                 items:
@@ -7357,7 +7364,7 @@ spec:
                 type: array
               volumes:
                 description: |-
-                  Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+                  volumes defines how configuration of additional volumes on the output StatefulSet definition. Volumes specified will
                   be appended to other volumes that are generated as a result of StorageSpec objects.
                 items:
                   description: Volume represents a named volume in a pod that may
@@ -9242,7 +9249,8 @@ spec:
                   type: object
                 type: array
               web:
-                description: Defines the configuration of the ThanosRuler web server.
+                description: web defines the configuration of the ThanosRuler web
+                  server.
                 properties:
                   httpConfig:
                     description: Defines HTTP parameters for web server.
@@ -9511,18 +9519,19 @@ spec:
             type: object
           status:
             description: |-
-              Most recent observed status of the ThanosRuler cluster. Read-only.
+              status defines the most recent observed status of the ThanosRuler cluster. Read-only.
               More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
               availableReplicas:
                 description: |-
-                  Total number of available pods (ready for at least minReadySeconds)
+                  availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
                   targeted by this ThanosRuler deployment.
                 format: int32
                 type: integer
               conditions:
-                description: The current state of the ThanosRuler object.
+                description: conditions defines the current state of the ThanosRuler
+                  object.
                 items:
                   description: |-
                     Condition represents the state of the resources associated with the
@@ -9568,23 +9577,23 @@ spec:
                 x-kubernetes-list-type: map
               paused:
                 description: |-
-                  Represents whether any actions on the underlying managed objects are
+                  paused represents whether any actions on the underlying managed objects are
                   being performed. Only delete actions will be performed.
                 type: boolean
               replicas:
                 description: |-
-                  Total number of non-terminated pods targeted by this ThanosRuler deployment
+                  replicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
                   (their labels match the selector).
                 format: int32
                 type: integer
               unavailableReplicas:
-                description: Total number of unavailable pods targeted by this ThanosRuler
-                  deployment.
+                description: unavailableReplicas defines the total number of unavailable
+                  pods targeted by this ThanosRuler deployment.
                 format: int32
                 type: integer
               updatedReplicas:
                 description: |-
-                  Total number of non-terminated pods targeted by this ThanosRuler deployment
+                  updatedReplicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
                   that have the desired version spec.
                 format: int32
                 type: integer

@@ -42,7 +42,7 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of desired Service selection for target discovery by\nPrometheus.",
+                "description": "spec defines the specification of desired Service selection for target discovery by\nPrometheus.",
                 "properties": {
                   "attachMetadata": {
                     "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.37.0.",
@@ -1102,7 +1102,7 @@
                 "type": "object"
               },
               "status": {
-                "description": "This Status subresource is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "status defines the status subresource is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "bindings": {
                     "description": "The list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.",

@@ -48,10 +48,10 @@ const (
 //
 // The resource defines via label and namespace selectors which `AlertmanagerConfig` objects should be associated to the deployed Alertmanager instances.
 type Alertmanager struct {
-	// TypeMeta is the embedded type metadata
+	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// metadata standard list
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// spec is the specification of the desired behavior of the Alertmanager cluster. More info:
@@ -742,9 +742,9 @@ type HTTPConfig struct {
 // AlertmanagerList is a list of Alertmanagers.
 // +k8s:openapi-gen=true
 type AlertmanagerList struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Alertmanagers
 	Items []Alertmanager `json:"items"`

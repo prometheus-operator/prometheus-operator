@@ -294,19 +294,17 @@ const (
 // EmbeddedPersistentVolumeClaim is an embedded version of k8s.io/api/core/v1.PersistentVolumeClaim.
 // It contains TypeMeta and a reduced ObjectMeta.
 type EmbeddedPersistentVolumeClaim struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
-
-	// EmbeddedMetadata contains metadata relevant to an EmbeddedResource.
+	// metadata defines EmbeddedMetadata contains metadata relevant to an EmbeddedResource.
 	// +optional
 	EmbeddedObjectMetadata `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-
-	// Defines the desired characteristics of a volume requested by a pod author.
+	// spec defines the specification of the  characteristics of a volume requested by a pod author.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
 	Spec v1.PersistentVolumeClaimSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
-
+	// status is eprecated: this field is never set.
 	// +optional
-	// Deprecated: this field is never set.
 	Status v1.PersistentVolumeClaimStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 

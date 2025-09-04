@@ -51,7 +51,7 @@ spec:
             type: object
           spec:
             description: |-
-              Specification of desired Service selection for target discovery by
+              spec defines the specification of desired Service selection for target discovery by
               Prometheus.
             properties:
               attachMetadata:
@@ -1278,7 +1278,7 @@ spec:
             type: object
           status:
             description: |-
-              This Status subresource is under active development and is updated only when the
+              status defines the status subresource is under active development and is updated only when the
               "StatusForConfigurationResources" feature gate is enabled.
 
               Most recent observed status of the ServiceMonitor. Read-only.

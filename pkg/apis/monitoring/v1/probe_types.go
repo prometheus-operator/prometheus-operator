@@ -38,10 +38,10 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
 type Probe struct {
-	// TypeMeta is the embedded type metadata
+	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// metadata standard list
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// spec of desired Ingress selection for target discovery by Prometheus.
@@ -220,10 +220,10 @@ type ProbeTargetStaticConfig struct {
 	// static defines he list of hosts to probe.
 	// +optional
 	Targets []string `json:"static,omitempty"`
-	// labels assigned to all metrics scraped from the targets.
+	// labels defines all labels assigned to all metrics scraped from the targets.
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// relabelingConfigs to apply to the label set of the targets before it gets
+	// relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
 	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	// +optional
@@ -276,11 +276,10 @@ type ProberSpec struct {
 // ProbeList is a list of Probes.
 // +k8s:openapi-gen=true
 type ProbeList struct {
-	// TypeMeta is the embedded type metadata
+	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// metadata standard list
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Probes

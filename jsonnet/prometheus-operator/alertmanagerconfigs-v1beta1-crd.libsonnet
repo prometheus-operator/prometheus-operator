@@ -18,7 +18,7 @@
             type: 'object',
           },
           spec: {
-            description: 'AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.\nBy definition, the Alertmanager configuration only applies to alerts for which\nthe `namespace` label is equal to the namespace of the AlertmanagerConfig resource.',
+            description: 'spec defines the specification of AlertmanagerConfigSpec',
             properties: {
               inhibitRules: {
                 description: "List of inhibition rules. The rules will only apply to alerts matching\nthe resource's namespace.",

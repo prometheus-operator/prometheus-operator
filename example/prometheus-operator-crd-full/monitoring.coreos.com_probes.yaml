@@ -991,12 +991,12 @@ spec:
                       labels:
                         additionalProperties:
                           type: string
-                        description: labels assigned to all metrics scraped from the
-                          targets.
+                        description: labels defines all labels assigned to all metrics
+                          scraped from the targets.
                         type: object
                       relabelingConfigs:
                         description: |-
-                          relabelingConfigs to apply to the label set of the targets before it gets
+                          relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
                           scraped.
                           More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
                         items:

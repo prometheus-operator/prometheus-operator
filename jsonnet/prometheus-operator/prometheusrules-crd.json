@@ -42,7 +42,7 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of desired alerting rule definitions for Prometheus.",
+                "description": "spec defines the specification of desired alerting rule definitions for Prometheus.",
                 "properties": {
                   "groups": {
                     "description": "Content of Prometheus rule file",
@@ -93,7 +93,7 @@
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Annotations to add to each alert.\nOnly valid for alerting rules.",
+                                "description": "annotations defines annotations to add to each alert.\nOnly valid for alerting rules.",
                                 "type": "object"
                               },
                               "expr": {
@@ -123,7 +123,7 @@
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Labels to add or overwrite.",
+                                "description": "labels defines labels to add or overwrite.",
                                 "type": "object"
                               },
                               "record": {

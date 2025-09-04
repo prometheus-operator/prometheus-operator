@@ -80,7 +80,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
-<p>metadata standard list</p>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -1036,7 +1036,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
-<p>metadata is the embedded object metadata</p>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -1409,7 +1409,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
-<p>metadata standard list</p>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -1844,6 +1844,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -1858,7 +1859,7 @@ PrometheusSpec
 </em>
 </td>
 <td>
-<p>Specification of the desired behavior of the Prometheus cluster. More info:
+<p>spec defines the specification of the desired behavior of the Prometheus cluster. More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 <br/>
 <br/>
@@ -3870,7 +3871,7 @@ PrometheusStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>Most recent observed status of the Prometheus cluster. Read-only.
+<p>status defines the most recent observed status of the Prometheus cluster. Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
@@ -3919,6 +3920,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -3933,7 +3935,7 @@ PrometheusRuleSpec
 </em>
 </td>
 <td>
-<p>Specification of desired alerting rule definitions for Prometheus.</p>
+<p>spec defines the specification of desired alerting rule definitions for Prometheus.</p>
 <br/>
 <br/>
 <table>
@@ -4003,6 +4005,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -4017,7 +4020,7 @@ ServiceMonitorSpec
 </em>
 </td>
 <td>
-<p>Specification of desired Service selection for target discovery by
+<p>spec defines the specification of desired Service selection for target discovery by
 Prometheus.</p>
 <br/>
 <br/>
@@ -4354,7 +4357,7 @@ ConfigResourceStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>This Status subresource is under active development and is updated only when the
+<p>status defines the status subresource is under active development and is updated only when the
 &ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
 <p>Most recent observed status of the ServiceMonitor. Read-only.
 More info:
@@ -4406,6 +4409,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -4420,7 +4424,7 @@ ThanosRulerSpec
 </em>
 </td>
 <td>
-<p>Specification of the desired behavior of the ThanosRuler cluster. More info:
+<p>spec defines the specification of the desired behavior of the ThanosRuler cluster. More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 <br/>
 <br/>
@@ -4434,7 +4438,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Version of Thanos to be deployed.</p>
+<p>version of Thanos to be deployed.</p>
 </td>
 </tr>
 <tr>
@@ -4448,7 +4452,7 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <em>(Optional)</em>
-<p>PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.</p>
+<p>podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.</p>
 <p>The following items are reserved and cannot be overridden:
 * &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -4466,7 +4470,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Thanos container image URL.</p>
+<p>image defines Thanos container image URL.</p>
 </td>
 </tr>
 <tr>
@@ -4480,7 +4484,7 @@ Kubernetes core/v1.PullPolicy
 </td>
 <td>
 <em>(Optional)</em>
-<p>Image pull policy for the &lsquo;thanos&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+<p>imagePullPolicy defines for the &lsquo;thanos&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
 See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
 </td>
 </tr>
@@ -4495,7 +4499,7 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </td>
 <td>
 <em>(Optional)</em>
-<p>An optional list of references to secrets in the same namespace
+<p>imagePullSecrets defines an optional list of references to secrets in the same namespace
 to use for pulling thanos images from registries
 see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
@@ -4509,7 +4513,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When a ThanosRuler deployment is paused, no actions except for deletion
+<p>paused defines when a ThanosRuler deployment is paused, no actions except for deletion
 will be performed on the underlying objects.</p>
 </td>
 </tr>
@@ -4522,7 +4526,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of thanos ruler instances to deploy.</p>
+<p>replicas defines the number of thanos ruler instances to deploy.</p>
 </td>
 </tr>
 <tr>
@@ -4534,7 +4538,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>nodeSelector defines which Nodes the Pods are scheduled on.</p>
 </td>
 </tr>
 <tr>
@@ -4548,7 +4552,7 @@ Kubernetes core/v1.ResourceRequirements
 </td>
 <td>
 <em>(Optional)</em>
-<p>Resources defines the resource requirements for single Pods.
+<p>resources defines the resource requirements for single Pods.
 If not provided, no requests/limits will be set</p>
 </td>
 </tr>
@@ -4563,7 +4567,7 @@ Kubernetes core/v1.Affinity
 </td>
 <td>
 <em>(Optional)</em>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<p>affinity defines when specified, the pod&rsquo;s scheduling constraints.</p>
 </td>
 </tr>
 <tr>
@@ -4577,7 +4581,7 @@ Kubernetes core/v1.Affinity
 </td>
 <td>
 <em>(Optional)</em>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<p>tolerations defines when specified, the pod&rsquo;s tolerations.</p>
 </td>
 </tr>
 <tr>
@@ -4605,7 +4609,7 @@ Kubernetes core/v1.PodSecurityContext
 </td>
 <td>
 <em>(Optional)</em>
-<p>SecurityContext holds pod-level security attributes and common container settings.
+<p>securityContext defines the pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
 </tr>
@@ -4620,7 +4624,7 @@ DNSPolicy
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the DNS policy for the pods.</p>
+<p>dnsPolicy defines the DNS policy for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -4634,7 +4638,7 @@ PodDNSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the DNS configuration for the pods.</p>
+<p>dnsConfig defines Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -4646,7 +4650,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+<p>enableServiceLinks defines whether information about services should be injected into pod&rsquo;s environment variables</p>
 </td>
 </tr>
 <tr>
@@ -4658,7 +4662,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Priority class assigned to the Pods</p>
+<p>priorityClassName defines the priority class assigned to the Pods</p>
 </td>
 </tr>
 <tr>
@@ -4670,7 +4674,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+<p>serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>thanos-ruler-operated</code> for ThanosRuler resources.
 When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
@@ -4686,7 +4690,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>ServiceAccountName is the name of the ServiceAccount to use to run the
+<p>serviceAccountName defines the name of the ServiceAccount to use to run the
 Thanos Ruler Pods.</p>
 </td>
 </tr>
@@ -4701,7 +4705,7 @@ StorageSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>storage defines the specification of how storage shall be used.</p>
 </td>
 </tr>
 <tr>
@@ -4715,7 +4719,7 @@ StorageSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+<p>volumes defines how configuration of additional volumes on the output StatefulSet definition. Volumes specified will
 be appended to other volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
@@ -4730,7 +4734,7 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </td>
 <td>
 <em>(Optional)</em>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+<p>volumeMounts defines how configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
 that are generated as a result of StorageSpec objects.</p>
 </td>
@@ -4746,7 +4750,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures object storage.</p>
+<p>objectStorageConfig</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage">https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage</a></p>
 <p>The operator performs no validation of the configuration.</p>
 <p><code>objectStorageConfigFile</code> takes precedence over this field.</p>
@@ -4761,7 +4765,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the path of the object storage configuration file.</p>
+<p>objectStorageConfigFile defines the path of the object storage configuration file.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage">https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage</a></p>
 <p>The operator performs no validation of the configuration file.</p>
 <p>This field takes precedence over <code>objectStorageConfig</code>.</p>
@@ -4776,7 +4780,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>ListenLocal makes the Thanos ruler listen on loopback, so that it
+<p>listenLocal defines the Thanos ruler listen on loopback, so that it
 does not bind against the Pod IP.</p>
 </td>
 </tr>
@@ -4789,7 +4793,7 @@ does not bind against the Pod IP.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Thanos Query endpoints from which to query metrics.</p>
+<p>queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.</p>
 <p>For Thanos &gt;= v0.11.0, it is recommended to use <code>queryConfig</code> instead.</p>
 <p><code>queryConfig</code> takes precedence over this field.</p>
 </td>
@@ -4805,7 +4809,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Thanos Query endpoints from which to query metrics.</p>
+<p>queryConfig defines the list of Thanos Query endpoints from which to query metrics.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/components/rule.md/#query-api">https://thanos.io/tip/components/rule.md/#query-api</a></p>
 <p>It requires Thanos &gt;= v0.11.0.</p>
 <p>The operator performs no validation of the configuration.</p>
@@ -4821,7 +4825,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Alertmanager endpoints to send alerts to.</p>
+<p>alertmanagersUrl defines the list of Alertmanager endpoints to send alerts to.</p>
 <p>For Thanos &gt;= v0.10.0, it is recommended to use <code>alertmanagersConfig</code> instead.</p>
 <p><code>alertmanagersConfig</code> takes precedence over this field.</p>
 </td>
@@ -4837,7 +4841,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Alertmanager endpoints to send alerts to.</p>
+<p>alertmanagersConfig defines the list of Alertmanager endpoints to send alerts to.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/components/rule.md/#alertmanager">https://thanos.io/tip/components/rule.md/#alertmanager</a>.</p>
 <p>It requires Thanos &gt;= v0.10.0.</p>
 <p>The operator performs no validation of the configuration.</p>
@@ -4855,7 +4859,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>PrometheusRule objects to be selected for rule evaluation. An empty
+<p>ruleSelector defines the PrometheusRule objects to be selected for rule evaluation. An empty
 label selector matches all objects. A null label selector matches no
 objects.</p>
 </td>
@@ -4871,7 +4875,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Namespaces to be selected for Rules discovery. If unspecified, only
+<p>ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only
 the same namespace as the ThanosRuler object is in is used.</p>
 </td>
 </tr>
@@ -4884,7 +4888,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
+<p>enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
 and metric that is user created. The label value will always be the namespace of the object that is
 being created.</p>
 </td>
@@ -4900,7 +4904,7 @@ being created.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of references to PrometheusRule objects
+<p>excludedFromEnforcement defines the list of references to PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
@@ -4916,7 +4920,7 @@ Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing
+<p>prometheusRulesExcludedFromEnforce defines a list of Prometheus rules to be excluded from enforcing
 of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
 Make sure both ruleNamespace and ruleName are set for each pair
 Deprecated: use excludedFromEnforcement instead.</p>
@@ -4931,7 +4935,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Log level for ThanosRuler to be configured with.</p>
+<p>logLevel for ThanosRuler to be configured with.</p>
 </td>
 </tr>
 <tr>
@@ -4943,7 +4947,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Log format for ThanosRuler to be configured with.</p>
+<p>logFormat for ThanosRuler to be configured with.</p>
 </td>
 </tr>
 <tr>
@@ -4955,7 +4959,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Port name used for the pods and governing service.
+<p>portName defines the port name used for the pods and governing service.
 Defaults to <code>web</code>.</p>
 </td>
 </tr>
@@ -4970,7 +4974,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Interval between consecutive evaluations.</p>
+<p>evaluationInterval defines the interval between consecutive evaluations.</p>
 </td>
 </tr>
 <tr>
@@ -4984,7 +4988,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+<p>resendDelay defines the minimum amount of time to wait before resending an alert to Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -4998,7 +5002,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Max time to tolerate prometheus outage for restoring &ldquo;for&rdquo; state of alert.
+<p>ruleOutageTolerance defines the max time to tolerate prometheus outage for restoring &ldquo;for&rdquo; state of alert.
 It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
@@ -5013,7 +5017,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default rule group&rsquo;s query offset duration to use.
+<p>ruleQueryOffset defines the default rule group&rsquo;s query offset duration to use.
 It requires Thanos &gt;= v0.38.0.</p>
 </td>
 </tr>
@@ -5026,7 +5030,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>How many rules can be evaluated concurrently.
+<p>ruleConcurrentEval defines how many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
 </td>
 </tr>
@@ -5041,7 +5045,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+<p>ruleGracePeriod defines the minimum duration between alert and restored &ldquo;for&rdquo; state.
 This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
 It requires Thanos &gt;= v0.30.0.</p>
 </td>
@@ -5057,7 +5061,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
+<p>retention defines the time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
 must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds
 seconds minutes hours days weeks years).</p>
 <p>The field has no effect when remote-write is configured since the Ruler
@@ -5075,7 +5079,7 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Containers allows injecting additional containers or modifying operator generated
+<p>containers allows injecting additional containers or modifying operator generated
 containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
 to change the behavior of an operator generated container. Containers described here modify
 an operator generated container if they share the same name and modifications are done via a
@@ -5095,7 +5099,7 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
+<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 fetch secrets for injection into the ThanosRuler configuration from external sources. Any
 errors during the execution of an initContainer will lead to a restart of the Pod.
 More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -5115,7 +5119,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures tracing.</p>
+<p>tracingConfig defines the tracing configuration.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/tracing.md/#configuration">https://thanos.io/tip/thanos/tracing.md/#configuration</a></p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
@@ -5132,7 +5136,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the path of the tracing configuration file.</p>
+<p>tracingConfigFile defines the path of the tracing configuration file.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/tracing.md/#configuration">https://thanos.io/tip/thanos/tracing.md/#configuration</a></p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
@@ -5149,7 +5153,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the external label pairs of the ThanosRuler resource.</p>
+<p>labels defines the external label pairs of the ThanosRuler resource.</p>
 <p>A default replica label <code>thanos_ruler_replica</code> will be always added as a
 label with the value of the pod&rsquo;s name.</p>
 </td>
@@ -5163,7 +5167,7 @@ label with the value of the pod&rsquo;s name.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the label names which should be dropped in Thanos Ruler
+<p>alertDropLabels defines the label names which should be dropped in Thanos Ruler
 alerts.</p>
 <p>The replica label <code>thanos_ruler_replica</code> will always be dropped from the alerts.</p>
 </td>
@@ -5177,7 +5181,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The external URL the Thanos Ruler instances will be available under. This is
+<p>externalPrefix defines the Thanos Ruler instances will be available under. This is
 necessary to generate correct URLs. This is necessary if Thanos Ruler is not
 served from root of a DNS name.</p>
 </td>
@@ -5205,7 +5209,7 @@ TLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
+<p>grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
 recorded rule data.
 Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
 Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
@@ -5220,7 +5224,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The external Query URL the Thanos Ruler will set in the &lsquo;Source&rsquo; field
+<p>TalertQueryUrl defines how Thanos Ruler will set in the &lsquo;Source&rsquo; field
 of all alerts.
 Maps to the &lsquo;&ndash;alert.query-url&rsquo; CLI arg.</p>
 </td>
@@ -5234,7 +5238,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.</p>
 <p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
@@ -5250,7 +5254,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures alert relabeling in Thanos Ruler.</p>
+<p>alertRelabelConfigs defines the alert relabeling in Thanos Ruler.</p>
 <p>Alert relabel configuration must have the form as specified in the
 official Prometheus documentation:
 <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
@@ -5267,7 +5271,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the path to the alert relabeling configuration file.</p>
+<p>alertRelabelConfigFile defines the path to the alert relabeling configuration file.</p>
 <p>Alert relabel configuration must have the form as specified in the
 official Prometheus documentation:
 <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
@@ -5286,7 +5290,7 @@ official Prometheus documentation:
 </td>
 <td>
 <em>(Optional)</em>
-<p>Pods&rsquo; hostAliases configuration</p>
+<p>hostAliases defines pods&rsquo; hostAliases configuration</p>
 </td>
 </tr>
 <tr>
@@ -5300,7 +5304,7 @@ official Prometheus documentation:
 </td>
 <td>
 <em>(Optional)</em>
-<p>AdditionalArgs allows setting additional arguments for the ThanosRuler container.
+<p>additionalArgs defines how to add additional arguments for the ThanosRuler container.
 It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 ThanosRuler container which may cause issues if they are invalid or not supported
@@ -5321,7 +5325,7 @@ ThanosRulerWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the ThanosRuler web server.</p>
+<p>web defines the configuration of the ThanosRuler web server.</p>
 </td>
 </tr>
 <tr>
@@ -5335,7 +5339,7 @@ ThanosRulerWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the list of remote write configurations.</p>
+<p>specification defines the list of remote write configurations.</p>
 <p>When the list isn&rsquo;t empty, the ruler is configured with stateless mode.</p>
 <p>It requires Thanos &gt;= 0.24.0.</p>
 </td>
@@ -5349,7 +5353,7 @@ int64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional duration in seconds the pod needs to terminate gracefully.
+<p>terminationGracePeriodSeconds defines the optional duration in seconds the pod needs to terminate gracefully.
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
@@ -5366,7 +5370,7 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
+<p>enableFeatures defines how to setup Thanos Ruler feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
@@ -5383,7 +5387,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>HostUsers supports the user space in Kubernetes.</p>
+<p>hostUsers supports the user space in Kubernetes.</p>
 <p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
 <p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
 Starting Kubernetes 1.33, the feature is enabled by default.</p>
@@ -5403,7 +5407,7 @@ ThanosRulerStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>Most recent observed status of the ThanosRuler cluster. Read-only.
+<p>status defines the most recent observed status of the ThanosRuler cluster. Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
@@ -10098,7 +10102,7 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <em>(Optional)</em>
-<p>EmbeddedMetadata contains metadata relevant to an EmbeddedResource.</p>
+<p>metadata defines EmbeddedMetadata contains metadata relevant to an EmbeddedResource.</p>
 </td>
 </tr>
 <tr>
@@ -10112,7 +10116,7 @@ Kubernetes core/v1.PersistentVolumeClaimSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the desired characteristics of a volume requested by a pod author.
+<p>spec defines the specification of the  characteristics of a volume requested by a pod author.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims">https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims</a></p>
 <br/>
 <br/>
@@ -10296,7 +10300,7 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>Deprecated: this field is never set.</p>
+<p>status is eprecated: this field is never set.</p>
 </td>
 </tr>
 </tbody>
@@ -13348,7 +13352,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>labels assigned to all metrics scraped from the targets.</p>
+<p>labels defines all labels assigned to all metrics scraped from the targets.</p>
 </td>
 </tr>
 <tr>
@@ -13362,7 +13366,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>relabelingConfigs to apply to the label set of the targets before it gets
+<p>relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
 scraped.
 More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
 </td>
@@ -17199,7 +17203,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Labels to add or overwrite.</p>
+<p>labels defines labels to add or overwrite.</p>
 </td>
 </tr>
 <tr>
@@ -17211,7 +17215,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Annotations to add to each alert.
+<p>annotations defines annotations to add to each alert.
 Only valid for alerting rules.</p>
 </td>
 </tr>
@@ -18742,7 +18746,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Version of Thanos to be deployed.</p>
+<p>version of Thanos to be deployed.</p>
 </td>
 </tr>
 <tr>
@@ -18756,7 +18760,7 @@ EmbeddedObjectMetadata
 </td>
 <td>
 <em>(Optional)</em>
-<p>PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.</p>
+<p>podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.</p>
 <p>The following items are reserved and cannot be overridden:
 * &ldquo;app.kubernetes.io/name&rdquo; label, set to &ldquo;thanos-ruler&rdquo;.
 * &ldquo;app.kubernetes.io/managed-by&rdquo; label, set to &ldquo;prometheus-operator&rdquo;.
@@ -18774,7 +18778,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Thanos container image URL.</p>
+<p>image defines Thanos container image URL.</p>
 </td>
 </tr>
 <tr>
@@ -18788,7 +18792,7 @@ Kubernetes core/v1.PullPolicy
 </td>
 <td>
 <em>(Optional)</em>
-<p>Image pull policy for the &lsquo;thanos&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
+<p>imagePullPolicy defines for the &lsquo;thanos&rsquo;, &lsquo;init-config-reloader&rsquo; and &lsquo;config-reloader&rsquo; containers.
 See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy">https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy</a> for more details.</p>
 </td>
 </tr>
@@ -18803,7 +18807,7 @@ See <a href="https://kubernetes.io/docs/concepts/containers/images/#image-pull-p
 </td>
 <td>
 <em>(Optional)</em>
-<p>An optional list of references to secrets in the same namespace
+<p>imagePullSecrets defines an optional list of references to secrets in the same namespace
 to use for pulling thanos images from registries
 see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod">http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod</a></p>
 </td>
@@ -18817,7 +18821,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When a ThanosRuler deployment is paused, no actions except for deletion
+<p>paused defines when a ThanosRuler deployment is paused, no actions except for deletion
 will be performed on the underlying objects.</p>
 </td>
 </tr>
@@ -18830,7 +18834,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of thanos ruler instances to deploy.</p>
+<p>replicas defines the number of thanos ruler instances to deploy.</p>
 </td>
 </tr>
 <tr>
@@ -18842,7 +18846,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Define which Nodes the Pods are scheduled on.</p>
+<p>nodeSelector defines which Nodes the Pods are scheduled on.</p>
 </td>
 </tr>
 <tr>
@@ -18856,7 +18860,7 @@ Kubernetes core/v1.ResourceRequirements
 </td>
 <td>
 <em>(Optional)</em>
-<p>Resources defines the resource requirements for single Pods.
+<p>resources defines the resource requirements for single Pods.
 If not provided, no requests/limits will be set</p>
 </td>
 </tr>
@@ -18871,7 +18875,7 @@ Kubernetes core/v1.Affinity
 </td>
 <td>
 <em>(Optional)</em>
-<p>If specified, the pod&rsquo;s scheduling constraints.</p>
+<p>affinity defines when specified, the pod&rsquo;s scheduling constraints.</p>
 </td>
 </tr>
 <tr>
@@ -18885,7 +18889,7 @@ Kubernetes core/v1.Affinity
 </td>
 <td>
 <em>(Optional)</em>
-<p>If specified, the pod&rsquo;s tolerations.</p>
+<p>tolerations defines when specified, the pod&rsquo;s tolerations.</p>
 </td>
 </tr>
 <tr>
@@ -18913,7 +18917,7 @@ Kubernetes core/v1.PodSecurityContext
 </td>
 <td>
 <em>(Optional)</em>
-<p>SecurityContext holds pod-level security attributes and common container settings.
+<p>securityContext defines the pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
 </td>
 </tr>
@@ -18928,7 +18932,7 @@ DNSPolicy
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the DNS policy for the pods.</p>
+<p>dnsPolicy defines the DNS policy for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -18942,7 +18946,7 @@ PodDNSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the DNS configuration for the pods.</p>
+<p>dnsConfig defines Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -18954,7 +18958,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Indicates whether information about services should be injected into pod&rsquo;s environment variables</p>
+<p>enableServiceLinks defines whether information about services should be injected into pod&rsquo;s environment variables</p>
 </td>
 </tr>
 <tr>
@@ -18966,7 +18970,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Priority class assigned to the Pods</p>
+<p>priorityClassName defines the priority class assigned to the Pods</p>
 </td>
 </tr>
 <tr>
@@ -18978,7 +18982,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+<p>serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>thanos-ruler-operated</code> for ThanosRuler resources.
 When deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.
@@ -18994,7 +18998,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>ServiceAccountName is the name of the ServiceAccount to use to run the
+<p>serviceAccountName defines the name of the ServiceAccount to use to run the
 Thanos Ruler Pods.</p>
 </td>
 </tr>
@@ -19009,7 +19013,7 @@ StorageSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Storage spec to specify how storage shall be used.</p>
+<p>storage defines the specification of how storage shall be used.</p>
 </td>
 </tr>
 <tr>
@@ -19023,7 +19027,7 @@ StorageSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+<p>volumes defines how configuration of additional volumes on the output StatefulSet definition. Volumes specified will
 be appended to other volumes that are generated as a result of StorageSpec objects.</p>
 </td>
 </tr>
@@ -19038,7 +19042,7 @@ be appended to other volumes that are generated as a result of StorageSpec objec
 </td>
 <td>
 <em>(Optional)</em>
-<p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+<p>volumeMounts defines how configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
 that are generated as a result of StorageSpec objects.</p>
 </td>
@@ -19054,7 +19058,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures object storage.</p>
+<p>objectStorageConfig</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage">https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage</a></p>
 <p>The operator performs no validation of the configuration.</p>
 <p><code>objectStorageConfigFile</code> takes precedence over this field.</p>
@@ -19069,7 +19073,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the path of the object storage configuration file.</p>
+<p>objectStorageConfigFile defines the path of the object storage configuration file.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage">https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage</a></p>
 <p>The operator performs no validation of the configuration file.</p>
 <p>This field takes precedence over <code>objectStorageConfig</code>.</p>
@@ -19084,7 +19088,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>ListenLocal makes the Thanos ruler listen on loopback, so that it
+<p>listenLocal defines the Thanos ruler listen on loopback, so that it
 does not bind against the Pod IP.</p>
 </td>
 </tr>
@@ -19097,7 +19101,7 @@ does not bind against the Pod IP.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Thanos Query endpoints from which to query metrics.</p>
+<p>queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.</p>
 <p>For Thanos &gt;= v0.11.0, it is recommended to use <code>queryConfig</code> instead.</p>
 <p><code>queryConfig</code> takes precedence over this field.</p>
 </td>
@@ -19113,7 +19117,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Thanos Query endpoints from which to query metrics.</p>
+<p>queryConfig defines the list of Thanos Query endpoints from which to query metrics.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/components/rule.md/#query-api">https://thanos.io/tip/components/rule.md/#query-api</a></p>
 <p>It requires Thanos &gt;= v0.11.0.</p>
 <p>The operator performs no validation of the configuration.</p>
@@ -19129,7 +19133,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Alertmanager endpoints to send alerts to.</p>
+<p>alertmanagersUrl defines the list of Alertmanager endpoints to send alerts to.</p>
 <p>For Thanos &gt;= v0.10.0, it is recommended to use <code>alertmanagersConfig</code> instead.</p>
 <p><code>alertmanagersConfig</code> takes precedence over this field.</p>
 </td>
@@ -19145,7 +19149,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the list of Alertmanager endpoints to send alerts to.</p>
+<p>alertmanagersConfig defines the list of Alertmanager endpoints to send alerts to.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/components/rule.md/#alertmanager">https://thanos.io/tip/components/rule.md/#alertmanager</a>.</p>
 <p>It requires Thanos &gt;= v0.10.0.</p>
 <p>The operator performs no validation of the configuration.</p>
@@ -19163,7 +19167,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>PrometheusRule objects to be selected for rule evaluation. An empty
+<p>ruleSelector defines the PrometheusRule objects to be selected for rule evaluation. An empty
 label selector matches all objects. A null label selector matches no
 objects.</p>
 </td>
@@ -19179,7 +19183,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Namespaces to be selected for Rules discovery. If unspecified, only
+<p>ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only
 the same namespace as the ThanosRuler object is in is used.</p>
 </td>
 </tr>
@@ -19192,7 +19196,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
+<p>enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
 and metric that is user created. The label value will always be the namespace of the object that is
 being created.</p>
 </td>
@@ -19208,7 +19212,7 @@ being created.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of references to PrometheusRule objects
+<p>excludedFromEnforcement defines the list of references to PrometheusRule objects
 to be excluded from enforcing a namespace label of origin.
 Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
@@ -19224,7 +19228,7 @@ Applies only if enforcedNamespaceLabel set to true.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing
+<p>prometheusRulesExcludedFromEnforce defines a list of Prometheus rules to be excluded from enforcing
 of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
 Make sure both ruleNamespace and ruleName are set for each pair
 Deprecated: use excludedFromEnforcement instead.</p>
@@ -19239,7 +19243,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Log level for ThanosRuler to be configured with.</p>
+<p>logLevel for ThanosRuler to be configured with.</p>
 </td>
 </tr>
 <tr>
@@ -19251,7 +19255,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Log format for ThanosRuler to be configured with.</p>
+<p>logFormat for ThanosRuler to be configured with.</p>
 </td>
 </tr>
 <tr>
@@ -19263,7 +19267,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Port name used for the pods and governing service.
+<p>portName defines the port name used for the pods and governing service.
 Defaults to <code>web</code>.</p>
 </td>
 </tr>
@@ -19278,7 +19282,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Interval between consecutive evaluations.</p>
+<p>evaluationInterval defines the interval between consecutive evaluations.</p>
 </td>
 </tr>
 <tr>
@@ -19292,7 +19296,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum amount of time to wait before resending an alert to Alertmanager.</p>
+<p>resendDelay defines the minimum amount of time to wait before resending an alert to Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -19306,7 +19310,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Max time to tolerate prometheus outage for restoring &ldquo;for&rdquo; state of alert.
+<p>ruleOutageTolerance defines the max time to tolerate prometheus outage for restoring &ldquo;for&rdquo; state of alert.
 It requires Thanos &gt;= v0.30.0.</p>
 </td>
 </tr>
@@ -19321,7 +19325,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The default rule group&rsquo;s query offset duration to use.
+<p>ruleQueryOffset defines the default rule group&rsquo;s query offset duration to use.
 It requires Thanos &gt;= v0.38.0.</p>
 </td>
 </tr>
@@ -19334,7 +19338,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>How many rules can be evaluated concurrently.
+<p>ruleConcurrentEval defines how many rules can be evaluated concurrently.
 It requires Thanos &gt;= v0.37.0.</p>
 </td>
 </tr>
@@ -19349,7 +19353,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum duration between alert and restored &ldquo;for&rdquo; state.
+<p>ruleGracePeriod defines the minimum duration between alert and restored &ldquo;for&rdquo; state.
 This is maintained only for alerts with configured &ldquo;for&rdquo; time greater than grace period.
 It requires Thanos &gt;= v0.30.0.</p>
 </td>
@@ -19365,7 +19369,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
+<p>retention defines the time duration ThanosRuler shall retain data for. Default is &lsquo;24h&rsquo;, and
 must match the regular expression <code>[0-9]+(ms|s|m|h|d|w|y)</code> (milliseconds
 seconds minutes hours days weeks years).</p>
 <p>The field has no effect when remote-write is configured since the Ruler
@@ -19383,7 +19387,7 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Containers allows injecting additional containers or modifying operator generated
+<p>containers allows injecting additional containers or modifying operator generated
 containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
 to change the behavior of an operator generated container. Containers described here modify
 an operator generated container if they share the same name and modifications are done via a
@@ -19403,7 +19407,7 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
+<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 fetch secrets for injection into the ThanosRuler configuration from external sources. Any
 errors during the execution of an initContainer will lead to a restart of the Pod.
 More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -19423,7 +19427,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures tracing.</p>
+<p>tracingConfig defines the tracing configuration.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/tracing.md/#configuration">https://thanos.io/tip/thanos/tracing.md/#configuration</a></p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
@@ -19440,7 +19444,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the path of the tracing configuration file.</p>
+<p>tracingConfigFile defines the path of the tracing configuration file.</p>
 <p>The configuration format is defined at <a href="https://thanos.io/tip/thanos/tracing.md/#configuration">https://thanos.io/tip/thanos/tracing.md/#configuration</a></p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
@@ -19457,7 +19461,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the external label pairs of the ThanosRuler resource.</p>
+<p>labels defines the external label pairs of the ThanosRuler resource.</p>
 <p>A default replica label <code>thanos_ruler_replica</code> will be always added as a
 label with the value of the pod&rsquo;s name.</p>
 </td>
@@ -19471,7 +19475,7 @@ label with the value of the pod&rsquo;s name.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the label names which should be dropped in Thanos Ruler
+<p>alertDropLabels defines the label names which should be dropped in Thanos Ruler
 alerts.</p>
 <p>The replica label <code>thanos_ruler_replica</code> will always be dropped from the alerts.</p>
 </td>
@@ -19485,7 +19489,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The external URL the Thanos Ruler instances will be available under. This is
+<p>externalPrefix defines the Thanos Ruler instances will be available under. This is
 necessary to generate correct URLs. This is necessary if Thanos Ruler is not
 served from root of a DNS name.</p>
 </td>
@@ -19513,7 +19517,7 @@ TLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
+<p>grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
 recorded rule data.
 Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
 Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
@@ -19528,7 +19532,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The external Query URL the Thanos Ruler will set in the &lsquo;Source&rsquo; field
+<p>TalertQueryUrl defines how Thanos Ruler will set in the &lsquo;Source&rsquo; field
 of all alerts.
 Maps to the &lsquo;&ndash;alert.query-url&rsquo; CLI arg.</p>
 </td>
@@ -19542,7 +19546,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Minimum number of seconds for which a newly created pod should be ready
+<p>minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
 without any of its container crashing for it to be considered available.</p>
 <p>If unset, pods will be considered available as soon as they are ready.</p>
 </td>
@@ -19558,7 +19562,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures alert relabeling in Thanos Ruler.</p>
+<p>alertRelabelConfigs defines the alert relabeling in Thanos Ruler.</p>
 <p>Alert relabel configuration must have the form as specified in the
 official Prometheus documentation:
 <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
@@ -19575,7 +19579,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures the path to the alert relabeling configuration file.</p>
+<p>alertRelabelConfigFile defines the path to the alert relabeling configuration file.</p>
 <p>Alert relabel configuration must have the form as specified in the
 official Prometheus documentation:
 <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs</a></p>
@@ -19594,7 +19598,7 @@ official Prometheus documentation:
 </td>
 <td>
 <em>(Optional)</em>
-<p>Pods&rsquo; hostAliases configuration</p>
+<p>hostAliases defines pods&rsquo; hostAliases configuration</p>
 </td>
 </tr>
 <tr>
@@ -19608,7 +19612,7 @@ official Prometheus documentation:
 </td>
 <td>
 <em>(Optional)</em>
-<p>AdditionalArgs allows setting additional arguments for the ThanosRuler container.
+<p>additionalArgs defines how to add additional arguments for the ThanosRuler container.
 It is intended for e.g. activating hidden flags which are not supported by
 the dedicated configuration options yet. The arguments are passed as-is to the
 ThanosRuler container which may cause issues if they are invalid or not supported
@@ -19629,7 +19633,7 @@ ThanosRulerWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the configuration of the ThanosRuler web server.</p>
+<p>web defines the configuration of the ThanosRuler web server.</p>
 </td>
 </tr>
 <tr>
@@ -19643,7 +19647,7 @@ ThanosRulerWebSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the list of remote write configurations.</p>
+<p>specification defines the list of remote write configurations.</p>
 <p>When the list isn&rsquo;t empty, the ruler is configured with stateless mode.</p>
 <p>It requires Thanos &gt;= 0.24.0.</p>
 </td>
@@ -19657,7 +19661,7 @@ int64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional duration in seconds the pod needs to terminate gracefully.
+<p>terminationGracePeriodSeconds defines the optional duration in seconds the pod needs to terminate gracefully.
 Value must be non-negative integer. The value zero indicates stop immediately via
 the kill signal (no opportunity to shut down) which may lead to data corruption.</p>
 <p>Defaults to 120 seconds.</p>
@@ -19674,7 +19678,7 @@ the kill signal (no opportunity to shut down) which may lead to data corruption.
 </td>
 <td>
 <em>(Optional)</em>
-<p>Enable access to Thanos Ruler feature flags. By default, no features are enabled.</p>
+<p>enableFeatures defines how to setup Thanos Ruler feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
@@ -19691,7 +19695,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>HostUsers supports the user space in Kubernetes.</p>
+<p>hostUsers supports the user space in Kubernetes.</p>
 <p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
 <p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
 Starting Kubernetes 1.33, the feature is enabled by default.</p>
@@ -19725,7 +19729,7 @@ bool
 </em>
 </td>
 <td>
-<p>Represents whether any actions on the underlying managed objects are
+<p>paused represents whether any actions on the underlying managed objects are
 being performed. Only delete actions will be performed.</p>
 </td>
 </tr>
@@ -19737,7 +19741,7 @@ int32
 </em>
 </td>
 <td>
-<p>Total number of non-terminated pods targeted by this ThanosRuler deployment
+<p>replicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
 (their labels match the selector).</p>
 </td>
 </tr>
@@ -19749,7 +19753,7 @@ int32
 </em>
 </td>
 <td>
-<p>Total number of non-terminated pods targeted by this ThanosRuler deployment
+<p>updatedReplicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
 that have the desired version spec.</p>
 </td>
 </tr>
@@ -19761,7 +19765,7 @@ int32
 </em>
 </td>
 <td>
-<p>Total number of available pods (ready for at least minReadySeconds)
+<p>availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
 targeted by this ThanosRuler deployment.</p>
 </td>
 </tr>
@@ -19773,7 +19777,7 @@ int32
 </em>
 </td>
 <td>
-<p>Total number of unavailable pods targeted by this ThanosRuler deployment.</p>
+<p>unavailableReplicas defines the total number of unavailable pods targeted by this ThanosRuler deployment.</p>
 </td>
 </tr>
 <tr>
@@ -19787,7 +19791,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>The current state of the ThanosRuler object.</p>
+<p>conditions defines the current state of the ThanosRuler object.</p>
 </td>
 </tr>
 </tbody>
@@ -20951,6 +20955,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -20965,6 +20970,7 @@ AlertmanagerConfigSpec
 </em>
 </td>
 <td>
+<p>spec defines the specification of AlertmanagerConfigSpec</p>
 <br/>
 <br/>
 <table>
@@ -21074,6 +21080,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -21088,7 +21095,7 @@ PrometheusAgentSpec
 </em>
 </td>
 <td>
-<p>Specification of the desired behavior of the Prometheus agent. More info:
+<p>spec defines the specification of the desired behavior of the Prometheus agent. More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 <br/>
 <br/>
@@ -22753,7 +22760,7 @@ PrometheusStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>Most recent observed status of the Prometheus cluster. Read-only.
+<p>status defines the most recent observed status of the Prometheus cluster. Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
@@ -22802,6 +22809,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -22816,6 +22824,7 @@ ScrapeConfigSpec
 </em>
 </td>
 <td>
+<p>spec defines the specification of ScrapeConfigSpec.</p>
 <br/>
 <br/>
 <table>
@@ -34261,7 +34270,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
-<p>List of targets for this static configuration.</p>
+<p>targets defines the list of targets for this static configuration.</p>
 </td>
 </tr>
 <tr>
@@ -34273,7 +34282,7 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Labels assigned to all metrics scraped from the targets.</p>
+<p>labels defines labels assigned to all metrics scraped from the targets.</p>
 </td>
 </tr>
 </tbody>
@@ -35166,6 +35175,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
+<p>metadata defines ObjectMeta as the metadata that all persisted resources.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -35180,6 +35190,7 @@ AlertmanagerConfigSpec
 </em>
 </td>
 <td>
+<p>spec defines the specification of AlertmanagerConfigSpec</p>
 <br/>
 <br/>
 <table>

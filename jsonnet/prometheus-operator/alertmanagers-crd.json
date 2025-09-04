@@ -5955,7 +5955,7 @@
                             "type": "string"
                           },
                           "metadata": {
-                            "description": "EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
+                            "description": "metadata defines EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
                             "properties": {
                               "annotations": {
                                 "additionalProperties": {
@@ -5979,7 +5979,7 @@
                             "type": "object"
                           },
                           "spec": {
-                            "description": "Defines the desired characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+                            "description": "spec defines the specification of the  characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the desired access modes the volume should have.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -6141,7 +6141,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "Deprecated: this field is never set.",
+                            "description": "status is eprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",

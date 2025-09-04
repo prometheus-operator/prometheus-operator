@@ -39,14 +39,16 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
 type ServiceMonitor struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of desired Service selection for target discovery by
+	// spec defines the specification of desired Service selection for target discovery by
 	// Prometheus.
 	// +required
 	Spec ServiceMonitorSpec `json:"spec"`
-	// This Status subresource is under active development and is updated only when the
+	// status defines the status subresource is under active development and is updated only when the
 	// "StatusForConfigurationResources" feature gate is enabled.
 	//
 	// Most recent observed status of the ServiceMonitor. Read-only.
@@ -197,9 +199,9 @@ type ServiceMonitorSpec struct {
 // ServiceMonitorList is a list of ServiceMonitors.
 // +k8s:openapi-gen=true
 type ServiceMonitorList struct {
+	// TypeMeta defines the versioned schema of this representation of an object
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors

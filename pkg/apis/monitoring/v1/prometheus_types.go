@@ -1082,14 +1082,16 @@ func (cpf *CommonPrometheusFields) WebRoutePrefix() string {
 //
 // The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.
 type Prometheus struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of the desired behavior of the Prometheus cluster. More info:
+	// spec defines the specification of the desired behavior of the Prometheus cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +required
 	Spec PrometheusSpec `json:"spec"`
-	// Most recent observed status of the Prometheus cluster. Read-only.
+	// status defines the most recent observed status of the Prometheus cluster. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
@@ -1104,9 +1106,10 @@ func (l *Prometheus) DeepCopyObject() runtime.Object {
 // PrometheusList is a list of Prometheuses.
 // +k8s:openapi-gen=true
 type PrometheusList struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
+	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses

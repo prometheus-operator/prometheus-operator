@@ -42,7 +42,7 @@
                 "type": "object"
               },
               "spec": {
-                "description": "ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.",
+                "description": "spec defines the specification of ScrapeConfigSpec.",
                 "properties": {
                   "authorization": {
                     "description": "Authorization header to use on every scrape request.",
@@ -11692,12 +11692,12 @@
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Labels assigned to all metrics scraped from the targets.",
+                          "description": "labels defines labels assigned to all metrics scraped from the targets.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "targets": {
-                          "description": "List of targets for this static configuration.",
+                          "description": "targets defines the list of targets for this static configuration.",
                           "items": {
                             "description": "Target represents a target for Prometheus to scrape\nkubebuilder:validation:MinLength:=1",
                             "type": "string"

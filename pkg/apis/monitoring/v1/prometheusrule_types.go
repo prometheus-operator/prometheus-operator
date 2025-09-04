@@ -34,10 +34,12 @@ const (
 //
 // `Prometheus` and `ThanosRuler` objects select `PrometheusRule` objects using label and namespace selectors.
 type PrometheusRule struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of desired alerting rule definitions for Prometheus.
+	// spec defines the specification of desired alerting rule definitions for Prometheus.
 	// +required
 	Spec PrometheusRuleSpec `json:"spec"`
 }
@@ -121,10 +123,10 @@ type Rule struct {
 	// KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.
 	// +optional
 	KeepFiringFor *NonEmptyDuration `json:"keep_firing_for,omitempty"`
-	// Labels to add or overwrite.
+	// labels defines labels to add or overwrite.
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Annotations to add to each alert.
+	// annotations defines annotations to add to each alert.
 	// Only valid for alerting rules.
 	// +optional
 	Annotations map[string]string `json:"annotations,omitempty"`
@@ -133,9 +135,9 @@ type Rule struct {
 // PrometheusRuleList is a list of PrometheusRules.
 // +k8s:openapi-gen=true
 type PrometheusRuleList struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Rules

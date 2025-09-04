@@ -77,7 +77,7 @@ spec:
             type: object
           spec:
             description: |-
-              Specification of the desired behavior of the Prometheus cluster. More info:
+              spec defines the specification of the desired behavior of the Prometheus cluster. More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
               additionalAlertManagerConfigs:
@@ -9720,8 +9720,8 @@ spec:
                           More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                         type: string
                       metadata:
-                        description: EmbeddedMetadata contains metadata relevant to
-                          an EmbeddedResource.
+                        description: metadata defines EmbeddedMetadata contains metadata
+                          relevant to an EmbeddedResource.
                         properties:
                           annotations:
                             additionalProperties:
@@ -9753,7 +9753,7 @@ spec:
                         type: object
                       spec:
                         description: |-
-                          Defines the desired characteristics of a volume requested by a pod author.
+                          spec defines the specification of the  characteristics of a volume requested by a pod author.
                           More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
                         properties:
                           accessModes:
@@ -9949,7 +9949,7 @@ spec:
                             type: string
                         type: object
                       status:
-                        description: 'Deprecated: this field is never set.'
+                        description: 'status is eprecated: this field is never set.'
                         properties:
                           accessModes:
                             description: |-
@@ -13386,7 +13386,7 @@ spec:
             type: object
           status:
             description: |-
-              Most recent observed status of the Prometheus cluster. Read-only.
+              status defines the most recent observed status of the Prometheus cluster. Read-only.
               More info:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
