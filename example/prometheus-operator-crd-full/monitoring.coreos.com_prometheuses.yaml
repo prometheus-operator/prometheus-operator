@@ -13500,12 +13500,6 @@ spec:
                   that have the desired version spec.
                 format: int32
                 type: integer
-            required:
-            - availableReplicas
-            - paused
-            - replicas
-            - unavailableReplicas
-            - updatedReplicas
             type: object
         required:
         - spec

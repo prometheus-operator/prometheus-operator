@@ -499,22 +499,22 @@ type AlertmanagerGlobalConfig struct {
 type AlertmanagerStatus struct {
 	// Represents whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
-	// +required
+	// +optional
 	Paused bool `json:"paused"`
 	// Total number of non-terminated pods targeted by this Alertmanager
 	// object (their labels match the selector).
-	// +required
+	// +optional
 	Replicas int32 `json:"replicas"`
 	// Total number of non-terminated pods targeted by this Alertmanager
 	// object that have the desired version spec.
-	// +required
+	// +optional
 	UpdatedReplicas int32 `json:"updatedReplicas"`
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Alertmanager cluster.
-	// +required
+	// +optional
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this Alertmanager object.
-	// +required
+	// +optional
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The selector used to match the pods targeted by this Alertmanager object.
 	// +optional
