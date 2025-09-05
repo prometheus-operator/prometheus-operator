@@ -52,7 +52,7 @@ func NewFinalizerSyncer(
 //
 // Returns true if the finalizer list was modified, otherwise false.
 // The second return value indicates any error encountered during the operation.
-func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slog.Logger, deletionInProgress bool, statusCleanup func() error) (bool, error) {
+func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, deletionInProgress bool, statusCleanup func() error) (bool, error) {
 	if !s.configResourcesStatusEnabled {
 		return false, nil
 	}

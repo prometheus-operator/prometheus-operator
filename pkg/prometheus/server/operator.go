@@ -808,7 +808,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return c.configResStatusCleanup(ctx, p)
 	}
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p), statusCleanup)
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), statusCleanup)
 	if err != nil {
 		return err
 	}
