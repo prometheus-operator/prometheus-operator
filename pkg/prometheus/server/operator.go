@@ -1091,7 +1091,7 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 			getErr = prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s)
 		}
 	}); err != nil {
-		return err
+		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
 	return getErr
 }
