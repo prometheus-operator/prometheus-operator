@@ -52,7 +52,7 @@ func NewFinalizerSyncer(
 //
 // Returns true if the finalizer list was modified, otherwise false.
 // The second return value indicates any error encountered during the operation.
-func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slog.Logger, deletionInProgress bool) (bool, error) {
+func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slog.Logger, deletionInProgress bool, statusCleanup func() error) (bool, error) {
 	if !s.configResourcesStatusEnabled {
 		return false, nil
 	}
@@ -73,8 +73,13 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slo
 		if err = s.updateObject(ctx, p, patchBytes); err != nil {
 			return false, fmt.Errorf("failed to add %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 		}
-		logger.Debug("added finalizer to object")
 		return true, nil
+	}
+
+	// Remove the workload bindings from the status of config resources.
+	err := statusCleanup()
+	if err != nil {
+		return false, fmt.Errorf("failed to clean up config resources status: %w", err)
 	}
 
 	// If the workload instance is marked for deletion, we remove the finalizer.
@@ -89,7 +94,6 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slo
 	if err = s.updateObject(ctx, p, patchBytes); err != nil {
 		return false, fmt.Errorf("failed to remove %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
 	}
-	logger.Debug("removed finalizer from object")
 
 	return true, nil
 }

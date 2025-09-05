@@ -804,7 +804,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	logger := c.logger.With("key", key)
 	c.logDeprecatedFields(logger, p)
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p))
+	statusCleanup := func() error {
+		return c.configResStatusCleanup(ctx, p)
+	}
+
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, logger, c.rr.DeletionInProgress(p), statusCleanup)
 	if err != nil {
 		return err
 	}
@@ -1068,6 +1072,28 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err != nil {
 		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
 	}
+}
+
+// configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
+
+	var getErr error
+	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
+		if getErr != nil {
+			return
+		}
+		s := obj.(*monitoringv1.ServiceMonitor)
+		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
+			getErr = prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s)
+		}
+	}); err != nil {
+		return err
+	}
+	return getErr
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
