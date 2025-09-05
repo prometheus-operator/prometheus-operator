@@ -1031,25 +1031,29 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	c.updateConfigResourcesStatus(ctx, p, logger, *resources)
+	err = c.updateConfigResourcesStatus(ctx, p, logger, *resources)
 
-	return nil
+	return err
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
-func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) {
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger, resources selectedConfigResources) error {
 	if !c.configResourcesStatusEnabled {
-		return
+		return nil
 	}
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 	for key, sm := range resources.sMons {
 		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
-			logger.Warn("Failed to update ServiceMonitor status", "error", err, "key", key)
+			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
 		}
 	}
 
-	err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
+	var getErr error
+	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
+		if getErr != nil {
+			return
+		}
 		k, ok := c.accessor.MetaNamespaceKey(obj)
 		if !ok {
 			return
@@ -1061,13 +1065,13 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		s := obj.(*monitoringv1.ServiceMonitor)
 		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
 			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
-				logger.Warn("Failed to remove Prometheus binding from ServiceMonitor status", "error", err, "key", k)
+				getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
 			}
 		}
-	})
-	if err != nil {
-		logger.Error("listing all ServiceMonitors from cache failed", "error", err)
+	}); err != nil {
+		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
+	return getErr
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
