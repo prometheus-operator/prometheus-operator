@@ -437,6 +437,7 @@ func TestGatedFeatures(t *testing.T) {
 		"ServiceMonitorStatusSubresource":              testServiceMonitorStatusSubresource,
 		"ServiceMonitorStatusWithMultipleWorkloads":    testServiceMonitorStatusWithMultipleWorkloads,
 		"GarbageCollectionOfServiceMonitorBinding":     testGarbageCollectionOfServiceMonitorBinding,
+		"RmServiceMonitorBindingDuringWorkloadDelete":  testRmServiceMonitorBindingDuringWorkloadDelete,
 	}
 
 	for name, f := range testFuncs {
