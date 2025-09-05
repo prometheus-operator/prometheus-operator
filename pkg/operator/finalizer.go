@@ -77,8 +77,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, logger *slo
 	}
 
 	// Remove the workload bindings from the status of config resources.
-	err := statusCleanup()
-	if err != nil {
+	if err := statusCleanup(); err != nil {
 		return false, fmt.Errorf("failed to clean up config resources status: %w", err)
 	}
 
