@@ -29,9 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
@@ -306,18 +305,19 @@ func NewMetrics(r prometheus.Registerer) *Metrics {
 	return &m
 }
 
-type EventRecorderFactory func(client kubernetes.Interface, component string) record.EventRecorder
+type EventRecorderFactory func(client kubernetes.Interface, component string) events.EventRecorder
 
 func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
-	return func(client kubernetes.Interface, component string) record.EventRecorder {
-		eventBroadcaster := record.NewBroadcaster()
+	return func(client kubernetes.Interface, component string) events.EventRecorder {
+		eventBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{Interface: client.EventsV1()})
 		eventBroadcaster.StartStructuredLogging(0)
 
 		if emitEvents {
-			eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
+			stopCh := make(chan struct{})
+			eventBroadcaster.StartRecordingToSink(stopCh)
 		}
 
-		return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: component})
+		return eventBroadcaster.NewRecorder(scheme.Scheme, component)
 	}
 }
 
