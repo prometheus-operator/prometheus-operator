@@ -7965,13 +7965,6 @@
                     "type": "integer"
                   }
                 },
-                "required": [
-                  "availableReplicas",
-                  "paused",
-                  "replicas",
-                  "unavailableReplicas",
-                  "updatedReplicas"
-                ],
                 "type": "object"
               }
             },

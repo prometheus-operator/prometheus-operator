@@ -7210,6 +7210,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Represents whether any actions on the underlying managed objects are
 being performed. Only delete actions will be performed.</p>
 </td>
@@ -7222,6 +7223,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of non-terminated pods targeted by this Alertmanager
 object (their labels match the selector).</p>
 </td>
@@ -7234,6 +7236,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of non-terminated pods targeted by this Alertmanager
 object that have the desired version spec.</p>
 </td>
@@ -7246,6 +7249,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of available pods (ready for at least minReadySeconds)
 targeted by this Alertmanager cluster.</p>
 </td>
@@ -7258,6 +7262,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of unavailable pods targeted by this Alertmanager object.</p>
 </td>
 </tr>
@@ -15670,6 +15675,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Represents whether any actions on the underlying managed objects are
 being performed. Only delete actions will be performed.</p>
 </td>
@@ -15682,6 +15688,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of non-terminated pods targeted by this Prometheus deployment
 (their labels match the selector).</p>
 </td>
@@ -15694,6 +15701,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of non-terminated pods targeted by this Prometheus deployment
 that have the desired version spec.</p>
 </td>
@@ -15706,6 +15714,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of available pods (ready for at least minReadySeconds)
 targeted by this Prometheus deployment.</p>
 </td>
@@ -15718,6 +15727,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of unavailable pods targeted by this Prometheus deployment.</p>
 </td>
 </tr>
@@ -19721,6 +19731,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Represents whether any actions on the underlying managed objects are
 being performed. Only delete actions will be performed.</p>
 </td>
@@ -19733,6 +19744,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of non-terminated pods targeted by this ThanosRuler deployment
 (their labels match the selector).</p>
 </td>
@@ -19745,6 +19757,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of non-terminated pods targeted by this ThanosRuler deployment
 that have the desired version spec.</p>
 </td>
@@ -19757,6 +19770,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of available pods (ready for at least minReadySeconds)
 targeted by this ThanosRuler deployment.</p>
 </td>
@@ -19769,6 +19783,7 @@ int32
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Total number of unavailable pods targeted by this ThanosRuler deployment.</p>
 </td>
 </tr>

@@ -20,6 +20,7 @@ linters:
               - "optionalorrequired" # Every field should be marked as `+optional` or `+required`.
               - "statussubresource" # All root objects that have a `status` field should have a status subresource.
               - "uniquemarkers" # Ensure that types and fields do not contain more than a single definition of a marker that should only be present once.
+              - "statusoptional"
 
             # Linters below this line are disabled, pending conversation on how and when to enable them.
             disable:
