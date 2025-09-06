@@ -2532,7 +2532,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(remoteRead []monitoringv1.Re
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
+		cfg = cg.addOAuth2V2ToYaml(cfg, s, spec.OAuth2)
 
 		cfg = cg.addTLStoYaml(cfg, s, spec.TLSConfig)
 
@@ -2584,6 +2584,52 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 		yaml.MapItem{Key: "client_secret", Value: string(clientSecret)},
 		yaml.MapItem{Key: "token_url", Value: oauth2.TokenURL},
 	)
+
+	if len(oauth2.Scopes) > 0 {
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: oauth2.Scopes})
+	}
+
+	if len(oauth2.EndpointParams) > 0 {
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: oauth2.EndpointParams})
+	}
+
+	oauth2Cfg = cg.WithMinimumVersion("2.43.0").addProxyConfigtoYaml(oauth2Cfg, store, oauth2.ProxyConfig)
+	oauth2Cfg = cg.WithMinimumVersion("2.43.0").addSafeTLStoYaml(oauth2Cfg, store, oauth2.TLSConfig)
+
+	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
+}
+
+func (cg *ConfigGenerator) addOAuth2V2ToYaml(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
+	oauth2 *monitoringv1.OAuth2V2,
+) yaml.MapSlice {
+	if oauth2 == nil {
+		return cfg
+	}
+
+	clientID, err := store.GetSecretOrConfigMapKey(oauth2.ClientID)
+	if err != nil {
+		cg.logger.Error("invalid OAuth2 client ID reference", "err", err)
+		return cfg
+	}
+
+	oauth2Cfg := yaml.MapSlice{}
+	oauth2Cfg = append(oauth2Cfg,
+		yaml.MapItem{Key: "client_id", Value: clientID},
+		yaml.MapItem{Key: "token_url", Value: oauth2.TokenURL},
+	)
+
+	if oauth2.ClientSecretFile != nil {
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "client_secret_file", Value: *oauth2.ClientSecretFile})
+	} else {
+		clientSecret, err := store.GetSecretKey(oauth2.ClientSecret)
+		if err != nil {
+			cg.logger.Error("invalid OAuth2 client secret reference", "err", err)
+			return cfg
+		}
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "client_secret", Value: string(clientSecret)})
+	}
 
 	if len(oauth2.Scopes) > 0 {
 		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: oauth2.Scopes})
@@ -2698,7 +2744,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
+		cfg = cg.addOAuth2V2ToYaml(cfg, s, spec.OAuth2)
 
 		cfg = cg.addTLStoYaml(cfg, s, spec.TLSConfig)
 

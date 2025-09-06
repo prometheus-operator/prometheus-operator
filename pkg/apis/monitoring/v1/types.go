@@ -656,6 +656,15 @@ type Endpoint struct {
 	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 
+	// `oauth2v2` configures the OAuth2 settings to use when scraping the target.
+	//
+	// It requires Prometheus >= 2.27.0.
+	//
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	//
+	// +optional
+	OAuth2V2 *OAuth2V2 `json:"oauth2v2,omitempty"`
+
 	// `metricRelabelings` configures the relabeling rules to apply to the
 	// samples before ingestion.
 	//
@@ -754,6 +763,14 @@ type OAuth2 struct {
 	ProxyConfig `json:",inline"`
 }
 
+// Extended OAuth2 for workload resources
+type OAuth2V2 struct {
+	OAuth2 `json:",inline"`
+	// `clientSecret` specifies a key of a Secret containing the OAuth2
+	// client's secret.
+	ClientSecretFile *string `json:"clientSecretFile,omitempty"`
+}
+
 type OAuth2ValidationError struct {
 	// +optional
 	err string
@@ -781,6 +798,26 @@ func (o *OAuth2) Validate() error {
 	if err := o.TLSConfig.Validate(); err != nil {
 		return &OAuth2ValidationError{
 			err: fmt.Sprintf("invalid OAuth2 tlsConfig: %s", err.Error()),
+		}
+	}
+
+	return nil
+}
+
+func (o *OAuth2V2) Validate() error {
+	if err := o.OAuth2.Validate(); err != nil {
+		return err
+	}
+
+	if o.ClientSecret != (v1.SecretKeySelector{}) && o.ClientSecretFile != nil {
+		return &OAuth2ValidationError{
+			err: "clientSecret and clientSecretFile are mutually exclusive, specify only one",
+		}
+	}
+
+	if o.ClientSecret == (v1.SecretKeySelector{}) && o.ClientSecretFile == nil {
+		return &OAuth2ValidationError{
+			err: "either clientSecret or clientSecretFile must be specified",
 		}
 	}
 
