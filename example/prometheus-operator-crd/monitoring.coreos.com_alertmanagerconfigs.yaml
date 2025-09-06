@@ -44,13 +44,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              AlertmanagerConfigSpec is a specification of the desired behavior of the
-              Alertmanager configuration.
-              By default, the Alertmanager configuration only applies to alerts for which
-              the `namespace` label is equal to the namespace of the AlertmanagerConfig
-              resource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the
-              Alertmanager CRD).
+            description: spec defines the specification of AlertmanagerConfigSpec
             properties:
               inhibitRules:
                 description: |-
@@ -275,9 +269,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -302,7 +296,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -1276,9 +1270,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1303,7 +1297,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -2025,9 +2019,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2052,7 +2046,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -2830,9 +2824,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2857,7 +2851,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -3622,9 +3616,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3649,7 +3643,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -4448,9 +4442,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4475,7 +4469,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -5322,9 +5316,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5349,7 +5343,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -6224,9 +6218,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6251,7 +6245,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -6969,9 +6963,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6996,7 +6990,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -7674,7 +7668,7 @@ spec:
                             properties:
                               accessKey:
                                 description: |-
-                                  AccessKey is the AWS API key. If not specified, the environment variable
+                                  accessKey is the AWS API key. If not specified, the environment variable
                                   `AWS_ACCESS_KEY_ID` is used.
                                 properties:
                                   key:
@@ -7699,20 +7693,20 @@ spec:
                                 type: object
                                 x-kubernetes-map-type: atomic
                               profile:
-                                description: Profile is the named AWS profile used
+                                description: profile is the named AWS profile used
                                   to authenticate.
                                 type: string
                               region:
-                                description: Region is the AWS region. If blank, the
+                                description: region is the AWS region. If blank, the
                                   region from the default credentials chain used.
                                 type: string
                               roleArn:
-                                description: RoleArn is the named AWS profile used
+                                description: roleArn is the named AWS profile used
                                   to authenticate.
                                 type: string
                               secretKey:
                                 description: |-
-                                  SecretKey is the AWS API secret. If not specified, the environment
+                                  secretKey is the AWS API secret. If not specified, the environment
                                   variable `AWS_SECRET_ACCESS_KEY` is used.
                                 properties:
                                   key:
@@ -7817,9 +7811,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -7844,7 +7838,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -8594,9 +8588,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -8621,7 +8615,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -9326,9 +9320,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -9353,7 +9347,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -10045,9 +10039,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10072,7 +10066,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 
@@ -10836,9 +10830,9 @@ spec:
                                   This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
                                 properties:
                                   credentials:
-                                    description: Selects a key of a Secret in the
-                                      namespace that contains the credentials for
-                                      authentication.
+                                    description: credentials selects a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -10863,7 +10857,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type:
                                     description: |-
-                                      Defines the authentication type. The value is case-insensitive.
+                                      type defines the authentication type. The value is case-insensitive.
 
                                       "Basic" is not a supported value.
 

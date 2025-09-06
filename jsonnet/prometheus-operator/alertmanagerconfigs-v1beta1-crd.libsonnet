@@ -18,7 +18,7 @@
             type: 'object',
           },
           spec: {
-            description: 'AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.\nBy definition, the Alertmanager configuration only applies to alerts for which\nthe `namespace` label is equal to the namespace of the AlertmanagerConfig resource.',
+            description: 'spec defines the specification of AlertmanagerConfigSpec',
             properties: {
               inhibitRules: {
                 description: "List of inhibition rules. The rules will only apply to alerts matching\nthe resource's namespace.",
@@ -151,7 +151,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -174,7 +174,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -1089,7 +1089,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -1112,7 +1112,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -1775,7 +1775,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -1798,7 +1798,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -2520,7 +2520,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -2543,7 +2543,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -3272,7 +3272,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -3295,7 +3295,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -4025,7 +4025,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -4048,7 +4048,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -4826,7 +4826,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -4849,7 +4849,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -5679,7 +5679,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5702,7 +5702,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -6377,7 +6377,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -6400,7 +6400,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -7020,7 +7020,7 @@
                             description: "Configures AWS's Signature Verification 4 signing process to sign requests.",
                             properties: {
                               accessKey: {
-                                description: 'AccessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.',
+                                description: 'accessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.',
                                 properties: {
                                   key: {
                                     description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -7043,19 +7043,19 @@
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               profile: {
-                                description: 'Profile is the named AWS profile used to authenticate.',
+                                description: 'profile is the named AWS profile used to authenticate.',
                                 type: 'string',
                               },
                               region: {
-                                description: 'Region is the AWS region. If blank, the region from the default credentials chain used.',
+                                description: 'region is the AWS region. If blank, the region from the default credentials chain used.',
                                 type: 'string',
                               },
                               roleArn: {
-                                description: 'RoleArn is the named AWS profile used to authenticate.',
+                                description: 'roleArn is the named AWS profile used to authenticate.',
                                 type: 'string',
                               },
                               secretKey: {
-                                description: 'SecretKey is the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.',
+                                description: 'secretKey is the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.',
                                 properties: {
                                   key: {
                                     description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -7146,7 +7146,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -7169,7 +7169,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -7866,7 +7866,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -7889,7 +7889,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -8535,7 +8535,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -8558,7 +8558,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -9195,7 +9195,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -9218,7 +9218,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },
@@ -9909,7 +9909,7 @@
                                 description: 'Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
                                 properties: {
                                   credentials: {
-                                    description: 'Selects a key of a Secret in the namespace that contains the credentials for authentication.',
+                                    description: 'credentials selects a key of a Secret in the namespace that contains the credentials for authentication.',
                                     properties: {
                                       key: {
                                         description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -9932,7 +9932,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   type: {
-                                    description: 'Defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
+                                    description: 'type defines the authentication type. The value is case-insensitive.\n\n"Basic" is not a supported value.\n\nDefault: "Bearer"',
                                     type: 'string',
                                   },
                                 },

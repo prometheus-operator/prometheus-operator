@@ -42,13 +42,13 @@
                 "type": "object"
               },
               "spec": {
-                "description": "ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.",
+                "description": "spec defines the specification of ScrapeConfigSpec.",
                 "properties": {
                   "authorization": {
                     "description": "Authorization header to use on every scrape request.",
                     "properties": {
                       "credentials": {
-                        "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                        "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                         "properties": {
                           "key": {
                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -71,7 +71,7 @@
                         "x-kubernetes-map-type": "atomic"
                       },
                       "type": {
-                        "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                        "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                         "type": "string"
                       }
                     },
@@ -95,7 +95,7 @@
                           "description": "Authorization header configuration to authenticate against the target HTTP endpoint.\nCannot be set at the same time as `oAuth2`, or `basicAuth`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -118,7 +118,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -832,7 +832,7 @@
                           "description": "Optional Authorization header configuration to authenticate against the Consul Server.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -855,7 +855,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -1552,7 +1552,7 @@
                           "description": "Authorization header configuration to authenticate against the DigitalOcean API.\nCannot be set at the same time as `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1575,7 +1575,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -2175,7 +2175,7 @@
                           "description": "Authorization header configuration to authenticate against the Docker API.\nCannot be set at the same time as `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2198,7 +2198,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -2854,7 +2854,7 @@
                           "description": "Authorization header configuration to authenticate against the target HTTP endpoint.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2877,7 +2877,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -3865,7 +3865,7 @@
                           "description": "Authorization header to use on every scrape request.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -3888,7 +3888,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -4583,7 +4583,7 @@
                           "description": "Authorization header configuration, required when role is hcloud.\nRole robot does not support bearer token authentication.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4606,7 +4606,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -5239,7 +5239,7 @@
                           "description": "Authorization header configuration to authenticate against the target HTTP endpoint.\nCannot be set at the same time as `oAuth2`, or `basicAuth`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -5262,7 +5262,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -5871,7 +5871,7 @@
                           "description": "Authorization` header configuration, required when using IONOS.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -5894,7 +5894,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -6483,7 +6483,7 @@
                           "description": "Authorization header to use on every scrape request.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -6506,7 +6506,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -7173,7 +7173,7 @@
                           "description": "Authorization header to use on every scrape request.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -7196,7 +7196,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -7851,7 +7851,7 @@
                           "description": "Optional `authorization` HTTP header configuration.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -7874,7 +7874,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -8518,7 +8518,7 @@
                           "description": "Authorization header configuration.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -8541,7 +8541,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -9104,7 +9104,7 @@
                       "properties": {
                         "action": {
                           "default": "replace",
-                          "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                          "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
                           "enum": [
                             "replace",
                             "Replace",
@@ -9132,24 +9132,24 @@
                           "type": "string"
                         },
                         "modulus": {
-                          "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                          "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                           "format": "int64",
                           "type": "integer"
                         },
                         "regex": {
-                          "description": "Regular expression against which the extracted value is matched.",
+                          "description": "regex defines the regular expression against which the extracted value is matched.",
                           "type": "string"
                         },
                         "replacement": {
-                          "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                          "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
                           "type": "string"
                         },
                         "separator": {
-                          "description": "Separator is the string between concatenated SourceLabels.",
+                          "description": "separator is the string between concatenated SourceLabels.",
                           "type": "string"
                         },
                         "sourceLabels": {
-                          "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                          "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                           "items": {
                             "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                             "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
@@ -9158,7 +9158,7 @@
                           "type": "array"
                         },
                         "targetLabel": {
-                          "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                          "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
                           "type": "string"
                         }
                       },
@@ -9225,7 +9225,7 @@
                           "description": "Authorization header to use on every scrape request.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -9248,7 +9248,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -10617,7 +10617,7 @@
                           "description": "Optional `authorization` HTTP header configuration.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials selects a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -10640,7 +10640,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -11264,7 +11264,7 @@
                       "properties": {
                         "action": {
                           "default": "replace",
-                          "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                          "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
                           "enum": [
                             "replace",
                             "Replace",
@@ -11292,24 +11292,24 @@
                           "type": "string"
                         },
                         "modulus": {
-                          "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                          "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                           "format": "int64",
                           "type": "integer"
                         },
                         "regex": {
-                          "description": "Regular expression against which the extracted value is matched.",
+                          "description": "regex defines the regular expression against which the extracted value is matched.",
                           "type": "string"
                         },
                         "replacement": {
-                          "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                          "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
                           "type": "string"
                         },
                         "separator": {
-                          "description": "Separator is the string between concatenated SourceLabels.",
+                          "description": "separator is the string between concatenated SourceLabels.",
                           "type": "string"
                         },
                         "sourceLabels": {
-                          "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                          "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                           "items": {
                             "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                             "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
@@ -11318,7 +11318,7 @@
                           "type": "array"
                         },
                         "targetLabel": {
-                          "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                          "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
                           "type": "string"
                         }
                       },
@@ -11692,12 +11692,12 @@
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Labels assigned to all metrics scraped from the targets.",
+                          "description": "labels defines labels assigned to all metrics scraped from the targets.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "targets": {
-                          "description": "List of targets for this static configuration.",
+                          "description": "targets defines the list of targets for this static configuration.",
                           "items": {
                             "description": "Target represents a target for Prometheus to scrape\nkubebuilder:validation:MinLength:=1",
                             "type": "string"

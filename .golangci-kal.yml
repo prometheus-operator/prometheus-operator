@@ -15,6 +15,7 @@ linters:
           linters:
             enable:
               - "conflictingmarkers"
+              - "commentstart"
               - "duplicatemarkers" # Ensure there are no exact duplicate markers. for types and fields.
               - "nofloats" # Ensure floats are not used.
               - "optionalorrequired" # Every field should be marked as `+optional` or `+required`.
