@@ -7,7 +7,7 @@
 {{ else }}
 <tr>
     <td>
-        <code>{{ fieldName . }}</code><br/>
+        <code>{{ with $name := fieldName . }}{{ if eq $name "status,omitempty,omitzero" }}{{ "status" }}{{ else }}{{ $name }}{{ end }}{{ end }}</code><br/>
         <em>
             {{ if linkForType .Type }}
                 <a href="{{ linkForType .Type}}">
