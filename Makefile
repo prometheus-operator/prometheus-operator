@@ -321,14 +321,26 @@ shellcheck: $(SHELLCHECK_BINARY)
 check-metrics: $(PROMLINTER_BINARY)
 	$(PROMLINTER_BINARY) lint .
 
+.PHONY: check
+check: check-golang check-api
+
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run -v
-	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml 
+
+.PHONY: check-api
+check-api: $(GOLANGCIKUBEAPILINTER_BINARY)
+	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml
+
+.PHONY: check
+fix: fix-golang fix-api
 
 .PHONY: fix-golang
 fix-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run --fix
+
+.PHONY: fix-api
+fix-api: $(GOLANGCIKUBEAPILINTER_BINARY)
 	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml --fix
 
 MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml

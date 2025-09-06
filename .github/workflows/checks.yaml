@@ -59,16 +59,16 @@ jobs:
         with:
           go-version: '${{ env.golang-version }}'
           check-latest: true
-      - name: go.mod
+      - name: Check go.mod
         run: make tidy && git diff --exit-code
-      - name: golangci-lint
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8.0.0
         with:
           version: '${{ env.golangci-lint-version }}'
           args: --timeout 10m0s
           install-mode: goinstall
       - name: Lint API
-        run: make check-golang
+        run: make check-api
 
   check-metrics:
     runs-on: ubuntu-latest
