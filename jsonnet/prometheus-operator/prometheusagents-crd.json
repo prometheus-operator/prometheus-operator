@@ -9121,6 +9121,26 @@
                   {
                     "message": "probeSelector cannot be set when mode is DaemonSet",
                     "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeSelector))"
+                  },
+                  {
+                    "message": "scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigNamespaceSelector))"
+                  },
+                  {
+                    "message": "probeNamespaceSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeNamespaceSelector))"
+                  },
+                  {
+                    "message": "serviceMonitorSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.serviceMonitorSelector))"
+                  },
+                  {
+                    "message": "serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.serviceMonitorNamespaceSelector))"
+                  },
+                  {
+                    "message": "additionalScrapeConfigs cannot be set when mode is DaemonSet",
+                    "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.additionalScrapeConfigs))"
                   }
                 ]
               },
