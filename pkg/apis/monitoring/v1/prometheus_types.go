@@ -1907,8 +1907,9 @@ type AzureOAuth struct {
 // ManagedIdentity defines the Azure User-assigned Managed identity.
 // +k8s:openapi-gen=true
 type ManagedIdentity struct {
-	// The client id
-	// +required
+	// The client id to be used with Azure AD Managed Identity
+	// For Prometheus >= 3.5.0, this field is allowed to be empty to support system assigned managed identity.
+	// +optional
 	ClientID string `json:"clientId"`
 }
 
