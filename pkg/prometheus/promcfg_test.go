@@ -3672,24 +3672,26 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.27.1",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
-				OAuth2: &monitoringv1.OAuth2{
-					ClientID: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+				OAuth2: &monitoringv1.OAuth2V2{
+					OAuth2: monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_id",
+							},
+						},
+						ClientSecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "oauth2",
 							},
-							Key: "client_id",
+							Key: "client_secret",
 						},
+						TokenURL:       "http://token-url",
+						Scopes:         []string{"scope1"},
+						EndpointParams: map[string]string{"param": "value"},
 					},
-					ClientSecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "oauth2",
-						},
-						Key: "client_secret",
-					},
-					TokenURL:       "http://token-url",
-					Scopes:         []string{"scope1"},
-					EndpointParams: map[string]string{"param": "value"},
 				},
 			},
 			golden: "RemoteReadConfig_v2.27.1.golden",
@@ -3698,24 +3700,26 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
-				OAuth2: &monitoringv1.OAuth2{
-					ClientID: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+				OAuth2: &monitoringv1.OAuth2V2{
+					OAuth2: monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_id",
+							},
+						},
+						ClientSecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "oauth2",
 							},
-							Key: "client_id",
+							Key: "client_secret",
 						},
+						TokenURL:       "http://token-url",
+						Scopes:         []string{"scope1"},
+						EndpointParams: map[string]string{"param": "value"},
 					},
-					ClientSecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "oauth2",
-						},
-						Key: "client_secret",
-					},
-					TokenURL:       "http://token-url",
-					Scopes:         []string{"scope1"},
-					EndpointParams: map[string]string{"param": "value"},
 				},
 			},
 			golden: "RemoteReadConfig_v2.26.0.golden",
@@ -3973,24 +3977,26 @@ func TestRemoteWriteConfig(t *testing.T) {
 			version: "v2.27.1",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
-				OAuth2: &monitoringv1.OAuth2{
-					ClientID: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+				OAuth2: &monitoringv1.OAuth2V2{
+					OAuth2: monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_id",
+							},
+						},
+						ClientSecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "oauth2",
 							},
-							Key: "client_id",
+							Key: "client_secret",
 						},
+						TokenURL:       "http://token-url",
+						Scopes:         []string{"scope1"},
+						EndpointParams: map[string]string{"param": "value"},
 					},
-					ClientSecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "oauth2",
-						},
-						Key: "client_secret",
-					},
-					TokenURL:       "http://token-url",
-					Scopes:         []string{"scope1"},
-					EndpointParams: map[string]string{"param": "value"},
 				},
 			},
 			golden: "RemoteWriteConfig_v2.27.1_1.golden",

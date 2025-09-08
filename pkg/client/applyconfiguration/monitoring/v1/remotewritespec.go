@@ -32,7 +32,7 @@ type RemoteWriteSpecApplyConfiguration struct {
 	RemoteTimeout                 *monitoringv1.Duration                  `json:"remoteTimeout,omitempty"`
 	Headers                       map[string]string                       `json:"headers,omitempty"`
 	WriteRelabelConfigs           []RelabelConfigApplyConfiguration       `json:"writeRelabelConfigs,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration               `json:"oauth2,omitempty"`
+	OAuth2                        *OAuth2V2ApplyConfiguration             `json:"oauth2,omitempty"`
 	BasicAuth                     *BasicAuthApplyConfiguration            `json:"basicAuth,omitempty"`
 	BearerTokenFile               *string                                 `json:"bearerTokenFile,omitempty"`
 	Authorization                 *AuthorizationApplyConfiguration        `json:"authorization,omitempty"`
@@ -132,7 +132,7 @@ func (b *RemoteWriteSpecApplyConfiguration) WithWriteRelabelConfigs(values ...*R
 // WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OAuth2 field is set to the value of the last call.
-func (b *RemoteWriteSpecApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
+func (b *RemoteWriteSpecApplyConfiguration) WithOAuth2(value *OAuth2V2ApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
 	b.OAuth2 = value
 	return b
 }

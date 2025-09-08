@@ -421,7 +421,7 @@ func TestHTTPClientConfigValidate(t *testing.T) {
 		{
 			name: "duplicate basic-auth and oauth2",
 			in: &HTTPConfig{
-				OAuth2:    &monitoringv1.OAuth2{},
+				OAuth2:    &monitoringv1.OAuth2V2{},
 				BasicAuth: &monitoringv1.BasicAuth{},
 			},
 			fail: true,

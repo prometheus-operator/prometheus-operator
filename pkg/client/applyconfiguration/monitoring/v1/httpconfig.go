@@ -25,7 +25,7 @@ import (
 type HTTPConfigApplyConfiguration struct {
 	Authorization                 *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	OAuth2                        *OAuth2V2ApplyConfiguration          `json:"oauth2,omitempty"`
 	BearerTokenSecret             *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
 	TLSConfig                     *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	ProxyConfigApplyConfiguration `json:",inline"`
@@ -57,7 +57,7 @@ func (b *HTTPConfigApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfig
 // WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OAuth2 field is set to the value of the last call.
-func (b *HTTPConfigApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *HTTPConfigApplyConfiguration {
+func (b *HTTPConfigApplyConfiguration) WithOAuth2(value *OAuth2V2ApplyConfiguration) *HTTPConfigApplyConfiguration {
 	b.OAuth2 = value
 	return b
 }

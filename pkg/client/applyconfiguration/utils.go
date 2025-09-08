@@ -122,6 +122,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.NativeHistogramConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OAuth2"):
 		return &monitoringv1.OAuth2ApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("OAuth2V2"):
+		return &monitoringv1.OAuth2V2ApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ObjectReference"):
 		return &monitoringv1.ObjectReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OTLPConfig"):

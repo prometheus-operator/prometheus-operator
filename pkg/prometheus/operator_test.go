@@ -63,7 +63,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_OAuth2",
 			spec: monitoringv1.RemoteWriteSpec{
-				OAuth2: &monitoringv1.OAuth2{},
+				OAuth2: &monitoringv1.OAuth2V2{},
 			},
 		}, {
 			name: "with_SigV4",
@@ -74,14 +74,14 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_OAuth2_and_SigV4",
 			spec: monitoringv1.RemoteWriteSpec{
-				OAuth2: &monitoringv1.OAuth2{},
+				OAuth2: &monitoringv1.OAuth2V2{},
 				Sigv4:  &monitoringv1.Sigv4{},
 			},
 			expectErr: true,
 		}, {
 			name: "with_OAuth2_and_BasicAuth",
 			spec: monitoringv1.RemoteWriteSpec{
-				OAuth2:    &monitoringv1.OAuth2{},
+				OAuth2:    &monitoringv1.OAuth2V2{},
 				BasicAuth: &monitoringv1.BasicAuth{},
 			},
 			expectErr: true,
@@ -97,7 +97,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				BasicAuth: &monitoringv1.BasicAuth{},
 				Sigv4:     &monitoringv1.Sigv4{},
-				OAuth2:    &monitoringv1.OAuth2{},
+				OAuth2:    &monitoringv1.OAuth2V2{},
 			},
 			expectErr: true,
 		},

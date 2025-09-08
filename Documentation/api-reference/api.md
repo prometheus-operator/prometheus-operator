@@ -10557,6 +10557,22 @@ OAuth2
 </tr>
 <tr>
 <td>
+<code>oauth2v2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2V2">
+OAuth2V2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>oauth2v2</code> configures the OAuth2 settings to use when scraping the target.</p>
+<p>It requires Prometheus &gt;= 2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, or <code>basicAuth</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>metricRelabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -11183,8 +11199,8 @@ This is mutually exclusive with Authorization. If both are defined, BasicAuth ta
 <td>
 <code>oauth2</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
+<a href="#monitoring.coreos.com/v1.OAuth2V2">
+OAuth2V2
 </a>
 </em>
 </td>
@@ -11669,7 +11685,7 @@ Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</c
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.OAuth2V2">OAuth2V2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>OAuth2 configures OAuth2 settings.</p>
@@ -11814,6 +11830,170 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.OAuth2V2">OAuth2V2
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+</p>
+<div>
+<p>Extended OAuth2 for workload resources</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientId</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
+SecretOrConfigMap
+</a>
+</em>
+</td>
+<td>
+<p><code>clientId</code> specifies a key of a Secret or ConfigMap containing the
+OAuth2 client&rsquo;s ID.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p><code>clientSecret</code> specifies a key of a Secret containing the OAuth2
+client&rsquo;s secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><code>tokenURL</code> configures the URL to fetch the token from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scopes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p><code>scopes</code> defines the OAuth2 scopes used for the token request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpointParams</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>endpointParams</code> configures the HTTP parameters to append to the token
+URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to use when connecting to the OAuth2 server.
+It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+map[string][]Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientSecretFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p><code>clientSecret</code> specifies a key of a Secret containing the OAuth2
+client&rsquo;s secret.</p>
 </td>
 </tr>
 </tbody>
@@ -16498,8 +16678,8 @@ the local storage should have complete data for.</p>
 <td>
 <code>oauth2</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
+<a href="#monitoring.coreos.com/v1.OAuth2V2">
+OAuth2V2
 </a>
 </em>
 </td>
@@ -16826,8 +17006,8 @@ Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritt
 <td>
 <code>oauth2</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
+<a href="#monitoring.coreos.com/v1.OAuth2V2">
+OAuth2V2
 </a>
 </em>
 </td>
@@ -26136,8 +26316,8 @@ This is mutually exclusive with Authorization. If both are defined, BasicAuth ta
 <td>
 <code>oauth2</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
+<a href="#monitoring.coreos.com/v1.OAuth2V2">
+OAuth2V2
 </a>
 </em>
 </td>
@@ -35737,8 +35917,8 @@ This is mutually exclusive with Authorization. If both are defined, BasicAuth ta
 <td>
 <code>oauth2</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
+<a href="#monitoring.coreos.com/v1.OAuth2V2">
+OAuth2V2
 </a>
 </em>
 </td>

@@ -41,6 +41,7 @@ type EndpointApplyConfiguration struct {
 	TrackTimestampsStaleness      *bool                                `json:"trackTimestampsStaleness,omitempty"`
 	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	OAuth2                        *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	OAuth2V2                      *OAuth2V2ApplyConfiguration          `json:"oauth2v2,omitempty"`
 	MetricRelabelConfigs          []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
 	RelabelConfigs                []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
 	ProxyConfigApplyConfiguration `json:",inline"`
@@ -186,6 +187,14 @@ func (b *EndpointApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfigur
 // If called multiple times, the OAuth2 field is set to the value of the last call.
 func (b *EndpointApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *EndpointApplyConfiguration {
 	b.OAuth2 = value
+	return b
+}
+
+// WithOAuth2V2 sets the OAuth2V2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2V2 field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithOAuth2V2(value *OAuth2V2ApplyConfiguration) *EndpointApplyConfiguration {
+	b.OAuth2V2 = value
 	return b
 }
 

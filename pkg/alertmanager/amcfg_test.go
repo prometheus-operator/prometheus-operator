@@ -147,25 +147,27 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringv1.HTTPConfig{
-					OAuth2: &monitoringv1.OAuth2{
-						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
+					OAuth2: &monitoringv1.OAuth2V2{
+						OAuth2: monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "webhook-client-id",
+									Name: "webhook-client-secret",
 								},
 								Key: "test",
 							},
-						},
-						ClientSecret: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
 							},
-							Key: "test",
-						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
 						},
 					},
 					FollowRedirects: ptr.To(true),
@@ -861,25 +863,27 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringv1.HTTPConfig{
-					OAuth2: &monitoringv1.OAuth2{
-						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
+					OAuth2: &monitoringv1.OAuth2V2{
+						OAuth2: monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "webhook-client-id",
+									Name: "webhook-client-secret",
 								},
 								Key: "test",
 							},
-						},
-						ClientSecret: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
 							},
-							Key: "test",
-						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
 						},
 					},
 					FollowRedirects: ptr.To(true),
@@ -2544,25 +2548,27 @@ func TestGenerateConfig(t *testing.T) {
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
 								URL: ptr.To("http://test.url"),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-									OAuth2: &monitoringv1.OAuth2{
-										ClientID: monitoringv1.SecretOrConfigMap{
-											ConfigMap: &corev1.ConfigMapKeySelector{
+									OAuth2: &monitoringv1.OAuth2V2{
+										OAuth2: monitoringv1.OAuth2{
+											ClientID: monitoringv1.SecretOrConfigMap{
+												ConfigMap: &corev1.ConfigMapKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: "webhook-client-id",
+													},
+													Key: "test",
+												},
+											},
+											ClientSecret: corev1.SecretKeySelector{
 												LocalObjectReference: corev1.LocalObjectReference{
-													Name: "webhook-client-id",
+													Name: "webhook-client-secret",
 												},
 												Key: "test",
 											},
-										},
-										ClientSecret: corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "webhook-client-secret",
+											TokenURL: "https://test.com",
+											Scopes:   []string{"any"},
+											EndpointParams: map[string]string{
+												"some": "value",
 											},
-											Key: "test",
-										},
-										TokenURL: "https://test.com",
-										Scopes:   []string{"any"},
-										EndpointParams: map[string]string{
-											"some": "value",
 										},
 									},
 									FollowRedirects: ptr.To(true),
