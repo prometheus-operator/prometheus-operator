@@ -1040,7 +1040,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return err
 }
 
-// updateConfigResourcesStatus updates the status of the selected configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+// updateConfigResourcesStatus updates the status of the selected configuration
+// resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, resources selectedConfigResources) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1053,24 +1054,28 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
+	// Remove bindings from configuration resources which reference the
+	// workload but aren't selected anymore.
 	var getErr error
 	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
 		if getErr != nil {
+			// Skip all subsequent updates after the first error.
 			return
 		}
+
 		k, ok := c.accessor.MetaNamespaceKey(obj)
 		if !ok {
 			return
 		}
+
 		_, ok = resources.sMons[k]
 		if ok {
 			return
 		}
+
 		s := obj.(*monitoringv1.ServiceMonitor)
-		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
-			if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
-				getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
-			}
+		if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
+			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
 		}
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
@@ -1088,12 +1093,12 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	var getErr error
 	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
 		if getErr != nil {
+			// Skip all subsequent updates after the first error.
 			return
 		}
+
 		s := obj.(*monitoringv1.ServiceMonitor)
-		if prompkg.IsBindingPresent(s.Status.Bindings, p, monitoringv1.PrometheusName) {
-			getErr = prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s)
-		}
+		getErr = prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s)
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
