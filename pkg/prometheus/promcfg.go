@@ -369,7 +369,7 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	finalLimit := cg.getLimit(limit, enforcedLimit)
 	if finalLimit == nil {
 		return cfg
@@ -2082,7 +2082,7 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
+func (cg *ConfigGenerator) getLimit(user *int64, enforced *int64) *int64 {
 	if ptr.Deref(enforced, 0) == 0 {
 		return user
 	}
@@ -2166,7 +2166,7 @@ func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
 		}
 
-		if c.Modulus != uint64(0) {
+		if c.Modulus != int64(0) {
 			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 		}
 
@@ -2665,7 +2665,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
 			}
 
-			if c.Modulus != uint64(0) {
+			if c.Modulus != int64(0) {
 				relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 			}
 
@@ -2759,19 +2759,19 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 		if spec.QueueConfig != nil {
 			queueConfig := yaml.MapSlice{}
 
-			if spec.QueueConfig.Capacity != int(0) {
+			if spec.QueueConfig.Capacity != int64(0) {
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
 			}
 
-			if spec.QueueConfig.MinShards != int(0) {
+			if spec.QueueConfig.MinShards != int32(0) {
 				queueConfig = cg.WithMinimumVersion("2.6.0").AppendMapItem(queueConfig, "min_shards", spec.QueueConfig.MinShards)
 			}
 
-			if spec.QueueConfig.MaxShards != int(0) {
+			if spec.QueueConfig.MaxShards != int32(0) {
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_shards", Value: spec.QueueConfig.MaxShards})
 			}
 
-			if spec.QueueConfig.MaxSamplesPerSend != int(0) {
+			if spec.QueueConfig.MaxSamplesPerSend != int64(0) {
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
 			}
 
@@ -2779,7 +2779,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: string(*spec.QueueConfig.BatchSendDeadline)})
 			}
 
-			if spec.QueueConfig.MaxRetries != int(0) {
+			if spec.QueueConfig.MaxRetries != int32(0) {
 				queueConfig = cg.WithMaximumVersion("2.11.0").AppendMapItem(queueConfig, "max_retries", spec.QueueConfig.MaxRetries)
 			}
 
@@ -2862,7 +2862,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
-func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) > 0 {
 		if ptr.Deref(enforcedLimit, 0) > 0 && *limit > *enforcedLimit {
 			cg.logger.Warn(fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforced_limit", *enforcedLimit)

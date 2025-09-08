@@ -447,14 +447,14 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 		scenario: "no timeout for old version",
 		version:  "0.16.9",
 		web: &monitoringv1.AlertmanagerWebSpec{
-			Timeout: toPtr(uint32(50)),
+			Timeout: toPtr(int32(50)),
 		},
 		expectTimeoutArg: false,
 	}, {
 		scenario: "timeout arg set if specified",
 		version:  operator.DefaultAlertmanagerVersion,
 		web: &monitoringv1.AlertmanagerWebSpec{
-			Timeout: toPtr(uint32(50)),
+			Timeout: toPtr(int32(50)),
 		},
 		expectTimeoutArg: true,
 	}}
@@ -493,7 +493,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 		scenario: "no get-concurrency for old version",
 		version:  "0.16.9",
 		web: &monitoringv1.AlertmanagerWebSpec{
-			GetConcurrency: toPtr(uint32(50)),
+			GetConcurrency: toPtr(int32(50)),
 		},
 		expectGetConcurrencyArg: false,
 	}, {
@@ -501,7 +501,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 		version:  operator.DefaultAlertmanagerVersion,
 
 		web: &monitoringv1.AlertmanagerWebSpec{
-			GetConcurrency: toPtr(uint32(50)),
+			GetConcurrency: toPtr(int32(50)),
 		},
 		expectGetConcurrencyArg: true,
 	}}

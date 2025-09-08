@@ -1535,8 +1535,8 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 				return nil, err
 			}
 			ti.Times = append(ti.Times, timeinterval.TimeRange{
-				StartMinute: parsedTime.Start,
-				EndMinute:   parsedTime.End,
+				StartMinute: int(parsedTime.Start),
+				EndMinute:   int(parsedTime.End),
 			})
 		}
 
@@ -1547,8 +1547,8 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 			}
 			ti.Weekdays = append(ti.Weekdays, timeinterval.WeekdayRange{
 				InclusiveRange: timeinterval.InclusiveRange{
-					Begin: parsedWeekday.Start,
-					End:   parsedWeekday.End,
+					Begin: int(parsedWeekday.Start),
+					End:   int(parsedWeekday.End),
 				},
 			})
 		}
@@ -1556,8 +1556,8 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 		for _, dom := range timeInterval.DaysOfMonth {
 			ti.DaysOfMonth = append(ti.DaysOfMonth, timeinterval.DayOfMonthRange{
 				InclusiveRange: timeinterval.InclusiveRange{
-					Begin: dom.Start,
-					End:   dom.End,
+					Begin: int(dom.Start),
+					End:   int(dom.End),
 				},
 			})
 		}
@@ -1569,8 +1569,8 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 			}
 			ti.Months = append(ti.Months, timeinterval.MonthRange{
 				InclusiveRange: timeinterval.InclusiveRange{
-					Begin: parsedMonth.Start,
-					End:   parsedMonth.End,
+					Begin: int(parsedMonth.Start),
+					End:   int(parsedMonth.End),
 				},
 			})
 		}
@@ -1582,8 +1582,8 @@ func convertMuteTimeInterval(in *monitoringv1alpha1.MuteTimeInterval, crKey type
 			}
 			ti.Years = append(ti.Years, timeinterval.YearRange{
 				InclusiveRange: timeinterval.InclusiveRange{
-					Begin: parsedYear.Start,
-					End:   parsedYear.End,
+					Begin: int(parsedYear.Start),
+					End:   int(parsedYear.End),
 				},
 			})
 		}

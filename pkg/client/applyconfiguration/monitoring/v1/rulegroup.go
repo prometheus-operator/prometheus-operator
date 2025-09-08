@@ -29,7 +29,7 @@ type RuleGroupApplyConfiguration struct {
 	QueryOffset             *monitoringv1.Duration   `json:"query_offset,omitempty"`
 	Rules                   []RuleApplyConfiguration `json:"rules,omitempty"`
 	PartialResponseStrategy *string                  `json:"partial_response_strategy,omitempty"`
-	Limit                   *int                     `json:"limit,omitempty"`
+	Limit                   *int32                   `json:"limit,omitempty"`
 }
 
 // RuleGroupApplyConfiguration constructs a declarative configuration of the RuleGroup type for use with
@@ -100,7 +100,7 @@ func (b *RuleGroupApplyConfiguration) WithPartialResponseStrategy(value string) 
 // WithLimit sets the Limit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Limit field is set to the value of the last call.
-func (b *RuleGroupApplyConfiguration) WithLimit(value int) *RuleGroupApplyConfiguration {
+func (b *RuleGroupApplyConfiguration) WithLimit(value int32) *RuleGroupApplyConfiguration {
 	b.Limit = &value
 	return b
 }

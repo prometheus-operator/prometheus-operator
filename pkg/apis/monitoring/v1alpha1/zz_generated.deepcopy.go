@@ -2834,33 +2834,33 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	}
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.TargetLimit != nil {
 		in, out := &in.TargetLimit, &out.TargetLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelNameLengthLimit != nil {
 		in, out := &in.LabelNameLengthLimit, &out.LabelNameLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.LabelValueLengthLimit != nil {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
-		*out = new(uint64)
+		*out = new(int64)
 		**out = **in
 	}
 	if in.MetricRelabelConfigs != nil {

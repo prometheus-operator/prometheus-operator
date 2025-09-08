@@ -7651,6 +7651,7 @@ spec:
                           description: |-
                             Capacity is the number of samples to buffer per shard before we start
                             dropping them.
+                          format: int64
                           type: integer
                         maxBackoff:
                           description: MaxBackoff is the maximum retry delay.
@@ -7659,14 +7660,17 @@ spec:
                         maxRetries:
                           description: MaxRetries is the maximum number of times to
                             retry a batch on recoverable errors.
+                          format: int32
                           type: integer
                         maxSamplesPerSend:
                           description: MaxSamplesPerSend is the maximum number of
                             samples per send.
+                          format: int64
                           type: integer
                         maxShards:
                           description: MaxShards is the maximum number of shards,
                             i.e. amount of concurrency.
+                          format: int32
                           type: integer
                         minBackoff:
                           description: MinBackoff is the initial retry delay. Gets
@@ -7676,6 +7680,7 @@ spec:
                         minShards:
                           description: MinShards is the minimum number of shards,
                             i.e. amount of concurrency.
+                          format: int32
                           type: integer
                         retryOnRateLimit:
                           description: |-

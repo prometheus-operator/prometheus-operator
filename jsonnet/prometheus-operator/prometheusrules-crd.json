@@ -63,6 +63,7 @@
                         },
                         "limit": {
                           "description": "Limit the number of alerts an alerting rule and series a recording\nrule can produce.\nLimit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.",
+                          "format": "int32",
                           "type": "integer"
                         },
                         "name": {

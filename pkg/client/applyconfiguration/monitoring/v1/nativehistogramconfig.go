@@ -24,7 +24,7 @@ import (
 // with apply.
 type NativeHistogramConfigApplyConfiguration struct {
 	ScrapeClassicHistograms        *bool              `json:"scrapeClassicHistograms,omitempty"`
-	NativeHistogramBucketLimit     *uint64            `json:"nativeHistogramBucketLimit,omitempty"`
+	NativeHistogramBucketLimit     *int64             `json:"nativeHistogramBucketLimit,omitempty"`
 	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
 	ConvertClassicHistogramsToNHCB *bool              `json:"convertClassicHistogramsToNHCB,omitempty"`
 }
@@ -46,7 +46,7 @@ func (b *NativeHistogramConfigApplyConfiguration) WithScrapeClassicHistograms(va
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *NativeHistogramConfigApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *NativeHistogramConfigApplyConfiguration {
+func (b *NativeHistogramConfigApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *NativeHistogramConfigApplyConfiguration {
 	b.NativeHistogramBucketLimit = &value
 	return b
 }

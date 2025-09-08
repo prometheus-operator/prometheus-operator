@@ -96,7 +96,7 @@ type RuleGroup struct {
 	// rule can produce.
 	// Limit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.
 	// +optional
-	Limit *int `json:"limit,omitempty"`
+	Limit *int32 `json:"limit,omitempty"`
 }
 
 // Rule describes an alerting or recording rule

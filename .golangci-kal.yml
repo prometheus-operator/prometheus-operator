@@ -16,6 +16,7 @@ linters:
             enable:
               - "conflictingmarkers"
               - "duplicatemarkers" # Ensure there are no exact duplicate markers. for types and fields.
+              - "integers"
               - "nofloats" # Ensure floats are not used.
               - "optionalorrequired" # Every field should be marked as `+optional` or `+required`.
               - "statussubresource" # All root objects that have a `status` field should have a status subresource.
