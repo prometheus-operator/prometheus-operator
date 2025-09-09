@@ -649,6 +649,10 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
 
+	if sigv4.UseFIPSSTSEndpoint != nil {
+		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "use_fips_sts_endpoint", Value: *sigv4.UseFIPSSTSEndpoint})
+	}
+
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "sigv4", sigv4Cfg)
 }
 

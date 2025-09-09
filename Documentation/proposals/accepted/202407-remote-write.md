@@ -53,6 +53,7 @@ spec:
   url: "https://aps-workspaces.us-west-2.amazonaws.com/workspaces/<workspace id>/api/v1/remote_write"
   sigv4:
     region: us-west-2
+    useFipsSTSEndpoint: true
     accessKey:
       # Secret object references will be resolved in the namespace of this remoteWrite object.
       # In this manifest it is the "default" namespace.
