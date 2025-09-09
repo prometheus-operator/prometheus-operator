@@ -17,10 +17,10 @@ set -e
 set -o pipefail
 
 CPU_ARCHS="${CPU_ARCHS:-"amd64 arm64 arm ppc64le s390x"}"
-REGISTRIES="${REGISTRIES:-"ghcr.io"}"
+REGISTRIES="${REGISTRIES:-"ttl.sh"}"
 
 # IMAGE_OPERATOR, IMAGER_RELOADER and IMAGE_WEBHOOK need to be exported to be used by `make`
-export IMAGE_OPERATOR="${IMAGE_OPERATOR:-"appian/prometheus-operator"}"
+export IMAGE_OPERATOR="2e356b16-a6f6-4d53-bf64-46889ab23d69"
 export IMAGE_RELOADER="${IMAGE_RELOADER:-"prometheus-operator/prometheus-config-reloader"}"
 export IMAGE_WEBHOOK="${IMAGE_WEBHOOK:="prometheus-operator/admission-webhook"}"
 
@@ -30,7 +30,7 @@ COMMIT_SHA="$(echo "${GITHUB_SHA:-$(git rev-parse HEAD)}" | cut -c1-8)"
 GITHUB_REF="${GITHUB_REF:-$(git symbolic-ref HEAD)}"
 TAG="${GITHUB_REF##*/}"
 
-IMAGE_SUFFIX="-dev"
+IMAGE_SUFFIX=""
 MAIN_BRANCH=""
 
 # Use the "official" image repository if TAG is a semver tag or it is the main
@@ -56,7 +56,7 @@ for i in ${REGISTRIES}; do
 	RELOADERS="$i/${IMAGE_RELOADER}${IMAGE_SUFFIX} ${RELOADERS}"
 	WEBHOOKS="$i/${IMAGE_WEBHOOK}${IMAGE_SUFFIX} ${WEBHOOKS}"
 done
-
+TAG="3hr"
 echo "Tag: ${TAG}"
 echo "Main branch: ${MAIN_BRANCH}"
 echo "Image suffix: ${IMAGE_SUFFIX}"
@@ -83,7 +83,7 @@ done
 
 # Compose the multi-arch images and push them to remote repositories.
 export DOCKER_CLI_EXPERIMENTAL=enabled
-for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
+for r in ${OPERATORS}; do
 	# Images need to be pushed to the remote registry before creating the manifest.
 	MANIFEST="${r}:${TAG}"
 	IMAGES=()
