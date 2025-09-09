@@ -1135,7 +1135,11 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
-			promArgs = cg.WithMinimumVersion("2.54.0").WithMaximumVersion("3.3.999").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+			cg = cg.WithMinimumVersion("2.54.0")
+			if cg.Version().LT(semver.MustParse("3.4.0")) {
+				promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+			}
+
 		}
 	}
 
