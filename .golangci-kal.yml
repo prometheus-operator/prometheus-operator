@@ -1,3 +1,9 @@
+# This file holds the Kube-API-Linter (KAL) configuration.
+# KAL ensures that our Custom Resource Definitions meet the Kubernetes API
+# conventions (as much as possible).
+#
+# The linters documentation is at
+# https://github.com/kubernetes-sigs/kube-api-linter/blob/main/docs/linters.md
 version: "2"
 run:
   go: "1.24"
@@ -5,25 +11,27 @@ run:
 linters:
   default: none
   enable:
-    - kubeapilinter # linter for Kube API conventions
+    - kubeapilinter
   settings:
     custom:
       kubeapilinter:
         type: module
-        description: KAL is the Kube-API-Linter and lints Kube like APIs based on API conventions and best practices.
+        description: KAL is the Kube-API-Linter and lints Custom Resource Definitions (CRDs) based on API conventions and best practices.
         settings:
           linters:
+            # We configure the list of enabled linters explicitly.
+            # Whenever a new linter is added, it should not break the backward
+            # compatibility of existing APIs (at least for v1 APIs).
             enable:
               - "conflictingmarkers"
-              - "duplicatemarkers" # Ensure there are no exact duplicate markers. for types and fields.
-              - "nofloats" # Ensure floats are not used.
-              - "optionalorrequired" # Every field should be marked as `+optional` or `+required`.
-              - "statussubresource" # All root objects that have a `status` field should have a status subresource.
-              - "uniquemarkers" # Ensure that types and fields do not contain more than a single definition of a marker that should only be present once.
-
-            # Linters below this line are disabled, pending conversation on how and when to enable them.
+              - "duplicatemarkers"
+              - "nofloats"
+              - "optionalorrequired"
+              - "statussubresource"
+              - "uniquemarkers"
+              - "jsontags"
             disable:
-            - "*" # We will manually enable new linters after understanding the impact. Disable all by default.
+              - "*"
           lintersConfig:
             conflictingmarkers:
               conflicts:
@@ -36,10 +44,11 @@ linters:
   exclusions:
     generated: strict
     paths:
-      - _test\.go  # Exclude test files.
+      # Exclude test files and generated code.
+      - _test\.go
       - zz_generated.*\.go$
     rules:
-    ## KAL should only run on API folders.
+    # KAL only validates the API folders.
     - path-except: pkg/apis/monitoring/
       linters:
         - kubeapilinter

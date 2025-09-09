@@ -68,6 +68,8 @@ This is a rough outline of what a contributor's workflow looks like:
 
 Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.
 
+We also use [golangci-lint](https://golangci-lint.run/docs/) to lint the Go code (including the API definitions). Make sure to execute `make check` before creating/updating your PR.
+
 Thanks for your contributions!
 
 ### Changes to the APIs

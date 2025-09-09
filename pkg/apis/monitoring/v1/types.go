@@ -438,6 +438,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `clientCAFile`.
 	//
 	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
 	// Path to the CA certificate file for client certificate authentication to
 	// the server.
@@ -754,34 +755,21 @@ type OAuth2 struct {
 	ProxyConfig `json:",inline"`
 }
 
-type OAuth2ValidationError struct {
-	// +optional
-	err string
-}
-
-func (e *OAuth2ValidationError) Error() string {
-	return e.err
-}
-
 func (o *OAuth2) Validate() error {
 	if o.TokenURL == "" {
-		return &OAuth2ValidationError{err: "OAuth2 token url must be specified"}
+		return errors.New("OAuth2 tokenURL must be specified")
 	}
 
 	if o.ClientID == (SecretOrConfigMap{}) {
-		return &OAuth2ValidationError{err: "OAuth2 client id must be specified"}
+		return errors.New("OAuth2 clientID must be specified")
 	}
 
 	if err := o.ClientID.Validate(); err != nil {
-		return &OAuth2ValidationError{
-			err: fmt.Sprintf("invalid OAuth2 client id: %s", err.Error()),
-		}
+		return fmt.Errorf("invalid OAuth2 clientID: %w", err)
 	}
 
 	if err := o.TLSConfig.Validate(); err != nil {
-		return &OAuth2ValidationError{
-			err: fmt.Sprintf("invalid OAuth2 tlsConfig: %s", err.Error()),
-		}
+		return fmt.Errorf("invalid OAuth2 tlsConfig: %w", err)
 	}
 
 	return nil

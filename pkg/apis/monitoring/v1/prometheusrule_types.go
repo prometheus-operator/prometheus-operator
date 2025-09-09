@@ -82,6 +82,7 @@ type RuleGroup struct {
 	// It requires Prometheus >= v2.53.0.
 	// It is not supported for ThanosRuler.
 	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	QueryOffset *Duration `json:"query_offset,omitempty"`
 	// List of alerting and recording rules.
 	// +optional
@@ -91,6 +92,7 @@ type RuleGroup struct {
 	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
 	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
 	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
 	// Limit the number of alerts an alerting rule and series a recording
 	// rule can produce.
@@ -120,6 +122,7 @@ type Rule struct {
 	For *Duration `json:"for,omitempty"`
 	// KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.
 	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	KeepFiringFor *NonEmptyDuration `json:"keep_firing_for,omitempty"`
 	// Labels to add or overwrite.
 	// +optional

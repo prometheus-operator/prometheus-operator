@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"errors"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -193,22 +195,10 @@ type ProbeTargets struct {
 // Validate semantically validates the given ProbeTargets.
 func (it *ProbeTargets) Validate() error {
 	if it.StaticConfig == nil && it.Ingress == nil {
-		return &ProbeTargetsValidationError{"at least one of .spec.targets.staticConfig and .spec.targets.ingress is required"}
+		return errors.New("at least one of .spec.targets.staticConfig and .spec.targets.ingress is required")
 	}
 
 	return nil
-}
-
-// ProbeTargetsValidationError is returned by ProbeTargets.Validate()
-// on semantically invalid configurations.
-// +k8s:openapi-gen=false
-type ProbeTargetsValidationError struct {
-	// +optional
-	err string
-}
-
-func (e *ProbeTargetsValidationError) Error() string {
-	return e.err
 }
 
 // ProbeTargetStaticConfig defines the set of static targets considered for probing.
