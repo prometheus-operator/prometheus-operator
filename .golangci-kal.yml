@@ -30,6 +30,7 @@ linters:
               - "statussubresource"
               - "uniquemarkers"
               - "jsontags"
+              - "statusoptional"
             disable:
               - "*"
           lintersConfig:
