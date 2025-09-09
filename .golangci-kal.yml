@@ -25,6 +25,7 @@ linters:
             enable:
               - "conflictingmarkers"
               - "duplicatemarkers"
+              - "maxlength"
               - "nofloats"
               - "optionalorrequired"
               - "statussubresource"

@@ -74,9 +74,12 @@ type GoDuration string
 type HostAlias struct {
 	// IP address of the host file entry.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	IP string `json:"ip"`
 	// Hostnames for the above IP address.
 	// +required
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Hostnames []string `json:"hostnames"`
 }
 
@@ -86,9 +89,11 @@ type HostAlias struct {
 type PrometheusRuleExcludeConfig struct {
 	// Namespace of the excluded PrometheusRule object.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	RuleNamespace string `json:"ruleNamespace"`
 	// Name of the excluded PrometheusRule object.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	RuleName string `json:"ruleName"`
 }
 
@@ -97,6 +102,7 @@ type ProxyConfig struct {
 	//
 	// +kubebuilder:validation:Pattern:="^(http|https|socks5)://.+$"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 	// `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
 	// that should be excluded from proxying. IP and domain names can
@@ -104,6 +110,7 @@ type ProxyConfig struct {
 	//
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	NoProxy *string `json:"noProxy,omitempty"`
 	// Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 	//
@@ -116,6 +123,7 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	// +mapType:=atomic
+	// +kubebuilder:validation:MaxProperties=1000
 	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
@@ -174,18 +182,22 @@ type ObjectReference struct {
 	// +optional
 	// +kubebuilder:default:="monitoring.coreos.com"
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
+	// +kubebuilder:validation:MaxLength=100000
 	Group string `json:"group"`
 	// Resource of the referent.
 	// +required
 	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes;scrapeconfigs
+	// +kubebuilder:validation:MaxLength=100000
 	Resource string `json:"resource"`
 	// Namespace of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 	// +required
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	Namespace string `json:"namespace"`
 	// Name of the referent. When not set, all resources in the namespace are matched.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name,omitempty"`
 }
 
@@ -231,18 +243,22 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 type Condition struct {
 	// Type of the condition being reported.
 	// +required
+// +kubebuilder:validation:MaxLength=100000
 	Type ConditionType `json:"type"`
 	// Status of the condition.
 	// +required
+// +kubebuilder:validation:MaxLength=100000
 	Status ConditionStatus `json:"status"`
 	// lastTransitionTime is the time of the last update to the current status property.
 	// +required
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// Reason for the condition's last transition.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Reason string `json:"reason,omitempty"`
 	// Human-readable message indicating details for the condition's last transition.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// ObservedGeneration represents the .metadata.generation that the
 	// condition was set based upon. For instance, if `.metadata.generation` is
@@ -320,6 +336,7 @@ type EmbeddedObjectMetadata struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
 
 	// Map of string keys and values that can be used to organize and categorize
@@ -327,6 +344,7 @@ type EmbeddedObjectMetadata struct {
 	// and services.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
 
 	// Annotations is an unstructured key value map stored with a resource that may be
@@ -334,6 +352,7 @@ type EmbeddedObjectMetadata struct {
 	// queryable and should be preserved when modifying objects.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
 }
 
@@ -367,23 +386,27 @@ type WebHTTPHeaders struct {
 	// Set the Content-Security-Policy header to HTTP responses.
 	// Unset if blank.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ContentSecurityPolicy string `json:"contentSecurityPolicy,omitempty"`
 	// Set the X-Frame-Options header to HTTP responses.
 	// Unset if blank. Accepted values are deny and sameorigin.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
 	// +kubebuilder:validation:Enum="";Deny;SameOrigin
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	XFrameOptions string `json:"xFrameOptions,omitempty"`
 	// Set the X-Content-Type-Options header to HTTP responses.
 	// Unset if blank. Accepted value is nosniff.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
 	// +kubebuilder:validation:Enum="";NoSniff
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	XContentTypeOptions string `json:"xContentTypeOptions,omitempty"`
 	// Set the X-XSS-Protection header to all responses.
 	// Unset if blank.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	XXSSProtection string `json:"xXSSProtection,omitempty"`
 	// Set the Strict-Transport-Security header to HTTP responses.
 	// Unset if blank.
@@ -392,6 +415,7 @@ type WebHTTPHeaders struct {
 	// domain and subdomains over HTTPS.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	StrictTransportSecurity string `json:"strictTransportSecurity,omitempty"`
 }
 
@@ -413,6 +437,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `cert`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	CertFile *string `json:"certFile,omitempty"`
 
 	// Secret containing the TLS private key for the web server.
@@ -430,6 +455,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `keySecret`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	KeyFile *string `json:"keyFile,omitempty"`
 
 	// Secret or ConfigMap containing the CA certificate for client certificate
@@ -446,6 +472,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `client_ca`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClientCAFile *string `json:"clientCAFile,omitempty"`
 	// The server policy for client TLS authentication.
 	//
@@ -453,15 +480,18 @@ type WebTLSConfig struct {
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClientAuthType *string `json:"clientAuthType,omitempty"`
 
 	// Minimum TLS version that is acceptable.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MinVersion *string `json:"minVersion,omitempty"`
 	// Maximum TLS version that is acceptable.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MaxVersion *string `json:"maxVersion,omitempty"`
 
 	// List of supported cipher suites for TLS versions up to TLS 1.2.
@@ -471,6 +501,8 @@ type WebTLSConfig struct {
 	// https://golang.org/pkg/crypto/tls/#pkg-constants
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	CipherSuites []string `json:"cipherSuites,omitempty"`
 
 	// Controls whether the server selects the client's most preferred cipher
@@ -489,6 +521,8 @@ type WebTLSConfig struct {
 	// https://golang.org/pkg/crypto/tls/#CurveID
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
 
@@ -549,6 +583,7 @@ type Endpoint struct {
 	//
 	// It takes precedence over `targetPort`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Port string `json:"port,omitempty"`
 
 	// Name or number of the target port of the `Pod` object behind the
@@ -561,6 +596,7 @@ type Endpoint struct {
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Path string `json:"path,omitempty"`
 
 	// HTTP scheme to use for scraping.
@@ -572,16 +608,19 @@ type Endpoint struct {
 	//
 	// +kubebuilder:validation:Enum=http;https
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Scheme string `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Params map[string][]string `json:"params,omitempty"`
 
 	// Interval at which Prometheus scrapes the metrics from the target.
 	//
 	// If empty, Prometheus uses the global scrape interval.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Interval Duration `json:"interval,omitempty"`
 
 	// Timeout after which Prometheus considers the scrape to be failed.
@@ -590,6 +629,7 @@ type Endpoint struct {
 	// than the target's scrape interval value in which the latter is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// TLS configuration to use when scraping the target.
@@ -601,6 +641,7 @@ type Endpoint struct {
 	//
 	// Deprecated: use `authorization` instead.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// `bearerTokenSecret` specifies a key of a Secret containing the bearer
@@ -661,6 +702,7 @@ type Endpoint struct {
 	// samples before ingestion.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 
 	// `relabelings` configures the relabeling rules to apply the target's
@@ -673,6 +715,7 @@ type Endpoint struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
 	// +optional
@@ -729,17 +772,21 @@ type OAuth2 struct {
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	TokenURL string `json:"tokenUrl"`
 
 	// `scopes` defines the OAuth2 scopes used for the token request.
 	//
 	// +optional.
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Scopes []string `json:"scopes,omitempty"`
 
 	// `endpointParams` configures the HTTP parameters to append to the token
 	// URL.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 
 	// TLS configuration to use when connecting to the OAuth2 server.
@@ -855,6 +902,7 @@ type SafeTLSConfig struct {
 
 	// Used to verify the hostname for the targets.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ServerName *string `json:"serverName,omitempty"`
 
 	// Disable target certificate validation.
@@ -914,12 +962,15 @@ type TLSConfig struct {
 	SafeTLSConfig `json:",inline"`
 	// Path to the CA cert in the Prometheus container to use for the targets.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	CAFile string `json:"caFile,omitempty"`
 	// Path to the client cert file in the Prometheus container for the targets.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	CertFile string `json:"certFile,omitempty"`
 	// Path to the client key file in the Prometheus container for the targets.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	KeyFile string `json:"keyFile,omitempty"`
 }
 
@@ -982,6 +1033,8 @@ type NamespaceSelector struct {
 	Any bool `json:"any,omitempty"`
 	// List of namespace names to select from.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	MatchNames []string `json:"matchNames,omitempty"`
 
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
@@ -995,9 +1048,11 @@ type Argument struct {
 	// Name of the argument, e.g. "scrape.discovery-reload-interval".
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 	// Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Value string `json:"value,omitempty"`
 }
 
@@ -1063,6 +1118,7 @@ type ConfigResourceStatus struct {
 	// +listMapKey=name
 	// +listMapKey=namespace
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Bindings []WorkloadBinding `json:"bindings,omitempty"`
 }
 
@@ -1072,23 +1128,28 @@ type WorkloadBinding struct {
 	// The group of the referenced resource.
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Group string `json:"group"`
 	// The type of resource being referenced (e.g. Prometheus or PrometheusAgent).
 	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Resource string `json:"resource"`
 	// The name of the referenced object.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 	// The namespace of the referenced object.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Namespace string `json:"namespace"`
 	// The current state of the configuration resource when bound to the referenced Prometheus object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Conditions []ConfigResourceCondition `json:"conditions,omitempty"`
 }
 
@@ -1102,15 +1163,18 @@ type ConfigResourceCondition struct {
 	Type ConditionType `json:"type"`
 	// Status of the condition.
 	// +required
+// +kubebuilder:validation:MaxLength=100000
 	Status ConditionStatus `json:"status"`
 	// LastTransitionTime is the time of the last update to the current status property.
 	// +required
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// Reason for the condition's last transition.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Reason string `json:"reason,omitempty"`
 	// Human-readable message indicating details for the condition's last transition.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// ObservedGeneration represents the .metadata.generation that the
 	// condition was set based upon. For instance, if `.metadata.generation` is

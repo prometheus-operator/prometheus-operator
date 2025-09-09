@@ -21,6 +21,8 @@ type PodDNSConfig struct {
 	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
+	// +kubebuilder:validation:items:MaxLength=45
+	// +kubebuilder:validation:MaxItems=1000
 	Nameservers []string `json:"nameservers,omitempty"`
 
 	// A list of DNS search domains for host-name lookup.
@@ -28,6 +30,8 @@ type PodDNSConfig struct {
 	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Searches []string `json:"searches,omitempty"`
 
 	// A list of DNS resolver options.
@@ -37,6 +41,7 @@ type PodDNSConfig struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=name
+// +kubebuilder:validation:MaxItems=100000
 	Options []PodDNSConfigOption `json:"options,omitempty"`
 }
 
@@ -45,10 +50,12 @@ type PodDNSConfigOption struct {
 	// Name is required and must be unique.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 
 	// Value is optional.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Value *string `json:"value,omitempty"`
 }
 

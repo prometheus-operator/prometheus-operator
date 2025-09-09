@@ -216,6 +216,7 @@ type CommonPrometheusFields struct {
 	// If not specified, the operator assumes the latest upstream version of
 	// Prometheus available at the time when the version of the operator was
 	// released.
+	// +kubebuilder:validation:MaxLength=100
 	// +optional
 	Version string `json:"version,omitempty"`
 
@@ -235,6 +236,7 @@ type CommonPrometheusFields struct {
 	// when the operator was released.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Image *string `json:"image,omitempty"`
 	// Image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
 	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
@@ -244,6 +246,7 @@ type CommonPrometheusFields struct {
 	// An optional list of references to Secrets in the same namespace
 	// to use for pulling images from registries.
 	// See http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	// +kubebuilder:validation:MaxItems=10
 	// +optional
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
@@ -290,6 +293,7 @@ type CommonPrometheusFields struct {
 	//
 	// Default: "prometheus_replica"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ReplicaExternalLabelName *string `json:"replicaExternalLabelName,omitempty"`
 	// Name of Prometheus external label used to denote the Prometheus instance
 	// name. The external label will _not_ be added when the field is set to
@@ -297,15 +301,18 @@ type CommonPrometheusFields struct {
 	//
 	// Default: "prometheus"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PrometheusExternalLabelName *string `json:"prometheusExternalLabelName,omitempty"`
 
 	// Log level for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Log level for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Interval between consecutive scrapes.
@@ -313,10 +320,12 @@ type CommonPrometheusFields struct {
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait until a scrape request times out.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// The protocols to negotiate during a scrape. It tells clients the
@@ -330,6 +339,7 @@ type CommonPrometheusFields struct {
 	//
 	// +listType=set
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
 	// The labels to add to any time series or alerts when communicating with
@@ -337,6 +347,7 @@ type CommonPrometheusFields struct {
 	// Labels defined by `spec.replicaExternalLabelName` and
 	// `spec.prometheusExternalLabelName` take precedence over this list.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
 
 	// Enable Prometheus to be used as a receiver for the Prometheus remote
@@ -368,6 +379,7 @@ type CommonPrometheusFields struct {
 	// +kubebuilder:validation:MinItems=1
 	// +listType:=set
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RemoteWriteReceiverMessageVersions []RemoteWriteMessageVersion `json:"remoteWriteReceiverMessageVersions,omitempty"`
 
 	// Enable access to Prometheus feature flags. By default, no features are enabled.
@@ -380,12 +392,15 @@ type CommonPrometheusFields struct {
 	//
 	// +listType:=set
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
+// +kubebuilder:validation:MaxItems=100000
 	EnableFeatures []EnableFeature `json:"enableFeatures,omitempty"`
 
 	// The external URL under which the Prometheus service is externally
 	// available. This is necessary to generate correct URLs (for instance if
 	// Prometheus is accessible behind an Ingress resource).
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ExternalURL string `json:"externalUrl,omitempty"`
 	// The route prefix Prometheus registers HTTP handlers for.
 	//
@@ -394,6 +409,7 @@ type CommonPrometheusFields struct {
 	// the server serves requests under a different route prefix. For example
 	// for use with `kubectl proxy`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoutePrefix string `json:"routePrefix,omitempty"`
 
 	// Storage defines the storage used by Prometheus.
@@ -404,12 +420,14 @@ type CommonPrometheusFields struct {
 	// StatefulSet definition. Volumes specified will be appended to other
 	// volumes that are generated as a result of StorageSpec objects.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Volumes []v1.Volume `json:"volumes,omitempty"`
 	// VolumeMounts allows the configuration of additional VolumeMounts.
 	//
 	// VolumeMounts will be appended to other VolumeMounts in the 'prometheus'
 	// container, that are generated as a result of StorageSpec objects.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 
 	// The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
@@ -430,11 +448,13 @@ type CommonPrometheusFields struct {
 
 	// Defines on which Nodes the Pods are scheduled.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
@@ -450,12 +470,16 @@ type CommonPrometheusFields struct {
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
 	// +listType:=set
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
 
@@ -464,14 +488,17 @@ type CommonPrometheusFields struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// Defines the Pods' tolerations if specified.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 
 	// Defines the pod's topology spread constraints if specified.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	TopologySpreadConstraints []TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 
 	// Defines the list of remote write configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
 	// Settings related to the OTLP receiver feature.
@@ -519,6 +546,7 @@ type CommonPrometheusFields struct {
 	// maintainers will support and by doing so, you accept that this behaviour
 	// may break at any time without notice.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Containers []v1.Container `json:"containers,omitempty"`
 	// InitContainers allows injecting initContainers to the Pod definition. Those
 	// can be used to e.g.  fetch secrets for injection into the Prometheus
@@ -536,6 +564,7 @@ type CommonPrometheusFields struct {
 	// maintainers will support and by doing so, you accept that this behaviour
 	// may break at any time without notice.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 
 	// AdditionalScrapeConfigs allows specifying a key of a Secret containing
@@ -562,11 +591,13 @@ type CommonPrometheusFields struct {
 
 	// Priority class assigned to the Pods.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// Port name used for the pods and governing service.
 	// Default: "web"
 	// +kubebuilder:default:="web"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PortName string `json:"portName,omitempty"`
 
 	// When true, ServiceMonitor, PodMonitor and Probe object are forbidden to
@@ -615,6 +646,7 @@ type CommonPrometheusFields struct {
 	// The label's value is the namespace of the `ServiceMonitor`,
 	// `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 
 	// When defined, enforcedSampleLimit specifies a global limit on the number
@@ -731,6 +763,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// Specifies the validation scheme for metric and label names.
@@ -781,6 +814,7 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=ip
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 
 	// AdditionalArgs allows setting additional arguments for the 'prometheus' container.
@@ -795,6 +829,7 @@ type CommonPrometheusFields struct {
 	// fail and an error will be logged.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 
 	// Configures compression of the write-ahead log (WAL) using Snappy.
@@ -812,6 +847,7 @@ type CommonPrometheusFields struct {
 	// It is only applicable if `spec.enforcedNamespaceLabel` set to true.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
 
 	// Use the host's network namespace if true.
@@ -830,6 +866,8 @@ type CommonPrometheusFields struct {
 	// PodMonitor and ServiceMonitor objects.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// TracingConfig configures tracing in Prometheus.
@@ -846,6 +884,7 @@ type CommonPrometheusFields struct {
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 	// Only valid in Prometheus versions 2.45.0 and newer.
@@ -918,6 +957,7 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=name
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
 	// Defines the service discovery role used to discover targets from
@@ -946,6 +986,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
 
 	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
@@ -956,6 +997,7 @@ type CommonPrometheusFields struct {
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ServiceName *string `json:"serviceName,omitempty"`
 
 	// RuntimeConfig configures the values for the Prometheus process behavior
@@ -1128,21 +1170,29 @@ type PrometheusSpec struct {
 
 	// Deprecated: use 'spec.image' instead.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
+	// +kubebuilder:validation:MaxLength=100000
 	BaseImage string `json:"baseImage,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
+	// +kubebuilder:validation:MaxLength=100000
 	Tag string `json:"tag,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
+	// +kubebuilder:validation:MaxLength=100000
 	SHA string `json:"sha,omitempty"`
 
 	// How long to retain the Prometheus data.
 	//
 	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Retention Duration `json:"retention,omitempty"`
 	// Maximum number of bytes used by the Prometheus data.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// ShardRetentionPolicy defines the retention policy for the Prometheus shards.
@@ -1169,6 +1219,7 @@ type PrometheusSpec struct {
 	// This is only relevant when `spec.enforcedNamespaceLabel` is set to true.
 	// +optional
 	// Deprecated: use `spec.excludedFromEnforcement` instead.
+// +kubebuilder:validation:MaxItems=100000
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// PrometheusRule objects to be selected for rule evaluation. An empty
 	// label selector matches all objects. A null label selector matches no
@@ -1223,6 +1274,7 @@ type PrometheusSpec struct {
 
 	// Defines the list of remote read configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RemoteRead []RemoteReadSpec `json:"remoteRead,omitempty"`
 
 	// Defines the configuration of the optional Thanos sidecar.
@@ -1242,6 +1294,7 @@ type PrometheusSpec struct {
 	// `/dev/stdout`, to log query information to the default Prometheus log
 	// stream.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 
 	// AllowOverlappingBlocks enables vertical compaction and vertical query
@@ -1260,11 +1313,13 @@ type PrometheusSpec struct {
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
 	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
 	// It requires Prometheus >= v2.53.0.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
 
 	// Enables access to the Prometheus web admin API.
@@ -1289,6 +1344,7 @@ var (
 
 type RetainConfig struct {
 	// +required
+// +kubebuilder:validation:MaxLength=100000
 	RetentionPeriod Duration `json:"retentionPeriod"`
 }
 
@@ -1311,11 +1367,13 @@ type PrometheusTracingConfig struct {
 	// Client used to export the traces. Supported values are `http` or `grpc`.
 	// +kubebuilder:validation:Enum=http;grpc
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClientType *string `json:"clientType"`
 
 	// Endpoint to send the traces to. Should be provided in format <host>:<port>.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Endpoint string `json:"endpoint"`
 
 	// Sets the probability a given trace will be sampled. Must be a float from 0 through 1.
@@ -1328,15 +1386,18 @@ type PrometheusTracingConfig struct {
 
 	// Key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Headers map[string]string `json:"headers"`
 
 	// Compression key for supported compression types. The only supported value is `gzip`.
 	// +kubebuilder:validation:Enum=gzip
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Compression *string `json:"compression"`
 
 	// Maximum time the exporter will wait for each batch export.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Timeout *Duration `json:"timeout"`
 
 	// TLS Config to use when sending traces.
@@ -1372,17 +1433,20 @@ type PrometheusStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Conditions []Condition `json:"conditions,omitempty"`
 	// The list has one entry per shard. Each entry provides a summary of the shard status.
 	// +listType=map
 	// +listMapKey=shardID
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 	// Shards is the most recently observed number of shards.
 	// +optional
 	Shards int32 `json:"shards,omitempty"`
 	// The selector used to match the pods targeted by this Prometheus resource.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Selector string `json:"selector,omitempty"`
 }
 
@@ -1391,6 +1455,7 @@ type PrometheusStatus struct {
 type AlertingSpec struct {
 	// Alertmanager endpoints where Prometheus should send alerts to.
 	// +required
+// +kubebuilder:validation:MaxItems=100000
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
@@ -1430,6 +1495,7 @@ type StorageSpec struct {
 type QuerySpec struct {
 	// The delta difference allowed for retrieving metrics during expression evaluations.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LookbackDelta *string `json:"lookbackDelta,omitempty"`
 	// Number of concurrent queries that can be run at once.
 	// +kubebuilder:validation:Minimum:=1
@@ -1442,6 +1508,7 @@ type QuerySpec struct {
 	MaxSamples *int32 `json:"maxSamples,omitempty"`
 	// Maximum time a query may take before being aborted.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Timeout *Duration `json:"timeout,omitempty"`
 }
 
@@ -1453,6 +1520,7 @@ type PrometheusWebSpec struct {
 
 	// The prometheus web page title.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PageTitle *string `json:"pageTitle,omitempty"`
 
 	// Defines the maximum number of simultaneous connections
@@ -1477,6 +1545,7 @@ type ThanosSpec struct {
 	// the time when the operator was released.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Image *string `json:"image,omitempty"`
 
 	// Version of Thanos being deployed. The operator uses this information
@@ -1487,16 +1556,20 @@ type ThanosSpec struct {
 	// released.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Version *string `json:"version,omitempty"`
 
 	// +optional
 	// Deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
+	// +kubebuilder:validation:MaxLength=100000
 	Tag *string `json:"tag,omitempty"`
 	// +optional
 	// Deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
+	// +kubebuilder:validation:MaxLength=100000
 	SHA *string `json:"sha,omitempty"`
 	// +optional
 	// Deprecated: use 'image' instead.
+	// +kubebuilder:validation:MaxLength=100000
 	BaseImage *string `json:"baseImage,omitempty"`
 
 	// Defines the resources requests and limits of the Thanos sidecar.
@@ -1516,6 +1589,7 @@ type ThanosSpec struct {
 	//
 	// This field takes precedence over objectStorageConfig.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 
 	// Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
@@ -1556,6 +1630,7 @@ type ThanosSpec struct {
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 
 	// Configures the TLS parameters for the gRPC server providing the StoreAPI.
@@ -1568,10 +1643,12 @@ type ThanosSpec struct {
 	// Log level for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Defines the start of time range limit served by the Thanos sidecar's StoreAPI.
@@ -1579,6 +1656,7 @@ type ThanosSpec struct {
 	// duration relative to current time, such as -1d or 2h45m. Valid duration
 	// units are ms, s, m, h, d, w, y.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MinTime string `json:"minTime,omitempty"`
 
 	// BlockDuration controls the size of TSDB blocks produced by Prometheus.
@@ -1592,23 +1670,28 @@ type ThanosSpec struct {
 	//
 	// +kubebuilder:default:="2h"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	BlockDuration Duration `json:"blockSize,omitempty"`
 
 	// ReadyTimeout is the maximum time that the Thanos sidecar will wait for
 	// Prometheus to start.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ReadyTimeout Duration `json:"readyTimeout,omitempty"`
 	// How often to retrieve the Prometheus configuration.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	GetConfigInterval Duration `json:"getConfigInterval,omitempty"`
 	// Maximum time to wait when retrieving the Prometheus configuration.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	GetConfigTimeout Duration `json:"getConfigTimeout,omitempty"`
 
 	// VolumeMounts allows configuration of additional VolumeMounts for Thanos.
 	// VolumeMounts specified will be appended to other VolumeMounts in the
 	// 'thanos-sidecar' container.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 
 	// AdditionalArgs allows setting additional arguments for the Thanos container.
@@ -1618,6 +1701,7 @@ type ThanosSpec struct {
 	// operator itself) or when providing an invalid argument, the reconciliation will
 	// fail and an error will be logged.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 }
 
@@ -1628,6 +1712,7 @@ type RemoteWriteSpec struct {
 	// The URL of the endpoint to send samples to.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url"`
 
 	// The name of the remote write queue, it must be unique if specified. The
@@ -1636,6 +1721,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Name *string `json:"name,omitempty"`
 
 	// The Remote Write message's version to use when writing to the endpoint.
@@ -1673,6 +1759,7 @@ type RemoteWriteSpec struct {
 
 	// Timeout for requests to the remote write endpoint.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RemoteTimeout *Duration `json:"remoteTimeout,omitempty"`
 
 	// Custom HTTP headers to be sent along with each remote write request.
@@ -1681,10 +1768,12 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// The list of remote write relabel configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	WriteRelabelConfigs []RelabelConfig `json:"writeRelabelConfigs,omitempty"`
 
 	// OAuth2 configuration for the URL.
@@ -1706,6 +1795,7 @@ type RemoteWriteSpec struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for the URL.
@@ -1740,6 +1830,7 @@ type RemoteWriteSpec struct {
 	//
 	// Deprecated: this will be removed in a future release.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// TLS Config to use for the URL.
@@ -1815,15 +1906,18 @@ type QueueConfig struct {
 	MaxSamplesPerSend int `json:"maxSamplesPerSend,omitempty"`
 	// BatchSendDeadline is the maximum time a sample will wait in buffer.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	BatchSendDeadline *Duration `json:"batchSendDeadline,omitempty"`
 	// MaxRetries is the maximum number of times to retry a batch on recoverable errors.
 	// +optional
 	MaxRetries int `json:"maxRetries,omitempty"`
 	// MinBackoff is the initial retry delay. Gets doubled for every retry.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	MinBackoff *Duration `json:"minBackoff,omitempty"`
 	// MaxBackoff is the maximum retry delay.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	MaxBackoff *Duration `json:"maxBackoff,omitempty"`
 	// Retry upon receiving a 429 status code from the remote-write storage.
 	//
@@ -1835,6 +1929,7 @@ type QueueConfig struct {
 	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	SampleAgeLimit *Duration `json:"sampleAgeLimit,omitempty"`
 }
 
@@ -1844,6 +1939,7 @@ type QueueConfig struct {
 type Sigv4 struct {
 	// Region is the AWS region. If blank, the region from the default credentials chain used.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Region string `json:"region,omitempty"`
 	// AccessKey is the AWS API key. If not specified, the environment variable
 	// `AWS_ACCESS_KEY_ID` is used.
@@ -1855,9 +1951,11 @@ type Sigv4 struct {
 	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
 	// Profile is the named AWS profile used to authenticate.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Profile string `json:"profile,omitempty"`
 	// RoleArn is the named AWS profile used to authenticate.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoleArn string `json:"roleArn,omitempty"`
 }
 
@@ -1867,6 +1965,7 @@ type AzureAD struct {
 	// The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.
 	// +kubebuilder:validation:Enum=AzureChina;AzureGovernment;AzurePublic
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Cloud *string `json:"cloud,omitempty"`
 	// ManagedIdentity defines the Azure User-assigned Managed identity.
 	// Cannot be set at the same time as `oauth` or `sdk`.
@@ -1894,6 +1993,7 @@ type AzureOAuth struct {
 	// `clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ClientID string `json:"clientId"`
 	// `clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
 	// +required
@@ -1902,6 +2002,7 @@ type AzureOAuth struct {
 	// +required
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	// +kubebuilder:validation:MaxLength=100000
 	TenantID string `json:"tenantId"`
 }
 
@@ -1910,6 +2011,7 @@ type AzureOAuth struct {
 type ManagedIdentity struct {
 	// The client id
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	ClientID string `json:"clientId"`
 }
 
@@ -1918,6 +2020,7 @@ type AzureSDK struct {
 	// `tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.
 	// +optional
 	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	// +kubebuilder:validation:MaxLength=100000
 	TenantID *string `json:"tenantId,omitempty"`
 }
 
@@ -1927,6 +2030,7 @@ type AzureSDK struct {
 type RemoteReadSpec struct {
 	// The URL of the endpoint to query from.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url"`
 
 	// The name of the remote read queue, it must be unique if specified. The
@@ -1936,21 +2040,25 @@ type RemoteReadSpec struct {
 	// It requires Prometheus >= v2.15.0.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name,omitempty"`
 
 	// An optional list of equality matchers which have to be present
 	// in a selector to query the remote read endpoint.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 
 	// Timeout for requests to the remote read endpoint.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RemoteTimeout *Duration `json:"remoteTimeout,omitempty"`
 
 	// Custom HTTP headers to be sent along with each remote read request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	// Only valid in Prometheus versions 2.26.0 and newer.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// Whether reads should be made for queries for time ranges that
@@ -1976,6 +2084,7 @@ type RemoteReadSpec struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// Authorization section for the URL.
 	//
@@ -1991,6 +2100,7 @@ type RemoteReadSpec struct {
 	//
 	// Deprecated: this will be removed in a future release.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// TLS Config to use for the URL.
@@ -2028,10 +2138,12 @@ type RelabelConfig struct {
 	// configured regular expression.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
 
 	// Separator is the string between concatenated SourceLabels.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Separator *string `json:"separator,omitempty"`
 
 	// Label to which the resulting string is written in a replacement.
@@ -2041,10 +2153,12 @@ type RelabelConfig struct {
 	//
 	// Regex capture groups are available.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TargetLabel string `json:"targetLabel,omitempty"`
 
 	// Regular expression against which the extracted value is matched.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Regex string `json:"regex,omitempty"`
 
 	// Modulus to take of the hash of the source label values.
@@ -2059,6 +2173,7 @@ type RelabelConfig struct {
 	// Regex capture groups are available.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Replacement *string `json:"replacement,omitempty"`
 
 	// Action to perform based on the regex matching.
@@ -2071,6 +2186,7 @@ type RelabelConfig struct {
 	// +kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
 	// +kubebuilder:default=replace
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Action string `json:"action,omitempty"`
 }
 
@@ -2083,6 +2199,7 @@ type APIServerConfig struct {
 	// Kubernetes API address consisting of a hostname or IP address followed
 	// by an optional port number.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Host string `json:"host"`
 
 	// BasicAuth configuration for the API server.
@@ -2099,6 +2216,7 @@ type APIServerConfig struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// TLS Config to use for the API server.
@@ -2119,6 +2237,7 @@ type APIServerConfig struct {
 	//
 	// Deprecated: this will be removed in a future release.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// Optional ProxyConfig.
@@ -2145,12 +2264,14 @@ type AlertmanagerEndpoints struct {
 	//
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Namespace *string `json:"namespace,omitempty"`
 
 	// Name of the Endpoints object in the namespace.
 	//
 	// +kubebuilder:validation:MinLength:=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 
 	// Port on which the Alertmanager API is exposed.
@@ -2159,10 +2280,12 @@ type AlertmanagerEndpoints struct {
 
 	// Scheme to use when firing alerts.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Scheme string `json:"scheme,omitempty"`
 
 	// Prefix for the HTTP path alerts are pushed to.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PathPrefix string `json:"pathPrefix,omitempty"`
 
 	// TLS Config to use for Alertmanager.
@@ -2183,6 +2306,7 @@ type AlertmanagerEndpoints struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// Authorization section for Alertmanager.
@@ -2215,6 +2339,7 @@ type AlertmanagerEndpoints struct {
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Timeout *Duration `json:"timeout,omitempty"`
 
 	// Whether to enable HTTP2.
@@ -2225,12 +2350,14 @@ type AlertmanagerEndpoints struct {
 	// Relabel configuration applied to the discovered Alertmanagers.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
 	// Relabeling configs applied before sending alerts to a specific Alertmanager.
 	// It requires Prometheus >= v2.51.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	AlertRelabelConfigs []RelabelConfig `json:"alertRelabelings,omitempty"`
 }
 
@@ -2248,6 +2375,7 @@ type RulesAlert struct {
 	// Max time to tolerate prometheus outage for restoring 'for' state of
 	// alert.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ForOutageTolerance string `json:"forOutageTolerance,omitempty"`
 
 	// Minimum duration between alert and restored 'for' state.
@@ -2255,11 +2383,13 @@ type RulesAlert struct {
 	// This is maintained only for alerts with a configured 'for' time greater
 	// than the grace period.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ForGracePeriod string `json:"forGracePeriod,omitempty"`
 
 	// Minimum amount of time to wait before resending an alert to
 	// Alertmanager.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ResendDelay string `json:"resendDelay,omitempty"`
 }
 
@@ -2273,6 +2403,7 @@ type MetadataConfig struct {
 
 	// Defines how frequently metric metadata is sent to the remote storage.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	SendInterval Duration `json:"sendInterval,omitempty"`
 
 	// MaxSamplesPerSend is the maximum number of metadata samples per send.
@@ -2287,6 +2418,7 @@ type MetadataConfig struct {
 type ShardStatus struct {
 	// Identifier of the shard.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	ShardID string `json:"shardID"`
 	// Total number of pods targeted by this shard.
 	// +required
@@ -2316,6 +2448,7 @@ type TSDBSpec struct {
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
@@ -2344,6 +2477,7 @@ type SafeAuthorization struct {
 	//
 	// Default: "Bearer"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Type string `json:"type,omitempty"`
 
 	// Selects a key of a Secret in the namespace that contains the credentials for authentication.
@@ -2374,6 +2508,7 @@ type Authorization struct {
 
 	// File to read a secret from, mutually exclusive with `credentials`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	CredentialsFile string `json:"credentialsFile,omitempty"`
 }
 
@@ -2399,6 +2534,7 @@ type ScrapeClass struct {
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 
 	// Default indicates that the scrape applies to all scrape objects that
@@ -2440,6 +2576,7 @@ type ScrapeClass struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Relabelings []RelabelConfig `json:"relabelings,omitempty"`
 
 	// MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
@@ -2451,6 +2588,7 @@ type ScrapeClass struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
 
 	// AttachMetadata configures additional metadata to the discovered targets.
@@ -2495,6 +2633,8 @@ type OTLPConfig struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
 
 	// List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
@@ -2504,6 +2644,8 @@ type OTLPConfig struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 
 	// Configures how the OTLP receiver endpoint translates the incoming metrics.

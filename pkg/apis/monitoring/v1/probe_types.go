@@ -58,6 +58,7 @@ func (l *Probe) DeepCopyObject() runtime.Object {
 type ProbeSpec struct {
 	// The job name assigned to scraped metrics by default.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	JobName string `json:"jobName,omitempty"`
 	// Specification for the prober to use for probing targets.
 	// The prober.URL parameter is required. Targets cannot be probed if left empty.
@@ -67,6 +68,7 @@ type ProbeSpec struct {
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Module string `json:"module,omitempty"`
 	// Targets defines a set of static or dynamically discovered targets to probe.
 	// +optional
@@ -74,11 +76,13 @@ type ProbeSpec struct {
 	// Interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Interval Duration `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	// If not specified, the Prometheus global scrape timeout is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	// +optional
@@ -97,6 +101,7 @@ type ProbeSpec struct {
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 	// Authorization section for this endpoint
 	// +optional
@@ -116,6 +121,7 @@ type ProbeSpec struct {
 	//
 	// +listType=set
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
@@ -148,6 +154,7 @@ type ProbeSpec struct {
 	// The scrape class to apply.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
 	// The list of HTTP query parameters for the scrape.
@@ -157,6 +164,7 @@ type ProbeSpec struct {
 	// +kubebuilder:validation:MinItems=1
 	// +listType=map
 	// +listMapKey=name
+// +kubebuilder:validation:MaxItems=100000
 	Params []ProbeParam `json:"params,omitempty"`
 }
 
@@ -165,12 +173,15 @@ type ProbeSpec struct {
 type ProbeParam struct {
 	// The parameter name
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=53
 	// +required
 	Name string `json:"name,omitempty"`
 	// The parameter values
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Values []string `json:"values,omitempty"`
 }
 
@@ -206,14 +217,18 @@ func (it *ProbeTargets) Validate() error {
 type ProbeTargetStaticConfig struct {
 	// The list of hosts to probe.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Targets []string `json:"static,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Labels map[string]string `json:"labels,omitempty"`
 	// RelabelConfigs to apply to the label set of the targets before it gets
 	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
@@ -235,6 +250,7 @@ type ProbeTargetIngress struct {
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
@@ -243,17 +259,20 @@ type ProbeTargetIngress struct {
 type ProberSpec struct {
 	// Mandatory URL of the prober.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url"`
 	// HTTP scheme to use for scraping.
 	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
 	// If empty, Prometheus uses the default value `http`.
 	// +kubebuilder:validation:Enum=http;https
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Scheme string `json:"scheme,omitempty"`
 	// Path to collect metrics from.
 	// Defaults to `/probe`.
 	// +kubebuilder:default:="/probe"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Path string `json:"path,omitempty"`
 
 	// +optional

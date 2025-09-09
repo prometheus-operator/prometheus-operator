@@ -45,6 +45,8 @@ type NamespaceDiscovery struct {
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
 	// +listType=set
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Names []string `json:"names,omitempty"`
 }
 
@@ -63,6 +65,7 @@ type Filter struct {
 	// Name of the Filter.
 	// +kubebuilder:vaidation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 	// Value to filter on.
 	//
@@ -70,6 +73,8 @@ type Filter struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +required
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Values []string `json:"values"`
 }
 
@@ -99,11 +104,13 @@ type K8SSelectorConfig struct {
 	// e.g: `node.kubernetes.io/instance-type=master`
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Label *string `json:"label,omitempty"`
 	// An optional field selector to limit the service discovery to resources which have fields with specific values.
 	// e.g: `metadata.name=foobar`
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Field *string `json:"field,omitempty"`
 }
 
@@ -156,75 +163,99 @@ type ScrapeConfigSpec struct {
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	JobName *string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
 	// FileSDConfigs defines a list of file service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
 	// HTTPSDConfigs defines a list of HTTP service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	KubernetesSDConfigs []KubernetesSDConfig `json:"kubernetesSDConfigs,omitempty"`
 	// ConsulSDConfigs defines a list of Consul service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
 	//DNSSDConfigs defines a list of DNS service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
 	// EC2SDConfigs defines a list of EC2 service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// AzureSDConfigs defines a list of Azure service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
 	// GCESDConfigs defines a list of GCE service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
 	// OpenStackSDConfigs defines a list of OpenStack service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
 	// DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// KumaSDConfigs defines a list of Kuma service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
 	// EurekaSDConfigs defines a list of Eureka service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// LinodeSDConfigs defines a list of Linode service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	NomadSDConfigs []NomadSDConfig `json:"nomadSDConfigs,omitempty"`
 	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
 	// PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
 	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
 	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
 	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
 	// IonosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
@@ -232,10 +263,12 @@ type ScrapeConfigSpec struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MetricsPath *string `json:"metricsPath,omitempty"`
 	// ScrapeInterval is the interval between consecutive scrapes.
 	// +optional
@@ -254,6 +287,7 @@ type ScrapeConfigSpec struct {
 	// +listType=set
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
@@ -276,11 +310,13 @@ type ScrapeConfigSpec struct {
 	// Optional HTTP URL parameters
 	// +mapType:=atomic
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Params map[string][]string `json:"params,omitempty"`
 	// Configures the protocol scheme used for requests.
 	// If empty, Prometheus uses HTTP by default.
 	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Scheme *string `json:"scheme,omitempty"`
 	// When false, Prometheus will request uncompressed response from the scraped target.
 	//
@@ -334,6 +370,7 @@ type ScrapeConfigSpec struct {
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
@@ -353,6 +390,7 @@ type ScrapeConfigSpec struct {
 	// The scrape class to apply.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
@@ -364,10 +402,13 @@ type StaticConfig struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +listType=set
 	// +required
+// +kubebuilder:validation:MaxLength=100000
+// +kubebuilder:validation:MaxItems=100000
 	Targets []Target `json:"targets"`
 	// Labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
@@ -382,6 +423,8 @@ type FileSDConfig struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +listType=set
 	// +required
+// +kubebuilder:validation:MaxLength=100000
+// +kubebuilder:validation:MaxItems=100000
 	Files []SDFile `json:"files"`
 	// RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.
 	// +optional
@@ -396,6 +439,7 @@ type HTTPSDConfig struct {
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-query the
 	// endpoint to update the target list.
@@ -437,6 +481,7 @@ type KubernetesSDConfig struct {
 	// CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	APIServer *string `json:"apiServer,omitempty"`
 	// Role of the Kubernetes entities that should be discovered.
 	// Role `Endpointslice` requires Prometheus >= v2.21.0
@@ -455,6 +500,7 @@ type KubernetesSDConfig struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=role
+// +kubebuilder:validation:MaxItems=100000
 	Selectors []K8SSelectorConfig `json:"selectors,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
@@ -487,12 +533,14 @@ type ConsulSDConfig struct {
 	// Consul server address. A valid string consisting of a hostname or IP followed by an optional port number.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Server string `json:"server"`
 	// Prefix for URIs for when consul is behind an API gateway (reverse proxy).
 	//
 	// It requires Prometheus >= 2.45.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PathPrefix *string `json:"pathPrefix,omitempty"`
 	// Consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.
 	// +optional
@@ -500,45 +548,56 @@ type ConsulSDConfig struct {
 	// Consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Datacenter *string `json:"datacenter,omitempty"`
 	// Namespaces are only supported in Consul Enterprise.
 	//
 	// It requires Prometheus >= 2.28.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Namespace *string `json:"namespace,omitempty"`
 	// Admin Partitions are only supported in Consul Enterprise.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Partition *string `json:"partition,omitempty"`
 	// HTTP Scheme default "http"
 	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
 	// +listType:=set
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
 	// +listType:=set
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Tags []string `json:"tags,omitempty"`
 	// The string by which Consul tags are joined into the tag label.
 	// If unset, Prometheus uses its default value.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
 	// +mapType:=atomic
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// Filter expression used to filter the catalog results.
 	// See https://www.consul.io/api-docs/catalog#list-services
 	// It requires Prometheus >= 3.0.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Filter *string `json:"filter,omitempty"`
 	// Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
@@ -596,6 +655,8 @@ type DNSSDConfig struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Names []string `json:"names"`
 	// RefreshInterval configures the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
@@ -630,6 +691,7 @@ type EC2SDConfig struct {
 	// The AWS region.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Region *string `json:"region,omitempty"`
 	// AccessKey is the AWS API key.
 	// +optional
@@ -640,6 +702,7 @@ type EC2SDConfig struct {
 	// AWS Role ARN, an alternative to using AWS API keys.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoleARN *string `json:"roleARN,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
@@ -656,6 +719,7 @@ type EC2SDConfig struct {
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// It requires Prometheus >= v2.3.0
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Filters        Filters `json:"filters,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// TLS configuration to connect to the AWS EC2 API.
@@ -688,6 +752,7 @@ type AzureSDConfig struct {
 	// The Azure environment.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Environment *string `json:"environment,omitempty"`
 	// # The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
 	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
@@ -698,14 +763,17 @@ type AzureSDConfig struct {
 	// The subscription ID. Always required.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	SubscriptionID string `json:"subscriptionID"`
 	// Optional tenant ID. Only required with the OAuth authentication method.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TenantID *string `json:"tenantID,omitempty"`
 	// Optional client ID. Only required with the OAuth authentication method.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClientID *string `json:"clientID,omitempty"`
 	// Optional client secret. Only required with the OAuth authentication method.
 	// +optional
@@ -714,6 +782,7 @@ type AzureSDConfig struct {
 	// Requires  Prometheus v2.35.0 and above
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ResourceGroup *string `json:"resourceGroup,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
 	// +optional
@@ -769,16 +838,19 @@ type GCESDConfig struct {
 	// The Google Cloud Project ID
 	// +kubebuilder:validation:MinLength:=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Project string `json:"project"`
 	// The zone of the scrape targets. If you need multiple zones use multiple GCESDConfigs.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Zone string `json:"zone"`
 	// Filter can be used optionally to filter the instance list by other criteria
 	// Syntax of this filter is described in the filter query parameter section:
 	// https://cloud.google.com/compute/docs/reference/latest/instances/list
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Filter *string `json:"filter,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
 	// +optional
@@ -792,6 +864,7 @@ type GCESDConfig struct {
 	// The tag separator is used to separate the tags on concatenation
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
 
@@ -817,11 +890,13 @@ type OpenStackSDConfig struct {
 	// The OpenStack Region.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Region string `json:"region"`
 	// IdentityEndpoint specifies the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
 	// +kubebuilder:validation:Pattern:=`^http(s)?:\/\/.+$`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
 	// Username is required if using Identity V2 API. Consult with your provider's
 	// control panel to discover your account's username.
@@ -829,10 +904,12 @@ type OpenStackSDConfig struct {
 	// and domainId or domainName are needed
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Username *string `json:"username,omitempty"`
 	// UserID
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	UserID *string `json:"userid,omitempty"`
 	// Password for the Identity V2 and V3 APIs. Consult with your provider's
 	// control panel to discover your account's preferred method of authentication.
@@ -842,10 +919,12 @@ type OpenStackSDConfig struct {
 	// with Identity V3. Otherwise, either are optional.
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	DomainName *string `json:"domainName,omitempty"`
 	// DomainID
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	DomainID *string `json:"domainID,omitempty"`
 	// The ProjectId and ProjectName fields are optional for the Identity V2 API.
 	// Some providers allow you to specify a ProjectName instead of the ProjectId.
@@ -853,10 +932,12 @@ type OpenStackSDConfig struct {
 	// how these fields influence authentication.
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ProjectName *string `json:"projectName,omitempty"`
 	//  ProjectID
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ProjectID *string `json:"projectID,omitempty"`
 	// The ApplicationCredentialID or ApplicationCredentialName fields are
 	// required if using an application credential to authenticate. Some providers
@@ -864,9 +945,11 @@ type OpenStackSDConfig struct {
 	// password.
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// ApplicationCredentialID
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
 	// The applicationCredentialSecret field is required if using an application
 	// credential to authenticate.
@@ -888,6 +971,7 @@ type OpenStackSDConfig struct {
 	// Availability of the endpoint to connect to.
 	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Availability *string `json:"availability,omitempty"`
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
@@ -936,9 +1020,11 @@ type KumaSDConfig struct {
 	// Address of the Kuma Control Plane's MADS xDS server.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Server string `json:"server"`
 	// Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClientID *string `json:"clientID,omitempty"`
 	// The time to wait between polling update requests.
 	// +optional
@@ -979,6 +1065,7 @@ type EurekaSDConfig struct {
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Server string `json:"server"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
@@ -1016,6 +1103,7 @@ type DockerSDConfig struct {
 	// Address of the docker daemon
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
@@ -1031,6 +1119,7 @@ type DockerSDConfig struct {
 	// The host to use if the container is in host networking mode.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Configure whether to match the first network if the container has multiple networks defined.
 	// If unset, Prometheus uses true by default.
@@ -1040,6 +1129,7 @@ type DockerSDConfig struct {
 	MatchFirstNetwork *bool `json:"matchFirstNetwork,omitempty"`
 	// Optional filters to limit the discovery process to a subset of the available resources.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Filters Filters `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
@@ -1071,6 +1161,7 @@ type HetznerSDConfig struct {
 	// The Hetzner role of entities that should be discovered.
 	// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Role string `json:"role"`
 	// BasicAuth information to use on every scrape request, required when role is robot.
 	// Role hcloud does not support basic auth.
@@ -1108,6 +1199,7 @@ type HetznerSDConfig struct {
 	// It requires Prometheus >= v3.5.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LabelSelector *string `json:"labelSelector,omitempty"`
 }
 
@@ -1120,15 +1212,19 @@ type NomadSDConfig struct {
 	// +optional
 	AllowStale *bool `json:"allowStale,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Namespace *string `json:"namespace,omitempty"`
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Region *string `json:"region,omitempty"`
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Server string `json:"server"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
@@ -1170,6 +1266,7 @@ type OVHCloudSDConfig struct {
 	// Access key to use. https://api.ovh.com.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	ApplicationKey string `json:"applicationKey"`
 	// +required
 	ApplicationSecret corev1.SecretKeySelector `json:"applicationSecret"`
@@ -1181,6 +1278,7 @@ type OVHCloudSDConfig struct {
 	// Custom endpoint to be used.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Endpoint *string `json:"endpoint,omitempty"`
 	// Refresh interval to re-read the resources list.
 	// +optional
@@ -1194,10 +1292,12 @@ type DockerSwarmSDConfig struct {
 	// Address of the Docker daemon
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Host string `json:"host"`
 	// Role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
 	// +kubebuilder:validation:Enum=Services;Tasks;Nodes
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Role string `json:"role"`
 	// The port to scrape metrics from, when `role` is nodes, and for discovered
 	// tasks and services that don't have published ports.
@@ -1212,6 +1312,7 @@ type DockerSwarmSDConfig struct {
 	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
 	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Filters Filters `json:"filters,omitempty"`
 	// The time after which the service discovery data is refreshed.
 	// +optional
@@ -1245,6 +1346,7 @@ type LinodeSDConfig struct {
 	// Optional region to filter on.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Region *string `json:"region,omitempty"`
 	// Default port to scrape metrics from.
 	// +kubebuilder:validation:Minimum=0
@@ -1254,6 +1356,7 @@ type LinodeSDConfig struct {
 	// The string by which Linode Instance tags are joined into the tag label.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Time after which the linode instances are refreshed.
 	// +optional
@@ -1284,11 +1387,13 @@ type PuppetDBSDConfig struct {
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url"`
 	// Puppet Query Language (PQL) query. Only resources are supported.
 	// https://puppet.com/docs/puppetdb/latest/api/query/v4/pql.html
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Query string `json:"query"`
 	// Whether to include the parameters as meta labels.
 	// Note: Enabling this exposes parameters in the Prometheus UI and API. Make sure
@@ -1334,6 +1439,7 @@ type LightSailSDConfig struct {
 	// The AWS region.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Region *string `json:"region,omitempty"`
 	// AccessKey is the AWS API key.
 	// +optional
@@ -1343,10 +1449,12 @@ type LightSailSDConfig struct {
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
 	// AWS Role ARN, an alternative to using AWS API keys.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoleARN *string `json:"roleARN,omitempty"`
 	// Custom endpoint to be used.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Endpoint *string `json:"endpoint,omitempty"`
 	// Refresh interval to re-read the list of instances.
 	// +optional
@@ -1397,6 +1505,7 @@ type ScalewaySDConfig struct {
 	// Access key to use. https://console.scaleway.com/project/credentials
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	AccessKey string `json:"accessKey"`
 	// Secret key to use when listing targets.
 	// +required
@@ -1404,6 +1513,7 @@ type ScalewaySDConfig struct {
 	// Project ID of the targets.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	ProjectID string `json:"projectID"`
 	// Service of the targets to retrieve. Must be `Instance` or `Baremetal`.
 	// +required
@@ -1416,20 +1526,25 @@ type ScalewaySDConfig struct {
 	// API URL to use when doing the server listing requests.
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ApiURL *string `json:"apiURL,omitempty"`
 	// Zone is the availability zone of your targets (e.g. fr-par-1).
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Zone *string `json:"zone,omitempty"`
 	// NameFilter specify a name filter (works as a LIKE) to apply on the server listing request.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	NameFilter *string `json:"nameFilter,omitempty"`
 	// TagsFilter specify a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	TagsFilter []string `json:"tagsFilter,omitempty"`
 	// Refresh interval to re-read the list of instances.
 	// +optional
@@ -1453,6 +1568,7 @@ type IonosSDConfig struct {
 	// The unique ID of the IONOS data center.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	DataCenterID string `json:"datacenterID"`
 	// Port to scrape the metrics from.
 	// +kubebuilder:validation:Minimum=0

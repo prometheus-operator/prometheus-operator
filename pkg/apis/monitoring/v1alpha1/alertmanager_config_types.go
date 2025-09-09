@@ -79,13 +79,16 @@ type AlertmanagerConfigSpec struct {
 	Route *Route `json:"route"`
 	// List of receivers.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Receivers []Receiver `json:"receivers"`
 	// List of inhibition rules. The rules will only apply to alerts matching
 	// the resource's namespace.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
 	// List of MuteTimeInterval specifying when the routes should be muted.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeIntervals,omitempty"`
 }
 
@@ -94,32 +97,39 @@ type Route struct {
 	// Name of the receiver for this route. If not empty, it should be listed in
 	// the `receivers` field.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Receiver string `json:"receiver"`
 	// List of labels to group by.
 	// Labels must not be repeated (unique list).
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	GroupBy []string `json:"groupBy,omitempty"`
 	// How long to wait before sending the initial notification.
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "30s"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	GroupWait string `json:"groupWait,omitempty"`
 	// How long to wait before sending an updated notification.
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "5m"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	GroupInterval string `json:"groupInterval,omitempty"`
 	// How long to wait before repeating the last notification.
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "4h"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RepeatInterval string `json:"repeatInterval,omitempty"`
 	// List of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
 	// matcher on the `namespace` label and adds a `namespace: <object
 	// namespace>` matcher.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// Boolean indicating whether an alert should continue matching subsequent
 	// sibling nodes. It will always be overridden to true for the first-level
@@ -128,6 +138,7 @@ type Route struct {
 	Continue bool `json:"continue,omitempty"`
 	// Child routes.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
 	// Note: this comment applies to the field definition above but appears
 	// below otherwise it gets included in the generated manifest.
@@ -138,9 +149,13 @@ type Route struct {
 	// JSON representation.
 	// MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 	// ActiveTimeIntervals is a list of MuteTimeInterval names when this route should be active.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
 
@@ -164,54 +179,70 @@ type Receiver struct {
 	// Name of the receiver. Must be unique across all items from the list.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 	// List of OpsGenie configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
 	// List of PagerDuty configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// List of Discord configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// List of Slack configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// List of WeChat configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	WeChatConfigs []WeChatConfig `json:"wechatConfigs,omitempty"`
 	// List of Email configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	EmailConfigs []EmailConfig `json:"emailConfigs,omitempty"`
 	// List of VictorOps configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
 	// List of Pushover configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
 	// List of SNS configurations
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// List of Telegram configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 	// List of Webex configurations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 	// List of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 	// List of RocketChat configurations.
 	// It requires Alertmanager >= 0.28.0.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
 
@@ -236,42 +267,54 @@ type PagerDutyConfig struct {
 	ServiceKey *v1.SecretKeySelector `json:"serviceKey,omitempty"`
 	// The URL to send requests to.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url,omitempty"`
 	// Client identification.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Client string `json:"client,omitempty"`
 	// Backlink to the sender of notification.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClientURL string `json:"clientURL,omitempty"`
 	// Description of the incident.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Description string `json:"description,omitempty"`
 	// Severity of the incident.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Severity string `json:"severity,omitempty"`
 	// The class/type of the event.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Class string `json:"class,omitempty"`
 	// A cluster or grouping of sources.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Group string `json:"group,omitempty"`
 	// The part or component of the affected system that is broken.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Component string `json:"component,omitempty"`
 	// Arbitrary key/value pairs that provide further detail about the incident.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Details []KeyValue `json:"details,omitempty"`
 	// A list of image details to attach that provide further detail about an incident.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PagerDutyImageConfigs []PagerDutyImageConfig `json:"pagerDutyImageConfigs,omitempty"`
 	// A list of link details to attach that provide further detail about an incident.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PagerDutyLinkConfigs []PagerDutyLinkConfig `json:"pagerDutyLinkConfigs,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// Unique location of the affected system.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
 }
 
@@ -279,12 +322,15 @@ type PagerDutyConfig struct {
 type PagerDutyImageConfig struct {
 	// Src of the image being attached to the incident
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Src string `json:"src,omitempty"`
 	// Optional URL; makes the image a clickable link.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Href string `json:"href,omitempty"`
 	// Alt is the optional alternative text for the image.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Alt string `json:"alt,omitempty"`
 }
 
@@ -292,9 +338,11 @@ type PagerDutyImageConfig struct {
 type PagerDutyLinkConfig struct {
 	// Href is the URL of the link to be attached
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Href string `json:"href,omitempty"`
 	// Text that describes the purpose of the link, and can be used as the link's text.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text string `json:"alt,omitempty"`
 }
 
@@ -311,20 +359,25 @@ type DiscordConfig struct {
 	APIURL v1.SecretKeySelector `json:"apiURL"`
 	// The template of the message's title.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title *string `json:"title,omitempty"`
 	// The template of the message's body.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message *string `json:"message,omitempty"`
 	// The template of the content's body.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	Content *string `json:"content,omitempty"`
 	// The username of the message sender.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	Username *string `json:"username,omitempty"`
 	// The avatar url of the message sender.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	AvatarURL *URL `json:"avatarURL,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -344,44 +397,62 @@ type SlackConfig struct {
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
 	// The channel or user to send notifications to.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Channel string `json:"channel,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Username string `json:"username,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Color string `json:"color,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title string `json:"title,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TitleLink string `json:"titleLink,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Pretext string `json:"pretext,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text string `json:"text,omitempty"`
 	// A list of Slack fields that are sent with each notification.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Fields []SlackField `json:"fields,omitempty"`
 	// +optional
 	ShortFields bool `json:"shortFields,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Footer string `json:"footer,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Fallback string `json:"fallback,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	CallbackID string `json:"callbackId,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	IconEmoji string `json:"iconEmoji,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	IconURL string `json:"iconURL,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ImageURL string `json:"imageURL,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ThumbURL string `json:"thumbURL,omitempty"`
 	// +optional
 	LinkNames bool `json:"linkNames,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	MrkdwnIn []string `json:"mrkdwnIn,omitempty"`
 	// A list of Slack actions that are sent with each notification.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Actions []SlackAction `json:"actions,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -412,17 +483,23 @@ func (sc *SlackConfig) Validate() error {
 type SlackAction struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Type string `json:"type"`
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Text string `json:"text"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Style string `json:"style,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Value string `json:"value,omitempty"`
 	// +optional
 	ConfirmField *SlackConfirmationField `json:"confirm,omitempty"`
@@ -459,12 +536,16 @@ func (sa *SlackAction) Validate() error {
 type SlackConfirmationField struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Text string `json:"text"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title string `json:"title,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	OkText string `json:"okText,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	DismissText string `json:"dismissText,omitempty"`
 }
 
@@ -483,9 +564,11 @@ func (scf *SlackConfirmationField) Validate() error {
 type SlackField struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Title string `json:"title"`
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Value string `json:"value"`
 	// +optional
 	Short *bool `json:"short,omitempty"`
@@ -513,6 +596,7 @@ type WebhookConfig struct {
 	// The URL to send HTTP POST requests to. `urlSecret` takes precedence over
 	// `url`. One of `urlSecret` and `url` should be defined.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	URL *string `json:"url,omitempty"`
 	// The secret's key that contains the webhook URL to send HTTP requests to.
 	// `urlSecret` takes precedence over `url`. One of `urlSecret` and `url`
@@ -548,24 +632,31 @@ type OpsGenieConfig struct {
 	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
 	// The URL to send OpsGenie API requests to.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	APIURL string `json:"apiURL,omitempty"`
 	// Alert text limited to 130 characters.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// Description of the incident.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Description string `json:"description,omitempty"`
 	// Backlink to the sender of the notification.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Source string `json:"source,omitempty"`
 	// Comma separated list of tags attached to the notifications.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Tags string `json:"tags,omitempty"`
 	// Additional alert note.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Note string `json:"note,omitempty"`
 	// Priority level of alert. Possible values are P1, P2, P3, P4, and P5.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Priority string `json:"priority,omitempty"`
 	// Whether to update message and description of the alert in OpsGenie if it already exists
 	// By default, the alert is never updated in OpsGenie, the new message only appears in activity log.
@@ -573,18 +664,22 @@ type OpsGenieConfig struct {
 	UpdateAlerts *bool `json:"updateAlerts,omitempty"`
 	// A set of arbitrary key/value pairs that provide further detail about the incident.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Details []KeyValue `json:"details,omitempty"`
 	// List of responders responsible for notifications.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Responders []OpsGenieConfigResponder `json:"responders,omitempty"`
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// Optional field that can be used to specify which domain alert is related to.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Entity string `json:"entity,omitempty"`
 	// Comma separated list of actions that will be available for the alert.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Actions string `json:"actions,omitempty"`
 }
 
@@ -603,16 +698,20 @@ func (o *OpsGenieConfig) Validate() error {
 type OpsGenieConfigResponder struct {
 	// ID of the responder.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ID string `json:"id,omitempty"`
 	// Name of the responder.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name,omitempty"`
 	// Username of the responder.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Username string `json:"username,omitempty"`
 	// Type of responder.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Type string `json:"type"`
 }
 
@@ -669,6 +768,7 @@ type HTTPConfig struct {
 	// If defined, this field takes precedence over `proxyUrl`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ProxyURLOriginal *string `json:"proxyURL,omitempty"`
 
 	monitoringv1.ProxyConfig `json:",inline"`
@@ -688,6 +788,7 @@ type WebexConfig struct {
 	// The Webex Teams API URL i.e. https://webexapis.com/v1/messages
 	// Provide if different from the default API URL.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 
 	// The HTTP client's configuration.
@@ -697,11 +798,13 @@ type WebexConfig struct {
 
 	// Message template
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message *string `json:"message,omitempty"`
 
 	// ID of the Webex Teams room where to send the messages.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	RoomID string `json:"roomID"`
 }
 
@@ -718,22 +821,30 @@ type WeChatConfig struct {
 	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
 	// The WeChat API URL.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	APIURL string `json:"apiURL,omitempty"`
 	// The corp id for authentication.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	CorpID string `json:"corpID,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AgentID string `json:"agentID,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ToUser string `json:"toUser,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ToParty string `json:"toParty,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ToTag string `json:"toTag,omitempty"`
 	// API request data as defined by the WeChat API.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MessageType string `json:"messageType,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -747,18 +858,23 @@ type EmailConfig struct {
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The email address to send notifications to.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	To string `json:"to,omitempty"`
 	// The sender address.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	From string `json:"from,omitempty"`
 	// The hostname to identify to the SMTP server.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Hello string `json:"hello,omitempty"`
 	// The SMTP host and port through which emails are sent. E.g. example.com:25
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Smarthost string `json:"smarthost,omitempty"`
 	// The username to use for authentication.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AuthUsername string `json:"authUsername,omitempty"`
 	// The secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -772,16 +888,20 @@ type EmailConfig struct {
 	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
 	// The identity to use for authentication.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AuthIdentity string `json:"authIdentity,omitempty"`
 	// Further headers email header key/value pairs. Overrides any headers
 	// previously set by the notification implementation.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Headers []KeyValue `json:"headers,omitempty"`
 	// The HTML body of the email notification.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	HTML *string `json:"html,omitempty"`
 	// The text body of the email notification.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text *string `json:"text,omitempty"`
 	// The SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
@@ -805,24 +925,31 @@ type VictorOpsConfig struct {
 	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
 	// The VictorOps API URL.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	APIURL string `json:"apiUrl,omitempty"`
 	// A key used to map the alert to a team.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoutingKey string `json:"routingKey"`
 	// Describes the behavior of the alert (CRITICAL, WARNING, INFO).
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MessageType string `json:"messageType,omitempty"`
 	// Contains summary of the alerted problem.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	EntityDisplayName string `json:"entityDisplayName,omitempty"`
 	// Contains long explanation of the alerted problem.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	StateMessage string `json:"stateMessage,omitempty"`
 	// The monitoring tool the state message is from.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	MonitoringTool string `json:"monitoringTool,omitempty"`
 	// Additional custom fields for notification.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	CustomFields []KeyValue `json:"customFields,omitempty"`
 	// The HTTP client's configuration.
 	// +optional
@@ -845,6 +972,7 @@ type PushoverConfig struct {
 	// Either `userKey` or `userKeyFile` is required.
 	// It requires Alertmanager >= v0.26.0.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	UserKeyFile *string `json:"userKeyFile,omitempty"`
 	// The secret's key that contains the registered application's API token, see https://pushover.net/apps.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -856,40 +984,50 @@ type PushoverConfig struct {
 	// Either `token` or `tokenFile` is required.
 	// It requires Alertmanager >= v0.26.0.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TokenFile *string `json:"tokenFile,omitempty"`
 	// Notification title.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title string `json:"title,omitempty"`
 	// Notification message.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// A supplementary URL shown alongside the message.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	URL string `json:"url,omitempty"`
 	// A title for supplementary URL, otherwise just the URL is shown
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	URLTitle string `json:"urlTitle,omitempty"`
 	// The time to live definition for the alert notification
 	// +optional
 	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// The name of a device to send the notification to
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Device *string `json:"device,omitempty"`
 	// The name of one of the sounds supported by device clients to override the user's default sound choice
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Sound string `json:"sound,omitempty"`
 	// Priority, see https://pushover.net/api#priority
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Priority string `json:"priority,omitempty"`
 	// How often the Pushover servers will send the same notification to the user.
 	// Must be at least 30 seconds.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Retry string `json:"retry,omitempty"`
 	// How long your notification will continue to be retried for, unless the user
 	// acknowledges the notification.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Expire string `json:"expire,omitempty"`
 	// Whether notification message is HTML or plain text.
 	// +optional
@@ -908,6 +1046,7 @@ type SNSConfig struct {
 	// The SNS API URL i.e. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ApiURL string `json:"apiURL,omitempty"`
 	// Configures AWS's Signature Verification 4 signing process to sign requests.
 	// +optional
@@ -915,23 +1054,29 @@ type SNSConfig struct {
 	// SNS topic ARN, i.e. arn:aws:sns:us-east-2:698519295917:My-Topic
 	// If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TopicARN string `json:"topicARN,omitempty"`
 	// Subject line when the message is delivered to email endpoints.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Subject string `json:"subject,omitempty"`
 	// Phone number if message is delivered via SMS in E.164 format.
 	// If you don't specify this value, you must specify a value for the TopicARN or TargetARN.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PhoneNumber string `json:"phoneNumber,omitempty"`
 	// The  mobile platform endpoint ARN if message is delivered via mobile notifications.
 	// If you don't specify this value, you must specify a value for the topic_arn or PhoneNumber.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TargetARN string `json:"targetARN,omitempty"`
 	// The message content of the SNS notification.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// SNS message attributes.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Attributes map[string]string `json:"attributes,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -947,6 +1092,7 @@ type TelegramConfig struct {
 	// The Telegram API URL i.e. https://api.telegram.org.
 	// If not specified, default API URL will be used.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	APIURL string `json:"apiURL,omitempty"`
 	// Telegram bot token. It is mutually exclusive with `botTokenFile`.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -962,6 +1108,7 @@ type TelegramConfig struct {
 	// It requires Alertmanager >= v0.26.0.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	BotTokenFile *string `json:"botTokenFile,omitempty"`
 	// The Telegram chat ID.
 	// +required
@@ -972,6 +1119,7 @@ type TelegramConfig struct {
 	MessageThreadID *int64 `json:"messageThreadID,omitempty"`
 	// Message template
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Message string `json:"message,omitempty"`
 	// Disable telegram notifications
 	// +optional
@@ -979,6 +1127,7 @@ type TelegramConfig struct {
 	// Parse mode for telegram message
 	//+kubebuilder:validation:Enum=MarkdownV2;Markdown;HTML
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ParseMode string `json:"parseMode,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -996,13 +1145,16 @@ type MSTeamsConfig struct {
 	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
 	// Message title template.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title *string `json:"title,omitempty"`
 	// Message summary template.
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Summary *string `json:"summary,omitempty"`
 	// Message body template.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -1022,10 +1174,12 @@ type MSTeamsV2Config struct {
 	// Message title template.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title *string `json:"title,omitempty"`
 	// Message body template.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text *string `json:"text,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -1041,10 +1195,12 @@ type RocketChatConfig struct {
 	// The API URL for RocketChat.
 	// Defaults to https://open.rocket.chat/ if not specified.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 	// The channel to send alerts to.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Channel *string `json:"channel,omitempty"`
 	// The sender token.
 	// +required
@@ -1055,38 +1211,47 @@ type RocketChatConfig struct {
 	// The message color.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Color *string `json:"color,omitempty"`
 	// If provided, the avatar will be displayed as an emoji.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Emoji *string `json:"emoji,omitempty"`
 	// Icon URL for the message.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	IconURL *URL `json:"iconURL,omitempty"`
 	// The message text to send, it is optional because of attachments.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text *string `json:"text,omitempty"`
 	// The message title.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title *string `json:"title,omitempty"`
 	// The title link for the message.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TitleLink *string `json:"titleLink,omitempty"`
 	// Additional fields for the message.
 	// +kubebuilder:validation:MinItems=1
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// Whether to use short fields.
 	// +optional
 	ShortFields *bool `json:"shortFields,omitempty"`
 	// Image URL for the message.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ImageURL *URL `json:"imageURL,omitempty"`
 	// Thumbnail URL for the message.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ThumbURL *URL `json:"thumbURL,omitempty"`
 	// Whether to enable link names.
 	// +optional
@@ -1094,6 +1259,7 @@ type RocketChatConfig struct {
 	// Actions to include in the message.
 	// +kubebuilder:validation:MinItems=1
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
 	// HTTP client configuration.
 	// +optional
@@ -1105,10 +1271,12 @@ type RocketChatFieldConfig struct {
 	// The title of this field.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Title *string `json:"title,omitempty"`
 	// The value of this field, displayed underneath the title value.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Value *string `json:"value,omitempty"`
 	// Whether this field should be a short field.
 	// +optional
@@ -1120,13 +1288,16 @@ type RocketChatActionConfig struct {
 	// The button text.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Text *string `json:"text,omitempty"`
 	// The URL the button links to.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	URL *URL `json:"url,omitempty"`
 	// The message to send when the button is clicked.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Msg *string `json:"msg,omitempty"`
 }
 
@@ -1137,15 +1308,19 @@ type InhibitRule struct {
 	// Matchers that have to be fulfilled in the alerts to be muted. The
 	// operator enforces that the alert matches the resource's namespace.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	TargetMatch []Matcher `json:"targetMatch,omitempty"`
 	// Matchers for which one or more alerts have to exist for the inhibition
 	// to take effect. The operator enforces that the alert matches the
 	// resource's namespace.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	Equal []string `json:"equal,omitempty"`
 }
 
@@ -1154,9 +1329,11 @@ type KeyValue struct {
 	// Key of the tuple.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Key string `json:"key"`
 	// Value of the tuple.
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Value string `json:"value"`
 }
 
@@ -1165,9 +1342,11 @@ type Matcher struct {
 	// Label to match.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 	// Label value to match.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Value string `json:"value"`
 	// Match operation available with AlertManager >= v0.22.0 and
 	// takes precedence over Regex (deprecated) if non-empty.
@@ -1256,9 +1435,11 @@ func openMetricsEscape(s string) string {
 type MuteTimeInterval struct {
 	// Name of the time interval
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name,omitempty"`
 	// TimeIntervals is a list of TimeInterval
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
 }
 
@@ -1266,18 +1447,26 @@ type MuteTimeInterval struct {
 type TimeInterval struct {
 	// Times is a list of TimeRange
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Times []TimeRange `json:"times,omitempty"`
 	// Weekdays is a list of WeekdayRange
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
+// +kubebuilder:validation:MaxItems=100000
 	Weekdays []WeekdayRange `json:"weekdays,omitempty"`
 	// DaysOfMonth is a list of DayOfMonthRange
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	DaysOfMonth []DayOfMonthRange `json:"daysOfMonth,omitempty"`
 	// Months is a list of MonthRange
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
+// +kubebuilder:validation:MaxItems=100000
 	Months []MonthRange `json:"months,omitempty"`
 	// Years is a list of YearRange
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
+// +kubebuilder:validation:MaxItems=100000
 	Years []YearRange `json:"years,omitempty"`
 }
 
@@ -1289,9 +1478,11 @@ type Time string
 type TimeRange struct {
 	// StartTime is the start time in 24hr format.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	StartTime Time `json:"startTime,omitempty"`
 	// EndTime is the end time in 24hr format.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	EndTime Time `json:"endTime,omitempty"`
 }
 

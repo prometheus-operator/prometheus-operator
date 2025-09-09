@@ -74,6 +74,7 @@ type ServiceMonitorSpec struct {
 	// If the value of this field is empty or if the label doesn't exist for
 	// the given Service, the `job` label of the metrics defaults to the name
 	// of the associated Kubernetes `Service`.
+	// +kubebuilder:validation:MaxLength=253
 	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 
@@ -81,17 +82,22 @@ type ServiceMonitorSpec struct {
 	// associated Kubernetes `Service` object onto the ingested metrics.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	TargetLabels []string `json:"targetLabels,omitempty"`
 	// `podTargetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// List of endpoints part of this ServiceMonitor.
 	// Defines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.
 	// In most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.
 	// +required
+// +kubebuilder:validation:MaxItems=100000
 	Endpoints []Endpoint `json:"endpoints"`
 
 	// Label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
@@ -128,6 +134,7 @@ type ServiceMonitorSpec struct {
 	//
 	// +listType=set
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
 	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -183,6 +190,7 @@ type ServiceMonitorSpec struct {
 	// The scrape class to apply.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
 	// When defined, bodySizeLimit specifies a job level limit on the size
@@ -191,6 +199,7 @@ type ServiceMonitorSpec struct {
 	// It requires Prometheus >= v2.28.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
 }
 

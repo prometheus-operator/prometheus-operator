@@ -54,6 +54,7 @@ type PrometheusRuleSpec struct {
 	// +listType=map
 	// +listMapKey=name
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Groups []RuleGroup `json:"groups,omitempty"`
 }
 
@@ -66,6 +67,7 @@ type RuleGroup struct {
 	// Name of the rule group.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Name string `json:"name"`
 	// Labels to add or overwrite before storing the result for its rules.
 	// The labels defined at the rule level take precedence.
@@ -73,9 +75,11 @@ type RuleGroup struct {
 	// It requires Prometheus >= 3.0.0.
 	// The field is ignored for Thanos Ruler.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Labels map[string]string `json:"labels,omitempty"`
 	// Interval determines how often rules in the group are evaluated.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Interval *Duration `json:"interval,omitempty"`
 	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
 	//
@@ -86,6 +90,7 @@ type RuleGroup struct {
 	QueryOffset *Duration `json:"query_offset,omitempty"`
 	// List of alerting and recording rules.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Rules []Rule `json:"rules,omitempty"`
 	// PartialResponseStrategy is only used by ThanosRuler and will
 	// be ignored by Prometheus instances.
@@ -93,6 +98,7 @@ type RuleGroup struct {
 	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
 	// +optional
 	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
+	// +kubebuilder:validation:MaxLength=100000
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
 	// Limit the number of alerts an alerting rule and series a recording
 	// rule can produce.
@@ -109,16 +115,19 @@ type Rule struct {
 	// Name of the time series to output to. Must be a valid metric name.
 	// Only one of `record` and `alert` must be set.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Record string `json:"record,omitempty"`
 	// Name of the alert. Must be a valid label value.
 	// Only one of `record` and `alert` must be set.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Alert string `json:"alert,omitempty"`
 	// PromQL expression to evaluate.
 	// +required
 	Expr intstr.IntOrString `json:"expr"`
 	// Alerts are considered firing once they have been returned for this long.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	For *Duration `json:"for,omitempty"`
 	// KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.
 	// +optional
@@ -126,10 +135,12 @@ type Rule struct {
 	KeepFiringFor *NonEmptyDuration `json:"keep_firing_for,omitempty"`
 	// Labels to add or overwrite.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations to add to each alert.
 	// Only valid for alerting rules.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 

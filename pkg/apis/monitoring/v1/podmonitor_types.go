@@ -66,6 +66,7 @@ type PodMonitorSpec struct {
 	//
 	// If the value of this field is empty, the `job` label of the metrics
 	// defaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).
+	// +kubebuilder:validation:MaxLength=253
 	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 
@@ -73,11 +74,14 @@ type PodMonitorSpec struct {
 	// associated Kubernetes `Pod` object onto the ingested metrics.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// Defines how to scrape metrics from the selected pods.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PodMetricsEndpoints []PodMetricsEndpoint `json:"podMetricsEndpoints"`
 
 	// Label selector to select the Kubernetes `Pod` objects to scrape metrics from.
@@ -120,6 +124,7 @@ type PodMonitorSpec struct {
 	//
 	// +listType=set
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
 	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -168,6 +173,7 @@ type PodMonitorSpec struct {
 	// The scrape class to apply.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
 	// When defined, bodySizeLimit specifies a job level limit on the size
@@ -176,6 +182,7 @@ type PodMonitorSpec struct {
 	// It requires Prometheus >= v2.28.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
 }
 
@@ -204,6 +211,7 @@ type PodMetricsEndpoint struct {
 	//
 	// It takes precedence over the `portNumber` and `targetPort` fields.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Port *string `json:"port,omitempty"`
 
 	// The `Pod` port number which exposes the endpoint.
@@ -223,6 +231,7 @@ type PodMetricsEndpoint struct {
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Path string `json:"path,omitempty"`
 
 	// HTTP scheme to use for scraping.
@@ -234,16 +243,19 @@ type PodMetricsEndpoint struct {
 	//
 	// +kubebuilder:validation:Enum=http;https
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Scheme string `json:"scheme,omitempty"`
 
 	// `params` define optional HTTP URL parameters.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Params map[string][]string `json:"params,omitempty"`
 
 	// Interval at which Prometheus scrapes the metrics from the target.
 	//
 	// If empty, Prometheus uses the global scrape interval.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Interval Duration `json:"interval,omitempty"`
 
 	// Timeout after which Prometheus considers the scrape to be failed.
@@ -252,6 +264,7 @@ type PodMetricsEndpoint struct {
 	// than the target's scrape interval value in which the latter is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// TLS configuration to use when scraping the target.
@@ -317,6 +330,7 @@ type PodMetricsEndpoint struct {
 	// samples before ingestion.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 
 	// `relabelings` configures the relabeling rules to apply the target's
@@ -329,6 +343,7 @@ type PodMetricsEndpoint struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
 	// +optional

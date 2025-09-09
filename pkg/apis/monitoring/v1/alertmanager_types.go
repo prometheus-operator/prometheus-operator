@@ -86,6 +86,7 @@ type AlertmanagerSpec struct {
 	// combinations. Specifying the version is still necessary to ensure the
 	// Prometheus Operator knows what version of Alertmanager is being
 	// configured.
+	// +kubebuilder:validation:MaxLength=2048
 	// +optional
 	Image *string `json:"image,omitempty"`
 	// Image pull policy for the 'alertmanager', 'init-config-reloader' and 'config-reloader' containers.
@@ -94,38 +95,50 @@ type AlertmanagerSpec struct {
 	// +optional
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Version the cluster should be on.
+	// +kubebuilder:validation:MaxLength=100
 	// +optional
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
 	// Deprecated: use 'image' instead. The image tag can be specified as part of the image URL.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
+	// +kubebuilder:validation:MaxLength=100000
 	Tag string `json:"tag,omitempty"`
 	// SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
 	// Deprecated: use 'image' instead. The image digest can be specified as part of the image URL.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
+	// +kubebuilder:validation:MaxLength=100000
 	SHA string `json:"sha,omitempty"`
 	// Base image that is used to deploy pods, without tag.
 	// Deprecated: use 'image' instead.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
+	// +kubebuilder:validation:MaxLength=100000
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+	// +kubebuilder:validation:MaxItems=10
 	// +optional
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Secrets is a list of Secrets in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
@@ -141,14 +154,17 @@ type AlertmanagerSpec struct {
 	// operator provisions a minimal Alertmanager configuration with one empty
 	// receiver (effectively dropping alert notifications).
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ConfigSecret string `json:"configSecret,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Alertmanager to be configured with.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogFormat string `json:"logFormat,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
@@ -159,6 +175,7 @@ type AlertmanagerSpec struct {
 	// and must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).
 	// +kubebuilder:default:="120h"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Retention GoDuration `json:"retention,omitempty"`
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
@@ -168,11 +185,13 @@ type AlertmanagerSpec struct {
 	// Volumes specified will be appended to other volumes that are generated as a result of
 	// StorageSpec objects.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Volumes []v1.Volume `json:"volumes,omitempty"`
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,
 	// that are generated as a result of StorageSpec objects.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 	// The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
 	// The default behavior is all PVCs are retained.
@@ -185,12 +204,14 @@ type AlertmanagerSpec struct {
 	// necessary to generate correct URLs. This is necessary if Alertmanager is not
 	// served from root of a DNS name.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ExternalURL string `json:"externalUrl,omitempty"`
 	// The route prefix Alertmanager registers HTTP handlers for. This is useful,
 	// if using ExternalURL and a proxy is rewriting HTTP routes of a request,
 	// and the actual ExternalURL is still true, but the server serves requests
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// If set to true all actions on the underlying managed objects are not
 	// going to be performed, except for delete actions.
@@ -198,6 +219,7 @@ type AlertmanagerSpec struct {
 	Paused bool `json:"paused,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// Define resources requests and limits for single Pods.
 	// +optional
@@ -207,9 +229,11 @@ type AlertmanagerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// If specified, the pod's topology spread constraints.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
@@ -233,10 +257,12 @@ type AlertmanagerSpec struct {
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ServiceName *string `json:"serviceName,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 	// ListenLocal makes the Alertmanager server listen on loopback, so that it
 	// does not bind against the Pod IP. Note this is only for the Alertmanager
@@ -252,6 +278,7 @@ type AlertmanagerSpec struct {
 	// of what the maintainers will support and by doing so, you accept that
 	// this behaviour may break at any time without notice.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Containers []v1.Container `json:"containers,omitempty"`
 	// InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 	// fetch secrets for injection into the Alertmanager configuration from external sources. Any
@@ -263,35 +290,45 @@ type AlertmanagerSpec struct {
 	// scope of what the maintainers will support and by doing so, you accept that
 	// this behaviour may break at any time without notice.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 	// Priority class assigned to the Pods
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	AdditionalPeers []string `json:"additionalPeers,omitempty"`
 	// ClusterAdvertiseAddress is the explicit address to advertise in cluster.
 	// Needs to be provided for non RFC1918 [1] (public) addresses.
 	// [1] RFC1918: https://tools.ietf.org/html/rfc1918
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClusterAdvertiseAddress string `json:"clusterAdvertiseAddress,omitempty"`
 	// Interval between gossip attempts.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ClusterGossipInterval GoDuration `json:"clusterGossipInterval,omitempty"`
 	// Defines the identifier that uniquely identifies the Alertmanager cluster.
 	// You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// Interval between pushpull attempts.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ClusterPushpullInterval GoDuration `json:"clusterPushpullInterval,omitempty"`
 	// Timeout for cluster peering.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
 	// Port name used for the pods and governing service.
 	// Defaults to `web`.
 	// +kubebuilder:default:="web"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PortName string `json:"portName,omitempty"`
 	// ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
@@ -322,6 +359,7 @@ type AlertmanagerSpec struct {
 	// +listType=map
 	// +listMapKey=ip
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	// +optional
@@ -354,6 +392,8 @@ type AlertmanagerSpec struct {
 	//
 	// It requires Alertmanager >= 0.27.0.
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
 	// AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.
 	// It is intended for e.g. activating hidden flags which are not supported by
@@ -361,6 +401,7 @@ type AlertmanagerSpec struct {
 	// Alertmanager container which may cause issues if they are invalid or not supported
 	// by the given Alertmanager version.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 
 	// Optional duration in seconds the pod needs to terminate gracefully.
@@ -424,6 +465,7 @@ type AlertmanagerConfiguration struct {
 	// It must be defined in the same namespace as the Alertmanager object.
 	// The operator will not enforce a `namespace` label for routes and inhibition rules.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=53
 	// +optional
 	Name string `json:"name,omitempty"`
 	// Defines the global parameters of the Alertmanager configuration.
@@ -431,6 +473,7 @@ type AlertmanagerConfiguration struct {
 	Global *AlertmanagerGlobalConfig `json:"global,omitempty"`
 	// Custom notification templates.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Templates []SecretOrConfigMap `json:"templates,omitempty"`
 }
 
@@ -445,6 +488,7 @@ type AlertmanagerGlobalConfig struct {
 	// not include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.
 	// This has no impact on alerts from Prometheus, as they always include EndsAt.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ResolveTimeout Duration `json:"resolveTimeout,omitempty"`
 
 	// HTTP client configuration.
@@ -465,6 +509,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// The default Pagerduty URL.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
 
 	// The default Telegram config
@@ -518,11 +563,13 @@ type AlertmanagerStatus struct {
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// The selector used to match the pods targeted by this Alertmanager object.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Selector string `json:"selector,omitempty"`
 	// The current state of the Alertmanager object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
@@ -567,6 +614,7 @@ type AlertmanagerLimitsSpec struct {
 	// It requires Alertmanager >= v0.28.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	MaxPerSilenceBytes *ByteSize `json:"maxPerSilenceBytes,omitempty"`
 }
 
@@ -575,6 +623,7 @@ type AlertmanagerLimitsSpec struct {
 type GlobalSMTPConfig struct {
 	// The default SMTP From header field.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	From *string `json:"from,omitempty"`
 
 	// The default SMTP smarthost used for sending emails.
@@ -583,10 +632,12 @@ type GlobalSMTPConfig struct {
 
 	// The default hostname to identify to the SMTP server.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Hello *string `json:"hello,omitempty"`
 
 	// SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AuthUsername *string `json:"authUsername,omitempty"`
 
 	// SMTP Auth using LOGIN and PLAIN.
@@ -595,6 +646,7 @@ type GlobalSMTPConfig struct {
 
 	// SMTP Auth using PLAIN
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AuthIdentity *string `json:"authIdentity,omitempty"`
 
 	// SMTP Auth using CRAM-MD5.
@@ -617,6 +669,7 @@ type GlobalTelegramConfig struct {
 	//
 	// It requires Alertmanager >= v0.24.0.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 }
 
@@ -627,6 +680,7 @@ type GlobalJiraConfig struct {
 	// It requires Alertmanager >= v0.28.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 }
 
@@ -637,6 +691,7 @@ type GlobalRocketChatConfig struct {
 	// It requires Alertmanager >= v0.28.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 
 	// The default Rocket Chat token.
@@ -662,6 +717,7 @@ type GlobalWebexConfig struct {
 	// It requires Alertmanager >= v0.25.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 }
 
@@ -669,6 +725,7 @@ type GlobalWeChatConfig struct {
 	// The default WeChat API URL.
 	// The default value is "https://qyapi.weixin.qq.com/cgi-bin/"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 
 	// The default WeChat API Secret.
@@ -678,6 +735,7 @@ type GlobalWeChatConfig struct {
 	// The default WeChat API Corporate ID.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	APICorpID *string `json:"apiCorpID,omitempty"`
 }
 
@@ -686,6 +744,7 @@ type GlobalVictorOpsConfig struct {
 	// The default VictorOps API URL.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	APIURL *URL `json:"apiURL,omitempty"`
 	// The default VictorOps API Key.
 	//
@@ -698,9 +757,11 @@ type HostPort struct {
 	// Defines the host's address, it can be a DNS name or a literal IP address.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+	// +kubebuilder:validation:MaxLength=100000
 	Host string `json:"host"`
 	// Defines the host's port, it can be a literal port number or a port name.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=5
 	// +required
 	Port string `json:"port"`
 }

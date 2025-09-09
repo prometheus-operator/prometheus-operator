@@ -77,6 +77,7 @@ type ThanosRulerList struct {
 type ThanosRulerSpec struct {
 	// Version of Thanos to be deployed.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Version *string `json:"version,omitempty"`
 
 	// PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.
@@ -92,6 +93,7 @@ type ThanosRulerSpec struct {
 
 	// Thanos container image URL.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	Image string `json:"image,omitempty"`
 
 	// Image pull policy for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.
@@ -103,6 +105,7 @@ type ThanosRulerSpec struct {
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling thanos images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	// +kubebuilder:validation:MaxItems=10
 	// +optional
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
@@ -117,6 +120,7 @@ type ThanosRulerSpec struct {
 
 	// Define which Nodes the Pods are scheduled on.
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// Resources defines the resource requirements for single Pods.
@@ -130,10 +134,12 @@ type ThanosRulerSpec struct {
 
 	// If specified, the pod's tolerations.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 
 	// If specified, the pod's topology spread constraints.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 
 	// SecurityContext holds pod-level security attributes and common container settings.
@@ -156,6 +162,7 @@ type ThanosRulerSpec struct {
 
 	// Priority class assigned to the Pods
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 
 	// The name of the service name used by the underlying StatefulSet(s) as the governing service.
@@ -165,11 +172,13 @@ type ThanosRulerSpec struct {
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=100000
 	ServiceName *string `json:"serviceName,omitempty"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Thanos Ruler Pods.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Storage spec to specify how storage shall be used.
@@ -179,11 +188,13 @@ type ThanosRulerSpec struct {
 	// Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
 	// be appended to other volumes that are generated as a result of StorageSpec objects.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Volumes []v1.Volume `json:"volumes,omitempty"`
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the ruler container,
 	// that are generated as a result of StorageSpec objects.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 
 	// Configures object storage.
@@ -205,6 +216,7 @@ type ThanosRulerSpec struct {
 	// This field takes precedence over `objectStorageConfig`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 
 	// ListenLocal makes the Thanos ruler listen on loopback, so that it
@@ -219,6 +231,8 @@ type ThanosRulerSpec struct {
 	// `queryConfig` takes precedence over this field.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	QueryEndpoints []string `json:"queryEndpoints,omitempty"`
 
 	// Configures the list of Thanos Query endpoints from which to query metrics.
@@ -241,6 +255,8 @@ type ThanosRulerSpec struct {
 	// `alertmanagersConfig` takes precedence over this field.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	AlertManagersURL []string `json:"alertmanagersUrl,omitempty"`
 	// Configures the list of Alertmanager endpoints to send alerts to.
 	//
@@ -271,51 +287,61 @@ type ThanosRulerSpec struct {
 	// and metric that is user created. The label value will always be the namespace of the object that is
 	// being created.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 	// List of references to PrometheusRule objects
 	// to be excluded from enforcing a namespace label of origin.
 	// Applies only if enforcedNamespaceLabel set to true.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	ExcludedFromEnforcement []ObjectReference `json:"excludedFromEnforcement,omitempty"`
 	// PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing
 	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
 	// Make sure both ruleNamespace and ruleName are set for each pair
 	// Deprecated: use excludedFromEnforcement instead.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 
 	// Log level for ThanosRuler to be configured with.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for ThanosRuler to be configured with.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// Port name used for the pods and governing service.
 	// Defaults to `web`.
 	// +kubebuilder:default:="web"
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	PortName string `json:"portName,omitempty"`
 
 	// Interval between consecutive evaluations.
 	// +kubebuilder:default:="15s"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
 	// Minimum amount of time to wait before resending an alert to Alertmanager.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	ResendDelay *Duration `json:"resendDelay,omitempty"`
 
 	// Max time to tolerate prometheus outage for restoring "for" state of alert.
 	// It requires Thanos >= v0.30.0.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RuleOutageTolerance *Duration `json:"ruleOutageTolerance,omitempty"`
 
 	// The default rule group's query offset duration to use.
 	// It requires Thanos >= v0.38.0.
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
 
 	// How many rules can be evaluated concurrently.
@@ -330,6 +356,7 @@ type ThanosRulerSpec struct {
 	// It requires Thanos >= v0.30.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	RuleGracePeriod *Duration `json:"ruleGracePeriod,omitempty"`
 
 	// Time duration ThanosRuler shall retain data for. Default is '24h', and
@@ -341,6 +368,7 @@ type ThanosRulerSpec struct {
 	//
 	// +kubebuilder:default:="24h"
 	// +optional
+// +kubebuilder:validation:MaxLength=100000
 	Retention Duration `json:"retention,omitempty"`
 
 	// Containers allows injecting additional containers or modifying operator generated
@@ -351,6 +379,7 @@ type ThanosRulerSpec struct {
 	// Overriding containers is entirely outside the scope of what the maintainers will support and by doing
 	// so, you accept that this behaviour may break at any time without notice.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Containers []v1.Container `json:"containers,omitempty"`
 	// InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 	// fetch secrets for injection into the ThanosRuler configuration from external sources. Any
@@ -360,6 +389,7 @@ type ThanosRulerSpec struct {
 	// of what the maintainers will support and by doing so, you accept that this behaviour may break
 	// at any time without notice.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 
 	// Configures tracing.
@@ -387,6 +417,7 @@ type ThanosRulerSpec struct {
 	// This field takes precedence over `tracingConfig`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 
 	// Configures the external label pairs of the ThanosRuler resource.
@@ -395,6 +426,7 @@ type ThanosRulerSpec struct {
 	// label with the value of the pod's name.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxProperties=1000
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// Configures the label names which should be dropped in Thanos Ruler
@@ -403,15 +435,19 @@ type ThanosRulerSpec struct {
 	// The replica label `thanos_ruler_replica` will always be dropped from the alerts.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxItems=1000
+	// +kubebuilder:validation:items:MaxLength=100000
 	AlertDropLabels []string `json:"alertDropLabels,omitempty"`
 
 	// The external URL the Thanos Ruler instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Thanos Ruler is not
 	// served from root of a DNS name.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	ExternalPrefix string `json:"externalPrefix,omitempty"`
 	// The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	RoutePrefix string `json:"routePrefix,omitempty"`
 
 	// GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
@@ -425,6 +461,7 @@ type ThanosRulerSpec struct {
 	// of all alerts.
 	// Maps to the '--alert.query-url' CLI arg.
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AlertQueryURL string `json:"alertQueryUrl,omitempty"`
 
 	// Minimum number of seconds for which a newly created pod should be ready
@@ -459,12 +496,14 @@ type ThanosRulerSpec struct {
 	// This field takes precedence over `alertRelabelConfig`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=100000
 	AlertRelabelConfigFile *string `json:"alertRelabelConfigFile,omitempty"`
 
 	// Pods' hostAliases configuration
 	// +listType=map
 	// +listMapKey=ip
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 
 	// AdditionalArgs allows setting additional arguments for the ThanosRuler container.
@@ -476,6 +515,7 @@ type ThanosRulerSpec struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
 
 	// Defines the configuration of the ThanosRuler web server.
@@ -489,6 +529,7 @@ type ThanosRulerSpec struct {
 	// It requires Thanos >= 0.24.0.
 	//
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
 	// Optional duration in seconds the pod needs to terminate gracefully.
@@ -512,6 +553,7 @@ type ThanosRulerSpec struct {
 	// It requires Thanos >= 0.39.0.
 	// +listType:=set
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	EnableFeatures []EnableFeature `json:"enableFeatures,omitempty"`
 
 	// HostUsers supports the user space in Kubernetes.
@@ -561,6 +603,7 @@ type ThanosRulerStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
+// +kubebuilder:validation:MaxItems=100000
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
