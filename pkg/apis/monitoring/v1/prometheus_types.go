@@ -216,6 +216,7 @@ type CommonPrometheusFields struct {
 	// If not specified, the operator assumes the latest upstream version of
 	// Prometheus available at the time when the version of the operator was
 	// released.
+	// +kubebuilder:validation:MaxLength=100
 	// +optional
 	Version string `json:"version,omitempty"`
 
@@ -244,6 +245,7 @@ type CommonPrometheusFields struct {
 	// An optional list of references to Secrets in the same namespace
 	// to use for pulling images from registries.
 	// See http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	// +kubebuilder:validation:MaxItems=10
 	// +optional
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
@@ -450,12 +452,16 @@ type CommonPrometheusFields struct {
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
 	// +listType:=set
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
 
@@ -1128,12 +1134,15 @@ type PrometheusSpec struct {
 
 	// Deprecated: use 'spec.image' instead.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
 	BaseImage string `json:"baseImage,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
 	Tag string `json:"tag,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
 	SHA string `json:"sha,omitempty"`
 
 	// How long to retain the Prometheus data.

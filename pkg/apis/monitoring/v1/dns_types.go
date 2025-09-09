@@ -21,6 +21,7 @@ type PodDNSConfig struct {
 	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
+	// +kubebuilder:validation:items:MaxLength=45
 	Nameservers []string `json:"nameservers,omitempty"`
 
 	// A list of DNS search domains for host-name lookup.

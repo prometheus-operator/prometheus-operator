@@ -74,6 +74,7 @@ type ServiceMonitorSpec struct {
 	// If the value of this field is empty or if the label doesn't exist for
 	// the given Service, the `job` label of the metrics defaults to the name
 	// of the associated Kubernetes `Service`.
+	// +kubebuilder:validation:MaxLength=253
 	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 

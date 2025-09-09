@@ -66,6 +66,7 @@ type PodMonitorSpec struct {
 	//
 	// If the value of this field is empty, the `job` label of the metrics
 	// defaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).
+	// +kubebuilder:validation:MaxLength=253
 	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 
