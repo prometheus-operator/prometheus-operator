@@ -30,6 +30,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
@@ -601,7 +602,7 @@ func run(fs *flag.FlagSet) int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"))
+	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation)
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)
