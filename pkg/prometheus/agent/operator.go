@@ -164,6 +164,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		eventRecorder:                c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
