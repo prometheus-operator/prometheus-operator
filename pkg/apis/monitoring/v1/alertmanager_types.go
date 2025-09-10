@@ -86,6 +86,7 @@ type AlertmanagerSpec struct {
 	// combinations. Specifying the version is still necessary to ensure the
 	// Prometheus Operator knows what version of Alertmanager is being
 	// configured.
+	// +kubebuilder:validation:MaxLength=2048
 	// +optional
 	Image *string `json:"image,omitempty"`
 	// Image pull policy for the 'alertmanager', 'init-config-reloader' and 'config-reloader' containers.
@@ -94,38 +95,47 @@ type AlertmanagerSpec struct {
 	// +optional
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Version the cluster should be on.
+	// +kubebuilder:validation:MaxLength=100
 	// +optional
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
 	// Deprecated: use 'image' instead. The image tag can be specified as part of the image URL.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
 	Tag string `json:"tag,omitempty"`
 	// SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
 	// Deprecated: use 'image' instead. The image digest can be specified as part of the image URL.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
 	SHA string `json:"sha,omitempty"`
 	// Base image that is used to deploy pods, without tag.
 	// Deprecated: use 'image' instead.
 	// +optional
+	//nolint:kubeapilinter // since deprecated
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+	// +kubebuilder:validation:MaxItems=10
 	// +optional
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Secrets is a list of Secrets in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.
+	// +kubebuilder:validation:MaxItems=50
+	// +kubebuilder:validation:items:MaxLength=253
 	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
@@ -424,6 +434,7 @@ type AlertmanagerConfiguration struct {
 	// It must be defined in the same namespace as the Alertmanager object.
 	// The operator will not enforce a `namespace` label for routes and inhibition rules.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=53
 	// +optional
 	Name string `json:"name,omitempty"`
 	// Defines the global parameters of the Alertmanager configuration.
@@ -701,6 +712,7 @@ type HostPort struct {
 	Host string `json:"host"`
 	// Defines the host's port, it can be a literal port number or a port name.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=5
 	// +required
 	Port string `json:"port"`
 }
