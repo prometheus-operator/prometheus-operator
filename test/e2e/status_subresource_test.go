@@ -288,6 +288,6 @@ func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 	finalizers := p.GetFinalizers()
 	require.NotEmpty(t, finalizers)
 
-	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
 }
