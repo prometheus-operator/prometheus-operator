@@ -1141,6 +1141,7 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 			cg = cg.WithMinimumVersion("2.54.0")
 			if cg.Version().LT(semver.MustParse("3.4.0")) {
 				promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+				break
 			}
 
 		}
