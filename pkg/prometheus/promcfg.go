@@ -1143,7 +1143,6 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 				promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
 				break
 			}
-
 		}
 	}
 
