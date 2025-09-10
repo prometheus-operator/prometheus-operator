@@ -96,6 +96,8 @@ type Operator struct {
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -612,12 +614,24 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Check if the Agent instance is marked for deletion.
-	if c.rr.DeletionInProgress(p) {
+	logger := c.logger.With("key", key)
+
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error {return nil})
+	if err != nil {
+		return err
+	}
+
+	if finalizersChanged {
+		// Since the object has been updated, let's trigger another sync.
+		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
 
-	logger := c.logger.With("key", key)
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		c.reconciliations.ForgetObject(key)
+		return nil
+	}
 
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
