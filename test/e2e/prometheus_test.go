@@ -5495,6 +5495,152 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func testPrometheusUTF8RelabelSupport(t *testing.T) {
+	skipPrometheusTests(t)
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		ns,
+		[]string{ns},
+		nil,
+		[]string{ns},
+		nil,
+		false,
+		true,
+		true,
+	)
+	require.NoError(t, err)
+
+	// Test UTF-8 relabel configs with global UTF-8 validation
+	t.Run("UTF8RelabelWithGlobalValidation", func(t *testing.T) {
+		testUTF8RelabelWithGlobalValidation(t, ns)
+	})
+
+	// Test Legacy validation rejects UTF-8 labels
+	t.Run("LegacyValidationRejectsUTF8", func(t *testing.T) {
+		testLegacyValidationRejectsUTF8(t, ns)
+	})
+}
+
+func testUTF8RelabelWithGlobalValidation(t *testing.T, ns string) {
+	name := "prometheus-utf8-relabel"
+
+	// Create Prometheus with UTF-8 validation scheme
+	prom := framework.MakeBasicPrometheus(ns, name, "test-app", 1)
+	prom.Spec.NameValidationScheme = ptr.To(monitoringv1.UTF8NameValidationScheme)
+	prom.Spec.NameEscapingScheme = ptr.To(monitoringv1.AllowUTF8NameEscapingScheme)
+
+	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
+
+	// Create ServiceMonitor with UTF-8 relabel configs
+	sm := framework.MakeBasicServiceMonitor("test-app")
+	sm.ObjectMeta.Name = "utf8-relabel-test"
+	sm.Spec.Endpoints[0].MetricRelabelConfigs = []monitoringv1.RelabelConfig{
+		{
+			SourceLabels: []monitoringv1.LabelName{"__name__"},
+			TargetLabel:  "服务",
+			Replacement:  ptr.To("测试服务"),
+			Action:       "replace",
+		},
+		{
+			SourceLabels: []monitoringv1.LabelName{"job"},
+			TargetLabel:  "environment",
+			Replacement:  ptr.To("生产环境"),
+			Action:       "replace",
+		},
+	}
+
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Verify UTF-8 configuration is present
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		configOk1, _ := verifyPrometheusConfig(t, ns, name, "metric_name_validation_scheme: utf8")
+		configOk2, _ := verifyPrometheusConfig(t, ns, name, "metric_name_escaping_scheme: allow-utf-8")
+		configOk3, _ := verifyPrometheusConfig(t, ns, name, "服务") // UTF-8 label in config
+		return configOk1 && configOk2 && configOk3, nil
+	})
+	require.NoError(t, err, "Expected UTF-8 validation, escaping, and UTF-8 labels in Prometheus config")
+}
+
+func testLegacyValidationRejectsUTF8(t *testing.T, ns string) {
+	name := "prometheus-legacy-relabel"
+
+	// Create Prometheus with Legacy validation scheme
+	prom := framework.MakeBasicPrometheus(ns, name, "test-app", 1)
+	prom.Spec.NameValidationScheme = ptr.To(monitoringv1.LegacyNameValidationScheme)
+
+	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
+
+	// Create ServiceMonitor with UTF-8 relabel configs
+	sm := framework.MakeBasicServiceMonitor("test-app")
+	sm.ObjectMeta.Name = "legacy-relabel-test"
+	sm.Spec.Endpoints[0].MetricRelabelConfigs = []monitoringv1.RelabelConfig{
+		{
+			SourceLabels: []monitoringv1.LabelName{"__name__"},
+			TargetLabel:  "服务",
+			Replacement:  ptr.To("测试服务"),
+			Action:       "replace",
+		},
+	}
+
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Verify Legacy validation is present but UTF-8 labels should not appear
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+		configOk, _ := verifyPrometheusConfig(t, ns, name, "metric_name_validation_scheme: legacy")
+		return configOk, nil
+	})
+	require.NoError(t, err, "Expected legacy validation in Prometheus config")
+
+	// Verify UTF-8 labels are not in the config (should be rejected/escaped)
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 30*time.Second, false, func(ctx context.Context) (bool, error) {
+		hasUTF8, _ := verifyPrometheusConfig(t, ns, name, "服务")
+		return !hasUTF8, nil // We want this to be false (UTF-8 should not be present)
+	})
+	require.NoError(t, err, "UTF-8 labels should not be present with legacy validation")
+}
+
+func verifyPrometheusConfig(t *testing.T, ns, promName, expectedConfig string) (bool, error) {
+	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("prometheus=%s", promName),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if len(pods.Items) == 0 {
+		return false, fmt.Errorf("no prometheus pods found")
+	}
+
+	pod := pods.Items[0]
+	stdout, _, err := framework.ExecWithOptions(context.Background(), testFramework.ExecOptions{
+		Command: []string{
+			"/bin/sh", "-c", "cat /etc/prometheus/config_out/prometheus.env.yaml",
+		},
+		Namespace:     ns,
+		PodName:       pod.Name,
+		ContainerName: "prometheus",
+		CaptureStdout: true,
+		CaptureStderr: true,
+		Stdin:         nil,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(stdout, expectedConfig), nil
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(

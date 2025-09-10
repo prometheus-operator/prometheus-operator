@@ -1945,11 +1945,22 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "staticConfig with invalid Labels",
+			scenario: "staticConfig with utf-8 label",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
 					{
 						Labels: map[string]string{"1owner": "prometheus"},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "staticConfig with invalid utf-8 label",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+					{
+						Labels: map[string]string{"\xff": "prometheus"},
 					},
 				}
 			},

@@ -21,8 +21,10 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -52,9 +54,10 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	return PrometheusRuleSelector{
-		ruleFormat: ruleFormat,
-		version:    version,
-		logger:     logger,
+		ruleFormat:           ruleFormat,
+		version:              version,
+		logger:               logger,
+		nameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
 	}
 }
 
@@ -133,7 +136,7 @@ func shouldAcceptRulesWithEmptyDurations(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func shouldRejectRuleWithInvalidLabels(t *testing.T) {
+func shouldRejectRuleWithInvalidUTF8Labels(t *testing.T) {
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
 			{
@@ -143,7 +146,7 @@ func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 						Alert: "alert",
 						Expr:  intstr.FromString("vector(1)"),
 						Labels: map[string]string{
-							"invalid/label": "value",
+							"\xff": "value",
 						},
 					},
 				},
@@ -454,7 +457,7 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, model.UTF8Validation)
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit")
 }
 
