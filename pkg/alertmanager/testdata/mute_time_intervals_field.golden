@@ -10,4 +10,5 @@ mute_time_intervals:
       end_time: "24:00"
     days_of_month: ["7", "18", "28"]
     months: ["january"]
+    location: Australia/Sydney
 templates: []

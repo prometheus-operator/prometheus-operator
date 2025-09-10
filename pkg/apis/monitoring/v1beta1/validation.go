@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (hc *HTTPConfig) Validate() error {
@@ -99,6 +100,12 @@ func (ti TimeInterval) Validate() error {
 				return fmt.Errorf("year range at %d is invalid: %w", i, err)
 			}
 		}
+		if ti.Location != nil {
+			if _, err := time.LoadLocation(*ti.Location); err != nil {
+				return fmt.Errorf("time zone location at %d is invalid: %w", i, err)
+			}
+		}
+
 	}
 	return nil
 }
