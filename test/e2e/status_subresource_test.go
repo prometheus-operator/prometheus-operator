@@ -260,3 +260,34 @@ func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
 	require.NoError(t, err)
 }
+
+// testFinalizerForPromAgentWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for PrometheusAgent when StatusForConfigurationResourcesFeature is enabled.
+func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "status-cleanup-finalizer-test"
+
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	finalizers := p.GetFinalizers()
+	require.NotEmpty(t, finalizers)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+}

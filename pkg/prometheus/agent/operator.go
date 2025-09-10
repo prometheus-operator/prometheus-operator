@@ -616,7 +616,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error {return nil})
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
 	if err != nil {
 		return err
 	}
