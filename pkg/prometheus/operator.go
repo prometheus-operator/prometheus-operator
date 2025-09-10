@@ -17,6 +17,7 @@ package prometheus
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"slices"
@@ -30,6 +31,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -37,6 +39,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
+
+const statusSubResource = "status"
 
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
@@ -71,34 +75,129 @@ func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoring
 	}
 }
 
-// UpdateBindingConditions returns the bindings slice with the conditions updated for the workload.
-// The 2nd return value indicates if the slice has been updated.
-func (crs *ConfigResourceSyncer) UpdateBindingConditions(bindings []monitoringv1.WorkloadBinding, conditions []monitoringv1.ConfigResourceCondition) ([]monitoringv1.WorkloadBinding, bool) {
-	updated := monitoringv1.WorkloadBinding{
+type patch []patchOperation
+
+type patchOperation struct {
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value any    `json:"value,omitempty"`
+}
+
+// GetBindingIndex returns the index of the workload binding in the slice.
+// The return value is negative if there's no binding for the workload.
+func (crs *ConfigResourceSyncer) GetBindingIndex(bindings []monitoringv1.WorkloadBinding) int {
+	for i, binding := range bindings {
+		if binding.Namespace == crs.workload.GetNamespace() &&
+			binding.Name == crs.workload.GetName() &&
+			binding.Group == crs.gvr.Group &&
+			binding.Resource == crs.gvr.Resource {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (crs *ConfigResourceSyncer) newBinding(conditions []monitoringv1.ConfigResourceCondition) monitoringv1.WorkloadBinding {
+	return monitoringv1.WorkloadBinding{
 		Namespace:  crs.workload.GetNamespace(),
 		Name:       crs.workload.GetName(),
 		Resource:   crs.gvr.Resource,
 		Group:      crs.gvr.Group,
 		Conditions: conditions,
 	}
-	for i, binding := range bindings {
-		if binding.Namespace != updated.Namespace ||
-			binding.Name != updated.Name ||
-			binding.Group != updated.Group ||
-			binding.Resource != updated.Resource {
-			continue
+}
+
+// UpdateBindingPatch returns a RFC-6902 JSON patch which updates the
+// conditions of the resource's status.
+// If the binding doesn't exist, the patch adds it to the status.
+// If the binding is already up-to-date, the return value is empty.
+func (crs *ConfigResourceSyncer) UpdateBindingPatch(bindings []monitoringv1.WorkloadBinding, conditions []monitoringv1.ConfigResourceCondition) ([]byte, error) {
+	i := crs.GetBindingIndex(bindings)
+	if i < 0 {
+		binding := crs.newBinding(conditions)
+		if len(bindings) == 0 {
+			// Initialize the workload bindings.
+			return json.Marshal(patch{
+				patchOperation{
+					Op:   "add",
+					Path: "/status",
+					Value: monitoringv1.ConfigResourceStatus{
+						Bindings: []monitoringv1.WorkloadBinding{binding},
+					},
+				},
+			})
 		}
 
-		// No need to update the binding if the conditions haven't changed
-		if equalConfigResourceConditions(binding.Conditions, updated.Conditions) {
-			return nil, false
-		}
-
-		bindings[i] = updated
-		return bindings, true
+		// Append the workload binding.
+		return json.Marshal(patch{
+			patchOperation{
+				Op:    "add",
+				Path:  "/status/bindings/-",
+				Value: binding,
+			},
+		})
 	}
 
-	return append(bindings, updated), true
+	// No need to update the binding if the conditions haven't changed
+	if equalConfigResourceConditions(bindings[i].Conditions, conditions) {
+		return nil, nil
+	}
+
+	return json.Marshal(
+		append(
+			crs.testBindingExists(i),
+			patchOperation{
+				Op:    "replace",
+				Path:  fmt.Sprintf("/status/bindings/%d/conditions", i),
+				Value: conditions,
+			},
+		),
+	)
+}
+
+// RemoveBindingPatch returns a RFC-6902 JSON patch which removes the
+// workload binding from the resource's status.
+// If the binding doesn't exist, the return value is empty.
+func (crs *ConfigResourceSyncer) RemoveBindingPatch(bindings []monitoringv1.WorkloadBinding) ([]byte, error) {
+	i := crs.GetBindingIndex(bindings)
+	if i < 0 {
+		return nil, nil
+	}
+
+	return json.Marshal(
+		append(
+			crs.testBindingExists(i),
+			patchOperation{
+				Op:   "remove",
+				Path: fmt.Sprintf("/status/bindings/%d", i),
+			}),
+	)
+}
+
+func (crs *ConfigResourceSyncer) testBindingExists(i int) patch {
+	return []patchOperation{
+		{
+			Op:    "test",
+			Path:  fmt.Sprintf("/status/bindings/%d/name", i),
+			Value: crs.workload.GetName(),
+		},
+		{
+			Op:    "test",
+			Path:  fmt.Sprintf("/status/bindings/%d/namespace", i),
+			Value: crs.workload.GetNamespace(),
+		},
+		{
+			Op:    "test",
+			Path:  fmt.Sprintf("/status/bindings/%d/resource", i),
+			Value: crs.gvr.Resource,
+		},
+		{
+			Op:    "test",
+			Path:  fmt.Sprintf("/status/bindings/%d/group", i),
+			Value: crs.gvr.Group,
+		},
+	}
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -304,16 +403,25 @@ func UpdateServiceMonitorStatus(
 	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
 	smon := res.resource
 
-	bindings, updated := c.UpdateBindingConditions(smon.Status.Bindings, res.conditions(smon.Generation))
-	if !updated {
+	p, err := c.UpdateBindingPatch(smon.Status.Bindings, res.conditions(smon.Generation))
+	if err != nil {
+		return err
+	}
+
+	if len(p) == 0 {
 		return nil
 	}
-	smon.Status.Bindings = bindings
 
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(
+	_, err = c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).Patch(
 		ctx,
-		ApplyConfigurationFromServiceMonitor(smon),
-		metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true},
+		smon.Name,
+		types.JSONPatchType,
+		p,
+		metav1.PatchOptions{
+			FieldManager:    operator.PrometheusOperatorFieldManager,
+			FieldValidation: metav1.FieldValidationStrict,
+		},
+		statusSubResource,
 	)
 	return err
 }
@@ -342,36 +450,33 @@ func equalConfigResourceConditions(a, b []monitoringv1.ConfigResourceCondition) 
 	})
 }
 
-// RemoveServiceMonitorBinding removes the Prometheus or PrometheusAgent binding from the status remove the Prometheus or PrometheusAgent binding from the status
-// subresource of status in serviceMonitor.
+// RemoveServiceMonitorBinding removes the Prometheus or PrometheusAgent
+// binding from the ServiceMonitor's status subresource.
+// If the workload has no binding, this a no-operation.
 func RemoveServiceMonitorBinding(
 	ctx context.Context,
 	c *ConfigResourceSyncer,
 	smon *monitoringv1.ServiceMonitor) error {
-	for i := range smon.Status.Bindings {
-		binding := &smon.Status.Bindings[i]
-		if binding.Namespace == c.workload.GetNamespace() &&
-			binding.Name == c.workload.GetName() &&
-			binding.Resource == c.gvr.Resource {
-			smon.Status.Bindings = append(smon.Status.Bindings[:i], smon.Status.Bindings[i+1:]...)
-			break
-		}
-	}
-
-	if len(smon.Status.Bindings) == 0 {
-		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).UpdateStatus(ctx, smon, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
+	p, err := c.RemoveBindingPatch(smon.Status.Bindings)
+	if err != nil {
 		return err
 	}
 
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	return err
-}
-
-func IsBindingPresent(bindings []monitoringv1.WorkloadBinding, p metav1.Object, resource string) bool {
-	for _, binding := range bindings {
-		if binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == resource {
-			return true
-		}
+	if len(p) == 0 {
+		// Binding not found.
+		return nil
 	}
-	return false
+
+	_, err = c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).Patch(
+		ctx,
+		smon.Name,
+		types.JSONPatchType,
+		p,
+		metav1.PatchOptions{
+			FieldManager:    operator.PrometheusOperatorFieldManager,
+			FieldValidation: metav1.FieldValidationStrict,
+		},
+		statusSubResource,
+	)
+	return err
 }
