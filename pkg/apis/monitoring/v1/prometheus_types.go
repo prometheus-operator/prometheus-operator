@@ -1859,6 +1859,9 @@ type Sigv4 struct {
 	// RoleArn is the named AWS profile used to authenticate.
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
+	// UseFIPSSTSEndpoint enables FIPS mode for AWS STS endpoint.
+	// +optional
+	UseFIPSSTSEndpoint *bool `json:"useFipsSTSEndpoint,omitempty"`
 }
 
 // AzureAD defines the configuration for remote write's azuread parameters.
