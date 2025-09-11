@@ -8209,7 +8209,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "paused": {
-                    "description": "paused represents whether any actions on the underlying managed objects are\nbeing performed. Only delete actions will be performed.",
+                    "description": "paused defines whether any actions on the underlying managed objects are\nbeing performed. Only delete actions will be performed.",
                     "type": "boolean"
                   },
                   "replicas": {

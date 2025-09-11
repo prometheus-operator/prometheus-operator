@@ -538,7 +538,7 @@ type ThanosRulerWebSpec struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ThanosRulerStatus struct {
-	// paused represents whether any actions on the underlying managed objects are
+	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
 	Paused bool `json:"paused"`
