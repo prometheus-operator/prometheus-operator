@@ -62,7 +62,8 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	logger := o.logger.With("thanos", t.Name, "namespace", t.Namespace)
 	thanosVersion := operator.StringValOrDefault(ptr.Deref(t.Spec.Version, ""), operator.DefaultThanosVersion)
 
-	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger)
+	// Since ThanosRuler doesn't support UTF-8 yet
+	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger, ptr.To(monitoringv1.LegacyNameValidationScheme))
 	if err != nil {
 		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}

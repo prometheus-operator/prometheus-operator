@@ -35,6 +35,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus/common/model"
 )
 
 const (
@@ -233,7 +234,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
 	}
 
-	errors := promoperator.ValidateRule(promRule.Spec)
+	errors := promoperator.ValidateRule(promRule.Spec, model.UTF8Validation)
 	if len(errors) != 0 {
 		const m = "Invalid rule"
 		a.logger.Debug(m, "content", promRule.Spec)
