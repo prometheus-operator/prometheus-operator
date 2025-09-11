@@ -42,15 +42,15 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of desired alerting rule definitions for Prometheus.",
+                "description": "spec defines the specification of desired alerting rule definitions for Prometheus.",
                 "properties": {
                   "groups": {
-                    "description": "Content of Prometheus rule file",
+                    "description": "groups defines the content of Prometheus rule file",
                     "items": {
                       "description": "RuleGroup is a list of sequentially evaluated recording and alerting rules.",
                       "properties": {
                         "interval": {
-                          "description": "Interval determines how often rules in the group are evaluated.",
+                          "description": "interval defines how often rules in the group are evaluated.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
@@ -58,42 +58,42 @@
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Labels to add or overwrite before storing the result for its rules.\nThe labels defined at the rule level take precedence.\n\nIt requires Prometheus >= 3.0.0.\nThe field is ignored for Thanos Ruler.",
+                          "description": "labels define the labels to add or overwrite before storing the result for its rules.\nThe labels defined at the rule level take precedence.\n\nIt requires Prometheus >= 3.0.0.\nThe field is ignored for Thanos Ruler.",
                           "type": "object"
                         },
                         "limit": {
-                          "description": "Limit the number of alerts an alerting rule and series a recording\nrule can produce.\nLimit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.",
+                          "description": "limit defines the number of alerts an alerting rule and series a recording\nrule can produce.\nLimit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.",
                           "type": "integer"
                         },
                         "name": {
-                          "description": "Name of the rule group.",
+                          "description": "name defines the name of the rule group.",
                           "minLength": 1,
                           "type": "string"
                         },
                         "partial_response_strategy": {
-                          "description": "PartialResponseStrategy is only used by ThanosRuler and will\nbe ignored by Prometheus instances.\nMore info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response",
+                          "description": "partial_response_strategy is only used by ThanosRuler and will\nbe ignored by Prometheus instances.\nMore info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response",
                           "pattern": "^(?i)(abort|warn)?$",
                           "type": "string"
                         },
                         "query_offset": {
-                          "description": "Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.\n\nIt requires Prometheus >= v2.53.0.\nIt is not supported for ThanosRuler.",
+                          "description": "query_offset defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.\n\nIt requires Prometheus >= v2.53.0.\nIt is not supported for ThanosRuler.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "rules": {
-                          "description": "List of alerting and recording rules.",
+                          "description": "rules defines the list of alerting and recording rules.",
                           "items": {
                             "description": "Rule describes an alerting or recording rule\nSee Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule",
                             "properties": {
                               "alert": {
-                                "description": "Name of the alert. Must be a valid label value.\nOnly one of `record` and `alert` must be set.",
+                                "description": "alert defines the name of the alert. Must be a valid label value.\nOnly one of `record` and `alert` must be set.",
                                 "type": "string"
                               },
                               "annotations": {
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Annotations to add to each alert.\nOnly valid for alerting rules.",
+                                "description": "annotations defines annotations to add to each alert.\nOnly valid for alerting rules.",
                                 "type": "object"
                               },
                               "expr": {
@@ -105,16 +105,16 @@
                                     "type": "string"
                                   }
                                 ],
-                                "description": "PromQL expression to evaluate.",
+                                "description": "expr defines the PromQL expression to evaluate.",
                                 "x-kubernetes-int-or-string": true
                               },
                               "for": {
-                                "description": "Alerts are considered firing once they have been returned for this long.",
+                                "description": "for defines how alerts are considered firing once they have been returned for this long.",
                                 "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                                 "type": "string"
                               },
                               "keep_firing_for": {
-                                "description": "KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.",
+                                "description": "keep_firing_for defines how long an alert will continue firing after the condition that triggered it has cleared.",
                                 "minLength": 1,
                                 "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                                 "type": "string"
@@ -123,11 +123,11 @@
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Labels to add or overwrite.",
+                                "description": "labels defines labels to add or overwrite.",
                                 "type": "object"
                               },
                               "record": {
-                                "description": "Name of the time series to output to. Must be a valid metric name.\nOnly one of `record` and `alert` must be set.",
+                                "description": "record defines the name of the time series to output to. Must be a valid metric name.\nOnly one of `record` and `alert` must be set.",
                                 "type": "string"
                               }
                             },

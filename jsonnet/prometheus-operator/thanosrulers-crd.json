@@ -84,20 +84,20 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of the desired behavior of the ThanosRuler cluster. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "spec defines the specification of the desired behavior of the ThanosRuler cluster. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "additionalArgs": {
-                    "description": "AdditionalArgs allows setting additional arguments for the ThanosRuler container.\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nThanosRuler container which may cause issues if they are invalid or not supported\nby the given ThanosRuler version.\nIn case of an argument conflict (e.g. an argument which is already set by the\noperator itself) or when providing an invalid argument the reconciliation will\nfail and an error will be logged.",
+                    "description": "additionalArgs defines how to add additional arguments for the ThanosRuler container.\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nThanosRuler container which may cause issues if they are invalid or not supported\nby the given ThanosRuler version.\nIn case of an argument conflict (e.g. an argument which is already set by the\noperator itself) or when providing an invalid argument the reconciliation will\nfail and an error will be logged.",
                     "items": {
                       "description": "Argument as part of the AdditionalArgs list.",
                       "properties": {
                         "name": {
-                          "description": "Name of the argument, e.g. \"scrape.discovery-reload-interval\".",
+                          "description": "name of the argument, e.g. \"scrape.discovery-reload-interval\".",
                           "minLength": 1,
                           "type": "string"
                         },
                         "value": {
-                          "description": "Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)",
+                          "description": "value defines the argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)",
                           "type": "string"
                         }
                       },
@@ -109,7 +109,7 @@
                     "type": "array"
                   },
                   "affinity": {
-                    "description": "If specified, the pod's scheduling constraints.",
+                    "description": "affinity defines when specified, the pod's scheduling constraints.",
                     "properties": {
                       "nodeAffinity": {
                         "description": "Describes node affinity scheduling rules for the pod.",
@@ -864,22 +864,22 @@
                     "type": "object"
                   },
                   "alertDropLabels": {
-                    "description": "Configures the label names which should be dropped in Thanos Ruler\nalerts.\n\nThe replica label `thanos_ruler_replica` will always be dropped from the alerts.",
+                    "description": "alertDropLabels defines the label names which should be dropped in Thanos Ruler\nalerts.\n\nThe replica label `thanos_ruler_replica` will always be dropped from the alerts.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "alertQueryUrl": {
-                    "description": "The external Query URL the Thanos Ruler will set in the 'Source' field\nof all alerts.\nMaps to the '--alert.query-url' CLI arg.",
+                    "description": "alertQueryUrl defines how Thanos Ruler will set in the 'Source' field\nof all alerts.\nMaps to the '--alert.query-url' CLI arg.",
                     "type": "string"
                   },
                   "alertRelabelConfigFile": {
-                    "description": "Configures the path to the alert relabeling configuration file.\n\nAlert relabel configuration must have the form as specified in the\nofficial Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `alertRelabelConfig`.",
+                    "description": "alertRelabelConfigFile defines the path to the alert relabeling configuration file.\n\nAlert relabel configuration must have the form as specified in the\nofficial Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `alertRelabelConfig`.",
                     "type": "string"
                   },
                   "alertRelabelConfigs": {
-                    "description": "Configures alert relabeling in Thanos Ruler.\n\nAlert relabel configuration must have the form as specified in the\nofficial Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\n\nThe operator performs no validation of the configuration.\n\n`alertRelabelConfigFile` takes precedence over this field.",
+                    "description": "alertRelabelConfigs defines the alert relabeling in Thanos Ruler.\n\nAlert relabel configuration must have the form as specified in the\nofficial Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\n\nThe operator performs no validation of the configuration.\n\n`alertRelabelConfigFile` takes precedence over this field.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -902,7 +902,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagersConfig": {
-                    "description": "Configures the list of Alertmanager endpoints to send alerts to.\n\nThe configuration format is defined at https://thanos.io/tip/components/rule.md/#alertmanager.\n\nIt requires Thanos >= v0.10.0.\n\nThe operator performs no validation of the configuration.\n\nThis field takes precedence over `alertmanagersUrl`.",
+                    "description": "alertmanagersConfig defines the list of Alertmanager endpoints to send alerts to.\n\nThe configuration format is defined at https://thanos.io/tip/components/rule.md/#alertmanager.\n\nIt requires Thanos >= v0.10.0.\n\nThe operator performs no validation of the configuration.\n\nThis field takes precedence over `alertmanagersUrl`.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -925,14 +925,14 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagersUrl": {
-                    "description": "Configures the list of Alertmanager endpoints to send alerts to.\n\nFor Thanos >= v0.10.0, it is recommended to use `alertmanagersConfig` instead.\n\n`alertmanagersConfig` takes precedence over this field.",
+                    "description": "alertmanagersUrl defines the list of Alertmanager endpoints to send alerts to.\n\nFor Thanos >= v0.10.0, it is recommended to use `alertmanagersConfig` instead.\n\n`alertmanagersConfig` takes precedence over this field.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "containers": {
-                    "description": "Containers allows injecting additional containers or modifying operator generated\ncontainers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or\nto change the behavior of an operator generated container. Containers described here modify\nan operator generated container if they share the same name and modifications are done via a\nstrategic merge patch. The current container names are: `thanos-ruler` and `config-reloader`.\nOverriding containers is entirely outside the scope of what the maintainers will support and by doing\nso, you accept that this behaviour may break at any time without notice.",
+                    "description": "containers allows injecting additional containers or modifying operator generated\ncontainers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or\nto change the behavior of an operator generated container. Containers described here modify\nan operator generated container if they share the same name and modifications are done via a\nstrategic merge patch. The current container names are: `thanos-ruler` and `config-reloader`.\nOverriding containers is entirely outside the scope of what the maintainers will support and by doing\nso, you accept that this behaviour may break at any time without notice.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -2270,10 +2270,10 @@
                     "type": "array"
                   },
                   "dnsConfig": {
-                    "description": "Defines the DNS configuration for the pods.",
+                    "description": "dnsConfig defines Defines the DNS configuration for the pods.",
                     "properties": {
                       "nameservers": {
-                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
+                        "description": "nameservers defines the list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -2282,17 +2282,17 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "options": {
-                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
+                        "description": "options defines the list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
                         "items": {
                           "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
                           "properties": {
                             "name": {
-                              "description": "Name is required and must be unique.",
+                              "description": "name is required and must be unique.",
                               "minLength": 1,
                               "type": "string"
                             },
                             "value": {
-                              "description": "Value is optional.",
+                              "description": "value is optional.",
                               "type": "string"
                             }
                           },
@@ -2308,7 +2308,7 @@
                         "x-kubernetes-list-type": "map"
                       },
                       "searches": {
-                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
+                        "description": "searches defines the list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -2320,7 +2320,7 @@
                     "type": "object"
                   },
                   "dnsPolicy": {
-                    "description": "Defines the DNS policy for the pods.",
+                    "description": "dnsPolicy defines the DNS policy for the pods.",
                     "enum": [
                       "ClusterFirstWithHostNet",
                       "ClusterFirst",
@@ -2330,7 +2330,7 @@
                     "type": "string"
                   },
                   "enableFeatures": {
-                    "description": "Enable access to Thanos Ruler feature flags. By default, no features are enabled.\n\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nFor more information see https://thanos.io/tip/components/rule.md/\n\nIt requires Thanos >= 0.39.0.",
+                    "description": "enableFeatures defines how to setup Thanos Ruler feature flags. By default, no features are enabled.\n\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nFor more information see https://thanos.io/tip/components/rule.md/\n\nIt requires Thanos >= 0.39.0.",
                     "items": {
                       "minLength": 1,
                       "type": "string"
@@ -2339,43 +2339,43 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "enableServiceLinks": {
-                    "description": "Indicates whether information about services should be injected into pod's environment variables",
+                    "description": "enableServiceLinks defines whether information about services should be injected into pod's environment variables",
                     "type": "boolean"
                   },
                   "enforcedNamespaceLabel": {
-                    "description": "EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert\nand metric that is user created. The label value will always be the namespace of the object that is\nbeing created.",
+                    "description": "enforcedNamespaceLabel enforces adding a namespace label of origin for each alert\nand metric that is user created. The label value will always be the namespace of the object that is\nbeing created.",
                     "type": "string"
                   },
                   "evaluationInterval": {
                     "default": "15s",
-                    "description": "Interval between consecutive evaluations.",
+                    "description": "evaluationInterval defines the interval between consecutive evaluations.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "excludedFromEnforcement": {
-                    "description": "List of references to PrometheusRule objects\nto be excluded from enforcing a namespace label of origin.\nApplies only if enforcedNamespaceLabel set to true.",
+                    "description": "excludedFromEnforcement defines the list of references to PrometheusRule objects\nto be excluded from enforcing a namespace label of origin.\nApplies only if enforcedNamespaceLabel set to true.",
                     "items": {
                       "description": "ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.",
                       "properties": {
                         "group": {
                           "default": "monitoring.coreos.com",
-                          "description": "Group of the referent. When not specified, it defaults to `monitoring.coreos.com`",
+                          "description": "group of the referent. When not specified, it defaults to `monitoring.coreos.com`",
                           "enum": [
                             "monitoring.coreos.com"
                           ],
                           "type": "string"
                         },
                         "name": {
-                          "description": "Name of the referent. When not set, all resources in the namespace are matched.",
+                          "description": "name of the referent. When not set, all resources in the namespace are matched.",
                           "type": "string"
                         },
                         "namespace": {
-                          "description": "Namespace of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+                          "description": "namespace of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
                           "minLength": 1,
                           "type": "string"
                         },
                         "resource": {
-                          "description": "Resource of the referent.",
+                          "description": "resource of the referent.",
                           "enum": [
                             "prometheusrules",
                             "servicemonitors",
@@ -2395,17 +2395,17 @@
                     "type": "array"
                   },
                   "externalPrefix": {
-                    "description": "The external URL the Thanos Ruler instances will be available under. This is\nnecessary to generate correct URLs. This is necessary if Thanos Ruler is not\nserved from root of a DNS name.",
+                    "description": "externalPrefix defines the Thanos Ruler instances will be available under. This is\nnecessary to generate correct URLs. This is necessary if Thanos Ruler is not\nserved from root of a DNS name.",
                     "type": "string"
                   },
                   "grpcServerTlsConfig": {
-                    "description": "GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads\nrecorded rule data.\nNote: Currently only the CAFile, CertFile, and KeyFile fields are supported.\nMaps to the '--grpc-server-tls-*' CLI args.",
+                    "description": "grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads\nrecorded rule data.\nNote: Currently only the CAFile, CertFile, and KeyFile fields are supported.\nMaps to the '--grpc-server-tls-*' CLI args.",
                     "properties": {
                       "ca": {
-                        "description": "Certificate authority used when verifying server certificates.",
+                        "description": "ca defines the Certificate authority used when verifying server certificates.",
                         "properties": {
                           "configMap": {
-                            "description": "ConfigMap containing data to use for the targets.",
+                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                             "properties": {
                               "key": {
                                 "description": "The key to select.",
@@ -2428,7 +2428,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "secret": {
-                            "description": "Secret containing data to use for the targets.",
+                            "description": "secret defines the Secret containing data to use for the targets.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2454,14 +2454,14 @@
                         "type": "object"
                       },
                       "caFile": {
-                        "description": "Path to the CA cert in the Prometheus container to use for the targets.",
+                        "description": "caFile defines the path to the CA cert in the Prometheus container to use for the targets.",
                         "type": "string"
                       },
                       "cert": {
-                        "description": "Client certificate to present when doing client-authentication.",
+                        "description": "cert defines the Client certificate to present when doing client-authentication.",
                         "properties": {
                           "configMap": {
-                            "description": "ConfigMap containing data to use for the targets.",
+                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                             "properties": {
                               "key": {
                                 "description": "The key to select.",
@@ -2484,7 +2484,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "secret": {
-                            "description": "Secret containing data to use for the targets.",
+                            "description": "secret defines the Secret containing data to use for the targets.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2510,19 +2510,19 @@
                         "type": "object"
                       },
                       "certFile": {
-                        "description": "Path to the client cert file in the Prometheus container for the targets.",
+                        "description": "certFile defines the path to the client cert file in the Prometheus container for the targets.",
                         "type": "string"
                       },
                       "insecureSkipVerify": {
-                        "description": "Disable target certificate validation.",
+                        "description": "insecureSkipVerify defines how to disable target certificate validation.",
                         "type": "boolean"
                       },
                       "keyFile": {
-                        "description": "Path to the client key file in the Prometheus container for the targets.",
+                        "description": "keyFile defines the path to the client key file in the Prometheus container for the targets.",
                         "type": "string"
                       },
                       "keySecret": {
-                        "description": "Secret containing the client key file for the targets.",
+                        "description": "keySecret defines the Secret containing the client key file for the targets.",
                         "properties": {
                           "key": {
                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2545,7 +2545,7 @@
                         "x-kubernetes-map-type": "atomic"
                       },
                       "maxVersion": {
-                        "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                        "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                         "enum": [
                           "TLS10",
                           "TLS11",
@@ -2555,7 +2555,7 @@
                         "type": "string"
                       },
                       "minVersion": {
-                        "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                        "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                         "enum": [
                           "TLS10",
                           "TLS11",
@@ -2565,26 +2565,26 @@
                         "type": "string"
                       },
                       "serverName": {
-                        "description": "Used to verify the hostname for the targets.",
+                        "description": "serverName is used to verify the hostname for the targets.",
                         "type": "string"
                       }
                     },
                     "type": "object"
                   },
                   "hostAliases": {
-                    "description": "Pods' hostAliases configuration",
+                    "description": "hostAliases defines pods' hostAliases configuration",
                     "items": {
                       "description": "HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the\npod's hosts file.",
                       "properties": {
                         "hostnames": {
-                          "description": "Hostnames for the above IP address.",
+                          "description": "hostnames defines hostnames for the above IP address.",
                           "items": {
                             "type": "string"
                           },
                           "type": "array"
                         },
                         "ip": {
-                          "description": "IP address of the host file entry.",
+                          "description": "ip defines the IP address of the host file entry.",
                           "type": "string"
                         }
                       },
@@ -2601,15 +2601,15 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "hostUsers": {
-                    "description": "HostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
+                    "description": "hostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
                     "type": "boolean"
                   },
                   "image": {
-                    "description": "Thanos container image URL.",
+                    "description": "image defines Thanos container image URL.",
                     "type": "string"
                   },
                   "imagePullPolicy": {
-                    "description": "Image pull policy for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.\nSee https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.",
+                    "description": "imagePullPolicy defines for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.\nSee https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.",
                     "enum": [
                       "",
                       "Always",
@@ -2619,7 +2619,7 @@
                     "type": "string"
                   },
                   "imagePullSecrets": {
-                    "description": "An optional list of references to secrets in the same namespace\nto use for pulling thanos images from registries\nsee http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod",
+                    "description": "imagePullSecrets defines an optional list of references to secrets in the same namespace\nto use for pulling thanos images from registries\nsee http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod",
                     "items": {
                       "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
                       "properties": {
@@ -2635,7 +2635,7 @@
                     "type": "array"
                   },
                   "initContainers": {
-                    "description": "InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.\nfetch secrets for injection into the ThanosRuler configuration from external sources. Any\nerrors during the execution of an initContainer will lead to a restart of the Pod.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nUsing initContainers for any use case other then secret fetching is entirely outside the scope\nof what the maintainers will support and by doing so, you accept that this behaviour may break\nat any time without notice.",
+                    "description": "initContainers allows adding initContainers to the pod definition. Those can be used to e.g.\nfetch secrets for injection into the ThanosRuler configuration from external sources. Any\nerrors during the execution of an initContainer will lead to a restart of the Pod.\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nUsing initContainers for any use case other then secret fetching is entirely outside the scope\nof what the maintainers will support and by doing so, you accept that this behaviour may break\nat any time without notice.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -3976,15 +3976,15 @@
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "Configures the external label pairs of the ThanosRuler resource.\n\nA default replica label `thanos_ruler_replica` will be always added as a\nlabel with the value of the pod's name.",
+                    "description": "labels defines the external label pairs of the ThanosRuler resource.\n\nA default replica label `thanos_ruler_replica` will be always added as a\nlabel with the value of the pod's name.",
                     "type": "object"
                   },
                   "listenLocal": {
-                    "description": "ListenLocal makes the Thanos ruler listen on loopback, so that it\ndoes not bind against the Pod IP.",
+                    "description": "listenLocal defines the Thanos ruler listen on loopback, so that it\ndoes not bind against the Pod IP.",
                     "type": "boolean"
                   },
                   "logFormat": {
-                    "description": "Log format for ThanosRuler to be configured with.",
+                    "description": "logFormat for ThanosRuler to be configured with.",
                     "enum": [
                       "",
                       "logfmt",
@@ -3993,7 +3993,7 @@
                     "type": "string"
                   },
                   "logLevel": {
-                    "description": "Log level for ThanosRuler to be configured with.",
+                    "description": "logLevel for ThanosRuler to be configured with.",
                     "enum": [
                       "",
                       "debug",
@@ -4004,7 +4004,7 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
+                    "description": "minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
                     "format": "int32",
                     "minimum": 0,
                     "type": "integer"
@@ -4013,11 +4013,11 @@
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "Define which Nodes the Pods are scheduled on.",
+                    "description": "nodeSelector defines which Nodes the Pods are scheduled on.",
                     "type": "object"
                   },
                   "objectStorageConfig": {
-                    "description": "Configures object storage.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration.\n\n`objectStorageConfigFile` takes precedence over this field.",
+                    "description": "objectStorageConfig defines the configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration.\n\n`objectStorageConfigFile` takes precedence over this field.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4040,32 +4040,32 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "objectStorageConfigFile": {
-                    "description": "Configures the path of the object storage configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `objectStorageConfig`.",
+                    "description": "objectStorageConfigFile defines the path of the object storage configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `objectStorageConfig`.",
                     "type": "string"
                   },
                   "paused": {
-                    "description": "When a ThanosRuler deployment is paused, no actions except for deletion\nwill be performed on the underlying objects.",
+                    "description": "paused defines when a ThanosRuler deployment is paused, no actions except for deletion\nwill be performed on the underlying objects.",
                     "type": "boolean"
                   },
                   "podMetadata": {
-                    "description": "PodMetadata configures labels and annotations which are propagated to the ThanosRuler pods.\n\nThe following items are reserved and cannot be overridden:\n* \"app.kubernetes.io/name\" label, set to \"thanos-ruler\".\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/instance\" label, set to the name of the ThanosRuler instance.\n* \"thanos-ruler\" label, set to the name of the ThanosRuler instance.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"thanos-ruler\".",
+                    "description": "podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.\n\nThe following items are reserved and cannot be overridden:\n* \"app.kubernetes.io/name\" label, set to \"thanos-ruler\".\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/instance\" label, set to the name of the ThanosRuler instance.\n* \"thanos-ruler\" label, set to the name of the ThanosRuler instance.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"thanos-ruler\".",
                     "properties": {
                       "annotations": {
                         "additionalProperties": {
                           "type": "string"
                         },
-                        "description": "Annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+                        "description": "annotations defines an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
                         "type": "object"
                       },
                       "labels": {
                         "additionalProperties": {
                           "type": "string"
                         },
-                        "description": "Map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+                        "description": "labels define the map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
                         "type": "object"
                       },
                       "name": {
-                        "description": "Name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
+                        "description": "name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
                         "type": "string"
                       }
                     },
@@ -4073,24 +4073,24 @@
                   },
                   "portName": {
                     "default": "web",
-                    "description": "Port name used for the pods and governing service.\nDefaults to `web`.",
+                    "description": "portName defines the port name used for the pods and governing service.\nDefaults to `web`.",
                     "type": "string"
                   },
                   "priorityClassName": {
-                    "description": "Priority class assigned to the Pods",
+                    "description": "priorityClassName defines the priority class assigned to the Pods",
                     "type": "string"
                   },
                   "prometheusRulesExcludedFromEnforce": {
-                    "description": "PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing\nof adding namespace labels. Works only if enforcedNamespaceLabel set to true.\nMake sure both ruleNamespace and ruleName are set for each pair\nDeprecated: use excludedFromEnforcement instead.",
+                    "description": "prometheusRulesExcludedFromEnforce defines a list of Prometheus rules to be excluded from enforcing\nof adding namespace labels. Works only if enforcedNamespaceLabel set to true.\nMake sure both ruleNamespace and ruleName are set for each pair\nDeprecated: use excludedFromEnforcement instead.",
                     "items": {
                       "description": "PrometheusRuleExcludeConfig enables users to configure excluded\nPrometheusRule names and their namespaces to be ignored while enforcing\nnamespace label for alerts and metrics.",
                       "properties": {
                         "ruleName": {
-                          "description": "Name of the excluded PrometheusRule object.",
+                          "description": "ruleName defines the name of the excluded PrometheusRule object.",
                           "type": "string"
                         },
                         "ruleNamespace": {
-                          "description": "Namespace of the excluded PrometheusRule object.",
+                          "description": "ruleNamespace defines the namespace of the excluded PrometheusRule object.",
                           "type": "string"
                         }
                       },
@@ -4103,7 +4103,7 @@
                     "type": "array"
                   },
                   "queryConfig": {
-                    "description": "Configures the list of Thanos Query endpoints from which to query metrics.\n\nThe configuration format is defined at https://thanos.io/tip/components/rule.md/#query-api\n\nIt requires Thanos >= v0.11.0.\n\nThe operator performs no validation of the configuration.\n\nThis field takes precedence over `queryEndpoints`.",
+                    "description": "queryConfig defines the list of Thanos Query endpoints from which to query metrics.\n\nThe configuration format is defined at https://thanos.io/tip/components/rule.md/#query-api\n\nIt requires Thanos >= v0.11.0.\n\nThe operator performs no validation of the configuration.\n\nThis field takes precedence over `queryEndpoints`.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4126,22 +4126,22 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "queryEndpoints": {
-                    "description": "Configures the list of Thanos Query endpoints from which to query metrics.\n\nFor Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.\n\n`queryConfig` takes precedence over this field.",
+                    "description": "queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.\n\nFor Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.\n\n`queryConfig` takes precedence over this field.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "remoteWrite": {
-                    "description": "Defines the list of remote write configurations.\n\nWhen the list isn't empty, the ruler is configured with stateless mode.\n\nIt requires Thanos >= 0.24.0.",
+                    "description": "remoteWrite defines the list of remote write configurations.\n\nWhen the list isn't empty, the ruler is configured with stateless mode.\n\nIt requires Thanos >= 0.24.0.",
                     "items": {
                       "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus\nto a remote endpoint.",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4164,21 +4164,21 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "credentialsFile": {
-                              "description": "File to read a secret from, mutually exclusive with `credentials`.",
+                              "description": "credentialsFile defines the file to read a secret from, mutually exclusive with `credentials`.",
                               "type": "string"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "azureAd": {
-                          "description": "AzureAD for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
+                          "description": "azureAd for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
                           "properties": {
                             "cloud": {
-                              "description": "The Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
+                              "description": "cloud defines the Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
                               "enum": [
                                 "AzureChina",
                                 "AzureGovernment",
@@ -4187,10 +4187,10 @@
                               "type": "string"
                             },
                             "managedIdentity": {
-                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
+                              "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
-                                  "description": "The client id",
+                                  "description": "clientId defines defines the Azure User-assigned Managed identity.",
                                   "type": "string"
                                 }
                               },
@@ -4200,15 +4200,15 @@
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
+                              "description": "oauth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
                               "properties": {
                                 "clientId": {
-                                  "description": "`clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "clientId defines the clientId of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
                                   "type": "string"
                                 },
                                 "clientSecret": {
-                                  "description": "`clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "clientSecret specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4231,7 +4231,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "tenantId": {
-                                  "description": "`tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "tenantId is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
                                   "pattern": "^[0-9a-zA-Z-.]+$",
                                   "type": "string"
@@ -4245,10 +4245,10 @@
                               "type": "object"
                             },
                             "sdk": {
-                              "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
+                              "description": "sdk defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
                               "properties": {
                                 "tenantId": {
-                                  "description": "`tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.",
+                                  "description": "tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.",
                                   "pattern": "^[0-9a-zA-Z-.]+$",
                                   "type": "string"
                                 }
@@ -4259,10 +4259,10 @@
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
+                          "description": "basicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
+                              "description": "password defines a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4285,7 +4285,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
+                              "description": "username defines a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4311,30 +4311,30 @@
                           "type": "object"
                         },
                         "bearerToken": {
-                          "description": "*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*\n\nDeprecated: this will be removed in a future release.",
+                          "description": "bearerToken is deprecated: this will be removed in a future release.\n*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
                           "type": "string"
                         },
                         "bearerTokenFile": {
-                          "description": "File from which to read bearer token for the URL.\n\nDeprecated: this will be removed in a future release. Prefer using `authorization`.",
+                          "description": "bearerTokenFile defines the file from which to read bearer token for the URL.\n\nDeprecated: this will be removed in a future release. Prefer using `authorization`.",
                           "type": "string"
                         },
                         "enableHTTP2": {
-                          "description": "Whether to enable HTTP2.",
+                          "description": "enableHTTP2 defines whether to enable HTTP2.",
                           "type": "boolean"
                         },
                         "followRedirects": {
-                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
+                          "description": "followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
                         "headers": {
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.",
+                          "description": "headers defines the custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.",
                           "type": "object"
                         },
                         "messageVersion": {
-                          "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.",
+                          "description": "messageVersion defines the Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.",
                           "enum": [
                             "V1.0",
                             "V2.0"
@@ -4342,20 +4342,20 @@
                           "type": "string"
                         },
                         "metadataConfig": {
-                          "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
+                          "description": "metadataConfig defines how to send a series metadata to the remote storage.",
                           "properties": {
                             "maxSamplesPerSend": {
-                              "description": "MaxSamplesPerSend is the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
+                              "description": "maxSamplesPerSend defines the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
                               "format": "int32",
                               "minimum": -1,
                               "type": "integer"
                             },
                             "send": {
-                              "description": "Defines whether metric metadata is sent to the remote storage or not.",
+                              "description": "send defines whether metric metadata is sent to the remote storage or not.",
                               "type": "boolean"
                             },
                             "sendInterval": {
-                              "description": "Defines how frequently metric metadata is sent to the remote storage.",
+                              "description": "sendInterval defines how frequently metric metadata is sent to the remote storage.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
@@ -4363,21 +4363,21 @@
                           "type": "object"
                         },
                         "name": {
-                          "description": "The name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.",
+                          "description": "name of the remote write queue, it must be unique if specified. The\nname is used in metrics and logging in order to differentiate queues.\n\nIt requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.",
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "OAuth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
+                          "description": "oauth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
+                              "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
-                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key to select.",
@@ -4400,7 +4400,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
-                                  "description": "Secret containing data to use for the targets.",
+                                  "description": "secret defines the Secret containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4426,7 +4426,7 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                              "description": "clientSecret defines a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4452,11 +4452,11 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
+                              "description": "endpointParams configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "noProxy": {
-                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                              "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "string"
                             },
                             "proxyConnectHeader": {
@@ -4486,34 +4486,34 @@
                                 },
                                 "type": "array"
                               },
-                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                              "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
                             "proxyFromEnvironment": {
-                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                              "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.",
+                              "description": "proxyUrl defines the HTTP proxy server to use.",
                               "pattern": "^(http|https|socks5)://.+$",
                               "type": "string"
                             },
                             "scopes": {
-                              "description": "`scopes` defines the OAuth2 scopes used for the token request.",
+                              "description": "scopes defines the OAuth2 scopes used for the token request.",
                               "items": {
                                 "type": "string"
                               },
                               "type": "array"
                             },
                             "tlsConfig": {
-                              "description": "TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
+                              "description": "tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
                               "properties": {
                                 "ca": {
-                                  "description": "Certificate authority used when verifying server certificates.",
+                                  "description": "ca defines the Certificate authority used when verifying server certificates.",
                                   "properties": {
                                     "configMap": {
-                                      "description": "ConfigMap containing data to use for the targets.",
+                                      "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key to select.",
@@ -4536,7 +4536,7 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "secret": {
-                                      "description": "Secret containing data to use for the targets.",
+                                      "description": "secret defines the Secret containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4562,10 +4562,10 @@
                                   "type": "object"
                                 },
                                 "cert": {
-                                  "description": "Client certificate to present when doing client-authentication.",
+                                  "description": "cert defines the Client certificate to present when doing client-authentication.",
                                   "properties": {
                                     "configMap": {
-                                      "description": "ConfigMap containing data to use for the targets.",
+                                      "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key to select.",
@@ -4588,7 +4588,7 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "secret": {
-                                      "description": "Secret containing data to use for the targets.",
+                                      "description": "secret defines the Secret containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4614,11 +4614,11 @@
                                   "type": "object"
                                 },
                                 "insecureSkipVerify": {
-                                  "description": "Disable target certificate validation.",
+                                  "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                   "type": "boolean"
                                 },
                                 "keySecret": {
-                                  "description": "Secret containing the client key file for the targets.",
+                                  "description": "keySecret defines the Secret containing the client key file for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4641,7 +4641,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "maxVersion": {
-                                  "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                  "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                   "enum": [
                                     "TLS10",
                                     "TLS11",
@@ -4651,7 +4651,7 @@
                                   "type": "string"
                                 },
                                 "minVersion": {
-                                  "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                  "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                   "enum": [
                                     "TLS10",
                                     "TLS11",
@@ -4661,14 +4661,14 @@
                                   "type": "string"
                                 },
                                 "serverName": {
-                                  "description": "Used to verify the hostname for the targets.",
+                                  "description": "serverName is used to verify the hostname for the targets.",
                                   "type": "string"
                                 }
                               },
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "description": "`tokenURL` configures the URL to fetch the token from.",
+                              "description": "tokenUrl defines the URL to fetch the token from.",
                               "minLength": 1,
                               "type": "string"
                             }
@@ -4707,63 +4707,63 @@
                             },
                             "type": "array"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.",
+                          "description": "proxyUrl defines the HTTP proxy server to use.",
                           "pattern": "^(http|https|socks5)://.+$",
                           "type": "string"
                         },
                         "queueConfig": {
-                          "description": "QueueConfig allows tuning of the remote write queue parameters.",
+                          "description": "queueConfig allows tuning of the remote write queue parameters.",
                           "properties": {
                             "batchSendDeadline": {
-                              "description": "BatchSendDeadline is the maximum time a sample will wait in buffer.",
+                              "description": "batchSendDeadline defines the maximum time a sample will wait in buffer.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "capacity": {
-                              "description": "Capacity is the number of samples to buffer per shard before we start\ndropping them.",
+                              "description": "capacity defines the number of samples to buffer per shard before we start\ndropping them.",
                               "type": "integer"
                             },
                             "maxBackoff": {
-                              "description": "MaxBackoff is the maximum retry delay.",
+                              "description": "maxBackoff defines the maximum retry delay.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "maxRetries": {
-                              "description": "MaxRetries is the maximum number of times to retry a batch on recoverable errors.",
+                              "description": "maxRetries defines the maximum number of times to retry a batch on recoverable errors.",
                               "type": "integer"
                             },
                             "maxSamplesPerSend": {
-                              "description": "MaxSamplesPerSend is the maximum number of samples per send.",
+                              "description": "maxSamplesPerSend defines the maximum number of samples per send.",
                               "type": "integer"
                             },
                             "maxShards": {
-                              "description": "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
+                              "description": "maxShards defines the maximum number of shards, i.e. amount of concurrency.",
                               "type": "integer"
                             },
                             "minBackoff": {
-                              "description": "MinBackoff is the initial retry delay. Gets doubled for every retry.",
+                              "description": "minBackoff defines the initial retry delay. Gets doubled for every retry.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "minShards": {
-                              "description": "MinShards is the minimum number of shards, i.e. amount of concurrency.",
+                              "description": "minShards defines the minimum number of shards, i.e. amount of concurrency.",
                               "type": "integer"
                             },
                             "retryOnRateLimit": {
-                              "description": "Retry upon receiving a 429 status code from the remote-write storage.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                              "description": "retryOnRateLimit defines the retry upon receiving a 429 status code from the remote-write storage.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                               "type": "boolean"
                             },
                             "sampleAgeLimit": {
-                              "description": "SampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.",
+                              "description": "sampleAgeLimit drops samples older than the limit.\nIt requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.",
                               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             }
@@ -4771,27 +4771,27 @@
                           "type": "object"
                         },
                         "remoteTimeout": {
-                          "description": "Timeout for requests to the remote write endpoint.",
+                          "description": "remoteTimeout defines the timeout for requests to the remote write endpoint.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "roundRobinDNS": {
-                          "description": "When enabled:\n    - The remote-write mechanism will resolve the hostname via DNS.\n    - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n    - The Go standard library will handle hostname resolution.\n    - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n      If disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.",
+                          "description": "roundRobinDNS controls the DNS resolution behavior for remote-write connections.\nWhen enabled:\n  - The remote-write mechanism will resolve the hostname via DNS.\n  - It will randomly select one of the resolved IP addresses and connect to it.\n\nWhen disabled (default behavior):\n  - The Go standard library will handle hostname resolution.\n  - It will attempt connections to each resolved IP address sequentially.\n\nNote: The connection timeout applies to the entire resolution and connection process.\n\n\tIf disabled, the timeout is distributed across all connection attempts.\n\nIt requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.",
                           "type": "boolean"
                         },
                         "sendExemplars": {
-                          "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.",
+                          "description": "sendExemplars enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
                         "sendNativeHistograms": {
-                          "description": "Enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.",
+                          "description": "sendNativeHistograms enables sending of native histograms, also known as sparse histograms\nover remote write.\n\nIt requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.",
                           "type": "boolean"
                         },
                         "sigv4": {
-                          "description": "Sigv4 allows to configures AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "sigv4 defines the AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
                           "properties": {
                             "accessKey": {
-                              "description": "AccessKey is the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",
+                              "description": "accessKey defines the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4814,19 +4814,19 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "profile": {
-                              "description": "Profile is the named AWS profile used to authenticate.",
+                              "description": "profile defines the named AWS profile used to authenticate.",
                               "type": "string"
                             },
                             "region": {
-                              "description": "Region is the AWS region. If blank, the region from the default credentials chain used.",
+                              "description": "region defines the AWS region. If blank, the region from the default credentials chain used.",
                               "type": "string"
                             },
                             "roleArn": {
-                              "description": "RoleArn is the named AWS profile used to authenticate.",
+                              "description": "roleArn defines the named AWS profile used to authenticate.",
                               "type": "string"
                             },
                             "secretKey": {
-                              "description": "SecretKey is the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.",
+                              "description": "secretKey defines the AWS API secret. If not specified, the environment\nvariable `AWS_SECRET_ACCESS_KEY` is used.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4852,13 +4852,13 @@
                           "type": "object"
                         },
                         "tlsConfig": {
-                          "description": "TLS Config to use for the URL.",
+                          "description": "tlsConfig to use for the URL.",
                           "properties": {
                             "ca": {
-                              "description": "Certificate authority used when verifying server certificates.",
+                              "description": "ca defines the Certificate authority used when verifying server certificates.",
                               "properties": {
                                 "configMap": {
-                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key to select.",
@@ -4881,7 +4881,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
-                                  "description": "Secret containing data to use for the targets.",
+                                  "description": "secret defines the Secret containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4907,14 +4907,14 @@
                               "type": "object"
                             },
                             "caFile": {
-                              "description": "Path to the CA cert in the Prometheus container to use for the targets.",
+                              "description": "caFile defines the path to the CA cert in the Prometheus container to use for the targets.",
                               "type": "string"
                             },
                             "cert": {
-                              "description": "Client certificate to present when doing client-authentication.",
+                              "description": "cert defines the Client certificate to present when doing client-authentication.",
                               "properties": {
                                 "configMap": {
-                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key to select.",
@@ -4937,7 +4937,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
-                                  "description": "Secret containing data to use for the targets.",
+                                  "description": "secret defines the Secret containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4963,19 +4963,19 @@
                               "type": "object"
                             },
                             "certFile": {
-                              "description": "Path to the client cert file in the Prometheus container for the targets.",
+                              "description": "certFile defines the path to the client cert file in the Prometheus container for the targets.",
                               "type": "string"
                             },
                             "insecureSkipVerify": {
-                              "description": "Disable target certificate validation.",
+                              "description": "insecureSkipVerify defines how to disable target certificate validation.",
                               "type": "boolean"
                             },
                             "keyFile": {
-                              "description": "Path to the client key file in the Prometheus container for the targets.",
+                              "description": "keyFile defines the path to the client key file in the Prometheus container for the targets.",
                               "type": "string"
                             },
                             "keySecret": {
-                              "description": "Secret containing the client key file for the targets.",
+                              "description": "keySecret defines the Secret containing the client key file for the targets.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4998,7 +4998,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "maxVersion": {
-                              "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                              "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -5008,7 +5008,7 @@
                               "type": "string"
                             },
                             "minVersion": {
-                              "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                              "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -5018,25 +5018,25 @@
                               "type": "string"
                             },
                             "serverName": {
-                              "description": "Used to verify the hostname for the targets.",
+                              "description": "serverName is used to verify the hostname for the targets.",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "url": {
-                          "description": "The URL of the endpoint to send samples to.",
+                          "description": "url defines the URL of the endpoint to send samples to.",
                           "minLength": 1,
                           "type": "string"
                         },
                         "writeRelabelConfigs": {
-                          "description": "The list of remote write relabel configurations.",
+                          "description": "writeRelabelConfigs defines the list of remote write relabel configurations.",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
                               "action": {
                                 "default": "replace",
-                                "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
                                 "enum": [
                                   "replace",
                                   "Replace",
@@ -5064,24 +5064,24 @@
                                 "type": "string"
                               },
                               "modulus": {
-                                "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                                "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
                                 "type": "integer"
                               },
                               "regex": {
-                                "description": "Regular expression against which the extracted value is matched.",
+                                "description": "regex defines the regular expression against which the extracted value is matched.",
                                 "type": "string"
                               },
                               "replacement": {
-                                "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                                "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
                                 "type": "string"
                               },
                               "separator": {
-                                "description": "Separator is the string between concatenated SourceLabels.",
+                                "description": "separator defines the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
                               "sourceLabels": {
-                                "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                                "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
                                   "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
@@ -5090,7 +5090,7 @@
                                 "type": "array"
                               },
                               "targetLabel": {
-                                "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                                "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
                                 "type": "string"
                               }
                             },
@@ -5107,17 +5107,17 @@
                     "type": "array"
                   },
                   "replicas": {
-                    "description": "Number of thanos ruler instances to deploy.",
+                    "description": "replicas defines the number of thanos ruler instances to deploy.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "resendDelay": {
-                    "description": "Minimum amount of time to wait before resending an alert to Alertmanager.",
+                    "description": "resendDelay defines the minimum amount of time to wait before resending an alert to Alertmanager.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "resources": {
-                    "description": "Resources defines the resource requirements for single Pods.\nIf not provided, no requests/limits will be set",
+                    "description": "resources defines the resource requirements for single Pods.\nIf not provided, no requests/limits will be set",
                     "properties": {
                       "claims": {
                         "description": "Claims lists the names of resources, defined in spec.resourceClaims,\nthat are used by this container.\n\nThis field depends on the\nDynamicResourceAllocation feature gate.\n\nThis field is immutable. It can only be set for containers.",
@@ -5181,27 +5181,27 @@
                   },
                   "retention": {
                     "default": "24h",
-                    "description": "Time duration ThanosRuler shall retain data for. Default is '24h', and\nmust match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds\nseconds minutes hours days weeks years).\n\nThe field has no effect when remote-write is configured since the Ruler\noperates in stateless mode.",
+                    "description": "retention defines the time duration ThanosRuler shall retain data for. Default is '24h', and\nmust match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds\nseconds minutes hours days weeks years).\n\nThe field has no effect when remote-write is configured since the Ruler\noperates in stateless mode.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "routePrefix": {
-                    "description": "The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.",
+                    "description": "routePrefix defines the route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.",
                     "type": "string"
                   },
                   "ruleConcurrentEval": {
-                    "description": "How many rules can be evaluated concurrently.\nIt requires Thanos >= v0.37.0.",
+                    "description": "ruleConcurrentEval defines how many rules can be evaluated concurrently.\nIt requires Thanos >= v0.37.0.",
                     "format": "int32",
                     "minimum": 1,
                     "type": "integer"
                   },
                   "ruleGracePeriod": {
-                    "description": "Minimum duration between alert and restored \"for\" state.\nThis is maintained only for alerts with configured \"for\" time greater than grace period.\nIt requires Thanos >= v0.30.0.",
+                    "description": "ruleGracePeriod defines the minimum duration between alert and restored \"for\" state.\nThis is maintained only for alerts with configured \"for\" time greater than grace period.\nIt requires Thanos >= v0.30.0.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "ruleNamespaceSelector": {
-                    "description": "Namespaces to be selected for Rules discovery. If unspecified, only\nthe same namespace as the ThanosRuler object is in is used.",
+                    "description": "ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only\nthe same namespace as the ThanosRuler object is in is used.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5246,17 +5246,17 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "ruleOutageTolerance": {
-                    "description": "Max time to tolerate prometheus outage for restoring \"for\" state of alert.\nIt requires Thanos >= v0.30.0.",
+                    "description": "ruleOutageTolerance defines the max time to tolerate prometheus outage for restoring \"for\" state of alert.\nIt requires Thanos >= v0.30.0.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "ruleQueryOffset": {
-                    "description": "The default rule group's query offset duration to use.\nIt requires Thanos >= v0.38.0.",
+                    "description": "ruleQueryOffset defines the default rule group's query offset duration to use.\nIt requires Thanos >= v0.38.0.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "ruleSelector": {
-                    "description": "PrometheusRule objects to be selected for rule evaluation. An empty\nlabel selector matches all objects. A null label selector matches no\nobjects.",
+                    "description": "ruleSelector defines the PrometheusRule objects to be selected for rule evaluation. An empty\nlabel selector matches all objects. A null label selector matches no\nobjects.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5301,7 +5301,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "securityContext": {
-                    "description": "SecurityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",
+                    "description": "securityContext defines the pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",
                     "properties": {
                       "appArmorProfile": {
                         "description": "appArmorProfile is the AppArmor options to use by the containers in this pod.\nNote that this field cannot be set when spec.os.name is windows.",
@@ -5448,23 +5448,23 @@
                     "type": "object"
                   },
                   "serviceAccountName": {
-                    "description": "ServiceAccountName is the name of the ServiceAccount to use to run the\nThanos Ruler Pods.",
+                    "description": "serviceAccountName defines the name of the ServiceAccount to use to run the\nThanos Ruler Pods.",
                     "type": "string"
                   },
                   "serviceName": {
-                    "description": "The name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.\nWhen deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
+                    "description": "serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the ThanosRuler resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `thanos-ruler-operated` for ThanosRuler resources.\nWhen deploying multiple ThanosRuler resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
                     "minLength": 1,
                     "type": "string"
                   },
                   "storage": {
-                    "description": "Storage spec to specify how storage shall be used.",
+                    "description": "storage defines the specification of how storage shall be used.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "Deprecated: subPath usage will be removed in a future release.",
+                        "description": "disableMountSubPath deprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
-                        "description": "EmptyDirVolumeSource to be used by the StatefulSet.\nIf specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
+                        "description": "emptyDir to be used by the StatefulSet.\nIf specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
                         "properties": {
                           "medium": {
                             "description": "medium represents what type of storage medium should back this directory.\nThe default is \"\" which means to use the node's default medium.\nMust be an empty string (default) or Memory.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
@@ -5487,7 +5487,7 @@
                         "type": "object"
                       },
                       "ephemeral": {
-                        "description": "EphemeralVolumeSource to be used by the StatefulSet.\nThis is a beta field in k8s 1.21 and GA in 1.15.\nFor lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.\nMore info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes",
+                        "description": "ephemeral to be used by the StatefulSet.\nThis is a beta field in k8s 1.21 and GA in 1.15.\nFor lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.\nMore info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes",
                         "properties": {
                           "volumeClaimTemplate": {
                             "description": "Will be used to create a stand-alone PVC to provision the volume.\nThe pod in which this EphemeralVolumeSource is embedded will be the\nowner of the PVC, i.e. the PVC will be deleted together with the\npod.  The name of the PVC will be `<pod name>-<volume name>` where\n`<volume name>` is the name from the `PodSpec.Volumes` array\nentry. Pod validation will reject the pod if the concatenated name\nis not valid for a PVC (for example, too long).\n\nAn existing PVC with that name that is not owned by the pod\nwill *not* be used for the pod to avoid using an unrelated\nvolume by mistake. Starting the pod is then blocked until\nthe unrelated PVC is removed. If such a pre-created PVC is\nmeant to be used by the pod, the PVC has to updated with an\nowner reference to the pod once the pod exists. Normally\nthis should not be necessary, but it may be useful when\nmanually reconstructing a broken cluster.\n\nThis field is read-only and no changes will be made by Kubernetes\nto the PVC after it has been created.\n\nRequired, must not be nil.",
@@ -5668,7 +5668,7 @@
                         "type": "object"
                       },
                       "volumeClaimTemplate": {
-                        "description": "Defines the PVC spec to be used by the Prometheus StatefulSets.\nThe easiest way to use a volume that cannot be automatically provisioned\nis to use a label selector alongside manually created PersistentVolumes.",
+                        "description": "volumeClaimTemplate defines the PVC spec to be used by the Prometheus StatefulSets.\nThe easiest way to use a volume that cannot be automatically provisioned\nis to use a label selector alongside manually created PersistentVolumes.",
                         "properties": {
                           "apiVersion": {
                             "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -5679,31 +5679,31 @@
                             "type": "string"
                           },
                           "metadata": {
-                            "description": "EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
+                            "description": "metadata defines EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
                             "properties": {
                               "annotations": {
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+                                "description": "annotations defines an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
                                 "type": "object"
                               },
                               "labels": {
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+                                "description": "labels define the map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
                                 "type": "object"
                               },
                               "name": {
-                                "description": "Name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
+                                "description": "name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
                                 "type": "string"
                               }
                             },
                             "type": "object"
                           },
                           "spec": {
-                            "description": "Defines the desired characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+                            "description": "spec defines the specification of the  characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the desired access modes the volume should have.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -5865,7 +5865,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "Deprecated: this field is never set.",
+                            "description": "status is deprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -5995,13 +5995,13 @@
                     "type": "object"
                   },
                   "terminationGracePeriodSeconds": {
-                    "description": "Optional duration in seconds the pod needs to terminate gracefully.\nValue must be non-negative integer. The value zero indicates stop immediately via\nthe kill signal (no opportunity to shut down) which may lead to data corruption.\n\nDefaults to 120 seconds.",
+                    "description": "terminationGracePeriodSeconds defines the optional duration in seconds the pod needs to terminate gracefully.\nValue must be non-negative integer. The value zero indicates stop immediately via\nthe kill signal (no opportunity to shut down) which may lead to data corruption.\n\nDefaults to 120 seconds.",
                     "format": "int64",
                     "minimum": 0,
                     "type": "integer"
                   },
                   "tolerations": {
-                    "description": "If specified, the pod's tolerations.",
+                    "description": "tolerations defines when specified, the pod's tolerations.",
                     "items": {
                       "description": "The pod this Toleration is attached to tolerates any taint that matches\nthe triple <key,value,effect> using the matching operator <operator>.",
                       "properties": {
@@ -6032,7 +6032,7 @@
                     "type": "array"
                   },
                   "topologySpreadConstraints": {
-                    "description": "If specified, the pod's topology spread constraints.",
+                    "description": "topologySpreadConstraints defines the pod's topology spread constraints.",
                     "items": {
                       "description": "TopologySpreadConstraint specifies how to spread matching pods among the given topology.",
                       "properties": {
@@ -6126,7 +6126,7 @@
                     "type": "array"
                   },
                   "tracingConfig": {
-                    "description": "Configures tracing.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration.\n\n`tracingConfigFile` takes precedence over this field.",
+                    "description": "tracingConfig defines the tracing configuration.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration.\n\n`tracingConfigFile` takes precedence over this field.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -6149,15 +6149,15 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "tracingConfigFile": {
-                    "description": "Configures the path of the tracing configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `tracingConfig`.",
+                    "description": "tracingConfigFile defines the path of the tracing configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `tracingConfig`.",
                     "type": "string"
                   },
                   "version": {
-                    "description": "Version of Thanos to be deployed.",
+                    "description": "version of Thanos to be deployed.",
                     "type": "string"
                   },
                   "volumeMounts": {
-                    "description": "VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.\nVolumeMounts specified will be appended to other VolumeMounts in the ruler container,\nthat are generated as a result of StorageSpec objects.",
+                    "description": "volumeMounts defines how the configuration of additional VolumeMounts on the output StatefulSet definition.\nVolumeMounts specified will be appended to other VolumeMounts in the ruler container,\nthat are generated as a result of StorageSpec objects.",
                     "items": {
                       "description": "VolumeMount describes a mounting of a Volume within a container.",
                       "properties": {
@@ -6199,7 +6199,7 @@
                     "type": "array"
                   },
                   "volumes": {
-                    "description": "Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will\nbe appended to other volumes that are generated as a result of StorageSpec objects.",
+                    "description": "volumes defines how configuration of additional volumes on the output StatefulSet definition. Volumes specified will\nbe appended to other volumes that are generated as a result of StorageSpec objects.",
                     "items": {
                       "description": "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
                       "properties": {
@@ -7662,24 +7662,24 @@
                     "type": "array"
                   },
                   "web": {
-                    "description": "Defines the configuration of the ThanosRuler web server.",
+                    "description": "web defines the configuration of the ThanosRuler web server.",
                     "properties": {
                       "httpConfig": {
-                        "description": "Defines HTTP parameters for web server.",
+                        "description": "httpConfig defines HTTP parameters for web server.",
                         "properties": {
                           "headers": {
-                            "description": "List of headers that can be added to HTTP responses.",
+                            "description": "headers defines a list of headers that can be added to HTTP responses.",
                             "properties": {
                               "contentSecurityPolicy": {
-                                "description": "Set the Content-Security-Policy header to HTTP responses.\nUnset if blank.",
+                                "description": "contentSecurityPolicy defines the Content-Security-Policy header to HTTP responses.\nUnset if blank.",
                                 "type": "string"
                               },
                               "strictTransportSecurity": {
-                                "description": "Set the Strict-Transport-Security header to HTTP responses.\nUnset if blank.\nPlease make sure that you use this with care as this header might force\nbrowsers to load Prometheus and the other applications hosted on the same\ndomain and subdomains over HTTPS.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
+                                "description": "strictTransportSecurity defines the Strict-Transport-Security header to HTTP responses.\nUnset if blank.\nPlease make sure that you use this with care as this header might force\nbrowsers to load Prometheus and the other applications hosted on the same\ndomain and subdomains over HTTPS.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
                                 "type": "string"
                               },
                               "xContentTypeOptions": {
-                                "description": "Set the X-Content-Type-Options header to HTTP responses.\nUnset if blank. Accepted value is nosniff.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options",
+                                "description": "xContentTypeOptions defines the X-Content-Type-Options header to HTTP responses.\nUnset if blank. Accepted value is nosniff.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options",
                                 "enum": [
                                   "",
                                   "NoSniff"
@@ -7687,7 +7687,7 @@
                                 "type": "string"
                               },
                               "xFrameOptions": {
-                                "description": "Set the X-Frame-Options header to HTTP responses.\nUnset if blank. Accepted values are deny and sameorigin.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options",
+                                "description": "xFrameOptions defines the X-Frame-Options header to HTTP responses.\nUnset if blank. Accepted values are deny and sameorigin.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options",
                                 "enum": [
                                   "",
                                   "Deny",
@@ -7696,27 +7696,27 @@
                                 "type": "string"
                               },
                               "xXSSProtection": {
-                                "description": "Set the X-XSS-Protection header to all responses.\nUnset if blank.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection",
+                                "description": "xXSSProtection defines the X-XSS-Protection header to all responses.\nUnset if blank.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection",
                                 "type": "string"
                               }
                             },
                             "type": "object"
                           },
                           "http2": {
-                            "description": "Enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.\nWhen TLSConfig is not configured, HTTP/2 will be disabled.\nWhenever the value of the field changes, a rolling update will be triggered.",
+                            "description": "http2 enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.\nWhen TLSConfig is not configured, HTTP/2 will be disabled.\nWhenever the value of the field changes, a rolling update will be triggered.",
                             "type": "boolean"
                           }
                         },
                         "type": "object"
                       },
                       "tlsConfig": {
-                        "description": "Defines the TLS parameters for HTTPS.",
+                        "description": "tlsConfig defines the TLS parameters for HTTPS.",
                         "properties": {
                           "cert": {
-                            "description": "Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
+                            "description": "cert defines the Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -7739,7 +7739,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -7765,29 +7765,29 @@
                             "type": "object"
                           },
                           "certFile": {
-                            "description": "Path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
+                            "description": "certFile defines the path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
                             "type": "string"
                           },
                           "cipherSuites": {
-                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "description": "cipherSuites defines the list of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "clientAuthType": {
-                            "description": "The server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "description": "clientAuthType defines the server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
                             "type": "string"
                           },
                           "clientCAFile": {
-                            "description": "Path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
+                            "description": "clientCAFile defines the path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
-                            "description": "Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
+                            "description": "client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -7810,7 +7810,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -7836,18 +7836,18 @@
                             "type": "object"
                           },
                           "curvePreferences": {
-                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "description": "curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "keyFile": {
-                            "description": "Path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
+                            "description": "keyFile defines the path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
                             "type": "string"
                           },
                           "keySecret": {
-                            "description": "Secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
+                            "description": "keySecret defines the secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -7870,15 +7870,15 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum TLS version that is acceptable.",
+                            "description": "maxVersion defines the Maximum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum TLS version that is acceptable.",
+                            "description": "minVersion defines the minimum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "preferServerCipherSuites": {
-                            "description": "Controls whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "description": "preferServerCipherSuites defines whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
                             "type": "boolean"
                           }
                         },
@@ -7891,15 +7891,15 @@
                 "type": "object"
               },
               "status": {
-                "description": "Most recent observed status of the ThanosRuler cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "status defines the most recent observed status of the ThanosRuler cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "availableReplicas": {
-                    "description": "Total number of available pods (ready for at least minReadySeconds)\ntargeted by this ThanosRuler deployment.",
+                    "description": "availableReplicas defines the total number of available pods (ready for at least minReadySeconds)\ntargeted by this ThanosRuler deployment.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "conditions": {
-                    "description": "The current state of the ThanosRuler object.",
+                    "description": "conditions defines the current state of the ThanosRuler object.",
                     "items": {
                       "description": "Condition represents the state of the resources associated with the\nPrometheus, Alertmanager or ThanosRuler resource.",
                       "properties": {
@@ -7909,25 +7909,25 @@
                           "type": "string"
                         },
                         "message": {
-                          "description": "Human-readable message indicating details for the condition's last transition.",
+                          "description": "message defines human-readable message indicating details for the condition's last transition.",
                           "type": "string"
                         },
                         "observedGeneration": {
-                          "description": "ObservedGeneration represents the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the\ninstance.",
+                          "description": "observedGeneration defines the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the\ninstance.",
                           "format": "int64",
                           "type": "integer"
                         },
                         "reason": {
-                          "description": "Reason for the condition's last transition.",
+                          "description": "reason for the condition's last transition.",
                           "type": "string"
                         },
                         "status": {
-                          "description": "Status of the condition.",
+                          "description": "status of the condition.",
                           "minLength": 1,
                           "type": "string"
                         },
                         "type": {
-                          "description": "Type of the condition being reported.",
+                          "description": "type of the condition being reported.",
                           "minLength": 1,
                           "type": "string"
                         }
@@ -7946,21 +7946,21 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "paused": {
-                    "description": "Represents whether any actions on the underlying managed objects are\nbeing performed. Only delete actions will be performed.",
+                    "description": "paused defines whether any actions on the underlying managed objects are\nbeing performed. Only delete actions will be performed.",
                     "type": "boolean"
                   },
                   "replicas": {
-                    "description": "Total number of non-terminated pods targeted by this ThanosRuler deployment\n(their labels match the selector).",
+                    "description": "replicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment\n(their labels match the selector).",
                     "format": "int32",
                     "type": "integer"
                   },
                   "unavailableReplicas": {
-                    "description": "Total number of unavailable pods targeted by this ThanosRuler deployment.",
+                    "description": "unavailableReplicas defines the total number of unavailable pods targeted by this ThanosRuler deployment.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "updatedReplicas": {
-                    "description": "Total number of non-terminated pods targeted by this ThanosRuler deployment\nthat have the desired version spec.",
+                    "description": "updatedReplicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment\nthat have the desired version spec.",
                     "format": "int32",
                     "type": "integer"
                   }
