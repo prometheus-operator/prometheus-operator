@@ -1133,9 +1133,16 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Since metadata-wal-records is in the process of being deprecated as part of remote write v2 stabilization as described in issue.
+	// Also seems to be cause some increase in resource usage overall, will stop being automatically added on prometheus 3.4.0 onwards.
+	// For more context see https://github.com/prometheus-operator/prometheus-operator/issues/7889
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
-			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+			cg = cg.WithMinimumVersion("2.54.0")
+			if cg.Version().LT(semver.MustParse("3.4.0")) {
+				promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+				break
+			}
 		}
 	}
 
