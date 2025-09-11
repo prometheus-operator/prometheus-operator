@@ -424,29 +424,27 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	// If Prometheus Agent runs in DaemonSet mode, check if
-	// the operator has proper RBAC permissions on the DaemonSet resource.
-	if cfg.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
-		allowed, errs, err := k8sutil.IsAllowed(ctx,
-			kclient.AuthorizationV1().SelfSubjectAccessReviews(),
-			cfg.Namespaces.PrometheusAllowList.Slice(),
-			k8sutil.ResourceAttribute{
-				Group:    appsv1.SchemeGroupVersion.Group,
-				Version:  appsv1.SchemeGroupVersion.Version,
-				Resource: "daemonsets",
-				Verbs:    []string{"get", "list", "watch", "create", "update", "delete"},
-			})
-		if err != nil {
-			logger.Error("failed to check permissions on DaemonSet resource", "err", err)
+	// Check if the operator has proper RBAC permissions on the DaemonSet resource
+	// for Prometheus Agent DaemonSet mode.
+	allowed, errs, err := k8sutil.IsAllowed(ctx,
+		kclient.AuthorizationV1().SelfSubjectAccessReviews(),
+		cfg.Namespaces.PrometheusAllowList.Slice(),
+		k8sutil.ResourceAttribute{
+			Group:    appsv1.SchemeGroupVersion.Group,
+			Version:  appsv1.SchemeGroupVersion.Version,
+			Resource: "daemonsets",
+			Verbs:    []string{"get", "list", "watch", "create", "update", "delete"},
+		})
+	if err != nil {
+		logger.Error("failed to check permissions on DaemonSet resource", "err", err)
+		cancel()
+		return 1
+	}
+	if !allowed {
+		for _, reason := range errs {
+			logger.Error("missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
 			cancel()
 			return 1
-		}
-		if !allowed {
-			for _, reason := range errs {
-				logger.Error("missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
-				cancel()
-				return 1
-			}
 		}
 	}
 
