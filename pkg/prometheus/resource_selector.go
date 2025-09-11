@@ -49,6 +49,10 @@ const (
 	invalidConfiguration = "InvalidConfiguration"
 )
 
+// validationScheme defines how to validate label names.
+// For now, the operator only supports the legacy scheme (e.g. not UTF-8).
+var validationScheme model.ValidationScheme = model.LegacyValidation
+
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
 type ConfigurationResource interface {
@@ -421,7 +425,7 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		}
 	}
 
-	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
+	if action == string(relabel.HashMod) && !validationScheme.IsValidLabelName(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -1417,7 +1421,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
 		for labelName := range config.Labels {
-			if !model.LabelName(labelName).IsValid() {
+			if !validationScheme.IsValidLabelName(labelName) {
 				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 			}
 		}
