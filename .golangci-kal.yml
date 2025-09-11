@@ -23,6 +23,7 @@ linters:
             # Whenever a new linter is added, it should not break the backward
             # compatibility of existing APIs (at least for v1 APIs).
             enable:
+              - "commentstart"
               - "conflictingmarkers"
               - "duplicatemarkers"
               - "nofloats"

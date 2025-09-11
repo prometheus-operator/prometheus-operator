@@ -42,29 +42,29 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of desired Pod selection for target discovery by Prometheus.",
+                "description": "spec defines the specification of desired Pod selection for target discovery by Prometheus.",
                 "properties": {
                   "attachMetadata": {
-                    "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.35.0.",
+                    "description": "attachMetadata defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.35.0.",
                     "properties": {
                       "node": {
-                        "description": "When set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
+                        "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
                         "type": "boolean"
                       }
                     },
                     "type": "object"
                   },
                   "bodySizeLimit": {
-                    "description": "When defined, bodySizeLimit specifies a job level limit on the size\nof uncompressed response body that will be accepted by Prometheus.\n\nIt requires Prometheus >= v2.28.0.",
+                    "description": "bodySizeLimit when defined specifies a job level limit on the size\nof uncompressed response body that will be accepted by Prometheus.\n\nIt requires Prometheus >= v2.28.0.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                     "type": "string"
                   },
                   "convertClassicHistogramsToNHCB": {
-                    "description": "Whether to convert all scraped classic histograms into a native histogram with custom buckets.\nIt requires Prometheus >= v3.0.0.",
+                    "description": "convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.\nIt requires Prometheus >= v3.0.0.",
                     "type": "boolean"
                   },
                   "fallbackScrapeProtocol": {
-                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
+                    "description": "fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
                     "enum": [
                       "PrometheusProto",
                       "OpenMetricsText0.0.1",
@@ -75,38 +75,38 @@
                     "type": "string"
                   },
                   "jobLabel": {
-                    "description": "The label to use to retrieve the job name from.\n`jobLabel` selects the label from the associated Kubernetes `Pod`\nobject which will be used as the `job` label for all metrics.\n\nFor example if `jobLabel` is set to `foo` and the Kubernetes `Pod`\nobject is labeled with `foo: bar`, then Prometheus adds the `job=\"bar\"`\nlabel to all ingested metrics.\n\nIf the value of this field is empty, the `job` label of the metrics\ndefaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).",
+                    "description": "jobLabel defines the label to use to retrieve the job name from.\n`jobLabel` selects the label from the associated Kubernetes `Pod`\nobject which will be used as the `job` label for all metrics.\n\nFor example if `jobLabel` is set to `foo` and the Kubernetes `Pod`\nobject is labeled with `foo: bar`, then Prometheus adds the `job=\"bar\"`\nlabel to all ingested metrics.\n\nIf the value of this field is empty, the `job` label of the metrics\ndefaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).",
                     "type": "string"
                   },
                   "keepDroppedTargets": {
-                    "description": "Per-scrape limit on the number of targets dropped by relabeling\nthat will be kept in memory. 0 means no limit.\n\nIt requires Prometheus >= v2.47.0.",
+                    "description": "keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling\nthat will be kept in memory. 0 means no limit.\n\nIt requires Prometheus >= v2.47.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelLimit": {
-                    "description": "Per-scrape limit on number of labels that will be accepted for a sample.\n\nIt requires Prometheus >= v2.27.0.",
+                    "description": "labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.\n\nIt requires Prometheus >= v2.27.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelNameLengthLimit": {
-                    "description": "Per-scrape limit on length of labels name that will be accepted for a sample.\n\nIt requires Prometheus >= v2.27.0.",
+                    "description": "labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.\n\nIt requires Prometheus >= v2.27.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelValueLengthLimit": {
-                    "description": "Per-scrape limit on length of labels value that will be accepted for a sample.\n\nIt requires Prometheus >= v2.27.0.",
+                    "description": "labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.\n\nIt requires Prometheus >= v2.27.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "namespaceSelector": {
-                    "description": "`namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.\nBy default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.",
+                    "description": "namespaceSelector defines in which namespace(s) Prometheus should discover the pods.\nBy default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.",
                     "properties": {
                       "any": {
-                        "description": "Boolean describing whether all namespaces are selected in contrast to a\nlist restricting them.",
+                        "description": "any defines the boolean describing whether all namespaces are selected in contrast to a\nlist restricting them.",
                         "type": "boolean"
                       },
                       "matchNames": {
-                        "description": "List of namespace names to select from.",
+                        "description": "matchNames defines the list of namespace names to select from.",
                         "items": {
                           "type": "string"
                         },
@@ -116,7 +116,7 @@
                     "type": "object"
                   },
                   "nativeHistogramBucketLimit": {
-                    "description": "If there are more than this many buckets in a native histogram,\nbuckets will be merged to stay within the limit.\nIt requires Prometheus >= v2.45.0.",
+                    "description": "nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,\nbuckets will be merged to stay within the limit.\nIt requires Prometheus >= v2.45.0.",
                     "format": "int64",
                     "type": "integer"
                   },
@@ -129,20 +129,20 @@
                         "type": "string"
                       }
                     ],
-                    "description": "If the growth factor of one bucket to the next is smaller than this,\nbuckets will be merged to increase the factor sufficiently.\nIt requires Prometheus >= v2.50.0.",
+                    "description": "nativeHistogramMinBucketFactor defines if the growth factor of one bucket to the next is smaller than this,\nbuckets will be merged to increase the factor sufficiently.\nIt requires Prometheus >= v2.50.0.",
                     "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
                     "x-kubernetes-int-or-string": true
                   },
                   "podMetricsEndpoints": {
-                    "description": "Defines how to scrape metrics from the selected pods.",
+                    "description": "podMetricsEndpoints defines how to scrape metrics from the selected pods.",
                     "items": {
                       "description": "PodMetricsEndpoint defines an endpoint serving Prometheus metrics to be scraped by\nPrometheus.",
                       "properties": {
                         "authorization": {
-                          "description": "`authorization` configures the Authorization header credentials to use when\nscraping the target.\n\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
+                          "description": "authorization defines the Authorization header credentials to use when\nscraping the target.\n\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
-                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -165,17 +165,17 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "`basicAuth` configures the Basic Authentication credentials to use when\nscraping the target.\n\nCannot be set at the same time as `authorization`, or `oauth2`.",
+                          "description": "basicAuth defines the Basic Authentication credentials to use when\nscraping the target.\n\nCannot be set at the same time as `authorization`, or `oauth2`.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
+                              "description": "password defines a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -198,7 +198,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
+                              "description": "username defines a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -224,7 +224,7 @@
                           "type": "object"
                         },
                         "bearerTokenSecret": {
-                          "description": "`bearerTokenSecret` specifies a key of a Secret containing the bearer\ntoken for scraping targets. The secret needs to be in the same namespace\nas the PodMonitor object and readable by the Prometheus Operator.\n\nDeprecated: use `authorization` instead.",
+                          "description": "bearerTokenSecret defines a key of a Secret containing the bearer\ntoken for scraping targets. The secret needs to be in the same namespace\nas the PodMonitor object and readable by the Prometheus Operator.\n\nDeprecated: use `authorization` instead.",
                           "properties": {
                             "key": {
                               "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -247,38 +247,38 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "enableHttp2": {
-                          "description": "`enableHttp2` can be used to disable HTTP2 when scraping the target.",
+                          "description": "enableHttp2 can be used to disable HTTP2 when scraping the target.",
                           "type": "boolean"
                         },
                         "filterRunning": {
-                          "description": "When true, the pods which are not running (e.g. either in Failed or\nSucceeded state) are dropped during the target discovery.\n\nIf unset, the filtering is enabled.\n\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase",
+                          "description": "filterRunning when true, the pods which are not running (e.g. either in Failed or\nSucceeded state) are dropped during the target discovery.\n\nIf unset, the filtering is enabled.\n\nMore info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase",
                           "type": "boolean"
                         },
                         "followRedirects": {
-                          "description": "`followRedirects` defines whether the scrape requests should follow HTTP\n3xx redirects.",
+                          "description": "followRedirects defines whether the scrape requests should follow HTTP\n3xx redirects.",
                           "type": "boolean"
                         },
                         "honorLabels": {
-                          "description": "When true, `honorLabels` preserves the metric's labels when they collide\nwith the target's labels.",
+                          "description": "honorLabels when true preserves the metric's labels when they collide\nwith the target's labels.",
                           "type": "boolean"
                         },
                         "honorTimestamps": {
-                          "description": "`honorTimestamps` controls whether Prometheus preserves the timestamps\nwhen exposed by the target.",
+                          "description": "honorTimestamps defines whether Prometheus preserves the timestamps\nwhen exposed by the target.",
                           "type": "boolean"
                         },
                         "interval": {
-                          "description": "Interval at which Prometheus scrapes the metrics from the target.\n\nIf empty, Prometheus uses the global scrape interval.",
+                          "description": "interval at which Prometheus scrapes the metrics from the target.\n\nIf empty, Prometheus uses the global scrape interval.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "metricRelabelings": {
-                          "description": "`metricRelabelings` configures the relabeling rules to apply to the\nsamples before ingestion.",
+                          "description": "metricRelabelings defines the relabeling rules to apply to the\nsamples before ingestion.",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
                               "action": {
                                 "default": "replace",
-                                "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
                                 "enum": [
                                   "replace",
                                   "Replace",
@@ -306,24 +306,24 @@
                                 "type": "string"
                               },
                               "modulus": {
-                                "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                                "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
                                 "type": "integer"
                               },
                               "regex": {
-                                "description": "Regular expression against which the extracted value is matched.",
+                                "description": "regex defines the regular expression against which the extracted value is matched.",
                                 "type": "string"
                               },
                               "replacement": {
-                                "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                                "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
                                 "type": "string"
                               },
                               "separator": {
-                                "description": "Separator is the string between concatenated SourceLabels.",
+                                "description": "separator defines the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
                               "sourceLabels": {
-                                "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                                "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
                                   "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
@@ -332,7 +332,7 @@
                                 "type": "array"
                               },
                               "targetLabel": {
-                                "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                                "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
                                 "type": "string"
                               }
                             },
@@ -341,17 +341,17 @@
                           "type": "array"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "`oauth2` configures the OAuth2 settings to use when scraping the target.\n\nIt requires Prometheus >= 2.27.0.\n\nCannot be set at the same time as `authorization`, or `basicAuth`.",
+                          "description": "oauth2 defines the OAuth2 settings to use when scraping the target.\n\nIt requires Prometheus >= 2.27.0.\n\nCannot be set at the same time as `authorization`, or `basicAuth`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
+                              "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
-                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key to select.",
@@ -374,7 +374,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
-                                  "description": "Secret containing data to use for the targets.",
+                                  "description": "secret defines the Secret containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -400,7 +400,7 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                              "description": "clientSecret defines a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -426,11 +426,11 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
+                              "description": "endpointParams configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "noProxy": {
-                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                              "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "string"
                             },
                             "proxyConnectHeader": {
@@ -460,34 +460,34 @@
                                 },
                                 "type": "array"
                               },
-                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                              "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
                             "proxyFromEnvironment": {
-                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                              "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.",
+                              "description": "proxyUrl defines the HTTP proxy server to use.",
                               "pattern": "^(http|https|socks5)://.+$",
                               "type": "string"
                             },
                             "scopes": {
-                              "description": "`scopes` defines the OAuth2 scopes used for the token request.",
+                              "description": "scopes defines the OAuth2 scopes used for the token request.",
                               "items": {
                                 "type": "string"
                               },
                               "type": "array"
                             },
                             "tlsConfig": {
-                              "description": "TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
+                              "description": "tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
                               "properties": {
                                 "ca": {
-                                  "description": "Certificate authority used when verifying server certificates.",
+                                  "description": "ca defines the Certificate authority used when verifying server certificates.",
                                   "properties": {
                                     "configMap": {
-                                      "description": "ConfigMap containing data to use for the targets.",
+                                      "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key to select.",
@@ -510,7 +510,7 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "secret": {
-                                      "description": "Secret containing data to use for the targets.",
+                                      "description": "secret defines the Secret containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -536,10 +536,10 @@
                                   "type": "object"
                                 },
                                 "cert": {
-                                  "description": "Client certificate to present when doing client-authentication.",
+                                  "description": "cert defines the Client certificate to present when doing client-authentication.",
                                   "properties": {
                                     "configMap": {
-                                      "description": "ConfigMap containing data to use for the targets.",
+                                      "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key to select.",
@@ -562,7 +562,7 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "secret": {
-                                      "description": "Secret containing data to use for the targets.",
+                                      "description": "secret defines the Secret containing data to use for the targets.",
                                       "properties": {
                                         "key": {
                                           "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -588,11 +588,11 @@
                                   "type": "object"
                                 },
                                 "insecureSkipVerify": {
-                                  "description": "Disable target certificate validation.",
+                                  "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                   "type": "boolean"
                                 },
                                 "keySecret": {
-                                  "description": "Secret containing the client key file for the targets.",
+                                  "description": "keySecret defines the Secret containing the client key file for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -615,7 +615,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "maxVersion": {
-                                  "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                  "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                   "enum": [
                                     "TLS10",
                                     "TLS11",
@@ -625,7 +625,7 @@
                                   "type": "string"
                                 },
                                 "minVersion": {
-                                  "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                  "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                   "enum": [
                                     "TLS10",
                                     "TLS11",
@@ -635,14 +635,14 @@
                                   "type": "string"
                                 },
                                 "serverName": {
-                                  "description": "Used to verify the hostname for the targets.",
+                                  "description": "serverName is used to verify the hostname for the targets.",
                                   "type": "string"
                                 }
                               },
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "description": "`tokenURL` configures the URL to fetch the token from.",
+                              "description": "tokenUrl defines the URL to fetch the token from.",
                               "minLength": 1,
                               "type": "string"
                             }
@@ -661,19 +661,19 @@
                             },
                             "type": "array"
                           },
-                          "description": "`params` define optional HTTP URL parameters.",
+                          "description": "params define optional HTTP URL parameters.",
                           "type": "object"
                         },
                         "path": {
-                          "description": "HTTP path from which to scrape for metrics.\n\nIf empty, Prometheus uses the default value (e.g. `/metrics`).",
+                          "description": "path defines the HTTP path from which to scrape for metrics.\n\nIf empty, Prometheus uses the default value (e.g. `/metrics`).",
                           "type": "string"
                         },
                         "port": {
-                          "description": "The `Pod` port name which exposes the endpoint.\n\nIt takes precedence over the `portNumber` and `targetPort` fields.",
+                          "description": "port defines the `Pod` port name which exposes the endpoint.\n\nIt takes precedence over the `portNumber` and `targetPort` fields.",
                           "type": "string"
                         },
                         "portNumber": {
-                          "description": "The `Pod` port number which exposes the endpoint.",
+                          "description": "portNumber defines the `Pod` port number which exposes the endpoint.",
                           "format": "int32",
                           "maximum": 65535,
                           "minimum": 1,
@@ -706,27 +706,27 @@
                             },
                             "type": "array"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                          "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.",
+                          "description": "proxyUrl defines the HTTP proxy server to use.",
                           "pattern": "^(http|https|socks5)://.+$",
                           "type": "string"
                         },
                         "relabelings": {
-                          "description": "`relabelings` configures the relabeling rules to apply the target's\nmetadata labels.\n\nThe Operator automatically adds relabelings for a few standard Kubernetes fields.\n\nThe original scrape job's name is available via the `__tmp_prometheus_job_name` label.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                          "description": "relabelings defines the relabeling rules to apply the target's\nmetadata labels.\n\nThe Operator automatically adds relabelings for a few standard Kubernetes fields.\n\nThe original scrape job's name is available via the `__tmp_prometheus_job_name` label.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
                               "action": {
                                 "default": "replace",
-                                "description": "Action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
                                 "enum": [
                                   "replace",
                                   "Replace",
@@ -754,24 +754,24 @@
                                 "type": "string"
                               },
                               "modulus": {
-                                "description": "Modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                                "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
                                 "type": "integer"
                               },
                               "regex": {
-                                "description": "Regular expression against which the extracted value is matched.",
+                                "description": "regex defines the regular expression against which the extracted value is matched.",
                                 "type": "string"
                               },
                               "replacement": {
-                                "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                                "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
                                 "type": "string"
                               },
                               "separator": {
-                                "description": "Separator is the string between concatenated SourceLabels.",
+                                "description": "separator defines the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
                               "sourceLabels": {
-                                "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                                "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
                                   "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                                   "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
@@ -780,7 +780,7 @@
                                 "type": "array"
                               },
                               "targetLabel": {
-                                "description": "Label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                                "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
                                 "type": "string"
                               }
                             },
@@ -789,7 +789,7 @@
                           "type": "array"
                         },
                         "scheme": {
-                          "description": "HTTP scheme to use for scraping.\n\n`http` and `https` are the expected values unless you rewrite the\n`__scheme__` label via relabeling.\n\nIf empty, Prometheus uses the default value `http`.",
+                          "description": "scheme defines the HTTP scheme to use for scraping.\n\n`http` and `https` are the expected values unless you rewrite the\n`__scheme__` label via relabeling.\n\nIf empty, Prometheus uses the default value `http`.",
                           "enum": [
                             "http",
                             "https"
@@ -797,7 +797,7 @@
                           "type": "string"
                         },
                         "scrapeTimeout": {
-                          "description": "Timeout after which Prometheus considers the scrape to be failed.\n\nIf empty, Prometheus uses the global scrape timeout unless it is less\nthan the target's scrape interval value in which the latter is used.\nThe value cannot be greater than the scrape interval otherwise the operator will reject the resource.",
+                          "description": "scrapeTimeout defines the timeout after which Prometheus considers the scrape to be failed.\n\nIf empty, Prometheus uses the global scrape timeout unless it is less\nthan the target's scrape interval value in which the latter is used.\nThe value cannot be greater than the scrape interval otherwise the operator will reject the resource.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
@@ -810,17 +810,17 @@
                               "type": "string"
                             }
                           ],
-                          "description": "Name or number of the target port of the `Pod` object behind the Service, the\nport must be specified with container port property.\n\nDeprecated: use 'port' or 'portNumber' instead.",
+                          "description": "targetPort defines the name or number of the target port of the `Pod` object behind the Service, the\nport must be specified with container port property.\n\nDeprecated: use 'port' or 'portNumber' instead.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {
-                          "description": "TLS configuration to use when scraping the target.",
+                          "description": "tlsConfig defines the TLS configuration to use when scraping the target.",
                           "properties": {
                             "ca": {
-                              "description": "Certificate authority used when verifying server certificates.",
+                              "description": "ca defines the Certificate authority used when verifying server certificates.",
                               "properties": {
                                 "configMap": {
-                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key to select.",
@@ -843,7 +843,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
-                                  "description": "Secret containing data to use for the targets.",
+                                  "description": "secret defines the Secret containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -869,10 +869,10 @@
                               "type": "object"
                             },
                             "cert": {
-                              "description": "Client certificate to present when doing client-authentication.",
+                              "description": "cert defines the Client certificate to present when doing client-authentication.",
                               "properties": {
                                 "configMap": {
-                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key to select.",
@@ -895,7 +895,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "secret": {
-                                  "description": "Secret containing data to use for the targets.",
+                                  "description": "secret defines the Secret containing data to use for the targets.",
                                   "properties": {
                                     "key": {
                                       "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -921,11 +921,11 @@
                               "type": "object"
                             },
                             "insecureSkipVerify": {
-                              "description": "Disable target certificate validation.",
+                              "description": "insecureSkipVerify defines how to disable target certificate validation.",
                               "type": "boolean"
                             },
                             "keySecret": {
-                              "description": "Secret containing the client key file for the targets.",
+                              "description": "keySecret defines the Secret containing the client key file for the targets.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -948,7 +948,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "maxVersion": {
-                              "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                              "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -958,7 +958,7 @@
                               "type": "string"
                             },
                             "minVersion": {
-                              "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                              "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                               "enum": [
                                 "TLS10",
                                 "TLS11",
@@ -968,14 +968,14 @@
                               "type": "string"
                             },
                             "serverName": {
-                              "description": "Used to verify the hostname for the targets.",
+                              "description": "serverName is used to verify the hostname for the targets.",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "trackTimestampsStaleness": {
-                          "description": "`trackTimestampsStaleness` defines whether Prometheus tracks staleness of\nthe metrics that have an explicit timestamp present in scraped data.\nHas no effect if `honorTimestamps` is false.\n\nIt requires Prometheus >= v2.48.0.",
+                          "description": "trackTimestampsStaleness defines whether Prometheus tracks staleness of\nthe metrics that have an explicit timestamp present in scraped data.\nHas no effect if `honorTimestamps` is false.\n\nIt requires Prometheus >= v2.48.0.",
                           "type": "boolean"
                         }
                       },
@@ -984,28 +984,28 @@
                     "type": "array"
                   },
                   "podTargetLabels": {
-                    "description": "`podTargetLabels` defines the labels which are transferred from the\nassociated Kubernetes `Pod` object onto the ingested metrics.",
+                    "description": "podTargetLabels defines the labels which are transferred from the\nassociated Kubernetes `Pod` object onto the ingested metrics.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "sampleLimit": {
-                    "description": "`sampleLimit` defines a per-scrape limit on the number of scraped samples\nthat will be accepted.",
+                    "description": "sampleLimit defines a per-scrape limit on the number of scraped samples\nthat will be accepted.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "scrapeClass": {
-                    "description": "The scrape class to apply.",
+                    "description": "scrapeClass defines the scrape class to apply.",
                     "minLength": 1,
                     "type": "string"
                   },
                   "scrapeClassicHistograms": {
-                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.",
+                    "description": "scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.",
                     "type": "boolean"
                   },
                   "scrapeProtocols": {
-                    "description": "`scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",
+                    "description": "scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",
                     "items": {
                       "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.\nSupported values are:\n* `OpenMetricsText0.0.1`\n* `OpenMetricsText1.0.0`\n* `PrometheusProto`\n* `PrometheusText0.0.4`\n* `PrometheusText1.0.0`",
                       "enum": [
@@ -1021,7 +1021,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "selector": {
-                    "description": "Label selector to select the Kubernetes `Pod` objects to scrape metrics from.",
+                    "description": "selector defines the label selector to select the Kubernetes `Pod` objects to scrape metrics from.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -1066,7 +1066,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "selectorMechanism": {
-                    "description": "Mechanism used to select the endpoints to scrape.\nBy default, the selection process relies on relabel configurations to filter the discovered targets.\nAlternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.\nWhich strategy is best for your use case needs to be carefully evaluated.\n\nIt requires Prometheus >= v2.17.0.",
+                    "description": "selectorMechanism defines the mechanism used to select the endpoints to scrape.\nBy default, the selection process relies on relabel configurations to filter the discovered targets.\nAlternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.\nWhich strategy is best for your use case needs to be carefully evaluated.\n\nIt requires Prometheus >= v2.17.0.",
                     "enum": [
                       "RelabelConfig",
                       "RoleSelector"
@@ -1074,7 +1074,7 @@
                     "type": "string"
                   },
                   "targetLimit": {
-                    "description": "`targetLimit` defines a limit on the number of scraped targets that will\nbe accepted.",
+                    "description": "targetLimit defines a limit on the number of scraped targets that will\nbe accepted.",
                     "format": "int64",
                     "type": "integer"
                   }

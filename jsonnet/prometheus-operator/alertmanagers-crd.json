@@ -84,20 +84,20 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Specification of the desired behavior of the Alertmanager cluster. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "spec defines the specification of the desired behavior of the Alertmanager cluster. More info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "additionalArgs": {
-                    "description": "AdditionalArgs allows setting additional arguments for the 'Alertmanager' container.\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nAlertmanager container which may cause issues if they are invalid or not supported\nby the given Alertmanager version.",
+                    "description": "additionalArgs allows setting additional arguments for the 'Alertmanager' container.\nIt is intended for e.g. activating hidden flags which are not supported by\nthe dedicated configuration options yet. The arguments are passed as-is to the\nAlertmanager container which may cause issues if they are invalid or not supported\nby the given Alertmanager version.",
                     "items": {
                       "description": "Argument as part of the AdditionalArgs list.",
                       "properties": {
                         "name": {
-                          "description": "Name of the argument, e.g. \"scrape.discovery-reload-interval\".",
+                          "description": "name of the argument, e.g. \"scrape.discovery-reload-interval\".",
                           "minLength": 1,
                           "type": "string"
                         },
                         "value": {
-                          "description": "Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)",
+                          "description": "value defines the argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)",
                           "type": "string"
                         }
                       },
@@ -109,14 +109,14 @@
                     "type": "array"
                   },
                   "additionalPeers": {
-                    "description": "AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.",
+                    "description": "additionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "affinity": {
-                    "description": "If specified, the pod's scheduling constraints.",
+                    "description": "affinity defines the pod's scheduling constraints.",
                     "properties": {
                       "nodeAffinity": {
                         "description": "Describes node affinity scheduling rules for the pod.",
@@ -871,11 +871,11 @@
                     "type": "object"
                   },
                   "alertmanagerConfigMatcherStrategy": {
-                    "description": "AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects\nprocess incoming alerts.",
+                    "description": "alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects\nprocess incoming alerts.",
                     "properties": {
                       "type": {
                         "default": "OnNamespace",
-                        "description": "AlertmanagerConfigMatcherStrategyType defines the strategy used by\nAlertmanagerConfig objects to match alerts in the routes and inhibition\nrules.\n\nThe default value is `OnNamespace`.",
+                        "description": "type defines the strategy used by\nAlertmanagerConfig objects to match alerts in the routes and inhibition\nrules.\n\nThe default value is `OnNamespace`.",
                         "enum": [
                           "OnNamespace",
                           "OnNamespaceExceptForAlertmanagerNamespace",
@@ -887,7 +887,7 @@
                     "type": "object"
                   },
                   "alertmanagerConfigNamespaceSelector": {
-                    "description": "Namespaces to be selected for AlertmanagerConfig discovery. If nil, only\ncheck own namespace.",
+                    "description": "alertmanagerConfigNamespaceSelector defines the namespaces to be selected for AlertmanagerConfig discovery. If nil, only\ncheck own namespace.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -932,7 +932,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagerConfigSelector": {
-                    "description": "AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.",
+                    "description": "alertmanagerConfigSelector defines the selector to be used for to merge and configure Alertmanager with.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -977,19 +977,19 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagerConfiguration": {
-                    "description": "alertmanagerConfiguration specifies the configuration of Alertmanager.\n\nIf defined, it takes precedence over the `configSecret` field.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                    "description": "alertmanagerConfiguration defines the configuration of Alertmanager.\n\nIf defined, it takes precedence over the `configSecret` field.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                     "properties": {
                       "global": {
-                        "description": "Defines the global parameters of the Alertmanager configuration.",
+                        "description": "global defines the global parameters of the Alertmanager configuration.",
                         "properties": {
                           "httpConfig": {
-                            "description": "HTTP client configuration.",
+                            "description": "httpConfig defines the default HTTP configuration.",
                             "properties": {
                               "authorization": {
-                                "description": "Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
+                                "description": "authorization defines the header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
                                 "properties": {
                                   "credentials": {
-                                    "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                                    "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1012,17 +1012,17 @@
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "type": {
-                                    "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                                    "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                                     "type": "string"
                                   }
                                 },
                                 "type": "object"
                               },
                               "basicAuth": {
-                                "description": "BasicAuth for the client.\nThis is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.",
+                                "description": "basicAuth defines basicAuth for the client.\nThis is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.",
                                 "properties": {
                                   "password": {
-                                    "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
+                                    "description": "password defines a key of a Secret containing the password for\nauthentication.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1045,7 +1045,7 @@
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "username": {
-                                    "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
+                                    "description": "username defines a key of a Secret containing the username for\nauthentication.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1071,7 +1071,7 @@
                                 "type": "object"
                               },
                               "bearerTokenSecret": {
-                                "description": "The secret's key that contains the bearer token to be used by the client\nfor authentication.\nThe secret needs to be in the same namespace as the Alertmanager\nobject and accessible by the Prometheus Operator.",
+                                "description": "bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client\nfor authentication.\nThe secret needs to be in the same namespace as the Alertmanager\nobject and accessible by the Prometheus Operator.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1094,21 +1094,21 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "followRedirects": {
-                                "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
+                                "description": "followRedirects defines whether the client should follow HTTP 3xx redirects.",
                                 "type": "boolean"
                               },
                               "noProxy": {
-                                "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                 "type": "string"
                               },
                               "oauth2": {
-                                "description": "OAuth2 client credentials used to fetch a token for the targets.",
+                                "description": "oauth2 defines the client credentials used to fetch a token for the targets.",
                                 "properties": {
                                   "clientId": {
-                                    "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
+                                    "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                                     "properties": {
                                       "configMap": {
-                                        "description": "ConfigMap containing data to use for the targets.",
+                                        "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key to select.",
@@ -1131,7 +1131,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
-                                        "description": "Secret containing data to use for the targets.",
+                                        "description": "secret defines the Secret containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1157,7 +1157,7 @@
                                     "type": "object"
                                   },
                                   "clientSecret": {
-                                    "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                    "description": "clientSecret defines a key of a Secret containing the OAuth2\nclient's secret.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1183,11 +1183,11 @@
                                     "additionalProperties": {
                                       "type": "string"
                                     },
-                                    "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
+                                    "description": "endpointParams configures the HTTP parameters to append to the token\nURL.",
                                     "type": "object"
                                   },
                                   "noProxy": {
-                                    "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                    "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                     "type": "string"
                                   },
                                   "proxyConnectHeader": {
@@ -1217,34 +1217,34 @@
                                       },
                                       "type": "array"
                                     },
-                                    "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                    "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "proxyFromEnvironment": {
-                                    "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                    "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                     "type": "boolean"
                                   },
                                   "proxyUrl": {
-                                    "description": "`proxyURL` defines the HTTP proxy server to use.",
+                                    "description": "proxyUrl defines the HTTP proxy server to use.",
                                     "pattern": "^(http|https|socks5)://.+$",
                                     "type": "string"
                                   },
                                   "scopes": {
-                                    "description": "`scopes` defines the OAuth2 scopes used for the token request.",
+                                    "description": "scopes defines the OAuth2 scopes used for the token request.",
                                     "items": {
                                       "type": "string"
                                     },
                                     "type": "array"
                                   },
                                   "tlsConfig": {
-                                    "description": "TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
+                                    "description": "tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
                                     "properties": {
                                       "ca": {
-                                        "description": "Certificate authority used when verifying server certificates.",
+                                        "description": "ca defines the Certificate authority used when verifying server certificates.",
                                         "properties": {
                                           "configMap": {
-                                            "description": "ConfigMap containing data to use for the targets.",
+                                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key to select.",
@@ -1267,7 +1267,7 @@
                                             "x-kubernetes-map-type": "atomic"
                                           },
                                           "secret": {
-                                            "description": "Secret containing data to use for the targets.",
+                                            "description": "secret defines the Secret containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1293,10 +1293,10 @@
                                         "type": "object"
                                       },
                                       "cert": {
-                                        "description": "Client certificate to present when doing client-authentication.",
+                                        "description": "cert defines the Client certificate to present when doing client-authentication.",
                                         "properties": {
                                           "configMap": {
-                                            "description": "ConfigMap containing data to use for the targets.",
+                                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key to select.",
@@ -1319,7 +1319,7 @@
                                             "x-kubernetes-map-type": "atomic"
                                           },
                                           "secret": {
-                                            "description": "Secret containing data to use for the targets.",
+                                            "description": "secret defines the Secret containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1345,11 +1345,11 @@
                                         "type": "object"
                                       },
                                       "insecureSkipVerify": {
-                                        "description": "Disable target certificate validation.",
+                                        "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                         "type": "boolean"
                                       },
                                       "keySecret": {
-                                        "description": "Secret containing the client key file for the targets.",
+                                        "description": "keySecret defines the Secret containing the client key file for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1372,7 +1372,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "maxVersion": {
-                                        "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                        "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                         "enum": [
                                           "TLS10",
                                           "TLS11",
@@ -1382,7 +1382,7 @@
                                         "type": "string"
                                       },
                                       "minVersion": {
-                                        "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                        "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                         "enum": [
                                           "TLS10",
                                           "TLS11",
@@ -1392,14 +1392,14 @@
                                         "type": "string"
                                       },
                                       "serverName": {
-                                        "description": "Used to verify the hostname for the targets.",
+                                        "description": "serverName is used to verify the hostname for the targets.",
                                         "type": "string"
                                       }
                                     },
                                     "type": "object"
                                   },
                                   "tokenUrl": {
-                                    "description": "`tokenURL` configures the URL to fetch the token from.",
+                                    "description": "tokenUrl defines the URL to fetch the token from.",
                                     "minLength": 1,
                                     "type": "string"
                                   }
@@ -1438,27 +1438,27 @@
                                   },
                                   "type": "array"
                                 },
-                                "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                 "type": "object",
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "proxyFromEnvironment": {
-                                "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                 "type": "boolean"
                               },
                               "proxyUrl": {
-                                "description": "`proxyURL` defines the HTTP proxy server to use.",
+                                "description": "proxyUrl defines the HTTP proxy server to use.",
                                 "pattern": "^(http|https|socks5)://.+$",
                                 "type": "string"
                               },
                               "tlsConfig": {
-                                "description": "TLS configuration for the client.",
+                                "description": "tlsConfig defines the TLSConfig for the client.",
                                 "properties": {
                                   "ca": {
-                                    "description": "Certificate authority used when verifying server certificates.",
+                                    "description": "ca defines the Certificate authority used when verifying server certificates.",
                                     "properties": {
                                       "configMap": {
-                                        "description": "ConfigMap containing data to use for the targets.",
+                                        "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key to select.",
@@ -1481,7 +1481,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
-                                        "description": "Secret containing data to use for the targets.",
+                                        "description": "secret defines the Secret containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1507,10 +1507,10 @@
                                     "type": "object"
                                   },
                                   "cert": {
-                                    "description": "Client certificate to present when doing client-authentication.",
+                                    "description": "cert defines the Client certificate to present when doing client-authentication.",
                                     "properties": {
                                       "configMap": {
-                                        "description": "ConfigMap containing data to use for the targets.",
+                                        "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key to select.",
@@ -1533,7 +1533,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
-                                        "description": "Secret containing data to use for the targets.",
+                                        "description": "secret defines the Secret containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1559,11 +1559,11 @@
                                     "type": "object"
                                   },
                                   "insecureSkipVerify": {
-                                    "description": "Disable target certificate validation.",
+                                    "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                     "type": "boolean"
                                   },
                                   "keySecret": {
-                                    "description": "Secret containing the client key file for the targets.",
+                                    "description": "keySecret defines the Secret containing the client key file for the targets.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1586,7 +1586,7 @@
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "maxVersion": {
-                                    "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                    "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                     "enum": [
                                       "TLS10",
                                       "TLS11",
@@ -1596,7 +1596,7 @@
                                     "type": "string"
                                   },
                                   "minVersion": {
-                                    "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                    "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                     "enum": [
                                       "TLS10",
                                       "TLS11",
@@ -1606,7 +1606,7 @@
                                     "type": "string"
                                   },
                                   "serverName": {
-                                    "description": "Used to verify the hostname for the targets.",
+                                    "description": "serverName is used to verify the hostname for the targets.",
                                     "type": "string"
                                   }
                                 },
@@ -1616,10 +1616,10 @@
                             "type": "object"
                           },
                           "jira": {
-                            "description": "The default configuration for Jira.",
+                            "description": "jira defines the default configuration for Jira.",
                             "properties": {
                               "apiURL": {
-                                "description": "The default Jira API URL.\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "apiURL defines the default Jira API URL.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }
@@ -1627,7 +1627,7 @@
                             "type": "object"
                           },
                           "opsGenieApiKey": {
-                            "description": "The default OpsGenie API Key.",
+                            "description": "opsGenieApiKey defines the default OpsGenie API Key.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1650,7 +1650,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "opsGenieApiUrl": {
-                            "description": "The default OpsGenie API URL.",
+                            "description": "opsGenieApiUrl defines the default OpsGenie API URL.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1673,24 +1673,24 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "pagerdutyUrl": {
-                            "description": "The default Pagerduty URL.",
+                            "description": "pagerdutyUrl defines the default Pagerduty URL.",
                             "type": "string"
                           },
                           "resolveTimeout": {
-                            "description": "ResolveTimeout is the default value used by alertmanager if the alert does\nnot include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.\nThis has no impact on alerts from Prometheus, as they always include EndsAt.",
+                            "description": "resolveTimeout defines the default value used by alertmanager if the alert does\nnot include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.\nThis has no impact on alerts from Prometheus, as they always include EndsAt.",
                             "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                             "type": "string"
                           },
                           "rocketChat": {
-                            "description": "The default configuration for Rocket Chat.",
+                            "description": "rocketChat defines the default configuration for Rocket Chat.",
                             "properties": {
                               "apiURL": {
-                                "description": "The default Rocket Chat API URL.\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "apiURL defines the default Rocket Chat API URL.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               },
                               "token": {
-                                "description": "The default Rocket Chat token.\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "token defines the default Rocket Chat token.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1713,7 +1713,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "tokenID": {
-                                "description": "The default Rocket Chat Token ID.\n\nIt requires Alertmanager >= v0.28.0.",
+                                "description": "tokenID defines the default Rocket Chat Token ID.\n\nIt requires Alertmanager >= v0.28.0.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1739,7 +1739,7 @@
                             "type": "object"
                           },
                           "slackApiUrl": {
-                            "description": "The default Slack API URL.",
+                            "description": "slackApiUrl defines the default Slack API URL.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1762,14 +1762,14 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "smtp": {
-                            "description": "Configures global SMTP parameters.",
+                            "description": "smtp defines global SMTP parameters.",
                             "properties": {
                               "authIdentity": {
-                                "description": "SMTP Auth using PLAIN",
+                                "description": "authIdentity represents SMTP Auth using PLAIN",
                                 "type": "string"
                               },
                               "authPassword": {
-                                "description": "SMTP Auth using LOGIN and PLAIN.",
+                                "description": "authPassword represents SMTP Auth using LOGIN and PLAIN.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1792,7 +1792,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "authSecret": {
-                                "description": "SMTP Auth using CRAM-MD5.",
+                                "description": "authSecret represents SMTP Auth using CRAM-MD5.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1815,31 +1815,31 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "authUsername": {
-                                "description": "SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.",
+                                "description": "authUsername represents SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.",
                                 "type": "string"
                               },
                               "from": {
-                                "description": "The default SMTP From header field.",
+                                "description": "from defines the default SMTP From header field.",
                                 "type": "string"
                               },
                               "hello": {
-                                "description": "The default hostname to identify to the SMTP server.",
+                                "description": "hello defines the default hostname to identify to the SMTP server.",
                                 "type": "string"
                               },
                               "requireTLS": {
-                                "description": "The default SMTP TLS requirement.\nNote that Go does not support unencrypted connections to remote SMTP endpoints.",
+                                "description": "requireTLS defines the default SMTP TLS requirement.\nNote that Go does not support unencrypted connections to remote SMTP endpoints.",
                                 "type": "boolean"
                               },
                               "smartHost": {
-                                "description": "The default SMTP smarthost used for sending emails.",
+                                "description": "smartHost defines the default SMTP smarthost used for sending emails.",
                                 "properties": {
                                   "host": {
-                                    "description": "Defines the host's address, it can be a DNS name or a literal IP address.",
+                                    "description": "host defines the host's address, it can be a DNS name or a literal IP address.",
                                     "minLength": 1,
                                     "type": "string"
                                   },
                                   "port": {
-                                    "description": "Defines the host's port, it can be a literal port number or a port name.",
+                                    "description": "port defines the host's port, it can be a literal port number or a port name.",
                                     "minLength": 1,
                                     "type": "string"
                                   }
@@ -1851,13 +1851,13 @@
                                 "type": "object"
                               },
                               "tlsConfig": {
-                                "description": "The default TLS configuration for SMTP receivers",
+                                "description": "tlsConfig defines the default TLS configuration for SMTP receivers",
                                 "properties": {
                                   "ca": {
-                                    "description": "Certificate authority used when verifying server certificates.",
+                                    "description": "ca defines the Certificate authority used when verifying server certificates.",
                                     "properties": {
                                       "configMap": {
-                                        "description": "ConfigMap containing data to use for the targets.",
+                                        "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key to select.",
@@ -1880,7 +1880,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
-                                        "description": "Secret containing data to use for the targets.",
+                                        "description": "secret defines the Secret containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1906,10 +1906,10 @@
                                     "type": "object"
                                   },
                                   "cert": {
-                                    "description": "Client certificate to present when doing client-authentication.",
+                                    "description": "cert defines the Client certificate to present when doing client-authentication.",
                                     "properties": {
                                       "configMap": {
-                                        "description": "ConfigMap containing data to use for the targets.",
+                                        "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key to select.",
@@ -1932,7 +1932,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "secret": {
-                                        "description": "Secret containing data to use for the targets.",
+                                        "description": "secret defines the Secret containing data to use for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1958,11 +1958,11 @@
                                     "type": "object"
                                   },
                                   "insecureSkipVerify": {
-                                    "description": "Disable target certificate validation.",
+                                    "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                     "type": "boolean"
                                   },
                                   "keySecret": {
-                                    "description": "Secret containing the client key file for the targets.",
+                                    "description": "keySecret defines the Secret containing the client key file for the targets.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1985,7 +1985,7 @@
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "maxVersion": {
-                                    "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                    "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                     "enum": [
                                       "TLS10",
                                       "TLS11",
@@ -1995,7 +1995,7 @@
                                     "type": "string"
                                   },
                                   "minVersion": {
-                                    "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                    "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                     "enum": [
                                       "TLS10",
                                       "TLS11",
@@ -2005,7 +2005,7 @@
                                     "type": "string"
                                   },
                                   "serverName": {
-                                    "description": "Used to verify the hostname for the targets.",
+                                    "description": "serverName is used to verify the hostname for the targets.",
                                     "type": "string"
                                   }
                                 },
@@ -2015,10 +2015,10 @@
                             "type": "object"
                           },
                           "telegram": {
-                            "description": "The default Telegram config",
+                            "description": "telegram defines the default Telegram config",
                             "properties": {
                               "apiURL": {
-                                "description": "The default Telegram API URL.\n\nIt requires Alertmanager >= v0.24.0.",
+                                "description": "apiURL defines he default Telegram API URL.\n\nIt requires Alertmanager >= v0.24.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }
@@ -2026,10 +2026,10 @@
                             "type": "object"
                           },
                           "victorops": {
-                            "description": "The default configuration for VictorOps.",
+                            "description": "victorops defines the default configuration for VictorOps.",
                             "properties": {
                               "apiKey": {
-                                "description": "The default VictorOps API Key.",
+                                "description": "apiKey defines the default VictorOps API Key.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2052,7 +2052,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "apiURL": {
-                                "description": "The default VictorOps API URL.",
+                                "description": "apiURL defines the default VictorOps API URL.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }
@@ -2060,10 +2060,10 @@
                             "type": "object"
                           },
                           "webex": {
-                            "description": "The default configuration for Jira.",
+                            "description": "webex defines the default configuration for Jira.",
                             "properties": {
                               "apiURL": {
-                                "description": "The default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",
+                                "description": "apiURL defines the is the default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }
@@ -2071,15 +2071,15 @@
                             "type": "object"
                           },
                           "wechat": {
-                            "description": "The default WeChat Config",
+                            "description": "wechat defines the default WeChat Config",
                             "properties": {
                               "apiCorpID": {
-                                "description": "The default WeChat API Corporate ID.",
+                                "description": "apiCorpID defines the default WeChat API Corporate ID.",
                                 "minLength": 1,
                                 "type": "string"
                               },
                               "apiSecret": {
-                                "description": "The default WeChat API Secret.",
+                                "description": "apiSecret defines the default WeChat API Secret.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2102,7 +2102,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "apiURL": {
-                                "description": "The default WeChat API URL.\nThe default value is \"https://qyapi.weixin.qq.com/cgi-bin/\"",
+                                "description": "apiURL defines he default WeChat API URL.\nThe default value is \"https://qyapi.weixin.qq.com/cgi-bin/\"",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }
@@ -2113,17 +2113,17 @@
                         "type": "object"
                       },
                       "name": {
-                        "description": "The name of the AlertmanagerConfig resource which is used to generate the Alertmanager configuration.\nIt must be defined in the same namespace as the Alertmanager object.\nThe operator will not enforce a `namespace` label for routes and inhibition rules.",
+                        "description": "name defines the name of the AlertmanagerConfig custom resource which is used to generate the Alertmanager configuration.\nIt must be defined in the same namespace as the Alertmanager object.\nThe operator will not enforce a `namespace` label for routes and inhibition rules.",
                         "minLength": 1,
                         "type": "string"
                       },
                       "templates": {
-                        "description": "Custom notification templates.",
+                        "description": "templates defines the custom notification templates.",
                         "items": {
                           "description": "SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.",
                           "properties": {
                             "configMap": {
-                              "description": "ConfigMap containing data to use for the targets.",
+                              "description": "configMap defines the ConfigMap containing data to use for the targets.",
                               "properties": {
                                 "key": {
                                   "description": "The key to select.",
@@ -2146,7 +2146,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "secret": {
-                              "description": "Secret containing data to use for the targets.",
+                              "description": "secret defines the Secret containing data to use for the targets.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2177,47 +2177,47 @@
                     "type": "object"
                   },
                   "automountServiceAccountToken": {
-                    "description": "AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.\nIf the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.",
+                    "description": "automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.\nIf the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.",
                     "type": "boolean"
                   },
                   "baseImage": {
-                    "description": "Base image that is used to deploy pods, without tag.\nDeprecated: use 'image' instead.",
+                    "description": "baseImage that is used to deploy pods, without tag.\nDeprecated: use 'image' instead.",
                     "type": "string"
                   },
                   "clusterAdvertiseAddress": {
-                    "description": "ClusterAdvertiseAddress is the explicit address to advertise in cluster.\nNeeds to be provided for non RFC1918 [1] (public) addresses.\n[1] RFC1918: https://tools.ietf.org/html/rfc1918",
+                    "description": "clusterAdvertiseAddress defines the explicit address to advertise in cluster.\nNeeds to be provided for non RFC1918 [1] (public) addresses.\n[1] RFC1918: https://tools.ietf.org/html/rfc1918",
                     "type": "string"
                   },
                   "clusterGossipInterval": {
-                    "description": "Interval between gossip attempts.",
+                    "description": "clusterGossipInterval defines the interval between gossip attempts.",
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "clusterLabel": {
-                    "description": "Defines the identifier that uniquely identifies the Alertmanager cluster.\nYou should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.",
+                    "description": "clusterLabel defines the identifier that uniquely identifies the Alertmanager cluster.\nYou should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.",
                     "type": "string"
                   },
                   "clusterPeerTimeout": {
-                    "description": "Timeout for cluster peering.",
+                    "description": "clusterPeerTimeout defines the timeout for cluster peering.",
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "clusterPushpullInterval": {
-                    "description": "Interval between pushpull attempts.",
+                    "description": "clusterPushpullInterval defines the interval between pushpull attempts.",
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "clusterTLS": {
-                    "description": "Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.\n\nIt requires Alertmanager >= 0.24.0.",
+                    "description": "clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.\n\nIt requires Alertmanager >= 0.24.0.",
                     "properties": {
                       "client": {
-                        "description": "Client-side configuration for mutual TLS.",
+                        "description": "client defines the client-side configuration for mutual TLS.",
                         "properties": {
                           "ca": {
-                            "description": "Certificate authority used when verifying server certificates.",
+                            "description": "ca defines the Certificate authority used when verifying server certificates.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -2240,7 +2240,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2266,10 +2266,10 @@
                             "type": "object"
                           },
                           "cert": {
-                            "description": "Client certificate to present when doing client-authentication.",
+                            "description": "cert defines the Client certificate to present when doing client-authentication.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -2292,7 +2292,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2318,11 +2318,11 @@
                             "type": "object"
                           },
                           "insecureSkipVerify": {
-                            "description": "Disable target certificate validation.",
+                            "description": "insecureSkipVerify defines how to disable target certificate validation.",
                             "type": "boolean"
                           },
                           "keySecret": {
-                            "description": "Secret containing the client key file for the targets.",
+                            "description": "keySecret defines the Secret containing the client key file for the targets.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2345,7 +2345,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                            "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                             "enum": [
                               "TLS10",
                               "TLS11",
@@ -2355,7 +2355,7 @@
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                            "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                             "enum": [
                               "TLS10",
                               "TLS11",
@@ -2365,20 +2365,20 @@
                             "type": "string"
                           },
                           "serverName": {
-                            "description": "Used to verify the hostname for the targets.",
+                            "description": "serverName is used to verify the hostname for the targets.",
                             "type": "string"
                           }
                         },
                         "type": "object"
                       },
                       "server": {
-                        "description": "Server-side configuration for mutual TLS.",
+                        "description": "server defines the server-side configuration for mutual TLS.",
                         "properties": {
                           "cert": {
-                            "description": "Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
+                            "description": "cert defines the Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -2401,7 +2401,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2427,29 +2427,29 @@
                             "type": "object"
                           },
                           "certFile": {
-                            "description": "Path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
+                            "description": "certFile defines the path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
                             "type": "string"
                           },
                           "cipherSuites": {
-                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "description": "cipherSuites defines the list of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "clientAuthType": {
-                            "description": "The server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "description": "clientAuthType defines the server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
                             "type": "string"
                           },
                           "clientCAFile": {
-                            "description": "Path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
+                            "description": "clientCAFile defines the path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
-                            "description": "Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
+                            "description": "client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -2472,7 +2472,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2498,18 +2498,18 @@
                             "type": "object"
                           },
                           "curvePreferences": {
-                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "description": "curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "keyFile": {
-                            "description": "Path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
+                            "description": "keyFile defines the path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
                             "type": "string"
                           },
                           "keySecret": {
-                            "description": "Secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
+                            "description": "keySecret defines the secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -2532,15 +2532,15 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum TLS version that is acceptable.",
+                            "description": "maxVersion defines the Maximum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum TLS version that is acceptable.",
+                            "description": "minVersion defines the minimum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "preferServerCipherSuites": {
-                            "description": "Controls whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "description": "preferServerCipherSuites defines whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
                             "type": "boolean"
                           }
                         },
@@ -2554,18 +2554,18 @@
                     "type": "object"
                   },
                   "configMaps": {
-                    "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.\nThe ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.",
+                    "description": "configMaps defines a list of ConfigMaps in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.\nThe ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "configSecret": {
-                    "description": "ConfigSecret is the name of a Kubernetes Secret in the same namespace as the\nAlertmanager object, which contains the configuration for this Alertmanager\ninstance. If empty, it defaults to `alertmanager-<alertmanager-name>`.\n\nThe Alertmanager configuration should be available under the\n`alertmanager.yaml` key. Additional keys from the original secret are\ncopied to the generated secret and mounted into the\n`/etc/alertmanager/config` directory in the `alertmanager` container.\n\nIf either the secret or the `alertmanager.yaml` key is missing, the\noperator provisions a minimal Alertmanager configuration with one empty\nreceiver (effectively dropping alert notifications).",
+                    "description": "configSecret defines the name of a Kubernetes Secret in the same namespace as the\nAlertmanager object, which contains the configuration for this Alertmanager\ninstance. If empty, it defaults to `alertmanager-<alertmanager-name>`.\n\nThe Alertmanager configuration should be available under the\n`alertmanager.yaml` key. Additional keys from the original secret are\ncopied to the generated secret and mounted into the\n`/etc/alertmanager/config` directory in the `alertmanager` container.\n\nIf either the secret or the `alertmanager.yaml` key is missing, the\noperator provisions a minimal Alertmanager configuration with one empty\nreceiver (effectively dropping alert notifications).",
                     "type": "string"
                   },
                   "containers": {
-                    "description": "Containers allows injecting additional containers. This is meant to\nallow adding an authentication proxy to an Alertmanager pod.\nContainers described here modify an operator generated container if they\nshare the same name and modifications are done via a strategic merge\npatch. The current container names are: `alertmanager` and\n`config-reloader`. Overriding containers is entirely outside the scope\nof what the maintainers will support and by doing so, you accept that\nthis behaviour may break at any time without notice.",
+                    "description": "containers allows injecting additional containers. This is meant to\nallow adding an authentication proxy to an Alertmanager pod.\nContainers described here modify an operator generated container if they\nshare the same name and modifications are done via a strategic merge\npatch. The current container names are: `alertmanager` and\n`config-reloader`. Overriding containers is entirely outside the scope\nof what the maintainers will support and by doing so, you accept that\nthis behaviour may break at any time without notice.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -3903,10 +3903,10 @@
                     "type": "array"
                   },
                   "dnsConfig": {
-                    "description": "Defines the DNS configuration for the pods.",
+                    "description": "dnsConfig defines the DNS configuration for the pods.",
                     "properties": {
                       "nameservers": {
-                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
+                        "description": "nameservers defines the list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -3915,17 +3915,17 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "options": {
-                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
+                        "description": "options defines the list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
                         "items": {
                           "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
                           "properties": {
                             "name": {
-                              "description": "Name is required and must be unique.",
+                              "description": "name is required and must be unique.",
                               "minLength": 1,
                               "type": "string"
                             },
                             "value": {
-                              "description": "Value is optional.",
+                              "description": "value is optional.",
                               "type": "string"
                             }
                           },
@@ -3941,7 +3941,7 @@
                         "x-kubernetes-list-type": "map"
                       },
                       "searches": {
-                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
+                        "description": "searches defines the list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
                         "items": {
                           "minLength": 1,
                           "type": "string"
@@ -3953,7 +3953,7 @@
                     "type": "object"
                   },
                   "dnsPolicy": {
-                    "description": "Defines the DNS policy for the pods.",
+                    "description": "dnsPolicy defines the DNS policy for the pods.",
                     "enum": [
                       "ClusterFirstWithHostNet",
                       "ClusterFirst",
@@ -3963,38 +3963,38 @@
                     "type": "string"
                   },
                   "enableFeatures": {
-                    "description": "Enable access to Alertmanager feature flags. By default, no features are enabled.\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nIt requires Alertmanager >= 0.27.0.",
+                    "description": "enableFeatures defines the Alertmanager's feature flags. By default, no features are enabled.\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nIt requires Alertmanager >= 0.27.0.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "enableServiceLinks": {
-                    "description": "Indicates whether information about services should be injected into pod's environment variables",
+                    "description": "enableServiceLinks defines whether information about services should be injected into pod's environment variables",
                     "type": "boolean"
                   },
                   "externalUrl": {
-                    "description": "The external URL the Alertmanager instances will be available under. This is\nnecessary to generate correct URLs. This is necessary if Alertmanager is not\nserved from root of a DNS name.",
+                    "description": "externalUrl defines the URL used to access the Alertmanager web service. This is\nnecessary to generate correct URLs. This is necessary if Alertmanager is not\nserved from root of a DNS name.",
                     "type": "string"
                   },
                   "forceEnableClusterMode": {
-                    "description": "ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.\nUse case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.",
+                    "description": "forceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.\nUse case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.",
                     "type": "boolean"
                   },
                   "hostAliases": {
-                    "description": "Pods' hostAliases configuration",
+                    "description": "hostAliases Pods configuration",
                     "items": {
                       "description": "HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the\npod's hosts file.",
                       "properties": {
                         "hostnames": {
-                          "description": "Hostnames for the above IP address.",
+                          "description": "hostnames defines hostnames for the above IP address.",
                           "items": {
                             "type": "string"
                           },
                           "type": "array"
                         },
                         "ip": {
-                          "description": "IP address of the host file entry.",
+                          "description": "ip defines the IP address of the host file entry.",
                           "type": "string"
                         }
                       },
@@ -4011,15 +4011,15 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "hostUsers": {
-                    "description": "HostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
+                    "description": "hostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
                     "type": "boolean"
                   },
                   "image": {
-                    "description": "Image if specified has precedence over baseImage, tag and sha\ncombinations. Specifying the version is still necessary to ensure the\nPrometheus Operator knows what version of Alertmanager is being\nconfigured.",
+                    "description": "image if specified has precedence over baseImage, tag and sha\ncombinations. Specifying the version is still necessary to ensure the\nPrometheus Operator knows what version of Alertmanager is being\nconfigured.",
                     "type": "string"
                   },
                   "imagePullPolicy": {
-                    "description": "Image pull policy for the 'alertmanager', 'init-config-reloader' and 'config-reloader' containers.\nSee https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.",
+                    "description": "imagePullPolicy for the 'alertmanager', 'init-config-reloader' and 'config-reloader' containers.\nSee https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.",
                     "enum": [
                       "",
                       "Always",
@@ -4029,7 +4029,7 @@
                     "type": "string"
                   },
                   "imagePullSecrets": {
-                    "description": "An optional list of references to secrets in the same namespace\nto use for pulling prometheus and alertmanager images from registries\nsee https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
+                    "description": "imagePullSecrets An optional list of references to secrets in the same namespace\nto use for pulling prometheus and alertmanager images from registries\nsee https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
                     "items": {
                       "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
                       "properties": {
@@ -4045,7 +4045,7 @@
                     "type": "array"
                   },
                   "initContainers": {
-                    "description": "InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.\nfetch secrets for injection into the Alertmanager configuration from external sources. Any\nerrors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nInitContainers described here modify an operator\ngenerated init containers if they share the same name and modifications are\ndone via a strategic merge patch. The current init container name is:\n`init-config-reloader`. Overriding init containers is entirely outside the\nscope of what the maintainers will support and by doing so, you accept that\nthis behaviour may break at any time without notice.",
+                    "description": "initContainers allows adding initContainers to the pod definition. Those can be used to e.g.\nfetch secrets for injection into the Alertmanager configuration from external sources. Any\nerrors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nInitContainers described here modify an operator\ngenerated init containers if they share the same name and modifications are\ndone via a strategic merge patch. The current init container name is:\n`init-config-reloader`. Overriding init containers is entirely outside the\nscope of what the maintainers will support and by doing so, you accept that\nthis behaviour may break at any time without notice.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -5383,15 +5383,15 @@
                     "type": "array"
                   },
                   "limits": {
-                    "description": "Defines the limits command line flags when starting Alertmanager.",
+                    "description": "limits defines the limits command line flags when starting Alertmanager.",
                     "properties": {
                       "maxPerSilenceBytes": {
-                        "description": "The maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's\n`--silences.max-per-silence-bytes` flag.\nIt requires Alertmanager >= v0.28.0.",
+                        "description": "maxPerSilenceBytes defines the maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's\n`--silences.max-per-silence-bytes` flag.\nIt requires Alertmanager >= v0.28.0.",
                         "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                         "type": "string"
                       },
                       "maxSilences": {
-                        "description": "The maximum number active and pending silences. This corresponds to the\nAlertmanager's `--silences.max-silences` flag.\nIt requires Alertmanager >= v0.28.0.",
+                        "description": "maxSilences defines the maximum number active and pending silences. This corresponds to the\nAlertmanager's `--silences.max-silences` flag.\nIt requires Alertmanager >= v0.28.0.",
                         "format": "int32",
                         "minimum": 0,
                         "type": "integer"
@@ -5400,11 +5400,11 @@
                     "type": "object"
                   },
                   "listenLocal": {
-                    "description": "ListenLocal makes the Alertmanager server listen on loopback, so that it\ndoes not bind against the Pod IP. Note this is only for the Alertmanager\nUI, not the gossip communication.",
+                    "description": "listenLocal defines the Alertmanager server listen on loopback, so that it\ndoes not bind against the Pod IP. Note this is only for the Alertmanager\nUI, not the gossip communication.",
                     "type": "boolean"
                   },
                   "logFormat": {
-                    "description": "Log format for Alertmanager to be configured with.",
+                    "description": "logFormat for Alertmanager to be configured with.",
                     "enum": [
                       "",
                       "logfmt",
@@ -5413,7 +5413,7 @@
                     "type": "string"
                   },
                   "logLevel": {
-                    "description": "Log level for Alertmanager to be configured with.",
+                    "description": "logLevel for Alertmanager to be configured with.",
                     "enum": [
                       "",
                       "debug",
@@ -5424,7 +5424,7 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "Minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
+                    "description": "minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
                     "format": "int32",
                     "minimum": 0,
                     "type": "integer"
@@ -5433,15 +5433,15 @@
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "Define which Nodes the Pods are scheduled on.",
+                    "description": "nodeSelector defines which Nodes the Pods are scheduled on.",
                     "type": "object"
                   },
                   "paused": {
-                    "description": "If set to true all actions on the underlying managed objects are not\ngoing to be performed, except for delete actions.",
+                    "description": "paused if set to true all actions on the underlying managed objects are not\ngoing to be performed, except for delete actions.",
                     "type": "boolean"
                   },
                   "persistentVolumeClaimRetentionPolicy": {
-                    "description": "The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.\nThe default behavior is all PVCs are retained.\nThis is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.\nIt requires enabling the StatefulSetAutoDeletePVC feature gate.",
+                    "description": "persistentVolumeClaimRetentionPolicy controls if and how PVCs are deleted during the lifecycle of a StatefulSet.\nThe default behavior is all PVCs are retained.\nThis is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.\nIt requires enabling the StatefulSetAutoDeletePVC feature gate.",
                     "properties": {
                       "whenDeleted": {
                         "description": "WhenDeleted specifies what happens to PVCs created from StatefulSet\nVolumeClaimTemplates when the StatefulSet is deleted. The default policy\nof `Retain` causes PVCs to not be affected by StatefulSet deletion. The\n`Delete` policy causes those PVCs to be deleted.",
@@ -5455,24 +5455,24 @@
                     "type": "object"
                   },
                   "podMetadata": {
-                    "description": "PodMetadata configures labels and annotations which are propagated to the Alertmanager pods.\n\nThe following items are reserved and cannot be overridden:\n* \"alertmanager\" label, set to the name of the Alertmanager instance.\n* \"app.kubernetes.io/instance\" label, set to the name of the Alertmanager instance.\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/name\" label, set to \"alertmanager\".\n* \"app.kubernetes.io/version\" label, set to the Alertmanager version.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"alertmanager\".",
+                    "description": "podMetadata defines labels and annotations which are propagated to the Alertmanager pods.\n\nThe following items are reserved and cannot be overridden:\n* \"alertmanager\" label, set to the name of the Alertmanager instance.\n* \"app.kubernetes.io/instance\" label, set to the name of the Alertmanager instance.\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/name\" label, set to \"alertmanager\".\n* \"app.kubernetes.io/version\" label, set to the Alertmanager version.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"alertmanager\".",
                     "properties": {
                       "annotations": {
                         "additionalProperties": {
                           "type": "string"
                         },
-                        "description": "Annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+                        "description": "annotations defines an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
                         "type": "object"
                       },
                       "labels": {
                         "additionalProperties": {
                           "type": "string"
                         },
-                        "description": "Map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+                        "description": "labels define the map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
                         "type": "object"
                       },
                       "name": {
-                        "description": "Name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
+                        "description": "name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
                         "type": "string"
                       }
                     },
@@ -5480,20 +5480,20 @@
                   },
                   "portName": {
                     "default": "web",
-                    "description": "Port name used for the pods and governing service.\nDefaults to `web`.",
+                    "description": "portName defines the port's name for the pods and governing service.\nDefaults to `web`.",
                     "type": "string"
                   },
                   "priorityClassName": {
-                    "description": "Priority class assigned to the Pods",
+                    "description": "priorityClassName assigned to the Pods",
                     "type": "string"
                   },
                   "replicas": {
-                    "description": "Size is the expected size of the alertmanager cluster. The controller will\neventually make the size of the running cluster equal to the expected\nsize.",
+                    "description": "replicas defines the expected size of the alertmanager cluster. The controller will\neventually make the size of the running cluster equal to the expected\nsize.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "resources": {
-                    "description": "Define resources requests and limits for single Pods.",
+                    "description": "resources defines the resource requests and limits of the Pods.",
                     "properties": {
                       "claims": {
                         "description": "Claims lists the names of resources, defined in spec.resourceClaims,\nthat are used by this container.\n\nThis field depends on the\nDynamicResourceAllocation feature gate.\n\nThis field is immutable. It can only be set for containers.",
@@ -5557,23 +5557,23 @@
                   },
                   "retention": {
                     "default": "120h",
-                    "description": "Time duration Alertmanager shall retain data for. Default is '120h',\nand must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).",
+                    "description": "retention defines the time duration Alertmanager shall retain data for. Default is '120h',\nand must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).",
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
                   "routePrefix": {
-                    "description": "The route prefix Alertmanager registers HTTP handlers for. This is useful,\nif using ExternalURL and a proxy is rewriting HTTP routes of a request,\nand the actual ExternalURL is still true, but the server serves requests\nunder a different route prefix. For example for use with `kubectl proxy`.",
+                    "description": "routePrefix Alertmanager registers HTTP handlers for. This is useful,\nif using ExternalURL and a proxy is rewriting HTTP routes of a request,\nand the actual ExternalURL is still true, but the server serves requests\nunder a different route prefix. For example for use with `kubectl proxy`.",
                     "type": "string"
                   },
                   "secrets": {
-                    "description": "Secrets is a list of Secrets in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.\nThe Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.",
+                    "description": "secrets is a list of Secrets in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.\nThe Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
                   },
                   "securityContext": {
-                    "description": "SecurityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",
+                    "description": "securityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",
                     "properties": {
                       "appArmorProfile": {
                         "description": "appArmorProfile is the AppArmor options to use by the containers in this pod.\nNote that this field cannot be set when spec.os.name is windows.",
@@ -5720,27 +5720,27 @@
                     "type": "object"
                   },
                   "serviceAccountName": {
-                    "description": "ServiceAccountName is the name of the ServiceAccount to use to run the\nPrometheus Pods.",
+                    "description": "serviceAccountName is the name of the ServiceAccount to use to run the\nPrometheus Pods.",
                     "type": "string"
                   },
                   "serviceName": {
-                    "description": "The name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.\nWhen deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
+                    "description": "serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.\nWhen deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
                     "minLength": 1,
                     "type": "string"
                   },
                   "sha": {
-                    "description": "SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.\nSimilar to a tag, but the SHA explicitly deploys an immutable container image.\nVersion and Tag are ignored if SHA is set.\nDeprecated: use 'image' instead. The image digest can be specified as part of the image URL.",
+                    "description": "sha of Alertmanager container image to be deployed. Defaults to the value of `version`.\nSimilar to a tag, but the SHA explicitly deploys an immutable container image.\nVersion and Tag are ignored if SHA is set.\nDeprecated: use 'image' instead. The image digest can be specified as part of the image URL.",
                     "type": "string"
                   },
                   "storage": {
-                    "description": "Storage is the definition of how storage will be used by the Alertmanager\ninstances.",
+                    "description": "storage defines the definition of how storage will be used by the Alertmanager\ninstances.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "Deprecated: subPath usage will be removed in a future release.",
+                        "description": "disableMountSubPath deprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
-                        "description": "EmptyDirVolumeSource to be used by the StatefulSet.\nIf specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
+                        "description": "emptyDir to be used by the StatefulSet.\nIf specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
                         "properties": {
                           "medium": {
                             "description": "medium represents what type of storage medium should back this directory.\nThe default is \"\" which means to use the node's default medium.\nMust be an empty string (default) or Memory.\nMore info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
@@ -5763,7 +5763,7 @@
                         "type": "object"
                       },
                       "ephemeral": {
-                        "description": "EphemeralVolumeSource to be used by the StatefulSet.\nThis is a beta field in k8s 1.21 and GA in 1.15.\nFor lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.\nMore info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes",
+                        "description": "ephemeral to be used by the StatefulSet.\nThis is a beta field in k8s 1.21 and GA in 1.15.\nFor lower versions, starting with k8s 1.19, it requires enabling the GenericEphemeralVolume feature gate.\nMore info: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes",
                         "properties": {
                           "volumeClaimTemplate": {
                             "description": "Will be used to create a stand-alone PVC to provision the volume.\nThe pod in which this EphemeralVolumeSource is embedded will be the\nowner of the PVC, i.e. the PVC will be deleted together with the\npod.  The name of the PVC will be `<pod name>-<volume name>` where\n`<volume name>` is the name from the `PodSpec.Volumes` array\nentry. Pod validation will reject the pod if the concatenated name\nis not valid for a PVC (for example, too long).\n\nAn existing PVC with that name that is not owned by the pod\nwill *not* be used for the pod to avoid using an unrelated\nvolume by mistake. Starting the pod is then blocked until\nthe unrelated PVC is removed. If such a pre-created PVC is\nmeant to be used by the pod, the PVC has to updated with an\nowner reference to the pod once the pod exists. Normally\nthis should not be necessary, but it may be useful when\nmanually reconstructing a broken cluster.\n\nThis field is read-only and no changes will be made by Kubernetes\nto the PVC after it has been created.\n\nRequired, must not be nil.",
@@ -5944,7 +5944,7 @@
                         "type": "object"
                       },
                       "volumeClaimTemplate": {
-                        "description": "Defines the PVC spec to be used by the Prometheus StatefulSets.\nThe easiest way to use a volume that cannot be automatically provisioned\nis to use a label selector alongside manually created PersistentVolumes.",
+                        "description": "volumeClaimTemplate defines the PVC spec to be used by the Prometheus StatefulSets.\nThe easiest way to use a volume that cannot be automatically provisioned\nis to use a label selector alongside manually created PersistentVolumes.",
                         "properties": {
                           "apiVersion": {
                             "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -5955,31 +5955,31 @@
                             "type": "string"
                           },
                           "metadata": {
-                            "description": "EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
+                            "description": "metadata defines EmbeddedMetadata contains metadata relevant to an EmbeddedResource.",
                             "properties": {
                               "annotations": {
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Annotations is an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+                                "description": "annotations defines an unstructured key value map stored with a resource that may be\nset by external tools to store and retrieve arbitrary metadata. They are not\nqueryable and should be preserved when modifying objects.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
                                 "type": "object"
                               },
                               "labels": {
                                 "additionalProperties": {
                                   "type": "string"
                                 },
-                                "description": "Map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+                                "description": "labels define the map of string keys and values that can be used to organize and categorize\n(scope and select) objects. May match selectors of replication controllers\nand services.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
                                 "type": "object"
                               },
                               "name": {
-                                "description": "Name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
+                                "description": "name must be unique within a namespace. Is required when creating resources, although\nsome resources may allow a client to request the generation of an appropriate name\nautomatically. Name is primarily intended for creation idempotence and configuration\ndefinition.\nCannot be updated.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/",
                                 "type": "string"
                               }
                             },
                             "type": "object"
                           },
                           "spec": {
-                            "description": "Defines the desired characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+                            "description": "spec defines the specification of the  characteristics of a volume requested by a pod author.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the desired access modes the volume should have.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -6141,7 +6141,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "Deprecated: this field is never set.",
+                            "description": "status is deprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -6271,17 +6271,17 @@
                     "type": "object"
                   },
                   "tag": {
-                    "description": "Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.\nVersion is ignored if Tag is set.\nDeprecated: use 'image' instead. The image tag can be specified as part of the image URL.",
+                    "description": "tag of Alertmanager container image to be deployed. Defaults to the value of `version`.\nVersion is ignored if Tag is set.\nDeprecated: use 'image' instead. The image tag can be specified as part of the image URL.",
                     "type": "string"
                   },
                   "terminationGracePeriodSeconds": {
-                    "description": "Optional duration in seconds the pod needs to terminate gracefully.\nValue must be non-negative integer. The value zero indicates stop immediately via\nthe kill signal (no opportunity to shut down) which may lead to data corruption.\n\nDefaults to 120 seconds.",
+                    "description": "terminationGracePeriodSeconds defines the Optional duration in seconds the pod needs to terminate gracefully.\nValue must be non-negative integer. The value zero indicates stop immediately via\nthe kill signal (no opportunity to shut down) which may lead to data corruption.\n\nDefaults to 120 seconds.",
                     "format": "int64",
                     "minimum": 0,
                     "type": "integer"
                   },
                   "tolerations": {
-                    "description": "If specified, the pod's tolerations.",
+                    "description": "tolerations defines the pod's tolerations.",
                     "items": {
                       "description": "The pod this Toleration is attached to tolerates any taint that matches\nthe triple <key,value,effect> using the matching operator <operator>.",
                       "properties": {
@@ -6312,7 +6312,7 @@
                     "type": "array"
                   },
                   "topologySpreadConstraints": {
-                    "description": "If specified, the pod's topology spread constraints.",
+                    "description": "topologySpreadConstraints defines the Pod's topology spread constraints.",
                     "items": {
                       "description": "TopologySpreadConstraint specifies how to spread matching pods among the given topology.",
                       "properties": {
@@ -6406,11 +6406,11 @@
                     "type": "array"
                   },
                   "version": {
-                    "description": "Version the cluster should be on.",
+                    "description": "version the cluster should be on.",
                     "type": "string"
                   },
                   "volumeMounts": {
-                    "description": "VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.\nVolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,\nthat are generated as a result of StorageSpec objects.",
+                    "description": "volumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.\nVolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,\nthat are generated as a result of StorageSpec objects.",
                     "items": {
                       "description": "VolumeMount describes a mounting of a Volume within a container.",
                       "properties": {
@@ -6452,7 +6452,7 @@
                     "type": "array"
                   },
                   "volumes": {
-                    "description": "Volumes allows configuration of additional volumes on the output StatefulSet definition.\nVolumes specified will be appended to other volumes that are generated as a result of\nStorageSpec objects.",
+                    "description": "volumes allows configuration of additional volumes on the output StatefulSet definition.\nVolumes specified will be appended to other volumes that are generated as a result of\nStorageSpec objects.",
                     "items": {
                       "description": "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
                       "properties": {
@@ -7915,29 +7915,29 @@
                     "type": "array"
                   },
                   "web": {
-                    "description": "Defines the web command line flags when starting Alertmanager.",
+                    "description": "web defines the web command line flags when starting Alertmanager.",
                     "properties": {
                       "getConcurrency": {
-                        "description": "Maximum number of GET requests processed concurrently. This corresponds to the\nAlertmanager's `--web.get-concurrency` flag.",
+                        "description": "getConcurrency defines the maximum number of GET requests processed concurrently. This corresponds to the\nAlertmanager's `--web.get-concurrency` flag.",
                         "format": "int32",
                         "type": "integer"
                       },
                       "httpConfig": {
-                        "description": "Defines HTTP parameters for web server.",
+                        "description": "httpConfig defines HTTP parameters for web server.",
                         "properties": {
                           "headers": {
-                            "description": "List of headers that can be added to HTTP responses.",
+                            "description": "headers defines a list of headers that can be added to HTTP responses.",
                             "properties": {
                               "contentSecurityPolicy": {
-                                "description": "Set the Content-Security-Policy header to HTTP responses.\nUnset if blank.",
+                                "description": "contentSecurityPolicy defines the Content-Security-Policy header to HTTP responses.\nUnset if blank.",
                                 "type": "string"
                               },
                               "strictTransportSecurity": {
-                                "description": "Set the Strict-Transport-Security header to HTTP responses.\nUnset if blank.\nPlease make sure that you use this with care as this header might force\nbrowsers to load Prometheus and the other applications hosted on the same\ndomain and subdomains over HTTPS.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
+                                "description": "strictTransportSecurity defines the Strict-Transport-Security header to HTTP responses.\nUnset if blank.\nPlease make sure that you use this with care as this header might force\nbrowsers to load Prometheus and the other applications hosted on the same\ndomain and subdomains over HTTPS.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
                                 "type": "string"
                               },
                               "xContentTypeOptions": {
-                                "description": "Set the X-Content-Type-Options header to HTTP responses.\nUnset if blank. Accepted value is nosniff.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options",
+                                "description": "xContentTypeOptions defines the X-Content-Type-Options header to HTTP responses.\nUnset if blank. Accepted value is nosniff.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options",
                                 "enum": [
                                   "",
                                   "NoSniff"
@@ -7945,7 +7945,7 @@
                                 "type": "string"
                               },
                               "xFrameOptions": {
-                                "description": "Set the X-Frame-Options header to HTTP responses.\nUnset if blank. Accepted values are deny and sameorigin.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options",
+                                "description": "xFrameOptions defines the X-Frame-Options header to HTTP responses.\nUnset if blank. Accepted values are deny and sameorigin.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options",
                                 "enum": [
                                   "",
                                   "Deny",
@@ -7954,32 +7954,32 @@
                                 "type": "string"
                               },
                               "xXSSProtection": {
-                                "description": "Set the X-XSS-Protection header to all responses.\nUnset if blank.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection",
+                                "description": "xXSSProtection defines the X-XSS-Protection header to all responses.\nUnset if blank.\nhttps://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection",
                                 "type": "string"
                               }
                             },
                             "type": "object"
                           },
                           "http2": {
-                            "description": "Enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.\nWhen TLSConfig is not configured, HTTP/2 will be disabled.\nWhenever the value of the field changes, a rolling update will be triggered.",
+                            "description": "http2 enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.\nWhen TLSConfig is not configured, HTTP/2 will be disabled.\nWhenever the value of the field changes, a rolling update will be triggered.",
                             "type": "boolean"
                           }
                         },
                         "type": "object"
                       },
                       "timeout": {
-                        "description": "Timeout for HTTP requests. This corresponds to the Alertmanager's\n`--web.timeout` flag.",
+                        "description": "timeout for HTTP requests. This corresponds to the Alertmanager's\n`--web.timeout` flag.",
                         "format": "int32",
                         "type": "integer"
                       },
                       "tlsConfig": {
-                        "description": "Defines the TLS parameters for HTTPS.",
+                        "description": "tlsConfig defines the TLS parameters for HTTPS.",
                         "properties": {
                           "cert": {
-                            "description": "Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
+                            "description": "cert defines the Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -8002,7 +8002,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -8028,29 +8028,29 @@
                             "type": "object"
                           },
                           "certFile": {
-                            "description": "Path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
+                            "description": "certFile defines the path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
                             "type": "string"
                           },
                           "cipherSuites": {
-                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "description": "cipherSuites defines the list of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "clientAuthType": {
-                            "description": "The server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "description": "clientAuthType defines the server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
                             "type": "string"
                           },
                           "clientCAFile": {
-                            "description": "Path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
+                            "description": "clientCAFile defines the path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
-                            "description": "Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
+                            "description": "client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
                             "properties": {
                               "configMap": {
-                                "description": "ConfigMap containing data to use for the targets.",
+                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key to select.",
@@ -8073,7 +8073,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "secret": {
-                                "description": "Secret containing data to use for the targets.",
+                                "description": "secret defines the Secret containing data to use for the targets.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -8099,18 +8099,18 @@
                             "type": "object"
                           },
                           "curvePreferences": {
-                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "description": "curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "keyFile": {
-                            "description": "Path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
+                            "description": "keyFile defines the path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
                             "type": "string"
                           },
                           "keySecret": {
-                            "description": "Secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
+                            "description": "keySecret defines the secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -8133,15 +8133,15 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum TLS version that is acceptable.",
+                            "description": "maxVersion defines the Maximum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum TLS version that is acceptable.",
+                            "description": "minVersion defines the minimum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "preferServerCipherSuites": {
-                            "description": "Controls whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "description": "preferServerCipherSuites defines whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
                             "type": "boolean"
                           }
                         },
@@ -8154,15 +8154,15 @@
                 "type": "object"
               },
               "status": {
-                "description": "Most recent observed status of the Alertmanager cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+                "description": "status defines the most recent observed status of the Alertmanager cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "availableReplicas": {
-                    "description": "Total number of available pods (ready for at least minReadySeconds)\ntargeted by this Alertmanager cluster.",
+                    "description": "availableReplicas defines the total number of available pods (ready for at least minReadySeconds)\ntargeted by this Alertmanager cluster.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "conditions": {
-                    "description": "The current state of the Alertmanager object.",
+                    "description": "conditions defines the current state of the Alertmanager object.",
                     "items": {
                       "description": "Condition represents the state of the resources associated with the\nPrometheus, Alertmanager or ThanosRuler resource.",
                       "properties": {
@@ -8172,25 +8172,25 @@
                           "type": "string"
                         },
                         "message": {
-                          "description": "Human-readable message indicating details for the condition's last transition.",
+                          "description": "message defines human-readable message indicating details for the condition's last transition.",
                           "type": "string"
                         },
                         "observedGeneration": {
-                          "description": "ObservedGeneration represents the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the\ninstance.",
+                          "description": "observedGeneration defines the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the\ninstance.",
                           "format": "int64",
                           "type": "integer"
                         },
                         "reason": {
-                          "description": "Reason for the condition's last transition.",
+                          "description": "reason for the condition's last transition.",
                           "type": "string"
                         },
                         "status": {
-                          "description": "Status of the condition.",
+                          "description": "status of the condition.",
                           "minLength": 1,
                           "type": "string"
                         },
                         "type": {
-                          "description": "Type of the condition being reported.",
+                          "description": "type of the condition being reported.",
                           "minLength": 1,
                           "type": "string"
                         }
@@ -8209,25 +8209,25 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "paused": {
-                    "description": "Represents whether any actions on the underlying managed objects are\nbeing performed. Only delete actions will be performed.",
+                    "description": "paused represents whether any actions on the underlying managed objects are\nbeing performed. Only delete actions will be performed.",
                     "type": "boolean"
                   },
                   "replicas": {
-                    "description": "Total number of non-terminated pods targeted by this Alertmanager\nobject (their labels match the selector).",
+                    "description": "replicas defines the total number of non-terminated pods targeted by this Alertmanager\nobject (their labels match the selector).",
                     "format": "int32",
                     "type": "integer"
                   },
                   "selector": {
-                    "description": "The selector used to match the pods targeted by this Alertmanager object.",
+                    "description": "selector used to match the pods targeted by this Alertmanager object.",
                     "type": "string"
                   },
                   "unavailableReplicas": {
-                    "description": "Total number of unavailable pods targeted by this Alertmanager object.",
+                    "description": "unavailableReplicas defines the total number of unavailable pods targeted by this Alertmanager object.",
                     "format": "int32",
                     "type": "integer"
                   },
                   "updatedReplicas": {
-                    "description": "Total number of non-terminated pods targeted by this Alertmanager\nobject that have the desired version spec.",
+                    "description": "updatedReplicas defines the total number of non-terminated pods targeted by this Alertmanager\nobject that have the desired version spec.",
                     "format": "int32",
                     "type": "integer"
                   }
