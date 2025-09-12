@@ -245,7 +245,7 @@ Environments: AWS, Google Cloud
 
 Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): No
 
-Opstrace installations use the Prometheus Operator internally to collect metrics and to alert. Opstrace users also often use the Prometheus Operator to scrape their own aplications and remote_write those metrics to Opstrace.
+Opstrace installations use the Prometheus Operator internally to collect metrics and to alert. Opstrace users also often use the Prometheus Operator to scrape their own applications and remote_write those metrics to Opstrace.
 
 ## Polar Signals
 

@@ -2837,7 +2837,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -8793,7 +8793,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -14558,7 +14558,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -22028,7 +22028,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -28807,7 +28807,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>projectName defines an ptional field for the Identity V2 API.
+<p>projectName defines an optional field for the Identity V2 API.
 Some providers allow you to specify a ProjectName instead of the ProjectId.
 Some require both. Your provider&rsquo;s authentication policies will determine
 how these fields influence authentication.</p>
@@ -28863,7 +28863,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>applicationCredentialSecret defines the requiered field if using an application
+<p>applicationCredentialSecret defines the required field if using an application
 credential to authenticate.</p>
 </td>
 </tr>
@@ -30620,7 +30620,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>

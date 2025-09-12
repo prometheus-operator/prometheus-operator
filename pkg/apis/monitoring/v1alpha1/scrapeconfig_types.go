@@ -852,7 +852,7 @@ type OpenStackSDConfig struct {
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	DomainID *string `json:"domainID,omitempty"`
-	// projectName defines an ptional field for the Identity V2 API.
+	// projectName defines an optional field for the Identity V2 API.
 	// Some providers allow you to specify a ProjectName instead of the ProjectId.
 	// Some require both. Your provider's authentication policies will determine
 	// how these fields influence authentication.
@@ -873,7 +873,7 @@ type OpenStackSDConfig struct {
 	// applicationCredentialId defines the OpenStack applicationCredentialId.
 	// +optional
 	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
-	// applicationCredentialSecret defines the requiered field if using an application
+	// applicationCredentialSecret defines the required field if using an application
 	// credential to authenticate.
 	// +optional
 	ApplicationCredentialSecret *corev1.SecretKeySelector `json:"applicationCredentialSecret,omitempty"`
