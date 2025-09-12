@@ -228,7 +228,7 @@
 
 * [CHANGE] Global limits over enforced limits when no user limits are set. #6608
 * [CHANGE/BUGFIX] Use a separate port number (`8081`) for the init container. #6635
-* [FEATURE] Add `source` field in `pagerdutyConfigs` in `AlertManangerConfig` CRD. #6427
+* [FEATURE] Add `source` field in `pagerdutyConfigs` in `AlertManagerConfig` CRD. #6427
 * [FEATURE] Add `DockerSwarm` Service Discovery support in the ScrapeConfig CRD. #6633
 * [FEATURE] Add `Linode` Service Discovery support in the ScrapeConfig CRD. #6586
 * [FEATURE] Add `PuppetDB` Service Discovery support in the ScrapeConfig CRD. #6651
@@ -392,7 +392,7 @@ This release is built using Go 1.21.4 which addresses CVE-2023-45283 and CVE-202
 * [BUGFIX] Fix text-only email configs in AlertmanagerConfig CRD. #5804
 * [BUGFIX] Fix rejecting PodMonitor, ServiceMonitor, Probes and ScrapeConfigs with invalid relabelings. #5841 #5856
 * [BUGFIX] Fix Kubernetes Service Discovery in ScrapeConfig CRD. #5871
-* [BUGFIX] Fix reserved labels being overriden by external labels. #5888
+* [BUGFIX] Fix reserved labels being overridden by external labels. #5888
 * [BUGFIX] Fix updating Status of Prometheus, Alertmanager and ThanosRuler even the operator fails to update their statefulsets. #5891
 
 ## 0.67.1 / 2023-08-03
@@ -994,7 +994,7 @@ We have also added a governance (#3398).
 * [CHANGE] Add CRD definitions to bundle.yaml (#3171)
 * [CHANGE] Switch to apiextensions.k8s.io/v1 CRD and require kubernetes v1.16 or newer (#3175, #3187)
 * [FEATURE] Add support prometheus query log file (#3116)
-* [FEATURE] Add support for watching specified rules directory by config-relader (#3128)
+* [FEATURE] Add support for watching specified rules directory by config-reloader (#3128)
 * [FEATURE] Add TLS support for operator web server (#3134, #3157)
 * [FEATURE] Allow to set address for operator http endpoint (#3098)
 * [FEATURE] Allow setting the alertmanagers cluster.advertiseAddress (#3160)
@@ -1487,7 +1487,7 @@ but causes this change.
 
 ## 0.8.1 / 2017-04-13
 
-* [ENHANCEMENT] Include kubelet insecure port in kubelet Enpdoints object.
+* [ENHANCEMENT] Include kubelet insecure port in kubelet Endpoints object.
 
 ## 0.8.0 / 2017-04-07
 

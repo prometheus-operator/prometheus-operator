@@ -165,7 +165,7 @@ func (r *Route) ChildRoutes() ([]Route, error) {
 
 // Receiver defines one or more notification integrations.
 type Receiver struct {
-	// name defiens the name of the receiver. Must be unique across all items from the list.
+	// name defines the name of the receiver. Must be unique across all items from the list.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
