@@ -630,6 +630,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
+	// Validate resource requirements
+	if err := p.Spec.CommonPrometheusFields.ValidateResources(); err != nil {
+		return fmt.Errorf("invalid resource configuration: %w", err)
+	}
+
 	// Generate the configuration data.
 	var (
 		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())

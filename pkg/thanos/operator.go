@@ -486,6 +486,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	// Validate resource requirements
+	if err := tr.Spec.ValidateResources(); err != nil {
+		return fmt.Errorf("invalid resource configuration: %w", err)
+	}
+
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
 	if err != nil {
 		return err
