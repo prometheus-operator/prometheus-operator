@@ -1581,3 +1581,4 @@ with the operator.
 
 * [CHANGE] Use StatefulSet instead of PetSet
 * [BUGFIX] Fix Prometheus config generation for labels containing "-"
+* [BUGFIX] Use distinct port name for init container to avoid duplicate port name warnings
