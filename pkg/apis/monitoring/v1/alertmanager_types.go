@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -334,6 +336,33 @@ type AlertmanagerSpec struct {
 	//
 	// +optional
 	HostUsers *bool `json:"hostUsers,omitempty"`
+}
+
+// ValidateResources validates that resource requests don't exceed limits
+func (a *AlertmanagerSpec) ValidateResources() error {
+	if a.Resources.Limits == nil || a.Resources.Requests == nil {
+		return nil
+	}
+
+	// Validate CPU
+	if cpuLimit, hasLimit := a.Resources.Limits[v1.ResourceCPU]; hasLimit {
+		if cpuRequest, hasRequest := a.Resources.Requests[v1.ResourceCPU]; hasRequest {
+			if cpuRequest.Cmp(cpuLimit) > 0 {
+				return fmt.Errorf("CPU request (%s) exceeds CPU limit (%s)", cpuRequest.String(), cpuLimit.String())
+			}
+		}
+	}
+
+	// Validate Memory
+	if memLimit, hasLimit := a.Resources.Limits[v1.ResourceMemory]; hasLimit {
+		if memRequest, hasRequest := a.Resources.Requests[v1.ResourceMemory]; hasRequest {
+			if memRequest.Cmp(memLimit) > 0 {
+				return fmt.Errorf("Memory request (%s) exceeds Memory limit (%s)", memRequest.String(), memLimit.String())
+			}
+		}
+	}
+
+	return nil
 }
 
 type AlertmanagerConfigMatcherStrategy struct {

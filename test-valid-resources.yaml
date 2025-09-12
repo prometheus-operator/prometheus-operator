@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: test-valid-resources
+  namespace: default
+spec:
+  version: v2.45.0
+  replicas: 1
+  serviceAccountName: prometheus
+  resources:
+    requests:
+      cpu: "500m"      # 0.5 cores requested
+      memory: "2Gi"    # 2GB requested
+    limits:
+      cpu: "1000m"     # 1 core limit - VALID (greater than request)
+      memory: "4Gi"    # 4GB limit - VALID (greater than request)

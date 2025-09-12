@@ -5731,6 +5731,11 @@ spec:
                       More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: "CPU requests must not exceed CPU limits"
+                  rule: "!has(self.requests) || !has(self.limits) || !has(self.requests.cpu) || !has(self.limits.cpu) || quantity(self.requests.cpu).isLessThanOrEqual(quantity(self.limits.cpu))"
+                - message: "Memory requests must not exceed memory limits"
+                  rule: "!has(self.requests) || !has(self.limits) || !has(self.requests.memory) || !has(self.limits.memory) || quantity(self.requests.memory).isLessThanOrEqual(quantity(self.limits.memory))"
               retention:
                 default: 24h
                 description: |-

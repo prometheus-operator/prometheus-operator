@@ -1,0 +1,349 @@
+apiVersion: v1
+data:
+  application.yaml: |-
+    management:
+      metrics:
+        export:
+          statsd:
+            host: localhost
+            port: 8125
+            protocol: tcp
+    activity-pipeline:
+      scoped-deployment:
+        enabled: true
+        cached: true
+      tenant-configuration:
+        cached: true
+      subnet-rules:
+        cached: true
+      location-rules-cache:
+        enabled: true
+      tg-rejector:
+        regex: .*
+      actor-writing:
+        enabled: true
+      standardization:
+        enabled: true
+     cache:
+        configs:
+          scoped-deployment:
+            ttl: PT1H
+            maxSize: 10000
+            scheduler: caches
+            refresh:
+              enabled: true
+              refreshAfterWrite: PT45M
+            preload:
+              enabled: true
+          tenant-configuration:
+            ttl: PT1H
+            maxSize: 60000
+            scheduler: caches
+            refresh:
+              enabled: true
+              refreshAfterWrite: PT45M
+            preload:
+              enabled: true
+          subnet-rules:
+            ttl: PT1H
+            maxSize: 7000
+            scheduler: caches
+            refresh:
+              enabled: true
+              refreshAfterWrite: PT45M
+            preload:
+              enabled: true
+        tenant-lookup:
+          size: 1000
+          ttl: PT1H
+        entities:
+          size: 50000
+          ttl: PT5M
+        user-agent:
+          size: 100000
+      entities:
+        type: service
+        service:
+          useTokenCache: true
+          refreshInterval: PT1M
+          maxConnections: 30
+          poolAcquirePendingLimit: 2500
+          entitiesUrl: https://gccm-core-usm-usmv-entapv2.aa.mda.securitycenter.microsoft.us/api/tp/entitiesapv2/
+      geo-provider-cache:
+        enabled: true
+        ttl: PT5M
+        size: 100000
+      source: apv2
+      interflow:
+        cache:
+          ttl: PT15M
+          size: 1000
+        provider:
+          client-url: https://gov-o-geo-main.usgovtrafficmanager.net
+          key-vault-name: https://adallom-certs-gccm1.vault.usgovcloudapi.net
+      dedup-temp:
+        enabled: false
+        cosmos-account-temp: dedupepic
+    kepi:
+      health-indicator:
+        subscriber: true
+        checkpoint: true
+      batching:
+        enabled: true
+        scheduler: batching
+        timeout-in-ms: 500
+        max-batch-size: 100
+      cosmossql:
+        enabled: true
+        accounts:
+          dedupapv2:
+            fully-qualified-endpoint: https://tp-gccm-usmv-acdb-activityreplicator-dedup.documents.azure.us:443/
+            database-name: Dedup
+            credentials: default
+      mongo:
+        enabled: true
+        clients:
+          appName: apv2
+          list:
+          - id: data
+            secretName: dataMongo
+            isSecondaryPreferred: true
+            maxConnectionPoolSize: 2
+          - id: entities
+            secretName: entitiesMongo
+            isSecondaryPreferred: true
+            maxConnectionPoolSize: 2
+          - id: mgmt
+            secretName: mgmtMongo
+            isSecondaryPreferred: true
+            maxConnectionPoolSize: 1
+            maxConnectionIdleTimeMinutes: 5
+        templates:
+          list:
+          - id: AllTenants
+            databaseName: AllTenants
+            clientId: data
+          - id: Entities
+            databaseName: AllTenants
+            clientId: entities
+          - id: cpanel
+            databaseName: cpanel
+            clientId: mgmt
+          - id: data-kb
+            databaseName: kb
+            clientId: data
+          - id: mgmt-kb
+            databaseName: kb
+            clientId: mgmt
+          - id: AlertsEngine
+            databaseName: alerts_engine
+            clientId: data
+      appconfiguration:
+        cache:
+          ttl: PT15M
+          size: 1000
+      azure-table:
+        event-hub:
+          storageConnectionStringPath: /vault-folder/adallomcertsglobal/EventHubsManagementStore
+          consumerEncryptionKeySecretPath: /vault-folder/ehconsumerenc/EventHubEncryptionConsumer
+          producerEncryptionKeySecretPath: /vault-folder/ehproducerenc/EventHubEncryptionProducer
+          clusterId: gccm-1
+        path: /vault-folder/primary/acdb-activitypipelinestore-usmv-rw
+        tableName: checkpoints
+      dispatchStrategy:
+        transform: splitMax
+        compressor: snappy
+        scheduler: publishers
+      schedulers:
+        list:
+        - name: processor
+          corePoolSize: 16
+          maximumPoolSize: 16
+          keepAliveTime: 0
+        - name: publishers
+          corePoolSize: 16
+          maximumPoolSize: 16
+          keepAliveTime: 0
+        - name: subscriber
+          corePoolSize: 16
+          maximumPoolSize: 16
+          keepAliveTime: 0
+        - name: batching
+          corePoolSize: 16
+          maximumPoolSize: 16
+          keepAliveTime: 0
+        - name: dispatch
+          corePoolSize: 16
+          maximumPoolSize: 16
+          keepAliveTime: 0
+        - name: caches
+          corePoolSize: 16
+          maximumPoolSize: 16
+          keepAliveTime: 0
+          scheduledExecutor: true
+      metrics:
+        namespace: activitypipeline
+        tags:
+          inputGroup: lgdl
+        dc: gccm-1
+      pipeline:
+        enricher: activity
+        checkpoint-store:
+          type: azure-table
+        state-manager:
+          name: multiEventHub
+        subscriber:
+          name: batch
+          type: batch-subscriber
+          scheduler: subscriber
+          batch-params:
+            messagesToHandle: 50
+            innerBatchMessagesParallelism: 16
+        consume:
+          builder: event-hub-msi
+          type: event-hub
+          consumerGroup: $Default
+          unwrap-type: event-hub
+          unwrap-params:
+            enabled: true
+          startFromEarliest: true
+          partition:
+            type: hostname
+          eventHubName: eventhub
+          eventHubNamespace: tp-gccm-usmv-eh-apv2-lg-dl-0.servicebus.usgovcloudapi.net
+        strategy: default
+        error-handling-strategy:
+          type: arbitrator
+          rejector:
+            monitor: fullVerbose
+          failure:
+            type: retryDispatch
+            error-handling-dispatcher: dldispatcher
+      cache:
+        size: 400000
+      dedup:
+        enabled: true
+        cosmos-account: dedupapv2
+        max-transaction-time: PT10S
+      decode:
+        runner: default
+        decoder: activities
+      processors:
+        scheduler: processor
+        runner: sequential
+        list:
+        - name: disabled-tenant-rejector
+        - name: event-time-rejector
+        - name: event-timestamp-rejector
+        - name: future-enrichment-rejector
+        - name: invalid-appid-rejector
+        - name: invalid-event-type-rejector
+        - name: tg-rejector
+        - name: dedup-rejector
+        - name: blocked-rejector
+        - name: apv2-flag
+        - name: event-uid
+        - name: event-uid-rejector
+        - name: aad-tenant
+        - name: unresolved-entities
+        - name: invalid-user
+        - name: user-field
+        - name: org-unit
+        - name: impersonate-event
+        - name: activity-standardization
+        - name: user-identifiers
+        - name: entity-event
+        - name: actor-writer
+        - name: user-tags
+        - name: resolved-actors
+        - name: backport-entity
+        - name: scoped-deployment-rejector
+        - name: obfuscation
+        - name: admin-tag
+        - name: device-event
+        - name: user-agent
+        - name: ip
+        - name: location
+        - name: interflow-risky-ip
+        - name: event-objects-domain
+        - name: created-field
+        - name: big-event-rejector
+      publishers:
+        scheduler: publishers
+        runner: sequential
+        number-to-parallel: 1
+        list:
+        - name: replicator
+          configuration:
+            dispatcherName: consolidatedreplicator
+      security:
+        tokens:
+          geo-token:
+            scopes:
+            - https://tp-gccm-usmv-entra-geo.USGovCloud.onmicrosoft.com/.default
+      secrets:
+        list:
+        - name: dataMongo
+          path: /vault-folder/adallomdbset/dbset-1-mongodb
+          base64: true
+        - name: entitiesMongo
+          path: /vault-folder/adallomdbset/DBset-1-entitiesMongodb
+          base64: true
+        - name: geoclient
+          path: /vault-folder/adallomsecrets/Geo-Client
+          base64: false
+        - name: mgmtMongo
+          path: /vault-folder/adallomdbset/DBset-1-mgmtMongodb
+          base64: true
+      dispatchers:
+        list:
+        - name: dldispatcher
+          type: direct-eventhub
+          scheduler: dispatch
+          dispatchConfigurations:
+            eventhub-namespace: tp-gccm-usmv-eh-apv2-lg-dl-0-alias.servicebus.usgovcloudapi.net
+            eventhub: eventhub
+        - name: consolidatedreplicator
+          type: batching-eventhub
+          scheduler: dispatch
+          dispatchConfigurations:
+            eventhub-namespace: tp-gccm-usmv-eh-activityreplicator-0-alias.servicebus.usgovcloudapi.net
+            eventhub: eventhub
+            parallelism: 1
+    spring:
+      application:
+        name: activitypipeline
+      cloud:
+        discovery:
+          enabled: false
+        service-registry:
+          auto-registration:
+            enabled: false
+    geo-reactive:
+      client:
+        serviceUrl: https://gccm-core-usm-usmv-geo.aa.mda.securitycenter.microsoft.us/api/tp/geo/
+        token: geo-token
+        maxConnections: 30
+  bootstrap.properties: spring.cloud.azure.appconfiguration.stores[0].endpoint=https://tp-gccm-usmv-appconfig-activitypipeline.azconfig.azure.us
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: activity-pipeline-apv2lgdl-0
+    meta.helm.sh/release-namespace: threat-protection
+  creationTimestamp: "2024-11-17T12:17:48Z"
+  labels:
+    ADOOrganizationName: msazure
+    ADOProjectName: MCAS
+    ADORepositoryName: core-main
+    BuildID: "20250824.1"
+    BuildName: ThreatProtection.APv2.Official
+    app.kubernetes.io/component: activitypipeline
+    app.kubernetes.io/instance: activity-pipeline-apv2lgdl-0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: apv2lgdl-0
+    helm.sh/chart: wdatp-service-5.220.0
+    kubernetes.azure.com/managedby: 2fa7ba65-93e0-46c6-98b0-1df0c4e8a74d
+  name: apv2lgdl-0
+  namespace: threat-protection
+  resourceVersion: "3480848224"
+  uid: 158faef5-f37a-4682-8a51-97ea9a09bb06

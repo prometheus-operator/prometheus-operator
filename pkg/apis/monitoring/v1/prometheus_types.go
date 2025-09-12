@@ -941,6 +941,33 @@ type CommonPrometheusFields struct {
 	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
+// ValidateResources validates that resource requests don't exceed limits
+func (c *CommonPrometheusFields) ValidateResources() error {
+	if c.Resources.Limits == nil || c.Resources.Requests == nil {
+		return nil
+	}
+
+	// Validate CPU
+	if cpuLimit, hasLimit := c.Resources.Limits[v1.ResourceCPU]; hasLimit {
+		if cpuRequest, hasRequest := c.Resources.Requests[v1.ResourceCPU]; hasRequest {
+			if cpuRequest.Cmp(cpuLimit) > 0 {
+				return fmt.Errorf("CPU request (%s) exceeds CPU limit (%s)", cpuRequest.String(), cpuLimit.String())
+			}
+		}
+	}
+
+	// Validate Memory
+	if memLimit, hasLimit := c.Resources.Limits[v1.ResourceMemory]; hasLimit {
+		if memRequest, hasRequest := c.Resources.Requests[v1.ResourceMemory]; hasRequest {
+			if memRequest.Cmp(memLimit) > 0 {
+				return fmt.Errorf("Memory request (%s) exceeds Memory limit (%s)", memRequest.String(), memLimit.String())
+			}
+		}
+	}
+
+	return nil
+}
+
 // Specifies the validation scheme for metric and label names.
 //
 // Supported values are:

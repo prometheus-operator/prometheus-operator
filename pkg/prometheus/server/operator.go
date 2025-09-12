@@ -824,6 +824,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	// Validate resource requirements
+	if err := p.Spec.CommonPrometheusFields.ValidateResources(); err != nil {
+		return fmt.Errorf("invalid resource configuration: %w", err)
+	}
+
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
 		return nil

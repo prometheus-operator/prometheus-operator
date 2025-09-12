@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -502,6 +504,28 @@ type ThanosRulerSpec struct {
 	//
 	// +optional
 	HostUsers *bool `json:"hostUsers,omitempty"`
+}
+
+// ValidateResources validates that resource limits are not smaller than requests
+func (spec *ThanosRulerSpec) ValidateResources() error {
+	if spec.Resources.Limits != nil && spec.Resources.Requests != nil {
+		if cpuLimit := spec.Resources.Limits.Cpu(); cpuLimit != nil {
+			if cpuRequest := spec.Resources.Requests.Cpu(); cpuRequest != nil {
+				if cpuLimit.Cmp(*cpuRequest) < 0 {
+					return fmt.Errorf("CPU limit (%s) is smaller than request (%s)", cpuLimit.String(), cpuRequest.String())
+				}
+			}
+		}
+
+		if memLimit := spec.Resources.Limits.Memory(); memLimit != nil {
+			if memRequest := spec.Resources.Requests.Memory(); memRequest != nil {
+				if memLimit.Cmp(*memRequest) < 0 {
+					return fmt.Errorf("memory limit (%s) is smaller than request (%s)", memLimit.String(), memRequest.String())
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.

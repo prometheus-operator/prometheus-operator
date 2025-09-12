@@ -606,6 +606,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	// Validate resource requirements
+	if err := am.Spec.ValidateResources(); err != nil {
+		return fmt.Errorf("invalid resource configuration: %w", err)
+	}
+
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {

@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: test-invalid-resources
+  namespace: default
+spec:
+  version: v2.45.0
+  replicas: 1
+  serviceAccountName: prometheus
+  resources:
+    requests:
+      cpu: "2000m"     # 2 cores requested
+      memory: "4Gi"    # 4GB requested
+    limits:
+      cpu: "1000m"     # Only 1 core limit - INVALID (less than request)
+      memory: "2Gi"    # Only 2GB limit - INVALID (less than request)
