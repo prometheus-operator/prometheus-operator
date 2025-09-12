@@ -415,7 +415,7 @@ const (
 	// is in the same namespace as the Alertmanager object, where it will process all alerts.
 	OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespaceExceptForAlertmanagerNamespace"
 
-	// With `None`, the route and inhbition rules of an AlertmanagerConfig
+	// With `None`, the route and inhibition rules of an AlertmanagerConfig
 	// object process all incoming alerts.
 	NoneConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "None"
 )

@@ -31780,7 +31780,7 @@ string
 </em>
 </td>
 <td>
-<p>name defiens the name of the receiver. Must be unique across all items from the list.</p>
+<p>name defines the name of the receiver. Must be unique across all items from the list.</p>
 </td>
 </tr>
 <tr>
@@ -37352,7 +37352,7 @@ string
 </em>
 </td>
 <td>
-<p>name defiens the name of the receiver. Must be unique across all items from the list.</p>
+<p>name defines the name of the receiver. Must be unique across all items from the list.</p>
 </td>
 </tr>
 <tr>
