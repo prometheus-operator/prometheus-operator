@@ -193,6 +193,7 @@ func WithDaemonSetMode() ReloaderOption {
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	configReloader := ConfigReloader{name: name}
+	portName := "reloader-web"
 
 	for _, option := range options {
 		option(&configReloader)
@@ -221,6 +222,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	}
 
 	if configReloader.initContainer {
+		portName = "reloader-web-init"
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
 	}
 
@@ -231,18 +233,21 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		// Use distinct ports for the init and "regular" containers to avoid
 		// warnings from the k8s client.
 		if configReloader.initContainer {
+			portName = "reloader-web-init"
 			port = initConfigReloaderPort
 		}
 
 		args = append(args, fmt.Sprintf("--listen-address=:%d", port))
+
 		ports = append(
 			ports,
 			v1.ContainerPort{
-				Name:          "reloader-web",
+				Name:          portName,
 				ContainerPort: int32(port),
 				Protocol:      v1.ProtocolTCP,
 			},
 		)
+
 	}
 
 	if len(configReloader.webConfigFile) > 0 {
