@@ -5696,7 +5696,7 @@ rules.</p>
 </tr>
 </thead>
 <tbody><tr><td><p>&#34;None&#34;</p></td>
-<td><p>With <code>None</code>, the route and inhbition rules of an AlertmanagerConfig
+<td><p>With <code>None</code>, the route and inhibition rules of an AlertmanagerConfig
 object process all incoming alerts.</p>
 </td>
 </tr><tr><td><p>&#34;OnNamespace&#34;</p></td>
