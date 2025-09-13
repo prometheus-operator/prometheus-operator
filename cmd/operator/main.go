@@ -601,7 +601,7 @@ func run(fs *flag.FlagSet) int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), kclient)
+	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)

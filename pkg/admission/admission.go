@@ -26,7 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 
@@ -80,20 +79,18 @@ var (
 // 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Promethues
 // 2. monitoringv1alpha1.AlertmanagerConfig (validation) - ensuring.
 type Admission struct {
-	logger  *slog.Logger
-	wh      http.Handler
-	kclient kubernetes.Interface
+	logger *slog.Logger
+	wh     http.Handler
 }
 
-func New(logger *slog.Logger, kclient kubernetes.Interface) *Admission {
+func New(logger *slog.Logger) *Admission {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(monitoringv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(monitoringv1beta1.AddToScheme(scheme))
 
 	return &Admission{
-		logger:  logger,
-		wh:      conversion.NewWebhookHandler(scheme),
-		kclient: kclient,
+		logger: logger,
+		wh:     conversion.NewWebhookHandler(scheme),
 	}
 }
 
