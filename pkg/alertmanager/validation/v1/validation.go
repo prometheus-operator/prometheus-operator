@@ -15,6 +15,7 @@
 package v1beta1
 
 import (
+	"fmt"
 	"regexp"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -27,9 +28,21 @@ var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9
 // In particular, it verifies things that can't be modelized with the OpenAPI
 // specification such as routes should refer to an existing receiver.
 func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
+	// Validate Global Config
+	if err := validateGlobalConfig(*am.Spec.AlertmanagerConfiguration.Global); err != nil {
+		return err
+	}
+
 	return validateConfigSecret(am.Spec.ConfigSecret)
 }
 
-func validateConfigSecret(cs string) (map[string]struct{}, error) {
-	var err error
+func validateConfigSecret(cs string) error {
+	return nil
+}
+
+func validateGlobalConfig(gc monitoringv1.AlertmanagerGlobalConfig) error {
+	if err := gc.HTTPConfig.Validate(); err != nil {
+		return fmt.Errorf("failed to validate global 'httpConfig'")
+	}
+	return nil
 }
