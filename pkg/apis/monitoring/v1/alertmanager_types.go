@@ -614,6 +614,15 @@ type GlobalSMTPConfig struct {
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
+func (c *GlobalSMTPConfig) Validate() error {
+
+	if err := c.TLSConfig.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GlobalTelegramConfig configures global Telegram parameters.
 type GlobalTelegramConfig struct {
 	// apiURL defines he default Telegram API URL.
