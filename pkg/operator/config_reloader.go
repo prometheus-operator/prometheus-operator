@@ -233,7 +233,6 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		// Use distinct ports for the init and "regular" containers to avoid
 		// warnings from the k8s client.
 		if configReloader.initContainer {
-			portName = "reloader-web-init"
 			port = initConfigReloaderPort
 		}
 
