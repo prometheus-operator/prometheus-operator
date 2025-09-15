@@ -16,12 +16,9 @@ package v1
 
 import (
 	"fmt"
-	"regexp"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
-
-var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
