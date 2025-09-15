@@ -18359,6 +18359,18 @@ string
 <p>roleArn defines the named AWS profile used to authenticate.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>useFipsSTSEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UseFIPSSTSEndpoint enables FIPS mode for AWS STS endpoint.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.StorageSpec">StorageSpec
