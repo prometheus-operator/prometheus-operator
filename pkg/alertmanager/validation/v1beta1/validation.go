@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/prometheus/alertmanager/pkg/labels"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
@@ -411,6 +413,21 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 		}
 	}
 
+	// Validate matchers, so they don't end up crashing the main instance: https://github.com/prometheus/alertmanager/blob/v0.26.0/config/coordinator.go#L124.
+	if len(r.Matchers) > 0 {
+		for _, matcher := range r.Matchers {
+			if matcher.MatchType == "" {
+				matcher.MatchType = monitoringv1beta1.MatchType(labels.MatchEqual.String())
+				// v1beta1.Matcher has no explicit Regex field, unlike v1alpha1.
+			}
+			_, err := labels.ParseMatcher(matcher.String())
+			if err != nil {
+				return fmt.Errorf("invalid matcher %q: %w", matcher, err)
+			}
+		}
+	}
+
+	// validate that if defaults are set, they match regex
 	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
 		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
 
