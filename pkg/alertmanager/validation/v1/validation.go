@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
@@ -41,16 +40,6 @@ func validateGlobalConfig(gc monitoringv1.AlertmanagerGlobalConfig) error {
 
 	if err := gc.HTTPConfig.Validate(); err != nil {
 		return fmt.Errorf("failed to validate global 'httpConfig'")
-	}
-
-	if err := gc.SMTPConfig.Validate(); err != nil {
-		return fmt.Errorf("failed to validate global 'smtpConfig'")
-	}
-
-	if gc.PagerdutyURL != nil {
-		if _, err := validation.ValidateURL(*gc.PagerdutyURL); err != nil {
-			return fmt.Errorf("failed to validate global 'pagerdutyURL'")
-		}
 	}
 
 	return nil
