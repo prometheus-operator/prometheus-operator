@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -62,6 +63,7 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	dclient  dynamic.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
@@ -151,6 +153,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
@@ -166,6 +173,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o := &Operator{
 		kclient:  client,
+		dclient:  dclient,
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
@@ -1047,9 +1055,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return nil
 	}
 
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
-	for key, sm := range resources.sMons {
-		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
+	configResourceSyncer := prompkg.NewConfigResourceSyncer(p, c.dclient)
+	for key, configResource := range resources.sMons {
+		smon := configResource.Resource()
+		conditions := configResource.Conditions(smon.Generation)
+		if err := configResourceSyncer.UpdateBinding(ctx, smon, smon.Status.Bindings, conditions); err != nil {
 			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
 		}
 	}
@@ -1068,13 +1078,21 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			return
 		}
 
-		_, ok = resources.sMons[k]
-		if ok {
+		if _, ok = resources.sMons[k]; ok {
 			return
 		}
 
-		s := obj.(*monitoringv1.ServiceMonitor)
-		if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
+		s, ok := obj.(*monitoringv1.ServiceMonitor)
+		if !ok {
+			return
+		}
+
+		if err := k8sutil.AddTypeInformationToObject(s); err != nil {
+			getErr = fmt.Errorf("failed to add type information to ServiceMonitor %s: %w", k, err)
+			return
+		}
+
+		if err := configResourceSyncer.RemoveBinding(ctx, s, s.Status.Bindings); err != nil {
 			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
 		}
 	}); err != nil {
@@ -1088,20 +1106,32 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	if !c.configResourcesStatusEnabled {
 		return nil
 	}
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 
-	var getErr error
+	var (
+		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
+		getErr               error
+	)
 	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
 		if getErr != nil {
 			// Skip all subsequent updates after the first error.
 			return
 		}
 
-		s := obj.(*monitoringv1.ServiceMonitor)
-		getErr = prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s)
+		s, ok := obj.(*monitoringv1.ServiceMonitor)
+		if !ok {
+			return
+		}
+
+		if err := k8sutil.AddTypeInformationToObject(s); err != nil {
+			getErr = fmt.Errorf("failed to add type information to ServiceMonitor: %w", err)
+			return
+		}
+
+		getErr = configResourceSyncer.RemoveBinding(ctx, s, s.Status.Bindings)
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
+
 	return getErr
 }
 

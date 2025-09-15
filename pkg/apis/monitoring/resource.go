@@ -22,8 +22,14 @@ const (
 	PrometheusesKind = "Prometheus"
 	PrometheusName   = "prometheuses"
 
+	PrometheusAgentsKind = "PrometheusAgent"
+	PrometheusAgentName  = "prometheusagents"
+
 	AlertmanagersKind = "Alertmanager"
 	AlertmanagerName  = "alertmanagers"
+
+	AlertmanagerConfigsKind = "AlertmanagerConfig"
+	AlertmanagerConfigName  = "alertmanagerconfigs"
 
 	ServiceMonitorsKind = "ServiceMonitor"
 	ServiceMonitorName  = "servicemonitors"
@@ -39,22 +45,51 @@ const (
 
 	ScrapeConfigsKind = "ScrapeConfig"
 	ScrapeConfigName  = "scrapeconfigs"
+
+	ThanosRulersKind = "ThanosRuler"
+	ThanosRulerName  = "thanosrulers"
 )
 
 var resourceToKindMap = map[string]string{
-	PrometheusName:     PrometheusesKind,
-	AlertmanagerName:   AlertmanagersKind,
-	ServiceMonitorName: ServiceMonitorsKind,
-	PodMonitorName:     PodMonitorsKind,
-	PrometheusRuleName: PrometheusRuleKind,
-	ProbeName:          ProbesKind,
-	ScrapeConfigName:   ScrapeConfigsKind,
+	PrometheusName:         PrometheusesKind,
+	PrometheusAgentName:    PrometheusAgentsKind,
+	AlertmanagerName:       AlertmanagersKind,
+	AlertmanagerConfigName: AlertmanagerConfigsKind,
+	ServiceMonitorName:     ServiceMonitorsKind,
+	PodMonitorName:         PodMonitorsKind,
+	PrometheusRuleName:     PrometheusRuleKind,
+	ProbeName:              ProbesKind,
+	ScrapeConfigName:       ScrapeConfigsKind,
+	ThanosRulerName:        ThanosRulersKind,
 }
 
-func ResourceToKind(s string) string {
-	kind, found := resourceToKindMap[s]
+var kindToResource = map[string]string{
+	PrometheusesKind:        PrometheusName,
+	PrometheusAgentsKind:    PrometheusAgentName,
+	AlertmanagersKind:       AlertmanagerName,
+	AlertmanagerConfigsKind: AlertmanagerConfigName,
+	ServiceMonitorsKind:     ServiceMonitorName,
+	PodMonitorsKind:         PodMonitorName,
+	PrometheusRuleKind:      PrometheusRuleName,
+	ProbesKind:              ProbeName,
+	ScrapeConfigsKind:       ScrapeConfigName,
+	ThanosRulersKind:        ThanosRulerName,
+}
+
+// KindToResource returns the resource name corresponding to the given kind.
+func KindToResource(k string) string {
+	kind, found := kindToResource[k]
 	if !found {
-		panic(fmt.Sprintf("failed to map resource %q to a kind", s))
+		panic(fmt.Sprintf("failed to map kind %q to a resource name", k))
+	}
+	return kind
+}
+
+// ResourceToKind returns the kind corresponding to the given resource name.
+func ResourceToKind(r string) string {
+	kind, found := resourceToKindMap[r]
+	if !found {
+		panic(fmt.Sprintf("failed to map resource %q to a kind", r))
 	}
 	return kind
 }
