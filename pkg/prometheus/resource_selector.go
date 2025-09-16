@@ -80,7 +80,12 @@ type TypedConfigurationResource[T ConfigurationResource] struct {
 	reason   string // Reason for rejection; empty if accepted.
 }
 
-func (r *TypedConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+func (r *TypedConfigurationResource[T]) Resource() T {
+	return r.resource
+}
+
+// Conditions returns a list of conditions based on the validation status of the configuration resource.
+func (r *TypedConfigurationResource[T]) Conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
 	condition := monitoringv1.ConfigResourceCondition{
 		Type:               monitoringv1.Accepted,
 		Status:             monitoringv1.ConditionTrue,
