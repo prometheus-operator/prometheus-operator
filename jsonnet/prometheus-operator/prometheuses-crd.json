@@ -4951,7 +4951,7 @@
                     "type": "object"
                   },
                   "overrideHonorLabels": {
-                    "description": "overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data\n to “exported_” for all targets created from ServiceMonitor, PodMonitor and\nScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.\nIn practice,`overrideHonorLaels:true` enforces `honorLabels:false`\nfor all ServiceMonitor, PodMonitor and ScrapeConfig objects.",
+                    "description": "overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data\n to “exported_” for all targets created from ServiceMonitor, PodMonitor and\nScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.\nIn practice,`OverrideHonorLabels:true` enforces `honorLabels:false`\nfor all ServiceMonitor, PodMonitor and ScrapeConfig objects.",
                     "type": "boolean"
                   },
                   "overrideHonorTimestamps": {
@@ -5223,7 +5223,7 @@
                     "type": "array"
                   },
                   "query": {
-                    "description": "query defines the configuration of the Promethus query service.",
+                    "description": "query defines the configuration of the Prometheus query service.",
                     "properties": {
                       "lookbackDelta": {
                         "description": "lookbackDelta defines the delta difference allowed for retrieving metrics during expression evaluations.",

@@ -127,7 +127,7 @@ If you want to run Prometheus Operator on your local environment, you can follow
 ./scripts/run-external.sh -c
 ```
 
-3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+3. You should now be able to see the logs from the operator in your terminal. The Operator is successfully running in your local system and can be debugged, checked for behaviour etc.
 
 Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
 

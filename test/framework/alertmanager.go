@@ -491,7 +491,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		alerts := models.GettableAlerts{}
 
-		resp, err := f.AlertmangerSVCGetRequest(ctx, ns, svcName, "/api/v2/alerts", map[string]string{
+		resp, err := f.AlertmanagerSVCGetRequest(ctx, ns, svcName, "/api/v2/alerts", map[string]string{
 			"state":  "active",
 			"filter": "alertname=" + alertName,
 		})
@@ -523,7 +523,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 	return nil
 }
 
-func (f *Framework) AlertmangerSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+func (f *Framework) AlertmanagerSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
 	return request.DoRaw(ctx)

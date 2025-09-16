@@ -292,7 +292,7 @@ func testTRMinReadySeconds(t *testing.T) {
 	require.Equal(t, int32(10), trSS.Spec.MinReadySeconds)
 }
 
-// Tests Thanos ruler -> Alertmanger path
+// Tests Thanos ruler -> Alertmanager path
 // This is done by creating a firing rule that will be picked up by
 // Thanos Ruler which will send it to Alertmanager, finally we will
 // use the Alertmanager API to validate that the alert is there.
@@ -326,7 +326,7 @@ func testTRAlertmanagerConfig(t *testing.T) {
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
 	require.NoError(t, err)
 
-	// Create Secret with Alermanager config,
+	// Create Secret with Alertmanager config,
 	trAmConfigSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,

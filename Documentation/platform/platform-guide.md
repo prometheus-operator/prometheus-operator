@@ -157,7 +157,7 @@ node's IP address on port `30903`.
 The Alertmanager cluster is now fully functional and highly available, but no
 alerts are fired against it.
 
-First, create a Prometheus instance that will send alerts to the Alertmanger cluster:
+First, create a Prometheus instance that will send alerts to the Alertmanager cluster:
 
 ```
 apiVersion: monitoring.coreos.com/v1
