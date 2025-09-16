@@ -112,7 +112,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		}
 
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - reciever %s: %w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
 
 	}
