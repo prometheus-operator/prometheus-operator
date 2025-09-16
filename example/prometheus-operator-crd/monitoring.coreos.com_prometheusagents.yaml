@@ -11161,6 +11161,79 @@ spec:
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.scrapeConfigSelector))'
             - message: probeSelector cannot be set when mode is DaemonSet
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.probeSelector))'
+            - message: serviceMonitorSelector label names must not exceed 63 characters
+              rule: '!has(self.serviceMonitorSelector) || !has(self.serviceMonitorSelector.matchLabels)
+                || self.serviceMonitorSelector.matchLabels.all(label, size(label)
+                <= 63)'
+            - message: serviceMonitorSelector matchExpressions key names must not
+                exceed 63 characters
+              rule: '!has(self.serviceMonitorSelector) || !has(self.serviceMonitorSelector.matchExpressions)
+                || self.serviceMonitorSelector.matchExpressions.all(expr, size(expr.key)
+                <= 63)'
+            - message: serviceMonitorNamespaceSelector label names must not exceed
+                63 characters
+              rule: '!has(self.serviceMonitorNamespaceSelector) || !has(self.serviceMonitorNamespaceSelector.matchLabels)
+                || self.serviceMonitorNamespaceSelector.matchLabels.all(label, size(label)
+                <= 63)'
+            - message: serviceMonitorNamespaceSelector matchExpressions key names
+                must not exceed 63 characters
+              rule: '!has(self.serviceMonitorNamespaceSelector) || !has(self.serviceMonitorNamespaceSelector.matchExpressions)
+                || self.serviceMonitorNamespaceSelector.matchExpressions.all(expr,
+                size(expr.key) <= 63)'
+            - message: podMonitorSelector label names must not exceed 63 characters
+              rule: '!has(self.podMonitorSelector) || !has(self.podMonitorSelector.matchLabels)
+                || self.podMonitorSelector.matchLabels.all(label, size(label) <= 63)'
+            - message: podMonitorSelector matchExpressions key names must not exceed
+                63 characters
+              rule: '!has(self.podMonitorSelector) || !has(self.podMonitorSelector.matchExpressions)
+                || self.podMonitorSelector.matchExpressions.all(expr, size(expr.key)
+                <= 63)'
+            - message: podMonitorNamespaceSelector label names must not exceed 63
+                characters
+              rule: '!has(self.podMonitorNamespaceSelector) || !has(self.podMonitorNamespaceSelector.matchLabels)
+                || self.podMonitorNamespaceSelector.matchLabels.all(label, size(label)
+                <= 63)'
+            - message: podMonitorNamespaceSelector matchExpressions key names must
+                not exceed 63 characters
+              rule: '!has(self.podMonitorNamespaceSelector) || !has(self.podMonitorNamespaceSelector.matchExpressions)
+                || self.podMonitorNamespaceSelector.matchExpressions.all(expr, size(expr.key)
+                <= 63)'
+            - message: probeSelector label names must not exceed 63 characters
+              rule: '!has(self.probeSelector) || !has(self.probeSelector.matchLabels)
+                || self.probeSelector.matchLabels.all(label, size(label) <= 63)'
+            - message: probeSelector matchExpressions key names must not exceed 63
+                characters
+              rule: '!has(self.probeSelector) || !has(self.probeSelector.matchExpressions)
+                || self.probeSelector.matchExpressions.all(expr, size(expr.key) <=
+                63)'
+            - message: probeNamespaceSelector label names must not exceed 63 characters
+              rule: '!has(self.probeNamespaceSelector) || !has(self.probeNamespaceSelector.matchLabels)
+                || self.probeNamespaceSelector.matchLabels.all(label, size(label)
+                <= 63)'
+            - message: probeNamespaceSelector matchExpressions key names must not
+                exceed 63 characters
+              rule: '!has(self.probeNamespaceSelector) || !has(self.probeNamespaceSelector.matchExpressions)
+                || self.probeNamespaceSelector.matchExpressions.all(expr, size(expr.key)
+                <= 63)'
+            - message: scrapeConfigSelector label names must not exceed 63 characters
+              rule: '!has(self.scrapeConfigSelector) || !has(self.scrapeConfigSelector.matchLabels)
+                || self.scrapeConfigSelector.matchLabels.all(label, size(label) <=
+                63)'
+            - message: scrapeConfigSelector matchExpressions key names must not exceed
+                63 characters
+              rule: '!has(self.scrapeConfigSelector) || !has(self.scrapeConfigSelector.matchExpressions)
+                || self.scrapeConfigSelector.matchExpressions.all(expr, size(expr.key)
+                <= 63)'
+            - message: scrapeConfigNamespaceSelector label names must not exceed 63
+                characters
+              rule: '!has(self.scrapeConfigNamespaceSelector) || !has(self.scrapeConfigNamespaceSelector.matchLabels)
+                || self.scrapeConfigNamespaceSelector.matchLabels.all(label, size(label)
+                <= 63)'
+            - message: scrapeConfigNamespaceSelector matchExpressions key names must
+                not exceed 63 characters
+              rule: '!has(self.scrapeConfigNamespaceSelector) || !has(self.scrapeConfigNamespaceSelector.matchExpressions)
+                || self.scrapeConfigNamespaceSelector.matchExpressions.all(expr, size(expr.key)
+                <= 63)'
           status:
             description: |-
               status defines the most recent observed status of the Prometheus cluster. Read-only.

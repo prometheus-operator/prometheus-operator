@@ -4842,6 +4842,187 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "serviceMonitorSelector-long-label-name-matchLabels",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// This label name is 80 characters (exceeds 63 limit)
+							"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy": "value",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "serviceMonitorSelector-long-label-name-matchExpressions",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								// This key name is 80 characters (exceeds 63 limit)
+								Key:      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"value1", "value2"},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "podMonitorSelector-long-label-name-matchLabels",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					PodMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// This label name is 80 characters (exceeds 63 limit)
+							"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy": "value",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "probeSelector-long-label-name-matchLabels",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// This label name is 80 characters (exceeds 63 limit)
+							"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy": "value",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "scrapeConfigSelector-long-label-name-matchLabels",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ScrapeConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// This label name is 80 characters (exceeds 63 limit)
+							"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy": "value",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "serviceMonitorNamespaceSelector-long-label-name",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorNamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// This label name is 80 characters (exceeds 63 limit)
+							"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy": "value",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-label-names-all-selectors",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							// This label name is exactly 63 characters
+							"valid-label-name-that-is-exactly-sixty-three-characters-long": "value",
+						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								// This key name is exactly 63 characters
+								Key:      "valid-expr-key-that-is-exactly-sixty-three-characters-long",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"value1"},
+							},
+						},
+					},
+					PodMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "test",
+						},
+					},
+					ProbeSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"env": "prod",
+						},
+					},
+					ScrapeConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"component": "metrics",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
 	}
 
 	for _, test := range tests {
