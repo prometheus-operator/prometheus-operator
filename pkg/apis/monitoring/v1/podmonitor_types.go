@@ -49,7 +49,7 @@ type PodMonitor struct {
 	// spec defines the specification of desired Pod selection for target discovery by Prometheus.
 	// +required
 	Spec PodMonitorSpec `json:"spec"`
-	// status defines the status subresource is under active development and is updated only when the
+	// status defines the status subresource. It is under active development and is updated only when the
 	// "StatusForConfigurationResources" feature gate is enabled.
 	//
 	// Most recent observed status of the PodMonitor. Read-only.

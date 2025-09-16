@@ -1373,7 +1373,7 @@ ConfigResourceStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>status defines the status subresource is under active development and is updated only when the
+<p>status defines the status subresource. It is under active development and is updated only when the
 &ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
 <p>Most recent observed status of the PodMonitor. Read-only.
 More info:
@@ -4375,7 +4375,7 @@ ConfigResourceStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>status defines the status subresource is under active development and is updated only when the
+<p>status defines the status subresource. It is under active development and is updated only when the
 &ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
 <p>Most recent observed status of the ServiceMonitor. Read-only.
 More info:
