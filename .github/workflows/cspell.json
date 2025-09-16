@@ -415,6 +415,8 @@
     "Lili", 
     "Loibl",
     "authzed",
-    "resolv"
+    "resolv",
+    "finalizer",
+    "selfsigned"
   ]
 }
