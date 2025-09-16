@@ -565,7 +565,7 @@ string
 <em>(Optional)</em>
 <p>serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
-If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alertmanager resources.
 When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
 See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
@@ -1469,7 +1469,7 @@ ProberSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>prober defines the pecification for the prober to use for probing targets.
+<p>prober defines the specification for the prober to use for probing targets.
 The prober.URL parameter is required. Targets cannot be probed if left empty.</p>
 </td>
 </tr>
@@ -2873,7 +2873,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -3702,7 +3702,7 @@ QuerySpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>query defines the configuration of the Promethus query service.</p>
+<p>query defines the configuration of the Prometheus query service.</p>
 </td>
 </tr>
 <tr>
@@ -5732,7 +5732,7 @@ rules.</p>
 </tr>
 </thead>
 <tbody><tr><td><p>&#34;None&#34;</p></td>
-<td><p>With <code>None</code>, the route and inhbition rules of an AlertmanagerConfig
+<td><p>With <code>None</code>, the route and inhibition rules of an AlertmanagerConfig
 object process all incoming alerts.</p>
 </td>
 </tr><tr><td><p>&#34;OnNamespace&#34;</p></td>
@@ -6821,7 +6821,7 @@ string
 <em>(Optional)</em>
 <p>serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
-If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alertmanager resources.
 When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
 See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
@@ -8829,7 +8829,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -12894,7 +12894,7 @@ ProberSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>prober defines the pecification for the prober to use for probing targets.
+<p>prober defines the specification for the prober to use for probing targets.
 The prober.URL parameter is required. Targets cannot be probed if left empty.</p>
 </td>
 </tr>
@@ -14594,7 +14594,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -15423,7 +15423,7 @@ QuerySpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>query defines the configuration of the Promethus query service.</p>
+<p>query defines the configuration of the Prometheus query service.</p>
 </td>
 </tr>
 <tr>
@@ -22064,7 +22064,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -28843,7 +28843,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>projectName defines an ptional field for the Identity V2 API.
+<p>projectName defines an optional field for the Identity V2 API.
 Some providers allow you to specify a ProjectName instead of the ProjectId.
 Some require both. Your provider&rsquo;s authentication policies will determine
 how these fields influence authentication.</p>
@@ -28899,7 +28899,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>applicationCredentialSecret defines the requiered field if using an application
+<p>applicationCredentialSecret defines the required field if using an application
 credential to authenticate.</p>
 </td>
 </tr>
@@ -30656,7 +30656,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -31816,7 +31816,7 @@ string
 </em>
 </td>
 <td>
-<p>name defiens the name of the receiver. Must be unique across all items from the list.</p>
+<p>name defines the name of the receiver. Must be unique across all items from the list.</p>
 </td>
 </tr>
 <tr>
@@ -37388,7 +37388,7 @@ string
 </em>
 </td>
 <td>
-<p>name defiens the name of the receiver. Must be unique across all items from the list.</p>
+<p>name defines the name of the receiver. Must be unique across all items from the list.</p>
 </td>
 </tr>
 <tr>

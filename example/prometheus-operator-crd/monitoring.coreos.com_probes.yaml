@@ -694,7 +694,7 @@ spec:
                 x-kubernetes-list-type: map
               prober:
                 description: |-
-                  prober defines the pecification for the prober to use for probing targets.
+                  prober defines the specification for the prober to use for probing targets.
                   The prober.URL parameter is required. Targets cannot be probed if left empty.
                 properties:
                   noProxy:

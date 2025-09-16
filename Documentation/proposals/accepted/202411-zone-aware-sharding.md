@@ -155,12 +155,12 @@ There are two ways to handle this:
    node name.
 
 The second solution would require the operator to constantly update the relabel
-configuration. This could lead to increased load on clusters with agressive
+configuration. This could lead to increased load on clusters with aggressive
 autoscaling as well as race conditions for pods on newly created nodes, as the
 config change is not atomic/instant.
 
 As of that, a change to the kubernetes service discovery is considered the more
-stable, and thus preferrable solution. It will require additional permissions
+stable, and thus preferable solution. It will require additional permissions
 for Prometheus in case it is not already allowed to read node objects.
 
 ### API changes
@@ -205,7 +205,7 @@ This feature is already possible by generating a `__tmp_hash` label through
 
 In case of the `Topology` mode, two labels are used for sharding. One is used
 to determine the correct topology of a target, the other one is used to allow
-sharding inside a specfic topology (e.g. zone).
+sharding inside a specific topology (e.g. zone).
 The second label implements the exact same mechanics as the `Classic` mode and
 thus uses the same `__tmp_hash` overwrite mechanics.
 To allow overwrites for the topology determination label, a custom label named

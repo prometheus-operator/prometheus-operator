@@ -10188,7 +10188,7 @@
                           "type": "string"
                         },
                         "applicationCredentialSecret": {
-                          "description": "applicationCredentialSecret defines the requiered field if using an application\ncredential to authenticate.",
+                          "description": "applicationCredentialSecret defines the required field if using an application\ncredential to authenticate.",
                           "properties": {
                             "key": {
                               "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -10273,7 +10273,7 @@
                           "type": "string"
                         },
                         "projectName": {
-                          "description": "projectName defines an ptional field for the Identity V2 API.\nSome providers allow you to specify a ProjectName instead of the ProjectId.\nSome require both. Your provider's authentication policies will determine\nhow these fields influence authentication.",
+                          "description": "projectName defines an optional field for the Identity V2 API.\nSome providers allow you to specify a ProjectName instead of the ProjectId.\nSome require both. Your provider's authentication policies will determine\nhow these fields influence authentication.",
                           "minLength": 1,
                           "type": "string"
                         },

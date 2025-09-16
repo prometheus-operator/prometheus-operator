@@ -75,7 +75,7 @@ This proposal is relevant to the following audience:
 
 # Non-Goals
 
-* Provide a solution that works with user intervantion. It'll require work from
+* Provide a solution that works with user intervention. It'll require work from
   the user deploying the operator and resources. (e.g. if the operator is
   started without any specific argument, it'll attempt to reconcile all
   resources in all namespaces).
