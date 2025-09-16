@@ -922,7 +922,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
-			return fmt.Errorf("failed to initialize from global AlertmangerConfig: %w", err)
+			return fmt.Errorf("failed to initialize from global AlertmanagerConfig: %w", err)
 		}
 
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
