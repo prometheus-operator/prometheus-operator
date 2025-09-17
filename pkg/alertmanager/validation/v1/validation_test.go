@@ -29,17 +29,12 @@ func TestValidateAlertmanager(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name: "Test HTTP Config both environment and url defined",
+			name: "Test PagerdutyURL with the correct URL",
 			in: &monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Global: &monitoringv1.AlertmanagerGlobalConfig{
-							HTTPConfig: &monitoringv1.HTTPConfig{
-								ProxyConfig: monitoringv1.ProxyConfig{
-									ProxyFromEnvironment: ptr.To(true),
-									ProxyURL:             ptr.To("https://proxy.example.com"),
-								},
-							},
+							PagerdutyURL: ptr.To("https://example.com/"),
 						},
 					},
 				},
@@ -47,17 +42,12 @@ func TestValidateAlertmanager(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test HTTP Config both noproxy and url defined",
+			name: "Test PagerdutyURL with the wrong URL",
 			in: &monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Global: &monitoringv1.AlertmanagerGlobalConfig{
-							HTTPConfig: &monitoringv1.HTTPConfig{
-								ProxyConfig: monitoringv1.ProxyConfig{
-									NoProxy:  ptr.To("https://noproxy.example.com"),
-									ProxyURL: ptr.To("https://proxy.example.com"),
-								},
-							},
+							PagerdutyURL: ptr.To("//example.com/"),
 						},
 					},
 				},
