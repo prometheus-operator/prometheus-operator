@@ -1057,12 +1057,21 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(p, c.dclient)
 
-	// Update selected serviceMonitors status.
+	// Update the status of selected serviceMonitors.
 	for key, configResource := range resources.sMons {
 		smon := configResource.Resource()
 		conditions := configResource.Conditions(smon.Generation)
 		if err := configResourceSyncer.UpdateBinding(ctx, smon, smon.Status.Bindings, conditions); err != nil {
 			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
+		}
+	}
+
+	// Update the status selected podMonitors.
+	for key, configResource := range resources.pMons {
+		pmon := configResource.Resource()
+		conditions := configResource.Conditions(pmon.Generation)
+		if err := configResourceSyncer.UpdateBinding(ctx, pmon, pmon.Status.Bindings, conditions); err != nil {
+			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
 		}
 	}
 
@@ -1100,19 +1109,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
-	if getErr != nil {
-		return getErr
-	}
-
-	// Update selected podMonitors status.
-	for key, configResource := range resources.pMons {
-		pmon := configResource.Resource()
-		conditions := configResource.Conditions(pmon.Generation)
-		if err := configResourceSyncer.UpdateBinding(ctx, pmon, pmon.Status.Bindings, conditions); err != nil {
-			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
-		}
-	}
-	return nil
+	return getErr
 }
 
 // configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
