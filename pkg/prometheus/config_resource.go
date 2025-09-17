@@ -87,14 +87,16 @@ type RuntimeObject interface {
 	metav1.Object
 }
 
+type ConfigurationObject interface {
+	RuntimeObject
+	Bindings() []monitoringv1.WorkloadBinding
+}
+
 // UpdateBinding updates the workload's binding in the configuration resource's
 // status subresource.
 // If the binding is up-to-date, this a no-operation.
-func (crs *ConfigResourceSyncer) UpdateBinding(
-	ctx context.Context,
-	configResource RuntimeObject,
-	bindings []monitoringv1.WorkloadBinding,
-	conditions []monitoringv1.ConfigResourceCondition) error {
+func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResource ConfigurationObject, conditions []monitoringv1.ConfigResourceCondition) error {
+	bindings := configResource.Bindings()
 	patch, err := crs.updateBindingPatch(bindings, conditions)
 	if err != nil {
 		return err
@@ -122,10 +124,8 @@ func (crs *ConfigResourceSyncer) UpdateBinding(
 // RemoveBinding removes the workload's binding from the configuration
 // resource's status subresource.
 // If the workload has no binding, this a no-operation.
-func (crs *ConfigResourceSyncer) RemoveBinding(
-	ctx context.Context,
-	configResource RuntimeObject,
-	bindings []monitoringv1.WorkloadBinding) error {
+func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResource ConfigurationObject) error {
+	bindings := configResource.Bindings()
 	p, err := crs.removeBindingPatch(bindings)
 	if err != nil {
 		return err
