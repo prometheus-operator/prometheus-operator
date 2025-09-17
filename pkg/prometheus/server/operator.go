@@ -1056,11 +1056,22 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(p, c.dclient)
+
+	// Update the status of selected serviceMonitors.
 	for key, configResource := range resources.sMons {
 		smon := configResource.Resource()
 		conditions := configResource.Conditions(smon.Generation)
 		if err := configResourceSyncer.UpdateBinding(ctx, smon, smon.Status.Bindings, conditions); err != nil {
 			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
+		}
+	}
+
+	// Update the status selected podMonitors.
+	for key, configResource := range resources.pMons {
+		pmon := configResource.Resource()
+		conditions := configResource.Conditions(pmon.Generation)
+		if err := configResourceSyncer.UpdateBinding(ctx, pmon, pmon.Status.Bindings, conditions); err != nil {
+			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
 		}
 	}
 

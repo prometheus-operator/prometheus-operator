@@ -49,6 +49,7 @@ rules:
   - servicemonitors
   - servicemonitors/status
   - podmonitors
+  - podmonitors/status
   - probes
   - prometheusrules
   verbs:
