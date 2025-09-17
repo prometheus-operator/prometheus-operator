@@ -98,6 +98,7 @@ function(params) {
                  'servicemonitors',
                  'servicemonitors/status',
                  'podmonitors',
+                 'podmonitors/status',
                  'probes',
                  'prometheusrules',
                ],
