@@ -6,5 +6,5 @@ set -o pipefail
 # error on unset variables
 set -u
 
-jsonnet -J scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet > "example/alertmanager-crd-conversion/patch.json"
+jsonnet -J scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alertmanagerconfig-crd.jsonnet > "example/alertmanager-crd-conversion/patch.json"
 
