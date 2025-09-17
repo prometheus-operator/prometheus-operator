@@ -1056,6 +1056,8 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}
 
 	configResourceSyncer := prompkg.NewConfigResourceSyncer(p, c.dclient)
+
+	// Update selected serviceMonitors status.
 	for key, configResource := range resources.sMons {
 		smon := configResource.Resource()
 		conditions := configResource.Conditions(smon.Generation)
@@ -1098,7 +1100,19 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
-	return getErr
+	if getErr != nil {
+		return getErr
+	}
+
+	// Update selected podMonitors status.
+	for key, configResource := range resources.pMons {
+		pmon := configResource.Resource()
+		conditions := configResource.Conditions(pmon.Generation)
+		if err := configResourceSyncer.UpdateBinding(ctx, pmon, pmon.Status.Bindings, conditions); err != nil {
+			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
+		}
+	}
+	return nil
 }
 
 // configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
