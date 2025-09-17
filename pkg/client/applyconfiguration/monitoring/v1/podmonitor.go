@@ -27,7 +27,8 @@ import (
 type PodMonitorApplyConfiguration struct {
 	metav1.TypeMetaApplyConfiguration    `json:",inline"`
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                                 *PodMonitorSpecApplyConfiguration `json:"spec,omitempty"`
+	Spec                                 *PodMonitorSpecApplyConfiguration       `json:"spec,omitempty"`
+	Status                               *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // PodMonitor constructs a declarative configuration of the PodMonitor type for use with
@@ -205,6 +206,14 @@ func (b *PodMonitorApplyConfiguration) ensureObjectMetaApplyConfigurationExists(
 // If called multiple times, the Spec field is set to the value of the last call.
 func (b *PodMonitorApplyConfiguration) WithSpec(value *PodMonitorSpecApplyConfiguration) *PodMonitorApplyConfiguration {
 	b.Spec = value
+	return b
+}
+
+// WithStatus sets the Status field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Status field is set to the value of the last call.
+func (b *PodMonitorApplyConfiguration) WithStatus(value *ConfigResourceStatusApplyConfiguration) *PodMonitorApplyConfiguration {
+	b.Status = value
 	return b
 }
 
