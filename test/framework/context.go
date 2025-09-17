@@ -149,6 +149,16 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 
 			dw.StartCollection("servicemonitors")
 			tc.collectServiceMonitors(dw, f, verbose)
+			dw.StartCollection("podmonitors")
+			tc.collectPodMonitors(dw, f, verbose)
+			dw.StartCollection("probes")
+			tc.collectProbes(dw, f, verbose)
+			dw.StartCollection("prometheusrules")
+			tc.collectPrometheusRules(dw, f, verbose)
+			dw.StartCollection("scrapeconfigs")
+			tc.collectScrapeConfigs(dw, f, verbose)
+			dw.StartCollection("alertmanagerconfigs")
+			tc.collectAlertmanagerConfigs(dw, f, verbose)
 
 			tc.collectLogs(dw, f)
 
@@ -327,6 +337,110 @@ func (ctx *TestCtx) collectServiceMonitors(w io.Writer, f *Framework, verbose bo
 
 		for _, sm := range sms.Items {
 			collectBindingConditions(w, fmt.Sprintf("ServiceMonitor=%s/%s", sm.Namespace, sm.Name), sm.Status.Bindings)
+		}
+
+	}
+}
+
+func (ctx *TestCtx) collectPodMonitors(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		pms, err := f.MonClientV1.PodMonitors(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get podmonitors: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, pms)
+			continue
+		}
+
+		for _, pm := range pms.Items {
+			collectBindingConditions(w, fmt.Sprintf("PodMonitor=%s/%s", pm.Namespace, pm.Name), pm.Status.Bindings)
+		}
+
+	}
+}
+
+func (ctx *TestCtx) collectProbes(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		ps, err := f.MonClientV1.Probes(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get probes: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, ps)
+			continue
+		}
+
+		for _, p := range ps.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("Probe=%s/%s", p.Namespace, p.Name), nil)
+		}
+
+	}
+}
+
+func (ctx *TestCtx) collectPrometheusRules(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		prs, err := f.MonClientV1.PrometheusRules(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get prometheusrules: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, prs)
+			continue
+		}
+
+		for _, pr := range prs.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("PrometheusRule=%s/%s", pr.Namespace, pr.Name), nil)
+		}
+
+	}
+}
+
+func (ctx *TestCtx) collectScrapeConfigs(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		scs, err := f.MonClientV1alpha1.ScrapeConfigs(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get scrapeconfigs: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, scs)
+			continue
+		}
+
+		for _, sc := range scs.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("ScrapeConfig=%s/%s", sc.Namespace, sc.Name), nil)
+		}
+
+	}
+}
+
+func (ctx *TestCtx) collectAlertmanagerConfigs(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		acs, err := f.MonClientV1beta1.AlertmanagerConfigs(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get alertmanagerconfigs: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, acs)
+			continue
+		}
+
+		for _, ac := range acs.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("AlertmanagerConfig=%s/%s", ac.Namespace, ac.Name), nil)
 		}
 
 	}
