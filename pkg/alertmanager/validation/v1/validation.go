@@ -17,6 +17,7 @@ package v1
 import (
 	"fmt"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
@@ -35,8 +36,9 @@ func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
 
 func validateGlobalConfig(gc monitoringv1.AlertmanagerGlobalConfig) error {
 
-	if err := gc.HTTPConfig.Validate(); err != nil {
-		return fmt.Errorf("failed to validate global 'httpConfig'")
+	if _, err := validation.ValidateURL(*gc.PagerdutyURL); err != nil {
+		return fmt.Errorf("failed to validate global 'pagerdutyURL'")
+
 	}
 
 	return nil
