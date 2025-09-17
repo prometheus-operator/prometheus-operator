@@ -438,6 +438,7 @@ func TestGatedFeatures(t *testing.T) {
 		"ServiceMonitorStatusWithMultipleWorkloads":          testServiceMonitorStatusWithMultipleWorkloads,
 		"GarbageCollectionOfServiceMonitorBinding":           testGarbageCollectionOfServiceMonitorBinding,
 		"RmServiceMonitorBindingDuringWorkloadDelete":        testRmServiceMonitorBindingDuringWorkloadDelete,
+		"PodMonitorStatusSubresource":                        testPodMonitorStatusSubresource,
 		"FinalizerForPromAgentWhenStatusForConfigResEnabled": testFinalizerForPromAgentWhenStatusForConfigResEnabled,
 	}
 

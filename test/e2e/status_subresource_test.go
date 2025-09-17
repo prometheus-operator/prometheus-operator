@@ -261,6 +261,88 @@ func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testPodMonitorStatusSubresource validates PodMonitor status updates upon Prometheus selection.
+func testPodMonitorStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "podmonitor-status-subresource-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first podmonitor to check that the operator only updates the binding when needed.
+	pm1 := framework.MakeBasicPodMonitor("pmon1")
+	pm1.Labels["group"] = name
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second podmonitor to check that the operator updates the binding when the condition changes.
+	pm2 := framework.MakeBasicPodMonitor("pmon2")
+	pm2.Labels["group"] = name
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm2, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm2, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first podmonitor. A label update doesn't
+	// change the status of the podmonitor and the observed timetstamp
+	// should be the same as before.
+	pm1.Labels["test"] = "test"
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second podmonitor to reference an non-existing Secret.
+	pm2.Spec.PodMetricsEndpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm2, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second PodMonitor should change to Accepted=False.
+	_, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first PodMonitor should remain unchanged.
+	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
 // testFinalizerForPromAgentWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for PrometheusAgent when StatusForConfigurationResourcesFeature is enabled.
 func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 	t.Parallel()
