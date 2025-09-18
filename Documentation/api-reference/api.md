@@ -1816,6 +1816,24 @@ The module name must be added using Module under ProbeSpec.</p>
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>status defines the status subresource. It is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
+<p>Most recent observed status of the Probe. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Prometheus">Prometheus
@@ -9734,7 +9752,7 @@ condition is out of date with respect to the current state of the object.</p>
 <h3 id="monitoring.coreos.com/v1.ConfigResourceStatus">ConfigResourceStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitor">PodMonitor</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitor">PodMonitor</a>, <a href="#monitoring.coreos.com/v1.Probe">Probe</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
 </p>
 <div>
 <p>ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
