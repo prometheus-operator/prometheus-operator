@@ -343,6 +343,84 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
+// testGarbageCollectionOfPodMonitorBinding validates that the operator removes the reference to the Prometheus resource when the PodMonitor isn't selected anymore by the workload.
+func testGarbageCollectionOfPodMonitorBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "pmon-status-binding-cleanup-test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pm := framework.MakeBasicPodMonitor(name)
+	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the PodMonitor's labels, Prometheus doesn't select the resource anymore.
+	pm.Labels = map[string]string{}
+	pm, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmPodMonitorBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource from PodMonitor's status when workload is deleted.
+func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "workload-del-pmon-test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+	pmon := framework.MakeBasicPodMonitor(name)
+
+	pm, err := framework.MonClientV1.PodMonitors(ns).Create(ctx, pmon, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testFinalizerForPromAgentWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for PrometheusAgent when StatusForConfigurationResourcesFeature is enabled.
 func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 	t.Parallel()
