@@ -75,9 +75,10 @@ type ResourceSelector struct {
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
 type TypedConfigurationResource[T ConfigurationResource] struct {
-	resource T
-	err      error  // error encountered during selection or validation (nil if valid).
-	reason   string // Reason for rejection; empty if accepted.
+	resource   T
+	err        error  // Error encountered during selection or validation (nil if valid).
+	reason     string // Reason for rejection; empty if accepted.
+	generation int64  // Generation of the desired state (spec).
 }
 
 func (r *TypedConfigurationResource[T]) Resource() T {
@@ -85,13 +86,13 @@ func (r *TypedConfigurationResource[T]) Resource() T {
 }
 
 // Conditions returns a list of conditions based on the validation status of the configuration resource.
-func (r *TypedConfigurationResource[T]) Conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+func (r *TypedConfigurationResource[T]) Conditions() []monitoringv1.ConfigResourceCondition {
 	condition := monitoringv1.ConfigResourceCondition{
 		Type:               monitoringv1.Accepted,
 		Status:             monitoringv1.ConditionTrue,
 		LastTransitionTime: metav1.Now(),
 		Reason:             r.reason,
-		ObservedGeneration: observedGeneration,
+		ObservedGeneration: r.generation,
 	}
 
 	if r.err != nil {
@@ -223,9 +224,10 @@ func selectObjects[T ConfigurationResource](
 		}
 
 		res[namespaceAndName] = TypedConfigurationResource[T]{
-			resource: o,
-			err:      err,
-			reason:   reason,
+			resource:   o,
+			err:        err,
+			reason:     reason,
+			generation: obj.(metav1.Object).GetGeneration(),
 		}
 	}
 

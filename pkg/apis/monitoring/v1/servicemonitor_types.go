@@ -63,6 +63,10 @@ func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+func (l *ServiceMonitor) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // ServiceMonitorSpec defines the specification parameters for a ServiceMonitor.
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
