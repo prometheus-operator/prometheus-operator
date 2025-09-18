@@ -231,7 +231,7 @@ type AlertmanagerSpec struct {
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 	// serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
-	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alertmanager resources.
 	// When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	// +optional
@@ -415,7 +415,7 @@ const (
 	// is in the same namespace as the Alertmanager object, where it will process all alerts.
 	OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespaceExceptForAlertmanagerNamespace"
 
-	// With `None`, the route and inhbition rules of an AlertmanagerConfig
+	// With `None`, the route and inhibition rules of an AlertmanagerConfig
 	// object process all incoming alerts.
 	NoneConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "None"
 )
