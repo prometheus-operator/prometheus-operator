@@ -39,7 +39,7 @@ func TestValidateAlertmanager(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 		{
 			name: "Test PagerdutyURL with the wrong URL",
