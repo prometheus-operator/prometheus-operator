@@ -1059,18 +1059,14 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Update the status of selected serviceMonitors.
 	for key, configResource := range resources.sMons {
-		smon := configResource.Resource()
-		conditions := configResource.Conditions(smon.Generation)
-		if err := configResourceSyncer.UpdateBinding(ctx, smon, smon.Status.Bindings, conditions); err != nil {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
 		}
 	}
 
-	// Update the status selected podMonitors.
+	// Update the status of selected podMonitors.
 	for key, configResource := range resources.pMons {
-		pmon := configResource.Resource()
-		conditions := configResource.Conditions(pmon.Generation)
-		if err := configResourceSyncer.UpdateBinding(ctx, pmon, pmon.Status.Bindings, conditions); err != nil {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
 		}
 	}
@@ -1112,7 +1108,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			return
 		}
 
-		if err := configResourceSyncer.RemoveBinding(ctx, s, s.Status.Bindings); err != nil {
+		if err := configResourceSyncer.RemoveBinding(ctx, s); err != nil {
 			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
 		}
 	}); err != nil {
@@ -1147,7 +1143,7 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 			return
 		}
 
-		getErr = configResourceSyncer.RemoveBinding(ctx, s, s.Status.Bindings)
+		getErr = configResourceSyncer.RemoveBinding(ctx, s)
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}

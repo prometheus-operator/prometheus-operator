@@ -65,6 +65,10 @@ func (l *PodMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+func (l *PodMonitor) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // PodMonitorSpec contains specification parameters for a PodMonitor.
 // +k8s:openapi-gen=true
 type PodMonitorSpec struct {
