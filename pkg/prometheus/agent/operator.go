@@ -32,7 +32,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -90,7 +90,7 @@ type Operator struct {
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
-	eventRecorder record.EventRecorder
+	eventRecorder events.EventRecorder
 
 	statusReporter prompkg.StatusReporter
 
