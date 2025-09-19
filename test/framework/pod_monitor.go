@@ -47,3 +47,25 @@ func (f *Framework) WaitForPodMonitorCondition(ctx context.Context, pm *monitori
 	}
 	return current, nil
 }
+
+func (f *Framework) WaitForPodMonitorWorkloadBindingCleanup(ctx context.Context, pm *monitoringv1.PodMonitor, workload metav1.Object, resource string, timeout time.Duration) (*monitoringv1.PodMonitor, error) {
+	var current *monitoringv1.PodMonitor
+
+	if err := f.WaitForConfigResWorkloadBindingCleanup(
+		ctx,
+		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
+			var err error
+			current, err = f.MonClientV1.PodMonitors(pm.Namespace).Get(ctx, pm.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			return current.Status.Bindings, nil
+		},
+		workload,
+		resource,
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("podMonitor status %v/%v failed to reach expected condition: %w", pm.Namespace, pm.Name, err)
+	}
+	return current, nil
+}
