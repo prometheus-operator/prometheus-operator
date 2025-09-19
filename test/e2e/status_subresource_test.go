@@ -362,22 +362,10 @@ func testProbeStatusSubresource(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	blackboxExporterName := "blackbox-exporter"
-	if err := framework.CreateBlackBoxExporterAndWaitUntilReady(context.Background(), ns, blackboxExporterName); err != nil {
-		t.Fatal("Creating blackbox exporter failed: ", err)
-	}
-
-	blackboxSvc := framework.MakeBlackBoxExporterService(ns, blackboxExporterName)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, blackboxSvc); err != nil {
-		t.Fatal("creating blackbox exporter service failed ", err)
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
-
 	name := "probe-status-subresource-test"
 	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
 
-	proberURL := blackboxExporterName + ":9115"
+	proberURL := "localhost:9115"
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
@@ -387,12 +375,11 @@ func testProbeStatusSubresource(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
 
 	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
-		t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
+		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
 	}
