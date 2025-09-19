@@ -322,6 +322,46 @@ webhooks:
     sideEffects: None
 ```
 
+### Alertmanager
+
+The `/admission-alertmanager/validate` endpoint rejects
+`Alertmanager` objects that are not semantically valid.
+
+The following example configures a validating admission webhook rejecting
+invalid `Alertmanager` objects.
+
+> Note: If you're not using cert-manager, check the [CA Bundle]({{< ref "#ca-bundle" >}}) section.
+
+```yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: prometheus-operator-alertmanager-validation
+  annotations:
+    cert-manager.io/inject-ca-from: default/prometheus-operator-admission-webhook
+webhooks:
+  - clientConfig:
+      service:
+        name: prometheus-operator-admission-webhook
+        namespace: default
+        path: /admission-alertmanager/validate
+    failurePolicy: Fail
+    name: alertmanagervalidate.monitoring.coreos.com
+    namespaceSelector: {}
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - alertmanager
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+```
+
 ## Converting AlertmanagerConfig resources
 
 The `/convert` endpoint converts `Alertmanagerconfig` objects between `v1alpha1`
