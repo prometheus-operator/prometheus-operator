@@ -58,7 +58,7 @@ const (
 	prometheusRuleValidatePath     = "/admission-prometheusrules/validate"
 	prometheusRuleMutatePath       = "/admission-prometheusrules/mutate"
 	alertmanagerConfigValidatePath = "/admission-alertmanagerconfigs/validate"
-	alertmanagerValidatePath       = "/admission-alertmanager/validate"
+	alertmanagerValidatePath       = "/admission-alertmanagers/validate"
 	convertPath                    = "/convert"
 )
 
@@ -303,7 +303,7 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 }
 
 func (a *Admission) validateAlertmanager(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	a.logger.Debug("Validating alertmanager")
+	a.logger.Debug("Validating alertmanagers")
 	gr := metav1.GroupResource{Group: ar.Request.Resource.Group, Resource: ar.Request.Resource.Resource}
 	if gr != alertManagerConfigGR {
 		err := fmt.Errorf("expected resource to be %v, but received %v", alertManagerResource, ar.Request.Resource)
