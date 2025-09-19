@@ -96,6 +96,9 @@ type ResourceReconciler struct {
 	g errgroup.Group
 
 	controllerID string
+
+	reconcileDelay time.Duration
+	lastReconcile  map[string]time.Time
 }
 
 var (
@@ -275,6 +278,8 @@ func NewResourceReconciler(
 		statusErrors:      statusErrors,
 		metrics:           metrics,
 		controllerID:      controllerID,
+
+		lastReconcile: make(map[string]time.Time),
 
 		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](
 			workqueue.DefaultTypedControllerRateLimiter[string](),
@@ -666,6 +671,13 @@ func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool
 	defer rr.reconcileQ.Done(key)
 	defer rr.statusQ.Add(key) // enqueues the object's key to update the status subresource
 
+	// Check if reconciliation should be delayed
+	if rr.shouldDelayReconcile(key) {
+		// Re-queue the item to be processed later
+		rr.reconcileQ.AddAfter(key, rr.reconcileDelay)
+		return true
+	}
+
 	rr.reconcileTotal.Inc()
 	startTime := time.Now()
 	err := rr.syncer.Sync(ctx, key)
@@ -673,6 +685,8 @@ func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool
 
 	if err == nil {
 		rr.reconcileQ.Forget(key)
+		// Update the last reconcile time with when reconciliation started
+		rr.updateLastReconcileTime(key, startTime)
 		return true
 	}
 
@@ -703,6 +717,43 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 	rr.statusQ.AddRateLimited(key)
 
 	return true
+}
+
+// SetReconcileDelay sets the reconcile delay for this ResourceReconciler.
+func (rr *ResourceReconciler) SetReconcileDelay(delay time.Duration) {
+	rr.reconcileDelay = delay
+	if delay > 0 {
+		rr.logger.Info("reconcile delay enabled", "delay", delay.String(), "resource_kind", rr.resourceKind)
+	}
+}
+
+// shouldDelayReconcile checks if reconciliation should be delayed for the given key.
+// Returns true if the delay period hasn't passed since the last reconciliation.
+func (rr *ResourceReconciler) shouldDelayReconcile(key string) bool {
+	if rr.reconcileDelay <= 0 {
+		return false
+	}
+
+	lastTime, exists := rr.lastReconcile[key]
+	if !exists {
+		return false
+	}
+
+	timeSinceLastReconcile := time.Since(lastTime)
+	if timeSinceLastReconcile < rr.reconcileDelay {
+		rr.logger.Debug("delaying reconciliation",
+			"key", key,
+			"time_since_last", timeSinceLastReconcile.String(),
+			"delay_configured", rr.reconcileDelay.String())
+		return true
+	}
+
+	return false
+}
+
+// updateLastReconcileTime records the last reconcile time with the given timestamp.
+func (rr *ResourceReconciler) updateLastReconcileTime(key string, timestamp time.Time) {
+	rr.lastReconcile[key] = timestamp
 }
 
 // ListMatchingNamespaces lists all the namespaces that match the provided
