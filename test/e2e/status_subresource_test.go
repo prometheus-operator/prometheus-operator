@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -384,6 +385,16 @@ func testProbeStatusSubresource(t *testing.T) {
 		MatchLabels: map[string]string{
 			"group": name,
 		},
+	}
+
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+		t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
 	probe1 := framework.MakeBasicStaticProbe("probe1", proberURL, targets)
