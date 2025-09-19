@@ -585,3 +585,17 @@ func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ctx context.Context, n
 
 	return nil
 }
+
+func (f *Framework) MakeAndCreateInvalidAlertmanager(ctx context.Context, ns, amName string) (*monitoringv1.Alertmanager, error) {
+	file := f.MakeBasicAlertmanager(ns, amName, 1)
+	file.Spec.AlertmanagerConfiguration.Global = &monitoringv1.AlertmanagerGlobalConfig{
+		PagerdutyURL: ptr.To("//example.com/"),
+	}
+
+	result, err := f.CreateAlertmanagerAndWaitUntilReady(ctx, file)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

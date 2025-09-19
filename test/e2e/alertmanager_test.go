@@ -2729,3 +2729,18 @@ func testAlertManagerServiceName(t *testing.T) {
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
 }
+
+func testInvalidAlertmanagersAreRejected(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "admission"
+
+	_, err := framework.MakeAndCreateInvalidAlertmanager(context.Background(), ns, name)
+	if err == nil {
+		t.Fatal("Expected invalid prometheusrule to be rejected")
+	}
+}
