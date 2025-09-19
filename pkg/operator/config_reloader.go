@@ -222,7 +222,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	}
 
 	if configReloader.initContainer {
-		portName = "reloader-web-init"
+		portName = "reloader-init"
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
 	}
 
