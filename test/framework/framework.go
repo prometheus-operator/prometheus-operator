@@ -661,6 +661,15 @@ func (f *Framework) DeletePrometheusOperatorClusterResource(ctx context.Context)
 		return fmt.Errorf("failed to delete alertmanager config mutatingwebhook: %w", err)
 	}
 
+	AlertmanagerValidatingWebhook, err := parseValidatingHookYaml(fmt.Sprintf("%s/alertmanager-validating-webhook.yaml", f.resourcesDir))
+	if err != nil {
+		return fmt.Errorf("failed to parse alertmanager mutatingwebhook: %w", err)
+	}
+	err = f.deleteValidatingWebhook(ctx, AlertmanagerValidatingWebhook.Name)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete alertmanager mutatingwebhook: %w", err)
+	}
+
 	return nil
 }
 
