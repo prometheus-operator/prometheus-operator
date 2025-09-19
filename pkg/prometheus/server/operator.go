@@ -1071,7 +1071,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
-	// Update the status selected probe.
+	// Update the status of selected probes.
 	for key, configResource := range resources.bMons {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update Probe %s status: %w", key, err)
