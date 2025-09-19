@@ -41,7 +41,10 @@ func TestUpdateObject(t *testing.T) {
 			o: &v1.Secret{},
 			exp: &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"managed-by": "prometheus-operator"},
+					Labels: map[string]string{
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+						"managed-by":                   "prometheus-operator",
+					},
 				},
 			},
 		},
@@ -85,10 +88,11 @@ func TestUpdateObject(t *testing.T) {
 						"annotation2": "val2",
 					},
 					Labels: map[string]string{
-						"label1":     "val1",
-						"label2":     "val2",
-						"label3":     "val3",
-						"managed-by": "prometheus-operator",
+						"label1":                       "val1",
+						"label2":                       "val2",
+						"label3":                       "val3",
+						"managed-by":                   "prometheus-operator",
+						"app.kubernetes.io/managed-by": "prometheus-operator",
 					},
 					OwnerReferences: []metav1.OwnerReference{
 						{
