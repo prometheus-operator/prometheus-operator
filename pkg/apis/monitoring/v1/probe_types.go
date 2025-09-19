@@ -65,6 +65,10 @@ func (l *Probe) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+func (l *Probe) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // ProbeSpec contains specification parameters for a Probe.
 // +k8s:openapi-gen=true
 type ProbeSpec struct {
