@@ -253,6 +253,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 		"AMStatusScale":                           testAlertmanagerStatusScale,
 		"AMServiceName":                           testAlertManagerServiceName,
+		"AMInvalidRejected":                       testInvalidAlertmanagersAreRejected,
 	}
 
 	for name, f := range testFuncs {
