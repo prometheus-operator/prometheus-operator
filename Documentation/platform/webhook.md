@@ -344,9 +344,9 @@ webhooks:
       service:
         name: prometheus-operator-admission-webhook
         namespace: default
-        path: /admission-alertmanager/validate
+        path: /admission-alertmanagers/validate
     failurePolicy: Fail
-    name: alertmanagervalidate.monitoring.coreos.com
+    name: alertmanagersvalidate.monitoring.coreos.com
     namespaceSelector: {}
     rules:
       - apiGroups:
@@ -357,7 +357,7 @@ webhooks:
           - CREATE
           - UPDATE
         resources:
-          - alertmanager
+          - alertmanagers
     admissionReviewVersions: ["v1", "v1beta1"]
     sideEffects: None
 ```
