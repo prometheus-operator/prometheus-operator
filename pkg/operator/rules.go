@@ -50,6 +50,9 @@ type RuleConfigurationFormat int
 const (
 	PrometheusFormat RuleConfigurationFormat = iota
 	ThanosFormat
+
+	// Generic reason for PrometheusRule that are not valid.
+	invalidConfiguration = "InvalidConfiguration"
 )
 
 // The maximum `Data` size of a ConfigMap seems to differ between
@@ -238,7 +241,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			prs.eventRecorder.Eventf(promRule, nil, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
+			prs.eventRecorder.Eventf(promRule, nil, v1.EventTypeWarning, invalidConfiguration, InvalidConfigurationEvent, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			continue
 		}
 
