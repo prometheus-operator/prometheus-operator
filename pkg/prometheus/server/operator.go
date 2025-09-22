@@ -1184,7 +1184,7 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	}
 
 	// Remove bindings from all podMonitors which reference the workload.
-	if err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
+	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
 		if getErr != nil {
 			// Skip all subsequent updates after the first error.
 			return
