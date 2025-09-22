@@ -207,7 +207,7 @@
 * [CHANGE] Add API-level validations to Kubernetes SD in the ScrapeConfig CRD. #6678
 * [FEATURE] Add TLS and Proxy settings to OAuth2 configuration for Prometheus and PrometheusAgent CRDs. #6735
 * [FEATURE] Add support for OAuth2 in the ScrapeConfig CRD. #6814
-* [FEATURE] Add scale subresource to the Alertmanger CRD. #6728
+* [FEATURE] Add scale subresource to the Alertmanager CRD. #6728
 * [FEATURE] Add Scaleway service discovery to the ScrapeConfig CRD. #6711
 * [FEATURE] Add `serviceDiscoveryRole` field to the Prometheus and PrometheusAgent CRDs to select between Endpoints (default) and EndpointSlice for discovering scrape and alerting targets. #6672
 * [ENHANCEMENT] Make the `namespace` field optional in the Alertmanager endpoints configuration of the Prometheus CRD, if not defined it will use the `default` namespace. #6338
@@ -228,7 +228,7 @@
 
 * [CHANGE] Global limits over enforced limits when no user limits are set. #6608
 * [CHANGE/BUGFIX] Use a separate port number (`8081`) for the init container. #6635
-* [FEATURE] Add `source` field in `pagerdutyConfigs` in `AlertManangerConfig` CRD. #6427
+* [FEATURE] Add `source` field in `pagerdutyConfigs` in `AlertManagerConfig` CRD. #6427
 * [FEATURE] Add `DockerSwarm` Service Discovery support in the ScrapeConfig CRD. #6633
 * [FEATURE] Add `Linode` Service Discovery support in the ScrapeConfig CRD. #6586
 * [FEATURE] Add `PuppetDB` Service Discovery support in the ScrapeConfig CRD. #6651
@@ -382,7 +382,7 @@ This release is built using Go 1.21.4 which addresses CVE-2023-45283 and CVE-202
 ## 0.68.0 / 2023-09-06
 
 * [FEATURE] Add support for Webex receiver to the AlertmanagerConfig CRD. #5305
-* [FEATURE] Add support for Bot Token File for Telegram receiver in AlermanagerConfig CRD. #5882
+* [FEATURE] Add support for Bot Token File for Telegram receiver in AlertmanagerConfig CRD. #5882
 * [FEATURE] Add support for MetricRelabelings to the ScrapeConfig CRD. #5805
 * [FEATURE] Add support for DNS service discovery fields to the ScrapeConfig CRD. #5866
 * [FEATURE] Add support for `keep_dropped_targets` to Prometheus, PrometheusAgent, ServiceMonitor, PodMonitor, Probe and ScrapeConfig CRDs. #5897
@@ -392,7 +392,7 @@ This release is built using Go 1.21.4 which addresses CVE-2023-45283 and CVE-202
 * [BUGFIX] Fix text-only email configs in AlertmanagerConfig CRD. #5804
 * [BUGFIX] Fix rejecting PodMonitor, ServiceMonitor, Probes and ScrapeConfigs with invalid relabelings. #5841 #5856
 * [BUGFIX] Fix Kubernetes Service Discovery in ScrapeConfig CRD. #5871
-* [BUGFIX] Fix reserved labels being overriden by external labels. #5888
+* [BUGFIX] Fix reserved labels being overridden by external labels. #5888
 * [BUGFIX] Fix updating Status of Prometheus, Alertmanager and ThanosRuler even the operator fails to update their statefulsets. #5891
 
 ## 0.67.1 / 2023-08-03
@@ -637,7 +637,7 @@ manifests to enable the v1beta1 version are under the
 
 ## 0.56.2 / 2022-05-09
 
-* [BUGFIX] Fix StatefulSet spec's generation to be determistic when `spec.containers` is not empty. #4772
+* [BUGFIX] Fix StatefulSet spec's generation to be deterministic when `spec.containers` is not empty. #4772
 
 ## 0.56.1 / 2022-05-03
 
@@ -994,7 +994,7 @@ We have also added a governance (#3398).
 * [CHANGE] Add CRD definitions to bundle.yaml (#3171)
 * [CHANGE] Switch to apiextensions.k8s.io/v1 CRD and require kubernetes v1.16 or newer (#3175, #3187)
 * [FEATURE] Add support prometheus query log file (#3116)
-* [FEATURE] Add support for watching specified rules directory by config-relader (#3128)
+* [FEATURE] Add support for watching specified rules directory by config-reloader (#3128)
 * [FEATURE] Add TLS support for operator web server (#3134, #3157)
 * [FEATURE] Allow to set address for operator http endpoint (#3098)
 * [FEATURE] Allow setting the alertmanagers cluster.advertiseAddress (#3160)
@@ -1044,7 +1044,7 @@ We have also added a governance (#3398).
 * [BUGFIX] Fix flaky test in Thanos ruler (#3038)
 * [BUGFIX] Fix ThanosRuler status reporting (#3045)
 * [BUGFIX] Preserve pod labels and annotations in custom resources (#3041, #3043)
-* [BUGFIX] Prevent stateful set update loop for alertmanager and thonos types (#3048, #3049)
+* [BUGFIX] Prevent stateful set update loop for alertmanager and thanos types (#3048, #3049)
 
 ## 0.36.0 / 2020-02-10
 
@@ -1327,8 +1327,8 @@ Some changes cause Prometheus and Alertmanager clusters to be redeployed. If you
 * [FEATURE] Allow configuring additional containers in Prometheus and Alertmanager Pods.
 * [FEATURE] Add ability to whitelist Kubernetes labels to become Prometheus labels.
 * [FEATURE] Allow specifying additional secrets for Alertmanager Pods to mount.
-* [FEATURE] Allow specifying `bearer_token_file` for Alertmanger configurations of Prometheus objects in order to authenticate with Alertmanager.
-* [FEATURE] Allow specifying TLS configuration for Alertmanger configurations of Prometheus objects.
+* [FEATURE] Allow specifying `bearer_token_file` for Alertmanager configurations of Prometheus objects in order to authenticate with Alertmanager.
+* [FEATURE] Allow specifying TLS configuration for Alertmanager configurations of Prometheus objects.
 * [FEATURE] Add metrics for reconciliation errors: `prometheus_operator_alertmanager_reconcile_errors_total` and `prometheus_operator_prometheus_reconcile_errors_total`.
 * [FEATURE] Support `read_recent` and `required_matchers` fields for remote read configurations.
 * [FEATURE] Allow disabling any defaults of `SecurityContext` fields of Pods.
@@ -1397,7 +1397,7 @@ Compatibility guarantees and migration strategies continue to be the same as for
 * [CHANGE] Remove analytics collection.
 * [BUGFIX] Fix memory leak in kubelet endpoints sync.
 * [FEATURE] Allow setting global default `scrape_interval`.
-* [FEATURE] Allow setting Pod objectmeta to Prometheus and Alertmanger objects.
+* [FEATURE] Allow setting Pod objectmeta to Prometheus and Alertmanager objects.
 * [FEATURE] Allow setting tolerations and affinity for Prometheus and Alertmanager objects.
 
 ## 0.12.0 / 2017-08-24
@@ -1475,7 +1475,7 @@ but causes this change.
 * [FEATURE] Add ability make use of the Prometheus `honor_labels` configuration option.
 * [FEATURE] Add ability to specify image pull secrets for Prometheus and Alertmanager pods.
 * [FEATURE] Add basic auth configuration option through ServiceMonitor.
-* [ENHANCEMENT] Add liveness and readiness probes to Prometheus and Alertmanger pods.
+* [ENHANCEMENT] Add liveness and readiness probes to Prometheus and Alertmanager pods.
 * [ENHANCEMENT] Add default resource requests for Alertmanager pods.
 * [ENHANCEMENT] Fallback to ExternalIPs when InternalIPs are not available in kubelet sync.
 * [ENHANCEMENT] Improved change detection to trigger Prometheus rollout.
@@ -1487,7 +1487,7 @@ but causes this change.
 
 ## 0.8.1 / 2017-04-13
 
-* [ENHANCEMENT] Include kubelet insecure port in kubelet Enpdoints object.
+* [ENHANCEMENT] Include kubelet insecure port in kubelet Endpoints object.
 
 ## 0.8.0 / 2017-04-07
 

@@ -1451,12 +1451,12 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 		{
 			name:    "Invalid Prometheus Version",
 			version: "2.40.1",
-			golden:  "AlertmangerAlertRelabel_Invalid_Version.golden",
+			golden:  "AlertmanagerAlertRelabel_Invalid_Version.golden",
 		},
 		{
 			name:    "Valid Prometheus Version",
 			version: "2.51.0",
-			golden:  "AlertmangerAlertRelabel_Valid_Version.golden",
+			golden:  "AlertmanagerAlertRelabel_Valid_Version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
