@@ -468,7 +468,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// pagerdutyUrl defines the default Pagerduty URL.
 	// +optional
-	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+	PagerdutyURL *URL `json:"pagerdutyUrl,omitempty"`
 
 	// telegram defines the default Telegram config
 	// +optional

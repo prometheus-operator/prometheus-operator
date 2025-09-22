@@ -1674,6 +1674,7 @@
                           },
                           "pagerdutyUrl": {
                             "description": "pagerdutyUrl defines the default Pagerduty URL.",
+                            "pattern": "^(http|https)://.+$",
                             "type": "string"
                           },
                           "resolveTimeout": {
