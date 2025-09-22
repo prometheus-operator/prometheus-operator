@@ -4288,7 +4288,7 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "promoteScopeMetadata": {
-                        "description": "PromoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.\nAs per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.\nIt requires Prometheus >= v3.6.0.",
+                        "description": "promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.\nAs per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.\nIt requires Prometheus >= v3.6.0.",
                         "type": "boolean"
                       },
                       "translationStrategy": {
