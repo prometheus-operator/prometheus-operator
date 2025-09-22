@@ -23152,7 +23152,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </td>
 <td>
 <em>(Optional)</em>
-<p>StackitSDConfigs defines a list of STACKIT service discovery configurations.</p>
+<p>stackitSDConfigs defines a list of STACKIT service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -33368,7 +33368,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </td>
 <td>
 <em>(Optional)</em>
-<p>StackitSDConfigs defines a list of STACKIT service discovery configurations.</p>
+<p>stackitSDConfigs defines a list of STACKIT service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -34522,7 +34522,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>proxyUrl defines the HTTP proxy server to use.</p>
 </td>
 </tr>
 <tr>
@@ -34534,7 +34534,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+<p>noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
@@ -34549,7 +34549,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
 </tr>
@@ -34564,7 +34564,7 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>ProxyConnectHeader optionally specifies headers to send to
+<p>proxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
 </td>
