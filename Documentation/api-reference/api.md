@@ -34561,7 +34561,7 @@ string
 </em>
 </td>
 <td>
-<p>STACKIT Project ID.</p>
+<p>project defines STACKIT Project ID.</p>
 </td>
 </tr>
 <tr>
@@ -34572,7 +34572,7 @@ string
 </em>
 </td>
 <td>
-<p>STACKIT Project ID.</p>
+<p>region defines STACKIT Project ID.</p>
 </td>
 </tr>
 <tr>
@@ -34583,7 +34583,7 @@ string
 </em>
 </td>
 <td>
-<p>Custom API endpoint to be used.</p>
+<p>endpoint defines Custom API endpoint to be used.</p>
 </td>
 </tr>
 <tr>
@@ -34595,7 +34595,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Port to scrape metrics from.</p>
+<p>port defines the port to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -34607,7 +34607,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Raw private key string used for authenticating a service account.</p>
+<p>privateKey defines the raw private key string used for authenticating a service account.</p>
 </td>
 </tr>
 <tr>
@@ -34619,7 +34619,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Full JSON-formatted service account key used for authentication.</p>
+<p>serviceAccountKey defines full JSON-formatted service account key used for authentication.</p>
 </td>
 </tr>
 <tr>
@@ -34633,7 +34633,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>RefreshInterval configures the time after which the servers are refreshed.</p>
+<p>refreshInterval configures the time after which the servers are refreshed.</p>
 </td>
 </tr>
 <tr>
@@ -34647,7 +34647,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization header configuration, required when using STACKIT.</p>
+<p>authorization defines the header configuration, required when using STACKIT.</p>
 </td>
 </tr>
 <tr>
@@ -34717,7 +34717,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use when connecting to the STACKIT API.</p>
+<p>tlsConfig defines the TLS configuration to use when connecting to the STACKIT API.</p>
 </td>
 </tr>
 <tr>
@@ -34729,7 +34729,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure whether the HTTP requests should follow HTTP 3xx redirects.</p>
+<p>followRedirects defines whether the HTTP requests should follow HTTP 3xx redirects.</p>
 </td>
 </tr>
 <tr>
@@ -34741,7 +34741,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure whether to enable HTTP2.</p>
+<p>enableHTTP2 defines whether to enable HTTP2.</p>
 </td>
 </tr>
 <tr>
@@ -34755,7 +34755,7 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure whether to enable OAuth2.</p>
+<p>oauth2 defines whether to enable OAuth2.</p>
 </td>
 </tr>
 </tbody>

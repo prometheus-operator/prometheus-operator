@@ -1530,48 +1530,48 @@ type IonosSDConfig struct {
 // StackitSDConfig configurations enables service discovery for STACKIT.
 // See https://prometheus.io/docs/prometheus/3.5/configuration/configuration/#stackit_sd_config
 type StackitSDConfig struct {
-	// STACKIT Project ID.
+	// project defines STACKIT Project ID.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
 	Project string `json:"project"`
-	// STACKIT Project ID.
+	// region defines STACKIT Project ID.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
 	Region string `json:"region"`
-	// Custom API endpoint to be used.
+	// endpoint defines Custom API endpoint to be used.
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
 	Endpoint string `json:"endpoint"`
-	// Port to scrape metrics from.
+	// port defines the port to scrape metrics from.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	Port *int32 `json:"port,omitempty"`
-	// Raw private key string used for authenticating a service account.
+	// privateKey defines the raw private key string used for authenticating a service account.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	PrivateKey *string `json:"privateKey,omitempty"`
-	// Full JSON-formatted service account key used for authentication.
+	// serviceAccountKey defines full JSON-formatted service account key used for authentication.
 	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	ServiceAccountKey *string `json:"serviceAccountKey,omitempty"`
-	// RefreshInterval configures the time after which the servers are refreshed.
+	// refreshInterval configures the time after which the servers are refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// Authorization header configuration, required when using STACKIT.
+	// authorization defines the header configuration, required when using STACKIT.
 	// +optional
 	Authorization  *v1.SafeAuthorization `json:"authorization,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// TLS configuration to use when connecting to the STACKIT API.
+	// tlsConfig defines the TLS configuration to use when connecting to the STACKIT API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// followRedirects defines whether the HTTP requests should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
-	// Configure whether to enable HTTP2.
+	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
-	// Configure whether to enable OAuth2.
+	// oauth2 defines whether to enable OAuth2.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 }

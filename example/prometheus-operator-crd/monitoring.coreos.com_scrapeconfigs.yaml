@@ -12579,8 +12579,8 @@ spec:
                     See https://prometheus.io/docs/prometheus/3.5/configuration/configuration/#stackit_sd_config
                   properties:
                     authorization:
-                      description: Authorization header configuration, required when
-                        using STACKIT.
+                      description: authorization defines the header configuration,
+                        required when using STACKIT.
                       properties:
                         credentials:
                           description: credentials defines a key of a Secret in the
@@ -12617,15 +12617,15 @@ spec:
                           type: string
                       type: object
                     enableHTTP2:
-                      description: Configure whether to enable HTTP2.
+                      description: enableHTTP2 defines whether to enable HTTP2.
                       type: boolean
                     endpoint:
-                      description: Custom API endpoint to be used.
+                      description: endpoint defines Custom API endpoint to be used.
                       pattern: ^http(s)?://.+$
                       type: string
                     followRedirects:
-                      description: Configure whether the HTTP requests should follow
-                        HTTP 3xx redirects.
+                      description: followRedirects defines whether the HTTP requests
+                        should follow HTTP 3xx redirects.
                       type: boolean
                     noProxy:
                       description: |-
@@ -12636,7 +12636,7 @@ spec:
                         It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                       type: string
                     oauth2:
-                      description: Configure whether to enable OAuth2.
+                      description: oauth2 defines whether to enable OAuth2.
                       properties:
                         clientId:
                           description: |-
@@ -12964,18 +12964,18 @@ spec:
                       - tokenUrl
                       type: object
                     port:
-                      description: Port to scrape metrics from.
+                      description: port defines the port to scrape metrics from.
                       format: int32
                       maximum: 65535
                       minimum: 0
                       type: integer
                     privateKey:
-                      description: Raw private key string used for authenticating
-                        a service account.
+                      description: privateKey defines the raw private key string used
+                        for authenticating a service account.
                       minLength: 1
                       type: string
                     project:
-                      description: STACKIT Project ID.
+                      description: project defines STACKIT Project ID.
                       minLength: 1
                       type: string
                     proxyConnectHeader:
@@ -13023,22 +13023,22 @@ spec:
                       pattern: ^(http|https|socks5)://.+$
                       type: string
                     refreshInterval:
-                      description: RefreshInterval configures the time after which
+                      description: refreshInterval configures the time after which
                         the servers are refreshed.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     region:
-                      description: STACKIT Project ID.
+                      description: region defines STACKIT Project ID.
                       minLength: 1
                       type: string
                     serviceAccountKey:
-                      description: Full JSON-formatted service account key used for
-                        authentication.
+                      description: serviceAccountKey defines full JSON-formatted service
+                        account key used for authentication.
                       minLength: 1
                       type: string
                     tlsConfig:
-                      description: TLS configuration to use when connecting to the
-                        STACKIT API.
+                      description: tlsConfig defines the TLS configuration to use
+                        when connecting to the STACKIT API.
                       properties:
                         ca:
                           description: ca defines the Certificate authority used when
