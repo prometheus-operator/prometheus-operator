@@ -622,15 +622,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	if finalizersChanged {
-		// Since the object has been updated, let's trigger another sync.
-		c.rr.EnqueueForReconciliation(p)
-		return nil
-	}
-
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		c.reconciliations.ForgetObject(key)
+		return nil
+	}
+
+	if finalizersChanged {
+		// Since the object has been updated, let's trigger another sync.
+		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
 
