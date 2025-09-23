@@ -61,8 +61,7 @@ const (
 	controllerName            = "alertmanager-controller"
 	applicationNameLabelValue = "alertmanager"
 
-	// Generic reason for AlertmanagerConfig that are not valid.
-	invalidConfiguration = "InvalidConfiguration"
+	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -1066,7 +1065,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.eventRecorder.Eventf(amc, am, v1.EventTypeWarning, invalidConfiguration, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			c.eventRecorder.Eventf(amc, am, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 

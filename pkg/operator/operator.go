@@ -313,8 +313,7 @@ func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
 		eventBroadcaster.StartStructuredLogging(0)
 
 		if emitEvents {
-			stopCh := make(chan struct{})
-			eventBroadcaster.StartRecordingToSink(stopCh)
+			eventBroadcaster.StartRecordingToSinkWithContext(context.Background())
 		}
 
 		return eventBroadcaster.NewRecorder(scheme.Scheme, component)

@@ -45,8 +45,8 @@ import (
 )
 
 const (
-	// Generic reason for selected resources that are not valid.
-	invalidConfiguration = "InvalidConfiguration"
+	invalidConfiguration                            = "InvalidConfiguration"
+	selectingPrometheusConfigurationResourcesAction = "SelectingPrometheusConfigurationResourcesAction"
 )
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
@@ -208,7 +208,7 @@ func selectObjects[T ConfigurationResource](
 			rejected++
 			reason = invalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
-			rs.eventRecorder.Eventf(obj, nil, v1.EventTypeWarning, invalidConfiguration, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+			rs.eventRecorder.Eventf(obj, nil, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingPrometheusConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
