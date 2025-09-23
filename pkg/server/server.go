@@ -69,7 +69,7 @@ func RegisterFlags(fs *flag.FlagSet, c *Config) {
 	fs.BoolVar(&c.EnableHTTP2, "web.enable-http2", c.EnableHTTP2, "Enable HTTP2 connections.")
 
 	fs.BoolVar(&c.TLSConfig.Enabled, "web.enable-tls", c.TLSConfig.Enabled, "Enable TLS for the web server.")
-	fs.StringVar(&c.TLSConfig.CertFile, "web.cert-file", c.TLSConfig.CertFile, "Certficate file to be used for the web server.")
+	fs.StringVar(&c.TLSConfig.CertFile, "web.cert-file", c.TLSConfig.CertFile, "Certificate file to be used for the web server.")
 	fs.StringVar(&c.TLSConfig.KeyFile, "web.key-file", c.TLSConfig.KeyFile, "Private key matching the cert file to be used for the web server.")
 	fs.StringVar(&c.TLSConfig.ClientCAFile, "web.client-ca-file", c.TLSConfig.ClientCAFile, "Client CA certificate file to be used for the web server.")
 

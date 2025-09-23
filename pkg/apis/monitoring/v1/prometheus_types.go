@@ -585,7 +585,7 @@ type CommonPrometheusFields struct {
 	// overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 	//  to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-	// In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+	// In practice,`OverrideHonorLabels:true` enforces `honorLabels:false`
 	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	// +optional
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
@@ -1184,7 +1184,7 @@ type PrometheusSpec struct {
 	// +optional
 	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
 
-	// query defines the configuration of the Promethus query service.
+	// query defines the configuration of the Prometheus query service.
 	// +optional
 	Query *QuerySpec `json:"query,omitempty"`
 

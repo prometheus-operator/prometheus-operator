@@ -75,7 +75,7 @@ type ProbeSpec struct {
 	// jobName assigned to scraped metrics by default.
 	// +optional
 	JobName string `json:"jobName,omitempty"`
-	// prober defines the pecification for the prober to use for probing targets.
+	// prober defines the specification for the prober to use for probing targets.
 	// The prober.URL parameter is required. Targets cannot be probed if left empty.
 	// +optional
 	ProberSpec ProberSpec `json:"prober,omitempty"`

@@ -1055,7 +1055,10 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return nil
 	}
 
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(p, c.dclient)
+	var (
+		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
+		getErr               error
+	)
 
 	// Update the status of selected serviceMonitors.
 	for key, configResource := range resources.sMons {
@@ -1078,9 +1081,8 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
-	// Remove bindings from configuration resources which reference the
+	// Remove bindings from serviceMonitors which reference the
 	// workload but aren't selected anymore.
-	var getErr error
 	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
 		if getErr != nil {
 			// Skip all subsequent updates after the first error.
@@ -1112,6 +1114,43 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
+	if getErr != nil {
+		return getErr
+	}
+
+	// Remove bindings from podMonitors which reference the
+	// workload but aren't selected anymore.
+	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
+		if getErr != nil {
+			// Skip all subsequent updates after the first error.
+			return
+		}
+
+		k, ok := c.accessor.MetaNamespaceKey(obj)
+		if !ok {
+			return
+		}
+
+		if _, ok = resources.pMons[k]; ok {
+			return
+		}
+
+		pm, ok := obj.(*monitoringv1.PodMonitor)
+		if !ok {
+			return
+		}
+
+		if err := k8sutil.AddTypeInformationToObject(pm); err != nil {
+			getErr = fmt.Errorf("failed to add type information to PodMonitor %s: %w", k, err)
+			return
+		}
+
+		if err := configResourceSyncer.RemoveBinding(ctx, pm); err != nil {
+			getErr = fmt.Errorf("failed to remove Prometheus binding from PodMonitor %s status: %w", k, err)
+		}
+	}); err != nil {
+		return fmt.Errorf("listing all PodMonitors from cache failed: %w", err)
+	}
 	return getErr
 }
 
@@ -1125,6 +1164,8 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
 		getErr               error
 	)
+
+	// Remove bindings from all serviceMonitors which reference the workload.
 	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
 		if getErr != nil {
 			// Skip all subsequent updates after the first error.
@@ -1145,7 +1186,31 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
+	if getErr != nil {
+		return getErr
+	}
 
+	// Remove bindings from all podMonitors which reference the workload.
+	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
+		if getErr != nil {
+			// Skip all subsequent updates after the first error.
+			return
+		}
+
+		pm, ok := obj.(*monitoringv1.PodMonitor)
+		if !ok {
+			return
+		}
+
+		if err := k8sutil.AddTypeInformationToObject(pm); err != nil {
+			getErr = fmt.Errorf("failed to add type information to PodMonitor: %w", err)
+			return
+		}
+
+		getErr = configResourceSyncer.RemoveBinding(ctx, pm)
+	}); err != nil {
+		return fmt.Errorf("listing all PodMonitors from cache failed: %w", err)
+	}
 	return getErr
 }
 
