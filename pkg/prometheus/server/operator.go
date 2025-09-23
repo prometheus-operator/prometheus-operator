@@ -1096,11 +1096,6 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 			return
 		}
 
-		if err := k8sutil.AddTypeInformationToObject(s); err != nil {
-			getErr = fmt.Errorf("failed to add type information to ServiceMonitor %s: %w", k, err)
-			return
-		}
-
 		if err := configResourceSyncer.RemoveBinding(ctx, s); err != nil {
 			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
 		}
@@ -1130,11 +1125,6 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 		pm, ok := obj.(*monitoringv1.PodMonitor)
 		if !ok {
-			return
-		}
-
-		if err := k8sutil.AddTypeInformationToObject(pm); err != nil {
-			getErr = fmt.Errorf("failed to add type information to PodMonitor %s: %w", k, err)
 			return
 		}
 
@@ -1170,11 +1160,6 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 			return
 		}
 
-		if err := k8sutil.AddTypeInformationToObject(s); err != nil {
-			getErr = fmt.Errorf("failed to add type information to ServiceMonitor: %w", err)
-			return
-		}
-
 		getErr = configResourceSyncer.RemoveBinding(ctx, s)
 	}); err != nil {
 		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
@@ -1192,11 +1177,6 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 
 		pm, ok := obj.(*monitoringv1.PodMonitor)
 		if !ok {
-			return
-		}
-
-		if err := k8sutil.AddTypeInformationToObject(pm); err != nil {
-			getErr = fmt.Errorf("failed to add type information to PodMonitor: %w", err)
 			return
 		}
 

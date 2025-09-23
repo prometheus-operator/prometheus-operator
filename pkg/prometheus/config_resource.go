@@ -29,6 +29,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -125,6 +126,10 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 // resource's status subresource.
 // If the workload has no binding, this a no-operation.
 func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResource ConfigurationObject) error {
+	if err := k8sutil.AddTypeInformationToObject(configResource); err != nil {
+		return fmt.Errorf("failed to add type information: %w", err)
+	}
+
 	bindings := configResource.Bindings()
 	p, err := crs.removeBindingPatch(bindings)
 	if err != nil {
