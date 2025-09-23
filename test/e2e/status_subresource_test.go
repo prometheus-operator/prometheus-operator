@@ -345,15 +345,13 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
-
 // testProbeStatusSubresource validates Probe status updates upon Prometheus selection.
 func testProbeStatusSubresource(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
-  
-  ns := framework.CreateNamespace(ctx, t, testCtx)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
 	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
 	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
 		ctx, testFramework.PrometheusOperatorOpts{
@@ -363,8 +361,8 @@ func testProbeStatusSubresource(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-  
-  name := "probe-status-subresource-test"
+
+	name := "probe-status-subresource-test"
 	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
 
 	proberURL := "localhost:9115"
@@ -376,11 +374,11 @@ func testProbeStatusSubresource(t *testing.T) {
 			"group": name,
 		},
 	}
-  
- 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
-  
-  if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
 		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
 	} else {
 		testCtx.AddFinalizerFn(finalizerFn)
