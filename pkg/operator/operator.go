@@ -313,7 +313,7 @@ func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
 		eventBroadcaster.StartStructuredLogging(0)
 
 		if emitEvents {
-			eventBroadcaster.StartRecordingToSinkWithContext(context.Background())
+			_ = eventBroadcaster.StartRecordingToSinkWithContext(context.Background())
 		}
 
 		return eventBroadcaster.NewRecorder(scheme.Scheme, component)
