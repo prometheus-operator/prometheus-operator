@@ -4784,6 +4784,10 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
 	}
 
+	if cg.version.LT(semver.MustParse("3.6.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.UnderscoreEscapingWithoutSuffixes {
+		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.6.0 ", monitoringv1.UnderscoreEscapingWithoutSuffixes)
+	}
+
 	if cg.version.GTE(semver.MustParse("3.5.0")) {
 		err := otlpConfig.Validate()
 		if err != nil {
