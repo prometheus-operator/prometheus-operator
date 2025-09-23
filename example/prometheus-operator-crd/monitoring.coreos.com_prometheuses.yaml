@@ -5857,6 +5857,7 @@ spec:
                     - NoUTF8EscapingWithSuffixes
                     - UnderscoreEscapingWithSuffixes
                     - NoTranslation
+                    - UnderscoreEscapingWithoutSuffixes
                     type: string
                 type: object
               overrideHonorLabels:

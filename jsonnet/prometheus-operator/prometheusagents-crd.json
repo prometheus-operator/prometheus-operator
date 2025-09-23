@@ -4292,7 +4292,8 @@
                         "enum": [
                           "NoUTF8EscapingWithSuffixes",
                           "UnderscoreEscapingWithSuffixes",
-                          "NoTranslation"
+                          "NoTranslation",
+                          "UnderscoreEscapingWithoutSuffixes"
                         ],
                         "type": "string"
                       }
