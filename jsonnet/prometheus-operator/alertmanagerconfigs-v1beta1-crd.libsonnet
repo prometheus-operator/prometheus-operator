@@ -10725,6 +10725,11 @@
                             },
                             type: 'array',
                           },
+                          location: {
+                            description: 'Location is the time zone for the time interval',
+                            minLength: 1,
+                            type: 'string',
+                          },
                           months: {
                             description: 'months defines a list of MonthRange',
                             items: {

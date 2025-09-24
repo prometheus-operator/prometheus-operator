@@ -5858,6 +5858,10 @@ func TestSanitizeRoute(t *testing.T) {
 // and any others with custom marshalling/unmarshalling are parsed
 // into the internal struct as expected.
 func TestLoadConfig(t *testing.T) {
+	sydneyLocation, err := time.LoadLocation("Australia/Sydney")
+	if err != nil {
+		require.NoError(t, err)
+	}
 	testCase := []struct {
 		name     string
 		expected *alertmanagerConfig
@@ -5914,6 +5918,7 @@ func TestLoadConfig(t *testing.T) {
 										EndMinute:   1440,
 									},
 								},
+								Location: &timeinterval.Location{Location: sydneyLocation},
 							},
 						},
 					},
