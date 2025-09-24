@@ -3992,6 +3992,24 @@ PrometheusRuleSpec
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>status defines the status subresource. It is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
+<p>Most recent observed status of the PrometheusRule. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor
@@ -9752,7 +9770,7 @@ condition is out of date with respect to the current state of the object.</p>
 <h3 id="monitoring.coreos.com/v1.ConfigResourceStatus">ConfigResourceStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitor">PodMonitor</a>, <a href="#monitoring.coreos.com/v1.Probe">Probe</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitor">PodMonitor</a>, <a href="#monitoring.coreos.com/v1.Probe">Probe</a>, <a href="#monitoring.coreos.com/v1.PrometheusRule">PrometheusRule</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
 </p>
 <div>
 <p>ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
@@ -9778,7 +9796,7 @@ More info:
 </td>
 <td>
 <em>(Optional)</em>
-<p>bindings defines the list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.</p>
+<p>bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.</p>
 </td>
 </tr>
 </tbody>
@@ -20856,7 +20874,7 @@ string
 </em>
 </td>
 <td>
-<p>resource defines the type of resource being referenced (e.g. Prometheus or PrometheusAgent).</p>
+<p>resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).</p>
 </td>
 </tr>
 <tr>
