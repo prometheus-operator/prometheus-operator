@@ -45,8 +45,9 @@ import (
 )
 
 const (
-	invalidConfiguration                            = "InvalidConfiguration"
-	selectingPrometheusConfigurationResourcesAction = "SelectingPrometheusConfigurationResourcesAction"
+	// Generic reason for selected resources that are not valid.
+	invalidConfiguration                  = "InvalidConfiguration"
+	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
