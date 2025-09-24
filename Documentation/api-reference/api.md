@@ -11941,6 +11941,20 @@ bool
 It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>promoteScopeMetadata</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
+It requires Prometheus &gt;= v3.6.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference

@@ -4287,6 +4287,10 @@
                         "type": "array",
                         "x-kubernetes-list-type": "set"
                       },
+                      "promoteScopeMetadata": {
+                        "description": "promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.\nAs per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.\nIt requires Prometheus >= v3.6.0.",
+                        "type": "boolean"
+                      },
                       "translationStrategy": {
                         "description": "translationStrategy defines how the OTLP receiver endpoint translates the incoming metrics.\n\nIt requires Prometheus >= v3.0.0.",
                         "enum": [
