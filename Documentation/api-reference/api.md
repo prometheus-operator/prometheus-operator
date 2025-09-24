@@ -9796,7 +9796,7 @@ More info:
 </td>
 <td>
 <em>(Optional)</em>
-<p>bindings defines the list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.</p>
+<p>bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.</p>
 </td>
 </tr>
 </tbody>
@@ -20860,7 +20860,7 @@ string
 </em>
 </td>
 <td>
-<p>resource defines the type of resource being referenced (e.g. Prometheus or PrometheusAgent).</p>
+<p>resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).</p>
 </td>
 </tr>
 <tr>

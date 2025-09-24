@@ -1139,7 +1139,7 @@
                 "description": "status defines the status subresource. It is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the Probe. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "bindings": {
-                    "description": "bindings defines the list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.",
+                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.",
                     "items": {
                       "description": "WorkloadBinding is a link between a configuration resource and a workload resource.",
                       "properties": {
@@ -1211,10 +1211,11 @@
                           "type": "string"
                         },
                         "resource": {
-                          "description": "resource defines the type of resource being referenced (e.g. Prometheus or PrometheusAgent).",
+                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).",
                           "enum": [
                             "prometheuses",
-                            "prometheusagents"
+                            "prometheusagents",
+                            "thanosrulers"
                           ],
                           "type": "string"
                         }
