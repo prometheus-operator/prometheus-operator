@@ -158,8 +158,8 @@ func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
 	return resources
 }
 
-// nolint: recvcheck
-type Quantity struct {
+// nolint:gci,recvcheck,godoclint
+type Quantity struct { 
 	q resource.Quantity
 }
 
