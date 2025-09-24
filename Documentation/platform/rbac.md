@@ -51,6 +51,7 @@ rules:
   - podmonitors
   - podmonitors/status
   - probes
+  - probes/status
   - prometheusrules
   verbs:
   - '*'

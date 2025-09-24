@@ -16,11 +16,13 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -337,6 +339,102 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 	binding, err = framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
+// testProbeStatusSubresource validates Probe status updates upon Prometheus selection.
+func testProbeStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "probe-status-subresource-test"
+	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
+
+	proberURL := "localhost:9115"
+	targets := []string{svc.Name + ":9090"}
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
+	}
+
+	probe1 := framework.MakeBasicStaticProbe("probe1", proberURL, targets)
+	probe1.Labels["group"] = name
+	probe1, err = framework.MonClientV1.Probes(ns).Create(ctx, probe1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	probe1, err = framework.WaitForProbeCondition(ctx, probe1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(probe1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second probe to check that the operator updates the binding when the condition changes.
+	probe2 := framework.MakeBasicStaticProbe("probe2", proberURL, targets)
+	probe2.Labels["group"] = name
+	probe2, err = framework.MonClientV1.Probes(ns).Create(ctx, probe2, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	probe2, err = framework.WaitForProbeCondition(ctx, probe2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first probe. A label update doesn't
+	// change the status of the probe and the observed timetstamp
+	// should be the same as before.
+	probe1.Labels["test"] = "test"
+	probe1, err = framework.MonClientV1.Probes(ns).Update(ctx, probe1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second probe to reference an non-existing Secret.
+	probe2.Spec.BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	probe2, err = framework.MonClientV1.Probes(ns).Update(ctx, probe2, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second Probe should change to Accepted=False.
+	_, err = framework.WaitForProbeCondition(ctx, probe2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first Probe should remain unchanged.
+	probe1, err = framework.WaitForProbeCondition(ctx, probe1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(probe1.Status.Bindings, p, monitoringv1.PrometheusName)
 	require.NoError(t, err)
 	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
 	require.NoError(t, err)

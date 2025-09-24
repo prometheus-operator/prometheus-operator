@@ -100,6 +100,7 @@ function(params) {
                  'podmonitors',
                  'podmonitors/status',
                  'probes',
+                 'probes/status',
                  'prometheusrules',
                ],
                verbs: ['*'],
