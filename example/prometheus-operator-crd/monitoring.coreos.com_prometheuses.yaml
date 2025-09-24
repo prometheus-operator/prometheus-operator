@@ -5848,6 +5848,11 @@ spec:
                     minItems: 1
                     type: array
                     x-kubernetes-list-type: set
+                  promoteScopeMetadata:
+                    description: |-
+                      promoteScopeMetadata defines enables promotion of OTel scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+                      It requires Prometheus >= v3.6.0.
+                    type: boolean
                   translationStrategy:
                     description: |-
                       translationStrategy defines how the OTLP receiver endpoint translates the incoming metrics.

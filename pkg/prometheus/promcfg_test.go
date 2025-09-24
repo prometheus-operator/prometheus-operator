@@ -9824,6 +9824,22 @@ func TestOTLPConfig(t *testing.T) {
 			},
 			golden: "OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
 		},
+		{
+			name:    "Config PromoteScopeMetadata old version",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteScopeMetadata: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_scope_metadata_with_old_version.golden",
+		},
+		{
+			name:    "Config PromoteScopeMetadata",
+			version: "v3.6.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteScopeMetadata: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_scope_metadata.golden",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

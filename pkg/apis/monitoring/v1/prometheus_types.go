@@ -2530,6 +2530,11 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.4.0.
 	// +optional
 	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
+
+	// promoteScopeMetadata defines enables promotion of OTel scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+	// It requires Prometheus >= v3.6.0.
+	// +optional
+	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"`
 }
 
 // Validate semantically validates the given OTLPConfig section.

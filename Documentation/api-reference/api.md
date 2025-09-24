@@ -11941,6 +11941,19 @@ bool
 It requires Prometheus &gt;= v3.4.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>promoteScopeMetadata</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>promoteScopeMetadata defines enables promotion of OTel scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+It requires Prometheus &gt;= v3.6.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference
