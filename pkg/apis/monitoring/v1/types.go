@@ -1059,7 +1059,7 @@ const (
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ConfigResourceStatus struct {
-	// bindings defines the list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.
+	// bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.
 	// +listType=map
 	// +listMapKey=group
 	// +listMapKey=resource
@@ -1076,8 +1076,8 @@ type WorkloadBinding struct {
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	// +required
 	Group string `json:"group"`
-	// resource defines the type of resource being referenced (e.g. Prometheus or PrometheusAgent).
-	// +kubebuilder:validation:Enum=prometheuses;prometheusagents
+	// resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).
+	// +kubebuilder:validation:Enum=prometheuses;prometheusagents;thanosrulers
 	// +required
 	Resource string `json:"resource"`
 	// name defines the name of the referenced object.
