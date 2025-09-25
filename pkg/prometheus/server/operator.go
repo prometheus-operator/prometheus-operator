@@ -1055,10 +1055,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return nil
 	}
 
-	var (
-		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
-		getErr               error
-	)
+	var configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient, c.accessor)
 
 	// Update the status of selected serviceMonitors.
 	for key, configResource := range resources.sMons {
@@ -1076,65 +1073,16 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Remove bindings from serviceMonitors which reference the
 	// workload but aren't selected anymore.
-	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		k, ok := c.accessor.MetaNamespaceKey(obj)
-		if !ok {
-			return
-		}
-
-		if _, ok = resources.sMons[k]; ok {
-			return
-		}
-
-		s, ok := obj.(*monitoringv1.ServiceMonitor)
-		if !ok {
-			return
-		}
-
-		if err := configResourceSyncer.RemoveBinding(ctx, s); err != nil {
-			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
-		}
-	}); err != nil {
-		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
-	}
-	if getErr != nil {
-		return getErr
+	if err := prompkg.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
 
 	// Remove bindings from podMonitors which reference the
 	// workload but aren't selected anymore.
-	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		k, ok := c.accessor.MetaNamespaceKey(obj)
-		if !ok {
-			return
-		}
-
-		if _, ok = resources.pMons[k]; ok {
-			return
-		}
-
-		pm, ok := obj.(*monitoringv1.PodMonitor)
-		if !ok {
-			return
-		}
-
-		if err := configResourceSyncer.RemoveBinding(ctx, pm); err != nil {
-			getErr = fmt.Errorf("failed to remove Prometheus binding from PodMonitor %s status: %w", k, err)
-		}
-	}); err != nil {
-		return fmt.Errorf("listing all PodMonitors from cache failed: %w", err)
+	if err := prompkg.CleanupBindings(ctx, c.pmonInfs.ListAll, resources.pMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
-	return getErr
+	return nil
 }
 
 // configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
@@ -1143,48 +1091,18 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 		return nil
 	}
 
-	var (
-		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
-		getErr               error
-	)
+	var configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient, c.accessor)
 
 	// Remove bindings from all serviceMonitors which reference the workload.
-	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		s, ok := obj.(*monitoringv1.ServiceMonitor)
-		if !ok {
-			return
-		}
-
-		getErr = configResourceSyncer.RemoveBinding(ctx, s)
-	}); err != nil {
-		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
-	}
-	if getErr != nil {
-		return getErr
+	if err := prompkg.CleanupBindings(ctx, c.smonInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1.ServiceMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
 
 	// Remove bindings from all podMonitors which reference the workload.
-	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		pm, ok := obj.(*monitoringv1.PodMonitor)
-		if !ok {
-			return
-		}
-
-		getErr = configResourceSyncer.RemoveBinding(ctx, pm)
-	}); err != nil {
-		return fmt.Errorf("listing all PodMonitors from cache failed: %w", err)
+	if err := prompkg.CleanupBindings(ctx, c.pmonInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1.PodMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
-	return getErr
+	return nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
