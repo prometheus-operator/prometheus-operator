@@ -180,7 +180,7 @@ func CleanupBindings[T ConfigurationResource](
 			return
 		}
 
-		obj, ok := o.(runtime.Object)
+		obj, ok := o.(ConfigurationObject)
 		if !ok {
 			return
 		}
@@ -190,17 +190,17 @@ func CleanupBindings[T ConfigurationResource](
 		}
 
 		var (
-			configResource ConfigurationObject
+			// configResource ConfigurationObject
 			gvk            = obj.GetObjectKind().GroupVersionKind()
 		)
-		switch gvk.Kind {
-		case monitoringv1.ServiceMonitorsKind:
-			configResource = o.(*monitoringv1.ServiceMonitor)
-		case monitoringv1.PodMonitorsKind:
-			configResource = o.(*monitoringv1.PodMonitor)
-		}
+		// switch gvk.Kind {
+		// case monitoringv1.ServiceMonitorsKind:
+		// 	configResource = o.(*monitoringv1.ServiceMonitor)
+		// case monitoringv1.PodMonitorsKind:
+		// 	configResource = o.(*monitoringv1.PodMonitor)
+		// }
 
-		if err = csr.RemoveBinding(ctx, configResource); err != nil {
+		if err = csr.RemoveBinding(ctx, obj); err != nil {
 			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
 		}
 	})
