@@ -56,6 +56,7 @@ const (
 // environments. This is probably due to different meta data sizes which count
 // into the overall maximum size of a ConfigMap. Thereby lets leave a
 // large buffer.
+// nolint:godoclint
 var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
 type PrometheusRuleSelector struct {
