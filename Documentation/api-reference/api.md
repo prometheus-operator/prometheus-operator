@@ -20397,6 +20397,7 @@ AdditionalLabelSelectors
 Supported values are:
 * <code>NoUTF8EscapingWithSuffixes</code>
 * <code>UnderscoreEscapingWithSuffixes</code>
+* <code>UnderscoreEscapingWithoutSuffixes</code>
 * <code>NoTranslation</code></p>
 </div>
 <table>
@@ -20412,6 +20413,8 @@ Supported values are:
 </tr><tr><td><p>&#34;NoUTF8EscapingWithSuffixes&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;UnderscoreEscapingWithSuffixes&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;UnderscoreEscapingWithoutSuffixes&#34;</p></td>
 <td></td>
 </tr></tbody>
 </table>
