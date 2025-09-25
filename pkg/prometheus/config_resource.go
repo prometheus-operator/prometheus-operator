@@ -189,16 +189,7 @@ func CleanupBindings[T ConfigurationResource](
 			return
 		}
 
-		var (
-			// configResource ConfigurationObject
-			gvk            = obj.GetObjectKind().GroupVersionKind()
-		)
-		// switch gvk.Kind {
-		// case monitoringv1.ServiceMonitorsKind:
-		// 	configResource = o.(*monitoringv1.ServiceMonitor)
-		// case monitoringv1.PodMonitorsKind:
-		// 	configResource = o.(*monitoringv1.PodMonitor)
-		// }
+		var gvk = obj.GetObjectKind().GroupVersionKind()
 
 		if err = csr.RemoveBinding(ctx, obj); err != nil {
 			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
@@ -207,7 +198,6 @@ func CleanupBindings[T ConfigurationResource](
 	if listErr != nil {
 		return fmt.Errorf("listing all items from cache failed: %w", listErr)
 	}
-
 	return err
 }
 
