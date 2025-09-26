@@ -305,10 +305,40 @@ func NewMetrics(r prometheus.Registerer) *Metrics {
 	return &m
 }
 
-type EventRecorderFactory func(client kubernetes.Interface, component string) events.EventRecorder
+// EventRecorderFactory returns an function to create EventRecorder objects.
+type EventRecorderFactory func(client kubernetes.Interface, component string) NewEventRecorderFunc
+
+// NewEventRecorderFunc returns an EventRecorder which will automatically inject the given runtime.Object as related.
+type NewEventRecorderFunc func(related runtime.Object) *EventRecorder
+
+// EventRecorder records events which are related to the associated Object.
+type EventRecorder struct {
+	er      events.EventRecorder
+	related runtime.Object
+}
+
+func NewFakeRecorder(bufferSize int, related runtime.Object) *EventRecorder {
+	return &EventRecorder{
+		related: related,
+		er:      events.NewFakeRecorder(bufferSize),
+	}
+}
+
+// Eventf records a Kubernetes event.
+func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
+	er.er.Eventf(
+		regarding,
+		er.related,
+		eventtype,
+		reason,
+		action,
+		note,
+		args,
+	)
+}
 
 func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
-	return func(client kubernetes.Interface, component string) events.EventRecorder {
+	return func(client kubernetes.Interface, component string) NewEventRecorderFunc {
 		eventBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{Interface: client.EventsV1()})
 		eventBroadcaster.StartStructuredLogging(0)
 
@@ -316,7 +346,14 @@ func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
 			_ = eventBroadcaster.StartRecordingToSinkWithContext(context.Background())
 		}
 
-		return eventBroadcaster.NewRecorder(scheme.Scheme, component)
+		eventRecorder := eventBroadcaster.NewRecorder(scheme.Scheme, component)
+
+		return func(related runtime.Object) *EventRecorder {
+			return &EventRecorder{
+				er:      eventRecorder,
+				related: related,
+			}
+		}
 	}
 }
 
