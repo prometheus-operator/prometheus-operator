@@ -60,7 +60,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 	logger := c.logger.With("prometheus", p.Name, "namespace", p.Namespace)
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 
-	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.PrometheusFormat, promVersion, p.Spec.RuleSelector, nsLabeler, c.ruleInfs, c.eventRecorder, logger)
+	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.PrometheusFormat, promVersion, p.Spec.RuleSelector, nsLabeler, c.ruleInfs, c.newEventRecorder(p), logger)
 	if err != nil {
 		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
