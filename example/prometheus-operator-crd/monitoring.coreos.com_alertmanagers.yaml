@@ -1896,6 +1896,7 @@ spec:
                         x-kubernetes-map-type: atomic
                       pagerdutyUrl:
                         description: pagerdutyUrl defines the default Pagerduty URL.
+                        pattern: ^(http|https)://.+$
                         type: string
                       resolveTimeout:
                         description: |-

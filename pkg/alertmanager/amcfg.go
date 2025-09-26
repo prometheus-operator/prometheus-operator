@@ -487,7 +487,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if in.PagerdutyURL != nil {
-		u, err := url.Parse(*in.PagerdutyURL)
+		u, err := url.Parse(string(*in.PagerdutyURL))
 		if err != nil {
 			return nil, fmt.Errorf("parse Pagerduty URL: %w", err)
 		}

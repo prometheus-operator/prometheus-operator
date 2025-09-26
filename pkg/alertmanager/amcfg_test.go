@@ -500,7 +500,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "valid global config with Pagerduty URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &pagerdutyURL,
+				PagerdutyURL: ptr.To(monitoringv1.URL(pagerdutyURL)),
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -534,7 +534,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "global config with invalid Pagerduty URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &invalidPagerdutyURL,
+				PagerdutyURL: ptr.To(monitoringv1.URL(invalidPagerdutyURL)),
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
