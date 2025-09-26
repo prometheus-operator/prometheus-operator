@@ -718,7 +718,7 @@ func (cg *ConfigGenerator) addAuthorizationToYaml(
 	return cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "authorization", authCfg)
 }
 
-func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
+func (cg *ConfigGenerator) buildExternalLabels() (yaml.MapSlice, error) {
 	m := map[string]string{}
 	cpf := cg.prom.GetCommonPrometheusFields()
 	objMeta := cg.prom.GetObjectMeta()
@@ -728,8 +728,11 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		prometheusExternalLabelName = *cpf.PrometheusExternalLabelName
 	}
 
-	// Do not add the external label if the resulting value is empty.
+	// Fail reconciliation if external label name is invalid.
 	if prometheusExternalLabelName != "" {
+		if !cg.isValidExternalLabelName(prometheusExternalLabelName) {
+			return nil, fmt.Errorf("invalid prometheusExternalLabelName %q for Prometheus version %s", prometheusExternalLabelName, cg.version.String())
+		}
 		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", objMeta.GetNamespace(), objMeta.GetName())
 	}
 
@@ -738,20 +741,47 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		replicaExternalLabelName = *cpf.ReplicaExternalLabelName
 	}
 
-	// Do not add the external label if the resulting value is empty.
+	// Fail reconciliation if replica external label name is invalid.
 	if replicaExternalLabelName != "" {
+		if !cg.isValidExternalLabelName(replicaExternalLabelName) {
+			return nil, fmt.Errorf("invalid replicaExternalLabelName %q for Prometheus version %s", replicaExternalLabelName, cg.version.String())
+		}
 		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
 	for k, v := range cpf.ExternalLabels {
 		if _, found := m[k]; found {
-			cg.logger.Warn("ignoring external label because it is a reserved key", "key", k)
-			continue
+			return nil, fmt.Errorf("external label %q conflicts with reserved label name", k)
 		}
+
+		if !cg.isValidExternalLabelName(k) {
+			return nil, fmt.Errorf("invalid external label name %q for Prometheus version %s", k, cg.version.String())
+		}
+
 		m[k] = v
 	}
 
-	return stringMapToMapSlice(m)
+	return stringMapToMapSlice(m), nil
+}
+
+func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) (yaml.MapSlice, error) {
+	externalLabels, err := cg.buildExternalLabels()
+	if err != nil {
+		return nil, err
+	}
+
+	slice = append(slice, yaml.MapItem{
+		Key:   "external_labels",
+		Value: externalLabels,
+	})
+
+	return slice, nil
+}
+
+// isValidExternalLabelName validates external label names using version-aware validation.
+func (cg *ConfigGenerator) isValidExternalLabelName(labelName string) bool {
+	validationScheme := operator.ValidationSchemeForPrometheus(cg.version)
+	return validationScheme.IsValidLabelName(labelName)
 }
 
 func (cg *ConfigGenerator) addProxyConfigtoYaml(
@@ -957,7 +987,10 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	cfg := yaml.MapSlice{}
 
 	// Global config
-	globalCfg := cg.buildGlobalConfig()
+	globalCfg, err := cg.buildGlobalConfig()
+	if err != nil {
+		return nil, fmt.Errorf("generating global configuration failed: %w", err)
+	}
 	globalCfg = cg.appendEvaluationInterval(globalCfg, p.Spec.EvaluationInterval)
 	globalCfg = cg.appendRuleQueryOffset(globalCfg, p.Spec.RuleQueryOffset)
 	globalCfg = cg.appendQueryLogFile(globalCfg, p.Spec.QueryLogFile)
@@ -979,7 +1012,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
+	scrapeConfigs, err = cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -2937,15 +2970,6 @@ func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice
 	return slice
 }
 
-func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSlice {
-	slice = append(slice, yaml.MapItem{
-		Key:   "external_labels",
-		Value: cg.buildExternalLabels(),
-	})
-
-	return slice
-}
-
 func (cg *ConfigGenerator) appendRuleQueryOffset(slice yaml.MapSlice, ruleQueryOffset *monitoringv1.Duration) yaml.MapSlice {
 	if ruleQueryOffset == nil {
 		return slice
@@ -3081,7 +3105,11 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	cfg := yaml.MapSlice{}
 
 	// Global config
-	cfg = append(cfg, yaml.MapItem{Key: "global", Value: cg.buildGlobalConfig()})
+	globalCfg, err := cg.buildGlobalConfig()
+	if err != nil {
+		return nil, fmt.Errorf("generating global configuration failed: %w", err)
+	}
+	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalCfg})
 
 	// Runtime config
 	cfg = cg.appendRuntime(cfg)
@@ -3094,7 +3122,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	)
 
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
 	}
@@ -5067,12 +5095,19 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 	return cg.AppendMapItem(cfg, "filters", filtersYamlMap)
 }
 
-func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
+func (cg *ConfigGenerator) buildGlobalConfig() (yaml.MapSlice, error) {
 	cpf := cg.prom.GetCommonPrometheusFields()
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
-	cfg = cg.appendExternalLabels(cfg)
+
+	// Handle the error return value
+	var err error
+	cfg, err = cg.appendExternalLabels(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg = cg.appendScrapeLimits(cfg)
 	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
@@ -5080,5 +5115,5 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 
-	return cfg
+	return cfg, nil
 }

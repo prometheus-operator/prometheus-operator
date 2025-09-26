@@ -164,29 +164,99 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:             "valid_scrape_timeout_along_with_valid_scrape_interval_specified.golden",
 		},
 		{
-			Scenario:           "external label specified",
-			Version:            "v2.15.2",
+			Scenario:           "external label specified along with reserved labels prometheus 3",
+			Version:            "v3.5.0",
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			ExternalLabels: map[string]string{
-				"key1": "value1",
-				"key2": "value2",
+				"prometheus_replica": "1",
+				"prometheus":         "prometheus-k8s-1",
+				"some.other.key":     "some-value",
 			},
-			Golden: "external_label_specified.golden",
+			PrometheusExternalLabelName: ptr.To("prometheus"),
+			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
+			ExpectError:                 true,
 		},
 		{
-			Scenario:           "external label specified along with reserved labels",
+			Scenario:           "external label specified along with reserved labels prometheus 2",
 			Version:            "v2.45.0",
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			ExternalLabels: map[string]string{
 				"prometheus_replica": "1",
 				"prometheus":         "prometheus-k8s-1",
-				"some-other-key":     "some-value",
+				"some.other.key":     "some-value",
 			},
 			PrometheusExternalLabelName: ptr.To("prometheus"),
 			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
-			Golden:                      "external_label_specified_along_with_reserved_labels.golden",
+			ExpectError:                 true,
+		},
+		{
+			Scenario:           "external label specified along with reserved labels prometheus 3",
+			Version:            "v3.6.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExternalLabels: map[string]string{
+				"prometheus_replica": "1",
+				"prometheus":         "prometheus-k8s-1",
+				"some.other.key":     "some-value",
+			},
+			PrometheusExternalLabelName: ptr.To("prometheus"),
+			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
+			ExpectError:                 true,
+		},
+		{
+			Scenario:           "external labels with UTF-8 characters with prometheus 3",
+			Version:            "v3.6.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExternalLabels: map[string]string{
+				"环境":          "production",
+				"unicode_测试":  "prometheus",
+				"valid_label": "test",
+			},
+			Golden: "external_labels_utf8_prometheus3.golden",
+		},
+		{
+			Scenario:           "external labels with UTF-8 characters with prometheus 2",
+			Version:            "v2.55.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExternalLabels: map[string]string{
+				"valid_label":    "test",
+				"some-other-key": "some-value",
+				"another.label":  "value",
+			},
+			ExpectError: true,
+		},
+		{
+			Scenario:           "external labels with invalid characters - prometheus 3",
+			Version:            "v3.6.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExternalLabels: map[string]string{
+				"valid_label": "test",
+				"\xff":        "some-value",
+			},
+			ExpectError: true,
+		},
+		{
+			Scenario:                    "custom external label names with UTF-8 prometheus 3",
+			Version:                     "v3.6.0",
+			ScrapeInterval:              "30s",
+			EvaluationInterval:          "30s",
+			PrometheusExternalLabelName: ptr.To("测试_prometheus"),
+			ReplicaExternalLabelName:    ptr.To("测试_replica"),
+			Golden:                      "external_label_names_utf8_prometheus3.golden",
+		},
+		{
+			Scenario:                    "custom external label names with UTF-8 with prometheus 2",
+			Version:                     "v2.55.0",
+			ScrapeInterval:              "30s",
+			EvaluationInterval:          "30s",
+			PrometheusExternalLabelName: ptr.To("测试_prometheus"),
+			ReplicaExternalLabelName:    ptr.To("测试_replica"),
+			ExpectError:                 true,
 		},
 		{
 			Scenario:           "query log file",
@@ -205,7 +275,7 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:               "scrape_failure_log_file.golden",
 		},
 		{
-			Scenario:             "scrape_failure_log_file_empty_path",
+			Scenario:             "scrape_fßailure_log_file_empty_path",
 			Version:              "v2.55.0",
 			ScrapeInterval:       "30s",
 			EvaluationInterval:   "30s",
@@ -355,9 +425,8 @@ func TestGlobalSettings(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				golden.Assert(t, string(cfg), tc.Golden)
 			}
-
-			golden.Assert(t, string(cfg), tc.Golden)
 		})
 	}
 }

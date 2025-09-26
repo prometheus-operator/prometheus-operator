@@ -5873,6 +5873,156 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 	require.NoError(t, err, "UTF-8 label queries should work in Prometheus 3.0+ queries")
 }
 
+func testPrometheusExternalLabelsValidation(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                        string
+		version                     string
+		externalLabels              map[string]string
+		prometheusExternalLabelName *string
+		replicaExternalLabelName    *string
+		expectReconciliationFailure bool
+		expectedErrorMessage        string
+	}{
+		{
+			name: "valid-labels-v3",
+			externalLabels: map[string]string{
+				"environment":  "production",
+				"app.name":     "test-app",
+				"service-type": "web",
+			},
+		},
+		{
+			name: "invalid-labels-v3",
+			externalLabels: map[string]string{
+				"valid_label": "test",
+				"\xff":        "prometheus",
+			},
+			expectReconciliationFailure: true,
+			expectedErrorMessage:        "invalid external label name",
+		},
+		{
+			name:    "valid-labels-v2",
+			version: operator.DefaultPrometheusV2,
+			externalLabels: map[string]string{
+				"environment":    "production",
+				"cluster_region": "us-west-2",
+			},
+		},
+		{
+			name:    "invalid-labels-v2",
+			version: operator.DefaultPrometheusV2,
+			externalLabels: map[string]string{
+				"valid_ascii":  "test",
+				"app.name":     "sample-app",
+				"service-type": "web",
+			},
+			expectReconciliationFailure: true,
+			expectedErrorMessage:        "invalid external label name",
+		},
+		{
+			name:                        "invalid-prometheus-external-label-name-v2",
+			version:                     operator.DefaultPrometheusV2,
+			prometheusExternalLabelName: ptr.To("invalid.name"),
+			expectReconciliationFailure: true,
+			expectedErrorMessage:        "invalid prometheusExternalLabelName",
+		},
+		{
+			name:                        "invalid-replica-external-label-name-v2",
+			version:                     operator.DefaultPrometheusV2,
+			replicaExternalLabelName:    ptr.To("invalid.name"),
+			expectReconciliationFailure: true,
+			expectedErrorMessage:        "invalid replicaExternalLabelName",
+		},
+		{
+			name: "reserved-label-conflict",
+			externalLabels: map[string]string{
+				"prometheus": "conflicting-value",
+			},
+			expectReconciliationFailure: true,
+			expectedErrorMessage:        "conflicts with reserved label name",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := framework.NewTestCtx(t)
+			//defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			promName := "prom-" + tt.name
+
+			// Create Prometheus with external labels.
+			prom := framework.MakeBasicPrometheus(ns, promName, tt.name, 1)
+			prom.Spec.Version = tt.version
+			prom.Spec.ExternalLabels = tt.externalLabels
+
+			if tt.prometheusExternalLabelName != nil {
+				prom.Spec.PrometheusExternalLabelName = tt.prometheusExternalLabelName
+			}
+			if tt.replicaExternalLabelName != nil {
+				prom.Spec.ReplicaExternalLabelName = tt.replicaExternalLabelName
+			}
+
+			if tt.expectReconciliationFailure {
+				// Create Prometheus and expect reconciliation to fail.
+				_, err := framework.MonClientV1.Prometheuses(ns).Create(context.Background(), prom, metav1.CreateOptions{})
+				require.NoError(t, err)
+
+				// Wait for reconciliation failure condition.
+				var pollErr error
+				err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+					current, err := framework.MonClientV1.Prometheuses(ns).Get(ctx, prom.Name, metav1.GetOptions{})
+					if err != nil {
+						pollErr = err
+						return false, nil
+					}
+
+					// Check for Reconciled condition with status False.
+					for _, cond := range current.Status.Conditions {
+						if cond.Type == monitoringv1.Reconciled && cond.Status == monitoringv1.ConditionFalse {
+							// Verify the error message contains expected message.
+							if tt.expectedErrorMessage != "" && !strings.Contains(cond.Message, tt.expectedErrorMessage) {
+								pollErr = fmt.Errorf("expected error message to contain %q, got %q", tt.expectedErrorMessage, cond.Message)
+								return false, nil
+							}
+							return true, nil
+						}
+					}
+
+					pollErr = fmt.Errorf("expected Reconciled condition with status False, but not found")
+					return false, nil
+				})
+
+				if err != nil {
+					t.Fatalf("waiting for reconciliation failure for %s: %v: %v", tt.name, err, pollErr)
+				}
+
+			} else {
+				// Create Prometheus and expect successful reconciliation
+				_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+				require.NoError(t, err, "expected successful reconciliation for %s", tt.name)
+
+				// Verify Reconciled condition is True
+				current, err := framework.MonClientV1.Prometheuses(ns).Get(context.Background(), prom.Name, metav1.GetOptions{})
+				require.NoError(t, err)
+
+				found := false
+				for _, cond := range current.Status.Conditions {
+					if cond.Type == monitoringv1.Reconciled && cond.Status == monitoringv1.ConditionTrue {
+						found = true
+						break
+					}
+				}
+				require.True(t, found, "expected Reconciled condition with status True for %s", tt.name)
+			}
+		})
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
