@@ -26,7 +26,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
@@ -50,6 +50,8 @@ type RuleConfigurationFormat int
 const (
 	PrometheusFormat RuleConfigurationFormat = iota
 	ThanosFormat
+
+	selectingPrometheusRuleResourcesAction = "SelectingPrometheusRuleResources"
 )
 
 // The maximum `Data` size of a ConfigMap seems to differ between
@@ -66,12 +68,12 @@ type PrometheusRuleSelector struct {
 	nsLabeler    *namespacelabeler.Labeler
 	ruleInformer *informers.ForResource
 
-	eventRecorder record.EventRecorder
+	eventRecorder events.EventRecorder
 
 	logger *slog.Logger
 }
 
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder events.EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -239,7 +241,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
+			prs.eventRecorder.Eventf(promRule, nil, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			continue
 		}
 

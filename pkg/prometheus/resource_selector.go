@@ -34,7 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,7 +46,8 @@ import (
 
 const (
 	// Generic reason for selected resources that are not valid.
-	invalidConfiguration = "InvalidConfiguration"
+	invalidConfiguration                  = "InvalidConfiguration"
+	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
 
 // validationScheme defines how to validate label names.
@@ -70,7 +71,7 @@ type ResourceSelector struct {
 	metrics            *operator.Metrics
 	accessor           *operator.Accessor
 
-	eventRecorder record.EventRecorder
+	eventRecorder events.EventRecorder
 }
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
@@ -126,7 +127,7 @@ func NewResourceSelector(
 	store *assets.StoreBuilder,
 	namespaceInformers cache.SharedIndexInformer,
 	metrics *operator.Metrics,
-	eventRecorder record.EventRecorder,
+	eventRecorder events.EventRecorder,
 ) (*ResourceSelector, error) {
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
@@ -218,7 +219,7 @@ func selectObjects[T ConfigurationResource](
 			rejected++
 			reason = invalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
-			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+			rs.eventRecorder.Eventf(obj, nil, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}

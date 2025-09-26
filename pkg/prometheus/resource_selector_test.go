@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -772,7 +772,7 @@ func TestSelectProbes(t *testing.T) {
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				events.NewFakeRecorder(1),
 			)
 			require.NoError(t, err)
 
@@ -1358,7 +1358,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				events.NewFakeRecorder(1),
 			)
 			require.NoError(t, err)
 
@@ -1661,7 +1661,7 @@ func TestSelectPodMonitors(t *testing.T) {
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				events.NewFakeRecorder(1),
 			)
 			require.NoError(t, err)
 
@@ -4637,7 +4637,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				events.NewFakeRecorder(1),
 			)
 			require.NoError(t, err)
 

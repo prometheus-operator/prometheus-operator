@@ -39,7 +39,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -60,6 +60,8 @@ const (
 	resyncPeriod              = 5 * time.Minute
 	controllerName            = "alertmanager-controller"
 	applicationNameLabelValue = "alertmanager"
+
+	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -101,7 +103,7 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	eventRecorder record.EventRecorder
+	eventRecorder events.EventRecorder
 
 	canReadStorageClass bool
 
@@ -1063,7 +1065,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			c.eventRecorder.Eventf(amc, am, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 
