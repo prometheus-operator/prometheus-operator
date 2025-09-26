@@ -9374,7 +9374,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -15153,7 +15153,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -22627,7 +22627,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -31219,7 +31219,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
