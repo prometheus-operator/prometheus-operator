@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -36,12 +37,29 @@ var (
 
 func main() {
 	flag.Parse()
+	version := os.Getenv("VERSION")
+	if version == "" {
+		version = "<unknown>"
+	}
 
 	if *certPath != "" {
 		go func() {
 			log.Fatal(mTLSEndpoint())
 		}()
 	}
+
+	// Expose a metric with UTF-8 name and label name.
+	// Depending on the Prometheus version and configuration, the metric will
+	// be ingested as-is or the dot characters will be escaped.
+	g := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name:        "app.info",
+			Help:        "Application information",
+			ConstLabels: map[string]string{"app.version": version},
+		},
+	)
+	g.Set(1)
+	_ = prometheus.DefaultRegisterer.Register(g)
 
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
