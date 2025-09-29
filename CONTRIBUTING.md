@@ -68,6 +68,8 @@ This is a rough outline of what a contributor's workflow looks like:
 
 Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.
 
+We also use [golangci-lint](https://golangci-lint.run/docs/) to lint the Go code (including the API definitions). Make sure to execute `make check` before creating/updating your PR.
+
 Thanks for your contributions!
 
 ### Changes to the APIs
@@ -125,7 +127,7 @@ If you want to run Prometheus Operator on your local environment, you can follow
 ./scripts/run-external.sh -c
 ```
 
-3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+3. You should now be able to see the logs from the operator in your terminal. The Operator is successfully running in your local system and can be debugged, checked for behaviour etc.
 
 Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
 

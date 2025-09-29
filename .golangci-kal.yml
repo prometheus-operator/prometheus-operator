@@ -1,0 +1,56 @@
+# This file holds the Kube-API-Linter (KAL) configuration.
+# KAL ensures that our Custom Resource Definitions meet the Kubernetes API
+# conventions (as much as possible).
+#
+# The linters documentation is at
+# https://github.com/kubernetes-sigs/kube-api-linter/blob/main/docs/linters.md
+version: "2"
+run:
+  go: "1.24"
+  allow-parallel-runners: true
+linters:
+  default: none
+  enable:
+    - kubeapilinter
+  settings:
+    custom:
+      kubeapilinter:
+        type: module
+        description: KAL is the Kube-API-Linter and lints Custom Resource Definitions (CRDs) based on API conventions and best practices.
+        settings:
+          linters:
+            # We configure the list of enabled linters explicitly.
+            # Whenever a new linter is added, it should not break the backward
+            # compatibility of existing APIs (at least for v1 APIs).
+            enable:
+              - "commentstart"
+              - "conflictingmarkers"
+              - "duplicatemarkers"
+              - "nofloats"
+              - "optionalorrequired"
+              - "statussubresource"
+              - "uniquemarkers"
+              - "jsontags"
+              - "statusoptional"
+            disable:
+              - "*"
+          lintersConfig:
+            conflictingmarkers:
+              conflicts:
+              - name: "default_vs_required"
+                sets:
+                  - ["default", "kubebuilder:default"]
+                  - ["required", "kubebuilder:validation:Required", "k8s:required"]
+                description: "A field with a default value cannot be required"
+
+  exclusions:
+    generated: strict
+    paths:
+      # Exclude test files and generated code.
+      - _test\.go
+      - zz_generated.*\.go$
+    rules:
+    # KAL only validates the API folders.
+    - path-except: pkg/apis/monitoring/
+      linters:
+        - kubeapilinter

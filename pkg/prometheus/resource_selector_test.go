@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -756,23 +755,24 @@ func TestSelectProbes(t *testing.T) {
 				},
 			)
 
-			rs, err := NewResourceSelector(
-				newLogger(),
-				&monitoringv1.Prometheus{
-					Spec: monitoringv1.PrometheusSpec{
-						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-							ScrapeClasses: []monitoringv1.ScrapeClass{
-								{
-									Name: "existent",
-								},
+			p := &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.ScrapeClass{
+							{
+								Name: "existent",
 							},
 						},
 					},
 				},
+			}
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				operator.NewFakeRecorder(1, p),
 			)
 			require.NoError(t, err)
 
@@ -1342,23 +1342,24 @@ func TestSelectServiceMonitors(t *testing.T) {
 				},
 			)
 
-			rs, err := NewResourceSelector(
-				newLogger(),
-				&monitoringv1.Prometheus{
-					Spec: monitoringv1.PrometheusSpec{
-						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-							ScrapeClasses: []monitoringv1.ScrapeClass{
-								{
-									Name: "existent",
-								},
+			p := &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.ScrapeClass{
+							{
+								Name: "existent",
 							},
 						},
 					},
 				},
+			}
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				operator.NewFakeRecorder(1, p),
 			)
 			require.NoError(t, err)
 
@@ -1645,23 +1646,25 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				},
 			)
-			rs, err := NewResourceSelector(
-				newLogger(),
-				&monitoringv1.Prometheus{
-					Spec: monitoringv1.PrometheusSpec{
-						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-							ScrapeClasses: []monitoringv1.ScrapeClass{
-								{
-									Name: "existent",
-								},
+
+			p := &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeClasses: []monitoringv1.ScrapeClass{
+							{
+								Name: "existent",
 							},
 						},
 					},
 				},
+			}
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				operator.NewFakeRecorder(1, p),
 			)
 			require.NoError(t, err)
 
@@ -4616,28 +4619,29 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				},
 			)
 
-			rs, err := NewResourceSelector(
-				newLogger(),
-				&monitoringv1.Prometheus{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "test",
-						Namespace: "test",
-					},
-					Spec: monitoringv1.PrometheusSpec{
-						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-							Version: tc.promVersion,
-							ScrapeClasses: []monitoringv1.ScrapeClass{
-								{
-									Name: "existent",
-								},
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.promVersion,
+						ScrapeClasses: []monitoringv1.ScrapeClass{
+							{
+								Name: "existent",
 							},
 						},
 					},
 				},
+			}
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
 				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
-				record.NewFakeRecorder(1),
+				operator.NewFakeRecorder(1, p),
 			)
 			require.NoError(t, err)
 

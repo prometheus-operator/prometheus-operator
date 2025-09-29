@@ -38,6 +38,7 @@ func EmbeddedPersistentVolumeClaim() *EmbeddedPersistentVolumeClaimApplyConfigur
 	b.WithAPIVersion("monitoring.coreos.com/v1")
 	return b
 }
+func (b EmbeddedPersistentVolumeClaimApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
@@ -114,4 +115,14 @@ func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithSpec(value corev1.
 func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) WithStatus(value corev1.PersistentVolumeClaimStatus) *EmbeddedPersistentVolumeClaimApplyConfiguration {
 	b.Status = &value
 	return b
+}
+
+// GetKind retrieves the value of the Kind field in the declarative configuration.
+func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) GetKind() *string {
+	return b.TypeMetaApplyConfiguration.Kind
+}
+
+// GetAPIVersion retrieves the value of the APIVersion field in the declarative configuration.
+func (b *EmbeddedPersistentVolumeClaimApplyConfiguration) GetAPIVersion() *string {
+	return b.TypeMetaApplyConfiguration.APIVersion
 }

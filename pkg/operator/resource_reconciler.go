@@ -355,7 +355,7 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 
 // objectKey returns the `namespace/name` key of a Kubernetes object, typically
 // retrieved from a controller's cache.
-func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
+func (rr *ResourceReconciler) objectKey(obj any) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
 		rr.logger.Error("creating key failed", "err", err)
@@ -398,7 +398,7 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 }
 
 // OnAdd implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
+func (rr *ResourceReconciler) OnAdd(obj any, _ bool) {
 
 	switch v := obj.(type) {
 	case *appsv1.DaemonSet:
@@ -430,7 +430,7 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 }
 
 // OnUpdate implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
+func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 	switch v := cur.(type) {
 	case *appsv1.DaemonSet:
 		rr.onDaemonSetUpdate(old.(*appsv1.DaemonSet), v)
@@ -474,7 +474,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 }
 
 // OnDelete implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnDelete(obj interface{}) {
+func (rr *ResourceReconciler) OnDelete(obj any) {
 	switch v := obj.(type) {
 	case *appsv1.DaemonSet:
 		rr.onDaemonSetDelete(v)
@@ -709,7 +709,7 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 // selector.
 func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInformer) ([]string, error) {
 	var ns []string
-	err := cache.ListAll(nsInf.GetStore(), selector, func(obj interface{}) {
+	err := cache.ListAll(nsInf.GetStore(), selector, func(obj any) {
 		ns = append(ns, obj.(*v1.Namespace).Name)
 	})
 	if err != nil {

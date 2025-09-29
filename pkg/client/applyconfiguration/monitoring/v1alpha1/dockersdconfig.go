@@ -29,7 +29,7 @@ type DockerSDConfigApplyConfiguration struct {
 	Host                             *string `json:"host,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	Port                             *int                                    `json:"port,omitempty"`
+	Port                             *int32                                  `json:"port,omitempty"`
 	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
 	MatchFirstNetwork                *bool                                   `json:"matchFirstNetwork,omitempty"`
 	Filters                          *monitoringv1alpha1.Filters             `json:"filters,omitempty"`
@@ -104,7 +104,7 @@ func (b *DockerSDConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfig
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *DockerSDConfigApplyConfiguration) WithPort(value int) *DockerSDConfigApplyConfiguration {
+func (b *DockerSDConfigApplyConfiguration) WithPort(value int32) *DockerSDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }

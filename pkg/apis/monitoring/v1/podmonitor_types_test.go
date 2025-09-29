@@ -41,7 +41,7 @@ func TestMarshallPodMonitor(t *testing.T) {
 			},
 		},
 	}
-	expected := `{"metadata":{"name":"test","namespace":"default","creationTimestamp":null,"labels":{"group":"group1"}},"spec":{"podMetricsEndpoints":[{"port":"metric","bearerTokenSecret":{"key":""}}],"selector":{},"namespaceSelector":{"matchNames":["test"]}}}`
+	expected := `{"metadata":{"name":"test","namespace":"default","labels":{"group":"group1"}},"spec":{"podMetricsEndpoints":[{"port":"metric","bearerTokenSecret":{"key":""}}],"selector":{},"namespaceSelector":{"matchNames":["test"]}}}`
 
 	r, err := json.Marshal(sm)
 	if err != nil {

@@ -35,7 +35,6 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -85,7 +84,7 @@ type Operator struct {
 	reconciliations     *operator.ReconciliationTracker
 	canReadStorageClass bool
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	config Config
 
@@ -136,15 +135,15 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
 	o := &Operator{
-		kclient:         client,
-		mdClient:        mdClient,
-		mclient:         mclient,
-		logger:          logger,
-		accessor:        operator.NewAccessor(logger),
-		metrics:         operator.NewMetrics(r),
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
-		reconciliations: &operator.ReconciliationTracker{},
-		controllerID:    c.ControllerID,
+		kclient:          client,
+		mdClient:         mdClient,
+		mclient:          mclient,
+		logger:           logger,
+		accessor:         operator.NewAccessor(logger),
+		metrics:          operator.NewMetrics(r),
+		newEventRecorder: c.EventRecorderFactory(client, controllerName),
+		reconciliations:  &operator.ReconciliationTracker{},
+		controllerID:     c.ControllerID,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
@@ -375,7 +374,7 @@ func (o *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing ThanosRuler objects.
-	_ = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		o.rr.EnqueueForStatus(obj.(*monitoringv1.ThanosRuler))
 	})
 
@@ -391,7 +390,7 @@ func (o *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := o.thanosRulerInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := o.thanosRulerInfs.ListAll(labels.Everything(), func(o any) {
 		a := o.(*monitoringv1.ThanosRuler)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
@@ -399,7 +398,7 @@ func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
 }
@@ -409,7 +408,7 @@ func thanosKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/thanos-ruler-" + keyParts[1]
 }
 
-func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+func (o *Operator) handleNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -424,7 +423,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	o.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for ThanosRuler instances selecting PrometheusRules in the namespace.
-	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		tr := obj.(*monitoringv1.ThanosRuler)
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, tr.Spec.RuleNamespaceSelector)
@@ -708,7 +707,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {

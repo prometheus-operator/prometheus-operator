@@ -158,7 +158,7 @@ func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
 	return resources
 }
 
-// nolint: recvcheck
+// nolint:recvcheck,godoclint
 type Quantity struct {
 	q resource.Quantity
 }
@@ -205,17 +205,13 @@ func (m *Map) String() string {
 func (m *Map) Merge(other map[string]string) map[string]string {
 	merged := map[string]string{}
 
-	for key, value := range other {
-		merged[key] = value
-	}
+	maps.Copy(merged, other)
 
 	if m == nil {
 		return merged
 	}
 
-	for key, value := range *m {
-		merged[key] = value
-	}
+	maps.Copy(merged, *m)
 
 	return merged
 }
@@ -230,7 +226,7 @@ func (m *Map) Set(value string) error {
 		*m = map[string]string{}
 	}
 
-	for _, pair := range strings.Split(value, ",") {
+	for pair := range strings.SplitSeq(value, ",") {
 		pair := strings.Split(pair, "=")
 		(*m)[pair[0]] = pair[1]
 	}
@@ -376,7 +372,7 @@ func (s StringSet) Set(value string) error {
 		return fmt.Errorf("expected StringSet variable to be initialized")
 	}
 
-	for _, v := range strings.Split(value, ",") {
+	for v := range strings.SplitSeq(value, ",") {
 		s[v] = struct{}{}
 	}
 

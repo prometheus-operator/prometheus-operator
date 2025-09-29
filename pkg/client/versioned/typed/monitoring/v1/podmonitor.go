@@ -38,6 +38,8 @@ type PodMonitorsGetter interface {
 type PodMonitorInterface interface {
 	Create(ctx context.Context, podMonitor *monitoringv1.PodMonitor, opts metav1.CreateOptions) (*monitoringv1.PodMonitor, error)
 	Update(ctx context.Context, podMonitor *monitoringv1.PodMonitor, opts metav1.UpdateOptions) (*monitoringv1.PodMonitor, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, podMonitor *monitoringv1.PodMonitor, opts metav1.UpdateOptions) (*monitoringv1.PodMonitor, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
 	Get(ctx context.Context, name string, opts metav1.GetOptions) (*monitoringv1.PodMonitor, error)
@@ -45,6 +47,8 @@ type PodMonitorInterface interface {
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *monitoringv1.PodMonitor, err error)
 	Apply(ctx context.Context, podMonitor *applyconfigurationmonitoringv1.PodMonitorApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.PodMonitor, err error)
+	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+	ApplyStatus(ctx context.Context, podMonitor *applyconfigurationmonitoringv1.PodMonitorApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.PodMonitor, err error)
 	PodMonitorExpansion
 }
 

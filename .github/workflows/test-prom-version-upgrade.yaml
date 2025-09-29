@@ -21,7 +21,7 @@ jobs:
         cat ".github/env" >> "$GITHUB_ENV"
         echo "E2E_DIAGNOSTIC_DIRECTORY=$(mktemp -d)" >> "$GITHUB_ENV"
     - name: Install Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true

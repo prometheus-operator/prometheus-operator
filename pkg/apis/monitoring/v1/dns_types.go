@@ -16,25 +16,25 @@ package v1
 // PodDNSConfig defines the DNS parameters of a pod in addition to
 // those generated from DNSPolicy.
 type PodDNSConfig struct {
-	// A list of DNS name server IP addresses.
+	// nameservers defines the list of DNS name server IP addresses.
 	// This will be appended to the base nameservers generated from DNSPolicy.
-	// +kubebuilder:validation:Optional
+	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
 	Nameservers []string `json:"nameservers,omitempty"`
 
-	// A list of DNS search domains for host-name lookup.
+	// searches defines the list of DNS search domains for host-name lookup.
 	// This will be appended to the base search paths generated from DNSPolicy.
-	// +kubebuilder:validation:Optional
+	// +optional
 	// +listType:=set
 	// +kubebuilder:validation:items:MinLength:=1
 	Searches []string `json:"searches,omitempty"`
 
-	// A list of DNS resolver options.
+	// options defines the list of DNS resolver options.
 	// This will be merged with the base options generated from DNSPolicy.
 	// Resolution options given in Options
 	// will override those that appear in the base DNSPolicy.
-	// +kubebuilder:validation:Optional
+	// +optional
 	// +listType=map
 	// +listMapKey=name
 	Options []PodDNSConfigOption `json:"options,omitempty"`
@@ -42,12 +42,13 @@ type PodDNSConfig struct {
 
 // PodDNSConfigOption defines DNS resolver options of a pod.
 type PodDNSConfigOption struct {
-	// Name is required and must be unique.
+	// name is required and must be unique.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
 
-	// Value is optional.
-	// +kubebuilder:validation:Optional
+	// value is optional.
+	// +optional
 	Value *string `json:"value,omitempty"`
 }
 
@@ -56,21 +57,21 @@ type PodDNSConfigOption struct {
 type DNSPolicy string
 
 const (
-	// DNSClusterFirstWithHostNet indicates that the pod should use cluster DNS
+	// DNSClusterFirstWithHostNet defines that the pod should use cluster DNS
 	// first, if it is available, then fall back on the default
 	// (as determined by kubelet) DNS settings.
 	DNSClusterFirstWithHostNet DNSPolicy = "ClusterFirstWithHostNet"
 
-	// DNSClusterFirst indicates that the pod should use cluster DNS
+	// DNSClusterFirst defines that the pod should use cluster DNS
 	// first unless hostNetwork is true, if it is available, then
 	// fall back on the default (as determined by kubelet) DNS settings.
 	DNSClusterFirst DNSPolicy = "ClusterFirst"
 
-	// DNSDefault indicates that the pod should use the default (as
+	// DNSDefault defines that the pod should use the default (as
 	// determined by kubelet) DNS settings.
 	DNSDefault DNSPolicy = "Default"
 
-	// DNSNone indicates that the pod should use empty DNS settings. DNS
+	// DNSNone defines that the pod should use empty DNS settings. DNS
 	// parameters such as nameservers and search paths should be defined via
 	// DNSConfig.
 	DNSNone DNSPolicy = "None"

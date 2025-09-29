@@ -29,7 +29,7 @@ func TestSortKeysEmptyMap(t *testing.T) {
 
 func TestSortKeys(t *testing.T) {
 
-	intKeys := SortedKeys(map[int]interface{}{
+	intKeys := SortedKeys(map[int]any{
 		-10: 6,
 		0:   "",
 		5:   []byte(""),
@@ -37,7 +37,7 @@ func TestSortKeys(t *testing.T) {
 	})
 	require.Equal(t, []int{-10, -1, 0, 5}, intKeys)
 
-	strKeys := SortedKeys(map[string]interface{}{
+	strKeys := SortedKeys(map[string]any{
 		"a": 6,
 		"c": "",
 		"d": []byte(""),
@@ -45,7 +45,7 @@ func TestSortKeys(t *testing.T) {
 	})
 	require.Equal(t, []string{"a", "b", "c", "d"}, strKeys)
 
-	int32Keys := SortedKeys(map[int32]interface{}{
+	int32Keys := SortedKeys(map[int32]any{
 		-10: 6,
 		0:   "",
 		5:   []byte(""),

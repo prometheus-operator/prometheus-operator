@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -119,7 +120,7 @@ func TestCreateInitConfigReloader(t *testing.T) {
 		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
 	}
 
-	if !contains(container.Args, "--watch-interval=0") {
+	if !slices.Contains(container.Args, "--watch-interval=0") {
 		t.Errorf("Expected '--watch-interval=0' does not exist in container arguments")
 	}
 
@@ -127,7 +128,7 @@ func TestCreateInitConfigReloader(t *testing.T) {
 		t.Errorf("Expected port number to be %d, got %d", initConfigReloaderPort, container.Ports[0].ContainerPort)
 	}
 
-	if !contains(container.Args, "--listen-address=:8081") {
+	if !slices.Contains(container.Args, "--listen-address=:8081") {
 		t.Errorf("Expected '--listen-address=:8081' not found in %s", container.Args)
 	}
 
@@ -181,29 +182,29 @@ func TestCreateConfigReloader(t *testing.T) {
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
 	}
-	if !contains(container.Args, "--listen-address=localhost:8080") {
+	if !slices.Contains(container.Args, "--listen-address=localhost:8080") {
 		t.Errorf("Expected '--listen-address=localhost:8080' not found in %s", container.Args)
 	}
-	if !contains(container.Args, "--reload-url=http://localhost:9093/-/reload") {
+	if !slices.Contains(container.Args, "--reload-url=http://localhost:9093/-/reload") {
 		t.Errorf("Expected '--reload-url=http://localhost:9093/-/reload' not found in %s", container.Args)
 	}
-	if !contains(container.Args, "--log-level=logLevel") {
+	if !slices.Contains(container.Args, "--log-level=logLevel") {
 		t.Errorf("Expected '--log-level=%s' not found in %s", logLevel, container.Args)
 	}
-	if !contains(container.Args, "--log-format=logFormat") {
+	if !slices.Contains(container.Args, "--log-format=logFormat") {
 		t.Errorf("Expected '--log-format=%s' not found in %s", logFormat, container.Args)
 	}
-	if !contains(container.Args, "--config-file=configFile") {
+	if !slices.Contains(container.Args, "--config-file=configFile") {
 		t.Errorf("Expected '--config-file=%s' not found in %s", configFile, container.Args)
 	}
-	if !contains(container.Args, "--config-envsubst-file=configEnvsubstFile") {
+	if !slices.Contains(container.Args, "--config-envsubst-file=configEnvsubstFile") {
 		t.Errorf("Expected '--config-envsubst-file=%s' not found in %s", configEnvsubstFile, container.Args)
 	}
-	if !contains(container.Args, "--web-config-file=webConfigFile") {
+	if !slices.Contains(container.Args, "--web-config-file=webConfigFile") {
 		t.Errorf("Expected '--web-config-file=%s' not found in %s", webConfigFile, container.Args)
 	}
 	for _, dir := range watchedDirectories {
-		if !contains(container.Args, fmt.Sprintf("--watched-dir=%s", dir)) {
+		if !slices.Contains(container.Args, fmt.Sprintf("--watched-dir=%s", dir)) {
 			t.Errorf("Expected '--watched-dir=%s' not found in %s", dir, container.Args)
 		}
 	}
@@ -252,13 +253,4 @@ func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 		Name:  ShardEnvVar,
 		Value: strconv.Itoa(0),
 	})
-}
-
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
 }

@@ -38,6 +38,8 @@ type ProbesGetter interface {
 type ProbeInterface interface {
 	Create(ctx context.Context, probe *monitoringv1.Probe, opts metav1.CreateOptions) (*monitoringv1.Probe, error)
 	Update(ctx context.Context, probe *monitoringv1.Probe, opts metav1.UpdateOptions) (*monitoringv1.Probe, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, probe *monitoringv1.Probe, opts metav1.UpdateOptions) (*monitoringv1.Probe, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
 	Get(ctx context.Context, name string, opts metav1.GetOptions) (*monitoringv1.Probe, error)
@@ -45,6 +47,8 @@ type ProbeInterface interface {
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *monitoringv1.Probe, err error)
 	Apply(ctx context.Context, probe *applyconfigurationmonitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.Probe, err error)
+	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+	ApplyStatus(ctx context.Context, probe *applyconfigurationmonitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.Probe, err error)
 	ProbeExpansion
 }
 

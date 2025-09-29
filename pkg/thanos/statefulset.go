@@ -294,13 +294,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: fullPath})
 	}
 
-	//	trVolumes = append(trVolumes, tlsSecrets.Volume("thanos-ruler-config"))
-	//	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
-	//		Name:      "thanos-ruler-config",
-	//		ReadOnly:  true,
-	//		MountPath: tlsAssetsDir,
-	//	})
-
 	trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
 	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
 		Name:      "tls-assets",
@@ -413,12 +406,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if tr.Spec.PodMetadata != nil {
-		for k, v := range tr.Spec.PodMetadata.Labels {
-			podLabels[k] = v
-		}
-		for k, v := range tr.Spec.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
+		maps.Copy(podLabels, tr.Spec.PodMetadata.Labels)
+		maps.Copy(podAnnotations, tr.Spec.PodMetadata.Annotations)
 	}
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
