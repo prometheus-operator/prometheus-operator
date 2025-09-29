@@ -39,19 +39,23 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
 type ServiceMonitor struct {
-	metav1.TypeMeta   `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of desired Service selection for target discovery by
+	// spec defines the specification of desired Service selection for target discovery by
 	// Prometheus.
+	// +required
 	Spec ServiceMonitorSpec `json:"spec"`
-	// This Status subresource is under active development and is updated only when the
+	// status defines the status subresource. It is under active development and is updated only when the
 	// "StatusForConfigurationResources" feature gate is enabled.
 	//
 	// Most recent observed status of the ServiceMonitor. Read-only.
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	Status ConfigResourceStatus `json:"status,omitempty"`
+	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -59,10 +63,14 @@ func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+func (l *ServiceMonitor) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // ServiceMonitorSpec defines the specification parameters for a ServiceMonitor.
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
-	// `jobLabel` selects the label from the associated Kubernetes `Service`
+	// jobLabel selects the label from the associated Kubernetes `Service`
 	// object which will be used as the `job` label for all metrics.
 	//
 	// For example if `jobLabel` is set to `foo` and the Kubernetes `Service`
@@ -72,28 +80,31 @@ type ServiceMonitorSpec struct {
 	// If the value of this field is empty or if the label doesn't exist for
 	// the given Service, the `job` label of the metrics defaults to the name
 	// of the associated Kubernetes `Service`.
+	// +optional
 	JobLabel string `json:"jobLabel,omitempty"`
 
-	// `targetLabels` defines the labels which are transferred from the
+	// targetLabels defines the labels which are transferred from the
 	// associated Kubernetes `Service` object onto the ingested metrics.
 	//
 	// +optional
 	TargetLabels []string `json:"targetLabels,omitempty"`
-	// `podTargetLabels` defines the labels which are transferred from the
+	// podTargetLabels defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
 	//
 	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
-	// List of endpoints part of this ServiceMonitor.
+	// endpoints defines the list of endpoints part of this ServiceMonitor.
 	// Defines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.
 	// In most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.
+	// +required
 	Endpoints []Endpoint `json:"endpoints"`
 
-	// Label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
+	// selector defines the label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
+	// +required
 	Selector metav1.LabelSelector `json:"selector"`
 
-	// Mechanism used to select the endpoints to scrape.
+	// selectorMechanism defines the mechanism used to select the endpoints to scrape.
 	// By default, the selection process relies on relabel configurations to filter the discovered targets.
 	// Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
 	// Which strategy is best for your use case needs to be carefully evaluated.
@@ -103,17 +114,18 @@ type ServiceMonitorSpec struct {
 	// +optional
 	SelectorMechanism *SelectorMechanism `json:"selectorMechanism,omitempty"`
 
-	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the services.
+	// namespaceSelector defines in which namespace(s) Prometheus should discover the services.
 	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
+	// +optional
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
-	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
+	// sampleLimit defines a per-scrape limit on the number of scraped samples
 	// that will be accepted.
 	//
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 
-	// `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
+	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
 	// protocols supported by Prometheus in order of preference (from most to least preferred).
 	//
 	// If unset, Prometheus uses its default value.
@@ -124,40 +136,41 @@ type ServiceMonitorSpec struct {
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
-	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 
-	// `targetLimit` defines a limit on the number of scraped targets that will
+	// targetLimit defines a limit on the number of scraped targets that will
 	// be accepted.
 	//
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
 
-	// Per-scrape limit on number of labels that will be accepted for a sample.
+	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
-	// Per-scrape limit on length of labels name that will be accepted for a sample.
+	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
-	// Per-scrape limit on length of labels value that will be accepted for a sample.
+	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
+	// +optional
 	NativeHistogramConfig `json:",inline"`
 
-	// Per-scrape limit on the number of targets dropped by relabeling
+	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
@@ -165,7 +178,7 @@ type ServiceMonitorSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 
-	// `attachMetadata` defines additional metadata which is added to the
+	// attachMetadata defines additional metadata which is added to the
 	// discovered targets.
 	//
 	// It requires Prometheus >= v2.37.0.
@@ -173,12 +186,12 @@ type ServiceMonitorSpec struct {
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 
-	// The scrape class to apply.
+	// scrapeClass defines the scrape class to apply.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
-	// When defined, bodySizeLimit specifies a job level limit on the size
+	// bodySizeLimit when defined, bodySizeLimit specifies a job level limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	//
 	// It requires Prometheus >= v2.28.0.
@@ -190,11 +203,13 @@ type ServiceMonitorSpec struct {
 // ServiceMonitorList is a list of ServiceMonitors.
 // +k8s:openapi-gen=true
 type ServiceMonitorList struct {
+	// TypeMeta defines the versioned schema of this representation of an object
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
+	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors
+	// +required
 	Items []ServiceMonitor `json:"items"`
 }
 

@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/url"
 	"path"
 	"strings"
@@ -60,6 +61,11 @@ const (
 	alertmanagerConfigFile             = "alertmanager.yaml"
 	alertmanagerConfigFileCompressed   = "alertmanager.yaml.gz"
 	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
+
+	alertmanagerWebPort         = 9093
+	alertmanagerMeshPort        = 9094
+	alertmanagerMeshUDPPortName = "mesh-udp"
+	alertmanagerMeshTCPPortName = "mesh-tcp"
 
 	alertmanagerStorageDir = "/alertmanager"
 
@@ -186,20 +192,20 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 			Ports: []v1.ServicePort{
 				{
 					Name:       a.Spec.PortName,
-					Port:       9093,
+					Port:       alertmanagerWebPort,
 					TargetPort: intstr.FromString(a.Spec.PortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
 					Name:       "tcp-mesh",
-					Port:       9094,
-					TargetPort: intstr.FromInt(9094),
+					Port:       alertmanagerMeshPort,
+					TargetPort: intstr.FromString(alertmanagerMeshTCPPortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
 					Name:       "udp-mesh",
-					Port:       9094,
-					TargetPort: intstr.FromInt(9094),
+					Port:       alertmanagerMeshPort,
+					TargetPort: intstr.FromString(alertmanagerMeshUDPPortName),
 					Protocol:   v1.ProtocolUDP,
 				},
 			},
@@ -385,16 +391,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := makeSelectorLabels(a.GetObjectMeta().GetName())
 	if a.Spec.PodMetadata != nil {
-		for k, v := range a.Spec.PodMetadata.Labels {
-			podLabels[k] = v
-		}
-		for k, v := range a.Spec.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
+		maps.Copy(podLabels, a.Spec.PodMetadata.Labels)
+		maps.Copy(podAnnotations, a.Spec.PodMetadata.Annotations)
 	}
-	for k, v := range podSelectorLabels {
-		podLabels[k] = v
-	}
+	maps.Copy(podLabels, podSelectorLabels)
 
 	podAnnotations[operator.DefaultContainerAnnotationKey] = "alertmanager"
 
@@ -420,13 +420,13 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	ports := []v1.ContainerPort{
 		{
-			Name:          "mesh-tcp",
-			ContainerPort: 9094,
+			Name:          alertmanagerMeshTCPPortName,
+			ContainerPort: alertmanagerMeshPort,
 			Protocol:      v1.ProtocolTCP,
 		},
 		{
-			Name:          "mesh-udp",
-			ContainerPort: 9094,
+			Name:          alertmanagerMeshUDPPortName,
+			ContainerPort: alertmanagerMeshPort,
 			Protocol:      v1.ProtocolUDP,
 		},
 	}
@@ -434,7 +434,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		ports = append([]v1.ContainerPort{
 			{
 				Name:          a.Spec.PortName,
-				ContainerPort: 9093,
+				ContainerPort: alertmanagerWebPort,
 				Protocol:      v1.ProtocolTCP,
 			},
 		}, ports...)

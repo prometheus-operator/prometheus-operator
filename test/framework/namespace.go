@@ -17,6 +17,7 @@ package framework
 import (
 	"context"
 	"encoding/json"
+	"maps"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -69,9 +70,7 @@ func (f *Framework) AddLabelsToNamespace(ctx context.Context, name string, addit
 		ns.Labels = map[string]string{}
 	}
 
-	for k, v := range additionalLabels {
-		ns.Labels[k] = v
-	}
+	maps.Copy(ns.Labels, additionalLabels)
 
 	_, err = f.KubeClient.CoreV1().Namespaces().Update(ctx, ns, metav1.UpdateOptions{})
 	if err != nil {

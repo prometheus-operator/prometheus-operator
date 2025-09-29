@@ -656,6 +656,7 @@ func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
 	t.Run("DaemonSetInvalidShards", testDaemonSetInvalidShards)
 	t.Run("DaemonSetInvalidPVCRetentionPolicy", testDaemonSetInvalidPVCRetentionPolicy)
 	t.Run("DaemonSetInvalidScrapeConfigSelector", testDaemonSetInvalidScrapeConfigSelector)
+	t.Run("DaemonSetInvalidProbeSelector", testDaemonSetInvalidProbeSelector)
 }
 
 func testDaemonSetInvalidReplicas(t *testing.T) {
@@ -814,4 +815,35 @@ func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scrapeConfigSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidProbeSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-probe-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "probeSelector cannot be set when mode is DaemonSet")
 }

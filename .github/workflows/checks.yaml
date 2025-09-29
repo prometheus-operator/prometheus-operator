@@ -25,28 +25,13 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make --always-make format generate && git diff --exit-code
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-  comment-generate-failure:
-    if: ${{ failure() }}
-    permissions:
-      pull-requests: write
-    needs: generate
-    name: Comment troubleshooting message for format and generate failure
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Comment PR
-        uses: thollander/actions-comment-pull-request@v3
-        with:
-         message: 'Auto-generated files are likely not up-to-date. Please make sure to run `make --always-make format generate`, commit the modifications and push the updated branch.'
 
   check-docs:
     runs-on: ubuntu-latest
@@ -55,28 +40,13 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make check-docs
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-  comment-docs-failure:
-    if: ${{ failure() }}
-    permissions:
-      pull-requests: write
-    needs: check-docs
-    name: Comment troubleshooting message for check-docs failure
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Comment PR
-        uses: thollander/actions-comment-pull-request@v3
-        with:
-          message: 'Formatting and local/remote links likely not correct. Please make sure to run `make check-docs`, commit the modifications and push the updated branch.'
 
   check-golang:
     runs-on: ubuntu-latest
@@ -85,17 +55,20 @@ jobs:
       - uses: actions/checkout@v5
       - name: Import environment variables from file
         run: cat ".github/env" >> "$GITHUB_ENV"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '${{ env.golang-version }}'
           check-latest: true
-      - name: go.mod
+      - name: Check go.mod
         run: make tidy && git diff --exit-code
-      - name: golangci-lint
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8.0.0
         with:
           version: '${{ env.golangci-lint-version }}'
           args: --timeout 10m0s
+          install-mode: goinstall
+      - name: Lint API
+        run: make check-api
 
   check-metrics:
     runs-on: ubuntu-latest
@@ -104,7 +77,7 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
@@ -122,7 +95,7 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
@@ -135,7 +108,7 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true

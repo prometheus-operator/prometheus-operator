@@ -163,12 +163,13 @@ func WithoutKubectlAnnotations() ObjectOption {
 	}
 }
 
-// UpdateObject updates the object's metadata with the provided options.
-// It automatically injects the "managed-by" label which identifies the
-// operator as the managing entity.
+// UpdateObject updates the object's metadata with the provided options. It
+// automatically injects the "managed-by" and "app.kubernetes.io/managed-by"
+// labels which identifies the operator as the managing entity.
 func UpdateObject(o metav1.Object, opts ...ObjectOption) {
 	WithLabels(map[string]string{
 		managedByOperatorLabel: ManagedByLabelValue,
+		ManagedByLabelKey:      ManagedByLabelValue,
 	})(o)
 
 	for _, opt := range opts {

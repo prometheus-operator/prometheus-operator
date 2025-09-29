@@ -745,23 +745,62 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var rocketchatConfigs []*rocketChatConfig
+	if l := len(in.RocketChatConfigs); l > 0 {
+		rocketchatConfigs = make([]*rocketChatConfig, l)
+		for i := range in.RocketChatConfigs {
+			receiver, err := cb.convertRocketChatConfig(ctx, in.RocketChatConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("RocketChatConfig[%d]: %w", i, err)
+			}
+			rocketchatConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
-		Name:             makeNamespacedString(in.Name, crKey),
-		OpsgenieConfigs:  opsgenieConfigs,
-		PagerdutyConfigs: pagerdutyConfigs,
-		DiscordConfigs:   discordConfigs,
-		SlackConfigs:     slackConfigs,
-		WebhookConfigs:   webhookConfigs,
-		WeChatConfigs:    weChatConfigs,
-		EmailConfigs:     emailConfigs,
-		VictorOpsConfigs: victorOpsConfigs,
-		PushoverConfigs:  pushoverConfigs,
-		SNSConfigs:       snsConfigs,
-		TelegramConfigs:  telegramConfigs,
-		WebexConfigs:     webexConfigs,
-		MSTeamsConfigs:   msTeamsConfigs,
-		MSTeamsV2Configs: msTeamsV2Configs,
+		Name:              makeNamespacedString(in.Name, crKey),
+		OpsgenieConfigs:   opsgenieConfigs,
+		PagerdutyConfigs:  pagerdutyConfigs,
+		DiscordConfigs:    discordConfigs,
+		SlackConfigs:      slackConfigs,
+		WebhookConfigs:    webhookConfigs,
+		WeChatConfigs:     weChatConfigs,
+		EmailConfigs:      emailConfigs,
+		VictorOpsConfigs:  victorOpsConfigs,
+		PushoverConfigs:   pushoverConfigs,
+		SNSConfigs:        snsConfigs,
+		TelegramConfigs:   telegramConfigs,
+		WebexConfigs:      webexConfigs,
+		MSTeamsConfigs:    msTeamsConfigs,
+		MSTeamsV2Configs:  msTeamsV2Configs,
+		RocketChatConfigs: rocketchatConfigs,
 	}, nil
+}
+
+func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitoringv1alpha1.RocketChatConfig, crKey types.NamespacedName) (*rocketChatConfig, error) {
+	out := &rocketChatConfig{
+		SendResolved: in.SendResolved,
+	}
+
+	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
+	}
+	out.Token = &token
+
+	tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.TokenID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
+	}
+	out.TokenID = &tokenID
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
 }
 
 func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoringv1alpha1.WebhookConfig, crKey types.NamespacedName) (*webhookConfig, error) {

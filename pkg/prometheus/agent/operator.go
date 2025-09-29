@@ -32,7 +32,6 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -90,12 +89,14 @@ type Operator struct {
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	statusReporter prompkg.StatusReporter
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -160,8 +161,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:                      operator.NewMetrics(r),
 		reconciliations:              &operator.ReconciliationTracker{},
 		controllerID:                 c.ControllerID,
-		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -415,7 +417,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing Prometheus agent objects.
-	_ = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		c.RefreshStatusFor(obj.(*monitoringv1alpha1.PrometheusAgent))
 	})
 
@@ -431,7 +433,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := c.promInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := c.promInfs.ListAll(labels.Everything(), func(o any) {
 		p := o.(*monitoringv1alpha1.PrometheusAgent)
 		processFn(p, p.Status.Conditions)
 	}); err != nil {
@@ -439,7 +441,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
@@ -612,12 +614,24 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Check if the Agent instance is marked for deletion.
-	if c.rr.DeletionInProgress(p) {
+	logger := c.logger.With("key", key)
+
+	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
+	if err != nil {
+		return err
+	}
+
+	if finalizersChanged {
+		// Since the object has been updated, let's trigger another sync.
+		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
 
-	logger := c.logger.With("key", key)
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		c.reconciliations.ForgetObject(key)
+		return nil
+	}
 
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
@@ -857,7 +871,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		ssets[ssetName] = struct{}{}
 	}
 
-	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj interface{}) {
+	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
@@ -882,7 +896,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
-	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p))
 	if err != nil {
 		return err
 	}
@@ -1085,7 +1099,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus Agent instances in the namespace.
 		p := obj.(*monitoringv1alpha1.PrometheusAgent)
 		if p.Namespace == nsName {
@@ -1161,7 +1175,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
+func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -1178,7 +1192,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 
 	// Check for Prometheus Agent instances selecting ServiceMonitors, PodMonitors,
 	// and Probes in the namespace.
-	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1alpha1.PrometheusAgent)
 
 		for name, selector := range map[string]*metav1.LabelSelector{
