@@ -127,6 +127,11 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 		}
 
 		if spec.AzureAD.OAuth != nil {
+			//promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
+			//version, err := semver.ParseTolerant(promVersion)
+			//if err != nil {
+			//	return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
+			//}
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")

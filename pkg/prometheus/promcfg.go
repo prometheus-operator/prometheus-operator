@@ -2721,8 +2721,10 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			if spec.AzureAD.ManagedIdentity != nil {
 				if cg.version.GTE(semver.MustParse("3.5.0")) {
 					clientID := ""
-					if spec.AzureAD.ManagedIdentity.ClientID != "" {
-						clientID = spec.AzureAD.ManagedIdentity.ClientID
+					if spec.AzureAD.ManagedIdentity.ClientID != nil {
+						if *spec.AzureAD.ManagedIdentity.ClientID != "" {
+							clientID = *spec.AzureAD.ManagedIdentity.ClientID
+						}
 					}
 					azureAd = append(azureAd,
 						yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
@@ -2730,12 +2732,14 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 						}},
 					)
 				} else {
-					if spec.AzureAD.ManagedIdentity.ClientID != "" {
-						azureAd = append(azureAd,
-							yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
-								{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-							}},
-						)
+					if spec.AzureAD.ManagedIdentity.ClientID != nil {
+						if *spec.AzureAD.ManagedIdentity.ClientID != "" {
+							azureAd = append(azureAd,
+								yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
+									{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
+								}},
+							)
+						}
 					}
 				}
 			}
