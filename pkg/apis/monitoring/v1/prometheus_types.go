@@ -1915,7 +1915,8 @@ type ManagedIdentity struct {
 	// clientId defines defines the Azure User-assigned Managed identity. to be used with Azure AD Managed Identity
 	// For Prometheus >= 3.5.0, this field is allowed to be empty to support system assigned managed identity.
 	// +optional
-	ClientID string `json:"clientId"`
+	// +kubebuilder:validation:MinLength:=1
+	ClientID *string `json:"clientId"`
 }
 
 // AzureSDK is used to store azure SDK config values.
