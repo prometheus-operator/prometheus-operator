@@ -4867,7 +4867,7 @@
                     "type": "string"
                   },
                   "maximumStartupDurationSeconds": {
-                    "description": "maximumStartupDurationSeconds defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.\nIf set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).",
+                    "description": "maximumStartupDurationSeconds defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.\nIf set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).",
                     "format": "int32",
                     "minimum": 60,
                     "type": "integer"
