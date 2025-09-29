@@ -22,28 +22,33 @@ import (
 	"slices"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/cache"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 // ConfigResourceSyncer patches the status of configuration resources.
 type ConfigResourceSyncer struct {
-	client dynamic.Interface
+	client   dynamic.Interface
+	accessor *operator.Accessor
 
 	// GroupVersionResource and metadata of the Workload.
 	gvr      schema.GroupVersionResource
 	workload metav1.Object
 }
 
-func NewConfigResourceSyncer(workload RuntimeObject, client dynamic.Interface) *ConfigResourceSyncer {
+func NewConfigResourceSyncer(workload RuntimeObject, client dynamic.Interface, accessor *operator.Accessor) *ConfigResourceSyncer {
 	return &ConfigResourceSyncer{
 		client:   client,
+		accessor: accessor,
 		gvr:      toGroupVersionResource(workload),
 		workload: workload,
 	}
@@ -148,6 +153,51 @@ func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResour
 		statusSubResource,
 	)
 
+	return err
+}
+
+// CleanupBindings removes the workload's binding from all configuration
+// resources that are not in the resourceSelection.
+func CleanupBindings[T ConfigurationResource](
+	ctx context.Context,
+	listerFunc func(labels.Selector, cache.AppendFunc) error,
+	resourceSelection TypedResourcesSelection[T],
+	csr *ConfigResourceSyncer,
+) error {
+	var err error
+	listErr := listerFunc(labels.Everything(), func(o any) {
+		if err != nil {
+			// Stop processing on the first error.
+			return
+		}
+
+		k, ok := csr.accessor.MetaNamespaceKey(o)
+		if !ok {
+			return
+		}
+
+		if _, found := resourceSelection[k]; found {
+			return
+		}
+
+		obj, ok := o.(ConfigurationObject)
+		if !ok {
+			return
+		}
+		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+			err = fmt.Errorf("failed to add type information: %w", err)
+			return
+		}
+
+		var gvk = obj.GetObjectKind().GroupVersionKind()
+
+		if err = csr.RemoveBinding(ctx, obj); err != nil {
+			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
+		}
+	})
+	if listErr != nil {
+		return fmt.Errorf("listing all items from cache failed: %w", listErr)
+	}
 	return err
 }
 
