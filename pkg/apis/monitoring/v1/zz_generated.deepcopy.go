@@ -240,7 +240,7 @@ func (in *AlertmanagerGlobalConfig) DeepCopyInto(out *AlertmanagerGlobalConfig) 
 	}
 	if in.PagerdutyURL != nil {
 		in, out := &in.PagerdutyURL, &out.PagerdutyURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.TelegramConfig != nil {
