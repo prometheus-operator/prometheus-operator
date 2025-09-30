@@ -11182,8 +11182,7 @@ Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
-<p>HTTPConfig defines a client HTTP configuration.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_config">https://prometheus.io/docs/alerting/latest/configuration/#http_config</a></p>
+<p>HTTPConfig defines the configuration for the HTTP client.</p>
 </div>
 <table>
 <thead>
@@ -11204,8 +11203,9 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the header configuration for the client.
-This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.</p>
+<p>authorization configures the Authorization header credentials used by
+the client.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11219,8 +11219,9 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>basicAuth defines basicAuth for the client.
-This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.</p>
+<p>basicAuth defines the Basic Authentication credentials used by the
+client.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11234,7 +11235,9 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>oauth2 defines the client credentials used to fetch a token for the targets.</p>
+<p>oauth2 defines the OAuth2 settings used by the client.</p>
+<p>It requires Prometheus &gt;= 2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>bearerTokenSecret</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11248,10 +11251,12 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>bearerTokenSecret defines the secret&rsquo;s key that contains the bearer token to be used by the client
-for authentication.
-The secret needs to be in the same namespace as the Alertmanager
-object and accessible by the Prometheus Operator.</p>
+<p>bearerTokenSecret defines a key of a Secret containing the bearer token
+used by the client for authentication. The secret needs to be in the
+same namespace as the custom resource and readable by the Prometheus
+Operator.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>oauth2</code>.</p>
+<p>Deprecated: use <code>authorization</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -11265,7 +11270,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLSConfig for the client.</p>
+<p>tlsConfig defines the TLS configuration used by the client.</p>
 </td>
 </tr>
 <tr>
@@ -11333,7 +11338,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>followRedirects defines whether the client should follow HTTP 3xx redirects.</p>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
 </td>
 </tr>
 </tbody>
