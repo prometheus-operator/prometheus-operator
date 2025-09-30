@@ -1686,11 +1686,24 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		}
 	}
 
-	// Check if both Authorization Credentials and Bearer Token Secret are specified.
-	if in.Authorization != nil {
-		if in.Authorization.Credentials != nil && in.BearerTokenSecret != nil {
-			return nil, fmt.Errorf("cannot provide both Authorization Credentials and Bearer Token Secret in HTTP Config")
+	// Check if both ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
+	var getAuthorizationCredentials = func(in *monitoringv1.SafeAuthorization) *v1.SecretKeySelector {
+		if in == nil {
+			return nil
 		}
+		return in.Credentials
+	}
+
+	if in.BasicAuth != nil && in.BearerTokenSecret != nil {
+		return nil, fmt.Errorf("cannot provide both BasicAuth and BearerTokenSecret in HTTP Config")
+	}
+
+	if in.BasicAuth != nil && getAuthorizationCredentials(in.Authorization) != nil {
+		return nil, fmt.Errorf("cannot provide both BasicAuth and Authorization Credentials in HTTP Config")
+	}
+
+	if getAuthorizationCredentials(in.Authorization) != nil && in.BearerTokenSecret != nil {
+		return nil, fmt.Errorf("cannot provide both Authorization Credentials and Bearer Token Secret in HTTP Config")
 	}
 
 	if in.Authorization != nil {
