@@ -5497,8 +5497,8 @@ spec:
                           properties:
                             clientId:
                               description: |-
-                                clientId defines defines the Azure User-assigned Managed identity. to be used with Azure AD Managed Identity
-                                For Prometheus >= 3.5.0, this field is allowed to be empty to support system assigned managed identity.
+                                clientId defines the Azure User-assigned Managed identity. to be used with Azure AD Managed Identity.
+                                For Prometheus >= 3.5.0, this field is allowed to be empty to support system-assigned managed identities.
                               minLength: 1
                               type: string
                           type: object

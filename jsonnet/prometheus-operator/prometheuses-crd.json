@@ -5999,7 +5999,7 @@
                               "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
-                                  "description": "clientId defines defines the Azure User-assigned Managed identity. to be used with Azure AD Managed Identity\nFor Prometheus >= 3.5.0, this field is allowed to be empty to support system assigned managed identity.",
+                                  "description": "clientId defines the Azure User-assigned Managed identity. to be used with Azure AD Managed Identity.\nFor Prometheus >= 3.5.0, this field is allowed to be empty to support system-assigned managed identities.",
                                   "minLength": 1,
                                   "type": "string"
                                 }
