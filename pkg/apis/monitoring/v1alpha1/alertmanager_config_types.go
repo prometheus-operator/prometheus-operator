@@ -749,6 +749,11 @@ type HTTPConfig struct {
 	// When true, the client will automatically follow redirect responses.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
+
+	// enableHttp2 can be used to disable HTTP2.
+	//
+	// +optional
+	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
 // WebexConfig configures notification via Cisco Webex

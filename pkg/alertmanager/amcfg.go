@@ -438,6 +438,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 			TLSConfig:         in.HTTPConfig.TLSConfig,
 			ProxyConfig:       in.HTTPConfig.ProxyConfig,
 			FollowRedirects:   in.HTTPConfig.FollowRedirects,
+			EnableHTTP2:       in.HTTPConfig.EnableHTTP2,
 		}
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
 		if err != nil {
@@ -1668,6 +1669,7 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	out := &httpClientConfig{
 		proxyConfig:     proxyConfig,
 		FollowRedirects: in.FollowRedirects,
+		EnableHTTP2:     in.EnableHTTP2,
 	}
 
 	if in.BasicAuth != nil {

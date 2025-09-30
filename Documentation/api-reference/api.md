@@ -11342,6 +11342,18 @@ bool
 redirects.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.HostAlias">HostAlias
@@ -26326,6 +26338,18 @@ bool
 When true, the client will automatically follow redirect responses.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig
@@ -36100,6 +36124,18 @@ bool
 <em>(Optional)</em>
 <p>followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 When true, the client will automatically follow redirect responses.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
 </tbody>
