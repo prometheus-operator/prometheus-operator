@@ -127,7 +127,14 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 		}
 
 		// check azure managed identity client id
-		if spec.AzureAD.ManagedIdentity == nil {
+		if spec.AzureAD.ManagedIdentity != nil {
+			cg, err := NewConfigGenerator(o.logger, nil)
+			if err != nil {
+				// do something
+			}
+			cg.WithMinimumVersion("3.5.0")
+			// check version
+
 			//promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
 			//version, err := semver.ParseTolerant(promVersion)
 			//if err != nil {
