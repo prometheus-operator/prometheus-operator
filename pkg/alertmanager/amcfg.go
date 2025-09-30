@@ -1686,6 +1686,13 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	// Check if both Authorization Credentials and Bearer Token Secret are specified.
+	if in.Authorization != nil {
+		if in.Authorization.Credentials != nil && in.BearerTokenSecret != nil {
+			return nil, fmt.Errorf("cannot provide both Authorization Credentials and Bearer Token Secret in HTTP Config")
+		}
+	}
+
 	if in.Authorization != nil {
 		credentials, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Authorization.Credentials)
 		if err != nil {
