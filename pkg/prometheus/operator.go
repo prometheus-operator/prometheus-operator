@@ -126,12 +126,16 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
-		if spec.AzureAD.OAuth != nil {
+		// check azure managed identity client id
+		if spec.AzureAD.ManagedIdentity == nil {
 			//promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
 			//version, err := semver.ParseTolerant(promVersion)
 			//if err != nil {
 			//	return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
 			//}
+		}
+
+		if spec.AzureAD.OAuth != nil {
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
