@@ -1054,12 +1054,12 @@ const (
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
 
-// ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
+// ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor, Probes, ScrapeConfig, PrometheusRule or AlertmanagerConfig). Read-only.
 // More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ConfigResourceStatus struct {
-	// bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.
+	// bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.
 	// +listType=map
 	// +listMapKey=group
 	// +listMapKey=resource
@@ -1076,8 +1076,8 @@ type WorkloadBinding struct {
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	// +required
 	Group string `json:"group"`
-	// resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).
-	// +kubebuilder:validation:Enum=prometheuses;prometheusagents;thanosrulers
+	// resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
+	// +kubebuilder:validation:Enum=prometheuses;prometheusagents;thanosrulers;alertmanagers
 	// +required
 	Resource string `json:"resource"`
 	// name defines the name of the referenced object.
@@ -1088,14 +1088,14 @@ type WorkloadBinding struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Namespace string `json:"namespace"`
-	// conditions defines the current state of the configuration resource when bound to the referenced Prometheus object.
+	// conditions defines the current state of the configuration resource when bound to the referenced Workload object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
 	Conditions []ConfigResourceCondition `json:"conditions,omitempty"`
 }
 
-// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.
+// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 // +k8s:deepcopy-gen=true
 type ConfigResourceCondition struct {
 	// type of the condition being reported.

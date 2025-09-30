@@ -165,7 +165,7 @@ spec:
             properties:
               bindings:
                 description: bindings defines the list of workload resources (Prometheus,
-                  PrometheusAgent, or ThanosRuler) which select the configuration
+                  PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration
                   resource.
                 items:
                   description: WorkloadBinding is a link between a configuration resource
@@ -173,11 +173,11 @@ spec:
                   properties:
                     conditions:
                       description: conditions defines the current state of the configuration
-                        resource when bound to the referenced Prometheus object.
+                        resource when bound to the referenced Workload object.
                       items:
                         description: ConfigResourceCondition describes the status
                           of configuration resources linked to Prometheus, PrometheusAgent,
-                          Alertmanager, or ThanosRuler.
+                          Alertmanager or ThanosRuler.
                         properties:
                           lastTransitionTime:
                             description: lastTransitionTime defines the time of the
@@ -236,11 +236,12 @@ spec:
                       type: string
                     resource:
                       description: resource defines the type of resource being referenced
-                        (e.g. Prometheus, PrometheusAgent, or ThanosRuler).
+                        (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
                       enum:
                       - prometheuses
                       - prometheusagents
                       - thanosrulers
+                      - alertmanagers
                       type: string
                   required:
                   - group
