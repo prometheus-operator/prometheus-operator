@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -6113,7 +6113,7 @@ spec:
                 - json
                 type: string
               logLevel:
-                description: logLevel for Alertmanager to be configured with.
+                description: Log level for Alertmanager to be configured with.
                 enum:
                 - ""
                 - debug
@@ -6130,6 +6130,13 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
+              namespaceInjection:
+                description: |-
+                  namespaceInjection enables automatic injection of namespace matchers into
+                  silences created from Silence resources. When enabled, the controller
+                  automatically adds a "namespace=<silence-namespace>" matcher to all silences,
+                  ensuring tenant isolation in multi-tenant environments.
+                type: boolean
               nodeSelector:
                 additionalProperties:
                   type: string
@@ -6558,6 +6565,105 @@ spec:
                   Version and Tag are ignored if SHA is set.
                   Deprecated: use 'image' instead. The image digest can be specified as part of the image URL.
                 type: string
+              silenceNamespaceSelector:
+                description: |-
+                  silenceNamespaceSelector defines label selector for namespaces containing
+                  Silence resources that should be applied to this Alertmanager instance.
+                  If empty, Silence resources from all namespaces (that match silenceSelector)
+                  are selected.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: |-
+                        A label selector requirement is a selector that contains values, a key, and an operator that
+                        relates the key and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: |-
+                            operator represents a key's relationship to a set of values.
+                            Valid operators are In, NotIn, Exists and DoesNotExist.
+                          type: string
+                        values:
+                          description: |-
+                            values is an array of string values. If the operator is In or NotIn,
+                            the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                            the values array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: atomic
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: atomic
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                      map is equivalent to an element of matchExpressions, whose key field is "key", the
+                      operator is "In", and the values array contains only "value". The requirements are ANDed.
+                    type: object
+                type: object
+                x-kubernetes-map-type: atomic
+              silenceSelector:
+                description: |-
+                  silenceSelector defines label selector for Silence resources that should
+                  be applied to this Alertmanager instance. If empty, no Silence resources
+                  are selected.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: |-
+                        A label selector requirement is a selector that contains values, a key, and an operator that
+                        relates the key and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: |-
+                            operator represents a key's relationship to a set of values.
+                            Valid operators are In, NotIn, Exists and DoesNotExist.
+                          type: string
+                        values:
+                          description: |-
+                            values is an array of string values. If the operator is In or NotIn,
+                            the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                            the values array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: atomic
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: atomic
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                      map is equivalent to an element of matchExpressions, whose key field is "key", the
+                      operator is "In", and the values array contains only "value". The requirements are ANDed.
+                    type: object
+                type: object
+                x-kubernetes-map-type: atomic
               storage:
                 description: |-
                   storage defines the definition of how storage will be used by the Alertmanager

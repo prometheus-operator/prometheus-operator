@@ -29,6 +29,7 @@ type MonitoringV1alpha1Interface interface {
 	AlertmanagerConfigsGetter
 	PrometheusAgentsGetter
 	ScrapeConfigsGetter
+	SilencesGetter
 }
 
 // MonitoringV1alpha1Client is used to interact with features provided by the monitoring.coreos.com group.
@@ -46,6 +47,10 @@ func (c *MonitoringV1alpha1Client) PrometheusAgents(namespace string) Prometheus
 
 func (c *MonitoringV1alpha1Client) ScrapeConfigs(namespace string) ScrapeConfigInterface {
 	return newScrapeConfigs(c, namespace)
+}
+
+func (c *MonitoringV1alpha1Client) Silences(namespace string) SilenceInterface {
+	return newSilences(c, namespace)
 }
 
 // NewForConfig creates a new MonitoringV1alpha1Client for the given config.

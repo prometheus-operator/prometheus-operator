@@ -17,7 +17,6 @@
 package fake
 
 import (
-	applyconfiguration "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration"
 	clientset "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	fakemonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1/fake"
@@ -94,7 +93,7 @@ func NewClientset(objects ...runtime.Object) *Clientset {
 	o := testing.NewFieldManagedObjectTracker(
 		scheme,
 		codecs.UniversalDecoder(),
-		applyconfiguration.NewTypeConverter(scheme),
+		nil, // TODO: TypeConverter temporarily set to nil
 	)
 	for _, obj := range objects {
 		if err := o.Add(obj); err != nil {
@@ -107,8 +106,8 @@ func NewClientset(objects ...runtime.Object) *Clientset {
 	cs.AddReactor("*", "*", testing.ObjectReaction(o))
 	cs.AddWatchReactor("*", func(action testing.Action) (handled bool, ret watch.Interface, err error) {
 		var opts metav1.ListOptions
-		if watchAction, ok := action.(testing.WatchActionImpl); ok {
-			opts = watchAction.ListOptions
+		if watchActcion, ok := action.(testing.WatchActionImpl); ok {
+			opts = watchActcion.ListOptions
 		}
 		gvr := action.GetResource()
 		ns := action.GetNamespace()

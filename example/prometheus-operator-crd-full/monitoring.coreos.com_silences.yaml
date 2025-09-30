@@ -1,0 +1,267 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: silences.monitoring.coreos.com
+spec:
+  group: monitoring.coreos.com
+  names:
+    categories:
+    - prometheus-operator
+    kind: Silence
+    listKind: SilenceList
+    plural: silences
+    shortNames:
+    - sil
+    singular: silence
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type == 'Ready')].status
+      name: Status
+      type: string
+    - jsonPath: .spec.expiresAt
+      name: Expires At
+      type: date
+    - jsonPath: .spec.comment
+      name: Comment
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          Silence defines a silence for Alertmanager instances managed by the prometheus-operator.
+          The Silence custom resource definition (CRD) enables GitOps-friendly management of
+          Alertmanager silences through Kubernetes resources, providing version control,
+          RBAC integration, and audit trails for silence operations.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of the Silence.
+            properties:
+              comment:
+                description: |-
+                  comment provides context about the silence, explaining the reason for
+                  creating it (e.g., "Scheduled maintenance window").
+                type: string
+              expiresAt:
+                description: |-
+                  expiresAt specifies when the silence expires and alert notifications
+                  resume. This field is required to prevent indefinite silences.
+                format: date-time
+                type: string
+              matchers:
+                description: |-
+                  matchers define the alerts that should be silenced. An alert matches
+                  the silence if it matches all matchers.
+                items:
+                  description: SilenceMatcher defines a label matcher for selecting
+                    alerts to silence.
+                  properties:
+                    matchType:
+                      default: =
+                      description: |-
+                        matchType defines the type of match to perform.
+                        Supported values are:
+                        - "=" (equality match)
+                        - "!=" (inequality match)
+                        - "=~" (regex match)
+                        - "!~" (negative regex match)
+                      enum:
+                      - =
+                      - '!='
+                      - =~
+                      - '!~'
+                      type: string
+                    name:
+                      description: name is the label name to match against.
+                      minLength: 1
+                      type: string
+                    value:
+                      description: value is the label value to match against.
+                      type: string
+                  required:
+                  - name
+                  - value
+                  type: object
+                minItems: 1
+                type: array
+            required:
+            - comment
+            - expiresAt
+            - matchers
+            type: object
+          status:
+            description: status defines the observed state of the Silence.
+            properties:
+              bindings:
+                description: |-
+                  bindings tracks the Alertmanager instances that this Silence is applied to.
+                  Each binding represents one Alertmanager resource that has selected this Silence.
+                items:
+                  description: SilenceBinding represents the binding between a Silence
+                    and an Alertmanager instance.
+                  properties:
+                    conditions:
+                      description: conditions represent the latest available observations
+                        of this binding's state.
+                      items:
+                        description: |-
+                          Condition represents the state of the resources associated with the
+                          Prometheus, Alertmanager or ThanosRuler resource.
+                        properties:
+                          lastTransitionTime:
+                            description: lastTransitionTime is the time of the last
+                              update to the current status property.
+                            format: date-time
+                            type: string
+                          message:
+                            description: message defines human-readable message indicating
+                              details for the condition's last transition.
+                            type: string
+                          observedGeneration:
+                            description: |-
+                              observedGeneration defines the .metadata.generation that the
+                              condition was set based upon. For instance, if `.metadata.generation` is
+                              currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+                              condition is out of date with respect to the current state of the
+                              instance.
+                            format: int64
+                            type: integer
+                          reason:
+                            description: reason for the condition's last transition.
+                            type: string
+                          status:
+                            description: status of the condition.
+                            minLength: 1
+                            type: string
+                          type:
+                            description: type of the condition being reported.
+                            minLength: 1
+                            type: string
+                        required:
+                        - lastTransitionTime
+                        - status
+                        - type
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - type
+                      x-kubernetes-list-type: map
+                    lastSyncTime:
+                      description: |-
+                        lastSyncTime is the last time the silence was successfully synchronized
+                        with this Alertmanager instance.
+                      format: date-time
+                      type: string
+                    name:
+                      description: name is the name of the Alertmanager resource.
+                      type: string
+                    namespace:
+                      description: namespace is the namespace of the Alertmanager
+                        resource.
+                      type: string
+                    silenceID:
+                      description: |-
+                        silenceID is the unique identifier of the silence in the Alertmanager API.
+                        This is populated after the silence is successfully created.
+                      type: string
+                    syncedInstances:
+                      description: |-
+                        syncedInstances is the number of Alertmanager instances that have
+                        successfully received this silence.
+                      format: int32
+                      type: integer
+                    totalInstances:
+                      description: |-
+                        totalInstances is the total number of Alertmanager instances that
+                        should have this silence.
+                      format: int32
+                      type: integer
+                  required:
+                  - name
+                  - namespace
+                  type: object
+                type: array
+              conditions:
+                description: conditions represent the latest available observations
+                  of the Silence's state.
+                items:
+                  description: |-
+                    Condition represents the state of the resources associated with the
+                    Prometheus, Alertmanager or ThanosRuler resource.
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the time of the last update
+                        to the current status property.
+                      format: date-time
+                      type: string
+                    message:
+                      description: message defines human-readable message indicating
+                        details for the condition's last transition.
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration defines the .metadata.generation that the
+                        condition was set based upon. For instance, if `.metadata.generation` is
+                        currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+                        condition is out of date with respect to the current state of the
+                        instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: status of the condition.
+                      minLength: 1
+                      type: string
+                    type:
+                      description: type of the condition being reported.
+                      minLength: 1
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              observedGeneration:
+                description: |-
+                  observedGeneration is the most recent generation observed for this Silence.
+                  It corresponds to the metadata generation field, indicating whether the
+                  status reflects the latest changes to the resource.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -20,13 +20,10 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-	internal "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/internal"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	managedfields "k8s.io/apimachinery/pkg/util/managedfields"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
@@ -344,6 +341,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.ScrapeConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfigSpec"):
 		return &monitoringv1alpha1.ScrapeConfigSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("Silence"):
+		return &monitoringv1alpha1.SilenceApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceBinding"):
+		return &monitoringv1alpha1.SilenceBindingApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceMatcher"):
+		return &monitoringv1alpha1.SilenceMatcherApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceSpec"):
+		return &monitoringv1alpha1.SilenceSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SilenceStatus"):
+		return &monitoringv1alpha1.SilenceStatusApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SlackAction"):
 		return &monitoringv1alpha1.SlackActionApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SlackConfig"):
@@ -447,8 +454,4 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 
 	}
 	return nil
-}
-
-func NewTypeConverter(scheme *runtime.Scheme) managedfields.TypeConverter {
-	return managedfields.NewSchemeTypeConverter(scheme, internal.Parser())
 }
