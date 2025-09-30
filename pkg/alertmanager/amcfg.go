@@ -36,6 +36,7 @@ import (
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	validationv1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -281,7 +282,7 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
-	if err := checkAlertmanagerGlobalConfigResource(globalConfig); err != nil {
+	if err := validationv1.ValidateAlertmanagerGlobalConfig(globalConfig); err != nil {
 		return err
 	}
 

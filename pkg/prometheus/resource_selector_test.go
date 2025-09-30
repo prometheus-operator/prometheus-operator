@@ -1466,17 +1466,19 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "valid proxy config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfig: monitoringv1.HTTPConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1489,17 +1491,19 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config with invalid secret key",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfig: monitoringv1.HTTPConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "invalid_key",
 									},
-									Key: "invalid_key",
 								},
 							},
 						},
@@ -1512,17 +1516,19 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config due to invalid proxy url",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfig: monitoringv1.HTTPConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1535,16 +1541,18 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfig: monitoringv1.HTTPConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1557,16 +1565,18 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfig: monitoringv1.HTTPConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1579,14 +1589,16 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config only with proxy connect header defined",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfig: monitoringv1.HTTPConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -4672,6 +4684,150 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			} else {
 				require.Empty(t, valid)
 			}
+		})
+	}
+}
+
+func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
+	storeBuilder := assets.NewTestStoreBuilder(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"secret": []byte("xxx"),
+			},
+		},
+	)
+	secretKey := v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "foo",
+		},
+		Key: "secret",
+	}
+
+	for _, tc := range []struct {
+		name       string
+		updateFunc func(pe *monitoringv1.PodMetricsEndpoint)
+	}{
+		{
+			name: "duplicate bearerTokenSecret and authorization",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BearerTokenSecret = &secretKey
+				pe.Authorization = &monitoringv1.SafeAuthorization{
+					Credentials: &secretKey,
+				}
+			},
+		},
+		{
+			name: "duplicate bearerTokenSecret and basicAuth",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BearerTokenSecret = &secretKey
+				pe.BasicAuth = &monitoringv1.BasicAuth{
+					Username: secretKey,
+					Password: secretKey,
+				}
+			},
+		},
+		{
+			name: "duplicate bearerTokenSecret and oauth2",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BearerTokenSecret = &secretKey
+				pe.OAuth2 = &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						Secret: &secretKey,
+					},
+					ClientSecret: secretKey,
+					TokenURL:     "http://example.com",
+				}
+			},
+		},
+		{
+			name: "duplicate authorization and basicAuth",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.Authorization = &monitoringv1.SafeAuthorization{
+					Credentials: &secretKey,
+				}
+				pe.BasicAuth = &monitoringv1.BasicAuth{
+					Username: secretKey,
+					Password: secretKey,
+				}
+			},
+		},
+		{
+			name: "duplicate authorization and oauth2",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.Authorization = &monitoringv1.SafeAuthorization{
+					Credentials: &secretKey,
+				}
+				pe.OAuth2 = &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						Secret: &secretKey,
+					},
+					ClientSecret: secretKey,
+					TokenURL:     "http://example.com",
+				}
+			},
+		},
+		{
+			name: "duplicate basicAuth and oauth2",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BasicAuth = &monitoringv1.BasicAuth{
+					Username: secretKey,
+					Password: secretKey,
+				}
+				pe.OAuth2 = &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						Secret: &secretKey,
+					},
+					ClientSecret: secretKey,
+					TokenURL:     "http://example.com",
+				}
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+
+			pme := monitoringv1.PodMetricsEndpoint{
+				Port:     ptr.To("web"),
+				Interval: "30s",
+			}
+			tc.updateFunc(&pme)
+			pm := &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{pme},
+				},
+			}
+
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
+				storeBuilder,
+				nil,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				operator.NewFakeRecorder(1, p),
+			)
+			require.NoError(t, err)
+
+			pms, err := rs.SelectPodMonitors(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
+				appendFn(pm)
+				return nil
+			})
+
+			require.NoError(t, err)
+			require.Len(t, pms, 1)
+
+			valid := pms.ValidResources()
+			require.Empty(t, valid)
 		})
 	}
 }
