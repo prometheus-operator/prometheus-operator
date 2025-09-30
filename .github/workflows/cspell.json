@@ -417,6 +417,9 @@
     "authzed",
     "resolv",
     "finalizer",
-    "selfsigned"
+    "selfsigned",
+    "mcbenjemaa",
+    "mariofer",
+    "alertname"
   ]
 }
