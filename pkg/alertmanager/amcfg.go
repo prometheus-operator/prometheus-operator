@@ -431,9 +431,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 
 	if in.HTTPConfig != nil {
 		v1alpha1Config := monitoringv1alpha1.HTTPConfig{
-			Authorization:     in.HTTPConfig.Authorization,
-			BasicAuth:         in.HTTPConfig.BasicAuth,
-			OAuth2:            in.HTTPConfig.OAuth2,
+			Authorization: in.HTTPConfig.Authorization,
+			BasicAuth:     in.HTTPConfig.BasicAuth,
+			OAuth2:        in.HTTPConfig.OAuth2,
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
 			TLSConfig:         in.HTTPConfig.TLSConfig,
 			ProxyConfig:       in.HTTPConfig.ProxyConfig,
