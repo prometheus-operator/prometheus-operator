@@ -729,6 +729,49 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion26.golden",
 		},
 		{
+			name:      "invalid globalConfig httpconfig when authorization credentials and bearer token secrets are specified",
+			amVersion: &version26,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					BearerTokenSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "httpconfig-authsecret",
+						},
+						Key: "token",
+					},
+					Authorization: &monitoringv1.SafeAuthorization{
+						Credentials: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "httpconfig-authsecret",
+							},
+							Key: "token",
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name: "invalid alertmanagerConfig with invalid child routes",
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1846,6 +1889,15 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Data: map[string][]byte{
 					"proxy-header": []byte("value"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "httpconfig-authsecret",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"token": []byte("value"),
 				},
 			},
 		)
