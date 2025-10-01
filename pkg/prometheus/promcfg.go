@@ -18,6 +18,7 @@ import (
 	"cmp"
 	"fmt"
 	"log/slog"
+	"maps"
 	"math"
 	"net/url"
 	"path"
@@ -224,7 +225,7 @@ func (cg *ConfigGenerator) Version() semver.Version {
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
-func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
+func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 	return &ConfigGenerator{
 		logger:                     cg.logger.With(keyvals...),
 		version:                    cg.version,
@@ -298,7 +299,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
 // the updated slice.
-func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v any) yaml.MapSlice {
 	if cg.notCompatible {
 		cg.Warn(k)
 		return m
@@ -1132,9 +1133,16 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Since metadata-wal-records is in the process of being deprecated as part of remote write v2 stabilization as described in issue.
+	// Also seems to be cause some increase in resource usage overall, will stop being automatically added on prometheus 3.4.0 onwards.
+	// For more context see https://github.com/prometheus-operator/prometheus-operator/issues/7889
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
-			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+			cg = cg.WithMinimumVersion("2.54.0")
+			if cg.Version().LT(semver.MustParse("3.4.0")) {
+				promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+				break
+			}
 		}
 	}
 
@@ -1187,13 +1195,9 @@ func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]str
 
 	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata
 	if podMetadata != nil {
-		for k, v := range podMetadata.Labels {
-			podLabels[k] = v
-		}
+		maps.Copy(podLabels, podMetadata.Labels)
 
-		for k, v := range podMetadata.Annotations {
-			podAnnotations[k] = v
-		}
+		maps.Copy(podAnnotations, podMetadata.Annotations)
 	}
 
 	return podAnnotations, podLabels
@@ -2470,7 +2474,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				otherConfigItems = append(otherConfigItems, mapItem)
 				continue
 			}
-			values, ok := mapItem.Value.([]interface{})
+			values, ok := mapItem.Value.([]any)
 			if !ok {
 				return nil, fmt.Errorf("error parsing relabel configs: %w", err)
 			}
@@ -4780,6 +4784,10 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
 	}
 
+	if cg.version.LT(semver.MustParse("3.6.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.UnderscoreEscapingWithoutSuffixes {
+		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.6.0 ", monitoringv1.UnderscoreEscapingWithoutSuffixes)
+	}
+
 	if cg.version.GTE(semver.MustParse("3.5.0")) {
 		err := otlpConfig.Validate()
 		if err != nil {
@@ -4823,6 +4831,12 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
 			"ignore_resource_attributes",
 			otlpConfig.IgnoreResourceAttributes)
+	}
+
+	if otlpConfig.PromoteScopeMetadata != nil {
+		otlp = cg.WithMinimumVersion("3.6.0").AppendMapItem(otlp,
+			"promote_scope_metadata",
+			otlpConfig.PromoteScopeMetadata)
 	}
 
 	if len(otlp) == 0 {

@@ -1451,12 +1451,12 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 		{
 			name:    "Invalid Prometheus Version",
 			version: "2.40.1",
-			golden:  "AlertmangerAlertRelabel_Invalid_Version.golden",
+			golden:  "AlertmanagerAlertRelabel_Invalid_Version.golden",
 		},
 		{
 			name:    "Valid Prometheus Version",
 			version: "2.51.0",
-			golden:  "AlertmangerAlertRelabel_Valid_Version.golden",
+			golden:  "AlertmanagerAlertRelabel_Valid_Version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2729,7 +2729,6 @@ func TestEndpointOAuth2(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			p := defaultPrometheus()
 
@@ -9227,7 +9226,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 					},
 				},
@@ -9258,7 +9257,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 						LabelSelector:   ptr.To("label_value"),
 					},
@@ -9290,7 +9289,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 						LabelSelector:   ptr.To("label_value"),
 					},
@@ -9824,6 +9823,22 @@ func TestOTLPConfig(t *testing.T) {
 				PromoteAllResourceAttributes: ptr.To(true),
 			},
 			golden: "OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
+		},
+		{
+			name:    "Config PromoteScopeMetadata with compatible versiopn",
+			version: "v3.6.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteScopeMetadata: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_scope_metadata.golden",
+		},
+		{
+			name:    "Config PromoteScopeMetadata with wrong version",
+			version: "v3.5.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteScopeMetadata: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_promote_scope_metadata_wrong_version.golden",
 		},
 	}
 	for _, tc := range testCases {

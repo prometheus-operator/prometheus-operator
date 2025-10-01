@@ -38,6 +38,8 @@ type ScrapeConfigsGetter interface {
 type ScrapeConfigInterface interface {
 	Create(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfig, opts v1.CreateOptions) (*monitoringv1alpha1.ScrapeConfig, error)
 	Update(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfig, opts v1.UpdateOptions) (*monitoringv1alpha1.ScrapeConfig, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfig, opts v1.UpdateOptions) (*monitoringv1alpha1.ScrapeConfig, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*monitoringv1alpha1.ScrapeConfig, error)
@@ -45,6 +47,8 @@ type ScrapeConfigInterface interface {
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1alpha1.ScrapeConfig, err error)
 	Apply(ctx context.Context, scrapeConfig *applyconfigurationmonitoringv1alpha1.ScrapeConfigApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.ScrapeConfig, err error)
+	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+	ApplyStatus(ctx context.Context, scrapeConfig *applyconfigurationmonitoringv1alpha1.ScrapeConfigApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.ScrapeConfig, err error)
 	ScrapeConfigExpansion
 }
 

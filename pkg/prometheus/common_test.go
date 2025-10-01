@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -123,6 +124,11 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 			version:         "v2.54.0",
 			messageVersion:  ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
 			expectedPresent: true,
+		},
+		{
+			version:         "v3.4.0",
+			messageVersion:  ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+			expectedPresent: false,
 		},
 	} {
 		t.Run("", func(t *testing.T) {
@@ -269,11 +275,8 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 					argsEnabled = true
 				case "enable-feature":
 					feats := strings.Split(arg.Value, ",")
-					for _, feat := range feats {
-						if feat == "otlp-write-receiver" {
-							featureEnabled = true
-							break
-						}
+					if slices.Contains(feats, "otlp-write-receiver") {
+						featureEnabled = true
 					}
 				}
 			}

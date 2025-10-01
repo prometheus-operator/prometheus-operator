@@ -460,7 +460,6 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 	}}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -508,7 +507,6 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 	}}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -556,7 +554,6 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 	}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -604,7 +601,6 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 	}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -669,17 +665,10 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
 	require.NoError(t, err)
 
-	found := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 	// Expected: --cluster.peer=alertmanager-<name>-0.<serviceName>.<namespace>.svc.<clusterDomain>.:9094
 	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated.monitoring.svc.custom.cluster.:9094"
-	for _, arg := range amArgs {
-		if arg == expectedArg {
-			found = true
-			break
-		}
-	}
-	require.True(t, found, "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedArg), "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
@@ -709,14 +698,7 @@ func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
 	// Check cluster.peer arguments
 	amArgs := spec.Template.Spec.Containers[0].Args
 	expectedPeerArg := fmt.Sprintf("--cluster.peer=alertmanager-%s-0.%s.%s.svc.%s.:9094", am.Name, customServiceName, am.Namespace, cfg.ClusterDomain)
-	foundPeerArg := false
-	for _, arg := range amArgs {
-		if arg == expectedPeerArg {
-			foundPeerArg = true
-			break
-		}
-	}
-	require.True(t, foundPeerArg, "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedPeerArg), "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
@@ -747,14 +729,7 @@ func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
 	// 2. Check cluster.peer arguments
 	amArgs := spec.Template.Spec.Containers[0].Args
 	expectedPeerArg := fmt.Sprintf("--cluster.peer=alertmanager-%s-0.%s.%s.svc.%s.:9094", am.Name, defaultServiceName, am.Namespace, cfg.ClusterDomain)
-	foundPeerArg := false
-	for _, arg := range amArgs {
-		if arg == expectedPeerArg {
-			foundPeerArg = true
-			break
-		}
-	}
-	require.True(t, foundPeerArg, "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedPeerArg), "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
@@ -975,15 +950,8 @@ func TestRetention(t *testing.T) {
 
 		amArgs := sset.Spec.Template.Spec.Containers[0].Args
 		expectedRetentionArg := fmt.Sprintf("--data.retention=%s", test.expectedRetention)
-		found := false
-		for _, flag := range amArgs {
-			if flag == expectedRetentionArg {
-				found = true
-				break
-			}
-		}
 
-		require.True(t, found, "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
+		require.True(t, slices.Contains(amArgs, expectedRetentionArg), "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
 	}
 }
 
@@ -1448,8 +1416,8 @@ func TestEnableFeatures(t *testing.T) {
 
 			expectedFeatures := make([]string, 0)
 			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
-				if strings.HasPrefix(flag, "--enable-feature=") {
-					expectedFeatures = append(expectedFeatures, strings.Split(strings.TrimPrefix(flag, "--enable-feature="), ",")...)
+				if after, ok := strings.CutPrefix(flag, "--enable-feature="); ok {
+					expectedFeatures = append(expectedFeatures, strings.Split(after, ",")...)
 				}
 			}
 			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)

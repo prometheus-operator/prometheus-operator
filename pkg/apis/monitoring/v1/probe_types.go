@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"errors"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,6 +31,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="prb"
+// +kubebuilder:subresource:status
 
 // The `Probe` custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
 //
@@ -38,10 +41,23 @@ const (
 //
 // `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
 type Probe struct {
-	metav1.TypeMeta   `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	// +optional
+	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of desired Ingress selection for target discovery by Prometheus.
+	// spec defines the specification of desired Ingress selection for target discovery by Prometheus.
+	// +required
 	Spec ProbeSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the Probe. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -49,49 +65,65 @@ func (l *Probe) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+func (l *Probe) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // ProbeSpec contains specification parameters for a Probe.
 // +k8s:openapi-gen=true
 type ProbeSpec struct {
-	// The job name assigned to scraped metrics by default.
+	// jobName assigned to scraped metrics by default.
+	// +optional
 	JobName string `json:"jobName,omitempty"`
-	// Specification for the prober to use for probing targets.
+	// prober defines the specification for the prober to use for probing targets.
 	// The prober.URL parameter is required. Targets cannot be probed if left empty.
+	// +optional
 	ProberSpec ProberSpec `json:"prober,omitempty"`
-	// The module to use for probing specifying how to probe the target.
+	// module to use for probing specifying how to probe the target.
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
+	// +optional
 	Module string `json:"module,omitempty"`
-	// Targets defines a set of static or dynamically discovered targets to probe.
+	// targets defines a set of static or dynamically discovered targets to probe.
+	// +optional
 	Targets ProbeTargets `json:"targets,omitempty"`
-	// Interval at which targets are probed using the configured prober.
+	// interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
+	// +optional
 	Interval Duration `json:"interval,omitempty"`
-	// Timeout for scraping metrics from the Prometheus exporter.
+	// scrapeTimeout defines the timeout for scraping metrics from the Prometheus exporter.
 	// If not specified, the Prometheus global scrape timeout is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
-	// TLS configuration to use when scraping the endpoint.
+	// tlsConfig defines the TLS configuration to use when scraping the endpoint.
+	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// Secret to mount to read bearer token for scraping targets. The secret
+	// bearerTokenSecret defines the secret to mount to read bearer token for scraping targets. The secret
 	// needs to be in the same namespace as the probe and accessible by
 	// the Prometheus Operator.
+	// +optional
 	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication.
+	// basicAuth allow an endpoint to authenticate over basic authentication.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
+	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	// oauth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-	// MetricRelabelConfigs to apply to samples before ingestion.
+	// metricRelabelings defines the RelabelConfig to apply to samples before ingestion.
+	// +optional
 	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
-	// Authorization section for this endpoint
+	// authorization section for this endpoint
+	// +optional
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
-	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
+	// targetLimit defines a limit on the number of scraped targets that will be accepted.
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
-	// `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
+	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
 	// protocols supported by Prometheus in order of preference (from most to least preferred).
 	//
 	// If unset, Prometheus uses its default value.
@@ -101,26 +133,27 @@ type ProbeSpec struct {
 	// +listType=set
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
-	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
-	// Per-scrape limit on number of labels that will be accepted for a sample.
+	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
-	// Per-scrape limit on length of labels name that will be accepted for a sample.
+	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
-	// Per-scrape limit on length of labels value that will be accepted for a sample.
+	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
+	// +optional
 	NativeHistogramConfig `json:",inline"`
-	// Per-scrape limit on the number of targets dropped by relabeling
+	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
@@ -128,12 +161,12 @@ type ProbeSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 
-	// The scrape class to apply.
+	// scrapeClass defines the scrape class to apply.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
-	// The list of HTTP query parameters for the scrape.
+	// params defines the list of HTTP query parameters for the scrape.
 	// Please note that the `.spec.module` field takes precedence over the `module` parameter from this list when both are defined.
 	// The module name must be added using Module under ProbeSpec.
 	// +optional
@@ -146,13 +179,14 @@ type ProbeSpec struct {
 // ProbeParam defines specification of extra parameters for a Probe.
 // +k8s:openapi-gen=true
 type ProbeParam struct {
-	// The parameter name
+	// name defines the parameter name
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name,omitempty"`
-	// The parameter values
+	// values defines the parameter values
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
+	// +optional
 	Values []string `json:"values,omitempty"`
 }
 
@@ -165,43 +199,37 @@ type ProbeTargets struct {
 	// relabeling configuration.
 	// If `ingress` is also defined, `staticConfig` takes precedence.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
+	// +optional
 	StaticConfig *ProbeTargetStaticConfig `json:"staticConfig,omitempty"`
 	// ingress defines the Ingress objects to probe and the relabeling
 	// configuration.
 	// If `staticConfig` is also defined, `staticConfig` takes precedence.
+	// +optional
 	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
 }
 
 // Validate semantically validates the given ProbeTargets.
 func (it *ProbeTargets) Validate() error {
 	if it.StaticConfig == nil && it.Ingress == nil {
-		return &ProbeTargetsValidationError{"at least one of .spec.targets.staticConfig and .spec.targets.ingress is required"}
+		return errors.New("at least one of .spec.targets.staticConfig and .spec.targets.ingress is required")
 	}
 
 	return nil
 }
 
-// ProbeTargetsValidationError is returned by ProbeTargets.Validate()
-// on semantically invalid configurations.
-// +k8s:openapi-gen=false
-type ProbeTargetsValidationError struct {
-	err string
-}
-
-func (e *ProbeTargetsValidationError) Error() string {
-	return e.err
-}
-
 // ProbeTargetStaticConfig defines the set of static targets considered for probing.
 // +k8s:openapi-gen=true
 type ProbeTargetStaticConfig struct {
-	// The list of hosts to probe.
+	// static defines the list of hosts to probe.
+	// +optional
 	Targets []string `json:"static,omitempty"`
-	// Labels assigned to all metrics scraped from the targets.
+	// labels defines all labels assigned to all metrics scraped from the targets.
+	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// RelabelConfigs to apply to the label set of the targets before it gets
+	// relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
 	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
@@ -209,33 +237,39 @@ type ProbeTargetStaticConfig struct {
 // The operator configures a target for each host/path combination of each ingress object.
 // +k8s:openapi-gen=true
 type ProbeTargetIngress struct {
-	// Selector to select the Ingress objects.
+	// selector to select the Ingress objects.
+	// +optional
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
-	// From which namespaces to select Ingress objects.
+	// namespaceSelector defines from which namespaces to select Ingress objects.
+	// +optional
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
-	// RelabelConfigs to apply to the label set of the target before it gets
+	// relabelingConfigs to apply to the label set of the target before it gets
 	// scraped.
 	// The original ingress address is available via the
 	// `__tmp_prometheus_ingress_address` label. It can be used to customize the
 	// probed URL.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
 // ProberSpec contains specification parameters for the Prober used for probing.
 // +k8s:openapi-gen=true
 type ProberSpec struct {
-	// Mandatory URL of the prober.
+	// url defines the mandatory URL of the prober.
+	// +required
 	URL string `json:"url"`
-	// HTTP scheme to use for scraping.
+	// scheme defines the HTTP scheme to use for scraping.
 	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
 	// If empty, Prometheus uses the default value `http`.
 	// +kubebuilder:validation:Enum=http;https
+	// +optional
 	Scheme string `json:"scheme,omitempty"`
-	// Path to collect metrics from.
+	// path to collect metrics from.
 	// Defaults to `/probe`.
 	// +kubebuilder:default:="/probe"
+	// +optional
 	Path string `json:"path,omitempty"`
 
 	// +optional
@@ -245,11 +279,14 @@ type ProberSpec struct {
 // ProbeList is a list of Probes.
 // +k8s:openapi-gen=true
 type ProbeList struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
+	// +optional
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
+	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Probes
+	// +required
 	Items []Probe `json:"items"`
 }
 

@@ -27,7 +27,7 @@ import (
 // after conversion, we validate we don't error when doing so.
 func ValidateURL(url string) (*config.URL, error) {
 	var u config.URL
-	err := json.Unmarshal([]byte(fmt.Sprintf(`"%s"`, url)), &u)
+	err := json.Unmarshal(fmt.Appendf(nil, `"%s"`, url), &u)
 	if err != nil {
 		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
 	}
@@ -40,7 +40,7 @@ func ValidateURL(url string) (*config.URL, error) {
 func ValidateSecretURL(url string) error {
 	var u config.SecretURL
 
-	err := u.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, url)))
+	err := u.UnmarshalJSON(fmt.Appendf(nil, `"%s"`, url))
 	if err != nil {
 		return fmt.Errorf("validate url from string failed with error: %w", err)
 	}

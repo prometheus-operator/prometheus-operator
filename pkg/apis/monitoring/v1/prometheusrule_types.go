@@ -29,15 +29,28 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="promrule"
+// +kubebuilder:subresource:status
 
 // The `PrometheusRule` custom resource definition (CRD) defines [alerting](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) and [recording](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) rules to be evaluated by `Prometheus` or `ThanosRuler` objects.
 //
 // `Prometheus` and `ThanosRuler` objects select `PrometheusRule` objects using label and namespace selectors.
 type PrometheusRule struct {
-	metav1.TypeMeta   `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMeta `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of desired alerting rule definitions for Prometheus.
+	// spec defines the specification of desired alerting rule definitions for Prometheus.
+	// +required
 	Spec PrometheusRuleSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the PrometheusRule. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
@@ -48,9 +61,10 @@ func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 // PrometheusRuleSpec contains specification parameters for a Rule.
 // +k8s:openapi-gen=true
 type PrometheusRuleSpec struct {
-	// Content of Prometheus rule file
+	// groups defines the content of Prometheus rule file
 	// +listType=map
 	// +listMapKey=name
+	// +optional
 	Groups []RuleGroup `json:"groups,omitempty"`
 }
 
@@ -60,34 +74,38 @@ type PrometheusRuleSpec struct {
 // RuleGroup is a list of sequentially evaluated recording and alerting rules.
 // +k8s:openapi-gen=true
 type RuleGroup struct {
-	// Name of the rule group.
+	// name defines the name of the rule group.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name"`
-	// Labels to add or overwrite before storing the result for its rules.
+	// labels define the labels to add or overwrite before storing the result for its rules.
 	// The labels defined at the rule level take precedence.
 	//
 	// It requires Prometheus >= 3.0.0.
 	// The field is ignored for Thanos Ruler.
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Interval determines how often rules in the group are evaluated.
+	// interval defines how often rules in the group are evaluated.
 	// +optional
 	Interval *Duration `json:"interval,omitempty"`
-	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+	// query_offset defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
 	//
 	// It requires Prometheus >= v2.53.0.
 	// It is not supported for ThanosRuler.
 	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	QueryOffset *Duration `json:"query_offset,omitempty"`
-	// List of alerting and recording rules.
+	// rules defines the list of alerting and recording rules.
 	// +optional
 	Rules []Rule `json:"rules,omitempty"`
-	// PartialResponseStrategy is only used by ThanosRuler and will
+	// partial_response_strategy is only used by ThanosRuler and will
 	// be ignored by Prometheus instances.
 	// More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
 	// +kubebuilder:validation:Pattern="^(?i)(abort|warn)?$"
+	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
-	// Limit the number of alerts an alerting rule and series a recording
+	// limit defines the number of alerts an alerting rule and series a recording
 	// rule can produce.
 	// Limit is supported starting with Prometheus >= 2.31 and Thanos Ruler >= 0.24.
 	// +optional
@@ -97,36 +115,45 @@ type RuleGroup struct {
 // Rule describes an alerting or recording rule
 // See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:OneOf=Record,Alert
 type Rule struct {
-	// Name of the time series to output to. Must be a valid metric name.
+	// record defines the name of the time series to output to. Must be a valid metric name.
 	// Only one of `record` and `alert` must be set.
+	// +optional
 	Record string `json:"record,omitempty"`
-	// Name of the alert. Must be a valid label value.
+	// alert defines the name of the alert. Must be a valid label value.
 	// Only one of `record` and `alert` must be set.
+	// +optional
 	Alert string `json:"alert,omitempty"`
-	// PromQL expression to evaluate.
+	// expr defines the PromQL expression to evaluate.
+	// +required
 	Expr intstr.IntOrString `json:"expr"`
-	// Alerts are considered firing once they have been returned for this long.
+	// for defines how alerts are considered firing once they have been returned for this long.
 	// +optional
 	For *Duration `json:"for,omitempty"`
-	// KeepFiringFor defines how long an alert will continue firing after the condition that triggered it has cleared.
+	// keep_firing_for defines how long an alert will continue firing after the condition that triggered it has cleared.
 	// +optional
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	KeepFiringFor *NonEmptyDuration `json:"keep_firing_for,omitempty"`
-	// Labels to add or overwrite.
+	// labels defines labels to add or overwrite.
+	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Annotations to add to each alert.
+	// annotations defines annotations to add to each alert.
 	// Only valid for alerting rules.
+	// +optional
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // PrometheusRuleList is a list of PrometheusRules.
 // +k8s:openapi-gen=true
 type PrometheusRuleList struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
+	// metadata defines ListMeta as metadata for collection responses.
+	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Rules
+	// +required
 	Items []PrometheusRule `json:"items"`
 }
 

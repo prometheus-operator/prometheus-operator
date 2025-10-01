@@ -21,23 +21,28 @@ import (
 
 // PrometheusRules is used to separate the PrometheusRules CRD wrapper from the underlying Prometheus rules.
 type PrometheusRules struct {
+	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
-	// Standard object’s metadata. More info:
-	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// Specification of desired alerting rule definitions for Prometheus.
+	// spec defines the specification of desired alerting rule definitions for Prometheus.
 	Spec runtime.RawExtension `json:"spec"`
 }
 
 type RuleGroups struct {
+	// groups defines alerting rules groups.
 	Groups []RuleGroup `json:"groups"`
 }
 
 type RuleGroup struct {
+	// rules defines alerting rules.
 	Rules []Rule `json:"rules"`
 }
 
 type Rule struct {
-	Labels      map[string]interface{} `json:"labels,omitempty"`
-	Annotations map[string]interface{} `json:"annotations,omitempty"`
+	// labels defines labels to be added to rules.
+	Labels map[string]any `json:"labels,omitempty"`
+	// annotations defines annotations to add to each alert.
+	Annotations map[string]any `json:"annotations,omitempty"`
 }

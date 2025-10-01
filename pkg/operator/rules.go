@@ -26,7 +26,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
@@ -48,14 +47,20 @@ func init() {
 type RuleConfigurationFormat int
 
 const (
+	// PrometheusFormat indicates that the rule configuration should comply with the Prometheus format.
 	PrometheusFormat RuleConfigurationFormat = iota
+	// ThanosFormat indicates that the rule configuration should comply with the Thanos format.
 	ThanosFormat
 )
 
-// The maximum `Data` size of a ConfigMap seems to differ between
-// environments. This is probably due to different meta data sizes which count
-// into the overall maximum size of a ConfigMap. Thereby lets leave a
-// large buffer.
+const (
+	selectingPrometheusRuleResourcesAction = "SelectingPrometheusRuleResources"
+)
+
+// MaxConfigMapDataSize represents the maximum size for ConfigMap's data.  The
+// maximum `Data` size of a ConfigMap seems to differ between environments.
+// This is probably due to different meta data sizes which count into the
+// overall maximum size of a ConfigMap. Thereby lets leave a large buffer.
 var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
 type PrometheusRuleSelector struct {
@@ -65,12 +70,12 @@ type PrometheusRuleSelector struct {
 	nsLabeler    *namespacelabeler.Labeler
 	ruleInformer *informers.ForResource
 
-	eventRecorder record.EventRecorder
+	eventRecorder *EventRecorder
 
 	logger *slog.Logger
 }
 
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -205,7 +210,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
-		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj interface{}) {
+		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj any) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
 				prs.logger.Error("failed to set rule type information", "namespace", ns, "err", err)
@@ -238,7 +243,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
+			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			continue
 		}
 

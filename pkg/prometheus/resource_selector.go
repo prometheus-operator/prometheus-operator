@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -33,7 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -45,8 +45,13 @@ import (
 
 const (
 	// Generic reason for selected resources that are not valid.
-	invalidConfiguration = "InvalidConfiguration"
+	invalidConfiguration                  = "InvalidConfiguration"
+	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
+
+// validationScheme defines how to validate label names.
+// For now, the operator only supports the legacy scheme (e.g. not UTF-8).
+var validationScheme model.ValidationScheme = model.LegacyValidation
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
@@ -65,23 +70,29 @@ type ResourceSelector struct {
 	metrics            *operator.Metrics
 	accessor           *operator.Accessor
 
-	eventRecorder record.EventRecorder
+	eventRecorder *operator.EventRecorder
 }
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
 type TypedConfigurationResource[T ConfigurationResource] struct {
-	resource T
-	err      error  // error encountered during selection or validation (nil if valid).
-	reason   string // Reason for rejection; empty if accepted.
+	resource   T
+	err        error  // Error encountered during selection or validation (nil if valid).
+	reason     string // Reason for rejection; empty if accepted.
+	generation int64  // Generation of the desired state (spec).
 }
 
-func (r *TypedConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+func (r *TypedConfigurationResource[T]) Resource() T {
+	return r.resource
+}
+
+// Conditions returns a list of conditions based on the validation status of the configuration resource.
+func (r *TypedConfigurationResource[T]) Conditions() []monitoringv1.ConfigResourceCondition {
 	condition := monitoringv1.ConfigResourceCondition{
 		Type:               monitoringv1.Accepted,
 		Status:             monitoringv1.ConditionTrue,
 		LastTransitionTime: metav1.Now(),
 		Reason:             r.reason,
-		ObservedGeneration: observedGeneration,
+		ObservedGeneration: r.generation,
 	}
 
 	if r.err != nil {
@@ -115,7 +126,7 @@ func NewResourceSelector(
 	store *assets.StoreBuilder,
 	namespaceInformers cache.SharedIndexInformer,
 	metrics *operator.Metrics,
-	eventRecorder record.EventRecorder,
+	eventRecorder *operator.EventRecorder,
 ) (*ResourceSelector, error) {
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
@@ -174,7 +185,7 @@ func selectObjects[T ConfigurationResource](
 	)
 
 	for _, ns := range namespaces {
-		err := listFn(ns, labelSelector, func(o interface{}) {
+		err := listFn(ns, labelSelector, func(o any) {
 			k, ok := rs.accessor.MetaNamespaceKey(o)
 			if !ok {
 				return
@@ -207,15 +218,16 @@ func selectObjects[T ConfigurationResource](
 			rejected++
 			reason = invalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
-			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
 
 		res[namespaceAndName] = TypedConfigurationResource[T]{
-			resource: o,
-			err:      err,
-			reason:   reason,
+			resource:   o,
+			err:        err,
+			reason:     reason,
+			generation: obj.(metav1.Object).GetGeneration(),
 		}
 	}
 
@@ -420,7 +432,7 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		}
 	}
 
-	if action == string(relabel.HashMod) && !model.LabelName(rc.TargetLabel).IsValid() {
+	if action == string(relabel.HashMod) && !validationScheme.IsValidLabelName(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -857,15 +869,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 				return fmt.Errorf("[%d]: invalid role: %q, expecting one of: pod, service, endpoints, endpointslice, node or ingress", i, s.Role)
 			}
 
-			var allowed bool
-
-			for _, role := range allowedSelectors[configRole] {
-				if role == strings.ToLower(string(s.Role)) {
-					allowed = true
-					break
-				}
-			}
-			if !allowed {
+			if !slices.Contains(allowedSelectors[configRole], strings.ToLower(string(s.Role))) {
 				return fmt.Errorf("[%d] : %s role supports only %s selectors", i, config.Role, strings.Join(allowedSelectors[configRole], ", "))
 			}
 		}
@@ -1428,7 +1432,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
 		for labelName := range config.Labels {
-			if !model.LabelName(labelName).IsValid() {
+			if !validationScheme.IsValidLabelName(labelName) {
 				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 			}
 		}

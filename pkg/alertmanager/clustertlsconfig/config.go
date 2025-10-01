@@ -146,7 +146,7 @@ func (c Config) GetMountParameters() (*monitoringv1.Argument, []v1.Volume, []v1.
 	return arg, volumes, mounts, nil
 }
 
-// CreateOrUpdateConfigSecret create or update a Kubernetes secret with the data for the cluster TLS config file.
+// ClusterTLSConfiguration create or update a Kubernetes secret with the data for the cluster TLS config file.
 // The format of the cluster TLS config file is available in the official prometheus documentation:
 // https://github.com/prometheus/alertmanager/blob/main/docs/https.md#gossip-traffic/
 func (c Config) ClusterTLSConfiguration() ([]byte, error) {

@@ -27,14 +27,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
+
+const statusSubResource = "status"
 
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
@@ -53,20 +53,6 @@ type StatusReporter struct {
 	Reconciliations *operator.ReconciliationTracker
 	SsetInfs        *informers.ForResource
 	Rr              *operator.ResourceReconciler
-}
-
-type ConfigResourceSyncer struct {
-	gvr      schema.GroupVersionResource
-	mclient  monitoringclient.Interface
-	workload metav1.Object // Workload resource (Prometheus and PrometheusAgent) selecting the configuration resources.
-}
-
-func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoringclient.Interface, workload metav1.Object) *ConfigResourceSyncer {
-	return &ConfigResourceSyncer{
-		gvr:      gvr,
-		mclient:  mclient,
-		workload: workload,
-	}
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -105,7 +91,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
 func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	var nonNilFields []string
-	for k, v := range map[string]interface{}{
+	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
 		"oauth2":        spec.OAuth2,
 		"authorization": spec.Authorization,
@@ -262,40 +248,4 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	)
 
 	return &pStatus, nil
-}
-
-// UpdateServiceMonitorStatus updates the status binding of the serviceMonitor for the given workload.
-func UpdateServiceMonitorStatus(
-	ctx context.Context,
-	c *ConfigResourceSyncer,
-	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
-	smon := res.resource
-	conditions := res.conditions(smon.Generation)
-
-	var found bool
-	for i := range smon.Status.Bindings {
-		binding := &smon.Status.Bindings[i]
-		if binding.Namespace == c.workload.GetNamespace() &&
-			binding.Name == c.workload.GetName() &&
-			binding.Resource == c.gvr.Resource {
-			binding.Conditions = conditions
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		smon.Status.Bindings = append(smon.Status.Bindings, monitoringv1.WorkloadBinding{
-			Namespace:  c.workload.GetNamespace(),
-			Name:       c.workload.GetName(),
-			Resource:   c.gvr.Resource,
-			Group:      c.gvr.Group,
-			Conditions: conditions,
-		})
-	}
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	if err != nil {
-		return err
-	}
-	return nil
 }

@@ -40,6 +40,7 @@ func AlertmanagerConfig(name, namespace string) *AlertmanagerConfigApplyConfigur
 	b.WithAPIVersion("monitoring.coreos.com/v1beta1")
 	return b
 }
+func (b AlertmanagerConfigApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
@@ -207,8 +208,24 @@ func (b *AlertmanagerConfigApplyConfiguration) WithSpec(value *AlertmanagerConfi
 	return b
 }
 
+// GetKind retrieves the value of the Kind field in the declarative configuration.
+func (b *AlertmanagerConfigApplyConfiguration) GetKind() *string {
+	return b.TypeMetaApplyConfiguration.Kind
+}
+
+// GetAPIVersion retrieves the value of the APIVersion field in the declarative configuration.
+func (b *AlertmanagerConfigApplyConfiguration) GetAPIVersion() *string {
+	return b.TypeMetaApplyConfiguration.APIVersion
+}
+
 // GetName retrieves the value of the Name field in the declarative configuration.
 func (b *AlertmanagerConfigApplyConfiguration) GetName() *string {
 	b.ensureObjectMetaApplyConfigurationExists()
 	return b.ObjectMetaApplyConfiguration.Name
+}
+
+// GetNamespace retrieves the value of the Namespace field in the declarative configuration.
+func (b *AlertmanagerConfigApplyConfiguration) GetNamespace() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.ObjectMetaApplyConfiguration.Namespace
 }

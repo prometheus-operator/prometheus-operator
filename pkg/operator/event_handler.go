@@ -32,9 +32,9 @@ import (
 // The Old and OldMeta fields are only set for update events.
 type EventPayload struct {
 	EventType   EventType
-	Old         interface{}
+	Old         any
 	OldMeta     metav1.Object
-	Current     interface{}
+	Current     any
 	CurrentMeta metav1.Object
 }
 
@@ -154,7 +154,7 @@ func NewEventHandler(
 }
 
 // OnAdd implements the k8s.io/tools/cache.ResourceEventHandler interface.
-func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
+func (e *EventHandler) OnAdd(obj any, _ bool) {
 	o, ok := e.accessor.ObjectMetadata(obj)
 	if !ok {
 		return
@@ -175,7 +175,7 @@ func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 }
 
 // OnUpdate implements the k8s.io/tools/cache.ResourceEventHandler interface.
-func (e *EventHandler) OnUpdate(old, cur interface{}) {
+func (e *EventHandler) OnUpdate(old, cur any) {
 	oldMeta, ok := e.accessor.ObjectMetadata(old)
 	if !ok {
 		return
@@ -203,7 +203,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 }
 
 // OnDelete implements the k8s.io/tools/cache.ResourceEventHandler interface.
-func (e *EventHandler) OnDelete(obj interface{}) {
+func (e *EventHandler) OnDelete(obj any) {
 	o, ok := e.accessor.ObjectMetadata(obj)
 	if !ok {
 		return

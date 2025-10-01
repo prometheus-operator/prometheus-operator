@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
+    controller-gen.kubebuilder.io/version: v0.19.0
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -48,15 +48,15 @@ spec:
           metadata:
             type: object
           spec:
-            description: Specification of desired Ingress selection for target discovery
-              by Prometheus.
+            description: spec defines the specification of desired Ingress selection
+              for target discovery by Prometheus.
             properties:
               authorization:
-                description: Authorization section for this endpoint
+                description: authorization section for this endpoint
                 properties:
                   credentials:
-                    description: Selects a key of a Secret in the namespace that contains
-                      the credentials for authentication.
+                    description: credentials defines a key of a Secret in the namespace
+                      that contains the credentials for authentication.
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -81,7 +81,7 @@ spec:
                     x-kubernetes-map-type: atomic
                   type:
                     description: |-
-                      Defines the authentication type. The value is case-insensitive.
+                      type defines the authentication type. The value is case-insensitive.
 
                       "Basic" is not a supported value.
 
@@ -90,12 +90,12 @@ spec:
                 type: object
               basicAuth:
                 description: |-
-                  BasicAuth allow an endpoint to authenticate over basic authentication.
+                  basicAuth allow an endpoint to authenticate over basic authentication.
                   More info: https://prometheus.io/docs/operating/configuration/#endpoint
                 properties:
                   password:
                     description: |-
-                      `password` specifies a key of a Secret containing the password for
+                      password defines a key of a Secret containing the password for
                       authentication.
                     properties:
                       key:
@@ -121,7 +121,7 @@ spec:
                     x-kubernetes-map-type: atomic
                   username:
                     description: |-
-                      `username` specifies a key of a Secret containing the username for
+                      username defines a key of a Secret containing the username for
                       authentication.
                     properties:
                       key:
@@ -148,7 +148,7 @@ spec:
                 type: object
               bearerTokenSecret:
                 description: |-
-                  Secret to mount to read bearer token for scraping targets. The secret
+                  bearerTokenSecret defines the secret to mount to read bearer token for scraping targets. The secret
                   needs to be in the same namespace as the probe and accessible by
                   the Prometheus Operator.
                 properties:
@@ -174,12 +174,12 @@ spec:
                 x-kubernetes-map-type: atomic
               convertClassicHistogramsToNHCB:
                 description: |-
-                  Whether to convert all scraped classic histograms into a native histogram with custom buckets.
+                  convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.
                   It requires Prometheus >= v3.0.0.
                 type: boolean
               fallbackScrapeProtocol:
                 description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+                  fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 
                   It requires Prometheus >= v3.0.0.
                 enum:
@@ -191,16 +191,16 @@ spec:
                 type: string
               interval:
                 description: |-
-                  Interval at which targets are probed using the configured prober.
+                  interval at which targets are probed using the configured prober.
                   If not specified Prometheus' global scrape interval is used.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               jobName:
-                description: The job name assigned to scraped metrics by default.
+                description: jobName assigned to scraped metrics by default.
                 type: string
               keepDroppedTargets:
                 description: |-
-                  Per-scrape limit on the number of targets dropped by relabeling
+                  keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
                   that will be kept in memory. 0 means no limit.
 
                   It requires Prometheus >= v2.47.0.
@@ -208,24 +208,25 @@ spec:
                 type: integer
               labelLimit:
                 description: |-
-                  Per-scrape limit on number of labels that will be accepted for a sample.
+                  labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
                 type: integer
               labelNameLengthLimit:
                 description: |-
-                  Per-scrape limit on length of labels name that will be accepted for a sample.
+                  labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
                 type: integer
               labelValueLengthLimit:
                 description: |-
-                  Per-scrape limit on length of labels value that will be accepted for a sample.
+                  labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
                 type: integer
               metricRelabelings:
-                description: MetricRelabelConfigs to apply to samples before ingestion.
+                description: metricRelabelings defines the RelabelConfig to apply
+                  to samples before ingestion.
                 items:
                   description: |-
                     RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -236,7 +237,7 @@ spec:
                     action:
                       default: replace
                       description: |-
-                        Action to perform based on the regex matching.
+                        action to perform based on the regex matching.
 
                         `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
                         `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
@@ -268,28 +269,29 @@ spec:
                       type: string
                     modulus:
                       description: |-
-                        Modulus to take of the hash of the source label values.
+                        modulus to take of the hash of the source label values.
 
                         Only applicable when the action is `HashMod`.
                       format: int64
                       type: integer
                     regex:
-                      description: Regular expression against which the extracted
-                        value is matched.
+                      description: regex defines the regular expression against which
+                        the extracted value is matched.
                       type: string
                     replacement:
                       description: |-
-                        Replacement value against which a Replace action is performed if the
+                        replacement value against which a Replace action is performed if the
                         regular expression matches.
 
                         Regex capture groups are available.
                       type: string
                     separator:
-                      description: Separator is the string between concatenated SourceLabels.
+                      description: separator defines the string between concatenated
+                        SourceLabels.
                       type: string
                     sourceLabels:
                       description: |-
-                        The source labels select values from existing labels. Their content is
+                        sourceLabels defines the source labels select values from existing labels. Their content is
                         concatenated using the configured Separator and matched against the
                         configured regular expression.
                       items:
@@ -301,7 +303,7 @@ spec:
                       type: array
                     targetLabel:
                       description: |-
-                        Label to which the resulting string is written in a replacement.
+                        targetLabel defines the label to which the resulting string is written in a replacement.
 
                         It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
                         `KeepEqual` and `DropEqual` actions.
@@ -312,13 +314,13 @@ spec:
                 type: array
               module:
                 description: |-
-                  The module to use for probing specifying how to probe the target.
+                  module to use for probing specifying how to probe the target.
                   Example module configuring in the blackbox exporter:
                   https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
                 type: string
               nativeHistogramBucketLimit:
                 description: |-
-                  If there are more than this many buckets in a native histogram,
+                  nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,
                   buckets will be merged to stay within the limit.
                   It requires Prometheus >= v2.45.0.
                 format: int64
@@ -328,22 +330,23 @@ spec:
                 - type: integer
                 - type: string
                 description: |-
-                  If the growth factor of one bucket to the next is smaller than this,
+                  nativeHistogramMinBucketFactor defines if the growth factor of one bucket to the next is smaller than this,
                   buckets will be merged to increase the factor sufficiently.
                   It requires Prometheus >= v2.50.0.
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 x-kubernetes-int-or-string: true
               oauth2:
-                description: OAuth2 for the URL. Only valid in Prometheus versions
+                description: oauth2 for the URL. Only valid in Prometheus versions
                   2.27.0 and newer.
                 properties:
                   clientId:
                     description: |-
-                      `clientId` specifies a key of a Secret or ConfigMap containing the
+                      clientId defines a key of a Secret or ConfigMap containing the
                       OAuth2 client's ID.
                     properties:
                       configMap:
-                        description: ConfigMap containing data to use for the targets.
+                        description: configMap defines the ConfigMap containing data
+                          to use for the targets.
                         properties:
                           key:
                             description: The key to select.
@@ -366,7 +369,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       secret:
-                        description: Secret containing data to use for the targets.
+                        description: secret defines the Secret containing data to
+                          use for the targets.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -392,7 +396,7 @@ spec:
                     type: object
                   clientSecret:
                     description: |-
-                      `clientSecret` specifies a key of a Secret containing the OAuth2
+                      clientSecret defines a key of a Secret containing the OAuth2
                       client's secret.
                     properties:
                       key:
@@ -420,12 +424,12 @@ spec:
                     additionalProperties:
                       type: string
                     description: |-
-                      `endpointParams` configures the HTTP parameters to append to the token
+                      endpointParams configures the HTTP parameters to append to the token
                       URL.
                     type: object
                   noProxy:
                     description: |-
-                      `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                      noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
                       that should be excluded from proxying. IP and domain names can
                       contain port numbers.
 
@@ -459,7 +463,7 @@ spec:
                         x-kubernetes-map-type: atomic
                       type: array
                     description: |-
-                      ProxyConnectHeader optionally specifies headers to send to
+                      proxyConnectHeader optionally specifies headers to send to
                       proxies during CONNECT requests.
 
                       It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
@@ -467,32 +471,32 @@ spec:
                     x-kubernetes-map-type: atomic
                   proxyFromEnvironment:
                     description: |-
-                      Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+                      proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 
                       It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                     type: boolean
                   proxyUrl:
-                    description: '`proxyURL` defines the HTTP proxy server to use.'
+                    description: proxyUrl defines the HTTP proxy server to use.
                     pattern: ^(http|https|socks5)://.+$
                     type: string
                   scopes:
-                    description: '`scopes` defines the OAuth2 scopes used for the
-                      token request.'
+                    description: scopes defines the OAuth2 scopes used for the token
+                      request.
                     items:
                       type: string
                     type: array
                   tlsConfig:
                     description: |-
-                      TLS configuration to use when connecting to the OAuth2 server.
+                      tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
                       It requires Prometheus >= v2.43.0.
                     properties:
                       ca:
-                        description: Certificate authority used when verifying server
-                          certificates.
+                        description: ca defines the Certificate authority used when
+                          verifying server certificates.
                         properties:
                           configMap:
-                            description: ConfigMap containing data to use for the
-                              targets.
+                            description: configMap defines the ConfigMap containing
+                              data to use for the targets.
                             properties:
                               key:
                                 description: The key to select.
@@ -515,7 +519,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           secret:
-                            description: Secret containing data to use for the targets.
+                            description: secret defines the Secret containing data
+                              to use for the targets.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -540,11 +545,12 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       cert:
-                        description: Client certificate to present when doing client-authentication.
+                        description: cert defines the Client certificate to present
+                          when doing client-authentication.
                         properties:
                           configMap:
-                            description: ConfigMap containing data to use for the
-                              targets.
+                            description: configMap defines the ConfigMap containing
+                              data to use for the targets.
                             properties:
                               key:
                                 description: The key to select.
@@ -567,7 +573,8 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           secret:
-                            description: Secret containing data to use for the targets.
+                            description: secret defines the Secret containing data
+                              to use for the targets.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -592,11 +599,12 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       insecureSkipVerify:
-                        description: Disable target certificate validation.
+                        description: insecureSkipVerify defines how to disable target
+                          certificate validation.
                         type: boolean
                       keySecret:
-                        description: Secret containing the client key file for the
-                          targets.
+                        description: keySecret defines the Secret containing the client
+                          key file for the targets.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -621,7 +629,7 @@ spec:
                         x-kubernetes-map-type: atomic
                       maxVersion:
                         description: |-
-                          Maximum acceptable TLS version.
+                          maxVersion defines the maximum acceptable TLS version.
 
                           It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
                         enum:
@@ -632,7 +640,7 @@ spec:
                         type: string
                       minVersion:
                         description: |-
-                          Minimum acceptable TLS version.
+                          minVersion defines the minimum acceptable TLS version.
 
                           It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
                         enum:
@@ -642,12 +650,12 @@ spec:
                         - TLS13
                         type: string
                       serverName:
-                        description: Used to verify the hostname for the targets.
+                        description: serverName is used to verify the hostname for
+                          the targets.
                         type: string
                     type: object
                   tokenUrl:
-                    description: '`tokenURL` configures the URL to fetch the token
-                      from.'
+                    description: tokenUrl defines the URL to fetch the token from.
                     minLength: 1
                     type: string
                 required:
@@ -657,7 +665,7 @@ spec:
                 type: object
               params:
                 description: |-
-                  The list of HTTP query parameters for the scrape.
+                  params defines the list of HTTP query parameters for the scrape.
                   Please note that the `.spec.module` field takes precedence over the `module` parameter from this list when both are defined.
                   The module name must be added using Module under ProbeSpec.
                 items:
@@ -665,11 +673,11 @@ spec:
                     for a Probe.
                   properties:
                     name:
-                      description: The parameter name
+                      description: name defines the parameter name
                       minLength: 1
                       type: string
                     values:
-                      description: The parameter values
+                      description: values defines the parameter values
                       items:
                         minLength: 1
                         type: string
@@ -685,12 +693,12 @@ spec:
                 x-kubernetes-list-type: map
               prober:
                 description: |-
-                  Specification for the prober to use for probing targets.
+                  prober defines the specification for the prober to use for probing targets.
                   The prober.URL parameter is required. Targets cannot be probed if left empty.
                 properties:
                   noProxy:
                     description: |-
-                      `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                      noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
                       that should be excluded from proxying. IP and domain names can
                       contain port numbers.
 
@@ -699,7 +707,7 @@ spec:
                   path:
                     default: /probe
                     description: |-
-                      Path to collect metrics from.
+                      path to collect metrics from.
                       Defaults to `/probe`.
                     type: string
                   proxyConnectHeader:
@@ -730,7 +738,7 @@ spec:
                         x-kubernetes-map-type: atomic
                       type: array
                     description: |-
-                      ProxyConnectHeader optionally specifies headers to send to
+                      proxyConnectHeader optionally specifies headers to send to
                       proxies during CONNECT requests.
 
                       It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
@@ -738,17 +746,17 @@ spec:
                     x-kubernetes-map-type: atomic
                   proxyFromEnvironment:
                     description: |-
-                      Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+                      proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
 
                       It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                     type: boolean
                   proxyUrl:
-                    description: '`proxyURL` defines the HTTP proxy server to use.'
+                    description: proxyUrl defines the HTTP proxy server to use.
                     pattern: ^(http|https|socks5)://.+$
                     type: string
                   scheme:
                     description: |-
-                      HTTP scheme to use for scraping.
+                      scheme defines the HTTP scheme to use for scraping.
                       `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
                       If empty, Prometheus uses the default value `http`.
                     enum:
@@ -756,30 +764,30 @@ spec:
                     - https
                     type: string
                   url:
-                    description: Mandatory URL of the prober.
+                    description: url defines the mandatory URL of the prober.
                     type: string
                 required:
                 - url
                 type: object
               sampleLimit:
-                description: SampleLimit defines per-scrape limit on number of scraped
+                description: sampleLimit defines per-scrape limit on number of scraped
                   samples that will be accepted.
                 format: int64
                 type: integer
               scrapeClass:
-                description: The scrape class to apply.
+                description: scrapeClass defines the scrape class to apply.
                 minLength: 1
                 type: string
               scrapeClassicHistograms:
                 description: |-
-                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
 
                   Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
                 type: boolean
               scrapeProtocols:
                 description: |-
-                  `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
+                  scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
                   protocols supported by Prometheus in order of preference (from most to least preferred).
 
                   If unset, Prometheus uses its default value.
@@ -805,18 +813,18 @@ spec:
                 x-kubernetes-list-type: set
               scrapeTimeout:
                 description: |-
-                  Timeout for scraping metrics from the Prometheus exporter.
+                  scrapeTimeout defines the timeout for scraping metrics from the Prometheus exporter.
                   If not specified, the Prometheus global scrape timeout is used.
                   The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               targetLimit:
-                description: TargetLimit defines a limit on the number of scraped
+                description: targetLimit defines a limit on the number of scraped
                   targets that will be accepted.
                 format: int64
                 type: integer
               targets:
-                description: Targets defines a set of static or dynamically discovered
+                description: targets defines a set of static or dynamically discovered
                   targets to probe.
                 properties:
                   ingress:
@@ -826,22 +834,24 @@ spec:
                       If `staticConfig` is also defined, `staticConfig` takes precedence.
                     properties:
                       namespaceSelector:
-                        description: From which namespaces to select Ingress objects.
+                        description: namespaceSelector defines from which namespaces
+                          to select Ingress objects.
                         properties:
                           any:
                             description: |-
-                              Boolean describing whether all namespaces are selected in contrast to a
+                              any defines the boolean describing whether all namespaces are selected in contrast to a
                               list restricting them.
                             type: boolean
                           matchNames:
-                            description: List of namespace names to select from.
+                            description: matchNames defines the list of namespace
+                              names to select from.
                             items:
                               type: string
                             type: array
                         type: object
                       relabelingConfigs:
                         description: |-
-                          RelabelConfigs to apply to the label set of the target before it gets
+                          relabelingConfigs to apply to the label set of the target before it gets
                           scraped.
                           The original ingress address is available via the
                           `__tmp_prometheus_ingress_address` label. It can be used to customize the
@@ -858,7 +868,7 @@ spec:
                             action:
                               default: replace
                               description: |-
-                                Action to perform based on the regex matching.
+                                action to perform based on the regex matching.
 
                                 `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
                                 `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
@@ -890,29 +900,29 @@ spec:
                               type: string
                             modulus:
                               description: |-
-                                Modulus to take of the hash of the source label values.
+                                modulus to take of the hash of the source label values.
 
                                 Only applicable when the action is `HashMod`.
                               format: int64
                               type: integer
                             regex:
-                              description: Regular expression against which the extracted
-                                value is matched.
+                              description: regex defines the regular expression against
+                                which the extracted value is matched.
                               type: string
                             replacement:
                               description: |-
-                                Replacement value against which a Replace action is performed if the
+                                replacement value against which a Replace action is performed if the
                                 regular expression matches.
 
                                 Regex capture groups are available.
                               type: string
                             separator:
-                              description: Separator is the string between concatenated
+                              description: separator defines the string between concatenated
                                 SourceLabels.
                               type: string
                             sourceLabels:
                               description: |-
-                                The source labels select values from existing labels. Their content is
+                                sourceLabels defines the source labels select values from existing labels. Their content is
                                 concatenated using the configured Separator and matched against the
                                 configured regular expression.
                               items:
@@ -924,7 +934,7 @@ spec:
                               type: array
                             targetLabel:
                               description: |-
-                                Label to which the resulting string is written in a replacement.
+                                targetLabel defines the label to which the resulting string is written in a replacement.
 
                                 It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
                                 `KeepEqual` and `DropEqual` actions.
@@ -934,7 +944,7 @@ spec:
                           type: object
                         type: array
                       selector:
-                        description: Selector to select the Ingress objects.
+                        description: selector to select the Ingress objects.
                         properties:
                           matchExpressions:
                             description: matchExpressions is a list of label selector
@@ -990,12 +1000,12 @@ spec:
                       labels:
                         additionalProperties:
                           type: string
-                        description: Labels assigned to all metrics scraped from the
-                          targets.
+                        description: labels defines all labels assigned to all metrics
+                          scraped from the targets.
                         type: object
                       relabelingConfigs:
                         description: |-
-                          RelabelConfigs to apply to the label set of the targets before it gets
+                          relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
                           scraped.
                           More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
                         items:
@@ -1008,7 +1018,7 @@ spec:
                             action:
                               default: replace
                               description: |-
-                                Action to perform based on the regex matching.
+                                action to perform based on the regex matching.
 
                                 `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
                                 `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
@@ -1040,29 +1050,29 @@ spec:
                               type: string
                             modulus:
                               description: |-
-                                Modulus to take of the hash of the source label values.
+                                modulus to take of the hash of the source label values.
 
                                 Only applicable when the action is `HashMod`.
                               format: int64
                               type: integer
                             regex:
-                              description: Regular expression against which the extracted
-                                value is matched.
+                              description: regex defines the regular expression against
+                                which the extracted value is matched.
                               type: string
                             replacement:
                               description: |-
-                                Replacement value against which a Replace action is performed if the
+                                replacement value against which a Replace action is performed if the
                                 regular expression matches.
 
                                 Regex capture groups are available.
                               type: string
                             separator:
-                              description: Separator is the string between concatenated
+                              description: separator defines the string between concatenated
                                 SourceLabels.
                               type: string
                             sourceLabels:
                               description: |-
-                                The source labels select values from existing labels. Their content is
+                                sourceLabels defines the source labels select values from existing labels. Their content is
                                 concatenated using the configured Separator and matched against the
                                 configured regular expression.
                               items:
@@ -1074,7 +1084,7 @@ spec:
                               type: array
                             targetLabel:
                               description: |-
-                                Label to which the resulting string is written in a replacement.
+                                targetLabel defines the label to which the resulting string is written in a replacement.
 
                                 It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
                                 `KeepEqual` and `DropEqual` actions.
@@ -1084,21 +1094,23 @@ spec:
                           type: object
                         type: array
                       static:
-                        description: The list of hosts to probe.
+                        description: static defines the list of hosts to probe.
                         items:
                           type: string
                         type: array
                     type: object
                 type: object
               tlsConfig:
-                description: TLS configuration to use when scraping the endpoint.
+                description: tlsConfig defines the TLS configuration to use when scraping
+                  the endpoint.
                 properties:
                   ca:
-                    description: Certificate authority used when verifying server
-                      certificates.
+                    description: ca defines the Certificate authority used when verifying
+                      server certificates.
                     properties:
                       configMap:
-                        description: ConfigMap containing data to use for the targets.
+                        description: configMap defines the ConfigMap containing data
+                          to use for the targets.
                         properties:
                           key:
                             description: The key to select.
@@ -1121,7 +1133,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       secret:
-                        description: Secret containing data to use for the targets.
+                        description: secret defines the Secret containing data to
+                          use for the targets.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -1146,10 +1159,12 @@ spec:
                         x-kubernetes-map-type: atomic
                     type: object
                   cert:
-                    description: Client certificate to present when doing client-authentication.
+                    description: cert defines the Client certificate to present when
+                      doing client-authentication.
                     properties:
                       configMap:
-                        description: ConfigMap containing data to use for the targets.
+                        description: configMap defines the ConfigMap containing data
+                          to use for the targets.
                         properties:
                           key:
                             description: The key to select.
@@ -1172,7 +1187,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       secret:
-                        description: Secret containing data to use for the targets.
+                        description: secret defines the Secret containing data to
+                          use for the targets.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -1197,10 +1213,12 @@ spec:
                         x-kubernetes-map-type: atomic
                     type: object
                   insecureSkipVerify:
-                    description: Disable target certificate validation.
+                    description: insecureSkipVerify defines how to disable target
+                      certificate validation.
                     type: boolean
                   keySecret:
-                    description: Secret containing the client key file for the targets.
+                    description: keySecret defines the Secret containing the client
+                      key file for the targets.
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -1225,7 +1243,7 @@ spec:
                     x-kubernetes-map-type: atomic
                   maxVersion:
                     description: |-
-                      Maximum acceptable TLS version.
+                      maxVersion defines the maximum acceptable TLS version.
 
                       It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
                     enum:
@@ -1236,7 +1254,7 @@ spec:
                     type: string
                   minVersion:
                     description: |-
-                      Minimum acceptable TLS version.
+                      minVersion defines the minimum acceptable TLS version.
 
                       It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
                     enum:
@@ -1246,12 +1264,118 @@ spec:
                     - TLS13
                     type: string
                   serverName:
-                    description: Used to verify the hostname for the targets.
+                    description: serverName is used to verify the hostname for the
+                      targets.
                     type: string
                 type: object
+            type: object
+          status:
+            description: |-
+              status defines the status subresource. It is under active development and is updated only when the
+              "StatusForConfigurationResources" feature gate is enabled.
+
+              Most recent observed status of the Probe. Read-only.
+              More info:
+              https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+            properties:
+              bindings:
+                description: bindings defines the list of workload resources (Prometheus,
+                  PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration
+                  resource.
+                items:
+                  description: WorkloadBinding is a link between a configuration resource
+                    and a workload resource.
+                  properties:
+                    conditions:
+                      description: conditions defines the current state of the configuration
+                        resource when bound to the referenced Workload object.
+                      items:
+                        description: ConfigResourceCondition describes the status
+                          of configuration resources linked to Prometheus, PrometheusAgent,
+                          Alertmanager or ThanosRuler.
+                        properties:
+                          lastTransitionTime:
+                            description: lastTransitionTime defines the time of the
+                              last update to the current status property.
+                            format: date-time
+                            type: string
+                          message:
+                            description: message defines the human-readable message
+                              indicating details for the condition's last transition.
+                            type: string
+                          observedGeneration:
+                            description: |-
+                              observedGeneration defines the .metadata.generation that the
+                              condition was set based upon. For instance, if `.metadata.generation` is
+                              currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+                              condition is out of date with respect to the current state of the object.
+                            format: int64
+                            type: integer
+                          reason:
+                            description: reason for the condition's last transition.
+                            type: string
+                          status:
+                            description: status of the condition.
+                            minLength: 1
+                            type: string
+                          type:
+                            description: |-
+                              type of the condition being reported.
+                              Currently, only "Accepted" is supported.
+                            enum:
+                            - Accepted
+                            minLength: 1
+                            type: string
+                        required:
+                        - lastTransitionTime
+                        - status
+                        - type
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - type
+                      x-kubernetes-list-type: map
+                    group:
+                      description: group defines the group of the referenced resource.
+                      enum:
+                      - monitoring.coreos.com
+                      type: string
+                    name:
+                      description: name defines the name of the referenced object.
+                      minLength: 1
+                      type: string
+                    namespace:
+                      description: namespace defines the namespace of the referenced
+                        object.
+                      minLength: 1
+                      type: string
+                    resource:
+                      description: resource defines the type of resource being referenced
+                        (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
+                      enum:
+                      - prometheuses
+                      - prometheusagents
+                      - thanosrulers
+                      - alertmanagers
+                      type: string
+                  required:
+                  - group
+                  - name
+                  - namespace
+                  - resource
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - group
+                - resource
+                - name
+                - namespace
+                x-kubernetes-list-type: map
             type: object
         required:
         - spec
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}

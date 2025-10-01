@@ -214,7 +214,7 @@ func (f *Framework) GetMetricValueFromPod(ctx context.Context, protocol, ns, pod
 	return getMetricValue(b, metricName)
 }
 
-// GetMetricValueFromService sends an HTTP(S) request to the /metrics endpoint
+// EnsureMetricsFromService sends an HTTP(S) request to the /metrics endpoint
 // of the service using the Proxy API, parses the response and returns the
 // flot64 value of the first series matching the metric name.
 // If protocol is empty, HTTP is used.

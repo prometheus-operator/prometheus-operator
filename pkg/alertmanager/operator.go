@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"path"
 	"strings"
 	"time"
@@ -38,7 +39,6 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -59,6 +59,8 @@ const (
 	resyncPeriod              = 5 * time.Minute
 	controllerName            = "alertmanager-controller"
 	applicationNameLabelValue = "alertmanager"
+
+	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -100,7 +102,7 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	canReadStorageClass bool
 
@@ -150,9 +152,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		metrics:          operator.NewMetrics(r),
+		reconciliations:  &operator.ReconciliationTracker{},
+		newEventRecorder: c.EventRecorderFactory(client, controllerName),
 
 		controllerID: c.ControllerID,
 
@@ -439,7 +441,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Alertmanager instances in the namespace.
 		am := obj.(*monitoringv1.Alertmanager)
 		if am.Namespace == nsName {
@@ -491,7 +493,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing Alertmanager objects.
-	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		c.RefreshStatusFor(obj.(*monitoringv1.Alertmanager))
 	})
 
@@ -507,7 +509,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := c.alrtInfs.ListAll(labels.Everything(), func(o any) {
 		a := o.(*monitoringv1.Alertmanager)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
@@ -515,7 +517,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
@@ -525,7 +527,7 @@ func alertmanagerKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/alertmanager-" + keyParts[1]
 }
 
-func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+func (c *Operator) handleNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -541,7 +543,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
-	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		a := obj.(*monitoringv1.Alertmanager)
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
@@ -921,7 +923,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
-			return fmt.Errorf("failed to initialize from global AlertmangerConfig: %w", err)
+			return fmt.Errorf("failed to initialize from global AlertmanagerConfig: %w", err)
 		}
 
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
@@ -980,9 +982,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 		operator.WithName(generatedConfigSecretName(am.Name)),
 	)
 
-	for k, v := range additionalData {
-		generatedConfigSecret.Data[k] = v
-	}
+	maps.Copy(generatedConfigSecret.Data, additionalData)
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, conf); err != nil {
@@ -1013,7 +1013,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			return nil, err
 		}
 
-		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
+		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj any) {
 			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
 		})
 		if err != nil {
@@ -1032,7 +1032,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj any) {
 			k, ok := c.accessor.MetaNamespaceKey(obj)
 			if !ok {
 				return
@@ -1054,6 +1054,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
+	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
@@ -1064,7 +1065,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 
@@ -1236,6 +1237,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkRocketChatConfigs(ctx, receiver.RocketChatConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1349,6 +1355,48 @@ func checkDiscordConfigs(
 		}
 		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
 			return fmt.Errorf("failed to validate API URL: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func checkRocketChatConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.RocketChatConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+	}
+
+	for _, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+
+		if config.APIURL != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.APIURL))); err != nil {
+				return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
+			}
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.Token); err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
 	}
 
