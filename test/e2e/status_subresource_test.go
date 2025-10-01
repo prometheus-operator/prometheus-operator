@@ -544,7 +544,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a first scrapeConfig to check that the operator only updates the binding when needed.
-	sc1 := framework.MakeBasicScrapeConfig("sc1", ns)
+	sc1 := framework.MakeBasicScrapeConfig(ns, "sc1")
 	sc1.Labels["group"] = name
 	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc1, v1.CreateOptions{})
 	require.NoError(t, err)
@@ -560,7 +560,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	require.NotEqual(t, "", ts)
 
 	// Create a second scrapeConfig to check that the operator updates the binding when the condition changes.
-	sc2 := framework.MakeBasicScrapeConfig("sc2", ns)
+	sc2 := framework.MakeBasicScrapeConfig(ns, "sc2")
 	sc2.Labels["group"] = name
 	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc2, v1.CreateOptions{})
 	require.NoError(t, err)
