@@ -1,3 +1,24 @@
+## 0.86.0 / 2025-10-03
+
+This release introduces the status subresource (behind the
+`StatusForConfigurationResources` feature gate) for `ServiceMonitor`,
+`PodMonitor` and `Scrapeconfig` custom resources. It is only supported for
+`Prometheus` resources.
+
+* [CHANGE] Remove automatic addition of the `metadata-wal-records` feature flag for Prometheus versions >= 3.4. #7893
+* [CHANGE] Add miscellaneous validations to the `ScrapeConfig` CRD. #7856 #7823 #7835 #7838 #7838 ##7966
+* [FEATURE] Add status subresource for `ServiceMonitor` custom resources (requires the `StatusForConfigurationResources` feature gate). #7767 #7836 #7827 #7795
+* [FEATURE] Add status subresource for `PodMonitor` custom resources (requires the `StatusForConfigurationResources` feature gate). #7929 #7914 #7936
+* [FEATURE] Add status subresource for `ScrapeConfig` custom resources (requires the `StatusForConfigurationResources` feature gate). #7958 #7964 #7969
+* [FEATURE] Add `UnderscoreEscapingWithoutSuffixes` to the `translationStrategy` field for the Prometheus and PrometheusAgent CRDs. #7947
+* [FEATURE] Add `promoteScopeMetadata` field to the Prometheus and PrometheusAgent CRDs. #7803
+* [FEATURE] Add `enableHttp2` field to Alertmanager and AlertmanagerConfig CRDs. #7963
+* [ENHANCEMENT] Add the related object to the events emitted by the operator. #7867 #7953
+* [ENHANCEMENT] Add webhook validation for the MSTeams V2 receiver of `AlertmanagerConfig` CRD. #7906
+* [ENHANCEMENT] Add `app.kubernetes.io/managed-by: prometheus-operator` label to all managed resources. #7939
+* [BUGFIX] Use distinct port name for the config-reloader init container to avoid duplicate port name warnings. #7904
+* [BUGFIX] Validate the PagerDuty URL in the Alertmanager's global configuration. #7945
+
 ## 0.85.0 / 2025-08-21
 
 * [CHANGE/BUGFIX] Add the `--watch-referenced-objects-in-all-namespaces` CLI argument. When enabled, the operator watches for secrets and configmaps in both workload and configuration resources. It ensures that reconciliation happens when a referenced secret/configmap is updated. #7615
