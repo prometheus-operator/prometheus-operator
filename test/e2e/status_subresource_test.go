@@ -572,7 +572,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	// change the status of the scrapeConfig and the observed timetstamp
 	// should be the same as before.
 	sc1.Labels["test"] = "test"
-	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc1, v1.UpdateOptions{})
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc1, v1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second scrapeConfig to reference an non-existing Secret.
