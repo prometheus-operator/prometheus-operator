@@ -1153,6 +1153,26 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		)
 	}
 
+	// Check if both ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
+	var getAuthorizationCredentials = func(auth *monitoringv1.SafeAuthorization) *v1.SecretKeySelector {
+		if auth == nil {
+			return nil
+		}
+		return auth.Credentials
+	}
+
+	if hc.BasicAuth != nil && hc.BearerTokenSecret != nil {
+		return fmt.Errorf("cannot set both 'basicAuth' and 'bearerTokenSecret' configs in 'httpConfig'")
+	}
+
+	if hc.BasicAuth != nil && getAuthorizationCredentials(hc.Authorization) != nil {
+		return fmt.Errorf("cannot set both 'basicAuth' and 'authorization.credentials' in 'httpConfig'")
+	}
+
+	if getAuthorizationCredentials(hc.Authorization) != nil && hc.BearerTokenSecret != nil {
+		return fmt.Errorf("cannot set both 'authorization.credentials' and 'bearerTokenSecret' in 'httpConfig'")
+	}
+
 	if (hc.NoProxy != nil ||
 		hc.ProxyFromEnvironment != nil ||
 		hc.ProxyConnectHeader != nil) &&
