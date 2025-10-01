@@ -5496,7 +5496,6 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 }
 
 func testPrometheusUTF8LabelSupport(t *testing.T) {
-	skipPrometheusTests(t)
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
