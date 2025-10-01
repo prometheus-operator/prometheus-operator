@@ -284,6 +284,11 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	name := "podmonitor-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
 

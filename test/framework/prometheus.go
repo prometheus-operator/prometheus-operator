@@ -202,11 +202,6 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 						"group": group,
 					},
 				},
-				ScrapeConfigSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
-					},
-				},
 				ServiceAccountName: "prometheus",
 				Resources: v1.ResourceRequirements{
 					Requests: v1.ResourceList{
