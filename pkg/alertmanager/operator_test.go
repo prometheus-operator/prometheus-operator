@@ -1481,6 +1481,26 @@ func TestCheckHTTPConfig(t *testing.T) {
 			},
 			ok: false,
 		},
+		{
+			name: "httpConfig with bearerTokenSecret and oauth2",
+			hc: &monitoringv1alpha1.HTTPConfig{
+				BearerTokenSecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "http-config",
+					},
+					Key: "secret",
+				},
+				OAuth2: &monitoringv1.OAuth2{
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "http-config",
+						},
+						Key: "secret",
+					},
+				},
+			},
+			ok: false,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 
