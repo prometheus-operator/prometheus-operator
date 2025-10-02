@@ -1434,6 +1434,26 @@ func TestCheckHTTPConfig(t *testing.T) {
 			ok:   true,
 		},
 		{
+			name: "httpConfig with basicAuth",
+			hc: &monitoringv1alpha1.HTTPConfig{
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "http-config",
+						},
+						Key: "username",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "http-config",
+						},
+						Key: "password",
+					},
+				},
+			},
+			ok: true,
+		},
+		{
 			name: "httpConfig with basicAuth and authorization.credentials",
 			hc: &monitoringv1alpha1.HTTPConfig{
 				BasicAuth: &monitoringv1.BasicAuth{
