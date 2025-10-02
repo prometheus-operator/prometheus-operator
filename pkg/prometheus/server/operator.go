@@ -815,12 +815,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return c.configResStatusCleanup(ctx, p)
 	}
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), statusCleanup)
+	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), statusCleanup)
 	if err != nil {
 		return err
 	}
 
-	if finalizersChanged {
+	if finalizerAdded {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
