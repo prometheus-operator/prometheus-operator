@@ -15,6 +15,9 @@
 package v1
 
 import (
+	"fmt"
+	"strings"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -737,6 +740,36 @@ type HTTPConfig struct {
 	// followRedirects defines whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
+}
+
+// Validate semantically validates the given HTTPConfig.
+func (hc *HTTPConfig) Validate() error {
+	// Check if Oauth2, ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
+	authSet := []string{}
+
+	if hc.BasicAuth != nil {
+		authSet = append(authSet, "'basicAuth'")
+	}
+
+	if hc.BearerTokenSecret != nil {
+		authSet = append(authSet, "'bearerTokenSecret'")
+	}
+
+	if hc.Authorization != nil {
+		if hc.Authorization.Credentials != nil {
+			authSet = append(authSet, "'authorization.credentials'")
+		}
+	}
+
+	if hc.OAuth2 != nil {
+		authSet = append(authSet, "'oauth2'")
+	}
+
+	if len(authSet) > 1 {
+		return fmt.Errorf("cannot set %s configs at the same time in 'httpConfig'", strings.Join(authSet, ", "))
+	}
+
+	return nil
 }
 
 // AlertmanagerList is a list of Alertmanagers.

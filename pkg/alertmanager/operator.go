@@ -1139,6 +1139,10 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		return nil
 	}
 
+	if err := hc.Validate(); err != nil {
+		return err
+	}
+
 	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
 		return fmt.Errorf(
 			"'authorization' config set in 'httpConfig' but supported in Alertmanager >= 0.22.0 only - current %s",
@@ -1151,31 +1155,6 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 			"'oauth2' config set in 'httpConfig' but supported in Alertmanager >= 0.22.0 only - current %s",
 			amVersion.String(),
 		)
-	}
-
-	// Check if Oauth2, ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
-	authSet := []string{}
-
-	if hc.BasicAuth != nil {
-		authSet = append(authSet, "'basicAuth'")
-	}
-
-	if hc.BearerTokenSecret != nil {
-		authSet = append(authSet, "'bearerTokenSecret'")
-	}
-
-	if hc.Authorization != nil {
-		if hc.Authorization.Credentials != nil {
-			authSet = append(authSet, "'authorization.credentials'")
-		}
-	}
-
-	if hc.OAuth2 != nil {
-		authSet = append(authSet, "'oauth2'")
-	}
-
-	if len(authSet) > 1 {
-		return fmt.Errorf("cannot set %s configs at the same time in 'httpConfig'", strings.Join(authSet, ", "))
 	}
 
 	if (hc.NoProxy != nil ||
