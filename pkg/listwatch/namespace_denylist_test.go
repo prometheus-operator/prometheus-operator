@@ -51,8 +51,8 @@ func (m *mockListerWatcher) ResultChan() <-chan watch.Event {
 
 func newUnstructured(namespace string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"metadata": map[string]interface{}{
+		Object: map[string]any{
+			"metadata": map[string]any{
 				"namespace": namespace,
 				"name":      "foo",
 			},

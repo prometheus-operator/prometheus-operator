@@ -39,8 +39,9 @@ const (
 	ConfOutDir   = "/etc/prometheus/config_out"
 	WebConfigDir = "/etc/prometheus/web_config"
 	tlsAssetsDir = "/etc/prometheus/certs"
-	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
+	// TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
+	// nolint:godoclint
 	RulesDir               = "/etc/prometheus/rules"
 	secretsDir             = "/etc/prometheus/secrets/"
 	configmapsDir          = "/etc/prometheus/configmaps/"
@@ -59,13 +60,29 @@ const (
 )
 
 var (
-	ShardLabelName                = "operator.prometheus.io/shard"
-	PrometheusNameLabelName       = "operator.prometheus.io/name"
-	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
-	PrometheusK8sLabelName        = "app.kubernetes.io/name"
-	ProbeTimeoutSeconds     int32 = 3
-	LabelPrometheusName           = "prometheus-name"
+	// ShardLabelName is the statefulset's label identifying the Prometheus/PrometheusAgent resource's shard.
+	ShardLabelName = "operator.prometheus.io/shard"
+
+	// PrometheusNameLabelName is the statefulset's label identifying the Prometheus/PrometheusAgent resource.
+	PrometheusNameLabelName = "operator.prometheus.io/name"
+
+	// PrometheusModeLabelName is the statefulset's label identifying whether the owning resource is a Prometheus or PrometheusAgent.
+	PrometheusModeLabelName = "operator.prometheus.io/mode"
+
+	ProbeTimeoutSeconds int32 = 3
+	LabelPrometheusName       = "prometheus-name"
 )
+
+// LabelSelectorForStatefulSets returns a label selector which selects statefulsets deployed with the server or agent mode.
+func LabelSelectorForStatefulSets(mode string) string {
+	return fmt.Sprintf(
+		"%s,%s,%s,%s in (%s)",
+		operator.ManagedByOperatorLabelSelector(),
+		ShardLabelName,
+		PrometheusNameLabelName,
+		PrometheusModeLabelName, mode,
+	)
+}
 
 func ExpectedStatefulSetShardNames(
 	p monitoringv1.PrometheusInterface,
@@ -176,7 +193,7 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 	}
 }
 
-// It is stil here because promcfg still uses it.
+// SubPathForStorage is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {

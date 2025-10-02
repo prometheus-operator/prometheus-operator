@@ -81,7 +81,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 			equal: false,
 		},
 		{
-			// differrent resource.Quantity produce the same hash because the
+			// different resource.Quantity produce the same hash because the
 			// struct contains private fields that aren't integrated into the
 			// hash computation.
 			name: "different specs but same hash",
@@ -968,7 +968,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "subroute-with-unknow-field",
+					Name:      "subroute-with-unknown-field",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -1198,13 +1198,6 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			t.Logf("err: %s", err)
 			require.Error(t, err)
 		})
-	}
-}
-
-func TestListOptions(t *testing.T) {
-	for i := 0; i < 1000; i++ {
-		o := ListOptions("test")
-		require.True(t, o.LabelSelector == "app.kubernetes.io/name=alertmanager,alertmanager=test" || o.LabelSelector == "alertmanager=test,app.kubernetes.io/name=alertmanager", "LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
 	}
 }
 
@@ -1443,11 +1436,12 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			c := fake.NewSimpleClientset(tc.objects...)
 
 			o := &Operator{
-				kclient:    c,
-				mclient:    monitoringfake.NewSimpleClientset(),
-				ssarClient: &alwaysAllowed{},
-				logger:     slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
-				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				kclient:          c,
+				mclient:          monitoringfake.NewSimpleClientset(),
+				ssarClient:       &alwaysAllowed{},
+				logger:           slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+				metrics:          operator.NewMetrics(prometheus.NewRegistry()),
+				newEventRecorder: func(related runtime.Object) *operator.EventRecorder { return operator.NewFakeRecorder(1, related) },
 			}
 
 			err := o.bootstrap(

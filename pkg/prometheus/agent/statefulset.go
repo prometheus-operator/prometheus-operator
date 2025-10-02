@@ -16,6 +16,7 @@ package prometheusagent
 
 import (
 	"fmt"
+	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -65,15 +66,14 @@ func makeStatefulSet(
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(name),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
+		operator.WithInputHashAnnotation(inputHash),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
-			prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
-			prompkg.PrometheusNameLabelName: objMeta.GetName(),
-			prompkg.PrometheusModeLabeLName: prometheusMode,
+			prompkg.PrometheusModeLabelName: prometheusMode,
 		}),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
 		operator.WithoutKubectlAnnotations(),
@@ -197,9 +197,7 @@ func makeStatefulSetSpec(
 	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
 	podSelectorLabels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 
-	for k, v := range podSelectorLabels {
-		podLabels[k] = v
-	}
+	maps.Copy(podLabels, podSelectorLabels)
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
@@ -207,11 +205,6 @@ func makeStatefulSetSpec(
 	var additionalContainers, operatorInitContainers []v1.Container
 
 	var watchedDirectories []string
-
-	var minReadySeconds int32
-	if cpf.MinReadySeconds != nil {
-		minReadySeconds = int32(*cpf.MinReadySeconds)
-	}
 
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
@@ -288,6 +281,7 @@ func makeStatefulSetSpec(
 		HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 		HostNetwork:                   cpf.HostNetwork,
 		EnableServiceLinks:            cpf.EnableServiceLinks,
+		HostUsers:                     cpf.HostUsers,
 	}
 
 	if cpf.HostNetwork {
@@ -305,7 +299,7 @@ func makeStatefulSetSpec(
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(p.Spec.MinReadySeconds, 0),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},

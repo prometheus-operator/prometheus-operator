@@ -17,6 +17,7 @@ package thanos
 import (
 	"context"
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 
@@ -24,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
@@ -61,7 +62,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	logger := o.logger.With("thanos", t.Name, "namespace", t.Namespace)
 	thanosVersion := operator.StringValOrDefault(ptr.Deref(t.Spec.Version, ""), operator.DefaultThanosVersion)
 
-	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger)
+	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.newEventRecorder(t), logger)
 	if err != nil {
 		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
@@ -84,9 +85,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 
 	currentRules := map[string]string{}
 	for _, cm := range currentConfigMaps {
-		for ruleFileName, ruleFile := range cm.Data {
-			currentRules[ruleFileName] = ruleFile
-		}
+		maps.Copy(currentRules, cm.Data)
 	}
 
 	equal := reflect.DeepEqual(newRules, currentRules)
@@ -202,7 +201,7 @@ func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]strin
 
 	// To make bin packing algorithm deterministic, sort ruleFiles filenames and
 	// iterate over filenames instead of ruleFiles map (not deterministic).
-	for _, filename := range util.SortedKeys(ruleFiles) {
+	for _, filename := range sortutil.SortedKeys(ruleFiles) {
 		// If rule file doesn't fit into current bucket, create new bucket.
 		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > operator.MaxConfigMapDataSize {
 			buckets = append(buckets, map[string]string{})

@@ -16,6 +16,9 @@ package k8sutil
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"testing"
@@ -310,12 +313,8 @@ func TestMergeMetadata(t *testing.T) {
 				svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
 
 				modifiedSvc := service.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedSvc.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedSvc.Annotations[a] = v
-				}
+				maps.Copy(modifiedSvc.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedSvc.Annotations, tc.modifiedAnnotations)
 				_, err := svcClient.Update(context.Background(), modifiedSvc, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -350,12 +349,8 @@ func TestMergeMetadata(t *testing.T) {
 				endpointsClient := fake.NewSimpleClientset(endpoints).CoreV1().Endpoints(namespace)
 
 				modifiedEndpoints := endpoints.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedEndpoints.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedEndpoints.Annotations[a] = v
-				}
+				maps.Copy(modifiedEndpoints.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedEndpoints.Annotations, tc.modifiedAnnotations)
 				_, err := endpointsClient.Update(context.Background(), modifiedEndpoints, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -390,12 +385,8 @@ func TestMergeMetadata(t *testing.T) {
 				ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
 
 				modifiedSset := sset.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedSset.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedSset.Annotations[a] = v
-				}
+				maps.Copy(modifiedSset.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedSset.Annotations, tc.modifiedAnnotations)
 				_, err := ssetClient.Update(context.Background(), modifiedSset, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -430,12 +421,8 @@ func TestMergeMetadata(t *testing.T) {
 				sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets(namespace)
 
 				modifiedSecret := secret.DeepCopy()
-				for l, v := range tc.modifiedLabels {
-					modifiedSecret.Labels[l] = v
-				}
-				for a, v := range tc.modifiedAnnotations {
-					modifiedSecret.Annotations[a] = v
-				}
+				maps.Copy(modifiedSecret.Labels, tc.modifiedLabels)
+				maps.Copy(modifiedSecret.Annotations, tc.modifiedAnnotations)
 				_, err := sClient.Update(context.Background(), modifiedSecret, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
@@ -553,6 +540,104 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 	for i, opt := range monitoringDNSConfig.Options {
 		require.Equal(t, opt.Name, spec.DNSConfig.Options[i].Name, "expected option names to match")
 		require.Equal(t, opt.Value, spec.DNSConfig.Options[i].Value, "expected option values to match")
+	}
+}
+
+func TestFinalizerAddPatch(t *testing.T) {
+	finalizerName := "cleanup.kubernetes.io/finalizer"
+	tests := []struct {
+		name          string
+		finalizers    []string
+		finalizerName string
+		expectedPatch []map[string]any
+		expectEmpty   bool
+	}{
+		{
+			name:          "empty finalizers",
+			finalizers:    []string{},
+			finalizerName: finalizerName,
+			expectedPatch: []map[string]any{
+				{"op": "add", "path": "/metadata/finalizers", "value": []string{finalizerName}},
+			},
+		},
+		{
+			name:          "finalizer not present",
+			finalizers:    []string{"a", "b"},
+			finalizerName: finalizerName,
+			expectedPatch: []map[string]any{
+				{"op": "add", "path": "/metadata/finalizers/-", "value": finalizerName},
+			},
+		},
+		{
+			name:          "finalizer already present",
+			finalizers:    []string{"a", finalizerName, "b"},
+			finalizerName: finalizerName,
+			expectEmpty:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patch, err := FinalizerAddPatch(tt.finalizers, tt.finalizerName)
+			require.NoError(t, err)
+
+			if tt.expectEmpty {
+				require.Empty(t, patch)
+			} else {
+				expectedBytes, err := json.Marshal(tt.expectedPatch)
+				require.NoError(t, err)
+				require.JSONEq(t, string(expectedBytes), string(patch))
+			}
+		})
+	}
+}
+
+func TestFinalizerDeletePatch(t *testing.T) {
+	finalizerName := "cleanup.kubernetes.io/finalizer"
+	tests := []struct {
+		name          string
+		finalizers    []string
+		finalizerName string
+		expectPatch   bool
+		expectedIndex int
+	}{
+		{
+			name:          "finalizer present at index 1",
+			finalizers:    []string{"a", finalizerName, "b"},
+			finalizerName: finalizerName,
+			expectPatch:   true,
+			expectedIndex: 1,
+		},
+		{
+			name:          "finalizer not present",
+			finalizers:    []string{"a", "b"},
+			finalizerName: finalizerName,
+			expectPatch:   false,
+		},
+		{
+			name:          "empty finalizers",
+			finalizers:    []string{},
+			finalizerName: finalizerName,
+			expectPatch:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patch, err := FinalizerDeletePatch(tt.finalizers, tt.finalizerName)
+			require.NoError(t, err)
+
+			if tt.expectPatch {
+				expected := []map[string]any{
+					{"op": "remove", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex)},
+				}
+				expectedBytes, err := json.Marshal(expected)
+				require.NoError(t, err)
+				require.JSONEq(t, string(expectedBytes), string(patch))
+			} else {
+				require.Empty(t, patch)
+			}
+		})
 	}
 }
 

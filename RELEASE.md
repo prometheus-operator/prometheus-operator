@@ -1,5 +1,5 @@
 ---
-weight: 506
+weight: 606
 toc: true
 title: Release
 menu:
@@ -18,9 +18,12 @@ The release cycle for cutting releases is every 6 weeks
 
 | Release | Date of release (year-month-day) | Release shepherd                          |
 |---------|----------------------------------|-------------------------------------------|
-| v0.86   | 2025-10-01                       | **searching for volunteer**               |
-| v0.85   | 2025-08-20                       | **searching for volunteer**               |
-| v0.84   | 2025-07-09                       | **searching for volunteer**               |
+| v0.89   | 2026-02-04                       | **searching for volunteer**               |
+| v0.88   | 2025-12-24                       | **searching for volunteer**               |
+| v0.87   | 2025-11-12                       | **searching for volunteer**               |
+| v0.86   | 2025-10-01                       | Jayapriya Pai (Github: @slashpai)         |
+| v0.85   | 2025-08-20                       | Simon Pasquier (GitHub: @simonpasquier)   |
+| v0.84   | 2025-07-09                       | M Viswanath Sai (Github: @mviswanathsai)  |
 | v0.83   | 2025-05-28                       | M Viswanath Sai (Github: @mviswanathsai)  |
 | v0.82   | 2025-04-16                       | Jayapriya Pai (Github: @slashpai)         |
 | v0.81   | 2025-03-05                       | Simon Pasquier (GitHub: @simonpasquier)   |

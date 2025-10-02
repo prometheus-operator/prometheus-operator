@@ -30,6 +30,7 @@ import (
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -37,10 +38,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -237,7 +238,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 	// Check that all pods report the expected number of peers.
 	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
 
-	for i := 0; i < replicas; i++ {
+	for i := range replicas {
 		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
 		if err := f.WaitForAlertmanagerPodInitialized(ctx, a.Namespace, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
 			return nil, fmt.Errorf(
@@ -346,8 +347,12 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, 
 		ns,
 		f.DefaultTimeout,
 		0,
-		alertmanager.ListOptions(name),
-	); err != nil {
+		metav1.ListOptions{
+			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+				operator.ApplicationNameLabelKey: "alertmanager",
+				"alertmanager":                   name,
+			})).String(),
+		}); err != nil {
 		return fmt.Errorf("waiting for Alertmanager tpr (%s) to vanish timed out: %w", name, err)
 	}
 
@@ -486,7 +491,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 	err := wait.PollUntilContextTimeout(ctx, 10*time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		alerts := models.GettableAlerts{}
 
-		resp, err := f.AlertmangerSVCGetRequest(ctx, ns, svcName, "/api/v2/alerts", map[string]string{
+		resp, err := f.AlertmanagerSVCGetRequest(ctx, ns, svcName, "/api/v2/alerts", map[string]string{
 			"state":  "active",
 			"filter": "alertname=" + alertName,
 		})
@@ -518,7 +523,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 	return nil
 }
 
-func (f *Framework) AlertmangerSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+func (f *Framework) AlertmanagerSVCGetRequest(ctx context.Context, ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
 	return request.DoRaw(ctx)

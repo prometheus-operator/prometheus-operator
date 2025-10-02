@@ -18,6 +18,7 @@ import (
 	"cmp"
 	"fmt"
 	"log/slog"
+	"maps"
 	"math"
 	"net/url"
 	"path"
@@ -35,7 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -224,7 +225,7 @@ func (cg *ConfigGenerator) Version() semver.Version {
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
-func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
+func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 	return &ConfigGenerator{
 		logger:                     cg.logger.With(keyvals...),
 		version:                    cg.version,
@@ -298,7 +299,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 // AppendMapItem appends the k/v item to the given yaml.MapSlice and returns
 // the updated slice.
-func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{}) yaml.MapSlice {
+func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v any) yaml.MapSlice {
 	if cg.notCompatible {
 		cg.Warn(k)
 		return m
@@ -487,7 +488,7 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
 
-	for _, k := range util.SortedKeys(m) {
+	for _, k := range sortutil.SortedKeys(m) {
 		res = append(res, yaml.MapItem{Key: k, Value: m[k]})
 	}
 
@@ -1132,9 +1133,16 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Since metadata-wal-records is in the process of being deprecated as part of remote write v2 stabilization as described in issue.
+	// Also seems to be cause some increase in resource usage overall, will stop being automatically added on prometheus 3.4.0 onwards.
+	// For more context see https://github.com/prometheus-operator/prometheus-operator/issues/7889
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
-			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+			cg = cg.WithMinimumVersion("2.54.0")
+			if cg.Version().LT(semver.MustParse("3.4.0")) {
+				promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+				break
+			}
 		}
 	}
 
@@ -1178,22 +1186,18 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 
 func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]string) {
 	podAnnotations := map[string]string{
-		"kubectl.kubernetes.io/default-container": "prometheus",
+		operator.DefaultContainerAnnotationKey: "prometheus",
 	}
 
 	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
+		operator.ApplicationVersionLabelKey: cg.version.String(),
 	}
 
 	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata
 	if podMetadata != nil {
-		for k, v := range podMetadata.Labels {
-			podLabels[k] = v
-		}
+		maps.Copy(podLabels, podMetadata.Labels)
 
-		for k, v := range podMetadata.Annotations {
-			podAnnotations[k] = v
-		}
+		maps.Copy(podAnnotations, podMetadata.Annotations)
 	}
 
 	return podAnnotations, podLabels
@@ -1325,9 +1329,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1358,6 +1359,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
+
 	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
 	relabelings := initRelabelings()
@@ -1371,7 +1374,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
 
-		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
+		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
@@ -1570,14 +1573,22 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.ProberSpec.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
-	if m.Spec.ProberSpec.ProxyURL != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: m.Spec.ProberSpec.ProxyURL})
+
+	var paramsMapSlice yaml.MapSlice
+	if m.Spec.Module != "" {
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: "module", Value: []string{m.Spec.Module}})
 	}
 
-	if m.Spec.Module != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
-			{Key: "module", Value: []string{m.Spec.Module}},
-		}})
+	for _, p := range m.Spec.Params {
+		if m.Spec.Module != "" && p.Name == "module" {
+			continue
+		}
+
+		paramsMapSlice = append(paramsMapSlice, yaml.MapItem{Key: p.Name, Value: p.Values})
+	}
+
+	if len(paramsMapSlice) != 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: paramsMapSlice})
 	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -1608,6 +1619,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	s := store.ForNamespace(m.Namespace)
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
 
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
@@ -1663,7 +1676,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		// Generate kubernetes_sd_config section for the ingress resources.
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
-		for _, k := range util.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels) {
+		for _, k := range sortutil.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(k)}},
@@ -1827,9 +1840,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
-	if ep.ProxyURL != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
-	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
@@ -1842,6 +1852,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
@@ -1874,7 +1886,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
-		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
+		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
@@ -2267,6 +2279,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
+
+		k8sSDConfig = cg.addProxyConfigtoYaml(k8sSDConfig, store, apiserverConfig.ProxyConfig)
 	}
 
 	if attachMetadataConfig != nil {
@@ -2460,7 +2474,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				otherConfigItems = append(otherConfigItems, mapItem)
 				continue
 			}
-			values, ok := mapItem.Value.([]interface{})
+			values, ok := mapItem.Value.([]any)
 			if !ok {
 				return nil, fmt.Errorf("error parsing relabel configs: %w", err)
 			}
@@ -2944,7 +2958,7 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	for _, identifier := range util.SortedKeys(serviceMonitors) {
+	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
 				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
@@ -2967,7 +2981,7 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	for _, identifier := range util.SortedKeys(podMonitors) {
+	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
 				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
@@ -2990,7 +3004,7 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	for _, identifier := range util.SortedKeys(probes) {
+	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
 				probes[identifier],
@@ -3106,7 +3120,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
 
-	for _, identifier := range util.SortedKeys(scrapeConfigs) {
+	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
 
@@ -4241,6 +4255,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
+
+			if config.LabelSelector != nil && len(*config.LabelSelector) > 0 {
+				configs[i] = cg.WithMinimumVersion("3.5.0").AppendMapItem(configs[i],
+					"label_selector",
+					config.LabelSelector)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "hetzner_sd_configs",
@@ -4738,6 +4758,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
+	cfg = cg.appendNameValidationScheme(cfg, sc.Spec.NameValidationScheme)
+	cfg = cg.appendNameEscapingScheme(cfg, sc.Spec.NameEscapingScheme)
+
 	return cfg, nil
 }
 
@@ -4759,6 +4782,17 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 
 	if cg.version.LT(semver.MustParse("3.4.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoTranslation {
 		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.4.0 ", monitoringv1.NoTranslation)
+	}
+
+	if cg.version.LT(semver.MustParse("3.6.0")) && ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.UnderscoreEscapingWithoutSuffixes {
+		return cfg, fmt.Errorf("nameValidationScheme %q is only supported from Prometheus version 3.6.0 ", monitoringv1.UnderscoreEscapingWithoutSuffixes)
+	}
+
+	if cg.version.GTE(semver.MustParse("3.5.0")) {
+		err := otlpConfig.Validate()
+		if err != nil {
+			return cfg, err
+		}
 	}
 
 	otlp := yaml.MapSlice{}
@@ -4785,6 +4819,24 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.4.0").AppendMapItem(otlp,
 			"convert_histograms_to_nhcb",
 			otlpConfig.ConvertHistogramsToNHCB)
+	}
+
+	if otlpConfig.PromoteAllResourceAttributes != nil {
+		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
+			"promote_all_resource_attributes",
+			otlpConfig.PromoteAllResourceAttributes)
+	}
+
+	if len(otlpConfig.IgnoreResourceAttributes) > 0 {
+		otlp = cg.WithMinimumVersion("3.5.0").AppendMapItem(otlp,
+			"ignore_resource_attributes",
+			otlpConfig.IgnoreResourceAttributes)
+	}
+
+	if otlpConfig.PromoteScopeMetadata != nil {
+		otlp = cg.WithMinimumVersion("3.6.0").AppendMapItem(otlp,
+			"promote_scope_metadata",
+			otlpConfig.PromoteScopeMetadata)
 	}
 
 	if len(otlp) == 0 {
@@ -4907,6 +4959,16 @@ func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlic
 	return cg.WithMinimumVersion("3.4.0").AppendMapItem(cfg, "convert_classic_histograms_to_nhcb", *cpf.ConvertClassicHistogramsToNHCB)
 }
 
+func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeClassicHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {
@@ -4983,6 +5045,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameValidationScheme(cfg, cpf.NameValidationScheme)
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
+	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 
 	return cfg
 }

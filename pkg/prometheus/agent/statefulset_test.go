@@ -15,6 +15,8 @@
 package prometheusagent
 
 import (
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -77,14 +79,7 @@ func TestWALCompression(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
-		for _, flag := range promArgs {
-			if flag == test.expectedArg {
-				found = true
-				break
-			}
-		}
-		require.Equal(t, test.shouldContain, found)
+		require.Equal(t, test.shouldContain, slices.Contains(promArgs, test.expectedArg))
 	}
 }
 
@@ -110,14 +105,7 @@ func TestPrometheusAgentCommandLineFlag(t *testing.T) {
 		require.NoError(t, err)
 
 		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		found := false
-		for _, flag := range promArgs {
-			if flag == test.expectedArg {
-				found = true
-				break
-			}
-		}
-		require.Equal(t, test.shouldContain, found)
+		require.Equal(t, test.shouldContain, slices.Contains(promArgs, test.expectedArg))
 	}
 }
 
@@ -147,7 +135,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv
 		&p,
 		defaultTestConfig,
 		cg,
-		"",
+		"abc",
 		0,
 		&operator.ShardedSecret{})
 }
@@ -331,6 +319,58 @@ func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
 	}
 
 	require.False(t, found, "Scrape failure log file mounted, when it shouldn't be.")
+}
+
+func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+		"kubectl.kubernetes.io/last-applied-configuration": "something",
+		"kubectl.kubernetes.io/something":                  "something",
+	}
+
+	// kubectl annotations must not be on the statefulset so kubectl does
+	// not manage the generated object
+	expectedStatefulSetAnnotations := map[string]string{
+		"prometheus-operator-input-hash": "abc",
+		"testannotation":                 "testannotationvalue",
+	}
+
+	expectedStatefulSetLabels := map[string]string{
+		"testlabel":                    "testlabelvalue",
+		"operator.prometheus.io/name":  "test",
+		"operator.prometheus.io/shard": "0",
+		"operator.prometheus.io/mode":  "agent",
+		"managed-by":                   "prometheus-operator",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "prometheus-agent",
+	}
+
+	expectedPodLabels := map[string]string{
+		"app.kubernetes.io/name":       "prometheus-agent",
+		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   "test",
+		"operator.prometheus.io/name":  "test",
+		"operator.prometheus.io/shard": "0",
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
+			Labels:      labels,
+			Annotations: annotations,
+		},
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, expectedStatefulSetLabels, sset.Labels)
+	require.Equal(t, expectedStatefulSetAnnotations, sset.Annotations)
+	require.Equal(t, expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels)
 }
 
 func TestStatefulSetenableServiceLinks(t *testing.T) {

@@ -23,16 +23,37 @@ import (
 // OTLPConfigApplyConfiguration represents a declarative configuration of the OTLPConfig type for use
 // with apply.
 type OTLPConfigApplyConfiguration struct {
+	PromoteAllResourceAttributes      *bool                                   `json:"promoteAllResourceAttributes,omitempty"`
+	IgnoreResourceAttributes          []string                                `json:"ignoreResourceAttributes,omitempty"`
 	PromoteResourceAttributes         []string                                `json:"promoteResourceAttributes,omitempty"`
 	TranslationStrategy               *monitoringv1.TranslationStrategyOption `json:"translationStrategy,omitempty"`
 	KeepIdentifyingResourceAttributes *bool                                   `json:"keepIdentifyingResourceAttributes,omitempty"`
 	ConvertHistogramsToNHCB           *bool                                   `json:"convertHistogramsToNHCB,omitempty"`
+	PromoteScopeMetadata              *bool                                   `json:"promoteScopeMetadata,omitempty"`
 }
 
 // OTLPConfigApplyConfiguration constructs a declarative configuration of the OTLPConfig type for use with
 // apply.
 func OTLPConfig() *OTLPConfigApplyConfiguration {
 	return &OTLPConfigApplyConfiguration{}
+}
+
+// WithPromoteAllResourceAttributes sets the PromoteAllResourceAttributes field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PromoteAllResourceAttributes field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithPromoteAllResourceAttributes(value bool) *OTLPConfigApplyConfiguration {
+	b.PromoteAllResourceAttributes = &value
+	return b
+}
+
+// WithIgnoreResourceAttributes adds the given value to the IgnoreResourceAttributes field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the IgnoreResourceAttributes field.
+func (b *OTLPConfigApplyConfiguration) WithIgnoreResourceAttributes(values ...string) *OTLPConfigApplyConfiguration {
+	for i := range values {
+		b.IgnoreResourceAttributes = append(b.IgnoreResourceAttributes, values[i])
+	}
+	return b
 }
 
 // WithPromoteResourceAttributes adds the given value to the PromoteResourceAttributes field in the declarative configuration
@@ -66,5 +87,13 @@ func (b *OTLPConfigApplyConfiguration) WithKeepIdentifyingResourceAttributes(val
 // If called multiple times, the ConvertHistogramsToNHCB field is set to the value of the last call.
 func (b *OTLPConfigApplyConfiguration) WithConvertHistogramsToNHCB(value bool) *OTLPConfigApplyConfiguration {
 	b.ConvertHistogramsToNHCB = &value
+	return b
+}
+
+// WithPromoteScopeMetadata sets the PromoteScopeMetadata field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PromoteScopeMetadata field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithPromoteScopeMetadata(value bool) *OTLPConfigApplyConfiguration {
+	b.PromoteScopeMetadata = &value
 	return b
 }

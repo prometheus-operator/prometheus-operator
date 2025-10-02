@@ -1,5 +1,5 @@
 ---
-weight: 501
+weight: 601
 toc: true
 title: Contributing
 menu:
@@ -68,6 +68,8 @@ This is a rough outline of what a contributor's workflow looks like:
 
 Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.
 
+We also use [golangci-lint](https://golangci-lint.run/docs/) to lint the Go code (including the API definitions). Make sure to execute `make check` before creating/updating your PR.
+
 Thanks for your contributions!
 
 ### Changes to the APIs
@@ -125,7 +127,7 @@ If you want to run Prometheus Operator on your local environment, you can follow
 ./scripts/run-external.sh -c
 ```
 
-3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+3. You should now be able to see the logs from the operator in your terminal. The Operator is successfully running in your local system and can be debugged, checked for behaviour etc.
 
 Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
 
@@ -171,6 +173,10 @@ What specific problems are we hitting with the current solution? Why is it not e
 Because of inconsistencies, those documents were harder to understand, and it was easy to miss important sections.
 This was causing certain engineering time to be wasted.*
 
+## Audience
+
+Provide the target audience for this change.
+
 ## Goals
 
 Goals and use cases for the solution as proposed in [How](#how):
@@ -178,10 +184,6 @@ Goals and use cases for the solution as proposed in [How](#how):
 * Allow easy collaboration and decision making on design ideas.
 * Have a consistent design style that is readable and understandable.
 * Have a design style that is concise and covers all the essential information.
-
-### Audience
-
-If this is not clear already, provide the target audience for this change.
 
 ## Non-Goals
 

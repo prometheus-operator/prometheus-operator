@@ -274,40 +274,25 @@ func testTRMinReadySeconds(t *testing.T) {
 
 	kubeClient := framework.KubeClient
 
-	var setMinReadySecondsInitial uint32 = 5
 	thanosRuler := framework.MakeBasicThanosRuler("test-thanos", 1, "http://test.example.com")
-	thanosRuler.Spec.MinReadySeconds = &setMinReadySecondsInitial
+	thanosRuler.Spec.MinReadySeconds = ptr.To(int32(5))
 	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	trSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(5), trSS.Spec.MinReadySeconds)
 
-	if trSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, trSS.Spec.MinReadySeconds)
-	}
-
-	var updated uint32 = 10
-	thanosRuler.Spec.MinReadySeconds = &updated
-	if _, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec); err != nil {
-		t.Fatal("patching ThanosRuler failed: ", err)
-	}
+	thanosRuler.Spec.MinReadySeconds = ptr.To(int32(10))
+	_, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec)
+	require.NoError(t, err)
 
 	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if trSS.Spec.MinReadySeconds != int32(updated) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, trSS.Spec.MinReadySeconds)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(10), trSS.Spec.MinReadySeconds)
 }
 
-// Tests Thanos ruler -> Alertmanger path
+// Tests Thanos ruler -> Alertmanager path
 // This is done by creating a firing rule that will be picked up by
 // Thanos Ruler which will send it to Alertmanager, finally we will
 // use the Alertmanager API to validate that the alert is there.
@@ -341,19 +326,19 @@ func testTRAlertmanagerConfig(t *testing.T) {
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
 	require.NoError(t, err)
 
-	// Create Secret with Alermanager config,
+	// Create Secret with Alertmanager config,
 	trAmConfigSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			configKey: []byte(fmt.Sprintf(`
+			configKey: fmt.Appendf(nil, `
 alertmanagers:
 - scheme: http
   api_version: v2
   static_configs:
     - dnssrv+_web._tcp.%s.%s.svc.cluster.local
-`, amSVC.Name, ns)),
+`, amSVC.Name, ns),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trAmConfigSecret, metav1.CreateOptions{})
@@ -421,11 +406,11 @@ func testTRQueryConfig(t *testing.T) {
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			configKey: []byte(fmt.Sprintf(`
+			configKey: fmt.Appendf(nil, `
 - scheme: http
   static_configs:
   - %s.%s.svc:%d
-`, querierSvc.Name, ns, querierSvc.Spec.Ports[0].Port)),
+`, querierSvc.Name, ns, querierSvc.Spec.Ports[0].Port),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), trQueryConfSecret, metav1.CreateOptions{})
@@ -604,11 +589,11 @@ func testThanosRulerStateless(t *testing.T) {
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			configKey: []byte(fmt.Sprintf(`
+			configKey: fmt.Appendf(nil, `
 - scheme: http
   static_configs:
   - %s.%s.svc:%d
-`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
+`, promSVC.Name, ns, promSVC.Spec.Ports[0].Port),
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, trQueryConfSecret, metav1.CreateOptions{})

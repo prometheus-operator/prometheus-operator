@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
@@ -37,7 +39,7 @@ func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "blackbox-exporter",
+				operator.ApplicationNameLabelKey: "blackbox-exporter",
 			},
 			Ports: []v1.ServicePort{
 				{
@@ -88,13 +90,13 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ctx context.Con
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app.kubernetes.io/name": "blackbox-exporter",
+					operator.ApplicationNameLabelKey: "blackbox-exporter",
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app.kubernetes.io/name": "blackbox-exporter",
+						operator.ApplicationNameLabelKey: "blackbox-exporter",
 					},
 				},
 				Spec: v1.PodSpec{
@@ -186,4 +188,28 @@ func (f *Framework) MakeBasicStaticProbe(name, url string, targets []string) *mo
 			},
 		},
 	}
+}
+
+func (f *Framework) WaitForProbeCondition(ctx context.Context, bm *monitoringv1.Probe, workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1.Probe, error) {
+	var current *monitoringv1.Probe
+
+	if err := f.WaitForConfigResourceCondition(
+		ctx,
+		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
+			var err error
+			current, err = f.MonClientV1.Probes(bm.Namespace).Get(ctx, bm.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			return current.Status.Bindings, nil
+		},
+		workload,
+		resource,
+		conditionType,
+		conditionStatus,
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("probe status %v/%v failed to reach expected condition: %w", bm.Namespace, bm.Name, err)
+	}
+	return current, nil
 }

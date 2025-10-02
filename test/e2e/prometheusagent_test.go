@@ -29,16 +29,17 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -419,7 +420,15 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			appPodsIPs = append(appPodsIPs, pod.Status.PodIP)
 		}
 
-		paPods, err = framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+		paPods, err = framework.KubeClient.CoreV1().Pods(ns).List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+					operator.ApplicationNameLabelKey:     "prometheus-agent",
+					operator.ApplicationInstanceLabelKey: name,
+				})).String(),
+			},
+		)
 		if err != nil {
 			pollErr = fmt.Errorf("can't list prometheus agent pods: %w", err)
 			return false, nil
@@ -639,4 +648,202 @@ type TargetsResponse struct {
 	Data   struct {
 		ActiveTargets []Target `json:"activeTargets"`
 	} `json:"data"`
+}
+
+func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
+	t.Run("DaemonSetInvalidReplicas", testDaemonSetInvalidReplicas)
+	t.Run("DaemonSetInvalidStorage", testDaemonSetInvalidStorage)
+	t.Run("DaemonSetInvalidShards", testDaemonSetInvalidShards)
+	t.Run("DaemonSetInvalidPVCRetentionPolicy", testDaemonSetInvalidPVCRetentionPolicy)
+	t.Run("DaemonSetInvalidScrapeConfigSelector", testDaemonSetInvalidScrapeConfigSelector)
+	t.Run("DaemonSetInvalidProbeSelector", testDaemonSetInvalidProbeSelector)
+}
+
+func testDaemonSetInvalidReplicas(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-replicas"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// no replicas should be set in Daemonsets
+	p.Spec.Replicas = ptr.To(int32(3))
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "replicas cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidStorage(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-storage"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// storage should not be set in Daemonsets
+	p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+			Spec: v1.PersistentVolumeClaimSpec{
+				StorageClassName: ptr.To("standard"),
+				Resources: v1.VolumeResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidShards(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-shards"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// shards cannot be greater than 1 in DaemonSets
+	p.Spec.Shards = ptr.To(int32(2))
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "shards cannot be greater than 1 when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-pvc-retention"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// persistentVolumeClaimRetentionPolicy cannot be set in DaemonSets
+	p.Spec.PersistentVolumeClaimRetentionPolicy = &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+		WhenDeleted: appsv1.RetainPersistentVolumeClaimRetentionPolicyType,
+		WhenScaled:  appsv1.RetainPersistentVolumeClaimRetentionPolicyType,
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-scrape-config-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	// scrapeConfigSelector cannot be set in DaemonSets
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "prometheus-agent",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scrapeConfigSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidProbeSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-probe-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "probeSelector cannot be set when mode is DaemonSet")
 }

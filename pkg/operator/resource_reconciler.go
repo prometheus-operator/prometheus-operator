@@ -36,6 +36,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/ptr"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 // Syncer knows how to synchronize statefulset-based or daemonset-based resources.
@@ -104,6 +106,114 @@ const (
 	controllerIDAnnotation = "operator.prometheus.io/controller-id"
 )
 
+type workQueueMetricsProvider struct {
+	depth                          *prometheus.GaugeVec
+	addsTotal                      *prometheus.CounterVec
+	latency                        *prometheus.HistogramVec
+	workDuration                   *prometheus.HistogramVec
+	unfinishedWorkSeconds          *prometheus.GaugeVec
+	longestRunningProcessorSeconds *prometheus.GaugeVec
+	retriesTotal                   *prometheus.CounterVec
+}
+
+var _ = workqueue.MetricsProvider(&workQueueMetricsProvider{})
+
+func newWorkQueueMetricsProvider(reg prometheus.Registerer) *workQueueMetricsProvider {
+	mp := &workQueueMetricsProvider{
+		depth: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_workqueue_depth",
+				Help: "Depth of the queue",
+			},
+			[]string{"name"},
+		),
+		addsTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "prometheus_operator_workqueue_adds_total",
+				Help: "Total number of additions to the queue",
+			},
+			[]string{"name"},
+		),
+		latency: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "prometheus_operator_workqueue_latency_seconds",
+				Help:    "Histogram of latency for the queue",
+				Buckets: []float64{.1, .5, 1, 5, 10},
+			},
+			[]string{"name"},
+		),
+		workDuration: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "prometheus_operator_workqueue_work_duration_seconds",
+				Help:    "Histogram of work duration for the queue",
+				Buckets: []float64{.1, .5, 1, 5, 10},
+			},
+			[]string{"name"},
+		),
+		unfinishedWorkSeconds: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_workqueue_unfinished_work_seconds",
+				Help: "How many seconds has been spent by processing work which is not yet finished. A growing number indicates a stuck thread.",
+			},
+			[]string{"name"},
+		),
+		longestRunningProcessorSeconds: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_workqueue_longest_running_processor_seconds",
+				Help: "How many seconds has the longest running (unfinished) processor spent.",
+			},
+			[]string{"name"},
+		),
+		retriesTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "prometheus_operator_workqueue_retries_total",
+				Help: "Total number of retries",
+			},
+			[]string{"name"},
+		),
+	}
+
+	reg.MustRegister(
+		mp.depth,
+		mp.addsTotal,
+		mp.latency,
+		mp.workDuration,
+		mp.unfinishedWorkSeconds,
+		mp.longestRunningProcessorSeconds,
+		mp.retriesTotal,
+	)
+
+	return mp
+}
+
+func (mp *workQueueMetricsProvider) NewDepthMetric(name string) workqueue.GaugeMetric {
+	return mp.depth.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewAddsMetric(name string) workqueue.CounterMetric {
+	return mp.addsTotal.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewLatencyMetric(name string) workqueue.HistogramMetric {
+	return mp.latency.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewWorkDurationMetric(name string) workqueue.HistogramMetric {
+	return mp.workDuration.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewUnfinishedWorkSecondsMetric(name string) workqueue.SettableGaugeMetric {
+	return mp.unfinishedWorkSeconds.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewLongestRunningProcessorSecondsMetric(name string) workqueue.SettableGaugeMetric {
+	return mp.longestRunningProcessorSeconds.WithLabelValues(name)
+}
+
+func (mp *workQueueMetricsProvider) NewRetriesMetric(name string) workqueue.CounterMetric {
+	return mp.retriesTotal.WithLabelValues(name)
+}
+
 // NewResourceReconciler returns a reconciler for the "kind" resource.
 func NewResourceReconciler(
 	l *slog.Logger,
@@ -141,6 +251,7 @@ func NewResourceReconciler(
 	})
 
 	reg.MustRegister(reconcileTotal, reconcileErrors, reconcileDuration, statusTotal, statusErrors)
+	mp := newWorkQueueMetricsProvider(reg)
 
 	qname := strings.ToLower(kind)
 
@@ -165,8 +276,20 @@ func NewResourceReconciler(
 		metrics:           metrics,
 		controllerID:      controllerID,
 
-		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname}),
-		statusQ:    workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname + "_status"}),
+		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](
+			workqueue.DefaultTypedControllerRateLimiter[string](),
+			workqueue.TypedRateLimitingQueueConfig[string]{
+				Name:            qname,
+				MetricsProvider: mp,
+			},
+		),
+		statusQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](
+			workqueue.DefaultTypedControllerRateLimiter[string](),
+			workqueue.TypedRateLimitingQueueConfig[string]{
+				Name:            qname + "_status",
+				MetricsProvider: mp,
+			},
+		),
 	}
 }
 
@@ -232,7 +355,7 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 
 // objectKey returns the `namespace/name` key of a Kubernetes object, typically
 // retrieved from a controller's cache.
-func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
+func (rr *ResourceReconciler) objectKey(obj any) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
 		rr.logger.Error("creating key failed", "err", err)
@@ -275,7 +398,7 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 }
 
 // OnAdd implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
+func (rr *ResourceReconciler) OnAdd(obj any, _ bool) {
 
 	switch v := obj.(type) {
 	case *appsv1.DaemonSet:
@@ -307,7 +430,7 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 }
 
 // OnUpdate implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
+func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 	switch v := cur.(type) {
 	case *appsv1.DaemonSet:
 		rr.onDaemonSetUpdate(old.(*appsv1.DaemonSet), v)
@@ -336,7 +459,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	if rr.DeletionInProgress(mCur) {
+	if !k8sutil.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
 		return
 	}
 
@@ -351,7 +474,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 }
 
 // OnDelete implements the cache.ResourceEventHandler interface.
-func (rr *ResourceReconciler) OnDelete(obj interface{}) {
+func (rr *ResourceReconciler) OnDelete(obj any) {
 	switch v := obj.(type) {
 	case *appsv1.DaemonSet:
 		rr.onDaemonSetDelete(v)
@@ -586,7 +709,7 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 // selector.
 func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInformer) ([]string, error) {
 	var ns []string
-	err := cache.ListAll(nsInf.GetStore(), selector, func(obj interface{}) {
+	err := cache.ListAll(nsInf.GetStore(), selector, func(obj any) {
 		ns = append(ns, obj.(*v1.Namespace).Name)
 	})
 	if err != nil {

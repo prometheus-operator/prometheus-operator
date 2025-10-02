@@ -16,12 +16,14 @@ package k8sutil
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/cespare/xxhash/v2"
@@ -54,6 +56,8 @@ import (
 
 // KubeConfigEnv (optionally) specify the location of kubeconfig file.
 const KubeConfigEnv = "KUBECONFIG"
+
+const StatusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
@@ -571,7 +575,7 @@ func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
 	podSpec.DNSPolicy = v1.DNSPolicy(*dnsPolicy)
 }
 
-// This function is responsible for the following:
+// EnsureCustomGoverningService is responsible for the following:
 //
 // Verify that the service exists in the resource's namespace
 // If it does not exist, fail the reconciliation.
@@ -598,4 +602,51 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 			namespace, serviceName, svcSelector.String(), labels.Set(selectorLabels).String())
 	}
 	return nil
+}
+
+// FinalizerAddPatch generates the JSON patch payload which adds the finalizer to the object's metadata.
+// If the finalizer is already present, it returns an empty []byte slice.
+func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error) {
+	if slices.Contains(finalizers, finalizerName) {
+		return []byte{}, nil
+	}
+	if len(finalizers) == 0 {
+		patch := []map[string]any{
+			{
+				"op":    "add",
+				"path":  "/metadata/finalizers",
+				"value": []string{finalizerName},
+			},
+		}
+		return json.Marshal(patch)
+	}
+	patch := []map[string]any{
+		{
+			"op":    "add",
+			"path":  "/metadata/finalizers/-",
+			"value": finalizerName,
+		},
+	}
+	return json.Marshal(patch)
+}
+
+// FinalizerDeletePatch generates the JSON patch payload which deletes the finalizer from the object's metadata.
+// If the finalizer is not present, it returns nil.
+func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
+	for i, f := range finalizers {
+		if f == finalizerName {
+			patch := []map[string]any{
+				{
+					"op":   "remove",
+					"path": fmt.Sprintf("/metadata/finalizers/%d", i),
+				},
+			}
+			return json.Marshal(patch)
+		}
+	}
+	return nil, nil
+}
+
+func HasStatusCleanupFinalizer(obj metav1.Object) bool {
+	return slices.Contains(obj.GetFinalizers(), StatusCleanupFinalizerName)
 }

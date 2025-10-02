@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"path"
 	"strings"
 	"time"
@@ -32,14 +33,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -57,8 +56,11 @@ import (
 )
 
 const (
-	resyncPeriod   = 5 * time.Minute
-	controllerName = "alertmanager-controller"
+	resyncPeriod              = 5 * time.Minute
+	controllerName            = "alertmanager-controller"
+	applicationNameLabelValue = "alertmanager"
+
+	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -91,6 +93,7 @@ type Operator struct {
 
 	alrtInfs    *informers.ForResource
 	alrtCfgInfs *informers.ForResource
+	cmapInfs    *informers.ForResource
 	secrInfs    *informers.ForResource
 	ssetInfs    *informers.ForResource
 
@@ -99,11 +102,13 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	canReadStorageClass bool
 
 	config Config
+
+	configResourcesStatusEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -147,9 +152,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		metrics:          operator.NewMetrics(r),
+		reconciliations:  &operator.ReconciliationTracker{},
+		newEventRecorder: c.EventRecorderFactory(client, controllerName),
 
 		controllerID: c.ControllerID,
 
@@ -161,6 +166,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -223,9 +229,17 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 		return fmt.Errorf("error creating alertmanagerconfig informers: %w", err)
 	}
 
+	allowList := config.Namespaces.AlertmanagerConfigAllowList
+	if config.WatchObjectRefsInAllNamespaces {
+		allowList = operator.MergeAllowLists(
+			config.Namespaces.AlertmanagerAllowList,
+			config.Namespaces.AlertmanagerConfigAllowList,
+		)
+	}
+
 	c.secrInfs, err = informers.NewInformersForResourceWithTransform(
 		informers.NewMetadataInformerFactory(
-			config.Namespaces.AlertmanagerConfigAllowList,
+			allowList,
 			config.Namespaces.DenyList,
 			c.mdClient,
 			resyncPeriod,
@@ -234,11 +248,26 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 				options.LabelSelector = config.SecretListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource("secrets"),
-		informers.PartialObjectMetadataStrip,
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
 		return fmt.Errorf("error creating secret informers: %w", err)
+	}
+
+	c.cmapInfs, err = informers.NewInformersForResourceWithTransform(
+		informers.NewMetadataInformerFactory(
+			allowList,
+			config.Namespaces.DenyList,
+			c.mdClient,
+			resyncPeriod,
+			nil,
+		),
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
+	)
+	if err != nil {
+		return fmt.Errorf("error creating configmap informers: %w", err)
 	}
 
 	c.ssetInfs, err = informers.NewInformersForResource(
@@ -247,7 +276,19 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				// TODO(simonpasquier): use a more restrictive label selector
+				// selecting only Alertmanager statefulsets (e.g.
+				// "app.kubernetes.io/name in (alertmanager)").
+				//
+				// We need to wait for a couple of releases after [1] merges to
+				// ensure that the expected labels have been propagated to the
+				// Alertmanager statefulsets otherwise the informer won't
+				// select any object.
+				//
+				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
+				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
@@ -303,6 +344,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"Alertmanager", c.alrtInfs},
 		{"AlertmanagerConfig", c.alrtCfgInfs},
 		{"Secret", c.secrInfs},
+		{"ConfigMap", c.cmapInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
@@ -340,14 +382,36 @@ func (c *Operator) addHandlers() {
 		c.metrics,
 		monitoringv1alpha1.AlertmanagerConfigKind,
 		c.enqueueForNamespace,
+		operator.WithFilter(
+			operator.AnyFilter(
+				operator.GenerationChanged,
+				operator.LabelsChanged,
+			),
+		),
 	))
 
+	hasRefFunc := operator.HasReferenceFunc(
+		c.alrtInfs,
+		c.reconciliations,
+	)
 	c.secrInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
-		"Secret",
+		operator.SecretGVK().Kind,
 		c.enqueueForNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
+		operator.WithFilter(hasRefFunc),
+	))
+
+	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		operator.ConfigMapGVK().Kind,
+		c.enqueueForNamespace,
+		operator.WithFilter(operator.ResourceVersionChanged),
+		operator.WithFilter(hasRefFunc),
 	))
 
 	// The controller needs to watch the namespaces in which the
@@ -377,7 +441,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Alertmanager instances in the namespace.
 		am := obj.(*monitoringv1.Alertmanager)
 		if am.Namespace == nsName {
@@ -417,6 +481,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.alrtInfs.Start(ctx.Done())
 	go c.alrtCfgInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
+	go c.cmapInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
 	go c.nsAlrtCfgInf.Run(ctx.Done())
 	if c.nsAlrtInf != c.nsAlrtCfgInf {
@@ -428,7 +493,7 @@ func (c *Operator) Run(ctx context.Context) error {
 	}
 
 	// Refresh the status of the existing Alertmanager objects.
-	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	_ = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		c.RefreshStatusFor(obj.(*monitoringv1.Alertmanager))
 	})
 
@@ -444,7 +509,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 // Iterate implements the operator.StatusReconciler interface.
 func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
-	if err := c.alrtInfs.ListAll(labels.Everything(), func(o interface{}) {
+	if err := c.alrtInfs.ListAll(labels.Everything(), func(o any) {
 		a := o.(*monitoringv1.Alertmanager)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
@@ -452,7 +517,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
@@ -462,7 +527,7 @@ func alertmanagerKeyToStatefulSetKey(key string) string {
 	return keyParts[0] + "/alertmanager-" + keyParts[1]
 }
 
-func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+func (c *Operator) handleNamespaceUpdate(oldo, curo any) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
@@ -478,7 +543,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
-	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+	err := c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		a := obj.(*monitoringv1.Alertmanager)
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
@@ -514,21 +579,15 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
-	aobj, err := c.alrtInfs.Get(key)
-
-	if apierrors.IsNotFound(err) {
-		c.reconciliations.ForgetObject(key)
-		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
-	}
+	am, err := operator.GetObjectFromKey[*monitoringv1.Alertmanager](c.alrtInfs, key)
 	if err != nil {
 		return err
 	}
 
-	am := aobj.(*monitoringv1.Alertmanager)
-	am = am.DeepCopy()
-	if err := k8sutil.AddTypeInformationToObject(am); err != nil {
-		return fmt.Errorf("failed to set Alertmanager type information: %w", err)
+	if am == nil {
+		c.reconciliations.ForgetObject(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
 	}
 
 	// Check if the Alertmanager instance is marked for deletion.
@@ -554,6 +613,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
+	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsShardedSecret, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, c.newTLSAssetSecret(am))
 	if err != nil {
@@ -610,7 +670,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationName] {
+	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
@@ -652,21 +712,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-// getAlertmanagerFromKey returns a copy of the Alertmanager object identified by key.
-// If the object is not found, it returns a nil pointer.
-func (c *Operator) getAlertmanagerFromKey(key string) (*monitoringv1.Alertmanager, error) {
-	obj, err := c.alrtInfs.Get(key)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			c.logger.Info("Alertmanager not found", "key", key)
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to retrieve Alertmanager from informer: %w", err)
-	}
-
-	return obj.(*monitoringv1.Alertmanager).DeepCopy(), nil
-}
-
 // getStatefulSetFromAlertmanagerKey returns a copy of the StatefulSet object
 // corresponding to the Alertmanager object identified by key.
 // If the object is not found, it returns a nil pointer without error.
@@ -689,12 +734,16 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 // key.
 // UpdateStatus implements the operator.Syncer interface.
 func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
-	a, err := c.getAlertmanagerFromKey(key)
+	a, err := operator.GetObjectFromKey[*monitoringv1.Alertmanager](c.alrtInfs, key)
 	if err != nil {
 		return err
 	}
 
-	if a == nil || c.rr.DeletionInProgress(a) {
+	if a == nil {
+		return nil
+	}
+
+	if c.rr.DeletionInProgress(a) {
 		return nil
 	}
 
@@ -737,10 +786,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name":       "alertmanager",
-		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   name,
-		"alertmanager":                 name,
+		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
+		operator.ManagedByLabelKey:           operator.ManagedByLabelValue,
+		operator.ApplicationInstanceLabelKey: name,
+		"alertmanager":                       name,
 	}
 }
 
@@ -861,7 +910,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 	var (
 		additionalData map[string][]byte
-		cfgBuilder     = NewConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
+		cfgBuilder     = NewConfigBuilder(namespacedLogger, version, store, am)
 	)
 
 	if am.Spec.AlertmanagerConfiguration != nil {
@@ -874,7 +923,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
-			return fmt.Errorf("failed to initialize from global AlertmangerConfig: %w", err)
+			return fmt.Errorf("failed to initialize from global AlertmanagerConfig: %w", err)
 		}
 
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
@@ -933,9 +982,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 		operator.WithName(generatedConfigSecretName(am.Name)),
 	)
 
-	for k, v := range additionalData {
-		generatedConfigSecret.Data[k] = v
-	}
+	maps.Copy(generatedConfigSecret.Data, additionalData)
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, conf); err != nil {
@@ -966,7 +1013,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			return nil, err
 		}
 
-		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
+		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj any) {
 			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
 		})
 		if err != nil {
@@ -985,7 +1032,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj any) {
 			k, ok := c.accessor.MetaNamespaceKey(obj)
 			if !ok {
 				return
@@ -1007,6 +1054,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
+	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
@@ -1017,7 +1065,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 
@@ -1194,6 +1242,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkRocketChatConfigs(ctx, receiver.RocketChatConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1307,6 +1360,48 @@ func checkDiscordConfigs(
 		}
 		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
 			return fmt.Errorf("failed to validate API URL: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func checkRocketChatConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.RocketChatConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+	}
+
+	for _, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+
+		if config.APIURL != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.APIURL))); err != nil {
+				return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
+			}
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.Token); err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
+			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
 	}
 
@@ -1828,15 +1923,6 @@ func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
 
 	if a.Spec.SHA != "" {
 		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
-	}
-}
-
-func ListOptions(name string) metav1.ListOptions {
-	return metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app.kubernetes.io/name": "alertmanager",
-			"alertmanager":           name,
-		})).String(),
 	}
 }
 

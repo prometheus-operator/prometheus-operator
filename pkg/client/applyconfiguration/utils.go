@@ -26,7 +26,7 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	testing "k8s.io/client-go/testing"
+	managedfields "k8s.io/apimachinery/pkg/util/managedfields"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
@@ -78,6 +78,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.CommonPrometheusFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Condition"):
 		return &monitoringv1.ConditionApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ConfigResourceCondition"):
+		return &monitoringv1.ConfigResourceConditionApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ConfigResourceStatus"):
+		return &monitoringv1.ConfigResourceStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
@@ -88,8 +92,20 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.EndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Exemplars"):
 		return &monitoringv1.ExemplarsApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalJiraConfig"):
+		return &monitoringv1.GlobalJiraConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalRocketChatConfig"):
+		return &monitoringv1.GlobalRocketChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
 		return &monitoringv1.GlobalSMTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalTelegramConfig"):
+		return &monitoringv1.GlobalTelegramConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalVictorOpsConfig"):
+		return &monitoringv1.GlobalVictorOpsConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalWebexConfig"):
+		return &monitoringv1.GlobalWebexConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalWeChatConfig"):
+		return &monitoringv1.GlobalWeChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
@@ -122,6 +138,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.PodMonitorSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Probe"):
 		return &monitoringv1.ProbeApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ProbeParam"):
+		return &monitoringv1.ProbeParamApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProberSpec"):
 		return &monitoringv1.ProberSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProbeSpec"):
@@ -216,6 +234,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.WebHTTPHeadersApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebTLSConfig"):
 		return &monitoringv1.WebTLSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("WorkloadBinding"):
+		return &monitoringv1.WorkloadBindingApplyConfiguration{}
 
 		// Group=monitoring.coreos.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfig"):
@@ -314,6 +334,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PushoverConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Receiver"):
 		return &monitoringv1alpha1.ReceiverApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatActionConfig"):
+		return &monitoringv1alpha1.RocketChatActionConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatConfig"):
+		return &monitoringv1alpha1.RocketChatConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatFieldConfig"):
+		return &monitoringv1alpha1.RocketChatFieldConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1alpha1.RouteApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScalewaySDConfig"):
@@ -390,6 +416,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.PushoverConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Receiver"):
 		return &monitoringv1beta1.ReceiverApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("RocketChatActionConfig"):
+		return &monitoringv1beta1.RocketChatActionConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("RocketChatConfig"):
+		return &monitoringv1beta1.RocketChatConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("RocketChatFieldConfig"):
+		return &monitoringv1beta1.RocketChatFieldConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1beta1.RouteApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("SecretKeySelector"):
@@ -425,6 +457,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 	return nil
 }
 
-func NewTypeConverter(scheme *runtime.Scheme) *testing.TypeConverter {
-	return &testing.TypeConverter{Scheme: scheme, TypeResolver: internal.Parser()}
+func NewTypeConverter(scheme *runtime.Scheme) managedfields.TypeConverter {
+	return managedfields.NewSchemeTypeConverter(scheme, internal.Parser())
 }

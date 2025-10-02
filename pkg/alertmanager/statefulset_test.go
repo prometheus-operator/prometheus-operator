@@ -54,29 +54,35 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedStatefulSetAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "abc",
 		"testannotation":                 "testannotationvalue",
 	}
 
 	expectedStatefulSetLabels := map[string]string{
-		"testlabel":  "testlabelvalue",
-		"managed-by": "prometheus-operator",
+		"testlabel":                    "testlabelvalue",
+		"managed-by":                   "prometheus-operator",
+		"alertmanager":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "alertmanager",
 	}
 
 	expectedPodLabels := map[string]string{
-		"alertmanager":                 "",
+		"alertmanager":                 "test",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultAlertmanagerVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
-		"app.kubernetes.io/instance":   "",
+		"app.kubernetes.io/instance":   "test",
 	}
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test",
+			Namespace:   "ns",
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "abc", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -285,6 +291,14 @@ func TestListenLocal(t *testing.T) {
 	require.Nil(t, sset.Spec.Template.Spec.Containers[0].LivenessProbe, "Alertmanager readiness probe expected to be empty")
 
 	require.Len(t, sset.Spec.Template.Spec.Containers[0].Ports, 2, "Alertmanager container should only have one port defined")
+	for _, port := range sset.Spec.Template.Spec.Containers[0].Ports {
+		require.Condition(
+			t,
+			func() bool {
+				return port.Name == alertmanagerMeshUDPPortName || port.Name == alertmanagerMeshTCPPortName
+			},
+		)
+	}
 }
 
 func TestListenTLS(t *testing.T) {
@@ -446,7 +460,6 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 	}}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -494,7 +507,6 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 	}}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -542,7 +554,6 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 	}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -590,7 +601,6 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 	}
 
 	for _, ts := range tt {
-		ts := ts
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = toPtr(int32(1))
@@ -655,17 +665,10 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
 	require.NoError(t, err)
 
-	found := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 	// Expected: --cluster.peer=alertmanager-<name>-0.<serviceName>.<namespace>.svc.<clusterDomain>.:9094
 	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated.monitoring.svc.custom.cluster.:9094"
-	for _, arg := range amArgs {
-		if arg == expectedArg {
-			found = true
-			break
-		}
-	}
-	require.True(t, found, "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedArg), "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
@@ -695,14 +698,7 @@ func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
 	// Check cluster.peer arguments
 	amArgs := spec.Template.Spec.Containers[0].Args
 	expectedPeerArg := fmt.Sprintf("--cluster.peer=alertmanager-%s-0.%s.%s.svc.%s.:9094", am.Name, customServiceName, am.Namespace, cfg.ClusterDomain)
-	foundPeerArg := false
-	for _, arg := range amArgs {
-		if arg == expectedPeerArg {
-			foundPeerArg = true
-			break
-		}
-	}
-	require.True(t, foundPeerArg, "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedPeerArg), "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
@@ -733,14 +729,7 @@ func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
 	// 2. Check cluster.peer arguments
 	amArgs := spec.Template.Spec.Containers[0].Args
 	expectedPeerArg := fmt.Sprintf("--cluster.peer=alertmanager-%s-0.%s.%s.svc.%s.:9094", am.Name, defaultServiceName, am.Namespace, cfg.ClusterDomain)
-	foundPeerArg := false
-	for _, arg := range amArgs {
-		if arg == expectedPeerArg {
-			foundPeerArg = true
-			break
-		}
-	}
-	require.True(t, foundPeerArg, "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
+	require.True(t, slices.Contains(amArgs, expectedPeerArg), "expected cluster.peer argument %q not found in %v", expectedPeerArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
@@ -961,15 +950,8 @@ func TestRetention(t *testing.T) {
 
 		amArgs := sset.Spec.Template.Spec.Containers[0].Args
 		expectedRetentionArg := fmt.Sprintf("--data.retention=%s", test.expectedRetention)
-		found := false
-		for _, flag := range amArgs {
-			if flag == expectedRetentionArg {
-				found = true
-				break
-			}
-		}
 
-		require.True(t, found, "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
+		require.True(t, slices.Contains(amArgs, expectedRetentionArg), "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
 	}
 }
 
@@ -1090,21 +1072,19 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
-	replicas := int32(3)
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = &replicas
+	a.Spec.Replicas = ptr.To(int32(3))
 
 	// assert defaults to zero if nil
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(0), statefulSet.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
+	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	var expect uint32 = 5
-	a.Spec.MinReadySeconds = &expect
+	a.Spec.MinReadySeconds = ptr.To(int32(5))
 	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
-	require.Equal(t, int32(expect), statefulSet.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
+	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
 }
 
 func TestPodTemplateConfig(t *testing.T) {
@@ -1149,6 +1129,7 @@ func TestPodTemplateConfig(t *testing.T) {
 		},
 	}
 	imagePullPolicy := v1.PullAlways
+	hostUsers := true
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -1162,6 +1143,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
+			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
@@ -1174,6 +1156,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, sset.Spec.Template.Spec.ServiceAccountName, serviceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
 	require.Equal(t, len(sset.Spec.Template.Spec.HostAliases), len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets, "expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+	require.Equal(t, *sset.Spec.Template.Spec.HostUsers, hostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)
 
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, initContainer.ImagePullPolicy, imagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
@@ -1433,8 +1416,8 @@ func TestEnableFeatures(t *testing.T) {
 
 			expectedFeatures := make([]string, 0)
 			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
-				if strings.HasPrefix(flag, "--enable-feature=") {
-					expectedFeatures = append(expectedFeatures, strings.Split(strings.TrimPrefix(flag, "--enable-feature="), ",")...)
+				if after, ok := strings.CutPrefix(flag, "--enable-feature="); ok {
+					expectedFeatures = append(expectedFeatures, strings.Split(after, ",")...)
 				}
 			}
 			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)

@@ -34,6 +34,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
+const statusSubResource = "status"
+
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
 // update of the managed statefulsets.
@@ -89,7 +91,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
 func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	var nonNilFields []string
-	for k, v := range map[string]interface{}{
+	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
 		"oauth2":        spec.OAuth2,
 		"authorization": spec.Authorization,

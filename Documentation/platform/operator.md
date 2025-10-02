@@ -52,13 +52,14 @@ Usage of ./operator:
   -disable-unmanaged-prometheus-configuration
     	Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.
   -enable-config-reloader-probes
-    	Enable liveness and readiness for the config-reloader container. Default: false
+    	Enable liveness, readiness, and startup probes for the config-reloader container. Default: false
   -feature-gates value
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
     	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
+    	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-endpoints
@@ -71,6 +72,8 @@ Usage of ./operator:
     	Label selector to filter nodes.
   -kubelet-service string
     	Service/Endpoints object to write kubelets into in format "namespace/name"
+  -kubelet-sync-period duration
+    	How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m). (default 3m0s)
   -labels value
     	Labels to be add to all resources created by the operator
   -localhost string
@@ -82,7 +85,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.82.2")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.85.0")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
@@ -105,8 +108,13 @@ Usage of ./operator:
     	- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.
   -version
     	Prints current version.
+  -watch-referenced-objects-in-all-namespaces
+    	When true the operator watches for configmaps and secrets in both workload and configuration resource namespaces.
+    	When false (default), the operator will only watch for secrets and configmaps in:
+    	* Workload namespaces for Prometheus and PrometheusAgent resources.
+    	* Configuration namespaces for Alertmanager resources.
   -web.cert-file string
-    	Certficate file to be used for the web server. (default "/etc/tls/private/tls.crt")
+    	Certificate file to be used for the web server. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
     	Client CA certificate file to be used for the web server. (default "/etc/tls/private/tls-ca.crt")
   -web.enable-http2

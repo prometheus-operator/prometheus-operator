@@ -40,7 +40,7 @@ You have several options to provide the [Alertmanager configuration](https://pro
 
 ### Using a Kubernetes Secret
 
-The following native Alertmanager configuration sends notifications to a fictuous webhook service:
+The following native Alertmanager configuration sends notifications to a fictitious webhook service:
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager.yaml"
 route:

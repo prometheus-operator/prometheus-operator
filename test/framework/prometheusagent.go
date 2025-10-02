@@ -23,6 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	wait "k8s.io/apimachinery/pkg/util/wait"
@@ -32,7 +33,6 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheusagent "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 )
 
 func (f *Framework) MakeBasicPrometheusAgent(ns, name, group string, replicas int32) *monitoringv1alpha1.PrometheusAgent {
@@ -194,8 +194,13 @@ func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, n
 		ns,
 		f.DefaultTimeout,
 		0,
-		prometheusagent.ListOptions(name),
-	); err != nil {
+		metav1.ListOptions{
+			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+				operator.ApplicationNameLabelKey:     "prometheus-agent",
+				operator.ManagedByLabelKey:           "prometheus-operator",
+				operator.ApplicationInstanceLabelKey: name,
+			})).String(),
+		}); err != nil {
 		return fmt.Errorf("waiting for PrometheusAgent custom resource (%s) to vanish timed out: %w", name, err)
 	}
 

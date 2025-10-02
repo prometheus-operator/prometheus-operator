@@ -1,0 +1,14 @@
+global:
+  victorops_api_url: https://victorops.example.com
+  victorops_api_key: myvictoropsapikey
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    matchers:
+    - mykey="myvalue"
+    - mykey1="myvalue1"
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+templates: []

@@ -26,11 +26,14 @@ const (
 	// PrometheusAgentDaemonSetFeature enables the DaemonSet mode for PrometheusAgent.
 	PrometheusAgentDaemonSetFeature FeatureGateName = "PrometheusAgentDaemonSet"
 
-	// PrometheusTopologySharding enables the zone-aware sharding for Prometheus.
+	// PrometheusTopologyShardingFeature enables the zone-aware sharding for Prometheus.
 	PrometheusTopologyShardingFeature FeatureGateName = "PrometheusTopologySharding"
 
 	// PrometheusShardRetentionPolicyFeature enables the shard retention policy for Prometheus.
 	PrometheusShardRetentionPolicyFeature FeatureGateName = "PrometheusShardRetentionPolicy"
+
+	// StatusForConfigurationResourcesFeature enables the status subresource for Prometheus-Operator Config Objects.
+	StatusForConfigurationResourcesFeature FeatureGateName = "StatusForConfigurationResources"
 )
 
 type FeatureGateName string

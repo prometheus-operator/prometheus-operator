@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -31,7 +32,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/thanos"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func (f *Framework) MakeBasicThanosRuler(name string, replicas int32, queryEndpoint string) *monitoringv1.ThanosRuler {
@@ -227,8 +228,12 @@ func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ctx context.Context, ns, n
 		ns,
 		f.DefaultTimeout,
 		0,
-		thanos.ListOptions(name),
-	); err != nil {
+		metav1.ListOptions{
+			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+				operator.ApplicationNameLabelKey: "thanos-ruler",
+				"thanos-ruler":                   name,
+			})).String(),
+		}); err != nil {
 		return fmt.Errorf("waiting for Prometheus custom resource (%s) to vanish timed out: %w", name, err)
 	}
 

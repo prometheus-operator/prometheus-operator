@@ -16,6 +16,7 @@ package prometheusagent
 
 import (
 	"fmt"
+	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -58,9 +59,9 @@ func makeDaemonSet(
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
-			prompkg.PrometheusNameLabelName: objMeta.GetName(),
-			prompkg.PrometheusModeLabeLName: prometheusMode,
+			prompkg.PrometheusModeLabelName: prometheusMode,
 		}),
+		operator.WithSelectorLabels(spec.Selector),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
 		operator.WithoutKubectlAnnotations(),
@@ -122,9 +123,7 @@ func makeDaemonSetSpec(
 	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
 
-	for k, v := range podSelectorLabels {
-		podLabels[k] = v
-	}
+	maps.Copy(podLabels, podSelectorLabels)
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
@@ -132,11 +131,6 @@ func makeDaemonSetSpec(
 	var additionalContainers, operatorInitContainers []v1.Container
 
 	var watchedDirectories []string
-
-	var minReadySeconds int32
-	if cpf.MinReadySeconds != nil {
-		minReadySeconds = int32(*cpf.MinReadySeconds)
-	}
 
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
@@ -200,7 +194,7 @@ func makeDaemonSetSpec(
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
-		MinReadySeconds: minReadySeconds,
+		MinReadySeconds: ptr.Deref(cpf.MinReadySeconds, 0),
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
@@ -223,6 +217,7 @@ func makeDaemonSetSpec(
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
 				EnableServiceLinks:            cpf.EnableServiceLinks,
+				HostUsers:                     cpf.HostUsers,
 			},
 		},
 	}

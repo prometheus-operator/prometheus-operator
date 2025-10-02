@@ -25,28 +25,28 @@ import (
 // PodMetricsEndpointApplyConfiguration represents a declarative configuration of the PodMetricsEndpoint type for use
 // with apply.
 type PodMetricsEndpointApplyConfiguration struct {
-	Port                     *string                              `json:"port,omitempty"`
-	PortNumber               *int32                               `json:"portNumber,omitempty"`
-	TargetPort               *intstr.IntOrString                  `json:"targetPort,omitempty"`
-	Path                     *string                              `json:"path,omitempty"`
-	Scheme                   *string                              `json:"scheme,omitempty"`
-	Params                   map[string][]string                  `json:"params,omitempty"`
-	Interval                 *monitoringv1.Duration               `json:"interval,omitempty"`
-	ScrapeTimeout            *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
-	TLSConfig                *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	BearerTokenSecret        *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
-	HonorLabels              *bool                                `json:"honorLabels,omitempty"`
-	HonorTimestamps          *bool                                `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness *bool                                `json:"trackTimestampsStaleness,omitempty"`
-	BasicAuth                *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	OAuth2                   *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	Authorization            *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	MetricRelabelConfigs     []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
-	RelabelConfigs           []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
-	ProxyURL                 *string                              `json:"proxyUrl,omitempty"`
-	FollowRedirects          *bool                                `json:"followRedirects,omitempty"`
-	EnableHttp2              *bool                                `json:"enableHttp2,omitempty"`
-	FilterRunning            *bool                                `json:"filterRunning,omitempty"`
+	Port                          *string                              `json:"port,omitempty"`
+	PortNumber                    *int32                               `json:"portNumber,omitempty"`
+	TargetPort                    *intstr.IntOrString                  `json:"targetPort,omitempty"`
+	Path                          *string                              `json:"path,omitempty"`
+	Scheme                        *string                              `json:"scheme,omitempty"`
+	Params                        map[string][]string                  `json:"params,omitempty"`
+	Interval                      *monitoringv1.Duration               `json:"interval,omitempty"`
+	ScrapeTimeout                 *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
+	TLSConfig                     *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	BearerTokenSecret             *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
+	HonorLabels                   *bool                                `json:"honorLabels,omitempty"`
+	HonorTimestamps               *bool                                `json:"honorTimestamps,omitempty"`
+	TrackTimestampsStaleness      *bool                                `json:"trackTimestampsStaleness,omitempty"`
+	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	OAuth2                        *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	Authorization                 *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	MetricRelabelConfigs          []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
+	RelabelConfigs                []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
+	ProxyConfigApplyConfiguration `json:",inline"`
+	FollowRedirects               *bool `json:"followRedirects,omitempty"`
+	EnableHttp2                   *bool `json:"enableHttp2,omitempty"`
+	FilterRunning                 *bool `json:"filterRunning,omitempty"`
 }
 
 // PodMetricsEndpointApplyConfiguration constructs a declarative configuration of the PodMetricsEndpoint type for use with
@@ -219,7 +219,37 @@ func (b *PodMetricsEndpointApplyConfiguration) WithRelabelConfigs(values ...*Rel
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithProxyURL(value string) *PodMetricsEndpointApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithNoProxy(value string) *PodMetricsEndpointApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithProxyFromEnvironment(value bool) *PodMetricsEndpointApplyConfiguration {
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *PodMetricsEndpointApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *PodMetricsEndpointApplyConfiguration {
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
+	}
 	return b
 }
 

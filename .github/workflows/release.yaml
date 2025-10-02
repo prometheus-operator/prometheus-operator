@@ -10,11 +10,11 @@ jobs:
     name: Upload release assets
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Import environment variables from file
         run: cat ".github/env" >> "$GITHUB_ENV"
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '${{ env.golang-version }}'
           check-latest: true

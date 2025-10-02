@@ -41,7 +41,6 @@ import (
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
@@ -212,6 +211,11 @@ func testAMStorageUpdate(t *testing.T) {
 		monitoringv1.AlertmanagerSpec{
 			Storage: &monitoringv1.StorageSpec{
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+					EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+						Labels: map[string]string{
+							"test": "testAMStorageUpdate",
+						},
+					},
 					Spec: v1.PersistentVolumeClaimSpec{
 						AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 						Resources: v1.VolumeResourceRequirements{
@@ -226,29 +230,10 @@ func testAMStorageUpdate(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(name))
-		if err != nil {
-			return false, err
-		}
-
-		if len(pods.Items) != 1 {
-			return false, nil
-		}
-
-		for _, volume := range pods.Items[0].Spec.Volumes {
-			if volume.Name == "alertmanager-"+name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
-				return true, nil
-			}
-		}
-
-		return false, nil
-	})
-
+	err = framework.WaitForBoundPVC(context.Background(), ns, "test=testAMStorageUpdate", 1)
 	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
-
 	_, err = framework.PatchAlertmanager(
 		context.Background(),
 		am.Name,
@@ -256,6 +241,11 @@ func testAMStorageUpdate(t *testing.T) {
 		monitoringv1.AlertmanagerSpec{
 			Storage: &monitoringv1.StorageSpec{
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+					EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+						Labels: map[string]string{
+							"test": "testAMStorageUpdate",
+						},
+					},
 					Spec: v1.PersistentVolumeClaimSpec{
 						StorageClassName: ptr.To("unknown-storage-class"),
 						Resources: v1.VolumeResourceRequirements{
@@ -270,22 +260,23 @@ func testAMStorageUpdate(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var loopError error
+	var pollErr error
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
 		current, err := framework.MonClientV1.Alertmanagers(ns).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
-			loopError = fmt.Errorf("failed to get object: %w", err)
+			pollErr = fmt.Errorf("failed to get object: %w", err)
 			return false, nil
 		}
 
-		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err == nil {
-			return true, nil
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionFalse); err != nil {
+			pollErr = err
+			return false, nil
 		}
 
-		return false, nil
+		return true, nil
 	})
 
-	require.NoError(t, err, "%v: %v", err, loopError)
+	require.NoError(t, err, "%v: %v", err, pollErr)
 }
 
 func testAMExposingWithKubernetesAPI(t *testing.T) {
@@ -329,7 +320,7 @@ func testAMClusterInitialization(t *testing.T) {
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService)
 	require.NoError(t, err)
 
-	for i := 0; i < amClusterSize; i++ {
+	for i := range amClusterSize {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
 		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
 		require.NoError(t, err)
@@ -356,7 +347,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 	alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
 
-	for i := 0; i < amClusterSize; i++ {
+	for i := range amClusterSize {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
 		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
 		require.NoError(t, err)
@@ -791,7 +782,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
 		Data: map[string][]byte{
-			"alertmanager.yaml": []byte(fmt.Sprintf(`
+			"alertmanager.yaml": fmt.Appendf(nil, `
 global:
   resolve_timeout: 5m
 
@@ -811,7 +802,7 @@ inhibit_rules:
     target_match:
       severity: 'warning'
     equal: ['alertname', 'dev', 'instance']
-`, whsvc.Name, ns)),
+`, whsvc.Name, ns),
 		},
 	}
 
@@ -1515,9 +1506,8 @@ route:
     - namespace="%s"
     continue: true
   - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-    match:
-      service: webapp
     matchers:
+    - service="webapp"
     - namespace="%s"
     continue: true
     routes:
@@ -1525,15 +1515,15 @@ route:
       group_by:
       - env
       - instance
-      match:
-        job: db
+      matchers:
+      - job="db"
       routes:
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-        match:
-          alertname: TargetDown
+        matchers:
+        - alertname="TargetDown"
       - receiver: %s/e2e-test-amconfig-sub-routes/e2e
-        match_re:
-          severity: critical|warning
+        matchers:
+        - severity=~"critical|warning"
         mute_time_intervals:
         - %s/e2e-test-amconfig-sub-routes/test
   - receiver: "null"
@@ -1922,8 +1912,8 @@ route:
   receiver: %[1]s
   routes:
   - receiver: %[1]s
-    match:
-      mykey: myvalue-1
+    matchers:
+    - mykey="myvalue-1"
 inhibit_rules:
 - target_matchers:
   - mykey="myvalue-2"
@@ -2356,24 +2346,22 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	var setMinReadySecondsInitial uint32 = 5
 	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
-	am.Spec.MinReadySeconds = &setMinReadySecondsInitial
+	am.Spec.MinReadySeconds = ptr.To(int32(5))
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	require.NoError(t, err)
 
 	amSS, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
 	require.NoError(t, err)
 
-	require.Equal(t, int32(setMinReadySecondsInitial), amSS.Spec.MinReadySeconds)
+	require.Equal(t, int32(5), amSS.Spec.MinReadySeconds)
 
-	var updated uint32 = 10
-	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: &updated})
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: ptr.To(int32(10))})
 	require.NoError(t, err)
 
 	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
 	require.NoError(t, err)
-	require.Equal(t, int32(updated), amSS.Spec.MinReadySeconds)
+	require.Equal(t, int32(10), amSS.Spec.MinReadySeconds)
 }
 
 func testAlertmanagerCRDValidation(t *testing.T) {
@@ -2532,7 +2520,6 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -2618,9 +2605,8 @@ route:
   - job
   routes:
   - receiver: %s/amcfg-v1alpha1/webhook
-    match:
-      test: test
     matchers:
+    - test="test"
     - namespace="%s"
     continue: true
   - receiver: "null"
@@ -2669,8 +2655,8 @@ route:
   - job
   routes:
   - receiver: %s/amcfg-v1alpha1/webhook
-    match:
-      test: test
+    matchers:
+    - test="test"
     continue: true
   - receiver: "null"
     match:

@@ -9,7 +9,9 @@ linters:
     - depguard
     - exptostd
     - godot
+    - godoclint
     - iface
+    - iotamixing
     - nilnesserr
     - recvcheck
     - revive
@@ -40,6 +42,7 @@ linters:
           - errcheck
           - staticcheck
           - testifylint
+          - revive
         path: _test.go
     paths:
       - zz_generated.*\.go$

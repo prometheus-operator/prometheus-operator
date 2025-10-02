@@ -33,8 +33,9 @@ type HetznerSDConfigApplyConfiguration struct {
 	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
 	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int                                `json:"port,omitempty"`
+	Port                             *int32                              `json:"port,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
+	LabelSelector                    *string                             `json:"labelSelector,omitempty"`
 }
 
 // HetznerSDConfigApplyConfiguration constructs a declarative configuration of the HetznerSDConfig type for use with
@@ -140,7 +141,7 @@ func (b *HetznerSDConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfi
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *HetznerSDConfigApplyConfiguration) WithPort(value int) *HetznerSDConfigApplyConfiguration {
+func (b *HetznerSDConfigApplyConfiguration) WithPort(value int32) *HetznerSDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }
@@ -150,5 +151,13 @@ func (b *HetznerSDConfigApplyConfiguration) WithPort(value int) *HetznerSDConfig
 // If called multiple times, the RefreshInterval field is set to the value of the last call.
 func (b *HetznerSDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.Duration) *HetznerSDConfigApplyConfiguration {
 	b.RefreshInterval = &value
+	return b
+}
+
+// WithLabelSelector sets the LabelSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelSelector field is set to the value of the last call.
+func (b *HetznerSDConfigApplyConfiguration) WithLabelSelector(value string) *HetznerSDConfigApplyConfiguration {
+	b.LabelSelector = &value
 	return b
 }

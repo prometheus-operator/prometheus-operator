@@ -26,11 +26,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
@@ -82,24 +82,61 @@ func (rs ReconciliationStatus) Ok() bool {
 }
 
 // ReconciliationTracker tracks reconciliation status per object.
+//
+// It only uses their `<namespace>/<name>` key to identify objects.
+//
 // The zero ReconciliationTracker is ready to use.
 type ReconciliationTracker struct {
 	once sync.Once
+
 	// mtx protects all fields below.
 	mtx            sync.RWMutex
 	statusByObject map[string]ReconciliationStatus
+	refTracker     map[string]ReferenceTracker
 }
 
-// SetStatus updates the last reconciliation status for the given object.
-func (rt *ReconciliationTracker) SetStatus(k string, err error) {
+// ReferenceTracker returns true if it has a reference to the object.
+type ReferenceTracker interface {
+	Has(runtime.Object) bool
+}
+
+func (rt *ReconciliationTracker) init() {
+	rt.once.Do(func() {
+		rt.statusByObject = map[string]ReconciliationStatus{}
+		rt.refTracker = map[string]ReferenceTracker{}
+	})
+}
+
+// HasRefTo returns true if the object identified by key has a direct or
+// indirect reference to obj (secret or configmap).
+func (rt *ReconciliationTracker) HasRefTo(key string, obj runtime.Object) bool {
 	rt.mtx.Lock()
 	defer rt.mtx.Unlock()
 
-	rt.once.Do(func() {
-		rt.statusByObject = map[string]ReconciliationStatus{}
-	})
+	refTracker, found := rt.refTracker[key]
+	if !found {
+		return false
+	}
 
-	rt.statusByObject[k] = ReconciliationStatus{err: err}
+	return refTracker.Has(obj)
+}
+
+// UpdateReferenceTracker updates the reference tracker for the object identified by key.
+func (rt *ReconciliationTracker) UpdateReferenceTracker(key string, refTracker ReferenceTracker) {
+	rt.init()
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rt.refTracker[key] = refTracker
+}
+
+// SetStatus updates the last reconciliation status for the object identified by key.
+func (rt *ReconciliationTracker) SetStatus(key string, err error) {
+	rt.init()
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rt.statusByObject[key] = ReconciliationStatus{err: err}
 }
 
 // GetStatus returns the last reconciliation status for the given object.
@@ -146,7 +183,7 @@ func (rt *ReconciliationTracker) GetCondition(k string, gen int64) monitoringv1.
 
 // ForgetObject removes the given object from the tracker.
 // It should be called when the controller detects that the object has been deleted.
-func (rt *ReconciliationTracker) ForgetObject(k string) {
+func (rt *ReconciliationTracker) ForgetObject(key string) {
 	rt.mtx.Lock()
 	defer rt.mtx.Unlock()
 
@@ -154,7 +191,8 @@ func (rt *ReconciliationTracker) ForgetObject(k string) {
 		return
 	}
 
-	delete(rt.statusByObject, k)
+	delete(rt.statusByObject, key)
+	delete(rt.refTracker, key)
 }
 
 // Describe implements the prometheus.Collector interface.
@@ -267,18 +305,55 @@ func NewMetrics(r prometheus.Registerer) *Metrics {
 	return &m
 }
 
-type EventRecorderFactory func(client kubernetes.Interface, component string) record.EventRecorder
+// EventRecorderFactory returns an function to create EventRecorder objects.
+type EventRecorderFactory func(client kubernetes.Interface, component string) NewEventRecorderFunc
+
+// NewEventRecorderFunc returns an EventRecorder which will automatically inject the given runtime.Object as related.
+type NewEventRecorderFunc func(related runtime.Object) *EventRecorder
+
+// EventRecorder records events which are related to the associated Object.
+type EventRecorder struct {
+	er      events.EventRecorder
+	related runtime.Object
+}
+
+func NewFakeRecorder(bufferSize int, related runtime.Object) *EventRecorder {
+	return &EventRecorder{
+		related: related,
+		er:      events.NewFakeRecorder(bufferSize),
+	}
+}
+
+// Eventf records a Kubernetes event.
+func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
+	er.er.Eventf(
+		regarding,
+		er.related,
+		eventtype,
+		reason,
+		action,
+		note,
+		args,
+	)
+}
 
 func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
-	return func(client kubernetes.Interface, component string) record.EventRecorder {
-		eventBroadcaster := record.NewBroadcaster()
+	return func(client kubernetes.Interface, component string) NewEventRecorderFunc {
+		eventBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{Interface: client.EventsV1()})
 		eventBroadcaster.StartStructuredLogging(0)
 
 		if emitEvents {
-			eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
+			_ = eventBroadcaster.StartRecordingToSinkWithContext(context.Background())
 		}
 
-		return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: component})
+		eventRecorder := eventBroadcaster.NewRecorder(scheme.Scheme, component)
+
+		return func(related runtime.Object) *EventRecorder {
+			return &EventRecorder{
+				er:      eventRecorder,
+				related: related,
+			}
+		}
 	}
 }
 
@@ -458,4 +533,14 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger *s
 	}
 
 	return ok
+}
+
+// ConfigMapGVK returns the GroupVersionKind representing ConfigMap objects.
+func ConfigMapGVK() schema.GroupVersionKind {
+	return v1.SchemeGroupVersion.WithKind("ConfigMap")
+}
+
+// SecretGVK returns the GroupVersionKind representing Secret objects.
+func SecretGVK() schema.GroupVersionKind {
+	return v1.SchemeGroupVersion.WithKind("Secret")
 }

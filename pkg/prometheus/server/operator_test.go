@@ -31,13 +31,6 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-func TestListOptions(t *testing.T) {
-	for i := 0; i < 1000; i++ {
-		o := ListOptions("test")
-		require.True(t, (o.LabelSelector == "app.kubernetes.io/name=prometheus,prometheus=test" || o.LabelSelector == "prometheus=test,app.kubernetes.io/name=prometheus"), "LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
-	}
-}
-
 func TestCreateStatefulSetInputHash(t *testing.T) {
 	falseVal := false
 
