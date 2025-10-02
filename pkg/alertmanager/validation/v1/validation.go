@@ -19,8 +19,14 @@ import (
 )
 
 func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig) error {
-	if err := gc.HTTPConfig.Validate(); err != nil {
-		return err
+	if gc == nil {
+		return nil
+	}
+
+	if gc.HTTPConfig != nil {
+		if err := gc.HTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil
