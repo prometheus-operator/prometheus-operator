@@ -2021,6 +2021,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
 			if tt.wantErr {
+				t.Logf("err: %s", err)
 				require.Error(t, err)
 				return
 			}
