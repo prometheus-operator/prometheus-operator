@@ -1925,6 +1925,6 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
 }
 
-func checkAlertmanagerGlobalConfigResource(ctx context.Context, gc *monitoringv1.AlertmanagerGlobalConfig, store *assets.StoreBuilder) error {
+func checkAlertmanagerGlobalConfigResource(gc *monitoringv1.AlertmanagerGlobalConfig) error {
 	return validationv1.ValidateAlertmanagerGlobalConfig(gc)
 }
