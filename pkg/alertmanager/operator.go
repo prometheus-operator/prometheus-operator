@@ -1153,14 +1153,7 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		)
 	}
 
-	// Check if both Oauth2, ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
-	var getAuthorizationCredentials = func(auth *monitoringv1.SafeAuthorization) *v1.SecretKeySelector {
-		if auth == nil {
-			return nil
-		}
-		return auth.Credentials
-	}
-
+	// Check if Oauth2, ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
 	authSet := []string{}
 
 	if hc.BasicAuth != nil {
