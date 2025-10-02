@@ -284,6 +284,7 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	name := "podmonitor-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
 
@@ -517,6 +518,94 @@ func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
 
 	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1.PrometheusName, 1*time.Minute)
 	require.NoError(t, err)
+}
+
+// testScrapeConfigStatusSubresource validates ScrapeConfig status updates upon Prometheus selection.
+func testScrapeConfigStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "scfg-status-subresource-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first scrapeConfig to check that the operator only updates the binding when needed.
+	sc1 := framework.MakeBasicScrapeConfig(ns, "sc1")
+	sc1.Labels["group"] = name
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	sc1, err = framework.WaitForScrapeConfigCondition(ctx, sc1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(sc1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second scrapeConfig to check that the operator updates the binding when the condition changes.
+	sc2 := framework.MakeBasicScrapeConfig(ns, "sc2")
+	sc2.Labels["group"] = name
+	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc2, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	sc2, err = framework.WaitForScrapeConfigCondition(ctx, sc2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first scrapeConfig. A label update doesn't
+	// change the status of the scrapeConfig and the observed timetstamp
+	// should be the same as before.
+	sc1.Labels["test"] = "test"
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second scrapeConfig to reference an non-existing Secret.
+	sc2.Spec.BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc2, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second ScrapeConfig should change to Accepted=False.
+	_, err = framework.WaitForScrapeConfigCondition(ctx, sc2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first ScrapeConfig should remain unchanged.
+	sc1, err = framework.WaitForScrapeConfigCondition(ctx, sc1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sc1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
 // testFinalizerForPromAgentWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for PrometheusAgent when StatusForConfigurationResourcesFeature is enabled.

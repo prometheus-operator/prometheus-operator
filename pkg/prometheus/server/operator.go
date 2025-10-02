@@ -1077,6 +1077,13 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
+	// Update the status of selected scrapeConfigs.
+	for key, configResource := range resources.scrapeConfigs {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update ScrapeConfig %s status: %w", key, err)
+		}
+	}
+
 	// Remove bindings from serviceMonitors which reference the
 	// workload but aren't selected anymore.
 	if err := prompkg.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
