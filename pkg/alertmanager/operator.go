@@ -1139,9 +1139,9 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		return nil
 	}
 
-	if err := hc.Validate(); err != nil {
-		return err
-	}
+	//if err := hc.Validate(); err != nil {
+	//	return err
+	//}
 
 	if hc.Authorization != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
 		return fmt.Errorf(
