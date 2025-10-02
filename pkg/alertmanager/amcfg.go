@@ -282,6 +282,10 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return fmt.Errorf("Error at initializeFromAlertmanagerConfig checkAlertmanagerConfigResource: %s", err)
 	}
 
+	if err := checkAlertmanagerResource(); err != nil {
+		return err
+	}
+
 	global, err := cb.convertGlobalConfig(ctx, globalConfig, crKey)
 	if err != nil {
 		return err

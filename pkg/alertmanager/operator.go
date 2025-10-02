@@ -42,6 +42,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	validationv1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1922,4 +1923,13 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	}
 
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+}
+
+func checkAlertmanagerResource(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
+	// Perform semantic validation irrespective of the Alertmanager version.
+	if err := validationv1.ValidateAlertmanager(am); err != nil {
+		return err
+	}
+
+	return nil
 }
