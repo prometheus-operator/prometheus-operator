@@ -1828,7 +1828,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name:      "invalid httpConfig in webhookConfigs basicAuth and authorization.credentials are both specified",
-			amVersion: &version21,
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				ResolveTimeout: "30s",
 				HTTPConfig: &monitoringv1.HTTPConfig{
