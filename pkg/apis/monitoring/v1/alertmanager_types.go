@@ -16,7 +16,6 @@ package v1
 
 import (
 	"fmt"
-	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -744,29 +743,46 @@ type HTTPConfig struct {
 
 // Validate semantically validates the given HTTPConfig.
 func (hc *HTTPConfig) Validate() error {
-	// Check if Oauth2, ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
-	authSet := []string{}
-
-	if hc.BasicAuth != nil {
-		authSet = append(authSet, "'basicAuth'")
+	if hc == nil {
+		return nil
 	}
 
-	if hc.BearerTokenSecret != nil {
-		authSet = append(authSet, "'bearerTokenSecret'")
+	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
+		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
 	}
 
 	if hc.Authorization != nil {
-		if hc.Authorization.Credentials != nil {
-			authSet = append(authSet, "'authorization.credentials'")
+		if hc.BearerTokenSecret != nil {
+			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
+		}
+
+		if hc.BasicAuth != nil || hc.OAuth2 != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.Authorization.Validate(); err != nil {
+			return err
 		}
 	}
 
 	if hc.OAuth2 != nil {
-		authSet = append(authSet, "'oauth2'")
+		if hc.BasicAuth != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.OAuth2.Validate(); err != nil {
+			return err
+		}
 	}
 
-	if len(authSet) > 1 {
-		return fmt.Errorf("cannot set %s configs at the same time in 'httpConfig'", strings.Join(authSet, ", "))
+	if hc.TLSConfig != nil {
+		if err := hc.TLSConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if err := hc.ProxyConfig.Validate(); err != nil {
+		return err
 	}
 
 	return nil
