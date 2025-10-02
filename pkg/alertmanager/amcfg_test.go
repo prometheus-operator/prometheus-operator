@@ -1848,17 +1848,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					"proxy-header": []byte("value"),
 				},
 			},
-			&corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "httpconfig-authsecret",
-					Namespace: "mynamespace",
-				},
-				Data: map[string][]byte{
-					"token":    []byte("value"),
-					"username": []byte("admin"),
-					"password": []byte("password"),
-				},
-			},
 		)
 		cb := NewConfigBuilder(
 			newNopLogger(t),
