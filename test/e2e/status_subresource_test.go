@@ -639,6 +639,8 @@ func testGarbageCollectionOfScrapeConfigBinding(t *testing.T) {
 	require.NoError(t, err)
 
 	sc := framework.MakeBasicScrapeConfig(ns, name)
+	sc.Labels["group"] = name
+
 	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, v1.CreateOptions{})
 	require.NoError(t, err)
 
@@ -682,9 +684,11 @@ func testRmScrapeConfigBindingDuringWorkloadDelete(t *testing.T) {
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
-	scfg := framework.MakeBasicScrapeConfig(ns, name)
 
-	sc, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, scfg, v1.CreateOptions{})
+	sc := framework.MakeBasicScrapeConfig(ns, name)
+	sc.Labels["group"] = name
+
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, v1.CreateOptions{})
 	require.NoError(t, err)
 
 	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
