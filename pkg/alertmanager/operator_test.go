@@ -1415,6 +1415,38 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 	}
 }
 
+func TestCheckHTTPConfig(t *testing.T) {
+	amVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		hc        *monitoringv1alpha1.HTTPConfig
+		objects   []runtime.Object
+		amVersion string
+		name      string
+
+		ok           bool
+		expectedKeys []string
+	}{
+		{
+			hc: &monitoringv1alpha1.HTTPConfig{},
+			ok: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+
+			err := checkHTTPConfig(tc.hc, amVersion)
+			if tc.ok {
+				require.NoError(t, err)
+				return
+			}
+
+			t.Logf("err: %s", err)
+			require.Error(t, err)
+		})
+	}
+}
+
 // alwaysAllowed implements SelfSubjectAccessReviewInterface.
 type alwaysAllowed struct{}
 
