@@ -240,16 +240,16 @@
                             "description": "JiraConfig configures notifications via Jira.\nSee https://prometheus.io/docs/alerting/latest/configuration/#Jira_config\nIt requires Alertmanager >= 0.28.0.",
                             "properties": {
                               "apiURL": {
-                                "description": "The Jira API URL i.e. https://company.atlassian.net/rest/api/2/\nThe full API path must be included.\nIf not specified, default API URL will be used.",
+                                "description": "apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/\nThe full API path must be included.\nIf not specified, default API URL will be used.",
                                 "pattern": "^http(s)?://.+$",
                                 "type": "string"
                               },
                               "description": {
-                                "description": "Issue description template.",
+                                "description": "description defines the issue description template.",
                                 "type": "string"
                               },
                               "fields": {
-                                "description": "Other issue and custom fields.",
+                                "description": "fields defines other issue and custom fields.",
                                 "items": {
                                   "description": "JiraField defines a (key, value) tuple.\nSee: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types",
                                   "properties": {
@@ -276,13 +276,13 @@
                                 "x-kubernetes-list-type": "map"
                               },
                               "httpConfig": {
-                                "description": "HTTP client configuration.",
+                                "description": "httpConfig defines HTTP client configuration for Jira connection.",
                                 "properties": {
                                   "authorization": {
-                                    "description": "Authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
+                                    "description": "authorization defines the authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
                                     "properties": {
                                       "credentials": {
-                                        "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                                        "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -305,17 +305,17 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "type": {
-                                        "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                                        "description": "type defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
                                         "type": "string"
                                       }
                                     },
                                     "type": "object"
                                   },
                                   "basicAuth": {
-                                    "description": "BasicAuth for the client.\nThis is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.",
+                                    "description": "basicAuth defines the basic authentication credentials for the client.\nThis is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.",
                                     "properties": {
                                       "password": {
-                                        "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
+                                        "description": "password defines a key of a Secret containing the password for\nauthentication.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -338,7 +338,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "username": {
-                                        "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
+                                        "description": "username defines a key of a Secret containing the username for\nauthentication.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -364,7 +364,7 @@
                                     "type": "object"
                                   },
                                   "bearerTokenSecret": {
-                                    "description": "The secret's key that contains the bearer token to be used by the client\nfor authentication.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
+                                    "description": "bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client\nfor authentication.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
                                     "properties": {
                                       "key": {
                                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -387,21 +387,21 @@
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "followRedirects": {
-                                    "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
+                                    "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
                                     "type": "boolean"
                                   },
                                   "noProxy": {
-                                    "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                    "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                     "type": "string"
                                   },
                                   "oauth2": {
-                                    "description": "OAuth2 client credentials used to fetch a token for the targets.",
+                                    "description": "oauth2 defines the OAuth2 client credentials used to fetch a token for the targets.\nThis enables OAuth2 authentication flow for HTTP requests.",
                                     "properties": {
                                       "clientId": {
-                                        "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
+                                        "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                                         "properties": {
                                           "configMap": {
-                                            "description": "ConfigMap containing data to use for the targets.",
+                                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key to select.",
@@ -424,7 +424,7 @@
                                             "x-kubernetes-map-type": "atomic"
                                           },
                                           "secret": {
-                                            "description": "Secret containing data to use for the targets.",
+                                            "description": "secret defines the Secret containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -450,7 +450,7 @@
                                         "type": "object"
                                       },
                                       "clientSecret": {
-                                        "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
+                                        "description": "clientSecret defines a key of a Secret containing the OAuth2\nclient's secret.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -476,11 +476,11 @@
                                         "additionalProperties": {
                                           "type": "string"
                                         },
-                                        "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
+                                        "description": "endpointParams configures the HTTP parameters to append to the token\nURL.",
                                         "type": "object"
                                       },
                                       "noProxy": {
-                                        "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                        "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                         "type": "string"
                                       },
                                       "proxyConnectHeader": {
@@ -510,34 +510,34 @@
                                           },
                                           "type": "array"
                                         },
-                                        "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                        "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                         "type": "object",
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "proxyFromEnvironment": {
-                                        "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                        "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                         "type": "boolean"
                                       },
                                       "proxyUrl": {
-                                        "description": "`proxyURL` defines the HTTP proxy server to use.",
+                                        "description": "proxyUrl defines the HTTP proxy server to use.",
                                         "pattern": "^(http|https|socks5)://.+$",
                                         "type": "string"
                                       },
                                       "scopes": {
-                                        "description": "`scopes` defines the OAuth2 scopes used for the token request.",
+                                        "description": "scopes defines the OAuth2 scopes used for the token request.",
                                         "items": {
                                           "type": "string"
                                         },
                                         "type": "array"
                                       },
                                       "tlsConfig": {
-                                        "description": "TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
+                                        "description": "tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.",
                                         "properties": {
                                           "ca": {
-                                            "description": "Certificate authority used when verifying server certificates.",
+                                            "description": "ca defines the Certificate authority used when verifying server certificates.",
                                             "properties": {
                                               "configMap": {
-                                                "description": "ConfigMap containing data to use for the targets.",
+                                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                                 "properties": {
                                                   "key": {
                                                     "description": "The key to select.",
@@ -560,7 +560,7 @@
                                                 "x-kubernetes-map-type": "atomic"
                                               },
                                               "secret": {
-                                                "description": "Secret containing data to use for the targets.",
+                                                "description": "secret defines the Secret containing data to use for the targets.",
                                                 "properties": {
                                                   "key": {
                                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -586,10 +586,10 @@
                                             "type": "object"
                                           },
                                           "cert": {
-                                            "description": "Client certificate to present when doing client-authentication.",
+                                            "description": "cert defines the Client certificate to present when doing client-authentication.",
                                             "properties": {
                                               "configMap": {
-                                                "description": "ConfigMap containing data to use for the targets.",
+                                                "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                                 "properties": {
                                                   "key": {
                                                     "description": "The key to select.",
@@ -612,7 +612,7 @@
                                                 "x-kubernetes-map-type": "atomic"
                                               },
                                               "secret": {
-                                                "description": "Secret containing data to use for the targets.",
+                                                "description": "secret defines the Secret containing data to use for the targets.",
                                                 "properties": {
                                                   "key": {
                                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -638,11 +638,11 @@
                                             "type": "object"
                                           },
                                           "insecureSkipVerify": {
-                                            "description": "Disable target certificate validation.",
+                                            "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                             "type": "boolean"
                                           },
                                           "keySecret": {
-                                            "description": "Secret containing the client key file for the targets.",
+                                            "description": "keySecret defines the Secret containing the client key file for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -665,7 +665,7 @@
                                             "x-kubernetes-map-type": "atomic"
                                           },
                                           "maxVersion": {
-                                            "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                            "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                             "enum": [
                                               "TLS10",
                                               "TLS11",
@@ -675,7 +675,7 @@
                                             "type": "string"
                                           },
                                           "minVersion": {
-                                            "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                            "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                             "enum": [
                                               "TLS10",
                                               "TLS11",
@@ -685,14 +685,14 @@
                                             "type": "string"
                                           },
                                           "serverName": {
-                                            "description": "Used to verify the hostname for the targets.",
+                                            "description": "serverName is used to verify the hostname for the targets.",
                                             "type": "string"
                                           }
                                         },
                                         "type": "object"
                                       },
                                       "tokenUrl": {
-                                        "description": "`tokenURL` configures the URL to fetch the token from.",
+                                        "description": "tokenUrl defines the URL to fetch the token from.",
                                         "minLength": 1,
                                         "type": "string"
                                       }
@@ -731,31 +731,31 @@
                                       },
                                       "type": "array"
                                     },
-                                    "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                    "description": "proxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "proxyFromEnvironment": {
-                                    "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
+                                    "description": "proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                     "type": "boolean"
                                   },
                                   "proxyURL": {
-                                    "description": "Optional proxy URL.\n\nIf defined, this field takes precedence over `proxyUrl`.",
+                                    "description": "proxyURL defines an optional proxy URL for HTTP requests.\nIf defined, this field takes precedence over `proxyUrl`.",
                                     "type": "string"
                                   },
                                   "proxyUrl": {
-                                    "description": "`proxyURL` defines the HTTP proxy server to use.",
+                                    "description": "proxyUrl defines the HTTP proxy server to use.",
                                     "pattern": "^(http|https|socks5)://.+$",
                                     "type": "string"
                                   },
                                   "tlsConfig": {
-                                    "description": "TLS configuration for the client.",
+                                    "description": "tlsConfig defines the TLS configuration for the client.\nThis includes settings for certificates, CA validation, and TLS protocol options.",
                                     "properties": {
                                       "ca": {
-                                        "description": "Certificate authority used when verifying server certificates.",
+                                        "description": "ca defines the Certificate authority used when verifying server certificates.",
                                         "properties": {
                                           "configMap": {
-                                            "description": "ConfigMap containing data to use for the targets.",
+                                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key to select.",
@@ -778,7 +778,7 @@
                                             "x-kubernetes-map-type": "atomic"
                                           },
                                           "secret": {
-                                            "description": "Secret containing data to use for the targets.",
+                                            "description": "secret defines the Secret containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -804,10 +804,10 @@
                                         "type": "object"
                                       },
                                       "cert": {
-                                        "description": "Client certificate to present when doing client-authentication.",
+                                        "description": "cert defines the Client certificate to present when doing client-authentication.",
                                         "properties": {
                                           "configMap": {
-                                            "description": "ConfigMap containing data to use for the targets.",
+                                            "description": "configMap defines the ConfigMap containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key to select.",
@@ -830,7 +830,7 @@
                                             "x-kubernetes-map-type": "atomic"
                                           },
                                           "secret": {
-                                            "description": "Secret containing data to use for the targets.",
+                                            "description": "secret defines the Secret containing data to use for the targets.",
                                             "properties": {
                                               "key": {
                                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -856,11 +856,11 @@
                                         "type": "object"
                                       },
                                       "insecureSkipVerify": {
-                                        "description": "Disable target certificate validation.",
+                                        "description": "insecureSkipVerify defines how to disable target certificate validation.",
                                         "type": "boolean"
                                       },
                                       "keySecret": {
-                                        "description": "Secret containing the client key file for the targets.",
+                                        "description": "keySecret defines the Secret containing the client key file for the targets.",
                                         "properties": {
                                           "key": {
                                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -883,7 +883,7 @@
                                         "x-kubernetes-map-type": "atomic"
                                       },
                                       "maxVersion": {
-                                        "description": "Maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
+                                        "description": "maxVersion defines the maximum acceptable TLS version.\n\nIt requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.",
                                         "enum": [
                                           "TLS10",
                                           "TLS11",
@@ -893,7 +893,7 @@
                                         "type": "string"
                                       },
                                       "minVersion": {
-                                        "description": "Minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
+                                        "description": "minVersion defines the minimum acceptable TLS version.\n\nIt requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.",
                                         "enum": [
                                           "TLS10",
                                           "TLS11",
@@ -903,7 +903,7 @@
                                         "type": "string"
                                       },
                                       "serverName": {
-                                        "description": "Used to verify the hostname for the targets.",
+                                        "description": "serverName is used to verify the hostname for the targets.",
                                         "type": "string"
                                       }
                                     },
@@ -913,12 +913,12 @@
                                 "type": "object"
                               },
                               "issueType": {
-                                "description": "Type of the issue (e.g. Bug).",
+                                "description": "issueType defines a type of the issue (e.g. Bug).",
                                 "minLength": 1,
                                 "type": "string"
                               },
                               "labels": {
-                                "description": "Labels to be added to the issue.",
+                                "description": "labels defines labels to be added to the issue.",
                                 "items": {
                                   "minLength": 1,
                                   "type": "string"
@@ -928,37 +928,37 @@
                                 "x-kubernetes-list-type": "set"
                               },
                               "priority": {
-                                "description": "Priority of the issue.",
+                                "description": "priority defines the priority of the issue.",
                                 "type": "string"
                               },
                               "project": {
-                                "description": "The project key where issues are created.",
+                                "description": "project defines the project key where issues are created.",
                                 "minLength": 1,
                                 "type": "string"
                               },
                               "reopenDuration": {
-                                "description": "If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe resolutiondate field is used to determine the age of the issue.",
+                                "description": "reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe resolutiondate field is used to determine the age of the issue.",
                                 "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                                 "type": "string"
                               },
                               "reopenTransition": {
-                                "description": "Name of the workflow transition to reopen an issue.\nThe target status should not have the category \"done\".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.",
+                                "description": "reopenTransition defines name of the workflow transition to reopen an issue.\nThe target status should not have the category \"done\".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.",
                                 "type": "string"
                               },
                               "resolveTransition": {
-                                "description": "Name of the workflow transition to resolve an issue.\nThe target status must have the category \"done\".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.",
+                                "description": "resolveTransition defines name of the workflow transition to resolve an issue.\nThe target status must have the category \"done\".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.",
                                 "type": "string"
                               },
                               "sendResolved": {
-                                "description": "Whether to notify about resolved alerts.",
+                                "description": "sendResolved defines whether to notify about resolved alerts.",
                                 "type": "boolean"
                               },
                               "summary": {
-                                "description": "Issue summary template.",
+                                "description": "summary defines the issue summary template.",
                                 "type": "string"
                               },
                               "wontFixResolution": {
-                                "description": "If reopenTransition is defined, ignore issues with that resolution.",
+                                "description": "wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.",
                                 "type": "string"
                               }
                             },

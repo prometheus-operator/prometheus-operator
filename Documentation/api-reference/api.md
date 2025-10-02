@@ -26147,11 +26147,7 @@ string
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-<<<<<<< HEAD
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
-=======
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
->>>>>>> main
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -26990,7 +26986,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to notify about resolved alerts.</p>
+<p>sendResolved defines whether to notify about resolved alerts.</p>
 </td>
 </tr>
 <tr>
@@ -27002,7 +26998,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Jira API URL i.e. <a href="https://company.atlassian.net/rest/api/2/">https://company.atlassian.net/rest/api/2/</a>
+<p>apiURL defines the Jira API URL i.e. <a href="https://company.atlassian.net/rest/api/2/">https://company.atlassian.net/rest/api/2/</a>
 The full API path must be included.
 If not specified, default API URL will be used.</p>
 </td>
@@ -27015,7 +27011,7 @@ string
 </em>
 </td>
 <td>
-<p>The project key where issues are created.</p>
+<p>project defines the project key where issues are created.</p>
 </td>
 </tr>
 <tr>
@@ -27027,7 +27023,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Issue summary template.</p>
+<p>summary defines the issue summary template.</p>
 </td>
 </tr>
 <tr>
@@ -27039,7 +27035,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Issue description template.</p>
+<p>description defines the issue description template.</p>
 </td>
 </tr>
 <tr>
@@ -27051,7 +27047,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Labels to be added to the issue.</p>
+<p>labels defines labels to be added to the issue.</p>
 </td>
 </tr>
 <tr>
@@ -27063,7 +27059,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Priority of the issue.</p>
+<p>priority defines the priority of the issue.</p>
 </td>
 </tr>
 <tr>
@@ -27074,7 +27070,7 @@ string
 </em>
 </td>
 <td>
-<p>Type of the issue (e.g. Bug).</p>
+<p>issueType defines a type of the issue (e.g. Bug).</p>
 </td>
 </tr>
 <tr>
@@ -27086,7 +27082,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name of the workflow transition to resolve an issue.
+<p>resolveTransition defines name of the workflow transition to resolve an issue.
 The target status must have the category &ldquo;done&rdquo;.
 NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
 </td>
@@ -27100,7 +27096,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name of the workflow transition to reopen an issue.
+<p>reopenTransition defines name of the workflow transition to reopen an issue.
 The target status should not have the category &ldquo;done&rdquo;.
 NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
 </td>
@@ -27114,7 +27110,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>If reopenTransition is defined, ignore issues with that resolution.</p>
+<p>wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.</p>
 </td>
 </tr>
 <tr>
@@ -27128,7 +27124,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
+<p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
 The resolutiondate field is used to determine the age of the issue.</p>
 </td>
 </tr>
@@ -27143,7 +27139,7 @@ The resolutiondate field is used to determine the age of the issue.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Other issue and custom fields.</p>
+<p>fields defines other issue and custom fields.</p>
 </td>
 </tr>
 <tr>
@@ -27157,7 +27153,7 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>HTTP client configuration.</p>
+<p>httpConfig defines HTTP client configuration for Jira connection.</p>
 </td>
 </tr>
 </tbody>
@@ -32331,7 +32327,6 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>msteamsv2Configs defines the list of MSTeamsV2 configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
@@ -36186,11 +36181,7 @@ This includes settings for certificates, CA validation, and TLS protocol options
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-<<<<<<< HEAD
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
-=======
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
->>>>>>> main
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.

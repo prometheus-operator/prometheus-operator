@@ -74,7 +74,6 @@ type globalConfig struct {
 	RocketChatTokenFile   string          `yaml:"rocketchat_token_file,omitempty" json:"rocketchat_token_file,omitempty"`
 	RocketChatTokenID     string          `yaml:"rocketchat_token_id,omitempty" json:"rocketchat_token_id,omitempty"`
 	RocketChatTokenIDFile string          `yaml:"rocketchat_token_id_file,omitempty" json:"rocketchat_token_id_file,omitempty"`
-	JiraAPIURL            *config.URL     `yaml:"jira_api_url,omitempty" json:"jira_api_url,omitempty"`
 }
 
 type route struct {
@@ -444,23 +443,6 @@ type msTeamsV2Config struct {
 	Title          string            `yaml:"title,omitempty"`
 	Text           string            `yaml:"text,omitempty"`
 	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
-}
-
-type jiraConfig struct {
-	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty"`
-	SendResolved      *bool             `yaml:"send_resolved,omitempty"`
-	APIURL            string            `yaml:"api_url,omitempty"`
-	Project           string            `yaml:"project,omitempty"`
-	Summary           string            `yaml:"summary,omitempty"`
-	Description       string            `yaml:"description,omitempty"`
-	Labels            []string          `yaml:"labels,omitempty"`
-	Priority          string            `yaml:"priority,omitempty"`
-	IssueType         string            `yaml:"issue_type,omitempty"`
-	ReopenTransition  string            `yaml:"reopen_transition,omitempty"`
-	ResolveTransition string            `yaml:"resolve_transition,omitempty"`
-	WontFixResolution string            `yaml:"wont_fix_resolution,omitempty"`
-	ReopenDuration    model.Duration    `yaml:"reopen_duration,omitempty"`
-	Fields            map[string]any    `yaml:"fields,omitempty"`
 }
 
 type rocketchatAttachmentField struct {
