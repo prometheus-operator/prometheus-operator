@@ -1153,7 +1153,7 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		)
 	}
 
-	// Check if both ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
+	// Check if both Oauth2, ฺBasicAuth, Authorization Credentials and Bearer Token Secret are specified at the same time
 	var getAuthorizationCredentials = func(auth *monitoringv1.SafeAuthorization) *v1.SecretKeySelector {
 		if auth == nil {
 			return nil
@@ -1161,16 +1161,28 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		return auth.Credentials
 	}
 
-	if hc.BasicAuth != nil && hc.BearerTokenSecret != nil {
-		return fmt.Errorf("cannot set both 'basicAuth' and 'bearerTokenSecret' configs in 'httpConfig'")
+	authSet := []string{}
+
+	if hc.BasicAuth != nil {
+		authSet = append(authSet, "'basicAuth'")
 	}
 
-	if hc.BasicAuth != nil && getAuthorizationCredentials(hc.Authorization) != nil {
-		return fmt.Errorf("cannot set both 'basicAuth' and 'authorization.credentials' in 'httpConfig'")
+	if hc.BearerTokenSecret != nil {
+		authSet = append(authSet, "'bearerTokenSecret'")
 	}
 
-	if getAuthorizationCredentials(hc.Authorization) != nil && hc.BearerTokenSecret != nil {
-		return fmt.Errorf("cannot set both 'authorization.credentials' and 'bearerTokenSecret' in 'httpConfig'")
+	if hc.Authorization != nil {
+		if hc.Authorization.Credentials != nil {
+			authSet = append(authSet, "'authorization.credentials'")
+		}
+	}
+
+	if hc.OAuth2 != nil {
+		authSet = append(authSet, "'oauth2'")
+	}
+
+	if len(authSet) > 1 {
+		return fmt.Errorf("cannot set %s configs at the same time in 'httpConfig'", strings.Join(authSet, ", "))
 	}
 
 	if (hc.NoProxy != nil ||
