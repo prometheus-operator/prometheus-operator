@@ -1429,10 +1429,12 @@ func TestCheckHTTPConfig(t *testing.T) {
 		expectedKeys []string
 	}{
 		{
-			hc: &monitoringv1alpha1.HTTPConfig{},
-			ok: true,
+			name: "base case",
+			hc:   &monitoringv1alpha1.HTTPConfig{},
+			ok:   true,
 		},
 		{
+			name: "httpConfig with basicAuth and authorization.credentials",
 			hc: &monitoringv1alpha1.HTTPConfig{
 				BasicAuth: &monitoringv1.BasicAuth{
 					Username: v1.SecretKeySelector{
@@ -1447,6 +1449,26 @@ func TestCheckHTTPConfig(t *testing.T) {
 						},
 						Key: "password",
 					},
+				},
+				Authorization: &monitoringv1.SafeAuthorization{
+					Credentials: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "http-config",
+						},
+						Key: "secret",
+					},
+				},
+			},
+			ok: false,
+		},
+		{
+			name: "httpConfig with bearerTokenSecret and authorization.credentials",
+			hc: &monitoringv1alpha1.HTTPConfig{
+				BearerTokenSecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "http-config",
+					},
+					Key: "secret",
 				},
 				Authorization: &monitoringv1.SafeAuthorization{
 					Credentials: &v1.SecretKeySelector{
