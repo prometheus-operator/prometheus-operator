@@ -18,12 +18,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-func ValidateAlertmanager(amc *monitoringv1.Alertmanager) error {
-	return validateGlobalConfig(amc.Spec.AlertmanagerConfiguration.Global)
-}
-
-func validateGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig) error {
-
+func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig) error {
 	if err := gc.HTTPConfig.Validate(); err != nil {
 		return err
 	}
