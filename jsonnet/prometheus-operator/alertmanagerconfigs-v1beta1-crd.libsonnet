@@ -1777,7 +1777,7 @@
                             type: 'string',
                           },
                           reopenDuration: {
-                            description: 'reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe "resolutiondate" field in Jira is used to determine the age of the issue.',
+                            description: "reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe 'resolutiondate' field in Jira is used to determine the age of the issue.",
                             pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                             type: 'string',
                           },
