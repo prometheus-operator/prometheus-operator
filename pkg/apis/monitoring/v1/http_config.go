@@ -14,7 +14,11 @@
 
 package v1
 
-import v1 "k8s.io/api/core/v1"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+)
 
 // HTTPConfig defines the configuration for the HTTP client.
 type HTTPConfig struct {
@@ -72,4 +76,51 @@ type HTTPConfig struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
+}
+
+// Validate semantically validates the given HTTPConfig.
+func (hc *HTTPConfig) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
+		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
+	}
+
+	if hc.Authorization != nil {
+		if hc.BearerTokenSecret != nil {
+			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
+		}
+
+		if hc.BasicAuth != nil || hc.OAuth2 != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.Authorization.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if hc.OAuth2 != nil {
+		if hc.BasicAuth != nil {
+			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+		}
+
+		if err := hc.OAuth2.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if hc.TLSConfig != nil {
+		if err := hc.TLSConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if err := hc.ProxyConfig.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
