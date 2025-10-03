@@ -95,6 +95,7 @@ function(params) {
                  'thanosrulers/finalizers',
                  'thanosrulers/status',
                  'scrapeconfigs',
+                 'scrapeconfigs/status',
                  'servicemonitors',
                  'servicemonitors/status',
                  'podmonitors',

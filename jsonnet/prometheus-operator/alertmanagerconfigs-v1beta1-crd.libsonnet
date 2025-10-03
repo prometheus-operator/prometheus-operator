@@ -252,6 +252,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -1190,6 +1194,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -1875,6 +1883,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
@@ -2620,6 +2632,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
@@ -3373,6 +3389,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -4125,6 +4145,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
@@ -4926,6 +4950,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
@@ -5797,6 +5825,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -6506,6 +6538,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
@@ -7276,6 +7312,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -7996,6 +8036,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -8665,6 +8709,10 @@
                                 ],
                                 type: 'object',
                               },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
+                              },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
@@ -9324,6 +9372,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
@@ -10039,6 +10091,10 @@
                                   'name',
                                 ],
                                 type: 'object',
+                              },
+                              enableHttp2: {
+                                description: 'enableHttp2 can be used to disable HTTP2.',
+                                type: 'boolean',
                               },
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',

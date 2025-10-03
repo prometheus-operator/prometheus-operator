@@ -6069,9 +6069,10 @@ func TestLoadConfig(t *testing.T) {
 
 func TestConvertHTTPConfig(t *testing.T) {
 	testCases := []struct {
-		name   string
-		cfg    monitoringv1alpha1.HTTPConfig
-		golden string
+		name    string
+		cfg     monitoringv1alpha1.HTTPConfig
+		version string
+		golden  string
 	}{
 		{
 			name:   "no proxy",
@@ -6114,26 +6115,49 @@ func TestConvertHTTPConfig(t *testing.T) {
 			},
 			golden: "proxy_url_empty_proxy_config.golden",
 		},
+		{
+			name: "enableHTTP2",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				EnableHTTP2: ptr.To(false),
+			},
+			golden: "http_config_enable_http2_supported.golden",
+		},
+		{
+			name: "enableHTTP2 not supported",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				EnableHTTP2: ptr.To(false),
+			},
+			version: "v0.24.0",
+			golden:  "http_config_enable_http2_not_supported.golden",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			v, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+			version := operator.DefaultAlertmanagerVersion
+			if tc.version != "" {
+				version = tc.version
+			}
+			v, err := semver.ParseTolerant(version)
 			require.NoError(t, err)
 
+			logger := newNopLogger(t)
 			cb := NewConfigBuilder(
-				newNopLogger(t),
+				logger,
 				v,
 				nil,
 				&monitoringv1.Alertmanager{
 					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
-					Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
-						Type: monitoringv1.OnNamespaceConfigMatcherStrategyType,
-					}},
+					Spec: monitoringv1.AlertmanagerSpec{
+						Version: tc.version,
+					},
 				},
 			)
 
 			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
+			require.NoError(t, err)
+
+			err = cfg.sanitize(v, logger)
 			require.NoError(t, err)
 
 			cfgBytes, err := yaml.Marshal(cfg)

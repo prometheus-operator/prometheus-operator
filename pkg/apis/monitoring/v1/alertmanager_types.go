@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -708,84 +706,6 @@ type HostPort struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Port string `json:"port"`
-}
-
-// HTTPConfig defines a client HTTP configuration.
-// See https://prometheus.io/docs/alerting/latest/configuration/#http_config
-type HTTPConfig struct {
-	// authorization defines the header configuration for the client.
-	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
-	// +optional
-	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-	// basicAuth defines basicAuth for the client.
-	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// oauth2 defines the client credentials used to fetch a token for the targets.
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-	// bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client
-	// for authentication.
-	// The secret needs to be in the same namespace as the Alertmanager
-	// object and accessible by the Prometheus Operator.
-	// +optional
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	// tlsConfig defines the TLSConfig for the client.
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
-	ProxyConfig `json:",inline"`
-
-	// followRedirects defines whether the client should follow HTTP 3xx redirects.
-	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
-}
-
-// Validate semantically validates the given HTTPConfig.
-func (hc *HTTPConfig) Validate() error {
-	if hc == nil {
-		return nil
-	}
-
-	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
-		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
-	}
-
-	if hc.Authorization != nil {
-		if hc.BearerTokenSecret != nil {
-			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
-		}
-
-		if hc.BasicAuth != nil || hc.OAuth2 != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
-		}
-
-		if err := hc.Authorization.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if hc.OAuth2 != nil {
-		if hc.BasicAuth != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
-		}
-
-		if err := hc.OAuth2.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if hc.TLSConfig != nil {
-		if err := hc.TLSConfig.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if err := hc.ProxyConfig.Validate(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // AlertmanagerList is a list of Alertmanagers.

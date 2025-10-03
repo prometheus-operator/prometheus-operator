@@ -157,14 +157,14 @@
                 "description": "status defines the status subresource. It is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the PrometheusRule. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "bindings": {
-                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.",
+                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.",
                     "items": {
                       "description": "WorkloadBinding is a link between a configuration resource and a workload resource.",
                       "properties": {
                         "conditions": {
-                          "description": "conditions defines the current state of the configuration resource when bound to the referenced Prometheus object.",
+                          "description": "conditions defines the current state of the configuration resource when bound to the referenced Workload object.",
                           "items": {
-                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.",
+                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.",
                             "properties": {
                               "lastTransitionTime": {
                                 "description": "lastTransitionTime defines the time of the last update to the current status property.",
@@ -229,11 +229,12 @@
                           "type": "string"
                         },
                         "resource": {
-                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).",
+                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).",
                           "enum": [
                             "prometheuses",
                             "prometheusagents",
-                            "thanosrulers"
+                            "thanosrulers",
+                            "alertmanagers"
                           ],
                           "type": "string"
                         }
