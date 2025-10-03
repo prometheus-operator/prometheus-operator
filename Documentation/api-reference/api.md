@@ -27125,7 +27125,7 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
-The resolutiondate field is used to determine the age of the issue.</p>
+The &ldquo;resolutiondate&rdquo; field in Jira is used to determine the age of the issue.</p>
 </td>
 </tr>
 <tr>
@@ -27183,7 +27183,7 @@ string
 </em>
 </td>
 <td>
-<p>Key of the tuple.</p>
+<p>key defines the key of the tuple.</p>
 </td>
 </tr>
 <tr>
@@ -27196,7 +27196,7 @@ k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON
 </em>
 </td>
 <td>
-<p>Value of the tuple.</p>
+<p>value defines the value of the tuple.</p>
 </td>
 </tr>
 </tbody>
@@ -36587,7 +36587,7 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
-The <code>resolutiondate</code> field in Jira is used to determine the age of the issue.</p>
+The &ldquo;resolutiondate&rdquo; field in Jira is used to determine the age of the issue.</p>
 </td>
 </tr>
 <tr>
@@ -36645,7 +36645,7 @@ string
 </em>
 </td>
 <td>
-<p>Key of the tuple.</p>
+<p>key defines the key of the tuple.</p>
 </td>
 </tr>
 <tr>
@@ -36658,7 +36658,7 @@ k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON
 </em>
 </td>
 <td>
-<p>Value of the tuple.</p>
+<p>value defines the value of the tuple.</p>
 </td>
 </tr>
 </tbody>
@@ -38140,7 +38140,7 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </em>
 </td>
 <td>
-<p>List of Jira configurations.
+<p>JiraConfigs defines the list of Jira configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>

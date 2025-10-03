@@ -206,7 +206,7 @@ type Receiver struct {
 	// It requires Alertmanager >= 0.26.0.
 	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
-	// List of Jira configurations.
+	// JiraConfigs defines the list of Jira configurations.
 	// It requires Alertmanager >= 0.28.0.
 	JiraConfigs []JiraConfig `json:"JiraConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
@@ -1133,11 +1133,11 @@ type MSTeamsConfig struct {
 // JiraField defines a (key, value) tuple.
 // See: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
 type JiraField struct {
-	// Key of the tuple.
+	// key defines the key of the tuple.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Key string `json:"key"`
-	// Value of the tuple.
+	// value defines the value of the tuple.
 	// +required
 	Value apiextensionsv1.JSON `json:"value"`
 }

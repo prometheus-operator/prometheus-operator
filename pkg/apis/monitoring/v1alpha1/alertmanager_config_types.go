@@ -1137,11 +1137,11 @@ type MSTeamsConfig struct {
 // JiraField defines a (key, value) tuple.
 // See: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
 type JiraField struct {
-	// Key of the tuple.
+	// key defines the key of the tuple.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Key string `json:"key"`
-	// Value of the tuple.
+	// value defines the value of the tuple.
 	// +required
 	Value apiextensionsv1.JSON `json:"value"`
 }

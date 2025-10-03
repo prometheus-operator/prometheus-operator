@@ -107,7 +107,7 @@
                   description: 'Receiver defines one or more notification integrations.',
                   properties: {
                     JiraConfigs: {
-                      description: 'List of Jira configurations.\nIt requires Alertmanager >= 0.28.0.',
+                      description: 'JiraConfigs defines the list of Jira configurations.\nIt requires Alertmanager >= 0.28.0.',
                       items: {
                         description: 'JiraConfig configures notifications via Jira.\nSee https://prometheus.io/docs/alerting/latest/configuration/#Jira_config\nIt requires Alertmanager >= 0.28.0.',
                         properties: {
@@ -126,12 +126,12 @@
                               description: 'JiraField defines a (key, value) tuple.\nSee: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types',
                               properties: {
                                 key: {
-                                  description: 'Key of the tuple.',
+                                  description: 'key defines the key of the tuple.',
                                   minLength: 1,
                                   type: 'string',
                                 },
                                 value: {
-                                  description: 'Value of the tuple.',
+                                  description: 'value defines the value of the tuple.',
                                   'x-kubernetes-preserve-unknown-fields': true,
                                 },
                               },
@@ -806,7 +806,7 @@
                             type: 'string',
                           },
                           reopenDuration: {
-                            description: 'reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe `resolutiondate` field in Jira is used to determine the age of the issue.',
+                            description: 'reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe "resolutiondate" field in Jira is used to determine the age of the issue.',
                             pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                             type: 'string',
                           },
