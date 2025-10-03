@@ -759,6 +759,10 @@ type OAuth2 struct {
 }
 
 func (o *OAuth2) Validate() error {
+	if o == nil {
+		return nil
+	}
+
 	if o.TokenURL == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}

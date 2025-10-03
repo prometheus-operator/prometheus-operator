@@ -15,7 +15,6 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -271,20 +270,6 @@ type PodMetricsEndpoint struct {
 	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
-	// tlsConfig defines the TLS configuration to use when scraping the target.
-	//
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
-	// bearerTokenSecret defines a key of a Secret containing the bearer
-	// token for scraping targets. The secret needs to be in the same namespace
-	// as the PodMonitor object and readable by the Prometheus Operator.
-	//
-	// +optional
-	//
-	// Deprecated: use `authorization` instead.
-	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-
 	// honorLabels when true preserves the metric's labels when they collide
 	// with the target's labels.
 	// +optional
@@ -305,31 +290,6 @@ type PodMetricsEndpoint struct {
 	// +optional
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 
-	// basicAuth defines the Basic Authentication credentials to use when
-	// scraping the target.
-	//
-	// Cannot be set at the same time as `authorization`, or `oauth2`.
-	//
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-
-	// oauth2 defines the OAuth2 settings to use when scraping the target.
-	//
-	// It requires Prometheus >= 2.27.0.
-	//
-	// Cannot be set at the same time as `authorization`, or `basicAuth`.
-	//
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-
-	// authorization defines the Authorization header credentials to use when
-	// scraping the target.
-	//
-	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
-	//
-	// +optional
-	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-
 	// metricRelabelings defines the relabeling rules to apply to the
 	// samples before ingestion.
 	//
@@ -348,20 +308,6 @@ type PodMetricsEndpoint struct {
 	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
-	// +optional
-	ProxyConfig `json:",inline"`
-
-	// followRedirects defines whether the scrape requests should follow HTTP
-	// 3xx redirects.
-	//
-	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
-
-	// enableHttp2 can be used to disable HTTP2 when scraping the target.
-	//
-	// +optional
-	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
-
 	// filterRunning when true, the pods which are not running (e.g. either in Failed or
 	// Succeeded state) are dropped during the target discovery.
 	//
@@ -371,4 +317,6 @@ type PodMetricsEndpoint struct {
 	//
 	// +optional
 	FilterRunning *bool `json:"filterRunning,omitempty"`
+
+	HTTPConfig `json:",inline"`
 }

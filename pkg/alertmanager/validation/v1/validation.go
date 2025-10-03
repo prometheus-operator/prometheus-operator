@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"fmt"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
@@ -23,10 +25,8 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return nil
 	}
 
-	if gc.HTTPConfig != nil {
-		if err := gc.HTTPConfig.Validate(); err != nil {
-			return err
-		}
+	if err := gc.HTTPConfig.Validate(); err != nil {
+		return fmt.Errorf("httpConfig: %w", err)
 	}
 
 	return nil

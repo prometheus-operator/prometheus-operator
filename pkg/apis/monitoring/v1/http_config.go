@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
@@ -84,38 +85,41 @@ func (hc *HTTPConfig) Validate() error {
 		return nil
 	}
 
-	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
-		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
-	}
-
-	if hc.Authorization != nil {
-		if hc.BearerTokenSecret != nil {
-			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
+	// Check duplicate authentication methods.
+	switch {
+	case hc.Authorization != nil:
+		switch {
+		case hc.BasicAuth != nil:
+			return errors.New("authorization and basicAuth cannot be configured at the same time")
+		case hc.BearerTokenSecret != nil:
+			return errors.New("authorization and bearerTokenSecret cannot be configured at the same time")
+		case hc.OAuth2 != nil:
+			return errors.New("authorization and oauth2 cannot be configured at the same time")
 		}
-
-		if hc.BasicAuth != nil || hc.OAuth2 != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+	case hc.BasicAuth != nil:
+		switch {
+		case hc.BearerTokenSecret != nil:
+			return errors.New("basicAuth and bearerTokenSecret cannot be configured at the same time")
+		case hc.OAuth2 != nil:
+			return errors.New("basicAuth and oauth2 cannot be configured at the same time")
 		}
-
-		if err := hc.Authorization.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if hc.OAuth2 != nil {
-		if hc.BasicAuth != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
-		}
-
-		if err := hc.OAuth2.Validate(); err != nil {
-			return err
+	case hc.BearerTokenSecret != nil:
+		switch {
+		case hc.OAuth2 != nil:
+			return errors.New("bearerTokenSecret and oauth2 cannot be configured at the same time")
 		}
 	}
 
-	if hc.TLSConfig != nil {
-		if err := hc.TLSConfig.Validate(); err != nil {
-			return err
-		}
+	if err := hc.Authorization.Validate(); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := hc.OAuth2.Validate(); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := hc.TLSConfig.Validate(); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
 	}
 
 	if err := hc.ProxyConfig.Validate(); err != nil {

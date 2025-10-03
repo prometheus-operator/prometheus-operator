@@ -2694,8 +2694,8 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.PodMonitorSpec{
 						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 							{
-								Port:   ptr.To("web"),
-								OAuth2: &oauth2,
+								Port:       ptr.To("web"),
+								HTTPConfig: monitoringv1.HTTPConfig{OAuth2: &oauth2},
 							},
 						},
 					},
@@ -5224,9 +5224,9 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:            ptr.To("web"),
-							Interval:        "30s",
-							FollowRedirects: ptr.To(tc.followRedirects),
+							Port:       ptr.To("web"),
+							Interval:   "30s",
+							HTTPConfig: monitoringv1.HTTPConfig{FollowRedirects: ptr.To(tc.followRedirects)},
 						},
 					},
 				},
@@ -5405,9 +5405,9 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:        ptr.To("web"),
-							Interval:    "30s",
-							EnableHttp2: ptr.To(tc.enableHTTP2),
+							Port:       ptr.To("web"),
+							Interval:   "30s",
+							HTTPConfig: monitoringv1.HTTPConfig{EnableHTTP2: ptr.To(tc.enableHTTP2)},
 						},
 					},
 				},
