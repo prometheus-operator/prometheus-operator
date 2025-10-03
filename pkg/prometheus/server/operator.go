@@ -1095,6 +1095,12 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err := prompkg.CleanupBindings(ctx, c.pmonInfs.ListAll, resources.pMons, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
+
+	// Remove bindings from scrapeConfigs which reference the
+	// workload but aren't selected anymore.
+	if err := prompkg.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	}
 	return nil
 }
 
@@ -1113,6 +1119,11 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 
 	// Remove bindings from all podMonitors which reference the workload.
 	if err := prompkg.CleanupBindings(ctx, c.pmonInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1.PodMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+
+	// Remove bindings from all scrapeConfigs which reference the workload.
+	if err := prompkg.CleanupBindings(ctx, c.sconInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
 	return nil
