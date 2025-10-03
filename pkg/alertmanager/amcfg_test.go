@@ -4497,7 +4497,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								Project: "peojectA",
+								Project: "projectA",
 							},
 						},
 					},
