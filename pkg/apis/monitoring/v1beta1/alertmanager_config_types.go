@@ -208,6 +208,7 @@ type Receiver struct {
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 	// jiraConfigs defines the list of Jira configurations.
 	// It requires Alertmanager >= 0.28.0.
+	// +optional
 	JiraConfigs []JiraConfig `json:"jiraConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.

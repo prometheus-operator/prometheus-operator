@@ -38142,6 +38142,7 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>jiraConfigs defines the list of Jira configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
