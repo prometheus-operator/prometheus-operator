@@ -12947,16 +12947,17 @@ spec:
                         properties:
                           apiURL:
                             description: |-
-                              The Jira API URL i.e. https://company.atlassian.net/rest/api/2/
+                              apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
                               The full API path must be included.
                               If not specified, default API URL will be used.
                             pattern: ^http(s)?://.+$
                             type: string
                           description:
-                            description: Issue description template.
+                            description: description defines the issue description
+                              template.
                             type: string
                           fields:
-                            description: Other issue and custom fields.
+                            description: fields defines other issue and custom fields.
                             items:
                               description: |-
                                 JiraField defines a (key, value) tuple.
@@ -12978,7 +12979,8 @@ spec:
                             - key
                             x-kubernetes-list-type: map
                           httpConfig:
-                            description: HTTP client configuration.
+                            description: httpConfig defines HTTP client configuration
+                              for Jira connection.
                             properties:
                               authorization:
                                 description: |-
@@ -13673,11 +13675,13 @@ spec:
                                 type: object
                             type: object
                           issueType:
-                            description: Type of the issue (e.g. Bug).
+                            description: issueType defines a type of the issue (e.g.
+                              Bug).
                             minLength: 1
                             type: string
                           labels:
-                            description: Labels to be added to the issue.
+                            description: labels defines labels to be added to the
+                              issue.
                             items:
                               minLength: 1
                               type: string
@@ -13685,39 +13689,41 @@ spec:
                             type: array
                             x-kubernetes-list-type: set
                           priority:
-                            description: Priority of the issue.
+                            description: priority defines the priority of the issue.
                             type: string
                           project:
-                            description: The project key where issues are created.
+                            description: project defines the project key where issues
+                              are created.
                             minLength: 1
                             type: string
                           reopenDuration:
                             description: |-
-                              If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
+                              reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
                               The resolutiondate field is used to determine the age of the issue.
                             pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                             type: string
                           reopenTransition:
                             description: |-
-                              Name of the workflow transition to reopen an issue.
+                              reopenTransition defines name of the workflow transition to reopen an issue.
                               The target status should not have the category "done".
                               NOTE: The name of the transition can be localized and depends on the language setting of the service account.
                             type: string
                           resolveTransition:
                             description: |-
-                              Name of the workflow transition to resolve an issue.
+                              resolveTransition defines name of the workflow transition to resolve an issue.
                               The target status must have the category "done".
                               NOTE: The name of the transition can be localized and depends on the language setting of the service account.
                             type: string
                           sendResolved:
-                            description: Whether to notify about resolved alerts.
+                            description: sendResolved defines whether to notify about
+                              resolved alerts.
                             type: boolean
                           summary:
-                            description: Issue summary template.
+                            description: summary defines the issue summary template.
                             type: string
                           wontFixResolution:
-                            description: If reopenTransition is defined, ignore issues
-                              with that resolution.
+                            description: wontFixResolution defines if reopenTransition
+                              is defined, ignore issues with that resolution.
                             type: string
                         required:
                         - issueType

@@ -36448,7 +36448,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to notify about resolved alerts.</p>
+<p>sendResolved defines whether to notify about resolved alerts.</p>
 </td>
 </tr>
 <tr>
@@ -36460,7 +36460,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Jira API URL i.e. <a href="https://company.atlassian.net/rest/api/2/">https://company.atlassian.net/rest/api/2/</a>
+<p>apiURL defines the Jira API URL i.e. <a href="https://company.atlassian.net/rest/api/2/">https://company.atlassian.net/rest/api/2/</a>
 The full API path must be included.
 If not specified, default API URL will be used.</p>
 </td>
@@ -36473,7 +36473,7 @@ string
 </em>
 </td>
 <td>
-<p>The project key where issues are created.</p>
+<p>project defines the project key where issues are created.</p>
 </td>
 </tr>
 <tr>
@@ -36485,7 +36485,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Issue summary template.</p>
+<p>summary defines the issue summary template.</p>
 </td>
 </tr>
 <tr>
@@ -36497,7 +36497,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Issue description template.</p>
+<p>description defines the issue description template.</p>
 </td>
 </tr>
 <tr>
@@ -36509,7 +36509,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Labels to be added to the issue.</p>
+<p>labels defines labels to be added to the issue.</p>
 </td>
 </tr>
 <tr>
@@ -36521,7 +36521,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Priority of the issue.</p>
+<p>priority defines the priority of the issue.</p>
 </td>
 </tr>
 <tr>
@@ -36532,7 +36532,7 @@ string
 </em>
 </td>
 <td>
-<p>Type of the issue (e.g. Bug).</p>
+<p>issueType defines a type of the issue (e.g. Bug).</p>
 </td>
 </tr>
 <tr>
@@ -36544,7 +36544,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name of the workflow transition to resolve an issue.
+<p>resolveTransition defines name of the workflow transition to resolve an issue.
 The target status must have the category &ldquo;done&rdquo;.
 NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
 </td>
@@ -36558,7 +36558,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name of the workflow transition to reopen an issue.
+<p>reopenTransition defines name of the workflow transition to reopen an issue.
 The target status should not have the category &ldquo;done&rdquo;.
 NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
 </td>
@@ -36572,7 +36572,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>If reopenTransition is defined, ignore issues with that resolution.</p>
+<p>wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.</p>
 </td>
 </tr>
 <tr>
@@ -36586,7 +36586,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
+<p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
 The resolutiondate field is used to determine the age of the issue.</p>
 </td>
 </tr>
@@ -36601,7 +36601,7 @@ The resolutiondate field is used to determine the age of the issue.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Other issue and custom fields.</p>
+<p>fields defines other issue and custom fields.</p>
 </td>
 </tr>
 <tr>
@@ -36615,7 +36615,7 @@ HTTPConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>HTTP client configuration.</p>
+<p>httpConfig defines HTTP client configuration for Jira connection.</p>
 </td>
 </tr>
 </tbody>

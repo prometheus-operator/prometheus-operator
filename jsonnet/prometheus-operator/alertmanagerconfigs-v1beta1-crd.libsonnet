@@ -112,16 +112,16 @@
                         description: 'JiraConfig configures notifications via Jira.\nSee https://prometheus.io/docs/alerting/latest/configuration/#Jira_config\nIt requires Alertmanager >= 0.28.0.',
                         properties: {
                           apiURL: {
-                            description: 'The Jira API URL i.e. https://company.atlassian.net/rest/api/2/\nThe full API path must be included.\nIf not specified, default API URL will be used.',
+                            description: 'apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/\nThe full API path must be included.\nIf not specified, default API URL will be used.',
                             pattern: '^http(s)?://.+$',
                             type: 'string',
                           },
                           description: {
-                            description: 'Issue description template.',
+                            description: 'description defines the issue description template.',
                             type: 'string',
                           },
                           fields: {
-                            description: 'Other issue and custom fields.',
+                            description: 'fields defines other issue and custom fields.',
                             items: {
                               description: 'JiraField defines a (key, value) tuple.\nSee: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types',
                               properties: {
@@ -148,7 +148,7 @@
                             'x-kubernetes-list-type': 'map',
                           },
                           httpConfig: {
-                            description: 'HTTP client configuration.',
+                            description: 'httpConfig defines HTTP client configuration for Jira connection.',
                             properties: {
                               authorization: {
                                 description: 'authorization defines the authorization header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.',
@@ -782,12 +782,12 @@
                             type: 'object',
                           },
                           issueType: {
-                            description: 'Type of the issue (e.g. Bug).',
+                            description: 'issueType defines a type of the issue (e.g. Bug).',
                             minLength: 1,
                             type: 'string',
                           },
                           labels: {
-                            description: 'Labels to be added to the issue.',
+                            description: 'labels defines labels to be added to the issue.',
                             items: {
                               minLength: 1,
                               type: 'string',
@@ -797,37 +797,37 @@
                             'x-kubernetes-list-type': 'set',
                           },
                           priority: {
-                            description: 'Priority of the issue.',
+                            description: 'priority defines the priority of the issue.',
                             type: 'string',
                           },
                           project: {
-                            description: 'The project key where issues are created.',
+                            description: 'project defines the project key where issues are created.',
                             minLength: 1,
                             type: 'string',
                           },
                           reopenDuration: {
-                            description: 'If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe resolutiondate field is used to determine the age of the issue.',
+                            description: 'reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).\nThe resolutiondate field is used to determine the age of the issue.',
                             pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                             type: 'string',
                           },
                           reopenTransition: {
-                            description: 'Name of the workflow transition to reopen an issue.\nThe target status should not have the category "done".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.',
+                            description: 'reopenTransition defines name of the workflow transition to reopen an issue.\nThe target status should not have the category "done".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.',
                             type: 'string',
                           },
                           resolveTransition: {
-                            description: 'Name of the workflow transition to resolve an issue.\nThe target status must have the category "done".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.',
+                            description: 'resolveTransition defines name of the workflow transition to resolve an issue.\nThe target status must have the category "done".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.',
                             type: 'string',
                           },
                           sendResolved: {
-                            description: 'Whether to notify about resolved alerts.',
+                            description: 'sendResolved defines whether to notify about resolved alerts.',
                             type: 'boolean',
                           },
                           summary: {
-                            description: 'Issue summary template.',
+                            description: 'summary defines the issue summary template.',
                             type: 'string',
                           },
                           wontFixResolution: {
-                            description: 'If reopenTransition is defined, ignore issues with that resolution.',
+                            description: 'wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.',
                             type: 'string',
                           },
                         },

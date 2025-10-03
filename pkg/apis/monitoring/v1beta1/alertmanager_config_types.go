@@ -1161,12 +1161,12 @@ func (jf *JiraField) Validate() error {
 // See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config
 // It requires Alertmanager >= 0.28.0.
 type JiraConfig struct {
-	// Whether to notify about resolved alerts.
+	// sendResolved defines whether to notify about resolved alerts.
 	//
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 
-	// The Jira API URL i.e. https://company.atlassian.net/rest/api/2/
+	// apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
 	// The full API path must be included.
 	// If not specified, default API URL will be used.
 	//
@@ -1174,23 +1174,23 @@ type JiraConfig struct {
 	// +optional
 	APIURL *string `json:"apiURL,omitempty"`
 
-	// The project key where issues are created.
+	// project defines the project key where issues are created.
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Project string `json:"project"`
 
-	// Issue summary template.
+	// summary defines the issue summary template.
 	//
 	// +optional
 	Summary *string `json:"summary,omitempty"`
 
-	// Issue description template.
+	// description defines the issue description template.
 	//
 	// +optional
 	Description *string `json:"description,omitempty"`
 
-	// Labels to be added to the issue.
+	// labels defines labels to be added to the issue.
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
@@ -1198,50 +1198,50 @@ type JiraConfig struct {
 	// +optional
 	Labels []string `json:"labels,omitempty"`
 
-	// Priority of the issue.
+	// priority defines the priority of the issue.
 	//
 	// +optional
 	Priority *string `json:"priority,omitempty"`
 
-	// Type of the issue (e.g. Bug).
+	// issueType defines a type of the issue (e.g. Bug).
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	IssueType string `json:"issueType"`
 
-	// Name of the workflow transition to resolve an issue.
+	// resolveTransition defines name of the workflow transition to resolve an issue.
 	// The target status must have the category "done".
 	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
 	//
 	// +optional
 	ResolveTransition *string `json:"resolveTransition,omitempty"`
 
-	// Name of the workflow transition to reopen an issue.
+	// reopenTransition defines name of the workflow transition to reopen an issue.
 	// The target status should not have the category "done".
 	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
 	//
 	// +optional
 	ReopenTransition *string `json:"reopenTransition,omitempty"`
 
-	// If reopenTransition is defined, ignore issues with that resolution.
+	// wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.
 	//
 	// +optional
 	WontFixResolution *string `json:"wontFixResolution,omitempty"`
 
-	// If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
+	// reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
 	// The resolutiondate field is used to determine the age of the issue.
 	//
 	// +optional
 	ReopenDuration *monitoringv1.Duration `json:"reopenDuration,omitempty"`
 
-	// Other issue and custom fields.
+	// fields defines other issue and custom fields.
 	//
 	// +listType=map
 	// +listMapKey=key
 	// +optional
 	Fields []JiraField `json:"fields,omitempty"`
 
-	// HTTP client configuration.
+	// httpConfig defines HTTP client configuration for Jira connection.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
