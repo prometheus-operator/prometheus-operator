@@ -32305,7 +32305,7 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </tr>
 <tr>
 <td>
-<code>JiraConfigs</code><br/>
+<code>jiraConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">
 []JiraConfig
@@ -32313,7 +32313,8 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </em>
 </td>
 <td>
-<p>List of Jira configurations.
+<em>(Optional)</em>
+<p>jiraConfigs defines the list of Jira configurations
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
@@ -32327,6 +32328,7 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>msteamsv2Configs defines the list of MSTeamsV2 configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
@@ -38132,7 +38134,7 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </tr>
 <tr>
 <td>
-<code>JiraConfigs</code><br/>
+<code>jiraConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.JiraConfig">
 []JiraConfig
@@ -38140,7 +38142,7 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </em>
 </td>
 <td>
-<p>JiraConfigs defines the list of Jira configurations.
+<p>jiraConfigs defines the list of Jira configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>

@@ -33,7 +33,7 @@ type ReceiverApplyConfiguration struct {
 	TelegramConfigs   []TelegramConfigApplyConfiguration   `json:"telegramConfigs,omitempty"`
 	WebexConfigs      []WebexConfigApplyConfiguration      `json:"webexConfigs,omitempty"`
 	MSTeamsConfigs    []MSTeamsConfigApplyConfiguration    `json:"msteamsConfigs,omitempty"`
-	JiraConfigs       []JiraConfigApplyConfiguration       `json:"JiraConfigs,omitempty"`
+	JiraConfigs       []JiraConfigApplyConfiguration       `json:"jiraConfigs,omitempty"`
 	MSTeamsV2Configs  []MSTeamsV2ConfigApplyConfiguration  `json:"msteamsv2Configs,omitempty"`
 	RocketChatConfigs []RocketChatConfigApplyConfiguration `json:"rocketchatConfigs,omitempty"`
 }

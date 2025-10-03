@@ -209,10 +209,12 @@ type Receiver struct {
 	// It requires Alertmanager >= 0.26.0.
 	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
-	// List of Jira configurations.
+	// jiraConfigs defines the list of Jira configurations
+	// +optional
 	// It requires Alertmanager >= 0.28.0.
-	JiraConfigs []JiraConfig `json:"JiraConfigs,omitempty"`
+	JiraConfigs []JiraConfig `json:"jiraConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
+	// +optional
 	// It requires Alertmanager >= 0.28.0.
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 	// rocketchatConfigs defines the list of RocketChat configurations.
