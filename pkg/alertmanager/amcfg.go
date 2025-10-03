@@ -2734,8 +2734,8 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 }
 
 func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
-	JiraAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
-	if !JiraAllowed {
+	jiraAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !jiraAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; Jira integration is available in Alertmanager >= 0.28.0`)
 	}
 
@@ -2748,7 +2748,7 @@ func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 	}
 
 	if tc.APIURL == nil {
-		return fmt.Errorf("mandatory field %q and %q is all empty", "api_url", "Jira_api_url")
+		return fmt.Errorf("mandatory field %q and %q are all empty", "api_url", "jira_api_url")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
