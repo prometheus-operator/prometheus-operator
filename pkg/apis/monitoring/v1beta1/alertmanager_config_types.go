@@ -1247,6 +1247,21 @@ type JiraConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
+// Validate ensures JiraField is valid.
+func (jc *JiraConfig) Validate() error {
+	if len(jc.Fields) == 0 {
+		return nil
+	}
+
+	for i, field := range jc.Fields {
+		if err := field.Validate(); err != nil {
+			return fmt.Errorf("Fields json decode index[%d] key[%s]: %w", i, field.Key, err)
+		}
+	}
+
+	return nil
+}
+
 // MSTeamsV2Config configures notifications via Microsoft Teams using the new message format with adaptive cards as required by flows.
 // See https://prometheus.io/docs/alerting/latest/configuration/#msteamsv2_config
 // It requires Alertmanager >= 0.28.0.
@@ -1390,21 +1405,6 @@ type RocketChatActionConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Msg *string `json:"msg,omitempty"`
-}
-
-// Validate ensures JiraField is valid.
-func (jc *JiraConfig) Validate() error {
-	if len(jc.Fields) == 0 {
-		return nil
-	}
-
-	for i, field := range jc.Fields {
-		if err := field.Validate(); err != nil {
-			return fmt.Errorf("Fields json decode index[%d] key[%s]: %w", i, field.Key, err)
-		}
-	}
-
-	return nil
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
