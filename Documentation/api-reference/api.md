@@ -36587,7 +36587,7 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
-The resolutiondate field is used to determine the age of the issue.</p>
+The <code>resolutiondate</code> field in Jira is used to determine the age of the issue.</p>
 </td>
 </tr>
 <tr>
