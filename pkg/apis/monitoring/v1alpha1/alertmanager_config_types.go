@@ -1233,7 +1233,7 @@ type JiraConfig struct {
 	WontFixResolution *string `json:"wontFixResolution,omitempty"`
 
 	// reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
-	// The resolutiondate field is used to determine the age of the issue.
+	// The "resolutiondate" field in Jira is used to determine the age of the issue.
 	//
 	// +optional
 	ReopenDuration *monitoringv1.Duration `json:"reopenDuration,omitempty"`
