@@ -1247,7 +1247,7 @@ type JiraConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// Validate ensures JiraField is valid.
+// Validate ensures JiraConfig is valid.
 func (jc *JiraConfig) Validate() error {
 	if len(jc.Fields) == 0 {
 		return nil
