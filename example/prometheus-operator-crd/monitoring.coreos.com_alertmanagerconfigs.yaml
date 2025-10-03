@@ -403,6 +403,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -2241,6 +2244,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -3004,6 +3010,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -3833,6 +3842,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -4662,6 +4674,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -5502,6 +5517,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -6413,6 +6431,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -7386,6 +7407,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -8167,6 +8191,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -9029,6 +9056,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -9830,6 +9860,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -10570,6 +10603,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -11296,6 +11332,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -12101,6 +12140,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.

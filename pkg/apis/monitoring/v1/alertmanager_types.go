@@ -708,37 +708,6 @@ type HostPort struct {
 	Port string `json:"port"`
 }
 
-// HTTPConfig defines a client HTTP configuration.
-// See https://prometheus.io/docs/alerting/latest/configuration/#http_config
-type HTTPConfig struct {
-	// authorization defines the header configuration for the client.
-	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
-	// +optional
-	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-	// basicAuth defines basicAuth for the client.
-	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// oauth2 defines the client credentials used to fetch a token for the targets.
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-	// bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client
-	// for authentication.
-	// The secret needs to be in the same namespace as the Alertmanager
-	// object and accessible by the Prometheus Operator.
-	// +optional
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	// tlsConfig defines the TLSConfig for the client.
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
-	ProxyConfig `json:",inline"`
-
-	// followRedirects defines whether the client should follow HTTP 3xx redirects.
-	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
-}
-
 // AlertmanagerList is a list of Alertmanagers.
 // +k8s:openapi-gen=true
 type AlertmanagerList struct {

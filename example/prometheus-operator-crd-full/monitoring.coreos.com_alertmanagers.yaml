@@ -1149,8 +1149,10 @@ spec:
                         properties:
                           authorization:
                             description: |-
-                              authorization defines the header configuration for the client.
-                              This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
+                              authorization configures the Authorization header credentials used by
+                              the client.
+
+                              Cannot be set at the same time as `basicAuth`, `bearerTokenSecret` or `oauth2`.
                             properties:
                               credentials:
                                 description: credentials defines a key of a Secret
@@ -1189,8 +1191,10 @@ spec:
                             type: object
                           basicAuth:
                             description: |-
-                              basicAuth defines basicAuth for the client.
-                              This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
+                              basicAuth defines the Basic Authentication credentials used by the
+                              client.
+
+                              Cannot be set at the same time as `authorization`, `bearerTokenSecret` or `oauth2`.
                             properties:
                               password:
                                 description: |-
@@ -1247,10 +1251,14 @@ spec:
                             type: object
                           bearerTokenSecret:
                             description: |-
-                              bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client
-                              for authentication.
-                              The secret needs to be in the same namespace as the Alertmanager
-                              object and accessible by the Prometheus Operator.
+                              bearerTokenSecret defines a key of a Secret containing the bearer token
+                              used by the client for authentication. The secret needs to be in the
+                              same namespace as the custom resource and readable by the Prometheus
+                              Operator.
+
+                              Cannot be set at the same time as `authorization`, `basicAuth` or `oauth2`.
+
+                              Deprecated: use `authorization` instead.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -1273,9 +1281,13 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                          enableHttp2:
+                            description: enableHttp2 can be used to disable HTTP2.
+                            type: boolean
                           followRedirects:
-                            description: followRedirects defines whether the client
-                              should follow HTTP 3xx redirects.
+                            description: |-
+                              followRedirects defines whether the client should follow HTTP 3xx
+                              redirects.
                             type: boolean
                           noProxy:
                             description: |-
@@ -1286,8 +1298,12 @@ spec:
                               It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                             type: string
                           oauth2:
-                            description: oauth2 defines the client credentials used
-                              to fetch a token for the targets.
+                            description: |-
+                              oauth2 defines the OAuth2 settings used by the client.
+
+                              It requires Prometheus >= 2.27.0.
+
+                              Cannot be set at the same time as `authorization`, `basicAuth` or `bearerTokenSecret`.
                             properties:
                               clientId:
                                 description: |-
@@ -1665,7 +1681,8 @@ spec:
                             pattern: ^(http|https|socks5)://.+$
                             type: string
                           tlsConfig:
-                            description: tlsConfig defines the TLSConfig for the client.
+                            description: tlsConfig defines the TLS configuration used
+                              by the client.
                             properties:
                               ca:
                                 description: ca defines the Certificate authority

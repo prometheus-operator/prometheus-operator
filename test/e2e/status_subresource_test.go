@@ -608,6 +608,99 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
+// testGarbageCollectionOfScrapeConfigBinding validates that the operator removes the reference to the Prometheus resource when the ScrapeConfig isn't selected anymore by the workload.
+func testGarbageCollectionOfScrapeConfigBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "scfg-status-binding-cleanup-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sc := framework.MakeBasicScrapeConfig(ns, name)
+	sc.Labels["group"] = name
+
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the ScrapeConfig's labels, Prometheus doesn't select the resource anymore.
+	sc.Labels = map[string]string{}
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForScrapeConfigWorkloadBindingCleanup(ctx, sc, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmScrapeConfigBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource when workload is deleted.
+func testRmScrapeConfigBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "workload-del-scfg-test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err, "failed to create Prometheus")
+
+	sc := framework.MakeBasicScrapeConfig(ns, name)
+	sc.Labels["group"] = name
+
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForScrapeConfigWorkloadBindingCleanup(ctx, sc, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testFinalizerForPromAgentWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for PrometheusAgent when StatusForConfigurationResourcesFeature is enabled.
 func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 	t.Parallel()
