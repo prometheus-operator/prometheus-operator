@@ -4439,7 +4439,7 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
 		},
 		{
-			name:           "Jira_config for supported versions",
+			name:           "jira_config for supported versions",
 			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4457,7 +4457,7 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "jira_config_for_supported_versions.golden",
 		},
 		{
-			name:           "Jira_config returns error for unsupported versions",
+			name:           "jira_config returns error for unsupported versions",
 			againstVersion: versionJiraNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4474,7 +4474,7 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "Jira_config returns error for missing project mandatory field",
+			name:           "jira_config returns error for missing project mandatory field",
 			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4490,7 +4490,7 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "Jira_config returns error for missing api_url/Jira_api_url mandatory field",
+			name:           "jira_config returns error for missing api_url/jira_api_url mandatory field",
 			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
