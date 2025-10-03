@@ -420,7 +420,7 @@ type msTeamsConfig struct {
 }
 
 type jiraConfig struct {
-	VSendResolved     *bool                  `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	SendResolved      *bool                  `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig        *httpClientConfig      `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIURL            *string                `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	Project           string                 `yaml:"project" json:"project"`

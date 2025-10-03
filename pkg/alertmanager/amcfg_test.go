@@ -5589,7 +5589,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:       "http://issues.example.com",
+								APIURL:       ptr.To("http://issues.example.com"),
 								Project:      "Monitoring",
 								IssueType:    "Bug",
 								SendResolved: ptr.To(true),
