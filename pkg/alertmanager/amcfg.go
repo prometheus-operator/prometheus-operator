@@ -1458,7 +1458,7 @@ func (cb *ConfigBuilder) convertMSTeamsConfig(
 
 func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1alpha1.JiraConfig, crKey types.NamespacedName) (*jiraConfig, error) {
 	out := &jiraConfig{
-		VSendResolved:     in.SendResolved,
+		SendResolved:      in.SendResolved,
 		Project:           in.Project,
 		Labels:            in.Labels,
 		Summary:           in.Summary,
