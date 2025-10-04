@@ -114,7 +114,7 @@ Usage of ./operator:
     	* Workload namespaces for Prometheus and PrometheusAgent resources.
     	* Configuration namespaces for Alertmanager resources.
   -web.cert-file string
-    	Certficate file to be used for the web server. (default "/etc/tls/private/tls.crt")
+    	Certificate file to be used for the web server. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
     	Client CA certificate file to be used for the web server. (default "/etc/tls/private/tls-ca.crt")
   -web.enable-http2

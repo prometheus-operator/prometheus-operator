@@ -30,6 +30,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="pmon"
+// +kubebuilder:subresource:status
 
 // The `PodMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of pods.
 // Among other things, it allows to specify:
@@ -49,11 +50,23 @@ type PodMonitor struct {
 	// spec defines the specification of desired Pod selection for target discovery by Prometheus.
 	// +required
 	Spec PodMonitorSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the PodMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
 func (l *PodMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+func (l *PodMonitor) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
 }
 
 // PodMonitorSpec contains specification parameters for a PodMonitor.

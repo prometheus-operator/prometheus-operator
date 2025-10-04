@@ -30,11 +30,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -62,6 +62,7 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	dclient  dynamic.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
@@ -97,8 +98,8 @@ type Operator struct {
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
 
-	eventRecorder   record.EventRecorder
-	finalizerSyncer *operator.FinalizerSyncer
+	newEventRecorder operator.NewEventRecorderFunc
+	finalizerSyncer  *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -151,6 +152,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
@@ -166,6 +172,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o := &Operator{
 		kclient:  client,
+		dclient:  dclient,
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
@@ -183,7 +190,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		reconciliations: &operator.ReconciliationTracker{},
 
 		controllerID:                 c.ControllerID,
-		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
@@ -601,7 +608,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
@@ -808,12 +815,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return c.configResStatusCleanup(ctx, p)
 	}
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), statusCleanup)
+	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), statusCleanup)
 	if err != nil {
 		return err
 	}
 
-	if finalizersChanged {
+	if finalizerAdded {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
@@ -1047,40 +1054,54 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return nil
 	}
 
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
-	for key, sm := range resources.sMons {
-		if err := prompkg.UpdateServiceMonitorStatus(ctx, configResourceSyncer, sm); err != nil {
+	var configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient, c.accessor)
+
+	// Update the status of selected serviceMonitors.
+	for key, configResource := range resources.sMons {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
 		}
 	}
 
-	// Remove bindings from configuration resources which reference the
-	// workload but aren't selected anymore.
-	var getErr error
-	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
+	// Update the status of selected podMonitors.
+	for key, configResource := range resources.pMons {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
 		}
-
-		k, ok := c.accessor.MetaNamespaceKey(obj)
-		if !ok {
-			return
-		}
-
-		_, ok = resources.sMons[k]
-		if ok {
-			return
-		}
-
-		s := obj.(*monitoringv1.ServiceMonitor)
-		if err := prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s); err != nil {
-			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
-		}
-	}); err != nil {
-		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
 	}
-	return getErr
+
+	// Update the status of selected probes.
+	for key, configResource := range resources.bMons {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update Probe %s status: %w", key, err)
+		}
+	}
+
+	// Update the status of selected scrapeConfigs.
+	for key, configResource := range resources.scrapeConfigs {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update ScrapeConfig %s status: %w", key, err)
+		}
+	}
+
+	// Remove bindings from serviceMonitors which reference the
+	// workload but aren't selected anymore.
+	if err := prompkg.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
+	}
+
+	// Remove bindings from podMonitors which reference the
+	// workload but aren't selected anymore.
+	if err := prompkg.CleanupBindings(ctx, c.pmonInfs.ListAll, resources.pMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+
+	// Remove bindings from scrapeConfigs which reference the
+	// workload but aren't selected anymore.
+	if err := prompkg.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	}
+	return nil
 }
 
 // configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
@@ -1088,21 +1109,24 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	if !c.configResourcesStatusEnabled {
 		return nil
 	}
-	configResourceSyncer := prompkg.NewConfigResourceSyncer(monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.mclient, p)
 
-	var getErr error
-	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
+	var configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient, c.accessor)
 
-		s := obj.(*monitoringv1.ServiceMonitor)
-		getErr = prompkg.RemoveServiceMonitorBinding(ctx, configResourceSyncer, s)
-	}); err != nil {
-		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
+	// Remove bindings from all serviceMonitors which reference the workload.
+	if err := prompkg.CleanupBindings(ctx, c.smonInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1.ServiceMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
-	return getErr
+
+	// Remove bindings from all podMonitors which reference the workload.
+	if err := prompkg.CleanupBindings(ctx, c.pmonInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1.PodMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+
+	// Remove bindings from all scrapeConfigs which reference the workload.
+	if err := prompkg.CleanupBindings(ctx, c.sconInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+	return nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
@@ -1262,7 +1286,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 
 // getSeletedConfigResources returns all the configuration resources (PodMonitor, ServiceMonitor, Probes and ScrapeConfigs) selected by the Prometheus.
 func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, store *assets.StoreBuilder) (*selectedConfigResources, error) {
-	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p))
 
 	if err != nil {
 		return nil, err

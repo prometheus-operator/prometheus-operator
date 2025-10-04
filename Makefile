@@ -280,8 +280,8 @@ example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.json
 example/admission-webhook: scripts/generate/vendor scripts/generate/admission-webhook.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-admission-webhook-example.sh
 
-example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
-	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
+example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alertmanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-conversion-webhook-patch-for-alertmanagerconfig-crd.sh
 
 FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
 

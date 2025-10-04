@@ -231,7 +231,7 @@ type AlertmanagerSpec struct {
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 	// serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
-	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alermanager resources.
+	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alertmanager resources.
 	// When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	// +optional
@@ -415,7 +415,7 @@ const (
 	// is in the same namespace as the Alertmanager object, where it will process all alerts.
 	OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespaceExceptForAlertmanagerNamespace"
 
-	// With `None`, the route and inhbition rules of an AlertmanagerConfig
+	// With `None`, the route and inhibition rules of an AlertmanagerConfig
 	// object process all incoming alerts.
 	NoneConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "None"
 )
@@ -468,7 +468,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// pagerdutyUrl defines the default Pagerduty URL.
 	// +optional
-	PagerdutyURL *string `json:"pagerdutyUrl,omitempty"`
+	PagerdutyURL *URL `json:"pagerdutyUrl,omitempty"`
 
 	// telegram defines the default Telegram config
 	// +optional
@@ -706,37 +706,6 @@ type HostPort struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Port string `json:"port"`
-}
-
-// HTTPConfig defines a client HTTP configuration.
-// See https://prometheus.io/docs/alerting/latest/configuration/#http_config
-type HTTPConfig struct {
-	// authorization defines the header configuration for the client.
-	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
-	// +optional
-	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-	// basicAuth defines basicAuth for the client.
-	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// oauth2 defines the client credentials used to fetch a token for the targets.
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-	// bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client
-	// for authentication.
-	// The secret needs to be in the same namespace as the Alertmanager
-	// object and accessible by the Prometheus Operator.
-	// +optional
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	// tlsConfig defines the TLSConfig for the client.
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
-	ProxyConfig `json:",inline"`
-
-	// followRedirects defines whether the client should follow HTTP 3xx redirects.
-	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

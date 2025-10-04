@@ -565,7 +565,7 @@ string
 <em>(Optional)</em>
 <p>serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
-If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alertmanager resources.
 When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
 See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
@@ -1362,6 +1362,24 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>status defines the status subresource. It is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
+<p>Most recent observed status of the PodMonitor. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Probe">Probe
@@ -1451,7 +1469,7 @@ ProberSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>prober defines the pecification for the prober to use for probing targets.
+<p>prober defines the specification for the prober to use for probing targets.
 The prober.URL parameter is required. Targets cannot be probed if left empty.</p>
 </td>
 </tr>
@@ -1796,6 +1814,24 @@ The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>status defines the status subresource. It is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
+<p>Most recent observed status of the Probe. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
 </tbody>
@@ -2837,7 +2873,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -3364,7 +3400,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -3666,7 +3702,7 @@ QuerySpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>query defines the configuration of the Promethus query service.</p>
+<p>query defines the configuration of the Prometheus query service.</p>
 </td>
 </tr>
 <tr>
@@ -3954,6 +3990,24 @@ PrometheusRuleSpec
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>status defines the status subresource. It is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
+<p>Most recent observed status of the PrometheusRule. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
 </tbody>
@@ -4357,7 +4411,7 @@ ConfigResourceStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>status defines the status subresource is under active development and is updated only when the
+<p>status defines the status subresource. It is under active development and is updated only when the
 &ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
 <p>Most recent observed status of the ServiceMonitor. Read-only.
 More info:
@@ -5696,7 +5750,7 @@ rules.</p>
 </tr>
 </thead>
 <tbody><tr><td><p>&#34;None&#34;</p></td>
-<td><p>With <code>None</code>, the route and inhbition rules of an AlertmanagerConfig
+<td><p>With <code>None</code>, the route and inhibition rules of an AlertmanagerConfig
 object process all incoming alerts.</p>
 </td>
 </tr><tr><td><p>&#34;OnNamespace&#34;</p></td>
@@ -6161,7 +6215,9 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <code>pagerdutyUrl</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -6785,7 +6841,7 @@ string
 <em>(Optional)</em>
 <p>serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
-If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alermanager resources.
+If empty, the operator will create and manage a headless service named <code>alertmanager-operated</code> for Alertmanager resources.
 When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
 See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
@@ -8793,7 +8849,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -9320,7 +9376,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -9622,7 +9678,7 @@ The possible status values for this condition type are:
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WorkloadBinding">WorkloadBinding</a>)
 </p>
 <div>
-<p>ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.</p>
+<p>ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.</p>
 </div>
 <table>
 <thead>
@@ -9716,10 +9772,10 @@ condition is out of date with respect to the current state of the object.</p>
 <h3 id="monitoring.coreos.com/v1.ConfigResourceStatus">ConfigResourceStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitor">PodMonitor</a>, <a href="#monitoring.coreos.com/v1.Probe">Probe</a>, <a href="#monitoring.coreos.com/v1.PrometheusRule">PrometheusRule</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig</a>)
 </p>
 <div>
-<p>ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
+<p>ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor, Probes, ScrapeConfig, PrometheusRule or AlertmanagerConfig). Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </div>
@@ -9742,7 +9798,7 @@ More info:
 </td>
 <td>
 <em>(Optional)</em>
-<p>bindings defines the list of workload resources (Prometheus or PrometheusAgent) which select the configuration resource.</p>
+<p>bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.</p>
 </td>
 </tr>
 </tbody>
@@ -11126,8 +11182,7 @@ Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
 </p>
 <div>
-<p>HTTPConfig defines a client HTTP configuration.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_config">https://prometheus.io/docs/alerting/latest/configuration/#http_config</a></p>
+<p>HTTPConfig defines the configuration for the HTTP client.</p>
 </div>
 <table>
 <thead>
@@ -11148,8 +11203,9 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the header configuration for the client.
-This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.</p>
+<p>authorization configures the Authorization header credentials used by
+the client.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11163,8 +11219,9 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>basicAuth defines basicAuth for the client.
-This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.</p>
+<p>basicAuth defines the Basic Authentication credentials used by the
+client.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11178,7 +11235,9 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>oauth2 defines the client credentials used to fetch a token for the targets.</p>
+<p>oauth2 defines the OAuth2 settings used by the client.</p>
+<p>It requires Prometheus &gt;= 2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>bearerTokenSecret</code>.</p>
 </td>
 </tr>
 <tr>
@@ -11192,10 +11251,12 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>bearerTokenSecret defines the secret&rsquo;s key that contains the bearer token to be used by the client
-for authentication.
-The secret needs to be in the same namespace as the Alertmanager
-object and accessible by the Prometheus Operator.</p>
+<p>bearerTokenSecret defines a key of a Secret containing the bearer token
+used by the client for authentication. The secret needs to be in the
+same namespace as the custom resource and readable by the Prometheus
+Operator.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>oauth2</code>.</p>
+<p>Deprecated: use <code>authorization</code> instead.</p>
 </td>
 </tr>
 <tr>
@@ -11209,7 +11270,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLSConfig for the client.</p>
+<p>tlsConfig defines the TLS configuration used by the client.</p>
 </td>
 </tr>
 <tr>
@@ -11277,7 +11338,20 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>followRedirects defines whether the client should follow HTTP 3xx redirects.</p>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
 </tbody>
@@ -11903,6 +11977,20 @@ bool
 <em>(Optional)</em>
 <p>convertHistogramsToNHCB defines optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
 It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>promoteScopeMetadata</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
+It requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
 </tbody>
@@ -12858,7 +12946,7 @@ ProberSpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>prober defines the pecification for the prober to use for probing targets.
+<p>prober defines the specification for the prober to use for probing targets.
 The prober.URL parameter is required. Targets cannot be probed if left empty.</p>
 </td>
 </tr>
@@ -14558,7 +14646,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -15085,7 +15173,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -15387,7 +15475,7 @@ QuerySpec
 </td>
 <td>
 <em>(Optional)</em>
-<p>query defines the configuration of the Promethus query service.</p>
+<p>query defines the configuration of the Prometheus query service.</p>
 </td>
 </tr>
 <tr>
@@ -20361,6 +20449,7 @@ AdditionalLabelSelectors
 Supported values are:
 * <code>NoUTF8EscapingWithSuffixes</code>
 * <code>UnderscoreEscapingWithSuffixes</code>
+* <code>UnderscoreEscapingWithoutSuffixes</code>
 * <code>NoTranslation</code></p>
 </div>
 <table>
@@ -20377,12 +20466,15 @@ Supported values are:
 <td></td>
 </tr><tr><td><p>&#34;UnderscoreEscapingWithSuffixes&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;UnderscoreEscapingWithoutSuffixes&#34;</p></td>
+<td><p>It requires Prometheus &gt;= v3.6.0.</p>
+</td>
 </tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -20802,7 +20894,7 @@ string
 </em>
 </td>
 <td>
-<p>resource defines the type of resource being referenced (e.g. Prometheus or PrometheusAgent).</p>
+<p>resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).</p>
 </td>
 </tr>
 <tr>
@@ -20838,7 +20930,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>conditions defines the current state of the configuration resource when bound to the referenced Prometheus object.</p>
+<p>conditions defines the current state of the configuration resource when bound to the referenced Workload object.</p>
 </td>
 </tr>
 </tbody>
@@ -22028,7 +22120,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -22555,7 +22647,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -23590,6 +23682,24 @@ string
 </td>
 </tr>
 </table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ConfigResourceStatus">
+ConfigResourceStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>status defines the status subresource. It is under active development and is updated only when the
+&ldquo;StatusForConfigurationResources&rdquo; feature gate is enabled.</p>
+<p>Most recent observed status of the ScrapeConfig. Read-only.
+More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
 </td>
 </tr>
 </tbody>
@@ -26228,6 +26338,18 @@ bool
 When true, the client will automatically follow redirect responses.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig
@@ -27249,7 +27371,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -27265,7 +27389,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>clientID is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.</p>
+<p>clientID is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
@@ -28807,7 +28932,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>projectName defines an ptional field for the Identity V2 API.
+<p>projectName defines an optional field for the Identity V2 API.
 Some providers allow you to specify a ProjectName instead of the ProjectId.
 Some require both. Your provider&rsquo;s authentication policies will determine
 how these fields influence authentication.</p>
@@ -28863,7 +28988,7 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>applicationCredentialSecret defines the requiered field if using an application
+<p>applicationCredentialSecret defines the required field if using an application
 credential to authenticate.</p>
 </td>
 </tr>
@@ -30620,7 +30745,7 @@ bool
 <p>overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+In practice,<code>OverrideHonorLabels:true</code> enforces <code>honorLabels:false</code>
 for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
@@ -31147,7 +31272,7 @@ int32
 <td>
 <em>(Optional)</em>
 <p>maximumStartupDurationSeconds defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).</p>
 </td>
 </tr>
 <tr>
@@ -31780,7 +31905,7 @@ string
 </em>
 </td>
 <td>
-<p>name defiens the name of the receiver. Must be unique across all items from the list.</p>
+<p>name defines the name of the receiver. Must be unique across all items from the list.</p>
 </td>
 </tr>
 <tr>
@@ -34689,7 +34814,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -36002,6 +36127,18 @@ bool
 <em>(Optional)</em>
 <p>followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 When true, the client will automatically follow redirect responses.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
 </tbody>
@@ -37352,7 +37489,7 @@ string
 </em>
 </td>
 <td>
-<p>name defiens the name of the receiver. Must be unique across all items from the list.</p>
+<p>name defines the name of the receiver. Must be unique across all items from the list.</p>
 </td>
 </tr>
 <tr>

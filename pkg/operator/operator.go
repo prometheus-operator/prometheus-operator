@@ -29,9 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
@@ -306,18 +305,55 @@ func NewMetrics(r prometheus.Registerer) *Metrics {
 	return &m
 }
 
-type EventRecorderFactory func(client kubernetes.Interface, component string) record.EventRecorder
+// EventRecorderFactory returns an function to create EventRecorder objects.
+type EventRecorderFactory func(client kubernetes.Interface, component string) NewEventRecorderFunc
+
+// NewEventRecorderFunc returns an EventRecorder which will automatically inject the given runtime.Object as related.
+type NewEventRecorderFunc func(related runtime.Object) *EventRecorder
+
+// EventRecorder records events which are related to the associated Object.
+type EventRecorder struct {
+	er      events.EventRecorder
+	related runtime.Object
+}
+
+func NewFakeRecorder(bufferSize int, related runtime.Object) *EventRecorder {
+	return &EventRecorder{
+		related: related,
+		er:      events.NewFakeRecorder(bufferSize),
+	}
+}
+
+// Eventf records a Kubernetes event.
+func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
+	er.er.Eventf(
+		regarding,
+		er.related,
+		eventtype,
+		reason,
+		action,
+		note,
+		args,
+	)
+}
 
 func NewEventRecorderFactory(emitEvents bool) EventRecorderFactory {
-	return func(client kubernetes.Interface, component string) record.EventRecorder {
-		eventBroadcaster := record.NewBroadcaster()
+	return func(client kubernetes.Interface, component string) NewEventRecorderFunc {
+		eventBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{Interface: client.EventsV1()})
 		eventBroadcaster.StartStructuredLogging(0)
 
 		if emitEvents {
-			eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
+			_ = eventBroadcaster.StartRecordingToSinkWithContext(context.Background())
 		}
 
-		return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: component})
+		eventRecorder := eventBroadcaster.NewRecorder(scheme.Scheme, component)
+
+		return func(related runtime.Object) *EventRecorder {
+			return &EventRecorder{
+				er:      eventRecorder,
+				related: related,
+			}
+		}
 	}
 }
 

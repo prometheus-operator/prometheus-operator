@@ -1287,7 +1287,7 @@ spec:
             type: object
           status:
             description: |-
-              status defines the status subresource is under active development and is updated only when the
+              status defines the status subresource. It is under active development and is updated only when the
               "StatusForConfigurationResources" feature gate is enabled.
 
               Most recent observed status of the ServiceMonitor. Read-only.
@@ -1295,19 +1295,20 @@ spec:
               https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
             properties:
               bindings:
-                description: bindings defines the list of workload resources (Prometheus
-                  or PrometheusAgent) which select the configuration resource.
+                description: bindings defines the list of workload resources (Prometheus,
+                  PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration
+                  resource.
                 items:
                   description: WorkloadBinding is a link between a configuration resource
                     and a workload resource.
                   properties:
                     conditions:
                       description: conditions defines the current state of the configuration
-                        resource when bound to the referenced Prometheus object.
+                        resource when bound to the referenced Workload object.
                       items:
                         description: ConfigResourceCondition describes the status
                           of configuration resources linked to Prometheus, PrometheusAgent,
-                          Alertmanager, or ThanosRuler.
+                          Alertmanager or ThanosRuler.
                         properties:
                           lastTransitionTime:
                             description: lastTransitionTime defines the time of the
@@ -1366,10 +1367,12 @@ spec:
                       type: string
                     resource:
                       description: resource defines the type of resource being referenced
-                        (e.g. Prometheus or PrometheusAgent).
+                        (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
                       enum:
                       - prometheuses
                       - prometheusagents
+                      - thanosrulers
+                      - alertmanagers
                       type: string
                   required:
                   - group

@@ -402,6 +402,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -1438,6 +1441,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -2201,6 +2207,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -2819,7 +2828,7 @@ spec:
                         type: object
                       type: array
                     name:
-                      description: name defiens the name of the receiver. Must be
+                      description: name defines the name of the receiver. Must be
                         unique across all items from the list.
                       minLength: 1
                       type: string
@@ -3030,6 +3039,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -3859,6 +3871,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -4699,6 +4714,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -5610,6 +5628,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -6583,6 +6604,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -7364,6 +7388,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -8226,6 +8253,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -9027,6 +9057,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -9767,6 +9800,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -10493,6 +10529,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -11298,6 +11337,9 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
@@ -12299,6 +12341,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -13314,6 +13359,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -14070,6 +14118,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -14688,7 +14739,7 @@ spec:
                         type: object
                       type: array
                     name:
-                      description: name defiens the name of the receiver. Must be
+                      description: name defines the name of the receiver. Must be
                         unique across all items from the list.
                       minLength: 1
                       type: string
@@ -14885,6 +14936,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -15702,6 +15756,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -16521,6 +16578,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -17411,6 +17471,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -18370,6 +18433,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -19144,6 +19210,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -19992,6 +20061,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -20779,6 +20851,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -21514,6 +21589,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -22233,6 +22311,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -23017,6 +23098,9 @@ spec:
                                 - key
                                 - name
                                 type: object
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
                               followRedirects:
                                 description: |-
                                   followRedirects defines whether HTTP requests follow HTTP 3xx redirects.

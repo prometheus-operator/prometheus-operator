@@ -281,6 +281,10 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
+	if err := checkAlertmanagerGlobalConfigResource(globalConfig); err != nil {
+		return err
+	}
+
 	global, err := cb.convertGlobalConfig(ctx, globalConfig, crKey)
 	if err != nil {
 		return err
@@ -431,13 +435,15 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 
 	if in.HTTPConfig != nil {
 		v1alpha1Config := monitoringv1alpha1.HTTPConfig{
-			Authorization:     in.HTTPConfig.Authorization,
-			BasicAuth:         in.HTTPConfig.BasicAuth,
-			OAuth2:            in.HTTPConfig.OAuth2,
+			Authorization: in.HTTPConfig.Authorization,
+			BasicAuth:     in.HTTPConfig.BasicAuth,
+			OAuth2:        in.HTTPConfig.OAuth2,
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
 			TLSConfig:         in.HTTPConfig.TLSConfig,
 			ProxyConfig:       in.HTTPConfig.ProxyConfig,
 			FollowRedirects:   in.HTTPConfig.FollowRedirects,
+			EnableHTTP2:       in.HTTPConfig.EnableHTTP2,
 		}
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
 		if err != nil {
@@ -487,7 +493,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if in.PagerdutyURL != nil {
-		u, err := url.Parse(*in.PagerdutyURL)
+		u, err := url.Parse(string(*in.PagerdutyURL))
 		if err != nil {
 			return nil, fmt.Errorf("parse Pagerduty URL: %w", err)
 		}
@@ -1668,6 +1674,7 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	out := &httpClientConfig{
 		proxyConfig:     proxyConfig,
 		FollowRedirects: in.FollowRedirects,
+		EnableHTTP2:     in.EnableHTTP2,
 	}
 
 	if in.BasicAuth != nil {

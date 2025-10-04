@@ -34,7 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,7 +45,8 @@ import (
 
 const (
 	// Generic reason for selected resources that are not valid.
-	invalidConfiguration = "InvalidConfiguration"
+	invalidConfiguration                  = "InvalidConfiguration"
+	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
 
 // validationScheme defines how to validate label names.
@@ -70,23 +70,29 @@ type ResourceSelector struct {
 	metrics            *operator.Metrics
 	accessor           *operator.Accessor
 
-	eventRecorder record.EventRecorder
+	eventRecorder *operator.EventRecorder
 }
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
 type TypedConfigurationResource[T ConfigurationResource] struct {
-	resource T
-	err      error  // error encountered during selection or validation (nil if valid).
-	reason   string // Reason for rejection; empty if accepted.
+	resource   T
+	err        error  // Error encountered during selection or validation (nil if valid).
+	reason     string // Reason for rejection; empty if accepted.
+	generation int64  // Generation of the desired state (spec).
 }
 
-func (r *TypedConfigurationResource[T]) conditions(observedGeneration int64) []monitoringv1.ConfigResourceCondition {
+func (r *TypedConfigurationResource[T]) Resource() T {
+	return r.resource
+}
+
+// Conditions returns a list of conditions based on the validation status of the configuration resource.
+func (r *TypedConfigurationResource[T]) Conditions() []monitoringv1.ConfigResourceCondition {
 	condition := monitoringv1.ConfigResourceCondition{
 		Type:               monitoringv1.Accepted,
 		Status:             monitoringv1.ConditionTrue,
 		LastTransitionTime: metav1.Now(),
 		Reason:             r.reason,
-		ObservedGeneration: observedGeneration,
+		ObservedGeneration: r.generation,
 	}
 
 	if r.err != nil {
@@ -120,7 +126,7 @@ func NewResourceSelector(
 	store *assets.StoreBuilder,
 	namespaceInformers cache.SharedIndexInformer,
 	metrics *operator.Metrics,
-	eventRecorder record.EventRecorder,
+	eventRecorder *operator.EventRecorder,
 ) (*ResourceSelector, error) {
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
@@ -212,15 +218,16 @@ func selectObjects[T ConfigurationResource](
 			rejected++
 			reason = invalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
-			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
 
 		res[namespaceAndName] = TypedConfigurationResource[T]{
-			resource: o,
-			err:      err,
-			reason:   reason,
+			resource:   o,
+			err:        err,
+			reason:     reason,
+			generation: obj.(metav1.Object).GetGeneration(),
 		}
 	}
 
@@ -1157,7 +1164,11 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 }
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
-		if err := validateServer(config.Server); err != nil {
+		if config.ClientID != nil && rs.version.LT(semver.MustParse("2.50.0")) {
+			return fmt.Errorf("field `clientID` in kuma SD configuration is only supported for Prometheus version >= 2.50.0")
+		}
+
+		if err := validateServer(string(config.Server)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 

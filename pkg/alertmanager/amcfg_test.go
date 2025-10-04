@@ -500,7 +500,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "valid global config with Pagerduty URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &pagerdutyURL,
+				PagerdutyURL: ptr.To(monitoringv1.URL(pagerdutyURL)),
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -534,7 +534,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "global config with invalid Pagerduty URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				PagerdutyURL: &invalidPagerdutyURL,
+				PagerdutyURL: ptr.To(monitoringv1.URL(invalidPagerdutyURL)),
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1753,6 +1753,79 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "invalid httpConfig global config basicAuth and oauth2 are both specified",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-id",
+								},
+								Key: "test",
+							},
+						},
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+						TokenURL: "https://test.com",
+						Scopes:   []string{"any"},
+						EndpointParams: map[string]string{
+							"some": "value",
+						},
+					},
+					BasicAuth: &monitoringv1.BasicAuth{
+						Username: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+						Password: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "webhook-client-secret",
+							},
+							Key: "test",
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
@@ -1861,6 +1934,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
 			if tt.wantErr {
+				t.Logf("err: %s", err)
 				require.Error(t, err)
 				return
 			}
@@ -5995,9 +6069,10 @@ func TestLoadConfig(t *testing.T) {
 
 func TestConvertHTTPConfig(t *testing.T) {
 	testCases := []struct {
-		name   string
-		cfg    monitoringv1alpha1.HTTPConfig
-		golden string
+		name    string
+		cfg     monitoringv1alpha1.HTTPConfig
+		version string
+		golden  string
 	}{
 		{
 			name:   "no proxy",
@@ -6040,26 +6115,49 @@ func TestConvertHTTPConfig(t *testing.T) {
 			},
 			golden: "proxy_url_empty_proxy_config.golden",
 		},
+		{
+			name: "enableHTTP2",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				EnableHTTP2: ptr.To(false),
+			},
+			golden: "http_config_enable_http2_supported.golden",
+		},
+		{
+			name: "enableHTTP2 not supported",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				EnableHTTP2: ptr.To(false),
+			},
+			version: "v0.24.0",
+			golden:  "http_config_enable_http2_not_supported.golden",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			v, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+			version := operator.DefaultAlertmanagerVersion
+			if tc.version != "" {
+				version = tc.version
+			}
+			v, err := semver.ParseTolerant(version)
 			require.NoError(t, err)
 
+			logger := newNopLogger(t)
 			cb := NewConfigBuilder(
-				newNopLogger(t),
+				logger,
 				v,
 				nil,
 				&monitoringv1.Alertmanager{
 					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
-					Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
-						Type: monitoringv1.OnNamespaceConfigMatcherStrategyType,
-					}},
+					Spec: monitoringv1.AlertmanagerSpec{
+						Version: tc.version,
+					},
 				},
 			)
 
 			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
+			require.NoError(t, err)
+
+			err = cfg.sanitize(v, logger)
 			require.NoError(t, err)
 
 			cfgBytes, err := yaml.Marshal(cfg)

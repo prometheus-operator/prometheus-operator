@@ -138,6 +138,7 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 			}
 			defer dw.Close()
 
+			// Workload resources
 			dw.StartCollection("alertmanagers")
 			tc.collectAlertmanagers(dw, f, verbose)
 			dw.StartCollection("prometheuses")
@@ -147,8 +148,33 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 			dw.StartCollection("prometheusagents")
 			tc.collectPrometheusAgents(dw, f, verbose)
 
+			// Configuration resources
 			dw.StartCollection("servicemonitors")
 			tc.collectServiceMonitors(dw, f, verbose)
+			dw.StartCollection("podmonitors")
+			tc.collectPodMonitors(dw, f, verbose)
+			dw.StartCollection("probes")
+			tc.collectProbes(dw, f, verbose)
+			dw.StartCollection("prometheusrules")
+			tc.collectPrometheusRules(dw, f, verbose)
+			dw.StartCollection("scrapeconfigs")
+			tc.collectScrapeConfigs(dw, f, verbose)
+			dw.StartCollection("alertmanagerconfigs")
+			tc.collectAlertmanagerConfigs(dw, f, verbose)
+
+			// Kubernetes resources
+			dw.StartCollection("statefulsets")
+			tc.collectStatefulSets(dw, f, verbose)
+			dw.StartCollection("daemonsets")
+			tc.collectDaemonSets(dw, f, verbose)
+			dw.StartCollection("pods")
+			tc.collectPods(dw, f, verbose)
+			dw.StartCollection("services")
+			tc.collectServices(dw, f, verbose)
+			dw.StartCollection("configmaps")
+			tc.collectConfigMaps(dw, f, verbose)
+			dw.StartCollection("secrets")
+			tc.collectSecrets(dw, f, verbose)
 
 			tc.collectLogs(dw, f)
 
@@ -328,7 +354,207 @@ func (ctx *TestCtx) collectServiceMonitors(w io.Writer, f *Framework, verbose bo
 		for _, sm := range sms.Items {
 			collectBindingConditions(w, fmt.Sprintf("ServiceMonitor=%s/%s", sm.Namespace, sm.Name), sm.Status.Bindings)
 		}
+	}
+}
 
+func (ctx *TestCtx) collectPodMonitors(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		pms, err := f.MonClientV1.PodMonitors(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get podmonitors: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, pms)
+			continue
+		}
+
+		for _, pm := range pms.Items {
+			collectBindingConditions(w, fmt.Sprintf("PodMonitor=%s/%s", pm.Namespace, pm.Name), pm.Status.Bindings)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectProbes(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		ps, err := f.MonClientV1.Probes(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get probes: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, ps)
+			continue
+		}
+
+		for _, p := range ps.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("Probe=%s/%s", p.Namespace, p.Name), nil)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectPrometheusRules(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		prs, err := f.MonClientV1.PrometheusRules(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get prometheusrules: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, prs)
+			continue
+		}
+
+		for _, pr := range prs.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("PrometheusRule=%s/%s", pr.Namespace, pr.Name), nil)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectScrapeConfigs(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		scs, err := f.MonClientV1alpha1.ScrapeConfigs(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get scrapeconfigs: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, scs)
+			continue
+		}
+
+		for _, sc := range scs.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("ScrapeConfig=%s/%s", sc.Namespace, sc.Name), nil)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectAlertmanagerConfigs(w io.Writer, f *Framework, verbose bool) {
+	for _, ns := range ctx.namespaces {
+		acs, err := f.MonClientV1beta1.AlertmanagerConfigs(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get alertmanagerconfigs: %v\n", ns, err)
+			continue
+		}
+
+		if verbose {
+			writeYAML(w, acs)
+			continue
+		}
+
+		for _, ac := range acs.Items {
+			//TODO(simonpasquier): provide workload bindings when implemented.
+			collectBindingConditions(w, fmt.Sprintf("AlertmanagerConfig=%s/%s", ac.Namespace, ac.Name), nil)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectStatefulSets(w io.Writer, f *Framework, verbose bool) {
+	if !verbose {
+		return
+	}
+
+	for _, ns := range ctx.namespaces {
+		sts, err := f.KubeClient.AppsV1().StatefulSets(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get statefulsets: %v\n", ns, err)
+			continue
+		}
+
+		writeYAML(w, sts)
+	}
+}
+
+func (ctx *TestCtx) collectDaemonSets(w io.Writer, f *Framework, verbose bool) {
+	if !verbose {
+		return
+	}
+
+	for _, ns := range ctx.namespaces {
+		dss, err := f.KubeClient.AppsV1().DaemonSets(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get daemonsets: %v\n", ns, err)
+			continue
+		}
+
+		writeYAML(w, dss)
+	}
+}
+
+func (ctx *TestCtx) collectPods(w io.Writer, f *Framework, verbose bool) {
+	if !verbose {
+		return
+	}
+
+	for _, ns := range ctx.namespaces {
+		pods, err := f.KubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get pods: %v\n", ns, err)
+			continue
+		}
+
+		writeYAML(w, pods)
+	}
+}
+
+func (ctx *TestCtx) collectServices(w io.Writer, f *Framework, verbose bool) {
+	if !verbose {
+		return
+	}
+
+	for _, ns := range ctx.namespaces {
+		svcs, err := f.KubeClient.CoreV1().Services(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get services: %v\n", ns, err)
+			continue
+		}
+
+		writeYAML(w, svcs)
+	}
+}
+
+func (ctx *TestCtx) collectConfigMaps(w io.Writer, f *Framework, verbose bool) {
+	if !verbose {
+		return
+	}
+
+	for _, ns := range ctx.namespaces {
+		cms, err := f.KubeClient.CoreV1().ConfigMaps(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get configmaps: %v\n", ns, err)
+			continue
+		}
+
+		writeYAML(w, cms)
+	}
+}
+
+func (ctx *TestCtx) collectSecrets(w io.Writer, f *Framework, verbose bool) {
+	if !verbose {
+		return
+	}
+
+	for _, ns := range ctx.namespaces {
+		secs, err := f.KubeClient.CoreV1().Secrets(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get secrets: %v\n", ns, err)
+			continue
+		}
+
+		for _, sec := range secs.Items {
+			for k := range sec.Data {
+				sec.Data[k] = []byte(`obfuscated`)
+			}
+		}
+
+		writeYAML(w, secs)
 	}
 }
 

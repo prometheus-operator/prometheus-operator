@@ -48,7 +48,7 @@ type ServiceMonitor struct {
 	// Prometheus.
 	// +required
 	Spec ServiceMonitorSpec `json:"spec"`
-	// status defines the status subresource is under active development and is updated only when the
+	// status defines the status subresource. It is under active development and is updated only when the
 	// "StatusForConfigurationResources" feature gate is enabled.
 	//
 	// Most recent observed status of the ServiceMonitor. Read-only.
@@ -61,6 +61,10 @@ type ServiceMonitor struct {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+func (l *ServiceMonitor) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
 }
 
 // ServiceMonitorSpec defines the specification parameters for a ServiceMonitor.

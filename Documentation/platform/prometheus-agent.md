@@ -46,10 +46,13 @@ rules:
   - thanosrulers/finalizers
   - thanosrulers/status
   - scrapeconfigs
+  - scrapeconfigs/status
   - servicemonitors
   - servicemonitors/status
   - podmonitors
+  - podmonitors/status
   - probes
+  - probes/status
   - prometheusrules
   verbs:
   - '*'

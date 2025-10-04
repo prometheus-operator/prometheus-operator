@@ -165,7 +165,7 @@ func (r *Route) ChildRoutes() ([]Route, error) {
 
 // Receiver defines one or more notification integrations.
 type Receiver struct {
-	// name defiens the name of the receiver. Must be unique across all items from the list.
+	// name defines the name of the receiver. Must be unique across all items from the list.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
@@ -749,6 +749,11 @@ type HTTPConfig struct {
 	// When true, the client will automatically follow redirect responses.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
+
+	// enableHttp2 can be used to disable HTTP2.
+	//
+	// +optional
+	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
 // WebexConfig configures notification via Cisco Webex

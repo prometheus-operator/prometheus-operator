@@ -585,7 +585,7 @@ type CommonPrometheusFields struct {
 	// overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
 	//  to “exported_” for all targets created from ServiceMonitor, PodMonitor and
 	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
-	// In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+	// In practice,`OverrideHonorLabels:true` enforces `honorLabels:false`
 	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	// +optional
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
@@ -904,7 +904,7 @@ type CommonPrometheusFields struct {
 	ReloadStrategy *ReloadStrategyType `json:"reloadStrategy,omitempty"`
 
 	// maximumStartupDurationSeconds defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-	// If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).
+	// If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).
 	// +optional
 	// +kubebuilder:validation:Minimum=60
 	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
@@ -1184,7 +1184,7 @@ type PrometheusSpec struct {
 	// +optional
 	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
 
-	// query defines the configuration of the Promethus query service.
+	// query defines the configuration of the Prometheus query service.
 	// +optional
 	Query *QuerySpec `json:"query,omitempty"`
 
@@ -2469,8 +2469,9 @@ type ScrapeClass struct {
 // Supported values are:
 // * `NoUTF8EscapingWithSuffixes`
 // * `UnderscoreEscapingWithSuffixes`
+// * `UnderscoreEscapingWithoutSuffixes`
 // * `NoTranslation`
-// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;NoTranslation
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes;NoTranslation;UnderscoreEscapingWithoutSuffixes
 type TranslationStrategyOption string
 
 const (
@@ -2478,6 +2479,8 @@ const (
 	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
 	// It requires Prometheus >= v3.4.0.
 	NoTranslation TranslationStrategyOption = "NoTranslation"
+	// It requires Prometheus >= v3.6.0.
+	UnderscoreEscapingWithoutSuffixes TranslationStrategyOption = "UnderscoreEscapingWithoutSuffixes"
 )
 
 // OTLPConfig is the configuration for writing to the OTLP endpoint.
@@ -2527,6 +2530,12 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.4.0.
 	// +optional
 	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
+
+	// promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+	// As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
+	// It requires Prometheus >= v3.6.0.
+	// +optional
+	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"`
 }
 
 // Validate semantically validates the given OTLPConfig section.

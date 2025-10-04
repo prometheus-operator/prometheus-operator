@@ -39,10 +39,10 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	validationv1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -60,6 +60,8 @@ const (
 	resyncPeriod              = 5 * time.Minute
 	controllerName            = "alertmanager-controller"
 	applicationNameLabelValue = "alertmanager"
+
+	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -101,7 +103,7 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	canReadStorageClass bool
 
@@ -151,9 +153,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
-		metrics:         operator.NewMetrics(r),
-		reconciliations: &operator.ReconciliationTracker{},
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		metrics:          operator.NewMetrics(r),
+		reconciliations:  &operator.ReconciliationTracker{},
+		newEventRecorder: c.EventRecorderFactory(client, controllerName),
 
 		controllerID: c.ControllerID,
 
@@ -516,7 +518,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
@@ -922,7 +924,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
-			return fmt.Errorf("failed to initialize from global AlertmangerConfig: %w", err)
+			return fmt.Errorf("failed to initialize from global AlertmanagerConfig: %w", err)
 		}
 
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
@@ -1053,6 +1055,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 
+	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
@@ -1063,7 +1066,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 
@@ -1916,4 +1919,8 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	}
 
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+}
+
+func checkAlertmanagerGlobalConfigResource(gc *monitoringv1.AlertmanagerGlobalConfig) error {
+	return validationv1.ValidateAlertmanagerGlobalConfig(gc)
 }

@@ -32,7 +32,6 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -90,12 +89,14 @@ type Operator struct {
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	statusReporter prompkg.StatusReporter
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -160,8 +161,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:                      operator.NewMetrics(r),
 		reconciliations:              &operator.ReconciliationTracker{},
 		controllerID:                 c.ControllerID,
-		eventRecorder:                c.EventRecorderFactory(client, controllerName),
+		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -439,7 +441,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
@@ -612,12 +614,24 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Check if the Agent instance is marked for deletion.
-	if c.rr.DeletionInProgress(p) {
+	logger := c.logger.With("key", key)
+
+	finalizersAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
+	if err != nil {
+		return err
+	}
+
+	if finalizersAdded {
+		// Since the object has been updated, let's trigger another sync.
+		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
 
-	logger := c.logger.With("key", key)
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		c.reconciliations.ForgetObject(key)
+		return nil
+	}
 
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
@@ -882,7 +896,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
-	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p))
 	if err != nil {
 		return err
 	}
