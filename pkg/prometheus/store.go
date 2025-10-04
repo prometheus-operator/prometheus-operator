@@ -32,7 +32,7 @@ func AddRemoteWritesToStore(
 	version semver.Version,
 ) error {
 	for i, remote := range rws {
-		if err := validateRemoteWriteSpec(remote); err != nil {
+		if err := validateRemoteWriteSpec(remote, version); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
