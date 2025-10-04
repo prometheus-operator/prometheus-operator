@@ -18,12 +18,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/blang/semver/v4"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
 // AddRemoteWritesToStore loads all secret/configmap references from remote-write configs into the store.
-func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+func AddRemoteWritesToStore(
+	ctx context.Context,
+	store *assets.StoreBuilder,
+	namespace string,
+	rws []monitoringv1.RemoteWriteSpec,
+	version semver.Version,
+) error {
 	for i, remote := range rws {
 		if err := validateRemoteWriteSpec(remote); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)

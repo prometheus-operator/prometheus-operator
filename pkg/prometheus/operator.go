@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -89,7 +90,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version) error {
 	var nonNilFields []string
 	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
@@ -128,18 +129,7 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 
 		// check azure managed identity client id
 		if spec.AzureAD.ManagedIdentity != nil {
-			cg, err := NewConfigGenerator(o.logger, nil)
-			if err != nil {
-				// do something
-			}
-			cg.WithMinimumVersion("3.5.0")
-			// check version
-
-			//promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
-			//version, err := semver.ParseTolerant(promVersion)
-			//if err != nil {
-			//	return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
-			//}
+			checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version)
 		}
 
 		if spec.AzureAD.OAuth != nil {
@@ -151,6 +141,23 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	return spec.Validate()
+}
+
+func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version) error {
+	if version.LT(semver.MustParse("3.5.0")) {
+
+		if mid.ClientID == nil {
+			return fmt.Errorf("nil clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
+				version.String())
+		}
+
+		if *mid.ClientID == "" {
+			return fmt.Errorf("empty clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
+				version.String())
+		}
+
+	}
+	return nil
 }
 
 // Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.
