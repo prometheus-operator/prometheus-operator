@@ -281,7 +281,7 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
-	if err := checkAlertmanagerGlobalConfigResource(globalConfig); err != nil {
+	if err := checkAlertmanagerGlobalConfigResource(ctx, globalConfig, crKey.Namespace, cb.store, cb.amVersion); err != nil {
 		return err
 	}
 
@@ -1895,10 +1895,6 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitoringv1.GlobalWebexConfig) error {
 	if in == nil {
 		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
 	}
 
 	if in.APIURL != nil {
