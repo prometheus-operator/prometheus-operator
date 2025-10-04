@@ -118,7 +118,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -141,7 +141,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 					SDK: &monitoringv1.AzureSDK{
 						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),

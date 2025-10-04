@@ -1349,7 +1349,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return err
 	}
 
-	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
+	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite, cg.Version()); err != nil {
 		return err
 	}
 

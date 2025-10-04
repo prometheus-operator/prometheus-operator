@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -89,7 +90,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version) error {
 	var nonNilFields []string
 	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
@@ -126,6 +127,11 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
+		// check azure managed identity client id
+		if spec.AzureAD.ManagedIdentity != nil {
+			checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version)
+		}
+
 		if spec.AzureAD.OAuth != nil {
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
@@ -135,6 +141,23 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	return spec.Validate()
+}
+
+func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version) error {
+	if version.LT(semver.MustParse("3.5.0")) {
+
+		if mid.ClientID == nil {
+			return fmt.Errorf("nil clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
+				version.String())
+		}
+
+		if *mid.ClientID == "" {
+			return fmt.Errorf("empty clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
+				version.String())
+		}
+
+	}
+	return nil
 }
 
 // Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.
