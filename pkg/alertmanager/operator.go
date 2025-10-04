@@ -1921,6 +1921,46 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
 }
 
-func checkAlertmanagerGlobalConfigResource(gc *monitoringv1.AlertmanagerGlobalConfig) error {
-	return validationv1.ValidateAlertmanagerGlobalConfig(gc)
+func checkAlertmanagerGlobalConfigResource(
+	ctx context.Context,
+	gc *monitoringv1.AlertmanagerGlobalConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+) error {
+	if gc == nil {
+		return nil
+	}
+
+	// Perform semantic validation irrespective of the Alertmanager version.
+	if err := validationv1.ValidateAlertmanagerGlobalConfig(gc); err != nil {
+		return err
+	}
+
+	// Perform more specific validations which depend on the Alertmanager
+	// version. It also retrieves data from referenced secrets and configmaps
+	// (and fails in case of missing/invalid references).
+	if err := checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace, store); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkGlobalWeChatConfig(
+	ctx context.Context,
+	wc *monitoringv1.GlobalWeChatConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+) error {
+	if wc == nil {
+		return nil
+	}
+
+	if wc.APISecret != nil {
+		if _, err := store.GetSecretKey(ctx, namespace, *wc.APISecret); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
