@@ -58,6 +58,10 @@ func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 	return f.DeepCopy()
 }
 
+func (l *PrometheusRule) Bindings() []WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // PrometheusRuleSpec contains specification parameters for a Rule.
 // +k8s:openapi-gen=true
 type PrometheusRuleSpec struct {

@@ -440,6 +440,7 @@ func TestGatedFeatures(t *testing.T) {
 		"RmServiceMonitorBindingDuringWorkloadDelete":        testRmServiceMonitorBindingDuringWorkloadDelete,
 		"PodMonitorStatusSubresource":                        testPodMonitorStatusSubresource,
 		"ProbeStatusSubresource":                             testProbeStatusSubresource,
+		"PrometheusRuleSubresource":                          testPrometheusRuleStatusSubresource,
 		"GarbageCollectionOfPodMonitorBinding":               testGarbageCollectionOfPodMonitorBinding,
 		"RmPodMonitorBindingDuringWorkloadDelete":            testRmPodMonitorBindingDuringWorkloadDelete,
 		"ScrapeConfigStatusSubresource":                      testScrapeConfigStatusSubresource,

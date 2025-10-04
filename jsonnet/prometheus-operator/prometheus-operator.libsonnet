@@ -103,6 +103,7 @@ function(params) {
                  'probes',
                  'probes/status',
                  'prometheusrules',
+                 'prometheusrules/status',
                ],
                verbs: ['*'],
              },

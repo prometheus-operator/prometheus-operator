@@ -151,3 +151,27 @@ func (f *Framework) DeleteRule(ctx context.Context, ns string, r string) error {
 
 	return nil
 }
+
+func (f *Framework) WaitForRuleCondition(ctx context.Context, pr *monitoringv1.PrometheusRule, workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1.PrometheusRule, error) {
+	var current *monitoringv1.PrometheusRule
+
+	if err := f.WaitForConfigResourceCondition(
+		ctx,
+		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
+			var err error
+			current, err = f.MonClientV1.PrometheusRules(pr.Namespace).Get(ctx, pr.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			return current.Status.Bindings, nil
+		},
+		workload,
+		resource,
+		conditionType,
+		conditionStatus,
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("prometheusRule status %v/%v failed to reach expected condition: %w", pr.Namespace, pr.Name, err)
+	}
+	return current, nil
+}
