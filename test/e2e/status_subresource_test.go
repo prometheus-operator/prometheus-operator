@@ -473,10 +473,19 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a first PrometheusRule to check that the operator only updates the binding when needed.
-	pr1, err := framework.MakeAndCreateFiringRule(ctx, ns, "rule1", "TestAlert1")
-	require.NoError(t, err)
+	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
 	pr1.Labels["group"] = name
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
@@ -490,10 +499,19 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 	require.NotEqual(t, "", ts)
 
 	// Create a second PrometheusRule to check that the operator updates the binding when the condition changes.
-	pr2, err := framework.MakeAndCreateFiringRule(ctx, ns, "rule2", "TestAlert2")
-	require.NoError(t, err)
+	pr2 := framework.MakeBasicRule(ns, "rule2", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert2",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert2",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
 	pr2.Labels["group"] = name
-	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, v1.UpdateOptions{})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, v1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr2, err = framework.WaitForRuleCondition(ctx, pr2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
