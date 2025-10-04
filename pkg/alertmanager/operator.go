@@ -1921,6 +1921,37 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
 }
 
-func checkAlertmanagerGlobalConfigResource(gc *monitoringv1.AlertmanagerGlobalConfig) error {
-	return validationv1.ValidateAlertmanagerGlobalConfig(gc)
+func checkAlertmanagerGlobalConfigResource(
+	ctx context.Context,
+	gc *monitoringv1.AlertmanagerGlobalConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if gc == nil {
+		return nil
+	}
+
+	// Perform semantic validation irrespective of the Alertmanager version.
+	if err := validationv1.ValidateAlertmanagerGlobalConfig(gc); err != nil {
+		return err
+	}
+
+	// Perform more specific validations which depend on the Alertmanager
+	// version. It also retrieves data from referenced secrets and configmaps
+	// (and fails in case of missing/invalid references).
+	if err := checkGlobalWebexConfig(gc.WebexConfig, amVersion); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig, version semver.Version) error {
+
+	if version.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
+	}
+
+	return nil
 }
