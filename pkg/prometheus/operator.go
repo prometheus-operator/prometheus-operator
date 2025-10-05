@@ -136,7 +136,9 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 
 		// check azure managed identity client id
 		if spec.AzureAD.ManagedIdentity != nil {
-			checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version, componentName)
+			if err := checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version, componentName); err != nil {
+				return err
+			}
 		}
 
 		if spec.AzureAD.OAuth != nil {
