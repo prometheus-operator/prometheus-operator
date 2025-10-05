@@ -1101,6 +1101,12 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err := prompkg.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
 	}
+
+	// Remove bindings from probes which reference the
+	// workload but aren't selected anymore.
+	if err := prompkg.CleanupBindings(ctx, c.probeInfs.ListAll, resources.bMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for probes: %w", err)
+	}
 	return nil
 }
 
