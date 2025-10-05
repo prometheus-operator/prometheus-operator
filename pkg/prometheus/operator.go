@@ -56,6 +56,13 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
+type ComponentName string
+
+const (
+	ComponentNamePrometheus ComponentName = "Prometheus"
+	ComponentNameThanos     ComponentName = "Thanos"
+)
+
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
@@ -90,7 +97,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version) error {
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version, componentName ComponentName) error {
 	var nonNilFields []string
 	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
@@ -129,7 +136,7 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 
 		// check azure managed identity client id
 		if spec.AzureAD.ManagedIdentity != nil {
-			checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version)
+			checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version, componentName)
 		}
 
 		if spec.AzureAD.OAuth != nil {
@@ -143,8 +150,8 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 	return spec.Validate()
 }
 
-func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version) error {
-	if version.LT(semver.MustParse("3.5.0")) {
+func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version, componentName ComponentName) error {
+	if (version.LT(semver.MustParse("3.5.0")) && componentName == ComponentNamePrometheus) || componentName == ComponentNameThanos {
 
 		if mid.ClientID == nil {
 			return fmt.Errorf("nil clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
