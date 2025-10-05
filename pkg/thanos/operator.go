@@ -849,7 +849,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 			return fmt.Errorf("thanos remote-write configuration requires at least version %q: current version %q", minRemoteWriteVersion, version)
 		}
 
-		err = prompkg.AddRemoteWritesToStore(ctx, store, tr.Namespace, tr.Spec.RemoteWrite)
+		err = prompkg.AddRemoteWritesToStore(ctx, store, tr.Namespace, tr.Spec.RemoteWrite, version)
 		if err != nil {
 			return err
 		}
