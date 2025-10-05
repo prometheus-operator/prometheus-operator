@@ -1049,8 +1049,31 @@ func testPrometheusAgentDaemonSetWithVolumes(t *testing.T) {
 		},
 	}
 
-	// This should fail with the bug: "Not found: test-vol"
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "Not found: \"test-vol\"")
+	// With the fix, creation should succeed and the resulting DaemonSet should include the volume and mount
+	created, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", created.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	// verify volume present
+	foundVol := false
+	for _, vol := range dms.Spec.Template.Spec.Volumes {
+		if vol.Name == "test-vol" && vol.EmptyDir != nil {
+			foundVol = true
+			break
+		}
+	}
+	require.True(t, foundVol, "expected DaemonSet to contain test-vol volume")
+
+	// verify mount present on prometheus container
+	foundMount := false
+	for _, m := range dms.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if m.Name == "test-vol" && m.MountPath == "/test-mount" {
+			foundMount = true
+			break
+		}
+	}
+	require.True(t, foundMount, "expected prometheus container to mount test-vol at /test-mount")
 }
