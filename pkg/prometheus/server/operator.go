@@ -1130,12 +1130,12 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 
 	// Remove bindings from all scrapeConfigs which reference the workload.
 	if err := prompkg.CleanupBindings(ctx, c.sconInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
 	}
 
 	// Remove bindings from all probes which reference the workload.
 	if err := prompkg.CleanupBindings(ctx, c.probeInfs.ListAll, prompkg.TypedResourcesSelection[*monitoringv1.Probe]{}, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+		return fmt.Errorf("failed to remove bindings for probes: %w", err)
 	}
 	return nil
 }
