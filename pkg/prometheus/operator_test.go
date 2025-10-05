@@ -242,7 +242,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			v := operator.StringValOrDefault(test.version, operator.DefaultThanosVersion)
 			version, err := semver.ParseTolerant(v)
-			require.Error(t, err)
+			if err != nil {
+				require.NoError(t, err)
+			}
 
 			err = validateRemoteWriteSpec(test.spec, version, test.componentName)
 			if test.expectErr {
