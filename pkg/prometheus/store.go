@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/blang/semver/v4"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
