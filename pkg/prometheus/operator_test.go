@@ -174,7 +174,22 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
+			expectErr:     true,
+			componentName: ComponentNamePrometheus,
+		},
+		{
+			name: "with_azure_managed_identity_empty_client_id_v3.5.0",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To(""),
+					},
+				},
+			},
 			expectErr:     false,
+			version:       "3.5.0",
 			componentName: ComponentNamePrometheus,
 		},
 		{
