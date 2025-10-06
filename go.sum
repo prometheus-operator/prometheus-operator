@@ -274,15 +274,13 @@ github.com/prometheus/common v0.66.1 h1:h5E0h5/Y8niHc5DlaLlWLArTQI7tMrsfQjHV+d9Z
 github.com/prometheus/common v0.66.1/go.mod h1:gcaUsgf3KfRSwHY4dIMXLPV0K/Wg1oZ8+SbZk/HH/dA=
 github.com/prometheus/exporter-toolkit v0.14.1 h1:uKPE4ewweVRWFainwvAcHs3uw15pjw2dk3I7b+aNo9o=
 github.com/prometheus/exporter-toolkit v0.14.1/go.mod h1:di7yaAJiaMkcjcz48f/u4yRPwtyuxTU5Jr4EnM2mhtQ=
-github.com/prometheus/otlptranslator v0.0.2 h1:+1CdeLVrRQ6Psmhnobldo0kTp96Rj80DRXRd5OSnMEQ=
-github.com/prometheus/otlptranslator v0.0.2/go.mod h1:P8AwMgdD7XEr6QRUJ2QWLpiAZTgTE2UYgjlu3svompI=
 github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
 github.com/prometheus/procfs v0.0.8/go.mod h1:7Qr8sr6344vo1JqZ6HhLceV9o3AJ1Ff+GxbHq6oeK9A=
 github.com/prometheus/procfs v0.17.0 h1:FuLQ+05u4ZI+SS/w9+BWEM2TXiHKsUQ9TADiRH7DuK0=
 github.com/prometheus/procfs v0.17.0/go.mod h1:oPQLaDAMRbA+u8H5Pbfq+dl3VDAvHxMUOVhe0wYB2zw=
-github.com/prometheus/prometheus v0.305.1-0.20250818080900-0a40df33fb4e h1:HcaG1Uuc0LCVkHHo+QMgJf8eXjCxEZDoYGOvmUjPU2g=
-github.com/prometheus/prometheus v0.305.1-0.20250818080900-0a40df33fb4e/go.mod h1:uxFMhGI+u8QK+W7Zr/oZGvf2lkHgnjbBmAEEnoymLyg=
+github.com/prometheus/prometheus v0.306.0 h1:Q0Pvz/ZKS6vVWCa1VSgNyNJlEe8hxdRlKklFg7SRhNw=
+github.com/prometheus/prometheus v0.306.0/go.mod h1:7hMSGyZHt0dcmZ5r4kFPJ/vxPQU99N5/BGwSPDxeZrQ=
 github.com/prometheus/sigv4 v0.2.0 h1:qDFKnHYFswJxdzGeRP63c4HlH3Vbn1Yf/Ao2zabtVXk=
 github.com/prometheus/sigv4 v0.2.0/go.mod h1:D04rqmAaPPEUkjRQxGqjoxdyJuyCh6E0M18fZr0zBiE=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
