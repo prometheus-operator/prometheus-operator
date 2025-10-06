@@ -731,3 +731,115 @@ func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
 }
+
+// testGarbageCollectionOfProbeBinding validates that the operator removes the reference to the Prometheus resource when the Probe isn't selected anymore by the workload.
+func testGarbageCollectionOfProbeBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "probe-status-binding-cleanup-test"
+	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
+
+	proberURL := "localhost:9115"
+	targets := []string{svc.Name + ":9090"}
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
+	}
+
+	probe := framework.MakeBasicStaticProbe("probe", proberURL, targets)
+	probe.Labels["group"] = name
+	probe, err = framework.MonClientV1.Probes(ns).Create(ctx, probe, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	probe, err = framework.WaitForProbeCondition(ctx, probe, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the Probe's labels, Prometheus doesn't select the resource anymore.
+	probe.Labels = map[string]string{}
+	probe, err = framework.MonClientV1.Probes(ns).Update(ctx, probe, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForProbeWorkloadBindingCleanup(ctx, probe, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmProbeBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource from Probe's status when workload is deleted.
+func testRmProbeBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "workload-del-probe-test"
+	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
+
+	proberURL := "localhost:9115"
+	targets := []string{svc.Name + ":9090"}
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
+	}
+
+	probe := framework.MakeBasicStaticProbe("probe", proberURL, targets)
+	probe.Labels["group"] = name
+	probe, err = framework.MonClientV1.Probes(ns).Create(ctx, probe, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	probe, err = framework.WaitForProbeCondition(ctx, probe, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForProbeWorkloadBindingCleanup(ctx, probe, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
