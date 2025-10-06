@@ -11443,8 +11443,9 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RelabelConfig">RelabelConfig</a>)
 </p>
 <div>
-<p>LabelName is a valid Prometheus label name which may only contain ASCII
-letters, numbers, as well as underscores.</p>
+<p>LabelName is a valid Prometheus label name.
+For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.</p>
 </div>
 <h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
 </h3>

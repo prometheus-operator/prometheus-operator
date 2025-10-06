@@ -5083,8 +5083,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"

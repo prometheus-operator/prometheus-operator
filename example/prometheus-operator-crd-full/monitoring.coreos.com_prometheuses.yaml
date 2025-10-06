@@ -1211,9 +1211,9 @@ spec:
                                   configured regular expression.
                                 items:
                                   description: |-
-                                    LabelName is a valid Prometheus label name which may only contain ASCII
-                                    letters, numbers, as well as underscores.
-                                  pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                    LabelName is a valid Prometheus label name.
+                                    For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                    For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                                   type: string
                                 type: array
                               targetLabel:
@@ -1494,9 +1494,9 @@ spec:
                                   configured regular expression.
                                 items:
                                   description: |-
-                                    LabelName is a valid Prometheus label name which may only contain ASCII
-                                    letters, numbers, as well as underscores.
-                                  pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                    LabelName is a valid Prometheus label name.
+                                    For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                    For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                                   type: string
                                 type: array
                               targetLabel:
@@ -8083,9 +8083,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -8534,9 +8534,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -8633,9 +8633,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
