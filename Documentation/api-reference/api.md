@@ -18481,6 +18481,19 @@ string
 <p>roleArn defines the named AWS profile used to authenticate.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>useFIPSSTSEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.StorageSpec">StorageSpec
