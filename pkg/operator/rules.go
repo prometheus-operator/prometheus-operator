@@ -15,9 +15,12 @@
 package operator
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -27,9 +30,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -266,4 +271,148 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 	)
 
 	return rules, rejected, nil
+}
+
+// PrometheusRuleSyncer knows how to synchronize ConfigMaps holding
+// Prometheus or Thanos rule configuration.
+type PrometheusRuleSyncer struct {
+	opts       []ObjectOption
+	cmClient   clientv1.ConfigMapInterface
+	cmSelector labels.Set
+
+	logger *slog.Logger
+}
+
+func NewPrometheusRuleSyncer(
+	logger *slog.Logger,
+	cmClient clientv1.ConfigMapInterface,
+	cmSelector labels.Set,
+	options []ObjectOption,
+) *PrometheusRuleSyncer {
+	return &PrometheusRuleSyncer{
+		logger:     logger,
+		cmClient:   cmClient,
+		cmSelector: cmSelector,
+		opts:       options,
+	}
+}
+
+// Sync synchronizes the ConfigMap(s) holding the provided list of rules.
+// It returns the list of ConfigMap names.
+func (prs *PrometheusRuleSyncer) Sync(ctx context.Context, rules map[string]string) ([]string, error) {
+	listConfigMapOpts := metav1.ListOptions{LabelSelector: prs.cmSelector.String()}
+	cmList, err := prs.cmClient.List(ctx, listConfigMapOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	current := cmList.Items
+	currentRules := map[string]string{}
+	for _, cm := range current {
+		maps.Copy(currentRules, cm.Data)
+	}
+
+	if equal := reflect.DeepEqual(rules, currentRules); equal && len(current) != 0 {
+		// Return early because current and generated configmaps are identical
+		// (and at least 1 configmap already exists).
+		prs.logger.Debug("no PrometheusRule changes")
+		return configMapNames(current), nil
+	}
+
+	configMaps, err := prs.makeConfigMapsFromRules(rules)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate ConfigMaps for PrometheusRule: %w", err)
+	}
+
+	// Delete and recreate the configmap(s). It's not very efficient but proved
+	// to be robust enough so far.
+	if len(current) > 0 {
+		prs.logger.Debug("deleting ConfigMaps for PrometheusRule")
+		// In theory we could use DeleteCollection but the method isn't
+		// supported by the fake client.
+		// See https://github.com/kubernetes/kubernetes/issues/105357
+		for _, cm := range current {
+			err := prs.cmClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("failed to delete ConfigMap %q: %w", cm.Name, err)
+			}
+		}
+	}
+
+	prs.logger.Debug("creating ConfigMaps for PrometheusRule")
+	for _, cm := range configMaps {
+		_, err = prs.cmClient.Create(ctx, &cm, metav1.CreateOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create ConfigMap %q: %w", cm.Name, err)
+		}
+	}
+
+	return configMapNames(configMaps), nil
+}
+
+func configMapNames(cms []v1.ConfigMap) []string {
+	return slices.Sorted(slices.Values(slices.Collect(func(yield func(string) bool) {
+		for _, cm := range cms {
+			if !yield(cm.Name) {
+				return
+			}
+		}
+	})))
+}
+
+type bucket struct {
+	rules map[string]string
+	size  int
+}
+
+// makeConfigMapsFromRules takes a map of rule files (keys: filenames) and returns
+// a list of Kubernetes ConfigMaps to be later on mounted into the a container.
+//
+// If the total size of rule files exceeds the Kubernetes ConfigMap limit,
+// they are split up via the simple first-fit [1] bin packing algorithm. In the
+// future this can be replaced by a more sophisticated algorithm, but for now
+// simplicity should be sufficient.
+//
+// [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
+func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string) ([]v1.ConfigMap, error) {
+	var (
+		i       int
+		buckets = []bucket{{rules: map[string]string{}}}
+	)
+	// To make bin packing algorithm deterministic, sort ruleFiles filenames
+	// and iterate over the filenames instead of the key/value pairs.
+	for _, filename := range sortutil.SortedKeys(rules) {
+		// If the rule file doesn't fit into the current bucket, create a new bucket.
+		if (buckets[i].size + len(rules[filename])) > MaxConfigMapDataSize {
+			buckets = append(buckets, bucket{rules: map[string]string{}})
+			i++
+		}
+
+		buckets[i].rules[filename] = rules[filename]
+		buckets[i].size += len(rules[filename])
+	}
+
+	configMaps := make([]v1.ConfigMap, 0, len(buckets))
+	for i, bucket := range buckets {
+		cm := v1.ConfigMap{
+			Data: bucket.rules,
+		}
+
+		UpdateObject(
+			&cm,
+			prs.opts...,
+		)
+
+		UpdateObject(
+			&cm,
+			WithLabels(prs.cmSelector),
+		)
+
+		// Ensure that the ConfigMap's names are unique.
+		cm.Name = fmt.Sprintf("%s-rulefiles-%d", cm.Name, i)
+
+		configMaps = append(configMaps, cm)
+	}
+
+	return configMaps, nil
 }

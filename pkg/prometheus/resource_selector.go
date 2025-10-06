@@ -158,32 +158,17 @@ func selectObjects[T ConfigurationResource](
 ) (TypedResourcesSelection[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
-	namespaces := []string{}
+
+	namespaces, err := operator.SelectNamespacesFromCache(rs.p.GetObjectMeta(), nsSelector, rs.namespaceInformers)
+	if err != nil {
+		return nil, err
+	}
+	logger.Debug("selecting objects", "namespaces", strings.Join(namespaces, ","))
 
 	labelSelector, err := metav1.LabelSelectorAsSelector(selector)
 	if err != nil {
 		return nil, err
 	}
-
-	if nsSelector == nil {
-		namespaces = append(namespaces, rs.p.GetObjectMeta().GetNamespace())
-	} else {
-		nsLabelSelector, err := metav1.LabelSelectorAsSelector(nsSelector)
-		if err != nil {
-			return nil, err
-		}
-
-		namespaces, err = operator.ListMatchingNamespaces(nsLabelSelector, rs.namespaceInformers)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	logger.Debug(
-		"selecting objects",
-		"namespaces", strings.Join(namespaces, ","),
-	)
-
 	for _, ns := range namespaces {
 		err := listFn(ns, labelSelector, func(o any) {
 			k, ok := rs.accessor.MetaNamespaceKey(o)
