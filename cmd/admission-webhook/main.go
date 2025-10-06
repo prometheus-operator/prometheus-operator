@@ -24,6 +24,7 @@ import (
 	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
@@ -35,13 +36,15 @@ import (
 )
 
 const defaultGOMemlimitRatio = 0.0
+const defaultValidationScheme = "legacy"
 
 func main() {
 	var (
-		serverConfig  = server.DefaultConfig(":8443", true)
-		flagset       = flag.CommandLine
-		logConfig     logging.Config
-		memlimitRatio float64
+		serverConfig         = server.DefaultConfig(":8443", true)
+		flagset              = flag.CommandLine
+		logConfig            logging.Config
+		memlimitRatio        float64
+		nameValidationScheme string
 	)
 
 	server.RegisterFlags(flagset, &serverConfig)
@@ -49,6 +52,7 @@ func main() {
 	logging.RegisterFlags(flagset, &logConfig)
 
 	flagset.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultGOMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
+	flagset.StringVar(&nameValidationScheme, "name-validation-scheme", defaultValidationScheme, "The name validation scheme to use ('legacy' or 'utf8').")
 
 	_ = flagset.Parse(os.Args[1:])
 
@@ -65,12 +69,24 @@ func main() {
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
+	// Parse and validate the name validation scheme
+	var validationScheme model.ValidationScheme
+	switch nameValidationScheme {
+	case "utf8":
+		validationScheme = model.UTF8Validation
+	case "legacy":
+		validationScheme = model.LegacyValidation
+	default:
+		logger.Error("invalid name validation scheme", "scheme", nameValidationScheme, "supported", []string{"utf8", "legacy"})
+		os.Exit(1)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	wg, ctx := errgroup.WithContext(ctx)
 
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"))
+	admit := admission.New(logger.With("component", "admissionwebhook"), validationScheme)
 	admit.Register(mux)
 
 	r := metrics.NewRegistry("prometheus_operator_admission_webhook")

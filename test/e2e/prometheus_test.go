@@ -5495,6 +5495,231 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func testPrometheusUTF8MetricsSupport(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	// Disable admission webhook for rule since utf8 is not enabled by default and rule contain metric name with utf8 characters.
+	ruleNamespaceSelector := map[string]string{"excludeFromWebhook": "true"}
+	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleNamespaceSelector)
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "prometheus-utf8-test"
+
+	// Create deployment for instrumented sample app
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "instrumented-sample-app",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app": "instrumented-sample-app",
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: ptr.To(int32(1)),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "instrumented-sample-app"},
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "instrumented-sample-app",
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{{
+						Name:  "instrumented-sample-app",
+						Image: "quay.io/prometheus-operator/instrumented-sample-app:latest",
+						Ports: []v1.ContainerPort{{
+							Name:          "web",
+							ContainerPort: 8080,
+							Protocol:      v1.ProtocolTCP,
+						}},
+					}},
+				},
+			},
+		},
+	}
+	_, err = framework.KubeClient.AppsV1().Deployments(ns).Create(context.Background(), deployment, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-test-service",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app":   "instrumented-sample-app",
+				"group": "test-app",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports:    []v1.ServicePort{{Name: "web", Port: 8080, TargetPort: intstr.FromInt(8080)}},
+			Selector: map[string]string{"app": "instrumented-sample-app"},
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), service, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-servicemonitor",
+			Namespace: ns,
+			Labels:    map[string]string{"group": "test-app"},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "instrumented-sample-app"},
+			},
+			Endpoints: []monitoringv1.Endpoint{{
+				Port:     "web",
+				Interval: "30s",
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+						Key:                  "username",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+						Key:                  "password",
+					},
+				},
+			}},
+		},
+	}
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "basic-auth",
+			Namespace: ns,
+		},
+		Type: v1.SecretTypeOpaque,
+		StringData: map[string]string{
+			"username": "user",
+			"password": "pass",
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Wait for deployment to be ready
+	err = framework.WaitForDeploymentReady(context.Background(), ns, "instrumented-sample-app", 1)
+	require.NoError(t, err)
+
+	// Create PrometheusRule with UTF-8 metrics.
+	prometheusRule := &monitoringv1.PrometheusRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-prometheus-rule",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app":  "test-app",
+				"role": "rulefile",
+			},
+			Annotations: map[string]string{
+				"description": "Test rule",
+			},
+		},
+		Spec: monitoringv1.PrometheusRuleSpec{
+			Groups: []monitoringv1.RuleGroup{{
+				Name: "utf8.test.rules",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "UTF8TestAlert",
+						Expr:  intstr.FromString(`count by("app.version") ({"app.info"})`),
+						Labels: map[string]string{
+							"severity":     "warning",
+							"service.name": "web",
+						},
+						Annotations: map[string]string{
+							"summary":             "Service is down",
+							"description.cluster": "The cluster service is not responding",
+							"runbook":             "https://runbook.example.com/cluster",
+						},
+					},
+					{
+						Record: "cluster.app_info:5m",
+						Expr:   intstr.FromString(`avg_over_time({"app.info"}[5m])`),
+						Labels: map[string]string{
+							"service.cluster": "availability",
+						},
+					},
+				},
+			}},
+		},
+	}
+	_, err = framework.MonClientV1.PrometheusRules(ns).Create(context.Background(), prometheusRule, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	prom := framework.MakeBasicPrometheus(ns, name, "test-app", 1)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
+
+	// Default Prometheus service name is "prometheus-operated".
+	promSvcName := "prometheus-operated"
+
+	// Wait for the instrumented-sample-app target to be discovered
+	err = framework.WaitForHealthyTargets(context.Background(), ns, promSvcName, 1)
+	require.NoError(t, err)
+
+	// Verify UTF8 metrics work in queries.
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		// Query for UTF8 metric
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", `{"app.info"}`)
+		if err != nil {
+			t.Logf("UTF8 query failed: %v", err)
+			return false, nil
+		}
+
+		if len(results) == 0 {
+			t.Logf("UTF8 query returned no results")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, err, "UTF-8 metrics should work in Prometheus 3.0+ queries")
+
+	// Check UTF8 recording rule from PrometheusRule
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", `{"cluster.app_info:5m"}`)
+		if err != nil {
+			t.Logf("UTF8 PrometheusRule recording query failed: %v", err)
+			return false, nil
+		}
+
+		if len(results) == 0 {
+			t.Logf("UTF8 recording query returned no results")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, err, "UTF-8 PrometheusRule recording rule should work")
+
+	// Verify the alert rule exists in Prometheus
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", `ALERTS{alertname="UTF8TestAlert"}`)
+		if err != nil {
+			t.Logf("UTF8 alert rule query failed: %v", err)
+			return false, nil
+		}
+		if len(results) == 0 {
+			t.Logf("UTF8TestAlert rule not found - may not be loaded yet")
+			return false, nil
+		}
+
+		t.Logf("UTF8TestAlert rule found and loaded")
+		return true, nil
+	})
+	require.NoError(t, err, "UTF-8 alert rule should be queryable")
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
