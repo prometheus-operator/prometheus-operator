@@ -1268,6 +1268,17 @@ spec:
                 - RelabelConfig
                 - RoleSelector
                 type: string
+              serviceDiscoveryRole:
+                description: |-
+                  serviceDiscoveryRole defines the service discovery role used to discover targets.
+
+                  If set, the value should be either "Endpoints" or "EndpointSlice".
+                  Otherwise it defaults to the value defined in the
+                  Prometheus/PrometheusAgent resource.
+                enum:
+                - Endpoints
+                - EndpointSlice
+                type: string
               targetLabels:
                 description: |-
                   targetLabels defines the labels which are transferred from the

@@ -62,7 +62,7 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 	}
 }
 
-func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGenerator {
+func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus, opts ...ConfigGeneratorOption) *ConfigGenerator {
 	t.Helper()
 
 	if p == nil {
@@ -72,7 +72,6 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 		Level: slog.LevelWarn,
 	}))
 
-	opts := []ConfigGeneratorOption{}
 	if p.Spec.ServiceDiscoveryRole != nil && *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
 		opts = append(opts, WithEndpointSliceSupport())
 	}
@@ -1641,22 +1640,51 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	golden.Assert(t, string(cfg), "NoEnforcedNamespaceLabelServiceMonitor_Expected.golden")
 }
 
-func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
-	p := defaultPrometheus()
-	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
-	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
+func TestServiceMonitorWithServiceDiscoveryRole(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		promRole *monitoringv1.ServiceDiscoveryRole
+		smonRole *monitoringv1.ServiceDiscoveryRole
+		golden   string
+	}{
+		{
+			name:   "Default",
+			golden: "TestServiceMonitorWithDefaultServiceDiscoveryRole.golden",
+		},
+		{
+			name:     "Prometheus with endpoints",
+			promRole: ptr.To(monitoringv1.EndpointsRole),
+			golden:   "TestServiceMonitorWithDefaultServiceDiscoveryRole.golden",
+		},
+		{
+			name:     "Prometheus with endpointslice",
+			promRole: ptr.To(monitoringv1.EndpointSliceRole),
+			golden:   "TestServiceMonitorWithEndpointSliceEnable_Expected.golden",
+		},
+		{
+			name:     "Prometheus with endpointslice and ServiceMonitor with endpoints",
+			promRole: ptr.To(monitoringv1.EndpointSliceRole),
+			smonRole: ptr.To(monitoringv1.EndpointsRole),
+			golden:   "TestServiceMonitorWithEndpointsAndPrometheusEndpointSlice.golden",
+		},
+		{
+			name:     "Prometheus with endpoints and ServiceMonitor with endpointslice",
+			promRole: ptr.To(monitoringv1.EndpointsRole),
+			smonRole: ptr.To(monitoringv1.EndpointSliceRole),
+			golden:   "TestServiceMonitorWithEndpointSliceAndPrometheusEndpoints.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = tc.promRole
 
-	cg := mustNewConfigGenerator(t, p)
-
-	cfg, err := cg.GenerateServerConfiguration(
-		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
+			smon := &monitoringv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					ServiceDiscoveryRole: ptr.To(monitoringv1.EndpointsRole),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1673,38 +1701,31 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "drop",
-									Regex:        "my-job-pod-.+",
-									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "ns-key",
-								},
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.*)",
-									Replacement:  ptr.To("$1"),
-									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
-								},
-							},
 						},
 					},
 				},
-			},
-		},
-		nil,
-		nil,
-		nil,
-		&assets.StoreBuilder{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "TestServiceMonitorWithEndpointSliceEnable_Expected.golden")
+			}
+			smon.Spec.ServiceDiscoveryRole = tc.smonRole
+
+			cg := mustNewConfigGenerator(t, p, WithEndpointSliceSupport())
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"test": smon,
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
 }
 
 func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {

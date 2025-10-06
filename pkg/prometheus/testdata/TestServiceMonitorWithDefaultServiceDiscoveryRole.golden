@@ -8,7 +8,7 @@ scrape_configs:
 - job_name: serviceMonitor/default/test/0
   honor_labels: false
   kubernetes_sd_configs:
-  - role: endpointslice
+  - role: endpoints
     namespaces:
       names:
       - default
@@ -29,18 +29,18 @@ scrape_configs:
     regex: (beta|gamma);true
   - action: keep
     source_labels:
-    - __meta_kubernetes_endpointslice_port_name
+    - __meta_kubernetes_endpoint_port_name
     regex: web
   - source_labels:
-    - __meta_kubernetes_endpointslice_address_target_kind
-    - __meta_kubernetes_endpointslice_address_target_name
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
     separator: ;
     regex: Node;(.*)
     replacement: ${1}
     target_label: node
   - source_labels:
-    - __meta_kubernetes_endpointslice_address_target_kind
-    - __meta_kubernetes_endpointslice_address_target_name
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
     separator: ;
     regex: Pod;(.*)
     replacement: ${1}

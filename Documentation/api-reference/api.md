@@ -4397,6 +4397,23 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serviceDiscoveryRole defines the service discovery role used to discover targets.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+Otherwise it defaults to the value defined in the
+Prometheus/PrometheusAgent resource.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -17888,7 +17905,7 @@ Kubernetes core/v1.ConfigMapKeySelector
 <h3 id="monitoring.coreos.com/v1.ServiceDiscoveryRole">ServiceDiscoveryRole
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 </div>
@@ -18237,6 +18254,23 @@ ByteSize
 <p>bodySizeLimit when defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serviceDiscoveryRole defines the service discovery role used to discover targets.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+Otherwise it defaults to the value defined in the
+Prometheus/PrometheusAgent resource.</p>
 </td>
 </tr>
 </tbody>

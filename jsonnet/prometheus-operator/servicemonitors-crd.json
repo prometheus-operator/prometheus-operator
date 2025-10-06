@@ -1082,6 +1082,14 @@
                     ],
                     "type": "string"
                   },
+                  "serviceDiscoveryRole": {
+                    "description": "serviceDiscoveryRole defines the service discovery role used to discover targets.\n\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nOtherwise it defaults to the value defined in the\nPrometheus/PrometheusAgent resource.",
+                    "enum": [
+                      "Endpoints",
+                      "EndpointSlice"
+                    ],
+                    "type": "string"
+                  },
                   "targetLabels": {
                     "description": "targetLabels defines the labels which are transferred from the\nassociated Kubernetes `Service` object onto the ingested metrics.",
                     "items": {
