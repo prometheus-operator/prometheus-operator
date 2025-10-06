@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -54,6 +55,8 @@ const (
 // overall maximum size of a ConfigMap. Thereby lets leave a large buffer.
 var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
+// PrometheusRuleSelector selects PrometheusRule resources and translates them
+// to Prometheus/Thanos configuration format.
 type PrometheusRuleSelector struct {
 	ruleFormat   RuleConfigurationFormat
 	version      semver.Version
@@ -66,6 +69,7 @@ type PrometheusRuleSelector struct {
 	logger *slog.Logger
 }
 
+// NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
@@ -202,7 +206,8 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 	return errs
 }
 
-// Select selects PrometheusRules and translates them into native Prometheus/Thanos configurations.
+// Select selects PrometheusRules and translates them into native
+// Prometheus/Thanos configurations.
 // The second returned value is the number of rejected PrometheusRule objects.
 func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]string, int, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
@@ -215,16 +220,20 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				return
 			}
 
+			// Generate a truly unique identifier for each PrometheusRule resource.
+			// We use the UID to avoid collisions between foo-bar/fred and foo/bar-fred.
 			promRules[fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
 		})
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to list prometheus rules in namespace %s: %w", ns, err)
+			return nil, 0, fmt.Errorf("failed to list PrometheusRule objects in namespace %s: %w", ns, err)
 		}
 	}
 
-	var rejected int
-	rules := make(map[string]string, len(promRules))
-
+	var (
+		rejected        int
+		rules           = make(map[string]string, len(promRules))
+		namespacedNames = make([]string, 0, len(promRules))
+	)
 	for ruleName, promRule := range promRules {
 		var err error
 		var content string
@@ -246,16 +255,14 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 		}
 
 		rules[ruleName] = content
+		namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
 	}
 
-	ruleNames := []string{}
-	for name := range rules {
-		ruleNames = append(ruleNames, name)
-	}
+	slices.Sort(namespacedNames)
 
 	prs.logger.Debug(
 		"selected Rules",
-		"rules", strings.Join(ruleNames, ","),
+		"rules", strings.Join(namespacedNames, ","),
 	)
 
 	return rules, rejected, nil
