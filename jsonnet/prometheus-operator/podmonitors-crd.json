@@ -669,11 +669,11 @@
                           "type": "string"
                         },
                         "port": {
-                          "description": "port defines the `Pod` port name which exposes the endpoint.\n\nIt takes precedence over the `portNumber` and `targetPort` fields.",
+                          "description": "port defines the `Pod` port name which exposes the endpoint.\n\nIf the pod doesn't expose a port with the same name, it will result\nin no targets being discovered.\n\nIf a `Pod` has multiple `Port`s with the same name (which is not\nrecommended), one target instance per unique port number will be\ngenerated.\n\nIt takes precedence over the `portNumber` and `targetPort` fields.",
                           "type": "string"
                         },
                         "portNumber": {
-                          "description": "portNumber defines the `Pod` port number which exposes the endpoint.",
+                          "description": "portNumber defines the `Pod` port number which exposes the endpoint.\n\nThe `Pod` must declare the specified `Port` in its spec or the\ntarget will be dropped by Prometheus.\n\nThis cannot be used to enable scraping of an undeclared port.\nTo scrape targets on a port which isn't exposed, you need to use\nrelabeling to override the `__address__` label (but beware of\nduplicate targets if the `Pod` has other declared ports).\n\nIn practice Prometheus will select targets for which the\nmatches the target's __meta_kubernetes_pod_container_port_number.",
                           "format": "int32",
                           "maximum": 65535,
                           "minimum": 1,
