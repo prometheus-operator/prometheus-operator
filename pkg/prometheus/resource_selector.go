@@ -56,7 +56,7 @@ func isValidLabelName(labelName string, version semver.Version) bool {
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
 type ConfigurationResource interface {
-	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
+	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig | *monitoringv1.PrometheusRule
 }
 
 // ResourceSelector knows how to select and verify scrape configuration
@@ -573,6 +573,29 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 		return fmt.Errorf("scrapeClassName: %w", err)
 	}
 
+	return nil
+}
+
+// SelectPrometheusRules returns the PrometheusRules that match the selectors in the Prometheus custom resource.
+func (rs *ResourceSelector) SelectPrometheusRules(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.PrometheusRule], error) {
+	cpf := rs.p.(*monitoringv1.Prometheus)
+
+	return selectObjects(
+		ctx,
+		rs.l.With("kind", monitoringv1.PrometheusRuleKind),
+		rs,
+		monitoringv1.PrometheusRuleKind,
+		cpf.Spec.RuleSelector,
+		cpf.Spec.RuleNamespaceSelector,
+		listFn,
+		rs.checkPrometheusRule,
+	)
+}
+
+func (rs *ResourceSelector) checkPrometheusRule(_ context.Context, rule *monitoringv1.PrometheusRule) error {
+	if len(rule.Spec.Groups) == 0 {
+		return fmt.Errorf("prometheusRule %s/%s has no rule groups", rule.Namespace, rule.Name)
+	}
 	return nil
 }
 

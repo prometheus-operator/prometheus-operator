@@ -111,6 +111,7 @@ type selectedConfigResources struct {
 	pMons         prompkg.TypedResourcesSelection[*monitoringv1.PodMonitor]
 	bMons         prompkg.TypedResourcesSelection[*monitoringv1.Probe]
 	scrapeConfigs prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	rules         prompkg.TypedResourcesSelection[*monitoringv1.PrometheusRule]
 }
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
@@ -1084,6 +1085,13 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
+	// Update the status of selected rules.
+	for key, configResource := range resources.rules {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
+		}
+	}
+
 	// Remove bindings from serviceMonitors which reference the
 	// workload but aren't selected anymore.
 	if err := prompkg.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
@@ -1317,6 +1325,11 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 		return nil, fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
+	prules, err := resourceSelector.SelectPrometheusRules(ctx, c.ruleInfs.ListAllByNamespace)
+	if err != nil {
+		return nil, fmt.Errorf("selecting PrometheusRules failed: %w", err)
+	}
+
 	var scrapeConfigs prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
@@ -1329,6 +1342,7 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 		bMons:         bmons,
 		pMons:         pmons,
 		scrapeConfigs: scrapeConfigs,
+		rules:         prules,
 	}, nil
 }
 
