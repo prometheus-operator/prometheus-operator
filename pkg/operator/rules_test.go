@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -28,25 +29,33 @@ import (
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
-	t.Run("shouldAcceptRuleWithValidPartialResponseStrategyValue", shouldAcceptRuleWithValidPartialResponseStrategyValue)
+	// Basic validation
 	t.Run("shouldAcceptValidRule", shouldAcceptValidRule)
-	t.Run("shouldAcceptRulesWithEmptyDurations", shouldAcceptRulesWithEmptyDurations)
 	t.Run("shouldRejectRuleWithInvalidLabels", shouldRejectRuleWithInvalidLabels)
 	t.Run("shouldRejectRuleWithInvalidExpression", shouldRejectRuleWithInvalidExpression)
-	t.Run("shouldResetRuleWithPartialResponseStrategySet", shouldResetRuleWithPartialResponseStrategySet)
+	t.Run("shouldAcceptRulesWithEmptyDurations", shouldAcceptRulesWithEmptyDurations)
+	t.Run("shouldErrorOnTooLargePrometheusRule", shouldErrorOnTooLargePrometheusRule)
+
+	// Prometheus features
 	t.Run("shouldAcceptRuleWithLimitPrometheus", shouldAcceptRuleWithLimitPrometheus)
-	t.Run("shouldAcceptRuleWithLimitThanos", shouldAcceptRuleWithLimitThanos)
-	t.Run("shouldAcceptRuleWithQueryOffsetPrometheus", shouldAcceptRuleWithQueryOffsetPrometheus)
 	t.Run("shouldDropLimitFieldForUnsupportedPrometheusVersion", shouldDropLimitFieldForUnsupportedPrometheusVersion)
-	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
+	t.Run("shouldAcceptRuleWithQueryOffsetPrometheus", shouldAcceptRuleWithQueryOffsetPrometheus)
 	t.Run("shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion", shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion)
 	t.Run("shouldAcceptRuleWithKeepFiringForPrometheus", shouldAcceptRuleWithKeepFiringForPrometheus)
-	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
-	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
 	t.Run("shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion", shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion)
-	t.Run("shouldErrorOnTooLargePrometheusRule", shouldErrorOnTooLargePrometheusRule)
 	t.Run("shouldDropGroupLabelsForUnsupportedPrometheusVersion", shouldDropGroupLabelsForUnsupportedPrometheusVersion)
 	t.Run("shouldAcceptRuleWithGroupLabels", shouldAcceptRuleWithGroupLabels)
+
+	// Thanos features
+	t.Run("shouldAcceptRuleWithValidPartialResponseStrategyValue", shouldAcceptRuleWithValidPartialResponseStrategyValue)
+	t.Run("shouldResetRuleWithPartialResponseStrategySet", shouldResetRuleWithPartialResponseStrategySet)
+	t.Run("shouldAcceptRuleWithLimitThanos", shouldAcceptRuleWithLimitThanos)
+	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
+	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
+	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
+
+	// UTF-8 validation
+	t.Run("UTF8Validation", TestUTF8Validation)
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
@@ -150,9 +159,10 @@ func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 			},
 		}},
 	}
-	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
+	promVersion, err := semver.ParseTolerant("2.55.0")
+	require.NoError(t, err)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	_, err = pr.generateRulesConfiguration(rules)
 	require.Error(t, err)
 }
 
@@ -440,7 +450,7 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 	ruleLbel := map[string]string{}
 	ruleLbel["label"] = strings.Repeat("a", MaxConfigMapDataSize+1)
 
-	err := ValidateRule(monitoringv1.PrometheusRuleSpec{
+	ruleSpec := monitoringv1.PrometheusRuleSpec{
 		Groups: []monitoringv1.RuleGroup{
 			{
 				Name: "group",
@@ -454,8 +464,13 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 				},
 			},
 		},
-	})
-	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit")
+	}
+
+	err := ValidateRule(ruleSpec, model.UTF8Validation)
+	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with UTF8Validation")
+
+	err = ValidateRule(ruleSpec, model.LegacyValidation)
+	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with LegacyValidation")
 }
 
 func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
@@ -508,4 +523,55 @@ func shouldAcceptRuleWithGroupLabels(t *testing.T) {
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	_, err := pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
+}
+
+func TestUTF8Validation(t *testing.T) {
+	rule := createUTF8Rule()
+
+	tests := []struct {
+		name          string
+		format        RuleConfigurationFormat
+		version       string
+		shouldSucceed bool
+	}{
+		{"Prometheus 3.0.0 accepts UTF-8", PrometheusFormat, "3.0.0", true},
+		{"Prometheus 2.55.0 rejects UTF-8", PrometheusFormat, "2.55.0", false},
+		{"Thanos 0.38.0 accepts UTF-8", ThanosFormat, "0.38.0", true},
+		{"Thanos 0.37.0 rejects UTF-8", ThanosFormat, "0.37.0", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			version, err := semver.ParseTolerant(tt.version)
+			require.NoError(t, err)
+
+			pr := newRuleSelectorForConfigGeneration(tt.format, version)
+			_, err = pr.generateRulesConfiguration(rule)
+
+			if tt.shouldSucceed {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
+		})
+	}
+}
+
+func createUTF8Rule() *monitoringv1.PrometheusRule {
+	return &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+						Labels: map[string]string{
+							"unicode_测试": "utf8_value",
+						},
+					},
+				},
+			},
+		}},
+	}
 }

@@ -68,13 +68,6 @@ scrape_configs:
   - target_label: endpoint
     replacement: web
   - source_labels:
-    - __meta_kubernetes_pod_ready
-    regex: (.*)
-    replacement: $1
-    action: replace
-  - target_label: ns-key
-    replacement: default
-  - source_labels:
     - __address__
     - __tmp_hash
     target_label: __tmp_hash
@@ -91,11 +84,3 @@ scrape_configs:
     - __tmp_disable_sharding
     regex: $(SHARD);|.+;.+
     action: keep
-  metric_relabel_configs:
-  - source_labels:
-    - pod_name
-    target_label: ns-key
-    regex: my-job-pod-.+
-    action: drop
-  - target_label: ns-key
-    replacement: default

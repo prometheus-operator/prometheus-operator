@@ -42,7 +42,6 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
-	validationv1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"

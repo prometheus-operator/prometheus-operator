@@ -1,0 +1,70 @@
+{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1",
+  "request": {
+    "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
+    "kind": {
+      "group": "monitoring.coreos.com",
+      "version": "v1",
+      "kind": "PrometheusRule"
+    },
+    "resource": {
+      "group": "monitoring.coreos.com",
+      "version": "v1",
+      "resource": "prometheusrules"
+    },
+    "namespace": "monitoring",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "kubernetes-admin",
+      "groups": [
+        "system:masters",
+        "system:authenticated"
+      ]
+    },
+    "object": {
+      "apiVersion": "monitoring.coreos.com/v1",
+      "kind": "PrometheusRule",
+      "metadata": {
+        "creationTimestamp": "2019-03-27T13:02:09Z",
+        "generation": 1,
+        "name": "test-utf8",
+        "namespace": "monitoring",
+        "uid": "87c5d31d-5090-11e9-b9b4-02425473f309"
+      },
+      "spec": {
+        "groups": [
+          {
+            "name": "test.utf8.rules",
+            "rules": [
+              {
+                "alert": "TestUTF8Alert",
+                "annotations": {
+                  "message": "UTF-8 test rule with émojis 🚀 and ünicöde",
+                  "description": "测试 UTF-8 characters in annotations"
+                },
+                "expr": "up{app=\"myapp\",service=\"测试服务\"} > 0",
+                "for": "5m",
+                "labels": {
+                  "severity": "critical",
+                  "team": "platform",
+                  "测试标签": "测试_label_with_中文"
+                }
+              },
+              {
+                 "record": "http.requests.rate_5m",
+                 "expr": "sum by(service,job,\"http.request\") (rate({\"http.requests.total\",\"error.type\"!=\"\"}[5m]))",
+                "labels": {
+                  "type": "recording",
+                  "描述": "Recording rule with UTF-8 characters 🎯"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "oldObject": null,
+    "dryRun": false
+  }
+}

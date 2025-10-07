@@ -20,13 +20,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"regexp"
 	"slices"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/blang/semver/v4"
-	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,9 +47,11 @@ const (
 	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
 
-// validationScheme defines how to validate label names.
-// For now, the operator only supports the legacy scheme (e.g. not UTF-8).
-var validationScheme model.ValidationScheme = model.LegacyValidation
+// isValidLabelName validates a label name using version-aware validation scheme.
+func isValidLabelName(labelName string, version semver.Version) bool {
+	scheme := operator.ValidationSchemeForPrometheus(version)
+	return scheme.IsValidLabelName(labelName)
+}
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus or PrometheusAgent.
@@ -388,9 +388,17 @@ func (lcv *LabelConfigValidator) Validate(rcs []monitoringv1.RelabelConfig) erro
 	return nil
 }
 
-func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
-	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+// From https://github.com/prometheus/prometheus/blob/747c5ee2b19a9e6a51acfafae9fa2c77e224803d/model/relabel/relabel.go#L378-L380
+func varInRegexTemplate(template string) bool {
+	return strings.Contains(template, "$")
+}
 
+func (lcv *LabelConfigValidator) isValidLabelName(labelName string) bool {
+	validationScheme := operator.ValidationSchemeForPrometheus(lcv.v)
+	return validationScheme.IsValidLabelName(labelName)
+}
+
+func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 	minimumVersionCaseActions := lcv.v.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := lcv.v.GTE(semver.MustParse("2.41.0"))
 	if rc.Action == "" {
@@ -418,7 +426,15 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if (action == string(relabel.Replace)) && !varInRegexTemplate(rc.TargetLabel) && !lcv.isValidLabelName(rc.TargetLabel) {
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if (action == string(relabel.Replace)) && varInRegexTemplate(rc.TargetLabel) && !lcv.isValidLabelName(rc.TargetLabel) {
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !lcv.isValidLabelName(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -426,13 +442,11 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
-	if action == string(relabel.LabelMap) {
-		if rc.Replacement != nil && !relabelTarget.MatchString(*rc.Replacement) {
-			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
-		}
+	if action == string(relabel.LabelMap) && (rc.Replacement != nil) && !lcv.isValidLabelName(*rc.Replacement) {
+		return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 	}
 
-	if action == string(relabel.HashMod) && !validationScheme.IsValidLabelName(rc.TargetLabel) {
+	if action == string(relabel.HashMod) && !lcv.isValidLabelName(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -515,29 +529,6 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 	for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 		epErr := fmt.Errorf("endpoint[%d]", i)
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
-			if _, err := rs.store.GetSecretKey(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret); err != nil {
-				return fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
-			}
-		}
-
-		if err := rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth); err != nil {
-			return fmt.Errorf("%w: basicAuth: %w", epErr, err)
-		}
-
-		if err := rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
-			return fmt.Errorf("%w: tlsConfig: %w", epErr, err)
-		}
-
-		if err := rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2); err != nil {
-			return fmt.Errorf("%w: oauth2: %w", epErr, err)
-		}
-
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization); err != nil {
-			return fmt.Errorf("%w: authorization: %w", epErr, err)
-		}
-
 		if err := validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
@@ -550,13 +541,51 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, pm.GetNamespace()); err != nil {
-			return fmt.Errorf("%w: proxyConfig: %w", epErr, err)
+		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfig, pm.GetNamespace()); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
 		}
 	}
 
 	if err := validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
 		return fmt.Errorf("scrapeClassName: %w", err)
+	}
+
+	return nil
+}
+
+func (rs *ResourceSelector) addHTTPConfigToStore(
+	ctx context.Context,
+	httpConfig monitoringv1.HTTPConfig,
+	namespace string) error {
+	if err := httpConfig.Validate(); err != nil {
+		return err
+	}
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if httpConfig.BearerTokenSecret != nil && httpConfig.BearerTokenSecret.Name != "" && httpConfig.BearerTokenSecret.Key != "" {
+		if _, err := rs.store.GetSecretKey(ctx, namespace, *httpConfig.BearerTokenSecret); err != nil {
+			return fmt.Errorf("bearerTokenSecret: %w", err)
+		}
+	}
+
+	if err := rs.store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth); err != nil {
+		return fmt.Errorf("basicAuth: %w", err)
+	}
+
+	if err := rs.store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	if err := rs.store.AddOAuth2(ctx, namespace, httpConfig.OAuth2); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := rs.store.AddSafeAuthorizationCredentials(ctx, namespace, httpConfig.Authorization); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := addProxyConfigToStore(ctx, httpConfig.ProxyConfig, rs.store, namespace); err != nil {
+		return fmt.Errorf("proxyConfig: %w", err)
 	}
 
 	return nil
@@ -1432,7 +1461,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
 		for labelName := range config.Labels {
-			if !validationScheme.IsValidLabelName(labelName) {
+			if !isValidLabelName(labelName, rs.version) {
 				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 			}
 		}

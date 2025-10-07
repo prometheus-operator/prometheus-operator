@@ -70,7 +70,7 @@ type ConfigGenerator struct {
 	version                    semver.Version
 	notCompatible              bool
 	prom                       monitoringv1.PrometheusInterface
-	useEndpointSlice           bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
+	endpointSliceSupported     bool // True when the cluster supports EndpointSlice.
 	scrapeClasses              map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName     string
 	daemonSet                  bool
@@ -84,8 +84,7 @@ type ConfigGeneratorOption func(*ConfigGenerator)
 
 func WithEndpointSliceSupport() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
-		cpf := cg.prom.GetCommonPrometheusFields()
-		cg.useEndpointSlice = ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole
+		cg.endpointSliceSupported = true
 	}
 }
 
@@ -165,13 +164,28 @@ func NewConfigGenerator(
 	return cg, nil
 }
 
-func (cg *ConfigGenerator) endpointRoleFlavor() string {
-	role := kubernetesSDRoleEndpoint
-	if cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice {
-		role = kubernetesSDRoleEndpointSlice
+// defaultEndpointRoleFlavor returns the default role (endpoints or
+// endpointslice) to be used for Kubernetes service discovery configurations.
+func (cg *ConfigGenerator) defaultEndpointRoleFlavor() string {
+	return cg.endpointRoleFlavor(cg.prom.GetCommonPrometheusFields().ServiceDiscoveryRole)
+}
+
+// endpointRoleFlavor returns the Kubernetes service discovery's role
+// (endpoints or endpointslice) corresponding to the given value.
+func (cg *ConfigGenerator) endpointRoleFlavor(sdr *monitoringv1.ServiceDiscoveryRole) string {
+	if !cg.endpointSliceSupported {
+		return kubernetesSDRoleEndpoint
 	}
 
-	return role
+	if cg.version.LT(semver.MustParse("2.21.0")) {
+		return kubernetesSDRoleEndpoint
+	}
+
+	if ptr.Deref(sdr, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole {
+		return kubernetesSDRoleEndpointSlice
+	}
+
+	return kubernetesSDRoleEndpoint
 }
 
 func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monitoringv1.ScrapeClass, string, error) {
@@ -231,7 +245,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 		version:                    cg.version,
 		notCompatible:              cg.notCompatible,
 		prom:                       cg.prom,
-		useEndpointSlice:           cg.useEndpointSlice,
+		endpointSliceSupported:     cg.endpointSliceSupported,
 		scrapeClasses:              cg.scrapeClasses,
 		defaultScrapeClassName:     cg.defaultScrapeClassName,
 		daemonSet:                  cg.daemonSet,
@@ -256,7 +270,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			version:                    cg.version,
 			notCompatible:              true,
 			prom:                       cg.prom,
-			useEndpointSlice:           cg.useEndpointSlice,
+			endpointSliceSupported:     cg.endpointSliceSupported,
 			scrapeClasses:              cg.scrapeClasses,
 			defaultScrapeClassName:     cg.defaultScrapeClassName,
 			daemonSet:                  cg.daemonSet,
@@ -284,7 +298,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			version:                    cg.version,
 			notCompatible:              true,
 			prom:                       cg.prom,
-			useEndpointSlice:           cg.useEndpointSlice,
+			endpointSliceSupported:     cg.endpointSliceSupported,
 			scrapeClasses:              cg.scrapeClasses,
 			defaultScrapeClassName:     cg.defaultScrapeClassName,
 			daemonSet:                  cg.daemonSet,
@@ -649,6 +663,10 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
 
+	if sigv4.UseFIPSSTSEndpoint != nil {
+		sigv4Cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(sigv4Cfg, "use_fips_sts_endpoint", *sigv4.UseFIPSSTSEndpoint)
+	}
+
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "sigv4", sigv4Cfg)
 }
 
@@ -843,6 +861,28 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	}
 
 	return cg.AppendMapItem(cfg, "tls_config", safetlsConfig)
+}
+
+func (cg *ConfigGenerator) addHTTPConfigToYAML(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
+	httpConfig *monitoringv1.HTTPConfig,
+	scrapeClass monitoringv1.ScrapeClass,
+
+) yaml.MapSlice {
+	if httpConfig == nil {
+		return cfg
+	}
+
+	if httpConfig.FollowRedirects != nil {
+		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *httpConfig.FollowRedirects)
+	}
+
+	if httpConfig.EnableHTTP2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *httpConfig.EnableHTTP2)
+	}
+
+	return cg.addTLStoYaml(cfg, store, mergeSafeTLSConfigWithScrapeClass(httpConfig.TLSConfig, scrapeClass))
 }
 
 func (cg *ConfigGenerator) addTLStoYaml(
@@ -1335,20 +1375,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
-	if ep.FollowRedirects != nil {
-		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
-	}
-	if ep.EnableHttp2 != nil {
-		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
-	}
 
-	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-	if ep.BearerTokenSecret.Name != "" {
+	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
 		cg.logger.Debug("'bearerTokenSecret' is deprecated, use 'authorization' instead.")
 
-		b, err := s.GetSecretKey(ep.BearerTokenSecret)
+		b, err := s.GetSecretKey(*ep.HTTPConfig.BearerTokenSecret)
 		if err != nil {
 			cg.logger.Error("invalid bearer token secret reference", "err", err)
 		} else {
@@ -1818,7 +1852,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	s := store.ForNamespace(m.Namespace)
 
-	role := cg.endpointRoleFlavor()
+	role := cg.defaultEndpointRoleFlavor()
+	if m.Spec.ServiceDiscoveryRole != nil {
+		role = cg.endpointRoleFlavor(m.Spec.ServiceDiscoveryRole)
+	}
 	roleSelectors := []string{role, strings.ToLower(string(monitoringv1alpha1.KubernetesRoleService))}
 
 	cfg = append(cfg, cg.generateK8SSDConfig(
@@ -2379,7 +2416,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		cfg = cg.addProxyConfigtoYaml(cfg, store, am.ProxyConfig)
 
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.defaultEndpointRoleFlavor(), nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -2416,7 +2453,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		if am.Port.StrVal != "" {
 			sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
-			if cg.endpointRoleFlavor() == kubernetesSDRoleEndpointSlice {
+			if cg.defaultEndpointRoleFlavor() == kubernetesSDRoleEndpointSlice {
 				sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
 			}
 			relabelings = append(relabelings, yaml.MapSlice{

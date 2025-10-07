@@ -320,6 +320,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusServiceName":                     testPrometheusServiceName,
 		"PrometheusAgentSSetServiceName":            testPrometheusAgentSSetServiceName,
 		"PrometheusReconciliationOnSecretChanges":   testPrometheusReconciliationOnSecretChanges,
+		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
+		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
 	}
 
 	for name, f := range testFuncs {
@@ -439,9 +441,11 @@ func TestGatedFeatures(t *testing.T) {
 		"GarbageCollectionOfServiceMonitorBinding":           testGarbageCollectionOfServiceMonitorBinding,
 		"RmServiceMonitorBindingDuringWorkloadDelete":        testRmServiceMonitorBindingDuringWorkloadDelete,
 		"PodMonitorStatusSubresource":                        testPodMonitorStatusSubresource,
-		"ProbeStatusSubresource":                             testProbeStatusSubresource,
 		"GarbageCollectionOfPodMonitorBinding":               testGarbageCollectionOfPodMonitorBinding,
 		"RmPodMonitorBindingDuringWorkloadDelete":            testRmPodMonitorBindingDuringWorkloadDelete,
+		"ProbeStatusSubresource":                             testProbeStatusSubresource,
+		"GarbageCollectionOfProbeBinding":                    testGarbageCollectionOfProbeBinding,
+		"RmProbeBindingDuringWorkloadDelete":                 testRmProbeBindingDuringWorkloadDelete,
 		"ScrapeConfigStatusSubresource":                      testScrapeConfigStatusSubresource,
 		"GarbageCollectionOfScrapeConfigBinding":             testGarbageCollectionOfScrapeConfigBinding,
 		"RmScrapeConfigBindingDuringWorkloadDelete":          testRmScrapeConfigBindingDuringWorkloadDelete,

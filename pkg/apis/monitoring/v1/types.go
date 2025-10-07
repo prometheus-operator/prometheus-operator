@@ -537,10 +537,9 @@ func (c *WebTLSConfig) Validate() error {
 	return nil
 }
 
-// LabelName is a valid Prometheus label name which may only contain ASCII
-// letters, numbers, as well as underscores.
-//
-// +kubebuilder:validation:Pattern:="^[a-zA-Z_][a-zA-Z0-9_]*$"
+// LabelName is a valid Prometheus label name.
+// For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+// For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
 type LabelName string
 
 // Endpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -759,6 +758,10 @@ type OAuth2 struct {
 }
 
 func (o *OAuth2) Validate() error {
+	if o == nil {
+		return nil
+	}
+
 	if o.TokenURL == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
