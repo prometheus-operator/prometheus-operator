@@ -529,29 +529,6 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 	for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 		epErr := fmt.Errorf("endpoint[%d]", i)
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
-			if _, err := rs.store.GetSecretKey(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret); err != nil {
-				return fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
-			}
-		}
-
-		if err := rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth); err != nil {
-			return fmt.Errorf("%w: basicAuth: %w", epErr, err)
-		}
-
-		if err := rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
-			return fmt.Errorf("%w: tlsConfig: %w", epErr, err)
-		}
-
-		if err := rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2); err != nil {
-			return fmt.Errorf("%w: oauth2: %w", epErr, err)
-		}
-
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization); err != nil {
-			return fmt.Errorf("%w: authorization: %w", epErr, err)
-		}
-
 		if err := validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
@@ -564,13 +541,51 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, pm.GetNamespace()); err != nil {
-			return fmt.Errorf("%w: proxyConfig: %w", epErr, err)
+		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfig, pm.GetNamespace()); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
 		}
 	}
 
 	if err := validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
 		return fmt.Errorf("scrapeClassName: %w", err)
+	}
+
+	return nil
+}
+
+func (rs *ResourceSelector) addHTTPConfigToStore(
+	ctx context.Context,
+	httpConfig monitoringv1.HTTPConfig,
+	namespace string) error {
+	if err := httpConfig.Validate(); err != nil {
+		return err
+	}
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if httpConfig.BearerTokenSecret != nil && httpConfig.BearerTokenSecret.Name != "" && httpConfig.BearerTokenSecret.Key != "" {
+		if _, err := rs.store.GetSecretKey(ctx, namespace, *httpConfig.BearerTokenSecret); err != nil {
+			return fmt.Errorf("bearerTokenSecret: %w", err)
+		}
+	}
+
+	if err := rs.store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth); err != nil {
+		return fmt.Errorf("basicAuth: %w", err)
+	}
+
+	if err := rs.store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	if err := rs.store.AddOAuth2(ctx, namespace, httpConfig.OAuth2); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := rs.store.AddSafeAuthorizationCredentials(ctx, namespace, httpConfig.Authorization); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := addProxyConfigToStore(ctx, httpConfig.ProxyConfig, rs.store, namespace); err != nil {
+		return fmt.Errorf("proxyConfig: %w", err)
 	}
 
 	return nil

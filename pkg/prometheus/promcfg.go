@@ -859,6 +859,28 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	return cg.AppendMapItem(cfg, "tls_config", safetlsConfig)
 }
 
+func (cg *ConfigGenerator) addHTTPConfigToYAML(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
+	httpConfig *monitoringv1.HTTPConfig,
+	scrapeClass monitoringv1.ScrapeClass,
+
+) yaml.MapSlice {
+	if httpConfig == nil {
+		return cfg
+	}
+
+	if httpConfig.FollowRedirects != nil {
+		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *httpConfig.FollowRedirects)
+	}
+
+	if httpConfig.EnableHTTP2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *httpConfig.EnableHTTP2)
+	}
+
+	return cg.addTLStoYaml(cfg, store, mergeSafeTLSConfigWithScrapeClass(httpConfig.TLSConfig, scrapeClass))
+}
+
 func (cg *ConfigGenerator) addTLStoYaml(
 	cfg yaml.MapSlice,
 	store assets.StoreGetter,
@@ -1349,20 +1371,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
-	if ep.FollowRedirects != nil {
-		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
-	}
-	if ep.EnableHttp2 != nil {
-		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
-	}
 
-	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-	if ep.BearerTokenSecret.Name != "" {
+	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
 		cg.logger.Debug("'bearerTokenSecret' is deprecated, use 'authorization' instead.")
 
-		b, err := s.GetSecretKey(ep.BearerTokenSecret)
+		b, err := s.GetSecretKey(*ep.HTTPConfig.BearerTokenSecret)
 		if err != nil {
 			cg.logger.Error("invalid bearer token secret reference", "err", err)
 		} else {
