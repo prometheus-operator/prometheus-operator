@@ -1863,7 +1863,7 @@ type Sigv4 struct {
 	// roleArn defines the named AWS profile used to authenticate.
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
-	// useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 	// It requires Prometheus >= v2.54.0.
 	//
 	// +optional
