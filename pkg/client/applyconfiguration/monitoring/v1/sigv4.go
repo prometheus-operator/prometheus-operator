@@ -23,11 +23,12 @@ import (
 // Sigv4ApplyConfiguration represents a declarative configuration of the Sigv4 type for use
 // with apply.
 type Sigv4ApplyConfiguration struct {
-	Region    *string                   `json:"region,omitempty"`
-	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
-	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
-	Profile   *string                   `json:"profile,omitempty"`
-	RoleArn   *string                   `json:"roleArn,omitempty"`
+	Region             *string                   `json:"region,omitempty"`
+	AccessKey          *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	SecretKey          *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	Profile            *string                   `json:"profile,omitempty"`
+	RoleArn            *string                   `json:"roleArn,omitempty"`
+	UseFIPSSTSEndpoint *bool                     `json:"useFIPSSTSEndpoint,omitempty"`
 }
 
 // Sigv4ApplyConfiguration constructs a declarative configuration of the Sigv4 type for use with
@@ -73,5 +74,13 @@ func (b *Sigv4ApplyConfiguration) WithProfile(value string) *Sigv4ApplyConfigura
 // If called multiple times, the RoleArn field is set to the value of the last call.
 func (b *Sigv4ApplyConfiguration) WithRoleArn(value string) *Sigv4ApplyConfiguration {
 	b.RoleArn = &value
+	return b
+}
+
+// WithUseFIPSSTSEndpoint sets the UseFIPSSTSEndpoint field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UseFIPSSTSEndpoint field is set to the value of the last call.
+func (b *Sigv4ApplyConfiguration) WithUseFIPSSTSEndpoint(value bool) *Sigv4ApplyConfiguration {
+	b.UseFIPSSTSEndpoint = &value
 	return b
 }

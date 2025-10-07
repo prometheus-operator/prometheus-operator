@@ -1586,6 +1586,11 @@ spec:
                               - key
                               type: object
                               x-kubernetes-map-type: atomic
+                            useFIPSSTSEndpoint:
+                              description: |-
+                                useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+                                It requires Prometheus >= v2.54.0.
+                              type: boolean
                           type: object
                         timeout:
                           description: timeout defines a per-target Alertmanager timeout
@@ -7827,6 +7832,11 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        useFIPSSTSEndpoint:
+                          description: |-
+                            useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+                            It requires Prometheus >= v2.54.0.
+                          type: boolean
                       type: object
                     tlsConfig:
                       description: tlsConfig to use for the URL.
