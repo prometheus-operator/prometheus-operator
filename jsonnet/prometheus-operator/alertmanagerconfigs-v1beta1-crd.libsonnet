@@ -10664,7 +10664,7 @@
                 type: 'array',
               },
               route: {
-                description: "route defines the Alertmanager route definition for alerts matching the resource's\nnamespace. If present, it will be added to the generated Alertmanager\nconfiguration as a first-level route.",
+                description: "route defines the Alertmanager route definition for incoming alerts. It will be added to the\ngenerated Alertmanager configuration as a first-level route. The matching behavior of the\nroute depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                 properties: {
                   activeTimeIntervals: {
                     description: 'activeTimeIntervals is a list of TimeInterval names when this route should be active.',
@@ -10693,7 +10693,7 @@
                     type: 'string',
                   },
                   matchers: {
-                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object\nnamespace>` matcher.",
+                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,\nunless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                     items: {
                       description: "Matcher defines how to match on alert's labels.",
                       properties: {

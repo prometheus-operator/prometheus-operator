@@ -23721,9 +23721,9 @@ spec:
                 type: array
               route:
                 description: |-
-                  route defines the Alertmanager route definition for alerts matching the resource's
-                  namespace. If present, it will be added to the generated Alertmanager
-                  configuration as a first-level route.
+                  route defines the Alertmanager route definition for incoming alerts. It will be added to the
+                  generated Alertmanager configuration as a first-level route. The matching behavior of the
+                  route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
                 properties:
                   activeTimeIntervals:
                     description: activeTimeIntervals is a list of TimeInterval names
@@ -23761,8 +23761,8 @@ spec:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first
                       level route, the operator removes any existing equality and regexp
-                      matcher on the `namespace` label and adds a `namespace: <object
-                      namespace>` matcher.
+                      matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+                      unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:
