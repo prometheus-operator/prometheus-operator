@@ -8049,7 +8049,7 @@ spec:
                                 x-kubernetes-map-type: atomic
                               useFIPSSTSEndpoint:
                                 description: |-
-                                  useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+                                  useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
                                   It requires Prometheus >= v2.54.0.
                                 type: boolean
                             type: object
@@ -19876,7 +19876,7 @@ spec:
                                 x-kubernetes-map-type: atomic
                               useFIPSSTSEndpoint:
                                 description: |-
-                                  useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+                                  useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
                                   It requires Prometheus >= v2.54.0.
                                 type: boolean
                             type: object

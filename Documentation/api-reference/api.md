@@ -18493,7 +18493,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+<p>useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
