@@ -15,18 +15,28 @@
 package v1
 
 import (
+	"fmt"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig) error {
-	if gc == nil {
-		return nil
+// ValidateAlertmanagerConfig checks that the given resource complies with the
+// semantics of the Alertmanager configuration.
+// In particular, it verifies things that can't be modelized with the OpenAPI
+// specification such as routes should refer to an existing receiver.
+func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
+	// Validate Global Config
+	if err := validateGlobalConfig(*am.Spec.AlertmanagerConfiguration.Global); err != nil {
+		return err
 	}
 
-	if gc.HTTPConfig != nil {
-		if err := gc.HTTPConfig.Validate(); err != nil {
-			return err
-		}
+	return nil
+}
+
+func validateGlobalConfig(gc monitoringv1.AlertmanagerGlobalConfig) error {
+
+	if err := gc.HTTPConfig.Validate(); err != nil {
+		return fmt.Errorf("failed to validate global 'httpConfig'")
 	}
 
 	return nil
