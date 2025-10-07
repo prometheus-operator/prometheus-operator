@@ -449,6 +449,7 @@ func TestGatedFeatures(t *testing.T) {
 		"GarbageCollectionOfScrapeConfigBinding":             testGarbageCollectionOfScrapeConfigBinding,
 		"RmScrapeConfigBindingDuringWorkloadDelete":          testRmScrapeConfigBindingDuringWorkloadDelete,
 		"FinalizerForPromAgentWhenStatusForConfigResEnabled": testFinalizerForPromAgentWhenStatusForConfigResEnabled,
+		"PrometheusAgentDaemonSetWithVolumes":          testPrometheusAgentDaemonSetWithVolumes,
 	}
 
 	for name, f := range testFuncs {
