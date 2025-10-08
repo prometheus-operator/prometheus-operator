@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"strings"
@@ -23,7 +24,10 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -54,7 +58,7 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
 	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
 
-	// UTF-8 validation
+	// UTF-8 validation.
 	t.Run("UTF8Validation", TestUTF8Validation)
 }
 
@@ -574,4 +578,103 @@ func createUTF8Rule() *monitoringv1.PrometheusRule {
 			},
 		}},
 	}
+}
+
+func TestPrometheusRuleSync(t *testing.T) {
+	c := fake.NewClientset(
+		// This configmap should be left untouched.
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "prometheus-bar-rulefiles-0",
+				Namespace: "monitoring",
+				Labels: map[string]string{
+					"prometheus-name": "bar",
+				},
+				UID: "immutable",
+			},
+			Data: map[string]string{
+				"key1": "xxx",
+			},
+		},
+	)
+	cmClient := c.CoreV1().ConfigMaps("monitoring")
+
+	prs := NewPrometheusRuleSyncer(
+		slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		cmClient,
+		map[string]string{"prometheus-name": "foo"},
+		[]ObjectOption{
+			WithName("prometheus-foo"),
+		},
+	)
+
+	t.Run("should create configmap with no rules", func(t *testing.T) {
+		configMaps, err := prs.Sync(context.Background(), map[string]string{})
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "prometheus-foo-rulefiles-0", cms.Items[0].Name)
+		require.Len(t, cms.Items[0].Data, 0)
+	})
+
+	t.Run("should update configmap with 1 rule", func(t *testing.T) {
+		configMaps, err := prs.Sync(context.Background(), map[string]string{"rule1.yaml": "xxx"})
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "prometheus-foo-rulefiles-0", cms.Items[0].Name)
+		require.Equal(t, cms.Items[0].Data["rule1.yaml"], "xxx")
+	})
+
+	//t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
+	t.Run("should split big rules into multiple configmaps", func(t *testing.T) {
+		rules := map[string]string{
+			"first.yaml":  strings.Repeat("a", MaxConfigMapDataSize),
+			"second.yaml": "a",
+		}
+		configMaps, err := prs.Sync(context.Background(), rules)
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 2)
+		for _, cm := range cms.Items {
+			switch cm.Name {
+			case "prometheus-foo-rulefiles-0":
+				require.Len(t, cm.Data, 1)
+				require.Equal(t, cm.Data["first.yaml"], rules["first.yaml"])
+			case "prometheus-foo-rulefiles-1":
+				require.Len(t, cm.Data, 1)
+				require.Equal(t, cm.Data["second.yaml"], "a")
+			default:
+				t.Errorf("unexpected configmap: %s", cm.Name)
+			}
+		}
+	})
+
+	t.Run("should keep 1 configmap with no rules", func(t *testing.T) {
+		configMaps, err := prs.Sync(context.Background(), map[string]string{})
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "prometheus-foo-rulefiles-0", cms.Items[0].Name)
+		require.Len(t, cms.Items[0].Data, 0)
+	})
+
+	t.Run("should not update other configmaps", func(t *testing.T) {
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=bar"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "immutable", string(cms.Items[0].UID))
+	})
 }
