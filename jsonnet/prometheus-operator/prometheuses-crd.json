@@ -7883,7 +7883,21 @@
                       }
                     },
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic"
+                    "x-kubernetes-map-type": "atomic",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "serviceMonitorNamespaceSelector matchLabels keys must not exceed 63 characters",
+                        "rule": "!has(self.matchLabels) || self.matchLabels.all(key, size(key) <= 63)"
+                      },
+                      {
+                        "message": "serviceMonitorNamespaceSelector matchExpressions keys must not exceed 63 characters",
+                        "rule": "!has(self.matchExpressions) || self.matchExpressions.all(expr, size(expr.key) <= 63)"
+                      },
+                      {
+                        "message": "serviceMonitorNamespaceSelector matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist",
+                        "rule": "!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])"
+                      }
+                    ]
                   },
                   "serviceMonitorSelector": {
                     "description": "serviceMonitorSelector defines the serviceMonitors to be selected for target discovery. An empty label\nselector matches all objects. A null label selector matches no objects.\n\nIf `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`\nand `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.\nThe Prometheus operator will ensure that the Prometheus configuration's\nSecret exists, but it is the responsibility of the user to provide the raw\ngzipped Prometheus configuration under the `prometheus.yaml.gz` key.\nThis behavior is *deprecated* and will be removed in the next major version\nof the custom resource definition. It is recommended to use\n`spec.additionalScrapeConfigs` instead.",
@@ -7928,7 +7942,21 @@
                       }
                     },
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic"
+                    "x-kubernetes-map-type": "atomic",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "serviceMonitorSelector matchLabels keys must not exceed 63 characters",
+                        "rule": "!has(self.matchLabels) || self.matchLabels.all(key, size(key) <= 63)"
+                      },
+                      {
+                        "message": "serviceMonitorSelector matchExpressions keys must not exceed 63 characters",
+                        "rule": "!has(self.matchExpressions) || self.matchExpressions.all(expr, size(expr.key) <= 63)"
+                      },
+                      {
+                        "message": "serviceMonitorSelector matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist",
+                        "rule": "!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])"
+                      }
+                    ]
                   },
                   "serviceName": {
                     "description": "serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.\nIf defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.\nIf empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,\nor `prometheus-agent-operated` for PrometheusAgent resources.\nWhen deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",

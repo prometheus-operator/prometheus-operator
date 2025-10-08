@@ -7604,6 +7604,19 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: serviceMonitorNamespaceSelector matchLabels keys must not
+                    exceed 63 characters
+                  rule: '!has(self.matchLabels) || self.matchLabels.all(key, size(key)
+                    <= 63)'
+                - message: serviceMonitorNamespaceSelector matchExpressions keys must
+                    not exceed 63 characters
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    size(expr.key) <= 63)'
+                - message: 'serviceMonitorNamespaceSelector matchExpressions operator
+                    must be one of: In, NotIn, Exists, DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               serviceMonitorSelector:
                 description: |-
                   serviceMonitorSelector defines the serviceMonitors to be selected for target discovery. An empty label
@@ -7661,6 +7674,19 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: serviceMonitorSelector matchLabels keys must not exceed
+                    63 characters
+                  rule: '!has(self.matchLabels) || self.matchLabels.all(key, size(key)
+                    <= 63)'
+                - message: serviceMonitorSelector matchExpressions keys must not exceed
+                    63 characters
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    size(expr.key) <= 63)'
+                - message: 'serviceMonitorSelector matchExpressions operator must
+                    be one of: In, NotIn, Exists, DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               serviceName:
                 description: |-
                   serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
