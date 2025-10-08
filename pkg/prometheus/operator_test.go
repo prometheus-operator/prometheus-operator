@@ -204,4 +204,3 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		})
 	}
 }
-

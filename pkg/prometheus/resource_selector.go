@@ -171,7 +171,7 @@ func selectObjects[T operator.ConfigurationResource](
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
-        
+
 		res[namespaceAndName] = operator.NewTypedConfigurationResource(o, err, reason, obj.(metav1.Object).GetGeneration())
 	}
 
