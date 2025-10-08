@@ -53,12 +53,6 @@ func isValidLabelName(labelName string, version semver.Version) bool {
 	return scheme.IsValidLabelName(labelName)
 }
 
-// ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
-// selectable by Prometheus or PrometheusAgent.
-type ConfigurationResource interface {
-	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
-}
-
 // ResourceSelector knows how to select and verify scrape configuration
 // resources that are matched by a Prometheus or PrometheusAgent object.
 type ResourceSelector struct {
@@ -71,51 +65,6 @@ type ResourceSelector struct {
 	accessor           *operator.Accessor
 
 	eventRecorder *operator.EventRecorder
-}
-
-// TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
-type TypedConfigurationResource[T ConfigurationResource] struct {
-	resource   T
-	err        error  // Error encountered during selection or validation (nil if valid).
-	reason     string // Reason for rejection; empty if accepted.
-	generation int64  // Generation of the desired state (spec).
-}
-
-func (r *TypedConfigurationResource[T]) Resource() T {
-	return r.resource
-}
-
-// Conditions returns a list of conditions based on the validation status of the configuration resource.
-func (r *TypedConfigurationResource[T]) Conditions() []monitoringv1.ConfigResourceCondition {
-	condition := monitoringv1.ConfigResourceCondition{
-		Type:               monitoringv1.Accepted,
-		Status:             monitoringv1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-		Reason:             r.reason,
-		ObservedGeneration: r.generation,
-	}
-
-	if r.err != nil {
-		condition.Status = monitoringv1.ConditionFalse
-		condition.Message = r.err.Error()
-	}
-
-	return []monitoringv1.ConfigResourceCondition{condition}
-}
-
-// TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
-type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
-
-// ValidResources returns only the resources which the operator considers to be valid.
-// The keys of the returned map identify the resources using the `<namespace>/<name>` format.
-func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
-	validRes := make(map[string]T)
-	for k, res := range resources {
-		if res.err == nil {
-			validRes[k] = res.resource
-		}
-	}
-	return validRes
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -146,7 +95,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T ConfigurationResource](
+func selectObjects[T operator.ConfigurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
@@ -155,7 +104,7 @@ func selectObjects[T ConfigurationResource](
 	nsSelector *metav1.LabelSelector,
 	listFn ListAllByNamespaceFn,
 	checkFn func(context.Context, T) error,
-) (TypedResourcesSelection[T], error) {
+) (operator.TypedResourcesSelection[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
 
@@ -192,7 +141,7 @@ func selectObjects[T ConfigurationResource](
 	var (
 		rejected int
 		valid    []string
-		res      = make(TypedResourcesSelection[T], len(objects))
+		res      = make(operator.TypedResourcesSelection[T], len(objects))
 	)
 
 	for namespaceAndName, obj := range objects {
@@ -208,12 +157,7 @@ func selectObjects[T ConfigurationResource](
 			valid = append(valid, namespaceAndName)
 		}
 
-		res[namespaceAndName] = TypedConfigurationResource[T]{
-			resource:   o,
-			err:        err,
-			reason:     reason,
-			generation: obj.(metav1.Object).GetGeneration(),
-		}
+		res[namespaceAndName] = operator.NewTypedConfigurationResource(o, err, reason, obj.(metav1.Object).GetGeneration())
 	}
 
 	logger.Debug("valid objects selected", "objects", strings.Join(valid, ","))
@@ -229,7 +173,7 @@ func selectObjects[T ConfigurationResource](
 // SelectServiceMonitors returns the ServiceMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -487,7 +431,7 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 // SelectPodMonitors returns the PodMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
+func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -579,7 +523,7 @@ func (rs *ResourceSelector) addHTTPConfigToStore(
 // SelectProbes returns the probes matching the selectors specified in the Prometheus CR.
 // This function also populates authentication stores and performs
 // validations against scrape intervals, relabel configs and Probe URLs.
-func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.Probe], error) {
+func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -689,7 +633,7 @@ func validateServer(server string) error {
 
 // SelectScrapeConfigs returns the ScrapeConfigs which match the selectors in the
 // Prometheus CR and filters them returning all the configuration.
-func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(

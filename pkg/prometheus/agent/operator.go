@@ -916,7 +916,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
-	var scrapeConfigs prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	var scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {

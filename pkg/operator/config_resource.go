@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package prometheus
+package operator
 
 import (
 	"cmp"
@@ -31,21 +31,83 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
+
+const statusSubResource = "status"
+
+// ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
+// selectable by Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
+type ConfigurationResource interface {
+	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
+}
+
+// TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
+type TypedConfigurationResource[T ConfigurationResource] struct {
+	resource   T
+	err        error  // Error encountered during selection or validation (nil if valid).
+	reason     string // Reason for rejection; empty if accepted.
+	generation int64  // Generation of the desired state (spec).
+}
+
+// TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
+type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
+
+func NewTypedConfigurationResource[T ConfigurationResource](res T, err error, reason string, generation int64) TypedConfigurationResource[T] {
+	return TypedConfigurationResource[T]{
+		resource:   res,
+		err:        err,
+		reason:     reason,
+		generation: generation,
+	}
+}
+
+func (r *TypedConfigurationResource[T]) Resource() T {
+	return r.resource
+}
+
+// Conditions returns a list of conditions based on the validation status of the configuration resource.
+func (r *TypedConfigurationResource[T]) Conditions() []monitoringv1.ConfigResourceCondition {
+	condition := monitoringv1.ConfigResourceCondition{
+		Type:               monitoringv1.Accepted,
+		Status:             monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Now(),
+		Reason:             r.reason,
+		ObservedGeneration: r.generation,
+	}
+
+	if r.err != nil {
+		condition.Status = monitoringv1.ConditionFalse
+		condition.Message = r.err.Error()
+	}
+
+	return []monitoringv1.ConfigResourceCondition{condition}
+}
+
+// ValidResources returns only the resources which the operator considers to be valid.
+// The keys of the returned map identify the resources using the `<namespace>/<name>` format.
+func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
+	validRes := make(map[string]T)
+	for k, res := range resources {
+		if res.err == nil {
+			validRes[k] = res.resource
+		}
+	}
+	return validRes
+}
 
 // ConfigResourceSyncer patches the status of configuration resources.
 type ConfigResourceSyncer struct {
 	client   dynamic.Interface
-	accessor *operator.Accessor
+	accessor *Accessor
 
 	// GroupVersionResource and metadata of the Workload.
 	gvr      schema.GroupVersionResource
 	workload metav1.Object
 }
 
-func NewConfigResourceSyncer(workload RuntimeObject, client dynamic.Interface, accessor *operator.Accessor) *ConfigResourceSyncer {
+func NewConfigResourceSyncer(workload RuntimeObject, client dynamic.Interface, accessor *Accessor) *ConfigResourceSyncer {
 	return &ConfigResourceSyncer{
 		client:   client,
 		accessor: accessor,
@@ -117,7 +179,7 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 		types.JSONPatchType,
 		patch,
 		metav1.PatchOptions{
-			FieldManager:    operator.PrometheusOperatorFieldManager,
+			FieldManager:    PrometheusOperatorFieldManager,
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,
@@ -147,7 +209,7 @@ func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResour
 		types.JSONPatchType,
 		p,
 		metav1.PatchOptions{
-			FieldManager:    operator.PrometheusOperatorFieldManager,
+			FieldManager:    PrometheusOperatorFieldManager,
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,
