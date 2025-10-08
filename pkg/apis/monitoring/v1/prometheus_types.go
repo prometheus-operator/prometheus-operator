@@ -1899,6 +1899,12 @@ type AzureAD struct {
 	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
 	// +optional
 	SDK *AzureSDK `json:"sdk,omitempty"`
+	// workloadIdentity defines the Azure Workload Identity authentication.
+	// Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
+	//
+	// It requires Prometheus >= v2.54.0.
+	// +optional
+	WorkloadIdentity *AzureWorkloadIdentity `json:"workloadIdentity,omitempty"`
 }
 
 // AzureOAuth defines the Azure OAuth settings.
@@ -1932,6 +1938,25 @@ type AzureSDK struct {
 	// +optional
 	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
 	TenantID *string `json:"tenantId,omitempty"`
+}
+
+// AzureWorkloadIdentity defines the Azure Workload Identity authentication configuration.
+type AzureWorkloadIdentity struct {
+	// clientId is the clientID of the Azure Active Directory application.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	ClientID string `json:"clientId"`
+
+	// tenantId is the tenant ID of the Azure Active Directory application.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	TenantID *string `json:"tenantId,omitempty"`
+
+	// tokenFilePath is the path to the service account token file.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:default="/var/run/secrets/azure/tokens/azure-identity-token"
+	// +optional
+	TokenFilePath *string `json:"tokenFilePath,omitempty"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples

@@ -124,10 +124,29 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
+		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure Workload Identity in the Azure AD config")
+		}
+
+		if spec.AzureAD.OAuth != nil && spec.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("cannot provide both Azure OAuth and Azure Workload Identity in the Azure AD config")
+		}
+
+		if spec.AzureAD.SDK != nil && spec.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("cannot provide both Azure SDK and Azure Workload Identity in the Azure AD config")
+		}
+
 		if spec.AzureAD.OAuth != nil {
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
+			}
+		}
+
+		if spec.AzureAD.WorkloadIdentity != nil {
+			_, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.ClientID)
+			if err != nil {
+				return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
 			}
 		}
 	}
