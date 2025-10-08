@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
 
@@ -176,6 +177,14 @@ func selectObjects[T operator.ConfigurationResource](
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
+	if err := validateLabelSelector(cpf.ServiceMonitorSelector); err != nil {
+		return nil, err
+	}
+
+	if err := validateLabelSelector(cpf.ServiceMonitorNamespaceSelector); err != nil {
+		return nil, err
+	}
+
 	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1.ServiceMonitorsKind),
@@ -276,6 +285,49 @@ func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
 
 	if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
 		return errors.New("it accesses file system via tls config which Prometheus specification prohibits")
+	}
+
+	return nil
+}
+
+// validateLabelSelector validates a LabelSelector using Kubernetes validation functions.
+func validateLabelSelector(selector *metav1.LabelSelector) error {
+	if selector == nil {
+		return nil
+	}
+
+	// Validate matchLabels keys and values.
+	for key, value := range selector.MatchLabels {
+		if errs := validation.IsQualifiedName(key); len(errs) > 0 {
+			return fmt.Errorf("key: Invalid value: %q: %v", key, errs)
+		}
+		if errs := validation.IsValidLabelValue(value); len(errs) > 0 {
+			return fmt.Errorf("value: Invalid value: %q: %v", value, errs)
+		}
+	}
+
+	// Validate matchExpressions keys and values.
+	for _, expr := range selector.MatchExpressions {
+		if errs := validation.IsQualifiedName(expr.Key); len(errs) > 0 {
+			return fmt.Errorf("key: Invalid value: %q: %v", expr.Key, errs)
+		}
+
+		for _, value := range expr.Values {
+			if errs := validation.IsValidLabelValue(value); len(errs) > 0 {
+				return fmt.Errorf("value: Invalid value: %q: %v", value, errs)
+			}
+		}
+
+		// Validate operators.
+		validOperators := map[metav1.LabelSelectorOperator]bool{
+			metav1.LabelSelectorOpIn:           true,
+			metav1.LabelSelectorOpNotIn:        true,
+			metav1.LabelSelectorOpExists:       true,
+			metav1.LabelSelectorOpDoesNotExist: true,
+		}
+		if !validOperators[expr.Operator] {
+			return fmt.Errorf("operator: Invalid value: %q: invalid operator", expr.Operator)
+		}
 	}
 
 	return nil

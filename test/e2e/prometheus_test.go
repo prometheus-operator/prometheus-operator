@@ -4850,6 +4850,114 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 			},
 		},
+		//
+		// ServiceMonitor Selector Validation Tests
+		//
+		{
+			name: "valid-service-monitor-selectors",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app":                      "prometheus",
+							"example.com/valid-domain": "test",
+							strings.Repeat("a", 63):    strings.Repeat("v", 63),
+						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "environment",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"prod", "staging"},
+							},
+							{
+								Key:      "team",
+								Operator: metav1.LabelSelectorOpExists,
+							},
+						},
+					},
+					ServiceMonitorNamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"monitoring": "enabled",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid-service-monitor-selector-key-too-long",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							strings.Repeat("y", 88): "xxx",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-service-monitor-selector-match-expressions-violations",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      strings.Repeat("k", 64),
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{strings.Repeat("v", 64)},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-service-monitor-namespace-selector-violations",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorNamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							strings.Repeat("n", 64): "enabled",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {

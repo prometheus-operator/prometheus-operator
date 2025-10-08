@@ -140,11 +140,18 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="!has(self.matchLabels) || self.matchLabels.all(key, size(key) <= 63)",message="serviceMonitorSelector matchLabels keys must not exceed 63 characters"
+	// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, size(expr.key) <= 63)",message="serviceMonitorSelector matchExpressions keys must not exceed 63 characters"
+	// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])",message="serviceMonitorSelector matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist"
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
+
 	// serviceMonitorNamespaceSelector defines the namespaces to match for ServicedMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="!has(self.matchLabels) || self.matchLabels.all(key, size(key) <= 63)",message="serviceMonitorNamespaceSelector matchLabels keys must not exceed 63 characters"
+	// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, size(expr.key) <= 63)",message="serviceMonitorNamespaceSelector matchExpressions keys must not exceed 63 characters"
+	// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])",message="serviceMonitorNamespaceSelector matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist"
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
 	// podMonitorSelector defines the podMonitors to be selected for target discovery. An empty label selector
