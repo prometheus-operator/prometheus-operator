@@ -302,11 +302,11 @@ type AlertmanagerSpec struct {
 	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
 	// alertmanagerConfigSelector defines the selector to be used for to merge and configure Alertmanager with.
 	// +optional
-	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
+	AlertmanagerConfigSelector *ValidatedLabelSelector `json:"alertmanagerConfigSelector,omitempty"`
 	// alertmanagerConfigNamespaceSelector defines the namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 	// check own namespace.
 	// +optional
-	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
+	AlertmanagerConfigNamespaceSelector *ValidatedLabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
 
 	// alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
 	// process incoming alerts.

@@ -18,6 +18,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,6 +27,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
@@ -4899,6 +4902,270 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				require.Len(t, valid, 1)
 			} else {
 				require.Empty(t, valid)
+			}
+		})
+	}
+}
+
+func TestSelectServiceMonitorsSelectors(t *testing.T) {
+	tests := []struct {
+		name                            string
+		serviceMonitorSelector          *monitoringv1.ValidatedLabelSelector
+		serviceMonitorNamespaceSelector *monitoringv1.ValidatedLabelSelector
+		expectError                     bool
+	}{
+		// Valid cases.
+		{
+			name:                            "nil selectors should work",
+			serviceMonitorSelector:          nil,
+			serviceMonitorNamespaceSelector: nil,
+			expectError:                     false,
+		},
+		{
+			name: "valid selectors with matchLabels",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": "prometheus",
+					},
+				},
+			},
+			serviceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"monitoring": "enabled",
+					},
+				},
+			},
+		},
+		{
+			name: "valid selectors with matchExpressions",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "environment",
+							Operator: metav1.LabelSelectorOpIn,
+							Values:   []string{"prod", "staging"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "valid edge case - exactly 63 characters",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						strings.Repeat("a", 63): strings.Repeat("v", 63),
+					},
+				},
+			},
+		},
+		{
+			name: "valid qualified name with domain prefix",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"example.com/app": "prometheus",
+					},
+				},
+			},
+		},
+		{
+			name: "valid all operators",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{Key: "key1", Operator: metav1.LabelSelectorOpIn, Values: []string{"val1"}},
+						{Key: "key2", Operator: metav1.LabelSelectorOpNotIn, Values: []string{"val2"}},
+						{Key: "key3", Operator: metav1.LabelSelectorOpExists},
+						{Key: "key4", Operator: metav1.LabelSelectorOpDoesNotExist},
+					},
+				},
+			},
+		},
+
+		// ServiceMonitorSelector validation failures.
+		{
+			name: "invalid serviceMonitorSelector - key too long",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						strings.Repeat("y", 64): "xxx",
+					},
+				},
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid serviceMonitorSelector - key with invalid characters",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"invalid@key": "value",
+					},
+				},
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid serviceMonitorSelector - value too long",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": strings.Repeat("v", 64),
+					},
+				},
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid serviceMonitorSelector - matchExpressions key too long",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      strings.Repeat("k", 64),
+							Operator: metav1.LabelSelectorOpIn,
+							Values:   []string{"value"},
+						},
+					},
+				},
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid serviceMonitorSelector - matchExpressions value too long",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "environment",
+							Operator: metav1.LabelSelectorOpIn,
+							Values:   []string{strings.Repeat("v", 64)},
+						},
+					},
+				},
+			},
+			expectError: true,
+		},
+
+		// ServiceMonitorNamespaceSelector validation failures.
+		{
+			name: "invalid serviceMonitorNamespaceSelector - key too long",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": "prometheus",
+					},
+				},
+			},
+			serviceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						strings.Repeat("n", 64): "enabled",
+					},
+				},
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid serviceMonitorNamespaceSelector - value too long",
+			serviceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"monitoring": strings.Repeat("v", 64),
+					},
+				},
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid serviceMonitorNamespaceSelector - matchExpressions key invalid",
+			serviceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "invalid@namespace",
+							Operator: metav1.LabelSelectorOpExists,
+						},
+					},
+				},
+			},
+			expectError: true,
+		},
+
+		// Combined scenarios - should fail on first invalid selector.
+		{
+			name: "both selectors invalid - fails on serviceMonitorSelector first",
+			serviceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						strings.Repeat("s", 64): "xxx",
+					},
+				},
+			},
+			serviceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						strings.Repeat("n", 64): "yyy",
+					},
+				},
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-prometheus",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ServiceMonitorSelector:          tt.serviceMonitorSelector,
+						ServiceMonitorNamespaceSelector: tt.serviceMonitorNamespaceSelector,
+					},
+				},
+			}
+
+			cs := fake.NewSimpleClientset()
+			nsInformer := cache.NewSharedIndexInformer(
+				&cache.ListWatch{
+					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+						return &v1.NamespaceList{}, nil
+					},
+					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+						return watch.NewFake(), nil
+					},
+				},
+				&v1.Namespace{},
+				0,
+				cache.Indexers{},
+			)
+
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
+				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
+				nsInformer,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				operator.NewFakeRecorder(1, p),
+			)
+			require.NoError(t, err)
+
+			listFn := func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+				return nil
+			}
+			_, err = rs.SelectServiceMonitors(context.Background(), listFn)
+
+			if tt.expectError {
+				require.Error(t, err, "SelectServiceMonitors should return an error for case: %s", tt.name)
+			} else {
+				require.NoError(t, err, "SelectServiceMonitors should not return an error for case: %s", tt.name)
 			}
 		})
 	}

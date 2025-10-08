@@ -1070,7 +1070,21 @@
                       }
                     },
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic"
+                    "x-kubernetes-map-type": "atomic",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "matchLabels keys must not exceed 63 characters",
+                        "rule": "!has(self.matchLabels) || self.matchLabels.all(key, size(key) <= 63)"
+                      },
+                      {
+                        "message": "matchExpressions keys must not exceed 63 characters",
+                        "rule": "!has(self.matchExpressions) || self.matchExpressions.all(expr, size(expr.key) <= 63)"
+                      },
+                      {
+                        "message": "matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist",
+                        "rule": "!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])"
+                      }
+                    ]
                   },
                   "selectorMechanism": {
                     "description": "selectorMechanism defines the mechanism used to select the endpoints to scrape.\nBy default, the selection process relies on relabel configurations to filter the discovered targets.\nAlternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.\nWhich strategy is best for your use case needs to be carefully evaluated.\n\nIt requires Prometheus >= v2.17.0.",

@@ -239,7 +239,7 @@ type ProbeTargetStaticConfig struct {
 type ProbeTargetIngress struct {
 	// selector to select the Ingress objects.
 	// +optional
-	Selector metav1.LabelSelector `json:"selector,omitempty"`
+	Selector ValidatedLabelSelector `json:"selector,omitempty"`
 	// namespaceSelector defines from which namespaces to select Ingress objects.
 	// +optional
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`

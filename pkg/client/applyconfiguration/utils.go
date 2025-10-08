@@ -226,6 +226,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TSDBSpec"):
 		return &monitoringv1.TSDBSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ValidatedLabelSelector"):
+		return &monitoringv1.ValidatedLabelSelectorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebConfigFileFields"):
 		return &monitoringv1.WebConfigFileFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebHTTPConfig"):

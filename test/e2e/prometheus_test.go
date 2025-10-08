@@ -1496,8 +1496,10 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(rootNS, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: ruleFilesNamespaceSelector,
+	p.Spec.RuleNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: ruleFilesNamespaceSelector,
+		},
 	}
 	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), rootNS, p)
 	if err != nil {
@@ -2498,9 +2500,11 @@ func testPromDiscoverTargetPort(t *testing.T) {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": group,
+			Selector: monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": group,
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -2567,9 +2571,11 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(prometheusNSName, prometheusName, group, 1)
-	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"team": "frontend",
+	p.Spec.ServiceMonitorNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"team": "frontend",
+			},
 		},
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), prometheusNSName, p); err != nil {
@@ -2797,8 +2803,10 @@ func testPromGetAuthSecret(t *testing.T) {
 			}
 
 			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-				MatchLabels: matchLabels,
+			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: matchLabels,
+				},
 			}
 			prometheusCRD.Spec.ScrapeInterval = "1s"
 			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
@@ -2862,8 +2870,10 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		p := framework.MakeBasicPrometheus(mainNS, name, name, 1)
-		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: prometheusNamespaceSelector,
+		p.Spec.RuleNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: prometheusNamespaceSelector,
+			},
 		}
 		p.Spec.EvaluationInterval = "1s"
 		p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), mainNS, p)
@@ -2928,8 +2938,10 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		p := framework.MakeBasicPrometheus(prometheusNS, name, name, 1)
-		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: prometheusNamespaceSelector,
+		p.Spec.RuleNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: prometheusNamespaceSelector,
+			},
 		}
 		p.Spec.EvaluationInterval = "1s"
 		p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), prometheusNS, p)
@@ -3442,9 +3454,11 @@ func testPromStaticProbe(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": group,
+	p.Spec.ProbeSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": group,
+			},
 		},
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
@@ -4850,6 +4864,124 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 			},
 		},
+		//
+		// ServiceMonitor Selector Validation Tests
+		//
+		{
+			name: "valid-service-monitor-selectors",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"app":                      "prometheus",
+								"example.com/valid-domain": "test",
+								strings.Repeat("a", 63):    strings.Repeat("v", 63),
+							},
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "environment",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{"prod", "staging"},
+								},
+								{
+									Key:      "team",
+									Operator: metav1.LabelSelectorOpExists,
+								},
+							},
+						},
+					},
+					ServiceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"monitoring": "enabled",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid-service-monitor-selector-key-too-long",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								strings.Repeat("y", 88): "xxx",
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-service-monitor-selector-match-expressions-violations",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      strings.Repeat("k", 64),
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{strings.Repeat("v", 64)},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-service-monitor-namespace-selector-violations",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					ServiceMonitorNamespaceSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								strings.Repeat("n", 64): "enabled",
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -5454,9 +5586,11 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"kubernetes.io/metadata.name": ns2,
+	p.Spec.ServiceMonitorNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"kubernetes.io/metadata.name": ns2,
+			},
 		},
 	}
 
@@ -5573,8 +5707,10 @@ func testPrometheusUTF8MetricsSupport(t *testing.T) {
 			Labels:    map[string]string{"group": "test-app"},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": "instrumented-sample-app"},
+			Selector: monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "instrumented-sample-app"},
+				},
 			},
 			Endpoints: []monitoringv1.Endpoint{{
 				Port:     "web",
@@ -5795,8 +5931,10 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 			Labels:    map[string]string{"group": "test.app", "app.name": "instrumented-sample-app"},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{"app.name": "instrumented-sample-app"},
+			Selector: monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"app.name": "instrumented-sample-app"},
+				},
 			},
 			Endpoints: []monitoringv1.Endpoint{{
 				Port:     "web",

@@ -806,9 +806,11 @@ func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	// scrapeConfigSelector cannot be set in DaemonSets
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"app": "prometheus-agent",
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app": "prometheus-agent",
+			},
 		},
 	}
 
@@ -837,9 +839,11 @@ func testDaemonSetInvalidProbeSelector(t *testing.T) {
 	name := "test-invalid-probe-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"app": "test",
+	p.Spec.ProbeSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app": "test",
+			},
 		},
 	}
 

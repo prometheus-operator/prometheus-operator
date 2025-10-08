@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestLabelSelectionHasChanged(t *testing.T) {
@@ -26,7 +28,7 @@ func TestLabelSelectionHasChanged(t *testing.T) {
 
 		old      map[string]string
 		current  map[string]string
-		selector *metav1.LabelSelector
+		selector *monitoringv1.ValidatedLabelSelector
 
 		expected    bool
 		expectedErr bool
@@ -39,8 +41,10 @@ func TestLabelSelectionHasChanged(t *testing.T) {
 			current: map[string]string{
 				"app": "foo",
 			},
-			selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": "foo"},
+			selector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "foo"},
+				},
 			},
 		},
 		{
@@ -51,8 +55,10 @@ func TestLabelSelectionHasChanged(t *testing.T) {
 			current: map[string]string{
 				"app": "bar",
 			},
-			selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": "foo"},
+			selector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "foo"},
+				},
 			},
 			expected: true,
 		},
@@ -64,8 +70,10 @@ func TestLabelSelectionHasChanged(t *testing.T) {
 			current: map[string]string{
 				"app": "foo",
 			},
-			selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": "foo"},
+			selector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "foo"},
+				},
 			},
 			expected: true,
 		},
@@ -77,7 +85,7 @@ func TestLabelSelectionHasChanged(t *testing.T) {
 			current: map[string]string{
 				"app": "bar",
 			},
-			selector: &metav1.LabelSelector{},
+			selector: &monitoringv1.ValidatedLabelSelector{},
 		},
 		{
 			name: "match-nothing label selector",
@@ -97,11 +105,13 @@ func TestLabelSelectionHasChanged(t *testing.T) {
 			current: map[string]string{
 				"app": "bar",
 			},
-			selector: &metav1.LabelSelector{
-				MatchExpressions: []metav1.LabelSelectorRequirement{
-					{
-						Key:      "foo",
-						Operator: metav1.LabelSelectorOperator("invalid"),
+			selector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "foo",
+							Operator: metav1.LabelSelectorOperator("invalid"),
+						},
 					},
 				},
 			},

@@ -260,12 +260,12 @@ type ThanosRulerSpec struct {
 	// objects.
 	//
 	// +optional
-	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
+	RuleSelector *ValidatedLabelSelector `json:"ruleSelector,omitempty"`
 	// ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only
 	// the same namespace as the ThanosRuler object is in is used.
 	//
 	// +optional
-	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
+	RuleNamespaceSelector *ValidatedLabelSelector `json:"ruleNamespaceSelector,omitempty"`
 
 	// enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
 	// and metric that is user created. The label value will always be the namespace of the object that is

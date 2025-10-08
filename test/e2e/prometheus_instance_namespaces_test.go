@@ -22,6 +22,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
@@ -158,15 +160,19 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	{
 		p := framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"monitored": "true",
+		p.Spec.ServiceMonitorNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"monitored": "true",
+				},
 			},
 		}
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"group": "monitored",
+		p.Spec.ServiceMonitorSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "monitored",
+				},
 			},
 		}
 
@@ -266,15 +272,19 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	{
 		p = framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"monitored": "true",
+		p.Spec.ServiceMonitorNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"monitored": "true",
+				},
 			},
 		}
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"group": "monitored",
+		p.Spec.ServiceMonitorSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "monitored",
+				},
 			},
 		}
 
@@ -416,15 +426,19 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	{
 		p := framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"monitored": "true",
+		p.Spec.ServiceMonitorNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"monitored": "true",
+				},
 			},
 		}
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"group": "monitored",
+		p.Spec.ServiceMonitorSelector = &monitoringv1.ValidatedLabelSelector{
+			LabelSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "monitored",
+				},
 			},
 		}
 

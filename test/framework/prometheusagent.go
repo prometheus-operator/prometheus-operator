@@ -46,14 +46,18 @@ func (f *Framework) MakeBasicPrometheusAgent(ns, name, group string, replicas in
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Replicas: &replicas,
 				Version:  operator.DefaultPrometheusVersion,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
+				ServiceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": group,
+						},
 					},
 				},
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
+				PodMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": group,
+						},
 					},
 				},
 				ServiceAccountName: "prometheus",
@@ -84,9 +88,11 @@ func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitori
 						v1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": name,
+				PodMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": name,
+						},
 					},
 				},
 			},

@@ -23,6 +23,7 @@ import (
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
@@ -169,15 +170,19 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	// Create the Alertmanager resource in the "allowed" namespace. We will check later that it is NOT reconciled.
 	am := framework.MakeBasicAlertmanager(allowedNs, "instance", 3)
 
-	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": "monitored",
+	am.Spec.AlertmanagerConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": "monitored",
+			},
 		},
 	}
 
-	am.Spec.AlertmanagerConfigNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"monitored": "true",
+	am.Spec.AlertmanagerConfigNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"monitored": "true",
+			},
 		},
 	}
 

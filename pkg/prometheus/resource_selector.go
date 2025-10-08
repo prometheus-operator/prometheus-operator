@@ -151,8 +151,8 @@ func selectObjects[T ConfigurationResource](
 	logger *slog.Logger,
 	rs *ResourceSelector,
 	kind string,
-	selector *metav1.LabelSelector,
-	nsSelector *metav1.LabelSelector,
+	selector *monitoringv1.ValidatedLabelSelector,
+	nsSelector *monitoringv1.ValidatedLabelSelector,
 	listFn ListAllByNamespaceFn,
 	checkFn func(context.Context, T) error,
 ) (TypedResourcesSelection[T], error) {
@@ -160,7 +160,7 @@ func selectObjects[T ConfigurationResource](
 	objects := make(map[string]runtime.Object)
 	namespaces := []string{}
 
-	labelSelector, err := metav1.LabelSelectorAsSelector(selector)
+	labelSelector, err := selector.AsSelector()
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func selectObjects[T ConfigurationResource](
 	if nsSelector == nil {
 		namespaces = append(namespaces, rs.p.GetObjectMeta().GetNamespace())
 	} else {
-		nsLabelSelector, err := metav1.LabelSelectorAsSelector(nsSelector)
+		nsLabelSelector, err := nsSelector.AsSelector()
 		if err != nil {
 			return nil, err
 		}
@@ -247,6 +247,14 @@ func selectObjects[T ConfigurationResource](
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
+	if err := k8sutil.ValidateLabelSelector(cpf.ServiceMonitorSelector); err != nil {
+		return nil, err
+	}
+
+	if err := k8sutil.ValidateLabelSelector(cpf.ServiceMonitorNamespaceSelector); err != nil {
+		return nil, err
+	}
+
 	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1.ServiceMonitorsKind),
@@ -263,7 +271,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitoringv1.ServiceMonitor) error {
 	cpf := rs.p.GetCommonPrometheusFields()
 
-	if _, err := metav1.LabelSelectorAsSelector(&sm.Spec.Selector); err != nil {
+	if _, err := sm.Spec.Selector.AsSelector(); err != nil {
 		return err
 	}
 
@@ -505,6 +513,14 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
+	if err := k8sutil.ValidateLabelSelector(cpf.PodMonitorSelector); err != nil {
+		return nil, err
+	}
+
+	if err := k8sutil.ValidateLabelSelector(cpf.PodMonitorNamespaceSelector); err != nil {
+		return nil, err
+	}
+
 	return selectObjects(
 		ctx,
 		rs.l.With("kind", monitoringv1.PodMonitorsKind),
@@ -519,7 +535,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 
 // checkPodMonitor verifies that the PodMonitor object is valid.
 func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv1.PodMonitor) error {
-	if _, err := metav1.LabelSelectorAsSelector(&pm.Spec.Selector); err != nil {
+	if _, err := pm.Spec.Selector.AsSelector(); err != nil {
 		return fmt.Errorf("failed to parse label selector: %w", err)
 	}
 
@@ -596,6 +612,14 @@ func (rs *ResourceSelector) addHTTPConfigToStore(
 // validations against scrape intervals, relabel configs and Probe URLs.
 func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
+
+	if err := k8sutil.ValidateLabelSelector(cpf.ProbeSelector); err != nil {
+		return nil, err
+	}
+
+	if err := k8sutil.ValidateLabelSelector(cpf.ProbeNamespaceSelector); err != nil {
+		return nil, err
+	}
 
 	return selectObjects(
 		ctx,
@@ -706,6 +730,14 @@ func validateServer(server string) error {
 // Prometheus CR and filters them returning all the configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
+
+	if err := k8sutil.ValidateLabelSelector(cpf.ScrapeConfigSelector); err != nil {
+		return nil, err
+	}
+
+	if err := k8sutil.ValidateLabelSelector(cpf.ScrapeConfigNamespaceSelector); err != nil {
+		return nil, err
+	}
 
 	return selectObjects(
 		ctx,

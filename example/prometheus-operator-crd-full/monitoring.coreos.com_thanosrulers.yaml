@@ -6021,6 +6021,17 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: matchLabels keys must not exceed 63 characters
+                  rule: '!has(self.matchLabels) || self.matchLabels.all(key, size(key)
+                    <= 63)'
+                - message: matchExpressions keys must not exceed 63 characters
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    size(expr.key) <= 63)'
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               ruleOutageTolerance:
                 description: |-
                   ruleOutageTolerance defines the max time to tolerate prometheus outage for restoring "for" state of alert.
@@ -6082,6 +6093,17 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: matchLabels keys must not exceed 63 characters
+                  rule: '!has(self.matchLabels) || self.matchLabels.all(key, size(key)
+                    <= 63)'
+                - message: matchExpressions keys must not exceed 63 characters
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    size(expr.key) <= 63)'
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               securityContext:
                 description: |-
                   securityContext defines the pod-level security attributes and common container settings.

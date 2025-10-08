@@ -192,14 +192,18 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Replicas: &replicas,
 				Version:  promVersion,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
+				ServiceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": group,
+						},
 					},
 				},
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
+				PodMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": group,
+						},
 					},
 				},
 				ServiceAccountName: "prometheus",
@@ -209,9 +213,11 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 					},
 				},
 			},
-			RuleSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"role": "rulefile",
+			RuleSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"role": "rulefile",
+					},
 				},
 			},
 		},
@@ -344,9 +350,11 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": name,
+			Selector: monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": name,
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -369,9 +377,11 @@ func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
 			},
 		},
 		Spec: monitoringv1.PodMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": name,
+			Selector: monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": name,
+					},
 				},
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{

@@ -97,7 +97,7 @@ type PodMonitorSpec struct {
 
 	// selector defines the label selector to select the Kubernetes `Pod` objects to scrape metrics from.
 	// +required
-	Selector metav1.LabelSelector `json:"selector"`
+	Selector ValidatedLabelSelector `json:"selector"`
 
 	// selectorMechanism defines the mechanism used to select the endpoints to scrape.
 	// By default, the selection process relies on relabel configurations to filter the discovered targets.

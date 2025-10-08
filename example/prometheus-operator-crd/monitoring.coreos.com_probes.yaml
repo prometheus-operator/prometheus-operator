@@ -990,6 +990,17 @@ spec:
                             type: object
                         type: object
                         x-kubernetes-map-type: atomic
+                        x-kubernetes-validations:
+                        - message: matchLabels keys must not exceed 63 characters
+                          rule: '!has(self.matchLabels) || self.matchLabels.all(key,
+                            size(key) <= 63)'
+                        - message: matchExpressions keys must not exceed 63 characters
+                          rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                            size(expr.key) <= 63)'
+                        - message: 'matchExpressions operator must be one of: In,
+                            NotIn, Exists, DoesNotExist'
+                          rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                            expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
                     type: object
                   staticConfig:
                     description: |-

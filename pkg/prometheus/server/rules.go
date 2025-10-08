@@ -162,7 +162,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 	if p.Spec.RuleNamespaceSelector == nil {
 		namespaces = append(namespaces, p.Namespace)
 	} else {
-		ruleNamespaceSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
+		ruleNamespaceSelector, err := p.Spec.RuleNamespaceSelector.AsSelector()
 		if err != nil {
 			return namespaces, fmt.Errorf("convert rule namespace label selector to selector: %w", err)
 		}

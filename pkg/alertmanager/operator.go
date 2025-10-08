@@ -451,7 +451,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 
 		// Check for Alertmanager instances selecting AlertmanagerConfigs in
 		// the namespace.
-		acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
+		acNSSelector, err := am.Spec.AlertmanagerConfigNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
@@ -1002,13 +1002,20 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
+	if err := k8sutil.ValidateLabelSelector(am.Spec.AlertmanagerConfigSelector); err != nil {
+		return nil, err
+	}
+
+	if err := k8sutil.ValidateLabelSelector(am.Spec.AlertmanagerConfigNamespaceSelector); err != nil {
+		return nil, err
+	}
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
 	if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
 		namespaces = append(namespaces, am.Namespace)
 
 		c.logger.Debug("selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
 	} else {
-		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
+		amConfigNSSelector, err := am.Spec.AlertmanagerConfigNamespaceSelector.AsSelector()
 		if err != nil {
 			return nil, err
 		}
@@ -1026,7 +1033,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
 
-	amConfigSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigSelector)
+	amConfigSelector, err := am.Spec.AlertmanagerConfigSelector.AsSelector()
 	if err != nil {
 		return nil, err
 	}

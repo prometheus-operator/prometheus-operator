@@ -915,7 +915,9 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "amconfig-versions", 1)
-	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	alertmanager.Spec.AlertmanagerConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{},
+	}
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
 
@@ -1004,9 +1006,13 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "amconfig-crd", 1)
-	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
-	alertmanager.Spec.AlertmanagerConfigNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{"monitored": "true"},
+	alertmanager.Spec.AlertmanagerConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{},
+	}
+	alertmanager.Spec.AlertmanagerConfigNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{"monitored": "true"},
+		},
 	}
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
@@ -2556,7 +2562,9 @@ func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
 
 	amName := "amconfigmatcherstrategy"
 	alertmanager := framework.MakeBasicAlertmanager(ns, amName, 1)
-	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	alertmanager.Spec.AlertmanagerConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{},
+	}
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
 

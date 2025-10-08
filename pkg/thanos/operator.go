@@ -717,7 +717,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for ThanosRuler instances selecting PrometheusRules in
 		// the namespace.
-		ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
+		ruleNSSelector, err := tr.Spec.RuleNamespaceSelector.AsSelector()
 		if err != nil {
 			o.logger.Error("",
 				"err", fmt.Errorf("failed to convert RuleNamespaceSelector: %w", err),

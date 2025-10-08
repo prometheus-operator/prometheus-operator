@@ -1162,7 +1162,9 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 					Namespace: "test",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+					AlertmanagerConfigSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{},
+					},
 				},
 			},
 			ok: true,
@@ -1198,8 +1200,10 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
 					ConfigSecret: "amconfig",
-					AlertmanagerConfigSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{"test": "test"},
+					AlertmanagerConfigSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{"test": "test"},
+						},
 					},
 				},
 			},
@@ -1246,8 +1250,10 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 					Namespace: "test",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					ConfigSecret:               "amconfig",
-					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+					ConfigSecret: "amconfig",
+					AlertmanagerConfigSelector: &monitoringv1.ValidatedLabelSelector{
+						LabelSelector: metav1.LabelSelector{},
+					},
 				},
 			},
 			objects: []runtime.Object{
@@ -1296,7 +1302,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
 					ConfigSecret:               "amconfig",
-					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+					AlertmanagerConfigSelector: &monitoringv1.ValidatedLabelSelector{},
 				},
 			},
 			objects: []runtime.Object{
@@ -1346,7 +1352,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
 					ConfigSecret:               "amconfig",
-					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+					AlertmanagerConfigSelector: &monitoringv1.ValidatedLabelSelector{},
 				},
 			},
 			objects: []runtime.Object{

@@ -24,6 +24,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -541,6 +542,14 @@ func (c *WebTLSConfig) Validate() error {
 // For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
 // For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
 type LabelName string
+
+// ValidatedLabelSelector is a LabelSelector with built-in validation for Kubernetes label names and values.
+// +kubebuilder:validation:XValidation:rule="!has(self.matchLabels) || self.matchLabels.all(key, size(key) <= 63)",message="matchLabels keys must not exceed 63 characters"
+// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, size(expr.key) <= 63)",message="matchExpressions keys must not exceed 63 characters"
+// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])",message="matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist"
+type ValidatedLabelSelector struct {
+	metav1.LabelSelector `json:",inline"`
+}
 
 // Endpoint defines an endpoint serving Prometheus metrics to be scraped by
 // Prometheus.
@@ -1124,4 +1133,27 @@ type ConfigResourceCondition struct {
 	// condition is out of date with respect to the current state of the object.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}
+
+// AsLabelSelector returns a pointer to the underlying metav1.LabelSelector.
+// This method provides access to the embedded LabelSelector for use with
+// Kubernetes client-go APIs that expect *metav1.LabelSelector.
+func (v *ValidatedLabelSelector) AsLabelSelector() *metav1.LabelSelector {
+	if v == nil {
+		return nil
+	}
+	return &v.LabelSelector
+}
+
+// AsSelector converts the ValidatedLabelSelector to a labels.Selector
+// for use with Kubernetes client-go list operations and label matching.
+//
+// This is a convenience method that combines validation and conversion
+// in a single call. It returns labels.Nothing() if the selector is nil,
+// which matches no objects.
+func (v *ValidatedLabelSelector) AsSelector() (labels.Selector, error) {
+	if v == nil {
+		return labels.Nothing(), nil
+	}
+	return metav1.LabelSelectorAsSelector(v.AsLabelSelector())
 }

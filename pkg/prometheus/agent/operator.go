@@ -1109,7 +1109,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for Prometheus instances selecting ServiceMonitors in
 		// the namespace.
-		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+		smNSSelector, err := p.Spec.ServiceMonitorNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
@@ -1124,7 +1124,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		// Check for Prometheus instances selecting PodMonitors in the NS.
-		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+		pmNSSelector, err := p.Spec.PodMonitorNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
@@ -1139,7 +1139,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		// Check for Prometheus instances selecting Probes in the NS.
-		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
+		bmNSSelector, err := p.Spec.ProbeNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
@@ -1153,7 +1153,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			return
 		}
 		// Check for Prometheus instances selecting Probes in the NS.
-		ScrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
+		scrapeConfigNSSelector, err := p.Spec.ScrapeConfigNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
@@ -1162,7 +1162,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			return
 		}
 
-		if ScrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
+		if scrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
 			c.rr.EnqueueForReconciliation(p)
 			return
 		}
@@ -1195,7 +1195,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1alpha1.PrometheusAgent)
 
-		for name, selector := range map[string]*metav1.LabelSelector{
+		for name, selector := range map[string]*monitoringv1.ValidatedLabelSelector{
 			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
 			"Probes":          p.Spec.ProbeNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,

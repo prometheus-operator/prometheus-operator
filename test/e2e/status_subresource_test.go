@@ -370,9 +370,11 @@ func testProbeStatusSubresource(t *testing.T) {
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": name,
+	p.Spec.ProbeSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": name,
+			},
 		},
 	}
 
@@ -541,9 +543,11 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	name := "scfg-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": name,
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": name,
+			},
 		},
 	}
 
@@ -629,9 +633,11 @@ func testGarbageCollectionOfScrapeConfigBinding(t *testing.T) {
 	name := "scfg-status-binding-cleanup-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": name,
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": name,
+			},
 		},
 	}
 
@@ -676,9 +682,11 @@ func testRmScrapeConfigBindingDuringWorkloadDelete(t *testing.T) {
 
 	name := "workload-del-scfg-test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": name,
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": name,
+			},
 		},
 	}
 
@@ -757,9 +765,11 @@ func testGarbageCollectionOfProbeBinding(t *testing.T) {
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": name,
+	p.Spec.ProbeSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": name,
+			},
 		},
 	}
 
@@ -814,9 +824,11 @@ func testRmProbeBindingDuringWorkloadDelete(t *testing.T) {
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": name,
+	p.Spec.ProbeSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": name,
+			},
 		},
 	}
 

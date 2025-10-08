@@ -2253,7 +2253,7 @@ func (a *attachMetadataConfig) node() bool {
 type k8sSDConfigOptions func(k8sSDConfig yaml.MapSlice) yaml.MapSlice
 
 func (cg *ConfigGenerator) withK8SRoleSelectorConfig(
-	selector metav1.LabelSelector,
+	selector monitoringv1.ValidatedLabelSelector,
 	selectorMechanism *monitoringv1.SelectorMechanism,
 	roles []string) k8sSDConfigOptions {
 	return func(k8sSDConfig yaml.MapSlice) yaml.MapSlice {
@@ -2357,9 +2357,9 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector metav1.LabelSelector) yaml.MapSlice {
+func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector monitoringv1.ValidatedLabelSelector) yaml.MapSlice {
 	selectors := make([]yaml.MapSlice, 0, len(roles))
-	labelSelector, err := metav1.LabelSelectorAsSelector(&selector)
+	labelSelector, err := selector.AsSelector()
 	if err != nil {
 		// The field must have been validated by the controller beforehand.
 		// If we fail here, it's a functional bug.
@@ -2973,7 +2973,7 @@ func (cg *ConfigGenerator) appendScrapeFailureLogFile(slice yaml.MapSlice, scrap
 	return cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
 }
 
-func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
+func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *monitoringv1.ValidatedLabelSelector) yaml.MapSlice {
 	if ruleSelector != nil {
 		ruleFilePaths := []string{}
 		for _, name := range ruleFiles {

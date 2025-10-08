@@ -20,7 +20,6 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // PrometheusSpecApplyConfiguration represents a declarative configuration of the PrometheusSpec type for use
@@ -36,8 +35,8 @@ type PrometheusSpecApplyConfiguration struct {
 	DisableCompaction                        *bool                                           `json:"disableCompaction,omitempty"`
 	Rules                                    *RulesApplyConfiguration                        `json:"rules,omitempty"`
 	PrometheusRulesExcludedFromEnforce       []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
-	RuleSelector                             *metav1.LabelSelectorApplyConfiguration         `json:"ruleSelector,omitempty"`
-	RuleNamespaceSelector                    *metav1.LabelSelectorApplyConfiguration         `json:"ruleNamespaceSelector,omitempty"`
+	RuleSelector                             *ValidatedLabelSelectorApplyConfiguration       `json:"ruleSelector,omitempty"`
+	RuleNamespaceSelector                    *ValidatedLabelSelectorApplyConfiguration       `json:"ruleNamespaceSelector,omitempty"`
 	Query                                    *QuerySpecApplyConfiguration                    `json:"query,omitempty"`
 	Alerting                                 *AlertingSpecApplyConfiguration                 `json:"alerting,omitempty"`
 	AdditionalAlertRelabelConfigs            *corev1.SecretKeySelector                       `json:"additionalAlertRelabelConfigs,omitempty"`
@@ -69,7 +68,7 @@ func (b *PrometheusSpecApplyConfiguration) WithPodMetadata(value *EmbeddedObject
 // WithServiceMonitorSelector sets the ServiceMonitorSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceMonitorSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithServiceMonitorSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithServiceMonitorSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ServiceMonitorSelector = value
 	return b
 }
@@ -77,7 +76,7 @@ func (b *PrometheusSpecApplyConfiguration) WithServiceMonitorSelector(value *met
 // WithServiceMonitorNamespaceSelector sets the ServiceMonitorNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceMonitorNamespaceSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithServiceMonitorNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithServiceMonitorNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ServiceMonitorNamespaceSelector = value
 	return b
 }
@@ -85,7 +84,7 @@ func (b *PrometheusSpecApplyConfiguration) WithServiceMonitorNamespaceSelector(v
 // WithPodMonitorSelector sets the PodMonitorSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PodMonitorSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithPodMonitorSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithPodMonitorSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.PodMonitorSelector = value
 	return b
 }
@@ -93,7 +92,7 @@ func (b *PrometheusSpecApplyConfiguration) WithPodMonitorSelector(value *metav1.
 // WithPodMonitorNamespaceSelector sets the PodMonitorNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PodMonitorNamespaceSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithPodMonitorNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithPodMonitorNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.PodMonitorNamespaceSelector = value
 	return b
 }
@@ -101,7 +100,7 @@ func (b *PrometheusSpecApplyConfiguration) WithPodMonitorNamespaceSelector(value
 // WithProbeSelector sets the ProbeSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProbeSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithProbeSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithProbeSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ProbeSelector = value
 	return b
 }
@@ -109,7 +108,7 @@ func (b *PrometheusSpecApplyConfiguration) WithProbeSelector(value *metav1.Label
 // WithProbeNamespaceSelector sets the ProbeNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProbeNamespaceSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithProbeNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithProbeNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ProbeNamespaceSelector = value
 	return b
 }
@@ -117,7 +116,7 @@ func (b *PrometheusSpecApplyConfiguration) WithProbeNamespaceSelector(value *met
 // WithScrapeConfigSelector sets the ScrapeConfigSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeConfigSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ScrapeConfigSelector = value
 	return b
 }
@@ -125,7 +124,7 @@ func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigSelector(value *metav
 // WithScrapeConfigNamespaceSelector sets the ScrapeConfigNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeConfigNamespaceSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ScrapeConfigNamespaceSelector = value
 	return b
 }
@@ -988,7 +987,7 @@ func (b *PrometheusSpecApplyConfiguration) WithPrometheusRulesExcludedFromEnforc
 // WithRuleSelector sets the RuleSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RuleSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithRuleSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithRuleSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.RuleSelector = value
 	return b
 }
@@ -996,7 +995,7 @@ func (b *PrometheusSpecApplyConfiguration) WithRuleSelector(value *metav1.LabelS
 // WithRuleNamespaceSelector sets the RuleNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RuleNamespaceSelector field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithRuleNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithRuleNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.RuleNamespaceSelector = value
 	return b
 }

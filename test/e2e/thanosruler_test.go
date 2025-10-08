@@ -115,9 +115,11 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	thanos := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", svc.Name, svc.Spec.Ports[0].Port))
-	thanos.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"monitored": "true",
+	thanos.Spec.RuleNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"monitored": "true",
+			},
 		},
 	}
 	thanos.Spec.EvaluationInterval = "1s"

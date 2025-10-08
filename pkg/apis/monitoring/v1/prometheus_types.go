@@ -140,12 +140,13 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	// +optional
-	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
+	ServiceMonitorSelector *ValidatedLabelSelector `json:"serviceMonitorSelector,omitempty"`
+
 	// serviceMonitorNamespaceSelector defines the namespaces to match for ServicedMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	// +optional
-	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
+	ServiceMonitorNamespaceSelector *ValidatedLabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
 	// podMonitorSelector defines the podMonitors to be selected for target discovery. An empty label selector
 	// matches all objects. A null label selector matches no objects.
@@ -159,12 +160,12 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	// +optional
-	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
+	PodMonitorSelector *ValidatedLabelSelector `json:"podMonitorSelector,omitempty"`
 	// podMonitorNamespaceSelector defines the namespaces to match for PodMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	// +optional
-	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
+	PodMonitorNamespaceSelector *ValidatedLabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 
 	// probeSelector defines the probes to be selected for target discovery. An empty label selector
 	// matches all objects. A null label selector matches no objects.
@@ -178,12 +179,12 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	// +optional
-	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
+	ProbeSelector *ValidatedLabelSelector `json:"probeSelector,omitempty"`
 	// probeNamespaceSelector defines the namespaces to match for Probe discovery. An empty label
 	// selector matches all namespaces. A null label selector matches the
 	// current namespace only.
 	// +optional
-	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
+	ProbeNamespaceSelector *ValidatedLabelSelector `json:"probeNamespaceSelector,omitempty"`
 
 	// scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label
 	// selector matches all objects. A null label selector matches no objects.
@@ -200,7 +201,7 @@ type CommonPrometheusFields struct {
 	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
 	//
 	// +optional
-	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
+	ScrapeConfigSelector *ValidatedLabelSelector `json:"scrapeConfigSelector,omitempty"`
 	// scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
@@ -208,7 +209,7 @@ type CommonPrometheusFields struct {
 	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
 	//
 	// +optional
-	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
+	ScrapeConfigNamespaceSelector *ValidatedLabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
 
 	// version of Prometheus being deployed. The operator uses this information
 	// to generate the Prometheus StatefulSet + configuration files.
@@ -1177,12 +1178,12 @@ type PrometheusSpec struct {
 	// label selector matches all objects. A null label selector matches no
 	// objects.
 	// +optional
-	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
+	RuleSelector *ValidatedLabelSelector `json:"ruleSelector,omitempty"`
 	// ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
 	// +optional
-	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
+	RuleNamespaceSelector *ValidatedLabelSelector `json:"ruleNamespaceSelector,omitempty"`
 
 	// query defines the configuration of the Prometheus query service.
 	// +optional

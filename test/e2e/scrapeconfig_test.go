@@ -255,9 +255,11 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"role": "scrapeconfig",
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"role": "scrapeconfig",
+			},
 		},
 	}
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
@@ -332,15 +334,19 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	// Make a prometheus object in promns which will select any ScrapeConfig resource with
 	// "group": "sc" and/or "kubernetes.io/metadata.name": <scns>
 	p := framework.MakeBasicPrometheus(promns, "prom", scns, 1)
-	p.Spec.ScrapeConfigNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"kubernetes.io/metadata.name": scns,
+	p.Spec.ScrapeConfigNamespaceSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"kubernetes.io/metadata.name": scns,
+			},
 		},
 	}
 
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"group": "sc",
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": "sc",
+			},
 		},
 	}
 
@@ -504,9 +510,11 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"role": "scrapeconfig",
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"role": "scrapeconfig",
+			},
 		},
 	}
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
@@ -552,9 +560,11 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"role": "scrapeconfig",
+	p.Spec.ScrapeConfigSelector = &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"role": "scrapeconfig",
+			},
 		},
 	}
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)

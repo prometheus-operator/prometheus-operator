@@ -763,8 +763,8 @@ Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters wit
 <td>
 <code>alertmanagerConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -777,8 +777,8 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -1105,8 +1105,8 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -1927,8 +1927,8 @@ EmbeddedObjectMetadata
 <td>
 <code>serviceMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -1950,8 +1950,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>serviceMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -1966,8 +1966,8 @@ namespace only.</p>
 <td>
 <code>podMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -1989,8 +1989,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>podMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -2005,8 +2005,8 @@ namespace only.</p>
 <td>
 <code>probeSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -2028,8 +2028,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>probeNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -2044,8 +2044,8 @@ current namespace only.</p>
 <td>
 <code>scrapeConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -2068,8 +2068,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>scrapeConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -3663,8 +3663,8 @@ Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</p>
 <td>
 <code>ruleSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -3679,8 +3679,8 @@ objects.</p>
 <td>
 <code>ruleNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -4143,8 +4143,8 @@ In most cases, an Endpoints object is backed by a Kubernetes <a href="https://ku
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -4922,8 +4922,8 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <code>ruleSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -4938,8 +4938,8 @@ objects.</p>
 <td>
 <code>ruleNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7056,8 +7056,8 @@ Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters wit
 <td>
 <code>alertmanagerConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7070,8 +7070,8 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7920,8 +7920,8 @@ EmbeddedObjectMetadata
 <td>
 <code>serviceMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7943,8 +7943,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>serviceMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7959,8 +7959,8 @@ namespace only.</p>
 <td>
 <code>podMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7982,8 +7982,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>podMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -7998,8 +7998,8 @@ namespace only.</p>
 <td>
 <code>probeSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -8021,8 +8021,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>probeNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -8037,8 +8037,8 @@ current namespace only.</p>
 <td>
 <code>scrapeConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -8061,8 +8061,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>scrapeConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -12630,8 +12630,8 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13333,8 +13333,8 @@ The operator configures a target for each host/path combination of each ingress 
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13720,8 +13720,8 @@ EmbeddedObjectMetadata
 <td>
 <code>serviceMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13743,8 +13743,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>serviceMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13759,8 +13759,8 @@ namespace only.</p>
 <td>
 <code>podMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13782,8 +13782,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>podMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13798,8 +13798,8 @@ namespace only.</p>
 <td>
 <code>probeSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13821,8 +13821,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>probeNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13837,8 +13837,8 @@ current namespace only.</p>
 <td>
 <code>scrapeConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -13861,8 +13861,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>scrapeConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -15456,8 +15456,8 @@ Deprecated: use <code>spec.excludedFromEnforcement</code> instead.</p>
 <td>
 <code>ruleSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -15472,8 +15472,8 @@ objects.</p>
 <td>
 <code>ruleNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -18005,8 +18005,8 @@ In most cases, an Endpoints object is backed by a Kubernetes <a href="https://ku
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -19233,8 +19233,8 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <code>ruleSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -19249,8 +19249,8 @@ objects.</p>
 <td>
 <code>ruleNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -20529,6 +20529,52 @@ Supported values are:
 <div>
 <p>URL represents a valid URL</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.ValidatedLabelSelector">ValidatedLabelSelector
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>ValidatedLabelSelector is a LabelSelector with built-in validation for Kubernetes label names and values.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>matchLabels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is &ldquo;key&rdquo;, the
+operator is &ldquo;In&rdquo;, and the values array contains only &ldquo;value&rdquo;. The requirements are ANDed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchExpressions</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselectorrequirement-v1-meta">
+[]Kubernetes meta/v1.LabelSelectorRequirement
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>matchExpressions is a list of label selector requirements. The requirements are ANDed.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
@@ -21224,8 +21270,8 @@ EmbeddedObjectMetadata
 <td>
 <code>serviceMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21247,8 +21293,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>serviceMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21263,8 +21309,8 @@ namespace only.</p>
 <td>
 <code>podMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21286,8 +21332,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>podMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21302,8 +21348,8 @@ namespace only.</p>
 <td>
 <code>probeSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21325,8 +21371,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>probeNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21341,8 +21387,8 @@ current namespace only.</p>
 <td>
 <code>scrapeConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -21365,8 +21411,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>scrapeConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29849,8 +29895,8 @@ EmbeddedObjectMetadata
 <td>
 <code>serviceMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29872,8 +29918,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>serviceMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29888,8 +29934,8 @@ namespace only.</p>
 <td>
 <code>podMonitorSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29911,8 +29957,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>podMonitorNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29927,8 +29973,8 @@ namespace only.</p>
 <td>
 <code>probeSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29950,8 +29996,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>probeNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29966,8 +30012,8 @@ current namespace only.</p>
 <td>
 <code>scrapeConfigSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
@@ -29990,8 +30036,8 @@ of the custom resource definition. It is recommended to use
 <td>
 <code>scrapeConfigNamespaceSelector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.ValidatedLabelSelector">
+ValidatedLabelSelector
 </a>
 </em>
 </td>
