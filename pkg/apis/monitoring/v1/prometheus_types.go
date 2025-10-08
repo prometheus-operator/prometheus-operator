@@ -1898,7 +1898,7 @@ type AzureAD struct {
 	// workloadIdentity defines the Azure Workload Identity authentication.
 	// Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
 	//
-	// It requires Prometheus >= v2.54.0.
+	// It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
 	// +optional
 	WorkloadIdentity *AzureWorkloadIdentity `json:"workloadIdentity,omitempty"`
 }
@@ -1946,11 +1946,10 @@ type AzureWorkloadIdentity struct {
 	// tenantId is the tenant ID of the Azure Active Directory application.
 	// +kubebuilder:validation:MinLength=1
 	// +required
-	TenantID *string `json:"tenantId,omitempty"`
+	TenantID string `json:"tenantId"`
 
 	// tokenFilePath is the path to the service account token file.
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:default="/var/run/secrets/azure/tokens/azure-identity-token"
 	// +optional
 	TokenFilePath *string `json:"tokenFilePath,omitempty"`
 }

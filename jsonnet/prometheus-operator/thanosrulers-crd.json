@@ -4256,7 +4256,7 @@
                               "type": "object"
                             },
                             "workloadIdentity": {
-                              "description": "workloadIdentity defines the Azure Workload Identity authentication.\nCannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.\n\nIt requires Prometheus >= v2.54.0.",
+                              "description": "workloadIdentity defines the Azure Workload Identity authentication.\nCannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.\n\nIt requires Prometheus >= 3.7.0. Currently not supported by Thanos.",
                               "properties": {
                                 "clientId": {
                                   "description": "clientId is the clientID of the Azure Active Directory application.",
@@ -4269,7 +4269,6 @@
                                   "type": "string"
                                 },
                                 "tokenFilePath": {
-                                  "default": "/var/run/secrets/azure/tokens/azure-identity-token",
                                   "description": "tokenFilePath is the path to the service account token file.",
                                   "minLength": 1,
                                   "type": "string"
