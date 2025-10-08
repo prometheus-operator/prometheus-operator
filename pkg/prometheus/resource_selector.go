@@ -95,7 +95,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T ConfigurationResource](
+func selectObjects[T operator.ConfigurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
@@ -104,7 +104,7 @@ func selectObjects[T ConfigurationResource](
 	nsSelector *metav1.LabelSelector,
 	listFn ListAllByNamespaceFn,
 	checkFn func(context.Context, T) error,
-) (TypedResourcesSelection[T], error) {
+) (operator.TypedResourcesSelection[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
 	namespaces := []string{}
@@ -156,7 +156,7 @@ func selectObjects[T ConfigurationResource](
 	var (
 		rejected int
 		valid    []string
-		res      = make(TypedResourcesSelection[T], len(objects))
+		res      = make(operator.TypedResourcesSelection[T], len(objects))
 	)
 
 	for namespaceAndName, obj := range objects {
@@ -171,13 +171,8 @@ func selectObjects[T ConfigurationResource](
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
-
-		res[namespaceAndName] = TypedConfigurationResource[T]{
-			resource:   o,
-			err:        err,
-			reason:     reason,
-			generation: obj.(metav1.Object).GetGeneration(),
-		}
+        
+		res[namespaceAndName] = operator.NewTypedConfigurationResource(o, err, reason, obj.(metav1.Object).GetGeneration())
 	}
 
 	logger.Debug("valid objects selected", "objects", strings.Join(valid, ","))
@@ -193,7 +188,7 @@ func selectObjects[T ConfigurationResource](
 // SelectServiceMonitors returns the ServiceMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -451,7 +446,7 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 // SelectPodMonitors returns the PodMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
+func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -543,7 +538,7 @@ func (rs *ResourceSelector) addHTTPConfigToStore(
 // SelectProbes returns the probes matching the selectors specified in the Prometheus CR.
 // This function also populates authentication stores and performs
 // validations against scrape intervals, relabel configs and Probe URLs.
-func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.Probe], error) {
+func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -653,7 +648,7 @@ func validateServer(server string) error {
 
 // SelectScrapeConfigs returns the ScrapeConfigs which match the selectors in the
 // Prometheus CR and filters them returning all the configuration.
-func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(

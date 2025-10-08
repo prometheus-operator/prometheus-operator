@@ -34,8 +34,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-const statusSubResource = "status"
-
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
 // update of the managed statefulsets.

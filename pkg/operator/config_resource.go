@@ -35,8 +35,10 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
+const statusSubResource = "status"
+
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
-// selectable by Prometheus or PrometheusAgent.
+// selectable by Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 type ConfigurationResource interface {
 	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
 }
@@ -51,6 +53,15 @@ type TypedConfigurationResource[T ConfigurationResource] struct {
 
 // TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
 type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
+
+func NewTypedConfigurationResource[T ConfigurationResource](res T, err error, reason string, generation int64) TypedConfigurationResource[T] {
+	return TypedConfigurationResource[T]{
+		resource:   res,
+		err:        err,
+		reason:     reason,
+		generation: generation,
+	}
+}
 
 func (r *TypedConfigurationResource[T]) Resource() T {
 	return r.resource
