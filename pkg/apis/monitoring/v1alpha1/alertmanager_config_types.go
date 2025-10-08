@@ -43,6 +43,7 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 // +kubebuilder:storageversion
+// +kubebuilder:subresource:status
 
 // AlertmanagerConfig configures the Prometheus Alertmanager,
 // specifying how alerts should be grouped, inhibited and notified to external systems.
@@ -55,6 +56,14 @@ type AlertmanagerConfig struct {
 	// spec defines the specification of AlertmanagerConfigSpec
 	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ServiceMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
