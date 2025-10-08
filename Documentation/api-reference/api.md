@@ -7706,7 +7706,7 @@ AzureWorkloadIdentity
 <em>(Optional)</em>
 <p>workloadIdentity defines the Azure Workload Identity authentication.
 Cannot be set at the same time as <code>oauth</code>, <code>managedIdentity</code>, or <code>sdk</code>.</p>
-<p>It requires Prometheus &gt;= v2.54.0.</p>
+<p>It requires Prometheus &gt;= 3.7.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 </tbody>

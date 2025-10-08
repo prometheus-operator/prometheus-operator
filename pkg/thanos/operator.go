@@ -912,7 +912,8 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		if version.LT(semver.MustParse("0.31.0")) {
 			reset := resetFieldFn("0.31.0")
 			if rw.AzureAD != nil {
-				reset("azureAD.oauth", &rw.AzureAD.OAuth) // requires >= v2.48.0
+				reset("azureAD.oauth", &rw.AzureAD.OAuth)                       // requires >= v2.48.0
+				reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity) // not curently supported by Thanos
 			}
 			reset("azureAD", &rw.AzureAD) // requires >= v2.45.0
 		}
