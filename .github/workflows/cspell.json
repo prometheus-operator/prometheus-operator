@@ -404,21 +404,23 @@
     "workqueue",
     "yaml",
     "Alertmanagers",
-    "alertmanagerconfigsvalidate", 
+    "alertmanagerconfigsvalidate",
     "alertmanagers",
     "auligh",
-    "aulig", 
+    "aulig",
     "cmdline",
     "Labels",
     "Lokomotive",
     "visualisation",
-    "Lili", 
+    "Lili",
     "Loibl",
     "authzed",
     "resolv",
     "finalizer",
     "selfsigned",
     "FIPS",
-    "FIPSSTS"
+    "FIPSSTS",
+    "STACKIT",
+    "stackit"
   ]
 }
