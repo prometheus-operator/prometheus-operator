@@ -1461,12 +1461,10 @@ func (cb *ConfigBuilder) convertMSTeamsConfig(
 func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1alpha1.JiraConfig, crKey types.NamespacedName) (*jiraConfig, error) {
 	out := &jiraConfig{
 		SendResolved:      in.SendResolved,
-		Project:           in.Project,
 		Labels:            in.Labels,
 		Summary:           in.Summary,
 		Description:       in.Description,
 		Priority:          in.Priority,
-		IssueType:         in.IssueType,
 		ResolveTransition: in.ResolveTransition,
 		ReopenTransition:  in.ReopenTransition,
 		WontFixResolution: in.WontFixResolution,
@@ -1476,6 +1474,18 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 		out.APIURL = in.APIURL
 	} else if cb.cfg.Global != nil && cb.cfg.Global.JiraAPIURL != nil {
 		out.APIURL = ptr.To(cb.cfg.Global.JiraAPIURL.RequestURI())
+	}
+
+	if in.Project != "" {
+		out.Project = in.Project
+	} else {
+		return nil, fmt.Errorf("project is required and must not be empty")
+	}
+
+	if in.IssueType != "" {
+		out.IssueType = in.IssueType
+	} else {
+		return nil, fmt.Errorf("IssueType is required and must not be empty")
 	}
 
 	if len(in.Fields) > 0 {
