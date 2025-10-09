@@ -79,7 +79,7 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 	return rules, nil
 }
 
-func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus, rules map[string]string, logger *slog.Logger) ([]string, error) {
+func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus, rules operator.PrometheusRuleSelection, logger *slog.Logger) ([]string, error) {
 
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(
@@ -93,5 +93,5 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 			operator.WithName(fmt.Sprintf("prometheus-%s", p.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules)
+	return prs.Sync(ctx, rules.RuleFiles())
 }

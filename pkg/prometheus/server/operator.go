@@ -859,7 +859,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules.RuleFiles(), logger)
+	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules, logger)
 	if err != nil {
 		return err
 	}
