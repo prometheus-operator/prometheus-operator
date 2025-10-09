@@ -59,11 +59,6 @@ type TypedConfigurationResource[T ConfigurationResource] struct {
 // TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
 type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
 
-type SelectedPrometheusRules struct {
-	Rules        TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
-	MarshalRules map[string]string                                     // Map of valid marshalled rules.
-}
-
 func NewTypedConfigurationResource[T ConfigurationResource](res T, err error, reason string, generation int64) TypedConfigurationResource[T] {
 	return TypedConfigurationResource[T]{
 		resource:   res,
@@ -105,6 +100,19 @@ func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
 		}
 	}
 	return validRes
+}
+
+type PrometheusRuleSelection struct {
+	selection TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
+	ruleFiles map[string]string                                     // Map of rule configuration files serialized to the Prometheus format (key=filename).
+}
+
+func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
+	return prs.ruleFiles
+}
+
+func (prs *PrometheusRuleSelection) Selected() TypedResourcesSelection[*monitoringv1.PrometheusRule] {
+	return prs.selection
 }
 
 // ConfigResourceSyncer patches the status of configuration resources.

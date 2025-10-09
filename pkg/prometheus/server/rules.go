@@ -29,9 +29,9 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.SelectedPrometheusRules, error) {
+func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.PrometheusRuleSelection, error) {
 	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector, c.nsMonInf)
-	var rules operator.SelectedPrometheusRules
+	var rules operator.PrometheusRuleSelection
 	if err != nil {
 		return rules, err
 	}
@@ -74,8 +74,7 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 	}
 
 	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
-		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.MarshalRules))
-		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.Rules)-len(rules.MarshalRules))
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.RuleFiles()))
 	}
 	return rules, nil
 }

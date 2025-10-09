@@ -213,7 +213,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 
 // Select selects PrometheusRules by Prometheus or ThanosRuler.
 // The second returned value is the number of rejected PrometheusRule objects.
-func (prs *PrometheusRuleSelector) Select(namespaces []string) (SelectedPrometheusRules, error) {
+func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSelection, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
@@ -229,12 +229,12 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (SelectedPromethe
 			promRules[fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
 		})
 		if err != nil {
-			return SelectedPrometheusRules{}, fmt.Errorf("failed to list PrometheusRule objects in namespace %s: %w", ns, err)
+			return PrometheusRuleSelection{}, fmt.Errorf("failed to list PrometheusRule objects in namespace %s: %w", ns, err)
 		}
 	}
 
 	var (
-		MarshalRules    = make(map[string]string, len(promRules))
+		marshalRules    = make(map[string]string, len(promRules))
 		rules           = make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(promRules))
 		namespacedNames = make([]string, 0, len(promRules))
 	)
@@ -268,7 +268,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (SelectedPromethe
 			generation: promRule.GetGeneration(),
 		}
 		if err == nil {
-			MarshalRules[ruleName] = content
+			marshalRules[ruleName] = content
 			namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
 		}
 	}
@@ -280,9 +280,9 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (SelectedPromethe
 		"rules", strings.Join(namespacedNames, ","),
 	)
 
-	return SelectedPrometheusRules{
-		Rules:        rules,
-		MarshalRules: MarshalRules,
+	return PrometheusRuleSelection{
+		selection: rules,
+		ruleFiles: marshalRules,
 	}, nil
 }
 
