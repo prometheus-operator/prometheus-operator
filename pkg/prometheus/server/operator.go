@@ -104,13 +104,14 @@ type Operator struct {
 
 type ControllerOption func(*Operator)
 
-// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes and scrapeConfig)
+// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes, rules and scrapeConfigs)
 // selected by Prometheus.
 type selectedConfigResources struct {
 	sMons         operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor]
 	pMons         operator.TypedResourcesSelection[*monitoringv1.PodMonitor]
 	bMons         operator.TypedResourcesSelection[*monitoringv1.Probe]
 	scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	rules         operator.TypedResourcesSelection[*monitoringv1.PrometheusRule]
 }
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
