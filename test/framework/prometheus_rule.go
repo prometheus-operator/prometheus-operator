@@ -44,19 +44,23 @@ func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGro
 
 func (f *Framework) CreateRule(ctx context.Context, ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
 	var (
-		rule *monitoringv1.PrometheusRule
-		err  error
+		rule      *monitoringv1.PrometheusRule
+		createErr error
 	)
 
-	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
-		rule, err = f.MonClientV1.PrometheusRules(ns).Create(ctx, ar, metav1.CreateOptions{})
-		if err != nil {
-			return false, err
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
+		rule, createErr = f.MonClientV1.PrometheusRules(ns).Create(ctx, ar, metav1.CreateOptions{})
+		if createErr != nil {
+			return false, nil
 		}
+
 		return true, nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", err, createErr)
+	}
 
-	return rule, err
+	return rule, nil
 }
 
 func (f *Framework) GetRule(ctx context.Context, ns, name string) (*monitoringv1.PrometheusRule, error) {

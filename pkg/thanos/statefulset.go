@@ -439,12 +439,14 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
+					Optional: ptr.To(true),
 				},
 			},
 		})
 		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
 			Name:      name,
 			MountPath: rulesDir + "/" + name,
+			ReadOnly:  true,
 		})
 	}
 

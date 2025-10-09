@@ -82,14 +82,20 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(
 		logger,
+		fmt.Sprintf("thanos-ruler-%s", t.Name),
 		o.kclient.CoreV1().ConfigMaps(t.Namespace),
 		labels.Set{labelThanosRulerName: t.Name},
 		[]operator.ObjectOption{
 			operator.WithAnnotations(o.config.Annotations),
 			operator.WithLabels(o.config.Labels),
 			operator.WithManagingOwner(t),
-			operator.WithName(fmt.Sprintf("thanos-ruler-%s", t.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules.RuleFiles())
+
+	configMaps, err := prs.Sync(ctx, rules.RuleFiles())
+	if err != nil {
+		return nil, err
+	}
+
+	return configMaps, nil
 }
