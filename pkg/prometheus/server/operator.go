@@ -1086,6 +1086,13 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
+	// Update the status of selected prometheusRules.
+	for key, configResource := range resources.rules {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
+		}
+	}
+
 	// Remove bindings from serviceMonitors which reference the
 	// workload but aren't selected anymore.
 	if err := operator.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
