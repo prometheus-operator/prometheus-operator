@@ -42,8 +42,6 @@ import (
 )
 
 const (
-	// Generic reason for selected resources that are not valid.
-	invalidConfiguration                  = "InvalidConfiguration"
 	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
 
@@ -150,7 +148,7 @@ func selectObjects[T operator.ConfigurationResource](
 		err := checkFn(ctx, o)
 		if err != nil {
 			rejected++
-			reason = invalidConfiguration
+			reason = operator.InvalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {

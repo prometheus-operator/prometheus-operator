@@ -35,7 +35,12 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-const statusSubResource = "status"
+const(
+	 statusSubResource = "status"
+
+	 // Generic reason for selected resources that are not valid.
+	 InvalidConfiguration = "InvalidConfiguration"
+)
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
@@ -49,6 +54,7 @@ type TypedConfigurationResource[T ConfigurationResource] struct {
 	err        error  // Error encountered during selection or validation (nil if valid).
 	reason     string // Reason for rejection; empty if accepted.
 	generation int64  // Generation of the desired state (spec).
+	content    string // Marshalled content of the resource (only for PrometheusRules).
 }
 
 // TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
