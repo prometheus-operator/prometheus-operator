@@ -4518,6 +4518,9 @@ func TestSanitizeConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			routeCfg, err := yaml.Marshal(tc.in)
+			if err != nil {
+				t.Logf("err: %s", err)
+			}
 			require.NoError(t, err)
 
 			golden.Assert(t, string(routeCfg), tc.golden)
