@@ -29,7 +29,7 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-func (c *Operator) getSelectedPrometheusRules(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger) (operator.TypedResourcesSelection[*monitoringv1.PrometheusRule], error) {
+func (c *Operator) getSelectedPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.TypedResourcesSelection[*monitoringv1.PrometheusRule], error) {
 	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector, c.nsMonInf)
 	if err != nil {
 		return nil, err

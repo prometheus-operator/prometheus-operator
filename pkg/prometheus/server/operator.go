@@ -1327,7 +1327,7 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 		}
 	}
 
-	rules, err := c.getSelectedPrometheusRules(ctx, p, logger)
+	rules, err := c.getSelectedPrometheusRules(p, logger)
 	if err != nil {
 		return nil, err
 	}

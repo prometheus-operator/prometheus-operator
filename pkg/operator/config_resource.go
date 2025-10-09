@@ -38,7 +38,7 @@ import (
 const (
 	statusSubResource = "status"
 
-	// Generic reason for selected resources that are not valid.
+	// InvalidConfiguration is a generic reason for selected resources that are not valid.
 	InvalidConfiguration = "InvalidConfiguration"
 )
 
