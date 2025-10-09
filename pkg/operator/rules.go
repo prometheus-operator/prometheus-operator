@@ -267,8 +267,8 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (SelectedPromethe
 			reason:     reason,
 			generation: promRule.GetGeneration(),
 		}
-		MarshalRules[ruleName] = content
 		if err == nil {
+			MarshalRules[ruleName] = content
 			namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
 		}
 	}
