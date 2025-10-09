@@ -842,10 +842,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger.Info("sync prometheus")
-	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
-	if err != nil {
-		return err
-	}
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
@@ -859,6 +855,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+	if err != nil {
+		return err
+	}
+
+	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules.ValidMarshalledResources(), logger)
 	if err != nil {
 		return err
 	}
@@ -1325,11 +1326,18 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 			return nil, fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
 		}
 	}
+
+	rules, err := c.getSelectedPrometheusRules(ctx, p, logger)
+	if err != nil {
+		return nil, err
+	}
+
 	return &selectedConfigResources{
 		sMons:         smons,
 		bMons:         bmons,
 		pMons:         pmons,
 		scrapeConfigs: scrapeConfigs,
+		rules:         rules,
 	}, nil
 }
 

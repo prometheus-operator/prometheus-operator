@@ -103,6 +103,17 @@ func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
 	return validRes
 }
 
+// ValidMarshalledResources returns only the marshalled resources which the operator considers to be valid.
+func (resources TypedResourcesSelection[T]) ValidMarshalledResources() map[string]string {
+	validRes := make(map[string]string)
+	for k, res := range resources {
+		if res.err == nil {
+			validRes[k] = res.content
+		}
+	}
+	return validRes
+}
+
 // ConfigResourceSyncer patches the status of configuration resources.
 type ConfigResourceSyncer struct {
 	client   dynamic.Interface

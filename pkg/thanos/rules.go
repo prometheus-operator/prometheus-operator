@@ -91,5 +91,5 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 			operator.WithName(fmt.Sprintf("thanos-ruler-%s", t.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules)
+	return prs.Sync(ctx, rules.ValidMarshalledResources())
 }
