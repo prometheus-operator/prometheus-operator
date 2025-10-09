@@ -469,6 +469,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
+					Optional: ptr.To(true),
 				},
 			},
 		})
@@ -478,10 +479,11 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
 			Name:      name,
 			MountPath: prompkg.RulesDir + "/" + name,
+			ReadOnly:  true,
 		})
 	}
 
-	// not mount 2 emptyDir volumes at the same mountpath
+	// Prevent mounting 2 emptyDir volumes at the same mountpath
 	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
 		volumeMounts = append(volumeMounts, vmount)
 	}

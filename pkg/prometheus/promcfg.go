@@ -22,6 +22,7 @@ import (
 	"math"
 	"net/url"
 	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -1510,7 +1511,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// value for it. A single pod may potentially have multiple metrics
 	// endpoints, therefore the endpoints labels is filled with the ports name or
 	// as a fallback the port number.
-
 	relabelings = append(relabelings, yaml.MapSlice{
 		{Key: "target_label", Value: "job"},
 		{Key: "replacement", Value: fmt.Sprintf("%s/%s", m.GetNamespace(), m.GetName())},
@@ -2977,7 +2977,7 @@ func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []stri
 	if ruleSelector != nil {
 		ruleFilePaths := []string{}
 		for _, name := range ruleFiles {
-			ruleFilePaths = append(ruleFilePaths, RulesDir+"/"+name+"/*.yaml")
+			ruleFilePaths = append(ruleFilePaths, filepath.Join(RulesDir, name, "*.yaml"))
 		}
 		slice = append(slice, yaml.MapItem{
 			Key:   "rule_files",
