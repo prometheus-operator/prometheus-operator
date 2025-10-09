@@ -29,10 +29,11 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.TypedResourcesSelection[*monitoringv1.PrometheusRule], error) {
+func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.SelectedPrometheusRules, error) {
 	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector, c.nsMonInf)
+	var rules operator.SelectedPrometheusRules
 	if err != nil {
-		return nil, err
+		return rules, err
 	}
 	logger.Debug("selected RuleNamespaces", "namespaces", strings.Join(namespaces, ","))
 
@@ -64,17 +65,17 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 		logger,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
+		return rules, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
 
-	rules, err := promRuleSelector.Select(namespaces)
+	rules, err = promRuleSelector.Select(namespaces)
 	if err != nil {
-		return nil, fmt.Errorf("selecting PrometheusRules failed: %w", err)
+		return rules, fmt.Errorf("selecting PrometheusRules failed: %w", err)
 	}
 
 	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
-		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules))
-		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules)-len(rules.ValidResources()))
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.MarshalRules))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.Rules)-len(rules.MarshalRules))
 	}
 	return rules, nil
 }

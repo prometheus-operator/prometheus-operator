@@ -54,11 +54,15 @@ type TypedConfigurationResource[T ConfigurationResource] struct {
 	err        error  // Error encountered during selection or validation (nil if valid).
 	reason     string // Reason for rejection; empty if accepted.
 	generation int64  // Generation of the desired state (spec).
-	content    string // Marshalled content of the resource (only for PrometheusRules).
 }
 
 // TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
 type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
+
+type SelectedPrometheusRules struct {
+	Rules        TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
+	MarshalRules map[string]string                                     // Map of valid marshalled rules.
+}
 
 func NewTypedConfigurationResource[T ConfigurationResource](res T, err error, reason string, generation int64) TypedConfigurationResource[T] {
 	return TypedConfigurationResource[T]{
@@ -98,17 +102,6 @@ func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
 	for k, res := range resources {
 		if res.err == nil {
 			validRes[k] = res.resource
-		}
-	}
-	return validRes
-}
-
-// ValidMarshalledResources returns only the marshalled resources which the operator considers to be valid.
-func (resources TypedResourcesSelection[T]) ValidMarshalledResources() map[string]string {
-	validRes := make(map[string]string)
-	for k, res := range resources {
-		if res.err == nil {
-			validRes[k] = res.content
 		}
 	}
 	return validRes

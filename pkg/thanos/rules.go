@@ -75,8 +75,8 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	}
 
 	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
-		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules))
-		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules)-len(rules.ValidResources()))
+		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules.MarshalRules))
+		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules.Rules)-len(rules.MarshalRules))
 	}
 
 	// Update the corresponding ConfigMap resources.
@@ -91,5 +91,5 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 			operator.WithName(fmt.Sprintf("thanos-ruler-%s", t.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules.ValidMarshalledResources())
+	return prs.Sync(ctx, rules.MarshalRules)
 }

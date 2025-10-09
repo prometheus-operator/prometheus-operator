@@ -111,7 +111,7 @@ type selectedConfigResources struct {
 	pMons         operator.TypedResourcesSelection[*monitoringv1.PodMonitor]
 	bMons         operator.TypedResourcesSelection[*monitoringv1.Probe]
 	scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
-	rules         operator.TypedResourcesSelection[*monitoringv1.PrometheusRule]
+	rules         operator.SelectedPrometheusRules
 }
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
@@ -859,7 +859,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules.ValidMarshalledResources(), logger)
+	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules.MarshalRules, logger)
 	if err != nil {
 		return err
 	}
@@ -1087,7 +1087,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}
 
 	// Update the status of selected prometheusRules.
-	for key, configResource := range resources.rules {
+	for key, configResource := range resources.rules.Rules {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
 		}
