@@ -601,11 +601,10 @@ func TestPrometheusRuleSync(t *testing.T) {
 
 	prs := NewPrometheusRuleSyncer(
 		slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		"prometheus-foo",
 		cmClient,
 		map[string]string{"prometheus-name": "foo"},
-		[]ObjectOption{
-			WithName("prometheus-foo"),
-		},
+		nil,
 	)
 
 	t.Run("should create configmap with no rules", func(t *testing.T) {
@@ -676,5 +675,17 @@ func TestPrometheusRuleSync(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, cms.Items, 1)
 		require.Equal(t, "immutable", string(cms.Items[0].UID))
+	})
+
+	t.Run("should append virtual configmaps", func(t *testing.T) {
+		require.Equal(t,
+			[]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"},
+			prs.AppendConfigMapNames([]string{"prometheus-foo-rulefiles-0"}, 3),
+		)
+
+		require.Equal(t,
+			[]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"},
+			prs.AppendConfigMapNames([]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"}, 3),
+		)
 	})
 }

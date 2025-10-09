@@ -156,6 +156,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 								{
 									Name:      "rules-configmap-one",
 									MountPath: "/etc/thanos/rules/rules-configmap-one",
+									ReadOnly:  true,
 								},
 								{
 									Name:      "additional-volume",
@@ -202,23 +203,20 @@ func TestStatefulSetVolumes(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
+									Optional: ptr.To(true),
 								},
 							},
 						},
 						{
 							Name: "thanos-ruler-foo-data",
 							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{
-									Medium: "",
-								},
+								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
 						},
 						{
 							Name: "additional-volume",
 							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{
-									Medium: "",
-								},
+								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
 						},
 					},
