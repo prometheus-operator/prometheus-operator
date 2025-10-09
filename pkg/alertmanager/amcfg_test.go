@@ -4509,7 +4509,7 @@ func TestSanitizeConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if err != nil {
-				fmt.Println("err: %s", err)
+				fmt.Printf("err: %s\n", err)
 			}
 			if tc.expectErr {
 				require.Error(t, err)
