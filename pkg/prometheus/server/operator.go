@@ -104,7 +104,7 @@ type Operator struct {
 
 type ControllerOption func(*Operator)
 
-// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes, rules and scrapeConfigs)
+// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes, prometheusRules and scrapeConfigs)
 // selected by Prometheus.
 type selectedConfigResources struct {
 	sMons         operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor]
@@ -1334,7 +1334,7 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 		}
 	}
 
-	rules, err := c.getSelectedPrometheusRules(p, logger)
+	rules, err := c.selectedPrometheusRules(p, logger)
 	if err != nil {
 		return nil, err
 	}

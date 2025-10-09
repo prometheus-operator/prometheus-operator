@@ -257,10 +257,15 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (TypedResourcesSe
 			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 		}
 
+		var reason string
+		if err != nil {
+			reason = InvalidConfigurationEvent
+		}
+
 		rules[ruleName] = TypedConfigurationResource[*monitoringv1.PrometheusRule]{
 			resource:   promRule,
 			err:        err,
-			reason:     InvalidConfiguration,
+			reason:     reason,
 			generation: promRule.GetGeneration(),
 			content:    content,
 		}
