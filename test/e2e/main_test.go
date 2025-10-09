@@ -449,6 +449,7 @@ func TestGatedFeatures(t *testing.T) {
 		"ScrapeConfigStatusSubresource":                      testScrapeConfigStatusSubresource,
 		"GarbageCollectionOfScrapeConfigBinding":             testGarbageCollectionOfScrapeConfigBinding,
 		"RmScrapeConfigBindingDuringWorkloadDelete":          testRmScrapeConfigBindingDuringWorkloadDelete,
+		"PrometheusRuleStatusSubresource":                    testPrometheusRuleStatusSubresource,
 		"FinalizerForPromAgentWhenStatusForConfigResEnabled": testFinalizerForPromAgentWhenStatusForConfigResEnabled,
 	}
 
