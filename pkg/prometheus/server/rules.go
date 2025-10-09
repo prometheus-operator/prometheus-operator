@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -28,9 +29,7 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
-	logger := c.logger.With("prometheus", p.Name, "namespace", p.Namespace)
-
+func (c *Operator) getSelectedPrometheusRules(ctx context.Context, p *monitoringv1.Prometheus, logger *slog.Logger) (operator.TypedResourcesSelection[*monitoringv1.PrometheusRule], error) {
 	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector, c.nsMonInf)
 	if err != nil {
 		return nil, err
@@ -77,6 +76,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules))
 		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, rejected)
 	}
+	return rules, nil
+}
+
+func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus, rules map[string]string, logger *slog.Logger) ([]string, error) {
 
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(

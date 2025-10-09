@@ -35,11 +35,11 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-const(
-	 statusSubResource = "status"
+const (
+	statusSubResource = "status"
 
-	 // Generic reason for selected resources that are not valid.
-	 InvalidConfiguration = "InvalidConfiguration"
+	// Generic reason for selected resources that are not valid.
+	InvalidConfiguration = "InvalidConfiguration"
 )
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources

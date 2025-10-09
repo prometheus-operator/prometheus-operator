@@ -211,10 +211,9 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 	return errs
 }
 
-// Select selects PrometheusRules and translates them into native
-// Prometheus/Thanos configurations.
+// Select selects PrometheusRules by Prometheus or ThanosRuler.
 // The second returned value is the number of rejected PrometheusRule objects.
-func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]string, int, error) {
+func (prs *PrometheusRuleSelector) Select(namespaces []string) (TypedResourcesSelection[*monitoringv1.PrometheusRule], int, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
@@ -236,7 +235,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 
 	var (
 		rejected        int
-		rules           = make(map[string]string, len(promRules))
+		rules           = make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(promRules))
 		namespacedNames = make([]string, 0, len(promRules))
 	)
 	for ruleName, promRule := range promRules {
@@ -256,11 +255,18 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"namespace", promRule.Namespace,
 			)
 			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
-			continue
 		}
 
-		rules[ruleName] = content
-		namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
+		rules[ruleName] = TypedConfigurationResource[*monitoringv1.PrometheusRule]{
+			resource:   promRule,
+			err:        err,
+			reason:     InvalidConfiguration,
+			generation: promRule.GetGeneration(),
+			content:    content,
+		}
+		if err == nil {
+			namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
+		}
 	}
 
 	slices.Sort(namespacedNames)
