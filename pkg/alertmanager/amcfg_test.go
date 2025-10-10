@@ -5098,6 +5098,79 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:           "Test pushover HTML and Monospace are mutually exclusive",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								Token:     "bar",
+								HTML:      true,
+								Monospace: true,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover HTML allowed without Monospace",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "foo",
+								Token:   "bar",
+								HTML:    true,
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_html_allowed_without_monospace.golden",
+		},
+		{
+			name:           "Test pushover Monospace allowed without HTML",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								Token:     "bar",
+								Monospace: true,
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_monospace_allowed_without_html.golden",
+		},
+		{
+			name:           "Test pushover Monospace dropped in unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								Token:     "bar",
+								Monospace: true,
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_monospace_dropped_unsupported_version.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
