@@ -4446,7 +4446,6 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:    ptr.To("http://example.com"),
 								Project:   "foo",
 								IssueType: "bug",
 							},
@@ -4464,8 +4463,8 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:  ptr.To("http://example.com"),
-								Project: "foo",
+								Project:   "foo",
+								IssueType: "bug",
 							},
 						},
 					},
@@ -4474,7 +4473,7 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "jira_config returns error for missing project mandatory field",
+			name:           "jira_config returns error for missing project and issue_type mandatory field",
 			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4482,22 +4481,6 @@ func TestSanitizeConfig(t *testing.T) {
 						JiraConfigs: []*jiraConfig{
 							{
 								APIURL: ptr.To("http://example.com"),
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "jira_config returns error for missing api_url/jira_api_url mandatory field",
-			againstVersion: versioJiraAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						JiraConfigs: []*jiraConfig{
-							{
-								Project: "projectA",
 							},
 						},
 					},
