@@ -21,6 +21,25 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// HTTPConfigWithProxy defines the configuration for the HTTP client with proxy configuration.
+type HTTPConfigWithProxy struct {
+	HTTPConfig  `json:",inline"`
+	ProxyConfig `json:",inline"`
+}
+
+// Validate semantically validates the given HTTPConfigWithProxy.
+func (hc *HTTPConfigWithProxy) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	if err := hc.HTTPConfig.Validate(); err != nil {
+		return err
+	}
+
+	return hc.ProxyConfig.Validate()
+}
+
 // HTTPConfig defines the configuration for the HTTP client.
 type HTTPConfig struct {
 	// authorization configures the Authorization header credentials used by
@@ -64,8 +83,6 @@ type HTTPConfig struct {
 	//
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
-	ProxyConfig `json:",inline"`
 
 	// followRedirects defines whether the client should follow HTTP 3xx
 	// redirects.
@@ -120,10 +137,6 @@ func (hc *HTTPConfig) Validate() error {
 
 	if err := hc.TLSConfig.Validate(); err != nil {
 		return fmt.Errorf("tlsConfig: %w", err)
-	}
-
-	if err := hc.ProxyConfig.Validate(); err != nil {
-		return err
 	}
 
 	return nil

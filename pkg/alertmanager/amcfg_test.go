@@ -146,29 +146,31 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 				ResolveTimeout: "30s",
-				HTTPConfig: &monitoringv1.HTTPConfig{
-					OAuth2: &monitoringv1.OAuth2{
-						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "webhook-client-id",
+									Name: "webhook-client-secret",
 								},
 								Key: "test",
 							},
-						},
-						ClientSecret: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
 							},
-							Key: "test",
 						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
-						},
+						FollowRedirects: ptr.To(true),
 					},
-					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -204,18 +206,20 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name:      "valid global config with global HTTPConfig CA",
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringv1.HTTPConfig{
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						CA: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "proxy-ca-certificate",
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
 								},
-								Key: "certificate",
 							},
 						},
+						FollowRedirects: ptr.To(true),
 					},
-					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -622,8 +626,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "globalConfig has null resolve timeout",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringv1.HTTPConfig{
-					FollowRedirects: ptr.To(true),
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						FollowRedirects: ptr.To(true),
+					},
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -650,7 +656,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name: "globalConfig httpconfig/proxyconfig has null secretKey for proxyConnectHeader",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringv1.HTTPConfig{
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						FollowRedirects: ptr.To(true),
+					},
 					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL: ptr.To("http://example.com"),
 						NoProxy:  ptr.To("svc.cluster.local"),
@@ -665,7 +674,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							},
 						},
 					},
-					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -693,7 +701,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion24",
 			amVersion: &version24,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringv1.HTTPConfig{
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
 					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL: ptr.To("http://example.com"),
 						NoProxy:  ptr.To("svc.cluster.local"),
@@ -708,7 +716,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							},
 						},
 					},
-					FollowRedirects: ptr.To(true),
+					HTTPConfig: monitoringv1.HTTPConfig{
+						FollowRedirects: ptr.To(true),
+					},
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -736,7 +746,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion26",
 			amVersion: &version26,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringv1.HTTPConfig{
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
 					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL: ptr.To("http://example.com"),
 						NoProxy:  ptr.To("svc.cluster.local"),
@@ -751,7 +761,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							},
 						},
 					},
-					FollowRedirects: ptr.To(true),
+					HTTPConfig: monitoringv1.HTTPConfig{
+						FollowRedirects: ptr.To(true),
+					},
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -907,29 +919,31 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 				ResolveTimeout: "30s",
-				HTTPConfig: &monitoringv1.HTTPConfig{
-					OAuth2: &monitoringv1.OAuth2{
-						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "webhook-client-id",
+									Name: "webhook-client-secret",
 								},
 								Key: "test",
 							},
-						},
-						ClientSecret: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
 							},
-							Key: "test",
 						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
-						},
+						FollowRedirects: ptr.To(true),
 					},
-					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1805,43 +1819,45 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				ResolveTimeout: "30s",
-				HTTPConfig: &monitoringv1.HTTPConfig{
-					OAuth2: &monitoringv1.OAuth2{
-						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
+				HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "webhook-client-id",
+									Name: "webhook-client-secret",
+								},
+								Key: "test",
+							},
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
+							},
+						},
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-secret",
+								},
+								Key: "test",
+							},
+							Password: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "webhook-client-secret",
 								},
 								Key: "test",
 							},
 						},
-						ClientSecret: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
-							},
-							Key: "test",
-						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
-						},
+						FollowRedirects: ptr.To(true),
 					},
-					BasicAuth: &monitoringv1.BasicAuth{
-						Username: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
-							},
-							Key: "test",
-						},
-						Password: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "webhook-client-secret",
-							},
-							Key: "test",
-						},
-					},
-					FollowRedirects: ptr.To(true),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{

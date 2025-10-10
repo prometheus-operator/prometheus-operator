@@ -452,7 +452,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// httpConfig defines the default HTTP configuration.
 	// +optional
-	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	HTTPConfigWithProxy *HTTPConfigWithProxy `json:"httpConfig,omitempty"`
 
 	// slackApiUrl defines the default Slack API URL.
 	// +optional

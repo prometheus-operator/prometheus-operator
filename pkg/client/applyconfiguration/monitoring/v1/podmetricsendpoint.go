@@ -25,21 +25,21 @@ import (
 // PodMetricsEndpointApplyConfiguration represents a declarative configuration of the PodMetricsEndpoint type for use
 // with apply.
 type PodMetricsEndpointApplyConfiguration struct {
-	Port                         *string                           `json:"port,omitempty"`
-	PortNumber                   *int32                            `json:"portNumber,omitempty"`
-	TargetPort                   *intstr.IntOrString               `json:"targetPort,omitempty"`
-	Path                         *string                           `json:"path,omitempty"`
-	Scheme                       *monitoringv1.Scheme              `json:"scheme,omitempty"`
-	Params                       map[string][]string               `json:"params,omitempty"`
-	Interval                     *monitoringv1.Duration            `json:"interval,omitempty"`
-	ScrapeTimeout                *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
-	HonorLabels                  *bool                             `json:"honorLabels,omitempty"`
-	HonorTimestamps              *bool                             `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness     *bool                             `json:"trackTimestampsStaleness,omitempty"`
-	MetricRelabelConfigs         []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
-	RelabelConfigs               []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
-	FilterRunning                *bool                             `json:"filterRunning,omitempty"`
-	HTTPConfigApplyConfiguration `json:",inline"`
+	Port                                  *string                           `json:"port,omitempty"`
+	PortNumber                            *int32                            `json:"portNumber,omitempty"`
+	TargetPort                            *intstr.IntOrString               `json:"targetPort,omitempty"`
+	Path                                  *string                           `json:"path,omitempty"`
+	Scheme                                *monitoringv1.Scheme              `json:"scheme,omitempty"`
+	Params                                map[string][]string               `json:"params,omitempty"`
+	Interval                              *monitoringv1.Duration            `json:"interval,omitempty"`
+	ScrapeTimeout                         *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
+	HonorLabels                           *bool                             `json:"honorLabels,omitempty"`
+	HonorTimestamps                       *bool                             `json:"honorTimestamps,omitempty"`
+	TrackTimestampsStaleness              *bool                             `json:"trackTimestampsStaleness,omitempty"`
+	MetricRelabelConfigs                  []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	RelabelConfigs                        []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	FilterRunning                         *bool                             `json:"filterRunning,omitempty"`
+	HTTPConfigWithProxyApplyConfiguration `json:",inline"`
 }
 
 // PodMetricsEndpointApplyConfiguration constructs a declarative configuration of the PodMetricsEndpoint type for use with
@@ -216,6 +216,22 @@ func (b *PodMetricsEndpointApplyConfiguration) WithTLSConfig(value *SafeTLSConfi
 	return b
 }
 
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithFollowRedirects(value bool) *PodMetricsEndpointApplyConfiguration {
+	b.HTTPConfigApplyConfiguration.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithEnableHTTP2(value bool) *PodMetricsEndpointApplyConfiguration {
+	b.HTTPConfigApplyConfiguration.EnableHTTP2 = &value
+	return b
+}
+
 // WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
@@ -251,21 +267,5 @@ func (b *PodMetricsEndpointApplyConfiguration) WithProxyConnectHeader(entries ma
 	for k, v := range entries {
 		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
-	return b
-}
-
-// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FollowRedirects field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithFollowRedirects(value bool) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.FollowRedirects = &value
-	return b
-}
-
-// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithEnableHTTP2(value bool) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.EnableHTTP2 = &value
 	return b
 }

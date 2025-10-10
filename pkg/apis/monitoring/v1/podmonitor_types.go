@@ -331,5 +331,5 @@ type PodMetricsEndpoint struct {
 	// +optional
 	FilterRunning *bool `json:"filterRunning,omitempty"`
 
-	HTTPConfig `json:",inline"`
+	HTTPConfigWithProxy `json:",inline"`
 }

@@ -434,17 +434,17 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		}
 	}
 
-	if in.HTTPConfig != nil {
+	if in.HTTPConfigWithProxy != nil {
 		v1alpha1Config := monitoringv1alpha1.HTTPConfig{
-			Authorization: in.HTTPConfig.Authorization,
-			BasicAuth:     in.HTTPConfig.BasicAuth,
-			OAuth2:        in.HTTPConfig.OAuth2,
+			Authorization: in.HTTPConfigWithProxy.Authorization,
+			BasicAuth:     in.HTTPConfigWithProxy.BasicAuth,
+			OAuth2:        in.HTTPConfigWithProxy.OAuth2,
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
-			TLSConfig:         in.HTTPConfig.TLSConfig,
-			ProxyConfig:       in.HTTPConfig.ProxyConfig,
-			FollowRedirects:   in.HTTPConfig.FollowRedirects,
-			EnableHTTP2:       in.HTTPConfig.EnableHTTP2,
+			BearerTokenSecret: in.HTTPConfigWithProxy.BearerTokenSecret,
+			TLSConfig:         in.HTTPConfigWithProxy.TLSConfig,
+			ProxyConfig:       in.HTTPConfigWithProxy.ProxyConfig,
+			FollowRedirects:   in.HTTPConfigWithProxy.FollowRedirects,
+			EnableHTTP2:       in.HTTPConfigWithProxy.EnableHTTP2,
 		}
 
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
