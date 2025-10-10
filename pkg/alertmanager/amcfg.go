@@ -802,17 +802,119 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		SendResolved: in.SendResolved,
 	}
 
-	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
+	if in.APIURL != nil && *in.APIURL != "" {
+		out.APIURL = (string)(*in.APIURL)
 	}
-	out.Token = &token
 
-	tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.TokenID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
+	if in.Token != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
+		}
+		out.Token = token
 	}
-	out.TokenID = &tokenID
+
+	if in.TokenFile != nil && *in.TokenFile != "" {
+		out.TokenFile = *in.TokenFile
+	}
+
+	if in.TokenID != nil {
+		tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.TokenID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
+		}
+		out.TokenID = tokenID
+	}
+
+	if in.TokenIDFile != nil && *in.TokenIDFile != "" {
+		out.TokenIDFile = *in.TokenIDFile
+	}
+
+	if in.Channel != nil && *in.Channel != "" {
+		out.Channel = *in.Channel
+	}
+
+	if in.Color != nil && *in.Color != "" {
+		out.Color = *in.Color
+	}
+
+	if in.Title != nil && *in.Title != "" {
+		out.Title = *in.Title
+	}
+
+	if in.TitleLink != nil && *in.TitleLink != "" {
+		out.TitleLink = *in.TitleLink
+	}
+
+	if in.Text != nil && *in.Text != "" {
+		out.Text = *in.Text
+	}
+
+	if in.ShortFields != nil {
+		out.ShortFields = *in.ShortFields
+	}
+
+	if in.Emoji != nil && *in.Emoji != "" {
+		out.Emoji = *in.Emoji
+	}
+
+	if in.IconURL != nil && *in.IconURL != "" {
+		out.IconURL = (string)(*in.IconURL)
+	}
+
+	if in.ImageURL != nil && *in.ImageURL != "" {
+		out.ImageURL = (string)(*in.ImageURL)
+	}
+
+	if in.ThumbURL != nil && *in.ThumbURL != "" {
+		out.ThumbURL = (string)(*in.ThumbURL)
+	}
+
+	if in.LinkNames != nil {
+		out.LinkNames = *in.LinkNames
+	}
+
+	if l := len(in.Fields); l > 0 {
+		fields := make([]*rocketchatAttachmentField, l)
+		for i, f := range in.Fields {
+			field := &rocketchatAttachmentField{
+				Short: f.Short,
+			}
+
+			if f.Title != nil {
+				field.Title = *f.Title
+			}
+
+			if f.Value != nil {
+				field.Value = *f.Value
+			}
+
+			fields[i] = field
+		}
+		out.Fields = fields
+	}
+
+	if l := len(in.Actions); l > 0 {
+		actions := make([]*rocketchatAttachmentAction, l)
+		for i, a := range in.Actions {
+			action := &rocketchatAttachmentAction{}
+
+			if a.Text != nil {
+				action.Text = *a.Text
+			}
+
+			if a.URL != nil {
+				action.URL = (string)(*a.URL)
+			}
+
+			if a.Msg != nil {
+				action.Msg = *a.Msg
+			}
+
+			actions[i] = action
+		}
+		out.Actions = actions
+	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
@@ -2943,10 +3045,10 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		return fmt.Errorf(`invalid syntax in receivers config; rocketchat integration is available in Alertmanager >= 0.28.0`)
 	}
 
-	if rc.Token != nil && len(rc.TokenFile) > 0 {
+	if len(rc.Token) > 0 && len(rc.TokenFile) > 0 {
 		return fmt.Errorf("at most one of token & token_file must be configured")
 	}
-	if rc.TokenID != nil && len(rc.TokenIDFile) > 0 {
+	if len(rc.TokenID) > 0 && len(rc.TokenIDFile) > 0 {
 		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
 	}
 

@@ -5568,7 +5568,7 @@
                             type: 'string',
                           },
                           token: {
-                            description: 'token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.',
+                            description: 'token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.\nEither `token` or `tokenFile` can be used.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5589,9 +5589,13 @@
                             ],
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
+                          },
+                          tokenFile: {
+                            description: 'tokenFile defines the sender token file for RocketChat authentication.\nEither `token` or `tokenFile` can be used.',
+                            type: 'string',
                           },
                           tokenID: {
-                            description: 'tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.',
+                            description: 'tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.\nEither `tokenID` or `tokenIDFile` can be used.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5613,11 +5617,11 @@
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',
                           },
+                          tokenIDFile: {
+                            description: 'tokenIDFile defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.\nEither `tokenID` or `tokenIDFile` can be used.',
+                            type: 'string',
+                          },
                         },
-                        required: [
-                          'token',
-                          'tokenID',
-                        ],
                         type: 'object',
                       },
                       type: 'array',
