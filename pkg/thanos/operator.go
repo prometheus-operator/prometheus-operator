@@ -897,6 +897,11 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 	}
 
 	for _, rw := range tr.Spec.RemoteWrite {
+		if rw.AzureAD != nil {
+			reset := resetFieldFn("any")
+			reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity) // not currently supported by any Thanos version
+		}
+
 		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
 		if version.LT(semver.MustParse("0.38.0")) {
 			reset := resetFieldFn("0.38.0")
@@ -932,8 +937,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		if version.LT(semver.MustParse("0.31.0")) {
 			reset := resetFieldFn("0.31.0")
 			if rw.AzureAD != nil {
-				reset("azureAD.oauth", &rw.AzureAD.OAuth)                       // requires >= v2.48.0
-				reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity) // not curently supported by Thanos
+				reset("azureAD.oauth", &rw.AzureAD.OAuth) // requires >= v2.48.0
 			}
 			reset("azureAD", &rw.AzureAD) // requires >= v2.45.0
 		}
