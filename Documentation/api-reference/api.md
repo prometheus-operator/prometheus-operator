@@ -33493,8 +33493,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> can be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tokenFile defines the sender token file for RocketChat authentication.
+Either <code>token</code> or <code>tokenFile</code> can be used.</p>
 </td>
 </tr>
 <tr>
@@ -33507,8 +33524,26 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.
+Either <code>tokenID</code> or <code>tokenIDFile</code> can be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenIDFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tokenIDFile defines the sender token ID for RocketChat authentication.
+This is the user ID associated with the token used for API requests.
+Either <code>tokenID</code> or <code>tokenIDFile</code> can be used.</p>
 </td>
 </tr>
 <tr>
@@ -39154,8 +39189,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.
+Either <code>token</code> or <code>tokenFile</code> can be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tokenFile defines the sender token file for RocketChat authentication.
+Either <code>token</code> or <code>tokenFile</code> can be used.</p>
 </td>
 </tr>
 <tr>
@@ -39168,8 +39220,26 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.
+Either <code>tokenID</code> or <code>tokenIDFile</code> can be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tokenIDFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tokenIDFile defines the sender token ID for RocketChat authentication.
+This is the user ID associated with the token used for API requests.
+Either <code>tokenID</code> or <code>tokenIDFile</code> can be used.</p>
 </td>
 </tr>
 <tr>
