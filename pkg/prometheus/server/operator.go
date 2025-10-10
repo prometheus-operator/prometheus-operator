@@ -104,13 +104,14 @@ type Operator struct {
 
 type ControllerOption func(*Operator)
 
-// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes and scrapeConfig)
+// selectedConfigResources return the configuration resources (serviceMonitors, podMonitors, probes, prometheusRules and scrapeConfigs)
 // selected by Prometheus.
 type selectedConfigResources struct {
 	sMons         operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor]
 	pMons         operator.TypedResourcesSelection[*monitoringv1.PodMonitor]
 	bMons         operator.TypedResourcesSelection[*monitoringv1.Probe]
 	scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	rules         operator.PrometheusRuleSelection
 }
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
@@ -841,10 +842,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger.Info("sync prometheus")
-	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
-	if err != nil {
-		return err
-	}
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
@@ -858,6 +855,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+	if err != nil {
+		return err
+	}
+
+	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules, logger)
 	if err != nil {
 		return err
 	}
@@ -1081,6 +1083,13 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	for key, configResource := range resources.scrapeConfigs {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update ScrapeConfig %s status: %w", key, err)
+		}
+	}
+
+	// Update the status of selected prometheusRules.
+	for key, configResource := range resources.rules.Selected() {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
 		}
 	}
 
@@ -1324,11 +1333,18 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 			return nil, fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
 		}
 	}
+
+	rules, err := c.selectPrometheusRules(p, logger)
+	if err != nil {
+		return nil, fmt.Errorf("selecting PrometheusRule failed: %w", err)
+	}
+
 	return &selectedConfigResources{
 		sMons:         smons,
 		bMons:         bmons,
 		pMons:         pmons,
 		scrapeConfigs: scrapeConfigs,
+		rules:         rules,
 	}, nil
 }
 

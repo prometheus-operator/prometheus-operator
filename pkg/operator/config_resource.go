@@ -35,12 +35,17 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-const statusSubResource = "status"
+const (
+	statusSubResource = "status"
+
+	// InvalidConfiguration is a generic reason for selected resources that are not valid.
+	InvalidConfiguration = "InvalidConfiguration"
+)
 
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 type ConfigurationResource interface {
-	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
+	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig | *monitoringv1.PrometheusRule
 }
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.

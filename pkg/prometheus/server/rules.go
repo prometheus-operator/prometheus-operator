@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -28,12 +29,11 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
-	logger := c.logger.With("prometheus", p.Name, "namespace", p.Namespace)
-
+func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.PrometheusRuleSelection, error) {
 	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector, c.nsMonInf)
+	var rules operator.PrometheusRuleSelection
 	if err != nil {
-		return nil, err
+		return rules, err
 	}
 	logger.Debug("selected RuleNamespaces", "namespaces", strings.Join(namespaces, ","))
 
@@ -65,18 +65,22 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		logger,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
+		return rules, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
 
-	rules, rejected, err := promRuleSelector.Select(namespaces)
+	rules, err = promRuleSelector.Select(namespaces)
 	if err != nil {
-		return nil, fmt.Errorf("selecting PrometheusRules failed: %w", err)
+		return rules, fmt.Errorf("selecting PrometheusRules failed: %w", err)
 	}
 
 	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
-		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules))
-		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, rejected)
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.Selected()))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, rules.Rejected())
 	}
+	return rules, nil
+}
+
+func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus, rules operator.PrometheusRuleSelection, logger *slog.Logger) ([]string, error) {
 
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(
@@ -90,5 +94,5 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 			operator.WithName(fmt.Sprintf("prometheus-%s", p.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules)
+	return prs.Sync(ctx, rules.RuleFiles())
 }

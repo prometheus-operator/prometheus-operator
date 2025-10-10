@@ -69,14 +69,14 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
 
-	rules, rejected, err := promRuleSelector.Select(namespaces)
+	rules, err := promRuleSelector.Select(namespaces)
 	if err != nil {
 		return nil, fmt.Errorf("selecting PrometheusRules failed: %w", err)
 	}
 
 	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
-		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules))
-		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rejected)
+		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules.Selected()))
+		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rules.Rejected())
 	}
 
 	// Update the corresponding ConfigMap resources.
@@ -91,5 +91,5 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 			operator.WithName(fmt.Sprintf("thanos-ruler-%s", t.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules)
+	return prs.Sync(ctx, rules.RuleFiles())
 }

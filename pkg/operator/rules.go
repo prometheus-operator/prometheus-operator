@@ -74,6 +74,23 @@ type PrometheusRuleSelector struct {
 	logger *slog.Logger
 }
 
+type PrometheusRuleSelection struct {
+	selection TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
+	ruleFiles map[string]string                                     // Map of rule configuration files serialized to the Prometheus format (key=filename).
+}
+
+func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
+	return prs.ruleFiles
+}
+
+func (prs *PrometheusRuleSelection) Selected() TypedResourcesSelection[*monitoringv1.PrometheusRule] {
+	return prs.selection
+}
+
+func (prs *PrometheusRuleSelection) Rejected() int {
+	return len(prs.selection) - len(prs.ruleFiles)
+}
+
 // NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
@@ -211,10 +228,8 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 	return errs
 }
 
-// Select selects PrometheusRules and translates them into native
-// Prometheus/Thanos configurations.
-// The second returned value is the number of rejected PrometheusRule objects.
-func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]string, int, error) {
+// Select selects PrometheusRules by Prometheus or ThanosRuler.
+func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSelection, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
@@ -230,13 +245,13 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 			promRules[fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
 		})
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to list PrometheusRule objects in namespace %s: %w", ns, err)
+			return PrometheusRuleSelection{}, fmt.Errorf("failed to list PrometheusRule objects in namespace %s: %w", ns, err)
 		}
 	}
 
 	var (
-		rejected        int
-		rules           = make(map[string]string, len(promRules))
+		marshalRules    = make(map[string]string, len(promRules))
+		rules           = make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(promRules))
 		namespacedNames = make([]string, 0, len(promRules))
 	)
 	for ruleName, promRule := range promRules {
@@ -248,7 +263,6 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 
 		content, err = prs.generateRulesConfiguration(promRule)
 		if err != nil {
-			rejected++
 			prs.logger.Warn(
 				"skipping prometheusrule",
 				"error", err.Error(),
@@ -256,11 +270,23 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"namespace", promRule.Namespace,
 			)
 			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
-			continue
 		}
 
-		rules[ruleName] = content
-		namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
+		var reason string
+		if err != nil {
+			reason = InvalidConfigurationEvent
+		}
+
+		rules[ruleName] = TypedConfigurationResource[*monitoringv1.PrometheusRule]{
+			resource:   promRule,
+			err:        err,
+			reason:     reason,
+			generation: promRule.GetGeneration(),
+		}
+		if err == nil {
+			marshalRules[ruleName] = content
+			namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
+		}
 	}
 
 	slices.Sort(namespacedNames)
@@ -270,7 +296,10 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 		"rules", strings.Join(namespacedNames, ","),
 	)
 
-	return rules, rejected, nil
+	return PrometheusRuleSelection{
+		selection: rules,
+		ruleFiles: marshalRules,
+	}, nil
 }
 
 // PrometheusRuleSyncer knows how to synchronize ConfigMaps holding

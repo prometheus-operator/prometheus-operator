@@ -54,6 +54,7 @@ rules:
   - probes
   - probes/status
   - prometheusrules
+  - prometheusrules/status
   verbs:
   - '*'
 - apiGroups:
