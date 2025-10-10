@@ -764,6 +764,17 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var incidentioConfigs []*incidentioConfig
+	if l := len(in.IncidentioConfigs); l > 0 {
+		incidentioConfigs = make([]*incidentioConfig, l)
+		for i := range in.IncidentioConfigs {
+			receiver, err := cb.convertIncidentioConfig(ctx, in.IncidentioConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("IncidentioConfig[%d]: %w", i, err)
+			}
+			incidentioConfigs[i] = receiver
+		}
+	}
 	return &receiver{
 		Name:              makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:   opsgenieConfigs,
@@ -781,6 +792,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		MSTeamsConfigs:    msTeamsConfigs,
 		MSTeamsV2Configs:  msTeamsV2Configs,
 		RocketChatConfigs: rocketchatConfigs,
+		IncidentioConfigs: incidentioConfigs,
 	}, nil
 }
 
@@ -1965,6 +1977,55 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	return nil
 }
 
+func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) (*incidentioConfig, error) {
+	out := &incidentioConfig{
+		VSendResolved: in.SendResolved,
+		MaxAlerts:     in.MaxAlerts,
+	}
+
+	if in.URL != nil {
+		url, err := validation.ValidateURL(string(*in.URL))
+		if err != nil {
+			return nil, err
+		}
+		out.URL = url.String()
+	}
+
+	if in.URLFile != nil && *in.URLFile != "" {
+		out.URLFile = *in.URLFile
+	}
+
+	if in.AlertSourceToken != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AlertSourceToken)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Incidentio alertSourceToken: %w", err)
+		}
+		out.AlertSourceToken = token
+	}
+
+	if in.AlertSourceTokenFile != nil && *in.AlertSourceTokenFile != "" {
+		out.AlertSourceTokenFile = *in.AlertSourceTokenFile
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
+	return out, nil
+}
+
 // sanitize the config against a specific Alertmanager version
 // types may be sanitized in one of two ways:
 // 1. stripping the unsupported config and log a warning
@@ -2210,6 +2271,37 @@ func (pc *proxyConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 	return nil
 }
 
+func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	incidentioAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if !incidentioAllowed {
+		return fmt.Errorf("invalid syntax in receivers config; incident.io integration is available in Alertmanager >= 0.29.0")
+	}
+
+	if ic.URL == "" && ic.URLFile == "" {
+		return errors.New("one of url or url_file must be configured")
+	}
+
+	if ic.URL != "" && ic.URLFile != "" {
+		logger.Warn("'url' and 'url_file' are mutually exclusive for incident.io receiver config - 'url' has taken precedence")
+		ic.URLFile = ""
+	}
+
+	if ic.AlertSourceToken != "" && ic.AlertSourceTokenFile != "" {
+		logger.Warn("'alert_source_token' and 'alert_source_token_file' are mutually exclusive for incident.io receiver config - 'alert_source_token' has taken precedence")
+		ic.AlertSourceTokenFile = ""
+	}
+
+	if ic.HTTPConfig != nil && ic.HTTPConfig.Authorization != nil && (ic.AlertSourceToken != "" || ic.AlertSourceTokenFile != "") {
+		return errors.New("cannot specify alert_source_token or alert_source_token_file when using http_config.authorization")
+	}
+
+	if ic.AlertSourceToken == "" && ic.AlertSourceTokenFile == "" && (ic.HTTPConfig == nil || ic.HTTPConfig.Authorization == nil) {
+		return errors.New("at least one of alert_source_token, alert_source_token_file or http_config.authorization must be configured")
+	}
+
+	return ic.HTTPConfig.sanitize(amVersion, logger)
+}
+
 func (o *oauth2) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if o == nil {
 		return nil
@@ -2326,6 +2418,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 	}
 
 	for _, conf := range r.RocketChatConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.IncidentioConfigs {
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
 		}
