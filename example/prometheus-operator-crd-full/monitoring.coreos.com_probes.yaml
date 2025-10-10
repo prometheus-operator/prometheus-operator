@@ -755,16 +755,22 @@ spec:
                     pattern: ^(http|https|socks5)://.+$
                     type: string
                   scheme:
-                    description: |-
-                      scheme defines the HTTP scheme to use for scraping.
-                      `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
-                      If empty, Prometheus uses the default value `http`.
+                    description: scheme defines the HTTP scheme to use when scraping
+                      the prober.
                     enum:
                     - http
                     - https
+                    - HTTP
+                    - HTTPS
                     type: string
                   url:
-                    description: url defines the mandatory URL of the prober.
+                    description: |-
+                      url defines the address of the prober.
+
+                      Unlike what the name indicates, the value should be in the form of
+                      `address:port` without any scheme which should be specified in the
+                      `scheme` field.
+                    minLength: 1
                     type: string
                 required:
                 - url

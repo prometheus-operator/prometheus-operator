@@ -1372,8 +1372,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
-	if ep.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	if ep.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme.String()})
 	}
 
 	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
@@ -1604,8 +1604,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.ScrapeTimeout != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: m.Spec.ScrapeTimeout})
 	}
-	if m.Spec.ProberSpec.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
+	if m.Spec.ProberSpec.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme.String()})
 	}
 
 	var paramsMapSlice yaml.MapSlice
@@ -1880,8 +1880,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
-	if ep.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	if ep.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme.String()})
 	}
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
@@ -2390,21 +2390,17 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
 	for i, am := range alerting.Alertmanagers {
-		if am.Scheme == "" {
-			am.Scheme = "http"
+		cfg := yaml.MapSlice{}
+		if am.Scheme != nil {
+			cfg = cg.AppendMapItem(cfg, "scheme", am.Scheme.String())
 		}
 
-		if am.PathPrefix == "" {
-			am.PathPrefix = "/"
-		}
-
-		cfg := yaml.MapSlice{
-			{Key: "path_prefix", Value: am.PathPrefix},
-			{Key: "scheme", Value: am.Scheme},
+		if am.PathPrefix != nil {
+			cfg = cg.AppendMapItem(cfg, "path_prefix", am.PathPrefix)
 		}
 
 		if am.Timeout != nil {
-			cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: am.Timeout})
+			cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: *am.Timeout})
 		}
 
 		if am.EnableHttp2 != nil {
@@ -3241,7 +3237,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: sc.Spec.Scheme.String()})
 	}
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, sc.Spec.ProxyConfig)
@@ -3508,7 +3504,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Scheme != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "scheme",
-					Value: strings.ToLower(*config.Scheme),
+					Value: config.Scheme.String(),
 				})
 			}
 
