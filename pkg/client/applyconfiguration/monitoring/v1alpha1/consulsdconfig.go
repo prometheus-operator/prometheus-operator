@@ -31,7 +31,7 @@ type ConsulSDConfigApplyConfiguration struct {
 	Datacenter                                                   *string                                                             `json:"datacenter,omitempty"`
 	Namespace                                                    *string                                                             `json:"namespace,omitempty"`
 	Partition                                                    *string                                                             `json:"partition,omitempty"`
-	Scheme                                                       *string                                                             `json:"scheme,omitempty"`
+	Scheme                                                       *monitoringv1.Scheme                                                `json:"scheme,omitempty"`
 	Services                                                     []string                                                            `json:"services,omitempty"`
 	Tags                                                         []string                                                            `json:"tags,omitempty"`
 	TagSeparator                                                 *string                                                             `json:"tagSeparator,omitempty"`
@@ -105,7 +105,7 @@ func (b *ConsulSDConfigApplyConfiguration) WithPartition(value string) *ConsulSD
 // WithScheme sets the Scheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Scheme field is set to the value of the last call.
-func (b *ConsulSDConfigApplyConfiguration) WithScheme(value string) *ConsulSDConfigApplyConfiguration {
+func (b *ConsulSDConfigApplyConfiguration) WithScheme(value monitoringv1.Scheme) *ConsulSDConfigApplyConfiguration {
 	b.Scheme = &value
 	return b
 }

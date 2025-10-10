@@ -1427,8 +1427,10 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     scheme:
-                      description: scheme defines the HTTP Scheme default "http"
+                      description: scheme defines the HTTP Scheme.
                       enum:
+                      - http
+                      - https
                       - HTTP
                       - HTTPS
                       type: string
@@ -12511,10 +12513,10 @@ spec:
                   type: object
                 type: array
               scheme:
-                description: |-
-                  scheme defines the protocol scheme used for requests.
-                  If empty, Prometheus uses HTTP by default.
+                description: scheme defines the protocol scheme used for requests.
                 enum:
+                - http
+                - https
                 - HTTP
                 - HTTPS
                 type: string

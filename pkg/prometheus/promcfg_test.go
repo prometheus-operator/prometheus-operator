@@ -542,7 +542,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -599,7 +599,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -646,7 +646,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -691,7 +691,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -750,7 +750,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -808,7 +808,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -4833,7 +4833,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 						ProxyConfig: monitoringv1.ProxyConfig{
@@ -5927,7 +5927,7 @@ func TestProbeSpecConfig(t *testing.T) {
 			golden: "ProbeSpecConfig_prober_spec.golden",
 			pbSpec: monitoringv1.ProbeSpec{
 				ProberSpec: monitoringv1.ProberSpec{
-					Scheme: "http",
+					Scheme: ptr.To(monitoringv1.SchemeHTTP),
 					URL:    "example.com",
 					Path:   "/probe",
 					ProxyConfig: monitoringv1.ProxyConfig{
@@ -6433,7 +6433,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "scheme",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				Scheme: ptr.To("HTTPS"),
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 			},
 			golden: "ScrapeConfigSpecConfig_Scheme.golden",
 		},
@@ -7491,7 +7491,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						Datacenter:   ptr.To("we1"),
 						Namespace:    ptr.To("observability"),
 						Partition:    ptr.To("1"),
-						Scheme:       ptr.To("https"),
+						Scheme:       ptr.To(monitoringv1.SchemeHTTPS),
 						Services:     []string{"prometheus", "alertmanager"},
 						Tags:         []string{"tag1"},
 						TagSeparator: ptr.To(";"),
@@ -10301,7 +10301,7 @@ func defaultProbe() *monitoringv1.Probe {
 		},
 		Spec: monitoringv1.ProbeSpec{
 			ProberSpec: monitoringv1.ProberSpec{
-				Scheme: "http",
+				Scheme: ptr.To(monitoringv1.SchemeHTTP),
 				URL:    "blackbox.exporter.io",
 				Path:   "/probe",
 			},

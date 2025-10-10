@@ -29,7 +29,7 @@ type PodMetricsEndpointApplyConfiguration struct {
 	PortNumber                   *int32                            `json:"portNumber,omitempty"`
 	TargetPort                   *intstr.IntOrString               `json:"targetPort,omitempty"`
 	Path                         *string                           `json:"path,omitempty"`
-	Scheme                       *string                           `json:"scheme,omitempty"`
+	Scheme                       *monitoringv1.Scheme              `json:"scheme,omitempty"`
 	Params                       map[string][]string               `json:"params,omitempty"`
 	Interval                     *monitoringv1.Duration            `json:"interval,omitempty"`
 	ScrapeTimeout                *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
@@ -83,7 +83,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithPath(value string) *PodMetric
 // WithScheme sets the Scheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Scheme field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithScheme(value string) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithScheme(value monitoringv1.Scheme) *PodMetricsEndpointApplyConfiguration {
 	b.Scheme = &value
 	return b
 }

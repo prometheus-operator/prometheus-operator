@@ -565,16 +565,10 @@ type Endpoint struct {
 	// +optional
 	Path string `json:"path,omitempty"`
 
-	// scheme defines the HTTP scheme to use for scraping.
+	// scheme defines the HTTP scheme to use when scraping the metrics.
 	//
-	// `http` and `https` are the expected values unless you rewrite the
-	// `__scheme__` label via relabeling.
-	//
-	// If empty, Prometheus uses the default value `http`.
-	//
-	// +kubebuilder:validation:Enum=http;https
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
 	// +optional
@@ -1125,3 +1119,24 @@ type ConfigResourceCondition struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+// Supported values are `HTTP` and `HTTPS`. You can also rewrite the
+// `__scheme__` label via relabeling configuration.
+//
+// If empty, the value defaults to `HTTP`.
+//
+// +kubebuilder:validation:Enum=http;https;HTTP;HTTPS
+type Scheme string
+
+func (s *Scheme) String() string {
+	if s == nil {
+		return ""
+	}
+
+	return strings.ToLower(string(*s))
+}
+
+const (
+	SchemeHTTP  Scheme = "HTTP"
+	SchemeHTTPS Scheme = "HTTPS"
+)

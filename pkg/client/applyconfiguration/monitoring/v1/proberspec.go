@@ -17,15 +17,16 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // ProberSpecApplyConfiguration represents a declarative configuration of the ProberSpec type for use
 // with apply.
 type ProberSpecApplyConfiguration struct {
-	URL                           *string `json:"url,omitempty"`
-	Scheme                        *string `json:"scheme,omitempty"`
-	Path                          *string `json:"path,omitempty"`
+	URL                           *string              `json:"url,omitempty"`
+	Scheme                        *monitoringv1.Scheme `json:"scheme,omitempty"`
+	Path                          *string              `json:"path,omitempty"`
 	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
@@ -46,7 +47,7 @@ func (b *ProberSpecApplyConfiguration) WithURL(value string) *ProberSpecApplyCon
 // WithScheme sets the Scheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Scheme field is set to the value of the last call.
-func (b *ProberSpecApplyConfiguration) WithScheme(value string) *ProberSpecApplyConfiguration {
+func (b *ProberSpecApplyConfiguration) WithScheme(value monitoringv1.Scheme) *ProberSpecApplyConfiguration {
 	b.Scheme = &value
 	return b
 }

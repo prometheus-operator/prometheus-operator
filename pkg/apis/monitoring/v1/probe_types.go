@@ -257,17 +257,24 @@ type ProbeTargetIngress struct {
 // ProberSpec contains specification parameters for the Prober used for probing.
 // +k8s:openapi-gen=true
 type ProberSpec struct {
-	// url defines the mandatory URL of the prober.
+	// url defines the address of the prober.
+	//
+	// Unlike what the name indicates, the value should be in the form of
+	// `address:port` without any scheme which should be specified in the
+	// `scheme` field.
+	//
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	URL string `json:"url"`
-	// scheme defines the HTTP scheme to use for scraping.
-	// `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.
-	// If empty, Prometheus uses the default value `http`.
-	// +kubebuilder:validation:Enum=http;https
+
+	// scheme defines the HTTP scheme to use when scraping the prober.
+	//
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
+
 	// path to collect metrics from.
 	// Defaults to `/probe`.
+	//
 	// +kubebuilder:default:="/probe"
 	// +optional
 	Path string `json:"path,omitempty"`

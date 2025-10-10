@@ -243,7 +243,7 @@ func (in *ConsulSDConfig) DeepCopyInto(out *ConsulSDConfig) {
 	}
 	if in.Scheme != nil {
 		in, out := &in.Scheme, &out.Scheme
-		*out = new(string)
+		*out = new(monitoringv1.Scheme)
 		**out = **in
 	}
 	if in.Services != nil {
@@ -2805,7 +2805,7 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	}
 	if in.Scheme != nil {
 		in, out := &in.Scheme, &out.Scheme
-		*out = new(string)
+		*out = new(monitoringv1.Scheme)
 		**out = **in
 	}
 	if in.EnableCompression != nil {

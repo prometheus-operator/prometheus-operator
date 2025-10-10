@@ -10,9 +10,7 @@ alerting:
   - action: labeldrop
     regex: prometheus_replica
   alertmanagers:
-  - path_prefix: /
-    scheme: http
-    kubernetes_sd_configs:
+  - kubernetes_sd_configs:
     - role: endpoints
       namespaces:
         names:

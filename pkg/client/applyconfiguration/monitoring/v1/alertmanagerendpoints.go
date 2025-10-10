@@ -28,7 +28,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	Namespace                     *string                              `json:"namespace,omitempty"`
 	Name                          *string                              `json:"name,omitempty"`
 	Port                          *intstr.IntOrString                  `json:"port,omitempty"`
-	Scheme                        *string                              `json:"scheme,omitempty"`
+	Scheme                        *monitoringv1.Scheme                 `json:"scheme,omitempty"`
 	PathPrefix                    *string                              `json:"pathPrefix,omitempty"`
 	TLSConfig                     *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
 	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
@@ -76,7 +76,7 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithPort(value intstr.IntOrStr
 // WithScheme sets the Scheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Scheme field is set to the value of the last call.
-func (b *AlertmanagerEndpointsApplyConfiguration) WithScheme(value string) *AlertmanagerEndpointsApplyConfiguration {
+func (b *AlertmanagerEndpointsApplyConfiguration) WithScheme(value monitoringv1.Scheme) *AlertmanagerEndpointsApplyConfiguration {
 	b.Scheme = &value
 	return b
 }

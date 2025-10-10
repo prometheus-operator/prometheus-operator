@@ -1127,6 +1127,7 @@
                             },
                             "pathPrefix": {
                               "description": "pathPrefix defines the prefix for the HTTP path alerts are pushed to.",
+                              "minLength": 1,
                               "type": "string"
                             },
                             "port": {
@@ -1250,7 +1251,13 @@
                               "type": "array"
                             },
                             "scheme": {
-                              "description": "scheme to use when firing alerts.",
+                              "description": "scheme defines the HTTP scheme to use when sending alerts.",
+                              "enum": [
+                                "http",
+                                "https",
+                                "HTTP",
+                                "HTTPS"
+                              ],
                               "type": "string"
                             },
                             "sigv4": {

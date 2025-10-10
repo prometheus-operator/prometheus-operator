@@ -2166,13 +2166,16 @@ type AlertmanagerEndpoints struct {
 	// +required
 	Port intstr.IntOrString `json:"port"`
 
-	// scheme to use when firing alerts.
+	// scheme defines the HTTP scheme to use when sending alerts.
+	//
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// pathPrefix defines the prefix for the HTTP path alerts are pushed to.
+	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	PathPrefix string `json:"pathPrefix,omitempty"`
+	PathPrefix *string `json:"pathPrefix,omitempty"`
 
 	// tlsConfig to use for Alertmanager.
 	//
