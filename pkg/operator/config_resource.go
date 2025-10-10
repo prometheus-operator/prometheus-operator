@@ -102,19 +102,6 @@ func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
 	return validRes
 }
 
-type PrometheusRuleSelection struct {
-	selection TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
-	ruleFiles map[string]string                                     // Map of rule configuration files serialized to the Prometheus format (key=filename).
-}
-
-func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
-	return prs.ruleFiles
-}
-
-func (prs *PrometheusRuleSelection) Selected() TypedResourcesSelection[*monitoringv1.PrometheusRule] {
-	return prs.selection
-}
-
 // ConfigResourceSyncer patches the status of configuration resources.
 type ConfigResourceSyncer struct {
 	client   dynamic.Interface

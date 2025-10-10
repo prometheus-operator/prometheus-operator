@@ -74,6 +74,23 @@ type PrometheusRuleSelector struct {
 	logger *slog.Logger
 }
 
+type PrometheusRuleSelection struct {
+	selection TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
+	ruleFiles map[string]string                                     // Map of rule configuration files serialized to the Prometheus format (key=filename).
+}
+
+func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
+	return prs.ruleFiles
+}
+
+func (prs *PrometheusRuleSelection) Selected() TypedResourcesSelection[*monitoringv1.PrometheusRule] {
+	return prs.selection
+}
+
+func (prs *PrometheusRuleSelection) Rejected() int {
+	return len(prs.selection) - len(prs.ruleFiles)
+}
+
 // NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
@@ -212,7 +229,6 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 }
 
 // Select selects PrometheusRules by Prometheus or ThanosRuler.
-// The second returned value is the number of rejected PrometheusRule objects.
 func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSelection, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
