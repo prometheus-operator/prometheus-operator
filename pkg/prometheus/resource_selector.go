@@ -779,6 +779,10 @@ func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitorin
 		return fmt.Errorf("IonosSDConfigs: %w", err)
 	}
 
+	if err := rs.validateStackitSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("StackitSDConfigs: %w", err)
+	}
+
 	return nil
 }
 
@@ -1414,6 +1418,36 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateStackitSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if len(sc.Spec.StackitSDConfigs) == 0 {
+		return nil
+	}
+
+	if rs.version.LT(semver.MustParse("3.5.0")) {
+		return fmt.Errorf("StackitSDConfig is only supported for Prometheus version >= 3.5.0")
+	}
+
+	for i, config := range sc.Spec.StackitSDConfigs {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
