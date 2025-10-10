@@ -150,6 +150,10 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 			if err != nil {
 				return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
 			}
+			_, err = uuid.Parse(spec.AzureAD.WorkloadIdentity.TenantID)
+			if err != nil {
+				return fmt.Errorf("the provided Azure Workload Identity tenantId is invalid")
+			}
 		}
 	}
 

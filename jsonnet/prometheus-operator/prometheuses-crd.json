@@ -6078,11 +6078,6 @@
                                   "description": "tenantId is the tenant ID of the Azure Active Directory application.",
                                   "minLength": 1,
                                   "type": "string"
-                                },
-                                "tokenFilePath": {
-                                  "description": "tokenFilePath is the path to the service account token file.",
-                                  "minLength": 1,
-                                  "type": "string"
                                 }
                               },
                               "required": [

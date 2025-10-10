@@ -2791,13 +2791,6 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 					{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
 				}
 
-				if spec.AzureAD.WorkloadIdentity.TokenFilePath != nil {
-					workloadIdentityConfig = append(workloadIdentityConfig, yaml.MapItem{
-						Key:   "token_file_path",
-						Value: *spec.AzureAD.WorkloadIdentity.TokenFilePath,
-					})
-				}
-
 				azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(azureAd, "workload_identity", workloadIdentityConfig)
 			}
 

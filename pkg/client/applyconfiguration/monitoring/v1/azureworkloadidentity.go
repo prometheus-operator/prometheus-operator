@@ -19,9 +19,8 @@ package v1
 // AzureWorkloadIdentityApplyConfiguration represents a declarative configuration of the AzureWorkloadIdentity type for use
 // with apply.
 type AzureWorkloadIdentityApplyConfiguration struct {
-	ClientID      *string `json:"clientId,omitempty"`
-	TenantID      *string `json:"tenantId,omitempty"`
-	TokenFilePath *string `json:"tokenFilePath,omitempty"`
+	ClientID *string `json:"clientId,omitempty"`
+	TenantID *string `json:"tenantId,omitempty"`
 }
 
 // AzureWorkloadIdentityApplyConfiguration constructs a declarative configuration of the AzureWorkloadIdentity type for use with
@@ -43,13 +42,5 @@ func (b *AzureWorkloadIdentityApplyConfiguration) WithClientID(value string) *Az
 // If called multiple times, the TenantID field is set to the value of the last call.
 func (b *AzureWorkloadIdentityApplyConfiguration) WithTenantID(value string) *AzureWorkloadIdentityApplyConfiguration {
 	b.TenantID = &value
-	return b
-}
-
-// WithTokenFilePath sets the TokenFilePath field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TokenFilePath field is set to the value of the last call.
-func (b *AzureWorkloadIdentityApplyConfiguration) WithTokenFilePath(value string) *AzureWorkloadIdentityApplyConfiguration {
-	b.TokenFilePath = &value
 	return b
 }

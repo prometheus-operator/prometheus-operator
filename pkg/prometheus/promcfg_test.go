@@ -4130,9 +4130,8 @@ func TestRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
-						ClientID:      "00000000-a12b-3cd4-e56f-000000000000",
-						TenantID:      "11111111-a12b-3cd4-e56f-000000000000",
-						TokenFilePath: ptr.To("/custom/path/to/token"),
+						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
+						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
 					},
 				},
 			},

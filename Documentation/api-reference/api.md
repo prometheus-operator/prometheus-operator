@@ -7830,18 +7830,6 @@ string
 <p>tenantId is the tenant ID of the Azure Active Directory application.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>tokenFilePath</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tokenFilePath is the path to the service account token file.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
