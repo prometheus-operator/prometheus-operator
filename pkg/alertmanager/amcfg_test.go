@@ -4446,6 +4446,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
+								APIURL:    ptr.To("http://example.com"),
 								Project:   "foo",
 								IssueType: "bug",
 							},
@@ -4463,6 +4464,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
+								APIURL:    ptr.To("http://example.com"),
 								Project:   "foo",
 								IssueType: "bug",
 							},
