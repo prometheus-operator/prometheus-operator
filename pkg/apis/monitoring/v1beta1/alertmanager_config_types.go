@@ -206,6 +206,10 @@ type Receiver struct {
 	// It requires Alertmanager >= 0.26.0.
 	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
+	// jiraConfigs defines the list of Jira configurations.
+	// It requires Alertmanager >= 0.28.0.
+	// +optional
+	JiraConfigs []JiraConfig `json:"jiraConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
 	// +optional
@@ -1130,6 +1134,137 @@ type MSTeamsConfig struct {
 	// httpConfig defines the HTTP client configuration for Teams webhook requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// JiraField defines a (key, value) tuple.
+// See: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
+type JiraField struct {
+	// key defines the key of the tuple.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Key string `json:"key"`
+	// value defines the value of the tuple.
+	// +required
+	Value apiextensionsv1.JSON `json:"value"`
+}
+
+// Validate ensures JiraField is valid.
+func (jf *JiraField) Validate() error {
+	if jf.Value.Raw == nil {
+		return nil
+	}
+
+	var ret interface{}
+	dec := json.NewDecoder(bytes.NewBuffer(jf.Value.Raw))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&ret); err != nil {
+		return fmt.Errorf("Value json decode: %w", err)
+	}
+	return nil
+}
+
+// JiraConfig configures notifications via Jira.
+// See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config
+// It requires Alertmanager >= 0.28.0.
+type JiraConfig struct {
+	// sendResolved defines whether to notify about resolved alerts.
+	//
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
+	// The full API path must be included.
+	// If not specified, default API URL will be used.
+	//
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
+
+	// project defines the project key where issues are created.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Project string `json:"project"`
+
+	// summary defines the issue summary template.
+	//
+	// +optional
+	Summary *string `json:"summary,omitempty"`
+
+	// description defines the issue description template.
+	//
+	// +optional
+	Description *string `json:"description,omitempty"`
+
+	// labels defines labels to be added to the issue.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Labels []string `json:"labels,omitempty"`
+
+	// priority defines the priority of the issue.
+	//
+	// +optional
+	Priority *string `json:"priority,omitempty"`
+
+	// issueType defines a type of the issue (e.g. Bug).
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	IssueType string `json:"issueType"`
+
+	// resolveTransition defines name of the workflow transition to resolve an issue.
+	// The target status must have the category "done".
+	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
+	//
+	// +optional
+	ResolveTransition *string `json:"resolveTransition,omitempty"`
+
+	// reopenTransition defines name of the workflow transition to reopen an issue.
+	// The target status should not have the category "done".
+	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
+	//
+	// +optional
+	ReopenTransition *string `json:"reopenTransition,omitempty"`
+
+	// wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.
+	//
+	// +optional
+	WontFixResolution *string `json:"wontFixResolution,omitempty"`
+
+	// reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
+	// The 'resolutiondate' field in Jira is used to determine the age of the issue.
+	//
+	// +optional
+	ReopenDuration *monitoringv1.Duration `json:"reopenDuration,omitempty"`
+
+	// fields defines other issue and custom fields.
+	//
+	// +listType=map
+	// +listMapKey=key
+	// +optional
+	Fields []JiraField `json:"fields,omitempty"`
+
+	// httpConfig defines HTTP client configuration for Jira connection.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// Validate ensures JiraConfig is valid.
+func (jc *JiraConfig) Validate() error {
+	if len(jc.Fields) == 0 {
+		return nil
+	}
+
+	for i, field := range jc.Fields {
+		if err := field.Validate(); err != nil {
+			return fmt.Errorf("Fields json decode index[%d] key[%s]: %w", i, field.Key, err)
+		}
+	}
+
+	return nil
 }
 
 // MSTeamsV2Config configures notifications via Microsoft Teams using the new message format with adaptive cards as required by flows.
