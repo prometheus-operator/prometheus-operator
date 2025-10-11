@@ -25,6 +25,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
+	config "github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
@@ -3774,6 +3775,9 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versioJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+	jiraURL := config.URL{}
+	jiraGlobalURL, _ := jiraURL.Parse("http://example.com")
+	jiraURL.URL = jiraGlobalURL
 
 	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
@@ -4465,6 +4469,26 @@ func TestSanitizeConfig(t *testing.T) {
 						JiraConfigs: []*jiraConfig{
 							{
 								APIURL:    ptr.To("http://example.com"),
+								Project:   "foo",
+								IssueType: "bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_config api_url set globally",
+			againstVersion: versionJiraNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					JiraAPIURL: &jiraURL,
+				},
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
 								Project:   "foo",
 								IssueType: "bug",
 							},
