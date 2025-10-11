@@ -25,7 +25,6 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
-	config "github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
