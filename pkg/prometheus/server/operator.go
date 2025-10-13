@@ -1127,6 +1127,12 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err := operator.CleanupBindings(ctx, c.probeInfs.ListAll, resources.bMons, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for probes: %w", err)
 	}
+
+	// Remove bindings from prometheusRules which reference the
+	// workload but aren't selected anymore.
+	if err := operator.CleanupBindings(ctx, c.ruleInfs.ListAll, resources.rules.Selected(), configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for prometheusRules: %w", err)
+	}
 	return nil
 }
 
@@ -1156,6 +1162,11 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	// Remove bindings from all probes which reference the workload.
 	if err := operator.CleanupBindings(ctx, c.probeInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.Probe]{}, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for probes: %w", err)
+	}
+
+	// Remove bindings from all prometheusRules which reference the workload.
+	if err := operator.CleanupBindings(ctx, c.ruleInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PrometheusRule]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for prometheusRule: %w", err)
 	}
 	return nil
 }
