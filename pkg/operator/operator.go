@@ -333,7 +333,7 @@ func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, act
 		reason,
 		action,
 		note,
-		args,
+		args...,
 	)
 }
 

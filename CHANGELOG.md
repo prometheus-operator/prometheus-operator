@@ -1,3 +1,7 @@
+## 0.86.1 / xxx
+
+* [BUGFIX] Fix formatting of Kubernetes events. #8015
+
 ## 0.86.0 / 2025-10-07
 
 > [!NOTE]
