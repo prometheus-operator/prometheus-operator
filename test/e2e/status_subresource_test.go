@@ -948,3 +948,108 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
+
+// testGarbageCollectionOfPrometheusRuleBinding validates that the operator removes the reference to the Prometheus resource when the PrometheusRule isn't selected anymore by the workload.
+func testGarbageCollectionOfPrometheusRuleBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "prom-rule-status-binding-cleanup-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr1.Labels["group"] = name
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr1.Labels = map[string]string{}
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmPrometheusRuleBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource when workload is deleted.
+func testRmPrometheusRuleBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "prom-rule-status-binding-cleanup-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr1.Labels["group"] = name
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
