@@ -1,4 +1,4 @@
-## 0.86.1 / xxx
+## 0.86.1 / 2025-10-13
 
 * [BUGFIX] Fix formatting of Kubernetes events. #8015
 
@@ -13,7 +13,7 @@
 > To preserve backward compatibility, the admission webhook service validates PrometheusRule resources against the legacy Prometheus scheme by default (but it can be changed with the `--name-validation-scheme` flag).
 
 * [CHANGE] Remove automatic addition of the `metadata-wal-records` feature flag for Prometheus versions >= 3.4. #7893
-* [CHANGE] Add miscellaneous validations to the `ScrapeConfig` CRD. #7856 #7823 #7835 #7838 #7838 ##7966
+* [CHANGE] Add miscellaneous validations to the `ScrapeConfig` CRD. #7856 #7823 #7835 #7838 #7838 #7966
 * [CHANGE/FEATURE] Add support for UTF-8 characters to label names and metric names in `PrometheusRule` resources and relabel configurations. #7637 #7985
 * [FEATURE] Add the flag `--name-validation-scheme` to admission webhook to select between utf8 and legacy validations. #7985
 * [FEATURE] Add status subresource for `ServiceMonitor` custom resources (requires the `StatusForConfigurationResources` feature gate). #7767 #7836 #7827 #7795
