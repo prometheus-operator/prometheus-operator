@@ -4442,6 +4442,14 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.54.0.golden",
 		},
+		{
+			// Empty metadataConfig defaults to no metadata being sent.
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{},
+			},
+			golden: "RemoteWriteConfigWithEmptyMetadataConfig.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()

@@ -1764,6 +1764,10 @@ type RemoteWriteSpec struct {
 	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
 
 	// metadataConfig defines how to send a series metadata to the remote storage.
+	//
+	// When the field is empty, **no metadata** is sent. But when the field is
+	// null, metadata is sent.
+	//
 	// +optional
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 
@@ -2277,10 +2281,12 @@ type RulesAlert struct {
 // +k8s:openapi-gen=true
 type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
+	//
 	// +optional
 	Send bool `json:"send,omitempty"`
 
 	// sendInterval defines how frequently metric metadata is sent to the remote storage.
+	//
 	// +optional
 	SendInterval Duration `json:"sendInterval,omitempty"`
 

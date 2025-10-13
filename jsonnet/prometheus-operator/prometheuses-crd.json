@@ -6153,7 +6153,7 @@
                           "type": "string"
                         },
                         "metadataConfig": {
-                          "description": "metadataConfig defines how to send a series metadata to the remote storage.",
+                          "description": "metadataConfig defines how to send a series metadata to the remote storage.\n\nWhen the field is empty, **no metadata** is sent. But when the field is\nnull, metadata is sent.",
                           "properties": {
                             "maxSamplesPerSend": {
                               "description": "maxSamplesPerSend defines the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",

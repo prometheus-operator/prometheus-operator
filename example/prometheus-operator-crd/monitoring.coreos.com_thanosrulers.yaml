@@ -5021,8 +5021,11 @@ spec:
                       - V2.0
                       type: string
                     metadataConfig:
-                      description: metadataConfig defines how to send a series metadata
-                        to the remote storage.
+                      description: |-
+                        metadataConfig defines how to send a series metadata to the remote storage.
+
+                        When the field is empty, **no metadata** is sent. But when the field is
+                        null, metadata is sent.
                       properties:
                         maxSamplesPerSend:
                           description: |-
