@@ -144,6 +144,14 @@ func WithoutUnmanagedConfiguration() ControllerOption {
 	}
 }
 
+// WithConfigResourceStatus tells that the controller can manage the status of
+// configuration resources.
+func WithConfigResourceStatus() ControllerOption {
+	return func(o *Operator) {
+		o.configResourcesStatusEnabled = true
+	}
+}
+
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -190,14 +198,17 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID:                 c.ControllerID,
-		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
-		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
-		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
-		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
+		controllerID:             c.ControllerID,
+		newEventRecorder:         c.EventRecorderFactory(client, controllerName),
+		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		finalizerSyncer:          operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range opts {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName))
 	}
 
 	o.metrics.MustRegister(o.reconciliations)
