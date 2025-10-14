@@ -279,6 +279,53 @@ func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResour
 	return err
 }
 
+// CleanupPrometheusRuleBindings removes the workload's binding from all prometheusRule
+// resources that are not in the resourceSelection.
+func CleanupPrometheusRuleBindings(
+	ctx context.Context,
+	listerFunc func(labels.Selector, cache.AppendFunc) error,
+	resourceSelection TypedResourcesSelection[*monitoringv1.PrometheusRule],
+	csr *ConfigResourceSyncer,
+) error {
+	var err error
+	listErr := listerFunc(labels.Everything(), func(o any) {
+		if err != nil {
+			// Stop processing on the first error.
+			return
+		}
+
+		promRule, ok := o.(*monitoringv1.PrometheusRule)
+		if !ok {
+			return
+		}
+
+		k := fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)
+
+		if _, found := resourceSelection[k]; found {
+			return
+		}
+
+		obj, ok := o.(ConfigurationObject)
+		if !ok {
+			return
+		}
+		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+			err = fmt.Errorf("failed to add type information: %w", err)
+			return
+		}
+
+		var gvk = obj.GetObjectKind().GroupVersionKind()
+
+		if err = csr.RemoveBinding(ctx, obj); err != nil {
+			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
+		}
+	})
+	if listErr != nil {
+		return fmt.Errorf("listing all items from cache failed: %w", listErr)
+	}
+	return err
+}
+
 // CleanupBindings removes the workload's binding from all configuration
 // resources that are not in the resourceSelection.
 func CleanupBindings[T ConfigurationResource](
