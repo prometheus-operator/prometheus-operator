@@ -6333,7 +6333,6 @@ spec:
                               This is the personal access token or bot token used to authenticate API requests.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              Either `token` or `tokenFile` can be used.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -6356,18 +6355,12 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          tokenFile:
-                            description: |-
-                              tokenFile defines the sender token file for RocketChat authentication.
-                              Either `token` or `tokenFile` can be used.
-                            type: string
                           tokenID:
                             description: |-
                               tokenID defines the sender token ID for RocketChat authentication.
                               This is the user ID associated with the token used for API requests.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              Either `tokenID` or `tokenIDFile` can be used.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -6390,12 +6383,6 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          tokenIDFile:
-                            description: |-
-                              tokenIDFile defines the sender token ID for RocketChat authentication.
-                              This is the user ID associated with the token used for API requests.
-                              Either `tokenID` or `tokenIDFile` can be used.
-                            type: string
                         type: object
                       type: array
                       x-kubernetes-list-type: atomic
@@ -18416,7 +18403,6 @@ spec:
                               This is the personal access token or bot token used to authenticate API requests.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              Either `token` or `tokenFile` can be used.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -18439,18 +18425,12 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          tokenFile:
-                            description: |-
-                              tokenFile defines the sender token file for RocketChat authentication.
-                              Either `token` or `tokenFile` can be used.
-                            type: string
                           tokenID:
                             description: |-
                               tokenID defines the sender token ID for RocketChat authentication.
                               This is the user ID associated with the token used for API requests.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              Either `tokenID` or `tokenIDFile` can be used.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -18473,12 +18453,6 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          tokenIDFile:
-                            description: |-
-                              tokenIDFile defines the sender token ID for RocketChat authentication.
-                              This is the user ID associated with the token used for API requests.
-                              Either `tokenID` or `tokenIDFile` can be used.
-                            type: string
                         type: object
                       type: array
                     slackConfigs:

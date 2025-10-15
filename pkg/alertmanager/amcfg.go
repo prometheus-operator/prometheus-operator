@@ -814,20 +814,12 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		out.Token = token
 	}
 
-	if in.TokenFile != nil && *in.TokenFile != "" {
-		out.TokenFile = *in.TokenFile
-	}
-
 	if in.TokenID != nil {
 		tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
 		}
 		out.TokenID = tokenID
-	}
-
-	if in.TokenIDFile != nil && *in.TokenIDFile != "" {
-		out.TokenIDFile = *in.TokenIDFile
 	}
 
 	if in.Channel != nil && *in.Channel != "" {
