@@ -33,6 +33,10 @@ type DiscordConfigApplyConfiguration struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// webhookURLFile defines the file to read the Discord webhook URL from.
+	// It is mutually exclusive with `apiURL`.
+	// Either `apiURL` or `webhookURLFile` is required.
+	WebhookURLFile *string `json:"webhookURLFile,omitempty"`
 	// title defines the template of the message's title.
 	Title *string `json:"title,omitempty"`
 	// message defines the template of the message's body.
@@ -66,6 +70,14 @@ func (b *DiscordConfigApplyConfiguration) WithSendResolved(value bool) *DiscordC
 // If called multiple times, the APIURL field is set to the value of the last call.
 func (b *DiscordConfigApplyConfiguration) WithAPIURL(value v1.SecretKeySelector) *DiscordConfigApplyConfiguration {
 	b.APIURL = &value
+	return b
+}
+
+// WithWebhookURLFile sets the WebhookURLFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebhookURLFile field is set to the value of the last call.
+func (b *DiscordConfigApplyConfiguration) WithWebhookURLFile(value string) *DiscordConfigApplyConfiguration {
+	b.WebhookURLFile = &value
 	return b
 }
 

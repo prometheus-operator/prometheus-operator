@@ -260,14 +260,15 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 
 func convertDiscordConfigTo(in DiscordConfig) v1alpha1.DiscordConfig {
 	return v1alpha1.DiscordConfig{
-		APIURL:       in.APIURL,
-		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
-		Title:        in.Title,
-		Message:      in.Message,
-		SendResolved: in.SendResolved,
-		Content:      in.Content,
-		Username:     in.Username,
-		AvatarURL:    (*v1alpha1.URL)(in.AvatarURL),
+		APIURL:         convertSecretKeySelectorTo(in.APIURL),
+		WebhookURLFile: in.WebhookURLFile,
+		HTTPConfig:     convertHTTPConfigTo(in.HTTPConfig),
+		Title:          in.Title,
+		Message:        in.Message,
+		SendResolved:   in.SendResolved,
+		Content:        in.Content,
+		Username:       in.Username,
+		AvatarURL:      (*v1alpha1.URL)(in.AvatarURL),
 	}
 }
 
