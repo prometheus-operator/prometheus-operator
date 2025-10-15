@@ -29,20 +29,21 @@ import (
 // FinalizerSyncer holds the configuration and dependencies
 // required to perform finalizer synchronization.
 type FinalizerSyncer struct {
-	mdClient                     metadata.Interface
-	gvr                          schema.GroupVersionResource
-	configResourcesStatusEnabled bool
+	mdClient metadata.Interface
+	gvr      schema.GroupVersionResource
+	disabled bool
 }
 
-func NewFinalizerSyncer(
-	mdClient metadata.Interface,
-	gvr schema.GroupVersionResource,
-	configResourcesStatusEnabled bool,
-) *FinalizerSyncer {
+func NewFinalizerSyncer(mdClient metadata.Interface, gvr schema.GroupVersionResource) *FinalizerSyncer {
 	return &FinalizerSyncer{
-		mdClient:                     mdClient,
-		gvr:                          gvr,
-		configResourcesStatusEnabled: configResourcesStatusEnabled,
+		mdClient: mdClient,
+		gvr:      gvr,
+	}
+}
+
+func NewNoopFinalizerSyncer() *FinalizerSyncer {
+	return &FinalizerSyncer{
+		disabled: true,
 	}
 }
 
@@ -52,7 +53,7 @@ func NewFinalizerSyncer(
 // Returns true if the finalizer was added, otherwise false.
 // The second return value indicates any error encountered during the operation.
 func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, deletionInProgress bool, statusCleanup func() error) (bool, error) {
-	if !s.configResourcesStatusEnabled {
+	if s.disabled {
 		return false, nil
 	}
 

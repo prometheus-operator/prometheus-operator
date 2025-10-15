@@ -123,6 +123,14 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
+// WithConfigResourceStatus tells that the controller can manage the status of
+// configuration resources.
+func WithConfigResourceStatus() ControllerOption {
+	return func(o *Operator) {
+		o.configResourcesStatusEnabled = true
+	}
+}
+
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -163,13 +171,17 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
-		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
+		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
 	)
 	for _, opt := range options {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName))
 	}
 
 	o.promInfs, err = informers.NewInformersForResource(
