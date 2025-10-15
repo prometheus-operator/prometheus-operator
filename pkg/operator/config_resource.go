@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -154,6 +155,18 @@ func (crs *ConfigResourceSyncer) newBinding(conditions []monitoringv1.ConfigReso
 	}
 }
 
+func (crs *ConfigResourceSyncer) newUnstructuredBinding(conditions []monitoringv1.ConfigResourceCondition) (map[string]any, error) {
+	b, err := json.Marshal(crs.newBinding(conditions))
+	if err != nil {
+		return nil, err
+	}
+	content := map[string]any{}
+	if err = json.Unmarshal(b, &content); err != nil {
+		return nil, err
+	}
+	return content, nil
+}
+
 type RuntimeObject interface {
 	runtime.Object
 	metav1.Object
@@ -166,19 +179,60 @@ type ConfigurationObject interface {
 
 // UpdateBinding updates the workload's binding in the configuration resource's
 // status subresource.
-// If the binding is up-to-date, this a no-operation.
+// If the binding is up-to-date, this is a no-operation.
 func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResource ConfigurationObject, conditions []monitoringv1.ConfigResourceCondition) error {
 	bindings := configResource.Bindings()
+
+	if len(bindings) == 0 {
+		// When the bindings slice is empty, update the status instead of patch
+		// to avoid race conditions when the resource is selected by 2 (or
+		// more) workloads.
+		// Patch semantics don't allow to ensure that the second patch
+		// operation doesn't overwrite the first change. Using ResourceVersion
+		// (aka optimistic locking), we make sure that the second operation
+		// would fail (and be retried).
+		obj := &unstructured.Unstructured{
+			Object: map[string]any{},
+		}
+
+		binding, err := crs.newUnstructuredBinding(conditions)
+		if err != nil {
+			return err
+		}
+
+		if err := unstructured.SetNestedSlice(obj.Object, []any{binding}, "status", "bindings"); err != nil {
+			return err
+		}
+
+		obj.SetGroupVersionKind(configResource.GetObjectKind().GroupVersionKind())
+		obj.SetKind(configResource.GetObjectKind().GroupVersionKind().Kind)
+		obj.SetName(configResource.GetName())
+		obj.SetResourceVersion(configResource.GetResourceVersion())
+
+		if _, err = crs.client.Resource(toGroupVersionResource(configResource)).Namespace(configResource.GetNamespace()).UpdateStatus(
+			ctx,
+			obj,
+			metav1.UpdateOptions{
+				FieldManager:    PrometheusOperatorFieldManager,
+				FieldValidation: metav1.FieldValidationStrict,
+			},
+		); err != nil {
+			return fmt.Errorf("failed to update status: %w", err)
+		}
+
+		return nil
+	}
+
 	patch, err := crs.updateBindingPatch(bindings, conditions)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to build patch status: %w", err)
 	}
 
 	if len(patch) == 0 {
 		return nil
 	}
 
-	_, err = crs.client.Resource(toGroupVersionResource(configResource)).Namespace(configResource.GetNamespace()).Patch(
+	if _, err = crs.client.Resource(toGroupVersionResource(configResource)).Namespace(configResource.GetNamespace()).Patch(
 		ctx,
 		configResource.GetName(),
 		types.JSONPatchType,
@@ -188,9 +242,11 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,
-	)
+	); err != nil {
+		return fmt.Errorf("failed to patch status: %w", err)
+	}
 
-	return err
+	return nil
 }
 
 // RemoveBinding removes the workload's binding from the configuration
@@ -284,26 +340,12 @@ func toGroupVersionResource(o runtime.Object) schema.GroupVersionResource {
 func (crs *ConfigResourceSyncer) updateBindingPatch(bindings []monitoringv1.WorkloadBinding, conditions []monitoringv1.ConfigResourceCondition) ([]byte, error) {
 	i := crs.GetBindingIndex(bindings)
 	if i < 0 {
-		binding := crs.newBinding(conditions)
-		if len(bindings) == 0 {
-			// Initialize the workload bindings.
-			return json.Marshal(patch{
-				patchOperation{
-					Op:   "add",
-					Path: "/status",
-					Value: monitoringv1.ConfigResourceStatus{
-						Bindings: []monitoringv1.WorkloadBinding{binding},
-					},
-				},
-			})
-		}
-
-		// Append the workload binding.
+		// Append the workload binding to the slice.
 		return json.Marshal(patch{
 			patchOperation{
 				Op:    "add",
 				Path:  "/status/bindings/-",
-				Value: binding,
+				Value: crs.newBinding(conditions),
 			},
 		})
 	}
