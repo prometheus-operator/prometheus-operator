@@ -4181,6 +4181,55 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
 		},
 		{
+			name:           "discord_config with webhook url file set",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_with_webhook_url_file_set.golden",
+		},
+		{
+			name:           "discord_config both webhook url and webhook url file set",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "discord_config webhook url file dropped for unsupported versions",
+			againstVersion: versionDiscordMessageFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "webex_config for supported versions",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
@@ -6065,6 +6114,11 @@ func TestLoadConfig(t *testing.T) {
 			require.Equal(t, tc.expected, ac)
 		})
 	}
+}
+
+func TestLoadConfigDiscordWebhookURLFile(t *testing.T) {
+	_, err := alertmanagerConfigFromBytes(golden.Get(t, "Discord_webhook_url_file_field.golden"))
+	require.NoError(t, err)
 }
 
 func TestConvertHTTPConfig(t *testing.T) {

@@ -241,6 +241,7 @@ spec:
                               apiURL defines the secret's key that contains the Discord webhook URL.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
+                              Either `apiURL` or `webhookURLFile` is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -995,8 +996,12 @@ spec:
                               sender.
                             minLength: 1
                             type: string
-                        required:
-                        - apiURL
+                          webhookURLFile:
+                            description: |-
+                              webhookURLFile defines the file to read the Discord webhook URL from.
+                              It is mutually exclusive with `apiURL`.
+                              Either `apiURL` or `webhookURLFile` is required.
+                            type: string
                         type: object
                       type: array
                     emailConfigs:
@@ -12192,28 +12197,22 @@ spec:
                               apiURL defines the secret's key that contains the Discord webhook URL.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
+                              Either `apiURL` or `webhookURLFile` is required.
                             properties:
                               key:
-                                description: The key of the secret to select from.  Must
-                                  be a valid secret key.
+                                description: key defines the key of the secret to
+                                  select from.  Must be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                default: ""
-                                description: |-
-                                  Name of the referent.
-                                  This field is effectively required, but due to backwards compatibility is
-                                  allowed to be empty. Instances of this type with an empty value here are
-                                  almost certainly wrong.
-                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                description: name defines the name of the secret in
+                                  the object's namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
-                            x-kubernetes-map-type: atomic
                           avatarURL:
                             description: avatarURL defines the avatar url of the message
                               sender.
@@ -12939,8 +12938,12 @@ spec:
                               sender.
                             minLength: 1
                             type: string
-                        required:
-                        - apiURL
+                          webhookURLFile:
+                            description: |-
+                              webhookURLFile defines the file to read the Discord webhook URL from.
+                              It is mutually exclusive with `apiURL`.
+                              Either `apiURL` or `webhookURLFile` is required.
+                            type: string
                         type: object
                       type: array
                     emailConfigs:
