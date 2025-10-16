@@ -10,9 +10,7 @@ alerting:
   - action: labeldrop
     regex: prometheus_replica
   alertmanagers:
-  - path_prefix: /
-    scheme: http
-    timeout: 60s
+  - timeout: 60s
     kubernetes_sd_configs:
     - role: endpoints
       namespaces:

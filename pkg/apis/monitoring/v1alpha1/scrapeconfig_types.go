@@ -296,10 +296,8 @@ type ScrapeConfigSpec struct {
 	// +optional
 	Params map[string][]string `json:"params,omitempty"`
 	// scheme defines the protocol scheme used for requests.
-	// If empty, Prometheus uses HTTP by default.
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +optional
-	Scheme *string `json:"scheme,omitempty"`
+	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// enableCompression when false, Prometheus will request uncompressed response from the scraped target.
 	//
 	// It requires Prometheus >= v2.49.0.
@@ -530,10 +528,9 @@ type ConsulSDConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Partition *string `json:"partition,omitempty"`
-	// scheme defines the HTTP Scheme default "http"
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// scheme defines the HTTP Scheme.
 	// +optional
-	Scheme *string `json:"scheme,omitempty"`
+	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
 	// +listType:=set
 	// +optional

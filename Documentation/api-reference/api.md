@@ -5902,12 +5902,14 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme to use when firing alerts.</p>
+<p>scheme defines the HTTP scheme to use when sending alerts.</p>
 </td>
 </tr>
 <tr>
@@ -10428,15 +10430,14 @@ string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the HTTP scheme to use for scraping.</p>
-<p><code>http</code> and <code>https</code> are the expected values unless you rewrite the
-<code>__scheme__</code> label via relabeling.</p>
-<p>If empty, Prometheus uses the default value <code>http</code>.</p>
+<p>scheme defines the HTTP scheme to use when scraping the metrics.</p>
 </td>
 </tr>
 <tr>
@@ -12256,15 +12257,14 @@ string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>scheme defines the HTTP scheme to use for scraping.</p>
-<p><code>http</code> and <code>https</code> are the expected values unless you rewrite the
-<code>__scheme__</code> label via relabeling.</p>
-<p>If empty, Prometheus uses the default value <code>http</code>.</p>
 </td>
 </tr>
 <tr>
@@ -13514,21 +13514,24 @@ string
 </em>
 </td>
 <td>
-<p>url defines the mandatory URL of the prober.</p>
+<p>url defines the address of the prober.</p>
+<p>Unlike what the name indicates, the value should be in the form of
+<code>address:port</code> without any scheme which should be specified in the
+<code>scheme</code> field.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the HTTP scheme to use for scraping.
-<code>http</code> and <code>https</code> are the expected values unless you rewrite the <code>__scheme__</code> label via relabeling.
-If empty, Prometheus uses the default value <code>http</code>.</p>
+<p>scheme defines the HTTP scheme to use when scraping the prober.</p>
 </td>
 </tr>
 <tr>
@@ -17664,6 +17667,29 @@ TLSVersion
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.Scheme">Scheme
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProberSpec">ProberSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>Supported values are <code>HTTP</code> and <code>HTTPS</code>. You can also rewrite the
+<code>__scheme__</code> label via relabeling configuration.</p>
+<p>If empty, the value defaults to <code>HTTP</code>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;HTTP&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;HTTPS&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ScrapeClass">ScrapeClass
 </h3>
@@ -23396,13 +23422,14 @@ map[string][]string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the protocol scheme used for requests.
-If empty, Prometheus uses HTTP by default.</p>
+<p>scheme defines the protocol scheme used for requests.</p>
 </td>
 </tr>
 <tr>
@@ -24265,12 +24292,14 @@ string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the HTTP Scheme default &ldquo;http&rdquo;</p>
+<p>scheme defines the HTTP Scheme.</p>
 </td>
 </tr>
 <tr>
@@ -33631,13 +33660,14 @@ map[string][]string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the protocol scheme used for requests.
-If empty, Prometheus uses HTTP by default.</p>
+<p>scheme defines the protocol scheme used for requests.</p>
 </td>
 </tr>
 <tr>

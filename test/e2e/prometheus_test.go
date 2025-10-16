@@ -139,7 +139,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 		{
 			Port:     "mtls",
 			Interval: "1s",
-			Scheme:   "https",
+			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					ServerName: ptr.To("caandserver.com"),
@@ -3339,7 +3339,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		{
 			Port:     "mtls",
 			Interval: "30s",
-			Scheme:   "https",
+			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
@@ -3544,7 +3544,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "tls-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
-				Scheme: "https",
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 				HTTPConfig: monitoringv1.HTTPConfig{
 					TLSConfig: &monitoringv1.SafeTLSConfig{
 						InsecureSkipVerify: ptr.To(true),
@@ -3579,7 +3579,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "tls-configmap",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
-				Scheme: "https",
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 				HTTPConfig: monitoringv1.HTTPConfig{
 					TLSConfig: &monitoringv1.SafeTLSConfig{
 						InsecureSkipVerify: ptr.To(true),
@@ -4663,8 +4663,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 						{
 							Name:            "test",
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4692,8 +4692,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Name:            "test",
 							Namespace:       ptr.To("default"),
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4720,8 +4720,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 						{
 							Namespace:       ptr.To("default"),
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
