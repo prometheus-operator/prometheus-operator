@@ -83,10 +83,9 @@ func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
 	return prs.ruleFiles
 }
 
-func (prs *PrometheusRuleSelection) Selected(log *slog.Logger) TypedResourcesSelection[*monitoringv1.PrometheusRule] {
+func (prs *PrometheusRuleSelection) Selected(accessor *Accessor) TypedResourcesSelection[*monitoringv1.PrometheusRule] {
 	selected := make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(prs.selection))
 
-	accessor := NewAccessor(log)
 	for _, promRule := range prs.selection {
 		k, ok := accessor.MetaNamespaceKey(promRule)
 		if !ok {
