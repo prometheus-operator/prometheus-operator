@@ -1055,14 +1055,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 
-	err = c.updateConfigResourcesStatus(ctx, p, *resources)
+	err = c.updateConfigResourcesStatus(ctx, p, *resources, logger)
 
 	return err
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
 // resources (ServiceMonitor, PodMonitor, ScrapeConfig and Probe).
-func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, resources selectedConfigResources) error {
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1.Prometheus, resources selectedConfigResources, logger *slog.Logger) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
 	}
@@ -1098,7 +1098,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}
 
 	// Update the status of selected prometheusRules.
-	for key, configResource := range resources.rules.Selected() {
+	for key, configResource := range resources.rules.Selected(logger) {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
 		}

@@ -75,8 +75,8 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	}
 
 	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
-		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules.Selected()))
-		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rules.Rejected())
+		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, rules.SelectedLen())
+		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rules.RejectedLen())
 	}
 
 	// Update the corresponding ConfigMap resources.
