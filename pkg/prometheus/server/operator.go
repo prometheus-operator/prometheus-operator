@@ -1098,7 +1098,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}
 
 	// Update the status of selected prometheusRules.
-	for key, configResource := range resources.rules.Selected() {
+	for key, configResource := range resources.rules.Selected(c.accessor) {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
 		}

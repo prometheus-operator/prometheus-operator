@@ -83,11 +83,25 @@ func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
 	return prs.ruleFiles
 }
 
-func (prs *PrometheusRuleSelection) Selected() TypedResourcesSelection[*monitoringv1.PrometheusRule] {
-	return prs.selection
+func (prs *PrometheusRuleSelection) Selected(accessor *Accessor) TypedResourcesSelection[*monitoringv1.PrometheusRule] {
+	selected := make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(prs.selection))
+
+	for _, promRule := range prs.selection {
+		k, ok := accessor.MetaNamespaceKey(promRule.resource)
+		if !ok {
+			continue
+		}
+
+		selected[k] = promRule
+	}
+	return selected
 }
 
-func (prs *PrometheusRuleSelection) Rejected() int {
+func (prs *PrometheusRuleSelection) SelectedLen() int {
+	return len(prs.selection)
+}
+
+func (prs *PrometheusRuleSelection) RejectedLen() int {
 	return len(prs.selection) - len(prs.ruleFiles)
 }
 

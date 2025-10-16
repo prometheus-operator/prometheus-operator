@@ -74,8 +74,8 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 	}
 
 	if pKey, ok := c.accessor.MetaNamespaceKey(p); ok {
-		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules.Selected()))
-		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, rules.Rejected())
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, rules.SelectedLen())
+		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, rules.RejectedLen())
 	}
 	return rules, nil
 }
