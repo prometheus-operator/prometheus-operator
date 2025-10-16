@@ -17086,6 +17086,8 @@ MetadataConfig
 <td>
 <em>(Optional)</em>
 <p>metadataConfig defines how to send a series metadata to the remote storage.</p>
+<p>When the field is empty, <strong>no metadata</strong> is sent. But when the field is
+null, metadata is sent.</p>
 </td>
 </tr>
 <tr>
