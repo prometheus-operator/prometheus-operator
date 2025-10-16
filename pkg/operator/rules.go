@@ -87,7 +87,7 @@ func (prs *PrometheusRuleSelection) Selected(accessor *Accessor) TypedResourcesS
 	selected := make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(prs.selection))
 
 	for _, promRule := range prs.selection {
-		k, ok := accessor.MetaNamespaceKey(promRule)
+		k, ok := accessor.MetaNamespaceKey(promRule.resource)
 		if !ok {
 			continue
 		}
