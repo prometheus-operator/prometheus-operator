@@ -1252,6 +1252,13 @@ type JiraConfig struct {
 	// +optional
 	Fields []JiraField `json:"fields,omitempty"`
 
+	// apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+	// It requires Alertmanager >= 0.29.0.
+	//
+	// +kubebuilder:validation:Enum=cloud;datacenter;auto
+	// +optional
+	APIType *string `json:"apiType,omitempty"`
+
 	// httpConfig defines HTTP client configuration for Jira connection.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

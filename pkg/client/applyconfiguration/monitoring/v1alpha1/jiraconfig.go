@@ -36,6 +36,7 @@ type JiraConfigApplyConfiguration struct {
 	WontFixResolution *string                       `json:"wontFixResolution,omitempty"`
 	ReopenDuration    *v1.Duration                  `json:"reopenDuration,omitempty"`
 	Fields            []JiraFieldApplyConfiguration `json:"fields,omitempty"`
+	APIType           *string                       `json:"apiType,omitempty"`
 	HTTPConfig        *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
@@ -153,6 +154,14 @@ func (b *JiraConfigApplyConfiguration) WithFields(values ...*JiraFieldApplyConfi
 		}
 		b.Fields = append(b.Fields, *values[i])
 	}
+	return b
+}
+
+// WithAPIType sets the APIType field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the APIType field is set to the value of the last call.
+func (b *JiraConfigApplyConfiguration) WithAPIType(value string) *JiraConfigApplyConfiguration {
+	b.APIType = &value
 	return b
 }
 

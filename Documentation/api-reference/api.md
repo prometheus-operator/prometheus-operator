@@ -27174,6 +27174,19 @@ The &lsquo;resolutiondate&rsquo; field in Jira is used to determine the age of t
 </tr>
 <tr>
 <td>
+<code>apiType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+It requires Alertmanager &gt;= 0.29.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -36646,6 +36659,19 @@ The &lsquo;resolutiondate&rsquo; field in Jira is used to determine the age of t
 <td>
 <em>(Optional)</em>
 <p>fields defines other issue and custom fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+It requires Alertmanager &gt;= 0.29.0.</p>
 </td>
 </tr>
 <tr>

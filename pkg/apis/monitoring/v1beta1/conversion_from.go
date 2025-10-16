@@ -554,6 +554,7 @@ func convertJiraConfigFrom(in v1alpha1.JiraConfig) JiraConfig {
 		WontFixResolution: in.WontFixResolution,
 		ReopenDuration:    in.ReopenDuration,
 		Fields:            convertJiraFieldFrom(in.Fields),
+		APIType:           in.APIType,
 		HTTPConfig:        convertHTTPConfigFrom(in.HTTPConfig),
 	}
 }

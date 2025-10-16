@@ -1194,6 +1194,11 @@ func (in *JiraConfig) DeepCopyInto(out *JiraConfig) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.APIType != nil {
+		in, out := &in.APIType, &out.APIType
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

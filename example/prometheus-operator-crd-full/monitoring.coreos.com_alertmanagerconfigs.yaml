@@ -1312,6 +1312,15 @@ spec:
                           See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config
                           It requires Alertmanager >= 0.28.0.
                         properties:
+                          apiType:
+                            description: |-
+                              apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+                              It requires Alertmanager >= 0.29.0.
+                            enum:
+                            - cloud
+                            - datacenter
+                            - auto
+                            type: string
                           apiURL:
                             description: |-
                               apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
@@ -14042,6 +14051,15 @@ spec:
                           See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config
                           It requires Alertmanager >= 0.28.0.
                         properties:
+                          apiType:
+                            description: |-
+                              apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+                              It requires Alertmanager >= 0.29.0.
+                            enum:
+                            - cloud
+                            - datacenter
+                            - auto
+                            type: string
                           apiURL:
                             description: |-
                               apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
