@@ -1130,7 +1130,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Remove bindings from prometheusRules which reference the
 	// workload but aren't selected anymore.
-	if err := operator.CleanupPrometheusRuleBindings(ctx, c.ruleInfs.ListAll, resources.rules.Selected(), configResourceSyncer); err != nil {
+	if err := operator.CleanupBindings(ctx, c.ruleInfs.ListAll, resources.rules.Selected(c.accessor), configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for prometheusRules: %w", err)
 	}
 	return nil
