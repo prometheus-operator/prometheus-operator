@@ -305,6 +305,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 // PrometheusRuleSyncer knows how to synchronize ConfigMaps holding
 // Prometheus or Thanos rule configuration.
 type PrometheusRuleSyncer struct {
+	namePrefix string
 	opts       []ObjectOption
 	cmClient   clientv1.ConfigMapInterface
 	cmSelector labels.Set
@@ -314,16 +315,42 @@ type PrometheusRuleSyncer struct {
 
 func NewPrometheusRuleSyncer(
 	logger *slog.Logger,
+	namePrefix string,
 	cmClient clientv1.ConfigMapInterface,
 	cmSelector labels.Set,
 	options []ObjectOption,
 ) *PrometheusRuleSyncer {
 	return &PrometheusRuleSyncer{
 		logger:     logger,
+		namePrefix: namePrefix,
 		cmClient:   cmClient,
 		cmSelector: cmSelector,
 		opts:       options,
 	}
+}
+
+// AppendConfigMapNames adds "virtual" ConfigMap names to the given slice until
+// it reaches the limit.
+//
+// The goal is to avoid statefulset redeployments when the number of "concrete"
+// ConfigMaps changes. Because rule's ConfigMaps are mounted with "optional:
+// true", the statefulset will be rolled out successfully even if the
+// ConfigMaps don't exist and if more ConfigMaps are generated, the operator
+// doesn't have to update the statefulset's spec.
+func (prs *PrometheusRuleSyncer) AppendConfigMapNames(configMapNames []string, limit int) []string {
+	if len(configMapNames) >= limit {
+		return configMapNames
+	}
+
+	for i := len(configMapNames); i < limit; i++ {
+		configMapNames = append(configMapNames, prs.configMapNameAt(i))
+	}
+
+	return configMapNames
+}
+
+func (prs *PrometheusRuleSyncer) configMapNameAt(i int) string {
+	return fmt.Sprintf("%s-rulefiles-%d", prs.namePrefix, i)
 }
 
 // Sync synchronizes the ConfigMap(s) holding the provided list of rules.
@@ -435,10 +462,8 @@ func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string
 		UpdateObject(
 			&cm,
 			WithLabels(prs.cmSelector),
+			WithName(prs.configMapNameAt(i)),
 		)
-
-		// Ensure that the ConfigMap's names are unique.
-		cm.Name = fmt.Sprintf("%s-rulefiles-%d", cm.Name, i)
 
 		configMaps = append(configMaps, cm)
 	}

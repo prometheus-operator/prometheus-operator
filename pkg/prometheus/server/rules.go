@@ -85,14 +85,20 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(
 		logger,
+		fmt.Sprintf("prometheus-%s", p.Name),
 		c.kclient.CoreV1().ConfigMaps(p.Namespace),
 		labels.Set{prompkg.LabelPrometheusName: p.Name},
 		[]operator.ObjectOption{
 			operator.WithAnnotations(c.config.Annotations),
 			operator.WithLabels(c.config.Labels),
 			operator.WithManagingOwner(p),
-			operator.WithName(fmt.Sprintf("prometheus-%s", p.Name)),
 		},
 	)
-	return prs.Sync(ctx, rules.RuleFiles())
+
+	configMapNames, err := prs.Sync(ctx, rules.RuleFiles())
+	if err != nil {
+		return nil, fmt.Errorf("synchronizing PrometheusRules failed: %w", err)
+	}
+
+	return prs.AppendConfigMapNames(configMapNames, 3), nil
 }
