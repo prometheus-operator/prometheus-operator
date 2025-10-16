@@ -434,6 +434,7 @@ type jiraConfig struct {
 	WontFixResolution *string                `yaml:"wont_fix_resolution,omitempty" json:"wont_fix_resolution,omitempty"`
 	ReopenDuration    *model.Duration        `yaml:"reopen_duration,omitempty" json:"reopen_duration,omitempty"`
 	Fields            map[string]interface{} `yaml:"fields,omitempty" json:"fields,omitempty"`
+	APIType           *string                `yaml:"api_type,omitempty" json:"api_type,omitempty"`
 }
 
 type msTeamsV2Config struct {

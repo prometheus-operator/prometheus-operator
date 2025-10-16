@@ -1,0 +1,8 @@
+receivers:
+- name: ""
+  jira_configs:
+  - send_resolved: true
+    api_url: http://issues.example.com
+    project: Monitoring
+    api_type: datacenter
+templates: []

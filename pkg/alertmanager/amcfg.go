@@ -1468,6 +1468,7 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 		ResolveTransition: in.ResolveTransition,
 		ReopenTransition:  in.ReopenTransition,
 		WontFixResolution: in.WontFixResolution,
+		APIType:           in.APIType,
 	}
 
 	if in.APIURL != nil {
