@@ -5765,7 +5765,7 @@ func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
 			golden: "PrometheusAgent_no_scrapeFailureLogFile.golden",
 		},
 		{
-			name:                 "PrometheusAgent verison < v2.55.0",
+			name:                 "PrometheusAgent version < v2.55.0",
 			version:              "v2.54.0",
 			scrapeFailureLogFile: ptr.To("file.log"),
 			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
@@ -8982,7 +8982,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DockerSD_with_MatchFirstNetwork.golden",
 		},
 		{
-			name:    "docker_sd_config_match_first_network_with_old_verison",
+			name:    "docker_sd_config_match_first_network_with_old_version",
 			version: "v2.53.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
