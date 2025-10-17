@@ -1,8 +1,8 @@
 receivers:
 - name: ""
   jira_configs:
-  - send_resolved: true
-    api_url: http://issues.example.com
+  - api_url: http://issues.example.com
     project: Monitoring
+    issue_type: Bug
     api_type: datacenter
 templates: []
