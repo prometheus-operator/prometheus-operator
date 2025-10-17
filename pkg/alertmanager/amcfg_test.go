@@ -5632,45 +5632,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "jira_configs_with_send_resolved.golden",
-		},
-		{
-			name:           "jira_configs with incorrect api_type",
-			againstVersion: version29,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						JiraConfigs: []*jiraConfig{
-							{
-								APIURL:    ptr.To("http://issues.example.com"),
-								Project:   "Monitoring",
-								IssueType: "Bug",
-								APIType:   ptr.To("test"),
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "jira_configs with api_type unsupported version",
-			againstVersion: versionJiraAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						JiraConfigs: []*jiraConfig{
-							{
-								APIURL:    ptr.To("http://issues.example.com"),
-								Project:   "Monitoring",
-								IssueType: "Bug",
-								APIType:   ptr.To("datacenter"),
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
+			golden: "jira_configs_with_api_type.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

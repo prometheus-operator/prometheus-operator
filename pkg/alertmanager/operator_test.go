@@ -216,6 +216,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version29, err := semver.ParseTolerant("v0.29.0")
+	require.NoError(t, err)
+
 	for _, tc := range []struct {
 		amConfig  *monitoringv1alpha1.AlertmanagerConfig
 		amVersion *semver.Version
@@ -1137,6 +1140,54 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 			amVersion: &version28,
 			ok:        true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "jira-with-apitype",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+							Project:   "projectA",
+							APIURL:    ptr.To("http://test.com"),
+							IssueType: "Bug",
+							APIType:   ptr.To("datacenter"),
+						}},
+					}},
+				},
+			},
+			amVersion: &version29,
+			ok:        true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "jira-with-apitype-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+							Project:   "projectA",
+							APIURL:    ptr.To("http://test.com"),
+							IssueType: "Bug",
+							APIType:   ptr.To("datacenter"),
+						}},
+					}},
+				},
+			},
+			amVersion: &version28,
+			ok:        false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
