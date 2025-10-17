@@ -179,3 +179,25 @@ func (f *Framework) WaitForRuleCondition(ctx context.Context, pr *monitoringv1.P
 	}
 	return current, nil
 }
+
+func (f *Framework) WaitForRuleWorkloadBindingCleanup(ctx context.Context, pm *monitoringv1.PrometheusRule, workload metav1.Object, resource string, timeout time.Duration) (*monitoringv1.PrometheusRule, error) {
+	var current *monitoringv1.PrometheusRule
+
+	if err := f.WaitForConfigResWorkloadBindingCleanup(
+		ctx,
+		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
+			var err error
+			current, err = f.MonClientV1.PrometheusRules(pm.Namespace).Get(ctx, pm.Name, metav1.GetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			return current.Status.Bindings, nil
+		},
+		workload,
+		resource,
+		timeout,
+	); err != nil {
+		return nil, fmt.Errorf("podMonitor status %v/%v failed to reach expected condition: %w", pm.Namespace, pm.Name, err)
+	}
+	return current, nil
+}
