@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.85.0
+    operator.prometheus.io/version: 0.86.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -337,9 +337,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -836,9 +836,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -853,16 +853,13 @@ spec:
                         type: object
                       type: array
                     scheme:
-                      description: |-
-                        scheme defines the HTTP scheme to use for scraping.
-
-                        `http` and `https` are the expected values unless you rewrite the
-                        `__scheme__` label via relabeling.
-
-                        If empty, Prometheus uses the default value `http`.
+                      description: scheme defines the HTTP scheme to use when scraping
+                        the metrics.
                       enum:
                       - http
                       - https
+                      - HTTP
+                      - HTTPS
                       type: string
                     scrapeTimeout:
                       description: |-
@@ -1267,6 +1264,17 @@ spec:
                 enum:
                 - RelabelConfig
                 - RoleSelector
+                type: string
+              serviceDiscoveryRole:
+                description: |-
+                  serviceDiscoveryRole defines the service discovery role used to discover targets.
+
+                  If set, the value should be either "Endpoints" or "EndpointSlice".
+                  Otherwise it defaults to the value defined in the
+                  Prometheus/PrometheusAgent resource.
+                enum:
+                - Endpoints
+                - EndpointSlice
                 type: string
               targetLabels:
                 description: |-

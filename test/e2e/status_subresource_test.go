@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -730,4 +731,220 @@ func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 
 	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
+}
+
+// testGarbageCollectionOfProbeBinding validates that the operator removes the reference to the Prometheus resource when the Probe isn't selected anymore by the workload.
+func testGarbageCollectionOfProbeBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "probe-status-binding-cleanup-test"
+	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
+
+	proberURL := "localhost:9115"
+	targets := []string{svc.Name + ":9090"}
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
+	}
+
+	probe := framework.MakeBasicStaticProbe("probe", proberURL, targets)
+	probe.Labels["group"] = name
+	probe, err = framework.MonClientV1.Probes(ns).Create(ctx, probe, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	probe, err = framework.WaitForProbeCondition(ctx, probe, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the Probe's labels, Prometheus doesn't select the resource anymore.
+	probe.Labels = map[string]string{}
+	probe, err = framework.MonClientV1.Probes(ns).Update(ctx, probe, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForProbeWorkloadBindingCleanup(ctx, probe, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmProbeBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource from Probe's status when workload is deleted.
+func testRmProbeBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "workload-del-probe-test"
+	svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
+
+	proberURL := "localhost:9115"
+	targets := []string{svc.Name + ":9090"}
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc); err != nil {
+		require.NoError(t, fmt.Errorf("creating prometheus service failed: %w", err))
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
+	}
+
+	probe := framework.MakeBasicStaticProbe("probe", proberURL, targets)
+	probe.Labels["group"] = name
+	probe, err = framework.MonClientV1.Probes(ns).Create(ctx, probe, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	probe, err = framework.WaitForProbeCondition(ctx, probe, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForProbeWorkloadBindingCleanup(ctx, probe, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testPrometheusRuleStatusSubresource validates PrometheusRule status updates upon Prometheus selection.
+func testPrometheusRuleStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "prometheusrule-status-subresource-test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first PrometheusRule to check that the operator only updates the binding when needed.
+	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr1.Labels["group"] = name
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(pr1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second PrometheusRule to check that the operator updates the binding when the condition changes.
+	pr2 := framework.MakeBasicRule(ns, "rule2", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert2",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert2",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr2.Labels["group"] = name
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr2, err = framework.WaitForRuleCondition(ctx, pr2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first PrometheusRule. A label update doesn't
+	// change the status of the PrometheusRule and the observed timestamp
+	// should be the same as before.
+	pr1.Labels["test"] = "test"
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second PrometheusRule to have an invalid rule expression.
+	pr2.Spec.Groups[0].Rules = append(pr2.Spec.Groups[0].Rules, monitoringv1.Rule{
+		Record: "test:invalid",
+		Expr:   intstr.FromString("invalid_expr{"),
+	})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second PrometheusRule should change to Accepted=False.
+	_, err = framework.WaitForRuleCondition(ctx, pr2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first PrometheusRule should remain unchanged.
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pr1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
 }

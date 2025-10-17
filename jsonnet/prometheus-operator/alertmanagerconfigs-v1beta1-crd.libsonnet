@@ -7142,6 +7142,10 @@
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
+                              useFIPSSTSEndpoint: {
+                                description: 'useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.',
+                                type: 'boolean',
+                              },
                             },
                             type: 'object',
                           },

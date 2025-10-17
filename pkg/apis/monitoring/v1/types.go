@@ -537,10 +537,9 @@ func (c *WebTLSConfig) Validate() error {
 	return nil
 }
 
-// LabelName is a valid Prometheus label name which may only contain ASCII
-// letters, numbers, as well as underscores.
-//
-// +kubebuilder:validation:Pattern:="^[a-zA-Z_][a-zA-Z0-9_]*$"
+// LabelName is a valid Prometheus label name.
+// For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+// For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
 type LabelName string
 
 // Endpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -566,16 +565,10 @@ type Endpoint struct {
 	// +optional
 	Path string `json:"path,omitempty"`
 
-	// scheme defines the HTTP scheme to use for scraping.
+	// scheme defines the HTTP scheme to use when scraping the metrics.
 	//
-	// `http` and `https` are the expected values unless you rewrite the
-	// `__scheme__` label via relabeling.
-	//
-	// If empty, Prometheus uses the default value `http`.
-	//
-	// +kubebuilder:validation:Enum=http;https
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
 	// +optional
@@ -759,6 +752,10 @@ type OAuth2 struct {
 }
 
 func (o *OAuth2) Validate() error {
+	if o == nil {
+		return nil
+	}
+
 	if o.TokenURL == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
@@ -1122,3 +1119,24 @@ type ConfigResourceCondition struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+// Supported values are `HTTP` and `HTTPS`. You can also rewrite the
+// `__scheme__` label via relabeling configuration.
+//
+// If empty, the value defaults to `HTTP`.
+//
+// +kubebuilder:validation:Enum=http;https;HTTP;HTTPS
+type Scheme string
+
+func (s *Scheme) String() string {
+	if s == nil {
+		return ""
+	}
+
+	return strings.ToLower(string(*s))
+}
+
+const (
+	SchemeHTTP  Scheme = "HTTP"
+	SchemeHTTPS Scheme = "HTTPS"
+)

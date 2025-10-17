@@ -1764,6 +1764,10 @@ type RemoteWriteSpec struct {
 	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
 
 	// metadataConfig defines how to send a series metadata to the remote storage.
+	//
+	// When the field is empty, **no metadata** is sent. But when the field is
+	// null, metadata is sent.
+	//
 	// +optional
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 
@@ -1863,6 +1867,11 @@ type Sigv4 struct {
 	// roleArn defines the named AWS profile used to authenticate.
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
+	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +optional
+	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"`
 }
 
 // AzureAD defines the configuration for remote write's azuread parameters.
@@ -2161,13 +2170,16 @@ type AlertmanagerEndpoints struct {
 	// +required
 	Port intstr.IntOrString `json:"port"`
 
-	// scheme to use when firing alerts.
+	// scheme defines the HTTP scheme to use when sending alerts.
+	//
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// pathPrefix defines the prefix for the HTTP path alerts are pushed to.
+	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	PathPrefix string `json:"pathPrefix,omitempty"`
+	PathPrefix *string `json:"pathPrefix,omitempty"`
 
 	// tlsConfig to use for Alertmanager.
 	//
@@ -2272,10 +2284,12 @@ type RulesAlert struct {
 // +k8s:openapi-gen=true
 type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
+	//
 	// +optional
 	Send bool `json:"send,omitempty"`
 
 	// sendInterval defines how frequently metric metadata is sent to the remote storage.
+	//
 	// +optional
 	SendInterval Duration `json:"sendInterval,omitempty"`
 

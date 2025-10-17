@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -333,7 +334,7 @@ func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, act
 		reason,
 		action,
 		note,
-		args,
+		args...,
 	)
 }
 
@@ -543,4 +544,28 @@ func ConfigMapGVK() schema.GroupVersionKind {
 // SecretGVK returns the GroupVersionKind representing Secret objects.
 func SecretGVK() schema.GroupVersionKind {
 	return v1.SchemeGroupVersion.WithKind("Secret")
+}
+
+// SelectNamespacesFromCache returns the selected namespaces from the informer's cache.
+func SelectNamespacesFromCache(obj metav1.Object, sel *metav1.LabelSelector, nsInfs cache.SharedIndexInformer) ([]string, error) {
+	// If the selector is nil, return the object's namespace.
+	if sel == nil {
+		return []string{obj.GetNamespace()}, nil
+	}
+
+	labelSelector, err := metav1.LabelSelectorAsSelector(sel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert namespace label selector to selector: %w", err)
+	}
+
+	var ns []string
+	err = cache.ListAll(nsInfs.GetStore(), labelSelector, func(obj any) {
+		ns = append(ns, obj.(*v1.Namespace).Name)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list namespaces: %w", err)
+	}
+	slices.Sort(ns)
+
+	return ns, nil
 }

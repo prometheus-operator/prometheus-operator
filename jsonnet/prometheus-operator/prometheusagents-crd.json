@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.86.1"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -4772,7 +4772,7 @@
                           "type": "string"
                         },
                         "metadataConfig": {
-                          "description": "metadataConfig defines how to send a series metadata to the remote storage.",
+                          "description": "metadataConfig defines how to send a series metadata to the remote storage.\n\nWhen the field is empty, **no metadata** is sent. But when the field is\nnull, metadata is sent.",
                           "properties": {
                             "maxSamplesPerSend": {
                               "description": "maxSamplesPerSend defines the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
@@ -5277,6 +5277,10 @@
                               ],
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
+                            },
+                            "useFIPSSTSEndpoint": {
+                              "description": "useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.",
+                              "type": "boolean"
                             }
                           },
                           "type": "object"
@@ -5513,8 +5517,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -5762,8 +5765,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -5836,8 +5838,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"

@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/admission/v1"
@@ -310,12 +311,22 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 	}
 }
 
+// api returns an Admission instance with legacy validation for backward compatibility.
 func api() *Admission {
-	a := New(
-		slog.New(slog.DiscardHandler),
-	)
+	return apiWithValidationScheme(model.LegacyValidation)
+}
 
-	return a
+// apiWithUTF8Validation returns an Admission instance configured for UTF-8 validation.
+func apiWithUTF8Validation() *Admission {
+	return apiWithValidationScheme(model.UTF8Validation)
+}
+
+// apiWithValidationScheme returns an Admission instance with the specified validation scheme.
+func apiWithValidationScheme(validationScheme model.ValidationScheme) *Admission {
+	return New(
+		slog.New(slog.DiscardHandler),
+		validationScheme,
+	)
 }
 
 func server(h http.HandlerFunc) *httptest.Server {
@@ -433,4 +444,88 @@ func buildConversionReviewFromAlertmanagerConfigSpec(t *testing.T, from, to, spe
 		alertManagerConfigKind,
 		spec)
 	return []byte(tmpl)
+}
+
+func TestAdmitGoodRuleWithUTF8Validation(t *testing.T) {
+	ts := server(apiWithUTF8Validation().servePrometheusRulesValidate)
+	defer ts.Close()
+
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithUTF8.golden"))
+	if !resp.Response.Allowed {
+		t.Errorf("Expected admission to be allowed with UTF-8 validation")
+	}
+}
+
+func TestAdmitUTF8RuleWithLegacyValidation(t *testing.T) {
+	// This test verifies that UTF-8 rules are rejected with legacy validation
+	ts := server(api().servePrometheusRulesValidate) // Uses legacy validation
+	defer ts.Close()
+
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "goodRulesWithUTF8.golden"))
+	if resp.Response.Allowed {
+		t.Errorf("Expected admission to be rejected with legacy validation for UTF-8 characters")
+	}
+
+	// Verify that it's rejected for the right reason (validation error)
+	if resp.Response.Result == nil || resp.Response.Result.Message == "" {
+		t.Errorf("Expected validation error message, got empty result")
+	}
+}
+
+func TestValidationSchemeComparison(t *testing.T) {
+	tests := []struct {
+		name        string
+		admit       *Admission
+		goldenFile  string
+		shouldAllow bool
+		description string
+	}{
+		{
+			name:        "legacy_validation_with_ascii_rules",
+			admit:       api(),
+			goldenFile:  "goodRulesWithAnnotations.golden",
+			shouldAllow: true,
+			description: "ASCII rules should pass with legacy validation",
+		},
+		{
+			name:        "utf8_validation_with_ascii_rules",
+			admit:       apiWithUTF8Validation(),
+			goldenFile:  "goodRulesWithAnnotations.golden",
+			shouldAllow: true,
+			description: "ASCII rules should pass with UTF-8 validation",
+		},
+		{
+			name:        "legacy_validation_with_utf8_rules",
+			admit:       api(),
+			goldenFile:  "goodRulesWithUTF8.golden",
+			shouldAllow: false,
+			description: "UTF-8 rules should be rejected with legacy validation",
+		},
+		{
+			name:        "utf8_validation_with_utf8_rules",
+			admit:       apiWithUTF8Validation(),
+			goldenFile:  "goodRulesWithUTF8.golden",
+			shouldAllow: true,
+			description: "UTF-8 rules should pass with UTF-8 validation",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := server(tt.admit.servePrometheusRulesValidate)
+			defer ts.Close()
+
+			resp := sendAdmissionReview(t, ts, golden.Get(t, tt.goldenFile))
+
+			if tt.shouldAllow && !resp.Response.Allowed {
+				t.Errorf("%s: Expected admission to be allowed, but it was rejected. Message: %s",
+					tt.description,
+					resp.Response.Result.Message)
+			}
+
+			if !tt.shouldAllow && resp.Response.Allowed {
+				t.Errorf("%s: Expected admission to be rejected, but it was allowed", tt.description)
+			}
+		})
+	}
 }
