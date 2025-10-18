@@ -1402,15 +1402,23 @@ func checkRocketChatConfigs(
 			return err
 		}
 
-		validateRocketChatURL(config.APIURL, "apiURL")
+		if err := validateRocketChatURL(config.APIURL, "apiURL"); err != nil {
+			return err
+		}
 
-		validateRocketChatURL(config.IconURL, "iconURL")
+		if err := validateRocketChatURL(config.IconURL, "iconURL"); err != nil {
+			return err
+		}
 
-		validateRocketChatURL(config.ImageURL, "imageURL")
+		if err := validateRocketChatURL(config.ImageURL, "imageURL"); err != nil {
+			return err
+		}
 
-		validateRocketChatURL(config.ThumbURL, "thumbURL")
-		
-		for _, action := config.Actions {
+		if err := validateRocketChatURL(config.ThumbURL, "thumbURL"); err != nil {
+			return err
+		}
+
+		for _, action := range config.Actions {
 			if err := checkRocketChatActionConfig(action); err != nil {
 				return err
 			}
@@ -1429,7 +1437,7 @@ func checkRocketChatConfigs(
 }
 
 func checkRocketChatActionConfig(cfg monitoringv1alpha1.RocketChatActionConfig) error {
-	
+
 	if cfg.URL != nil {
 		if _, err := validation.ValidateURL(strings.TrimSpace(string(*cfg.URL))); err != nil {
 			return fmt.Errorf("failed to validate RocketChat Action Config URL: %w", err)
