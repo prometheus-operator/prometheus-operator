@@ -1383,8 +1383,8 @@ func checkRocketChatConfigs(
 		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
 	}
 
-	validateRocketChatURL := func(u *URL, urlName string) error {
-		if v != nil {
+	validateRocketChatURL := func(u *monitoringv1alpha1.URL, urlName string) error {
+		if u != nil {
 			if _, err := validation.ValidateURL(strings.TrimSpace(string(*u))); err != nil {
 				return fmt.Errorf("failed to validate RocketChat '%s': %w", urlName, err)
 			}
