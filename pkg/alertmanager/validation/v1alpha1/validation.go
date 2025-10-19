@@ -206,7 +206,7 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 		}
 
 		for _, action := range config.Actions {
-			if err := validateRocketChatURL(action.URL, "Action Config URL"); err != nil {
+			if err := validateRocketChatURL(action.URL, "Action URL"); err != nil {
 				return err
 			}
 		}
