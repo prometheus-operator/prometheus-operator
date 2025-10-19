@@ -1383,16 +1383,6 @@ func checkRocketChatConfigs(
 		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
 	}
 
-	validateRocketChatURL := func(u *monitoringv1alpha1.URL, urlName string) error {
-		if u != nil {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*u))); err != nil {
-				return fmt.Errorf("failed to validate RocketChat '%s': %w", urlName, err)
-			}
-		}
-
-		return nil
-	}
-
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
@@ -1402,45 +1392,12 @@ func checkRocketChatConfigs(
 			return err
 		}
 
-		if err := validateRocketChatURL(config.APIURL, "apiURL"); err != nil {
-			return err
-		}
-
-		if err := validateRocketChatURL(config.IconURL, "iconURL"); err != nil {
-			return err
-		}
-
-		if err := validateRocketChatURL(config.ImageURL, "imageURL"); err != nil {
-			return err
-		}
-
-		if err := validateRocketChatURL(config.ThumbURL, "thumbURL"); err != nil {
-			return err
-		}
-
-		for _, action := range config.Actions {
-			if err := checkRocketChatActionConfig(action); err != nil {
-				return err
-			}
-		}
-
 		if _, err := store.GetSecretKey(ctx, namespace, config.Token); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
 		}
 
 		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func checkRocketChatActionConfig(cfg monitoringv1alpha1.RocketChatActionConfig) error {
-
-	if cfg.URL != nil {
-		if _, err := validation.ValidateURL(strings.TrimSpace(string(*cfg.URL))); err != nil {
-			return fmt.Errorf("failed to validate RocketChat Action Config URL: %w", err)
 		}
 	}
 
