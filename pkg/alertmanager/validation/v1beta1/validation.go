@@ -346,6 +346,18 @@ func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 }
 
 func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) error {
+	validateRocketChatURL := func(u *monitoringv1beta1.URL, urlName string) error {
+		if u != nil {
+			if *u != "" {
+				if _, err := validation.ValidateURL(strings.TrimSpace(string(*u))); err != nil {
+					return fmt.Errorf("failed to validate RocketChat '%s': %w", urlName, err)
+				}
+			}
+		}
+
+		return nil
+	}
+
 	for _, config := range configs {
 		if config.APIURL != nil && *config.APIURL != "" {
 			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
@@ -353,11 +365,32 @@ func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) err
 			}
 		}
 
+		if err := validateRocketChatURL(config.APIURL, "apiURL"); err != nil {
+			return err
+		}
+
+		if err := validateRocketChatURL(config.IconURL, "iconURL"); err != nil {
+			return err
+		}
+
+		if err := validateRocketChatURL(config.ImageURL, "imageURL"); err != nil {
+			return err
+		}
+
+		if err := validateRocketChatURL(config.ThumbURL, "thumbURL"); err != nil {
+			return err
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
-	}
 
+		for _, action := range config.Actions {
+			if err := validateRocketChatURL(action.URL, "Action URL"); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
