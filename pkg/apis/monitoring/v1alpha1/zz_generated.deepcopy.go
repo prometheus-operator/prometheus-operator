@@ -3148,6 +3148,11 @@ func (in *VictorOpsConfig) DeepCopyInto(out *VictorOpsConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.CustomFields != nil {
 		in, out := &in.CustomFields, &out.CustomFields
 		*out = make([]KeyValue, len(*in))

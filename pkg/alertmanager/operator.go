@@ -1553,6 +1553,13 @@ func checkVictorOpsConfigs(
 	amVersion semver.Version,
 ) error {
 	for _, config := range configs {
+
+		if config.APIURL != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.APIURL))); err != nil {
+				return fmt.Errorf("failed to validate VictorOps apiUrl: %w ", err)
+			}
+		}
+
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}

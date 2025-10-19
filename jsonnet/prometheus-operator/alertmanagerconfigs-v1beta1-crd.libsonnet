@@ -7903,6 +7903,7 @@
                           },
                           apiUrl: {
                             description: 'apiUrl defines the VictorOps API URL.\nWhen not specified, defaults to the standard VictorOps API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           customFields: {

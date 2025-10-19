@@ -1222,7 +1222,7 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
 	out := &victorOpsConfig{
 		VSendResolved:     in.SendResolved,
-		APIURL:            in.APIURL,
+		APIURL:            string(*in.APIURL),
 		RoutingKey:        in.RoutingKey,
 		MessageType:       in.MessageType,
 		EntityDisplayName: in.EntityDisplayName,
