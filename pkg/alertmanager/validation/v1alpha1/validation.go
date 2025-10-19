@@ -281,9 +281,10 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 		}
 
 		if config.APIURL != nil {
-			if *config.APIURL != "" {
-				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-					return fmt.Errorf("'apiURL' %s invalid: %w", config.APIURL, err)
+			apiURL := string(*config.APIURL)
+			if apiURL != "" {
+				if _, err := validation.ValidateURL(string(apiURL)); err != nil {
+					return fmt.Errorf("'apiURL' %s invalid: %w", string(apiURL), err)
 				}
 			}
 		}
