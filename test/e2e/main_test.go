@@ -320,6 +320,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusServiceName":                     testPrometheusServiceName,
 		"PrometheusAgentSSetServiceName":            testPrometheusAgentSSetServiceName,
 		"PrometheusReconciliationOnSecretChanges":   testPrometheusReconciliationOnSecretChanges,
+		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
+		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
 	}
 
 	for name, f := range testFuncs {
@@ -426,17 +428,31 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"CreatePrometheusAgentDaemonSet":               testCreatePrometheusAgentDaemonSet,
-		"PromAgentDaemonSetResourceUpdate":             testPromAgentDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceUpdate":    testPromAgentReconcileDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceDelete":    testPromAgentReconcileDaemonSetResourceDelete,
-		"PrometheusAgentDaemonSetSelectPodMonitor":     testPrometheusAgentDaemonSetSelectPodMonitor,
-		"PrometheusRetentionPolicies":                  testPrometheusRetentionPolicies,
-		"FinalizerWhenStatusForConfigResourcesEnabled": testFinalizerWhenStatusForConfigResourcesEnabled,
-		"PrometheusAgentDaemonSetCELValidations":       testPrometheusAgentDaemonSetCELValidations,
-		"ServiceMonitorStatusSubresource":              testServiceMonitorStatusSubresource,
-		"ServiceMonitorStatusWithMultipleWorkloads":    testServiceMonitorStatusWithMultipleWorkloads,
-		"GarbageCollectionOfServiceMonitorBinding":     testGarbageCollectionOfServiceMonitorBinding,
+		"CreatePrometheusAgentDaemonSet":                     testCreatePrometheusAgentDaemonSet,
+		"PromAgentDaemonSetResourceUpdate":                   testPromAgentDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceUpdate":          testPromAgentReconcileDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceDelete":          testPromAgentReconcileDaemonSetResourceDelete,
+		"PrometheusAgentDaemonSetSelectPodMonitor":           testPrometheusAgentDaemonSetSelectPodMonitor,
+		"PrometheusRetentionPolicies":                        testPrometheusRetentionPolicies,
+		"FinalizerWhenStatusForConfigResourcesEnabled":       testFinalizerWhenStatusForConfigResourcesEnabled,
+		"PrometheusAgentDaemonSetCELValidations":             testPrometheusAgentDaemonSetCELValidations,
+		"ServiceMonitorStatusSubresource":                    testServiceMonitorStatusSubresource,
+		"ServiceMonitorStatusWithMultipleWorkloads":          testServiceMonitorStatusWithMultipleWorkloads,
+		"GarbageCollectionOfServiceMonitorBinding":           testGarbageCollectionOfServiceMonitorBinding,
+		"RmServiceMonitorBindingDuringWorkloadDelete":        testRmServiceMonitorBindingDuringWorkloadDelete,
+		"PodMonitorStatusSubresource":                        testPodMonitorStatusSubresource,
+		"GarbageCollectionOfPodMonitorBinding":               testGarbageCollectionOfPodMonitorBinding,
+		"RmPodMonitorBindingDuringWorkloadDelete":            testRmPodMonitorBindingDuringWorkloadDelete,
+		"ProbeStatusSubresource":                             testProbeStatusSubresource,
+		"GarbageCollectionOfProbeBinding":                    testGarbageCollectionOfProbeBinding,
+		"RmProbeBindingDuringWorkloadDelete":                 testRmProbeBindingDuringWorkloadDelete,
+		"ScrapeConfigStatusSubresource":                      testScrapeConfigStatusSubresource,
+		"GarbageCollectionOfScrapeConfigBinding":             testGarbageCollectionOfScrapeConfigBinding,
+		"RmScrapeConfigBindingDuringWorkloadDelete":          testRmScrapeConfigBindingDuringWorkloadDelete,
+		"PrometheusRuleStatusSubresource":                    testPrometheusRuleStatusSubresource,
+		"FinalizerForPromAgentWhenStatusForConfigResEnabled": testFinalizerForPromAgentWhenStatusForConfigResEnabled,
+		"GarbageCollectionOfPrometheusRuleBinding":           testGarbageCollectionOfPrometheusRuleBinding,
+		"RmPrometheusRuleBindingDuringWorkloadDelete":        testRmPrometheusRuleBindingDuringWorkloadDelete,
 	}
 
 	for name, f := range testFuncs {

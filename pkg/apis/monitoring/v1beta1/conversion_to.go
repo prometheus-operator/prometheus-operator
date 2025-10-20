@@ -144,6 +144,7 @@ func convertHTTPConfigTo(in *HTTPConfig) *v1alpha1.HTTPConfig {
 		ProxyURLOriginal:  in.ProxyURLOriginal,
 		ProxyConfig:       in.ProxyConfig,
 		FollowRedirects:   in.FollowRedirects,
+		EnableHTTP2:       in.EnableHTTP2,
 	}
 }
 

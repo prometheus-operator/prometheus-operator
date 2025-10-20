@@ -85,7 +85,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.85.0")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.86.1")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
@@ -114,7 +114,7 @@ Usage of ./operator:
     	* Workload namespaces for Prometheus and PrometheusAgent resources.
     	* Configuration namespaces for Alertmanager resources.
   -web.cert-file string
-    	Certficate file to be used for the web server. (default "/etc/tls/private/tls.crt")
+    	Certificate file to be used for the web server. (default "/etc/tls/private/tls.crt")
   -web.client-ca-file string
     	Client CA certificate file to be used for the web server. (default "/etc/tls/private/tls-ca.crt")
   -web.enable-http2

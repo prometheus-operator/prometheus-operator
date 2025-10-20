@@ -9,7 +9,9 @@ linters:
     - depguard
     - exptostd
     - godot
+    - godoclint
     - iface
+    - iotamixing
     - nilnesserr
     - recvcheck
     - revive

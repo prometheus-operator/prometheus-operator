@@ -459,7 +459,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	createMutualTLSSecret(t, secretName, ns)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
-	sc.Spec.Scheme = ptr.To("HTTPS")
+	sc.Spec.Scheme = ptr.To(monitoringv1.SchemeHTTPS)
 	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
 		Credentials: &v1.SecretKeySelector{
 			LocalObjectReference: v1.LocalObjectReference{
@@ -625,6 +625,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	})
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
+	})
+	t.Run("KumaSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, KumaSDTestCases)
 	})
 	t.Run("ScalewaySD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
@@ -857,7 +860,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server: "valid-server",
-					Scheme: ptr.To("HTTP"),
+					Scheme: ptr.To(monitoringv1.SchemeHTTP),
 				},
 			},
 		},
@@ -869,7 +872,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server: "valid-server",
-					Scheme: ptr.To("HTTPS"),
+					Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 				},
 			},
 		},
@@ -881,7 +884,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server: "valid-server",
-					Scheme: ptr.To(""),
+					Scheme: ptr.To(monitoringv1.Scheme("")),
 				},
 			},
 		},
@@ -1709,21 +1712,21 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 	{
 		name: "Scheme: Invalid Value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			Scheme: ptr.To("FTP"),
+			Scheme: ptr.To(monitoringv1.Scheme("FTP")),
 		},
 		expectedError: true,
 	},
 	{
 		name: "Scheme: Valid Value HTTP",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			Scheme: ptr.To("HTTP"),
+			Scheme: ptr.To(monitoringv1.SchemeHTTP),
 		},
 		expectedError: false,
 	},
 	{
 		name: "Scheme: Valid Value HTTPS",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			Scheme: ptr.To("HTTPS"),
+			Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 		},
 		expectedError: false,
 	},
@@ -3221,6 +3224,170 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 	},
 }
 
+var KumaSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid KumaSDConfig - Required Fields",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://kuma-control-plane.example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid - Required Fields Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Server schema",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "ftp://example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid ClientID specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To("valid-client-id"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid empty ClientID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid FetchTimeout",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:       "http://example.com",
+					FetchTimeout: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid FetchTimeout",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:       "http://example.com",
+					FetchTimeout: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					FollowRedirects: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "FollowRedirects False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:          "http://example.com",
+					FollowRedirects: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 True",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:      "http://example.com",
+					EnableHTTP2: ptr.To(true),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "EnableHTTP2 False",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:      "http://example.com",
+					EnableHTTP2: ptr.To(false),
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
 var ScalewaySDTestCases = []scrapeCRDTestCase{
 	{
 		name: "Valid Project ID",

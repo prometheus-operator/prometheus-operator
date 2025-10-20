@@ -280,8 +280,8 @@ example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.json
 example/admission-webhook: scripts/generate/vendor scripts/generate/admission-webhook.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-admission-webhook-example.sh
 
-example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
-	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
+example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alertmanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-conversion-webhook-patch-for-alertmanagerconfig-crd.sh
 
 FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
 
@@ -321,14 +321,26 @@ shellcheck: $(SHELLCHECK_BINARY)
 check-metrics: $(PROMLINTER_BINARY)
 	$(PROMLINTER_BINARY) lint .
 
+.PHONY: check
+check: check-golang check-api
+
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run -v
-	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml 
+
+.PHONY: check-api
+check-api: $(GOLANGCIKUBEAPILINTER_BINARY)
+	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml
+
+.PHONY: check
+fix: fix-golang fix-api
 
 .PHONY: fix-golang
 fix-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run --fix
+
+.PHONY: fix-api
+fix-api: $(GOLANGCIKUBEAPILINTER_BINARY)
 	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml --fix
 
 MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml

@@ -575,7 +575,7 @@ func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
 	podSpec.DNSPolicy = v1.DNSPolicy(*dnsPolicy)
 }
 
-// This function is responsible for the following:
+// EnsureCustomGoverningService is responsible for the following:
 //
 // Verify that the service exists in the resource's namespace
 // If it does not exist, fail the reconciliation.
@@ -604,7 +604,7 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 	return nil
 }
 
-// AddFinalizerPatch generates the JSON patch payload which adds the finalizer to the object's metadata.
+// FinalizerAddPatch generates the JSON patch payload which adds the finalizer to the object's metadata.
 // If the finalizer is already present, it returns an empty []byte slice.
 func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error) {
 	if slices.Contains(finalizers, finalizerName) {

@@ -125,6 +125,11 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 			messageVersion:  ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
 			expectedPresent: true,
 		},
+		{
+			version:         "v3.4.0",
+			messageVersion:  ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+			expectedPresent: false,
+		},
 	} {
 		t.Run("", func(t *testing.T) {
 			p := &monitoringv1.Prometheus{

@@ -25,11 +25,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -703,19 +701,6 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 	rr.statusQ.AddRateLimited(key)
 
 	return true
-}
-
-// ListMatchingNamespaces lists all the namespaces that match the provided
-// selector.
-func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInformer) ([]string, error) {
-	var ns []string
-	err := cache.ListAll(nsInf.GetStore(), selector, func(obj any) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list namespaces: %w", err)
-	}
-	return ns, nil
 }
 
 // isManagedByController returns true if the controller is the "owner" of the object.

@@ -127,7 +127,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 	return nil
 }
 
-// CreateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml
+// CreateOrUpdateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml
 // manifest on the apiserver and wait until it is available for use.
 func (f *Framework) CreateOrUpdateCRDAndWaitUntilReady(ctx context.Context, crdName string, listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	crdName = strings.ToLower(crdName)

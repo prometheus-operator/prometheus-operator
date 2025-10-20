@@ -24,7 +24,7 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
@@ -38,7 +38,7 @@ jobs:
     - uses: actions/checkout@v5
     - name: Import environment variables from file
       run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: ${{ env.golang-version }}
         check-latest: true

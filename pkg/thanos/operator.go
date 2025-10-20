@@ -35,7 +35,6 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -85,7 +84,7 @@ type Operator struct {
 	reconciliations     *operator.ReconciliationTracker
 	canReadStorageClass bool
 
-	eventRecorder record.EventRecorder
+	newEventRecorder operator.NewEventRecorderFunc
 
 	config Config
 
@@ -113,6 +112,14 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
+// WithConfigResourceStatus tells that the controller can manage the status of
+// configuration resources.
+func WithConfigResourceStatus() ControllerOption {
+	return func(o *Operator) {
+		o.configResourcesStatusEnabled = true
+	}
+}
+
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -136,15 +143,15 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
 	o := &Operator{
-		kclient:         client,
-		mdClient:        mdClient,
-		mclient:         mclient,
-		logger:          logger,
-		accessor:        operator.NewAccessor(logger),
-		metrics:         operator.NewMetrics(r),
-		eventRecorder:   c.EventRecorderFactory(client, controllerName),
-		reconciliations: &operator.ReconciliationTracker{},
-		controllerID:    c.ControllerID,
+		kclient:          client,
+		mdClient:         mdClient,
+		mclient:          mclient,
+		logger:           logger,
+		accessor:         operator.NewAccessor(logger),
+		metrics:          operator.NewMetrics(r),
+		newEventRecorder: c.EventRecorderFactory(client, controllerName),
+		reconciliations:  &operator.ReconciliationTracker{},
+		controllerID:     c.ControllerID,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
@@ -152,7 +159,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
-		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -399,7 +405,7 @@ func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 	}
 }
 
-// RefreshStatus implements the operator.StatusReconciler interface.
+// RefreshStatusFor implements the operator.StatusReconciler interface.
 func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
 }

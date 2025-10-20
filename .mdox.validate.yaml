@@ -1,5 +1,7 @@
 version: 1
 timeout: "1m"
+parallelism: 10
+random_delay: 1s
 
 explicitLocalValidators: true
 

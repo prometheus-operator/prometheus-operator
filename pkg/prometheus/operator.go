@@ -15,11 +15,9 @@
 package prometheus
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"reflect"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -29,11 +27,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
@@ -55,50 +51,6 @@ type StatusReporter struct {
 	Reconciliations *operator.ReconciliationTracker
 	SsetInfs        *informers.ForResource
 	Rr              *operator.ResourceReconciler
-}
-
-type ConfigResourceSyncer struct {
-	gvr      schema.GroupVersionResource
-	mclient  monitoringclient.Interface
-	workload metav1.Object // Workload resource (Prometheus and PrometheusAgent) selecting the configuration resources.
-}
-
-func NewConfigResourceSyncer(gvr schema.GroupVersionResource, mclient monitoringclient.Interface, workload metav1.Object) *ConfigResourceSyncer {
-	return &ConfigResourceSyncer{
-		gvr:      gvr,
-		mclient:  mclient,
-		workload: workload,
-	}
-}
-
-// UpdateBindingConditions returns the bindings slice with the conditions updated for the workload.
-// The 2nd return value indicates if the slice has been updated.
-func (crs *ConfigResourceSyncer) UpdateBindingConditions(bindings []monitoringv1.WorkloadBinding, conditions []monitoringv1.ConfigResourceCondition) ([]monitoringv1.WorkloadBinding, bool) {
-	updated := monitoringv1.WorkloadBinding{
-		Namespace:  crs.workload.GetNamespace(),
-		Name:       crs.workload.GetName(),
-		Resource:   crs.gvr.Resource,
-		Group:      crs.gvr.Group,
-		Conditions: conditions,
-	}
-	for i, binding := range bindings {
-		if binding.Namespace != updated.Namespace ||
-			binding.Name != updated.Name ||
-			binding.Group != updated.Group ||
-			binding.Resource != updated.Resource {
-			continue
-		}
-
-		// No need to update the binding if the conditions haven't changed
-		if equalConfigResourceConditions(binding.Conditions, updated.Conditions) {
-			return nil, false
-		}
-
-		bindings[i] = updated
-		return bindings, true
-	}
-
-	return append(bindings, updated), true
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -294,84 +246,4 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	)
 
 	return &pStatus, nil
-}
-
-// UpdateServiceMonitorStatus updates the status binding of the serviceMonitor
-// for the given workload.
-func UpdateServiceMonitorStatus(
-	ctx context.Context,
-	c *ConfigResourceSyncer,
-	res TypedConfigurationResource[*monitoringv1.ServiceMonitor]) error {
-	smon := res.resource
-
-	bindings, updated := c.UpdateBindingConditions(smon.Status.Bindings, res.conditions(smon.Generation))
-	if !updated {
-		return nil
-	}
-	smon.Status.Bindings = bindings
-
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(
-		ctx,
-		ApplyConfigurationFromServiceMonitor(smon),
-		metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true},
-	)
-	return err
-}
-
-// equalConfigResourceConditions returns true when both slices are equal semantically.
-func equalConfigResourceConditions(a, b []monitoringv1.ConfigResourceCondition) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	ac, bc := slices.Clone(a), slices.Clone(b)
-
-	slices.SortFunc(ac, func(a, b monitoringv1.ConfigResourceCondition) int {
-		return cmp.Compare(a.Type, b.Type)
-	})
-	slices.SortFunc(bc, func(a, b monitoringv1.ConfigResourceCondition) int {
-		return cmp.Compare(a.Type, b.Type)
-	})
-
-	return slices.EqualFunc(ac, bc, func(a, b monitoringv1.ConfigResourceCondition) bool {
-		return a.Type == b.Type &&
-			a.Status == b.Status &&
-			a.Reason == b.Reason &&
-			a.Message == b.Message &&
-			a.ObservedGeneration == b.ObservedGeneration
-	})
-}
-
-// RemoveServiceMonitorBinding removes the Prometheus or PrometheusAgent binding from the status remove the Prometheus or PrometheusAgent binding from the status
-// subresource of status in serviceMonitor.
-func RemoveServiceMonitorBinding(
-	ctx context.Context,
-	c *ConfigResourceSyncer,
-	smon *monitoringv1.ServiceMonitor) error {
-	for i := range smon.Status.Bindings {
-		binding := &smon.Status.Bindings[i]
-		if binding.Namespace == c.workload.GetNamespace() &&
-			binding.Name == c.workload.GetName() &&
-			binding.Resource == c.gvr.Resource {
-			smon.Status.Bindings = append(smon.Status.Bindings[:i], smon.Status.Bindings[i+1:]...)
-			break
-		}
-	}
-
-	if len(smon.Status.Bindings) == 0 {
-		_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).UpdateStatus(ctx, smon, metav1.UpdateOptions{FieldManager: operator.PrometheusOperatorFieldManager})
-		return err
-	}
-
-	_, err := c.mclient.MonitoringV1().ServiceMonitors(smon.Namespace).ApplyStatus(ctx, ApplyConfigurationFromServiceMonitor(smon), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true})
-	return err
-}
-
-func IsBindingPresent(bindings []monitoringv1.WorkloadBinding, p metav1.Object, resource string) bool {
-	for _, binding := range bindings {
-		if binding.Name == p.GetName() && binding.Namespace == p.GetNamespace() && binding.Resource == resource {
-			return true
-		}
-	}
-	return false
 }

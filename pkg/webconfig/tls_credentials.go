@@ -29,7 +29,7 @@ const (
 	volumePrefix = "web-config-tls-"
 )
 
-// tlsReferences represent TLS material referenced from secrets/configmaps.
+// TLSReferences represent TLS material referenced from secrets/configmaps.
 type TLSReferences struct {
 	// mountPath is the directory where TLS credentials are intended to be mounted.
 	mountPath string
@@ -50,7 +50,7 @@ func NewTLSReferences(mountPath string, keySecret corev1.SecretKeySelector, cert
 	}
 }
 
-// getMountParameters creates volumes and volume mounts referencing the TLS credentials.
+// GetMountParameters creates volumes and volume mounts referencing the TLS credentials.
 func (tr *TLSReferences) GetMountParameters(volumePrefix string) ([]corev1.Volume, []corev1.VolumeMount, error) {
 	var (
 		volumes []corev1.Volume
@@ -177,18 +177,18 @@ func (tr *TLSReferences) mountParamsForConfigmap(
 	return volumes, mounts, nil
 }
 
-// getKeyMountPath is the mount path of the TLS key inside a prometheus container.
+// GetKeyMountPath is the mount path of the TLS key inside a prometheus container.
 func (tr *TLSReferences) GetKeyMountPath() string {
 	secret := monitoringv1.SecretOrConfigMap{Secret: &tr.keySecret}
 	return tr.tlsPathForSelector(secret, "key")
 }
 
-// getKeyFilename returns the filename of the private key.
+// GetKeyFilename returns the filename of the private key.
 func (tr *TLSReferences) GetKeyFilename() string {
 	return tr.keySecret.Key
 }
 
-// getCertMountPath is the mount path of the TLS certificate inside a prometheus container,.
+// GetCertMountPath is the mount path of the TLS certificate inside a prometheus container,.
 func (tr *TLSReferences) GetCertMountPath() string {
 	if tr.cert.ConfigMap != nil || tr.cert.Secret != nil {
 		return tr.tlsPathForSelector(tr.cert, "cert")
@@ -197,7 +197,7 @@ func (tr *TLSReferences) GetCertMountPath() string {
 	return ""
 }
 
-// getCertFilename returns the filename (key) of the certificate.
+// GetCertFilename returns the filename (key) of the certificate.
 func (tr *TLSReferences) GetCertFilename() string {
 	if tr.cert.Secret != nil {
 		return tr.cert.Secret.Key
@@ -208,7 +208,7 @@ func (tr *TLSReferences) GetCertFilename() string {
 	return ""
 }
 
-// getCAMountPath is the mount path of the client CA certificate inside a prometheus container.
+// GetCAMountPath is the mount path of the client CA certificate inside a prometheus container.
 func (tr *TLSReferences) GetCAMountPath() string {
 	if tr.clientCA.ConfigMap != nil || tr.clientCA.Secret != nil {
 		return tr.tlsPathForSelector(tr.clientCA, "ca")
@@ -217,7 +217,7 @@ func (tr *TLSReferences) GetCAMountPath() string {
 	return ""
 }
 
-// getCAFilename retruns the filename (key) of the client CA certificate.
+// GetCAFilename retruns the filename (key) of the client CA certificate.
 func (tr *TLSReferences) GetCAFilename() string {
 	if tr.clientCA.Secret != nil {
 		return tr.clientCA.Secret.Key

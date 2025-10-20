@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.85.0
+    app.kubernetes.io/version: 0.86.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -46,11 +46,15 @@ rules:
   - thanosrulers/finalizers
   - thanosrulers/status
   - scrapeconfigs
+  - scrapeconfigs/status
   - servicemonitors
   - servicemonitors/status
   - podmonitors
+  - podmonitors/status
   - probes
+  - probes/status
   - prometheusrules
+  - prometheusrules/status
   verbs:
   - '*'
 - apiGroups:

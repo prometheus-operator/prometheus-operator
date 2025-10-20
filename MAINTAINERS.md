@@ -28,6 +28,7 @@ Full list of triage people is displayed below:
 | João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
 | Hélia Barroso   | `@Hélia Barroso`   | [@heliapb](https://github.com/heliapb)                 | Five9           |
 | Dong Jiang      | `@dongjiang`       | [@dongjiang1989](https://github.com/dongjiang1989)     | iFlytek         |
+| S Ashwin        | `@Ashwin Sriram`   | [@AshwinSriram11](https://github.com/AshwinSriram11)   | Deutsche Bank   |
 
 ## Emeritus maintainers
 
@@ -41,7 +42,7 @@ Full list of triage people is displayed below:
 
 ## How to be maintainer?
 
-Any contributor that shows effort, consistentcy and willingness in maintaining a repository will be invited to join the Maintainers team.
+Any contributor that shows effort, consistency and willingness in maintaining a repository will be invited to join the Maintainers team.
 
 Open Source is all about the trust, which is the key factor in decision to add write permissions.
 
@@ -49,5 +50,5 @@ Reach us if you have any questions on how to join maintainer team.
 
 ## Notes
 
-This document is heavily inspired by Thanos MANTAINERS.md file. <3
+This document is heavily inspired by Thanos MAINTAINERS.md file. <3
 If you find anything not clear in this file feel free to open an issue or reach out to one of the maintainers.
