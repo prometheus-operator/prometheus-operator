@@ -706,7 +706,7 @@ type AttachMetadata struct {
 	// +optional
 	Node *bool `json:"node,omitempty"`
 
-	// When set to true, Prometheus attaches namespace metadata to the discovered
+	// namespace when set to true, Prometheus attaches namespace metadata to the discovered
 	// targets.
 	//
 	// The Prometheus service account must have the `list` and `watch`

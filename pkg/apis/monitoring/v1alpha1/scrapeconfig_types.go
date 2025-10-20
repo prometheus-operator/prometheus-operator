@@ -475,7 +475,7 @@ type KubernetesSDConfig struct {
 	// It requires Prometheus >= v2.35.0 when using the `Pod` role and
 	// Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
 	// +optional
-	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+	AttachMetadata *v1.AttachMetadata `json:"attachMetadata,omitempty"`
 	// selectors defines the selector to select objects.
 	// It requires Prometheus >= v2.17.0
 	// +optional

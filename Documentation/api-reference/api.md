@@ -7567,7 +7567,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When set to true, Prometheus attaches namespace metadata to the discovered
+<p>namespace when set to true, Prometheus attaches namespace metadata to the discovered
 targets.</p>
 <p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
 permissions on the <code>Namespaces</code> objects.</p>
