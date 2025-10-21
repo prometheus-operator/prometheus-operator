@@ -23918,7 +23918,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Attaches namespace metadata to discovered targets.
+<p>namespace attaches namespace metadata to discovered targets.
 When set to true, Prometheus must have permissions to list/watch Namespaces.
 Only valid for pod, endpoints, endpointslice, service, ingress.</p>
 <p>It requires Prometheus &gt;= v3.6.0.</p>

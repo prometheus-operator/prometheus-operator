@@ -57,7 +57,7 @@ type AttachMetadata struct {
 	// +optional
 	Node *bool `json:"node,omitempty"`
 
-	// Attaches namespace metadata to discovered targets.
+	// namespace attaches namespace metadata to discovered targets.
 	// When set to true, Prometheus must have permissions to list/watch Namespaces.
 	// Only valid for pod, endpoints, endpointslice, service, ingress.
 	//
