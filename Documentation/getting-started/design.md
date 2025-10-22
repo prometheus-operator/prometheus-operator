@@ -47,7 +47,7 @@ The `ThanosRuler` CRD sets up a [Thanos Ruler](https://github.com/thanos-io/than
 
 #### Prometheus Agent
 
-The `Prometheus Agent` CRD sets up a [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) instance in a Kubernetes cluster. While similar to the `Prometheus` CR, the `Prometheus Agent` has several configuration options redacted, including alerting, PrometheusRules selectors, remote-read, storage, and Thanos sidecars. To understand why Agent support was introduced, read the [proposal here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202201-prometheus-agent.md).
+The `Prometheus Agent` CRD sets up a [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) instance in a Kubernetes cluster. While similar to the `Prometheus` CR, the `Prometheus Agent` has several configuration options redacted, including alerting, PrometheusRules selectors, remote-read, storage, and Thanos sidecars. To understand why Agent support was introduced, read the [proposal here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/implemented/202201-prometheus-agent.md).
 
 ### Config-Based Resources
 
