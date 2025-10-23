@@ -1151,7 +1151,7 @@ type PrometheusSpec struct {
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
 	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
 	//
-	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/accepted/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
 	// however, the feature is not yet fully implemented in this PR. The limitation being:
 	// * Retention duration is not settable, for now, shards are retained forever.
 	//
