@@ -1,8 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25.0
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.5
@@ -30,7 +28,7 @@ require (
 	// Since we needed the change added in https://github.com/prometheus/prometheus/pull/16928 and it's not released yet.
 	github.com/prometheus/prometheus v0.307.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thanos-io/thanos v0.39.2
+	github.com/thanos-io/thanos v0.40.0
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.46.0
 	golang.org/x/sync v0.17.0
