@@ -49,7 +49,7 @@ jobs:
         make test-e2e-prometheus-upgrade
     - name: Upload diagnostics artifact
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cluster-state
         path: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
