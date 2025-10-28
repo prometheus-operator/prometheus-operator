@@ -268,6 +268,12 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 			continue
 		}
 
+		k, ok := accessor.MetaNamespaceKey(promRule)
+		if !ok {
+			continue
+		}
+
+		var reason string
 		content, err = prs.generateRulesConfiguration(promRule)
 		if err != nil {
 			prs.logger.Warn(
@@ -277,19 +283,10 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 				"namespace", promRule.Namespace,
 			)
 			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
-		}
-
-		var reason string
-		if err != nil {
 			reason = InvalidConfigurationEvent
 		} else {
 			marshalRules[ruleName] = content
 			namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
-		}
-
-		k, ok := accessor.MetaNamespaceKey(promRule)
-		if !ok {
-			continue
 		}
 
 		rules[k] = TypedConfigurationResource[*monitoringv1.PrometheusRule]{
