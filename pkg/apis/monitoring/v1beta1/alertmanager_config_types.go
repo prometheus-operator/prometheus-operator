@@ -1440,6 +1440,10 @@ type TimePeriod struct {
 	// years defines a list of YearRange
 	// +optional
 	Years []YearRange `json:"years,omitempty"`
+	// Location is the time zone for the time interval
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Location *string `json:"location,omitempty"`
 }
 
 // Time defines a time in 24hr format
