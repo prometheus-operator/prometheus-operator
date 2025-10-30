@@ -1072,7 +1072,7 @@ func testFinalizerForThanosRulerWhenStatusForConfigResEnabled(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "status-cleanup-finalizer-test-thanosruler"
+	name := "tr-status-finalizer"
 
 	tr := framework.MakeBasicThanosRuler(name, 1, name)
 	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
