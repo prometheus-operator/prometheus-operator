@@ -1053,3 +1053,34 @@ func testRmPrometheusRuleBindingDuringWorkloadDelete(t *testing.T) {
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, p, monitoringv1.PrometheusName, 1*time.Minute)
 	require.NoError(t, err)
 }
+
+// testFinalizerForThanosRulerWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for ThanosRuler when StatusForConfigurationResourcesFeature is enabled.
+func testFinalizerForThanosRulerWhenStatusForConfigResEnabled(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "status-cleanup-finalizer-test-thanosruler"
+
+	tr := framework.MakeBasicThanosRuler(name, 1, name)
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	require.NoError(t, err)
+
+	finalizers := tr.GetFinalizers()
+	require.NotEmpty(t, finalizers)
+
+	err = framework.DeleteThanosRulerAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+}
