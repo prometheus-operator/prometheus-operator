@@ -168,7 +168,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	}
 
 	if o.configResourcesStatusEnabled {
-		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName))
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName))
 	}
 
 	o.cmapInfs, err = informers.NewInformersForResource(
