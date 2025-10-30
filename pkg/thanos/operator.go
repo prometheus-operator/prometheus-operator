@@ -489,11 +489,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	logger := o.logger.With("key", key)
 
-	statusCleanup := func() error {
-		return nil
-	}
-
-	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), statusCleanup)
+	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), func() error { return nil })
 	if err != nil {
 		return err
 	}
