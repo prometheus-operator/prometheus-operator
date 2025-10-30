@@ -1249,6 +1249,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkIncidentioConfigs(ctx, receiver.IncidentioConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1735,6 +1740,69 @@ func checkMSTeamsV2Configs(
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func checkIncidentioConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.IncidentioConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.29.0")) {
+		return fmt.Errorf("'incidentioConfigs' is available in Alertmanager >= 0.29.0 only - current %s", amVersion)
+	}
+
+	for _, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+
+		if config.URL == nil && (config.URLFile == nil || *config.URLFile == "") {
+			return fmt.Errorf("one of url or urlFile must be configured for incident.io config")
+		}
+
+		if config.URL != nil && config.URLFile != nil && *config.URLFile != "" {
+			return fmt.Errorf("at most one of url & urlFile must be configured for incident.io config")
+		}
+
+		if config.URL != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.URL))); err != nil {
+				return fmt.Errorf("failed to validate incident.io URL: %w", err)
+			}
+		}
+
+		if config.AlertSourceToken != nil && config.AlertSourceTokenFile != nil && *config.AlertSourceTokenFile != "" {
+			return fmt.Errorf("at most one of AlertSourceToken & AlertSourceTokenFile must be configured for incident.io config")
+		}
+
+		if config.HTTPConfig != nil && config.HTTPConfig.Authorization != nil &&
+			(config.AlertSourceToken != nil || (config.AlertSourceTokenFile != nil && *config.AlertSourceTokenFile != "")) {
+			return fmt.Errorf("cannot specify AlertSourceToken or AlertSourceTokenFile when using HTTPConfig Authorization for incident.io config")
+		}
+
+		if config.AlertSourceToken == nil &&
+			(config.AlertSourceTokenFile == nil || *config.AlertSourceTokenFile == "") &&
+			(config.HTTPConfig == nil || config.HTTPConfig.Authorization == nil) {
+			return fmt.Errorf("at least one of AlertSourceToken, AlertSourceTokenFile or HTTPConfig Authorization must be configured for incident.io config")
+		}
+
+		if config.AlertSourceToken != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.AlertSourceToken); err != nil {
+				return fmt.Errorf("failed to retrieve incident.io alert source token: %w", err)
+			}
 		}
 	}
 

@@ -119,6 +119,7 @@ type receiver struct {
 	MSTeamsV2Configs  []*msTeamsV2Config  `yaml:"msteamsv2_configs,omitempty"`
 	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
 	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
+	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_config,omitempty"`
 }
 
 type webhookConfig struct {
@@ -210,6 +211,16 @@ type slackConfig struct {
 	Actions       []slackAction     `yaml:"actions,omitempty" json:"actions,omitempty"`
 }
 
+type incidentioConfig struct {
+	VSendResolved        *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	HTTPConfig           *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	URL                  string            `yaml:"url,omitempty" json:"url,omitempty"`
+	URLFile              string            `yaml:"url_file,omitempty" json:"url_file,omitempty"`
+	AlertSourceToken     string            `yaml:"alert_source_token,omitempty" json:"alert_source_token,omitempty"`
+	AlertSourceTokenFile string            `yaml:"alert_source_token_file,omitempty" json:"alert_source_token_file,omitempty"`
+	MaxAlerts            int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
+	Timeout              *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+}
 type httpClientConfig struct {
 	Authorization   *authorization `yaml:"authorization,omitempty"`
 	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
