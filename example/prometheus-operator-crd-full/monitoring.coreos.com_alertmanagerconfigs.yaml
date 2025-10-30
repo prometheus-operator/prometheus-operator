@@ -8903,6 +8903,7 @@ spec:
                             description: |-
                               apiUrl defines the VictorOps API URL.
                               When not specified, defaults to the standard VictorOps API endpoint.
+                            pattern: ^https?://.+$
                             type: string
                           customFields:
                             description: |-
@@ -20709,6 +20710,7 @@ spec:
                             description: |-
                               apiUrl defines the VictorOps API URL.
                               When not specified, defaults to the standard VictorOps API endpoint.
+                            pattern: ^https?://.+$
                             type: string
                           customFields:
                             description: |-
