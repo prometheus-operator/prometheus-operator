@@ -1075,13 +1075,13 @@ func testFinalizerForThanosRulerWhenStatusForConfigResEnabled(t *testing.T) {
 	name := "tr-status-finalizer"
 
 	tr := framework.MakeBasicThanosRuler(name, 1, name)
-	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
-	tr, err = framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, v1.GetOptions{})
+	ruler, err := framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, v1.GetOptions{})
 	require.NoError(t, err)
 
-	finalizers := tr.GetFinalizers()
+	finalizers := ruler.GetFinalizers()
 	require.NotEmpty(t, finalizers)
 
 	err = framework.DeleteThanosRulerAndWaitUntilGone(ctx, ns, name)
