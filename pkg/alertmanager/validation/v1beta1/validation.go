@@ -337,6 +337,17 @@ func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 
 func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 	for _, config := range configs {
+		hasAPIURL := config.APIURL != nil
+		hasWebhookURLFile := config.WebhookURLFile != nil && len(strings.TrimSpace(*config.WebhookURLFile)) > 0
+
+		if !hasAPIURL && !hasWebhookURLFile {
+			return errors.New("one of 'apiURL' or 'webhookURLFile' must be specified")
+		}
+
+		if hasAPIURL && hasWebhookURLFile {
+			return errors.New("'apiURL' and 'webhookURLFile' are mutually exclusive")
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
