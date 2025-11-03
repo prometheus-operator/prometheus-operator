@@ -89,6 +89,8 @@ type Operator struct {
 	config Config
 
 	configResourcesStatusEnabled bool
+
+	finalizerSyncer *operator.FinalizerSyncer
 }
 
 // Config defines the operator's parameters for the Thanos controller.
@@ -159,9 +161,14 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
+		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName))
 	}
 
 	o.cmapInfs, err = informers.NewInformersForResource(
@@ -476,16 +483,29 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Check if the Thanos instance is marked for deletion.
-	if o.rr.DeletionInProgress(tr) {
-		return nil
-	}
-
 	if tr.Spec.Paused {
 		return nil
 	}
 
 	logger := o.logger.With("key", key)
+
+	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), func() error { return nil })
+	if err != nil {
+		return err
+	}
+
+	if finalizerAdded {
+		// Since the object has been updated, let's trigger another sync.
+		o.rr.EnqueueForReconciliation(tr)
+		return nil
+	}
+
+	// Check if the Thanos instance is marked for deletion.
+	if o.rr.DeletionInProgress(tr) {
+		o.reconciliations.ForgetObject(key)
+		return nil
+	}
+
 	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
