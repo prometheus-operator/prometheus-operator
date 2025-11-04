@@ -153,7 +153,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o := &Operator{
 		kclient:          client,
-		dclient: dclient,
+		dclient:          dclient,
 		mdClient:         mdClient,
 		mclient:          mclient,
 		logger:           logger,
