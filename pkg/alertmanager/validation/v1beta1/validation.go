@@ -386,10 +386,18 @@ func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error
 
 func validateJiraConfigs(configs []monitoringv1beta1.JiraConfig) error {
 	for _, config := range configs {
+		if config.Project == "" {
+			return fmt.Errorf("invalid 'project': this is a required field")
+		}
+
 		if config.APIURL != nil {
 			if _, err := validation.ValidateURL(*config.APIURL); err != nil {
 				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
+		}
+
+		if config.IssueType == "" {
+			return fmt.Errorf("invalid 'issueType': this is a required field")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

@@ -3772,7 +3772,7 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
-	versioJiraAllowed := semver.Version{Major: 0, Minor: 28}
+	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
 	jiraURL := config.URL{}
 	jiraGlobalURL, _ := jiraURL.Parse("http://example.com")
@@ -4443,7 +4443,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "jira_config for supported versions",
-			againstVersion: versioJiraAllowed,
+			againstVersion: versionJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -4499,7 +4499,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "jira_config returns error for missing project and issue_type mandatory field",
-			againstVersion: versioJiraAllowed,
+			againstVersion: versionJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
