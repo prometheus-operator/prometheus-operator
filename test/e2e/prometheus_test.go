@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -5953,8 +5953,8 @@ func assertExpectedAlertmanagerTargets(ams []*alertmanagerTarget, expectedTarget
 		existingTargets = append(existingTargets, am.URL)
 	}
 
-	sort.Strings(expectedTargets)
-	sort.Strings(existingTargets)
+	slices.Sort(expectedTargets)
+	slices.Sort(existingTargets)
 
 	if !reflect.DeepEqual(expectedTargets, existingTargets) {
 		log.Printf("Existing Alertmanager Targets: %#+v\n", existingTargets)
