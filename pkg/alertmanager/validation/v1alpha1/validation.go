@@ -382,7 +382,7 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 	return nil
 }
 
-func validateJiraConfigs(configs []monitoringv1beta1.JiraConfig) error {
+func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
 	for _, config := range configs {
 		if config.Project == "" {
 			return fmt.Errorf("invalid 'project': this is a required field")
