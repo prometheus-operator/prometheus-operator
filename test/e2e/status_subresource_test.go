@@ -1106,9 +1106,9 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	name := "promrule-status-subres-tr-test"
+	name := "promrule-tr-test"
 
-	p := framework.MakeBasicThanosRuler(name, 1, "")
+	p := framework.MakeBasicThanosRuler(name, 1, name)
 	p.Spec.RuleSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
