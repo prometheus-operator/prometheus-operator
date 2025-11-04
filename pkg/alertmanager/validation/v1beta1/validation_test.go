@@ -509,8 +509,9 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							JiraConfigs: []monitoringv1beta1.JiraConfig{
 								{
-									Project: "testA",
-									Labels:  []string{"aa", "bb"},
+									Project:   "testA",
+									Labels:    []string{"aa", "bb"},
+									IssueType: "bug",
 									Fields: []monitoringv1beta1.JiraField{
 										{
 											Key:   "customField1",
@@ -552,7 +553,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "Test a validate on Jira config",
+			name: "Test validate on Jira config",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
