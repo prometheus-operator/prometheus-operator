@@ -1117,9 +1117,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
 						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
-							Project: "projectA",
-							APIURL:  ptr.To("http://test.com"),
-							Labels:  []string{"aa", "bb"},
+							Project:   "projectA",
+							APIURL:    ptr.To("http://test.com"),
+							IssueType: "bug",
+							Labels:    []string{"aa", "bb"},
 							Fields: []monitoringv1alpha1.JiraField{
 								{
 									Key:   "customField1",
