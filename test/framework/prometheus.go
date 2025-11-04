@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -724,8 +724,8 @@ func assertExpectedTargets(targets []*Target, expectedTargets []string) error {
 		existingTargets = append(existingTargets, t.ScrapeURL)
 	}
 
-	sort.Strings(expectedTargets)
-	sort.Strings(existingTargets)
+	slices.Sort(expectedTargets)
+	slices.Sort(existingTargets)
 
 	if !reflect.DeepEqual(expectedTargets, existingTargets) {
 		return fmt.Errorf(
