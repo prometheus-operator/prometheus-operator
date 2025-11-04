@@ -512,7 +512,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
+	selectedRules, err := o.selectPrometheusRules(tr, logger)
+	if err != nil {
+		return err
+	}
+
+	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr, selectedRules, logger)
 	if err != nil {
 		return err
 	}
