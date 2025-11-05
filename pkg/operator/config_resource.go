@@ -266,9 +266,13 @@ func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResour
 
 	if len(p) == 0 {
 		// Binding not found.
+		fmt.Println("binding not found!")
 		return nil
 	}
 
+	fmt.Println("o:", configResource.GetNamespace(), configResource.GetName())
+	fmt.Println("gvr:", toGroupVersionResource(configResource).String())
+	fmt.Println("patch:", string(p))
 	_, err = crs.client.Resource(toGroupVersionResource(configResource)).Namespace(configResource.GetNamespace()).Patch(
 		ctx,
 		configResource.GetName(),
@@ -293,23 +297,28 @@ func CleanupBindings[T ConfigurationResource](
 	csr *ConfigResourceSyncer,
 ) error {
 	var err error
+	fmt.Println("cleanup bindings")
 	listErr := listerFunc(labels.Everything(), func(o any) {
 		if err != nil {
 			// Stop processing on the first error.
+			fmt.Println("got err", err)
 			return
 		}
 
 		k, ok := csr.accessor.MetaNamespaceKey(o)
 		if !ok {
+			fmt.Println("couldn't read metadata key")
 			return
 		}
 
 		if _, found := resourceSelection[k]; found {
+			fmt.Printf("found %s\n", k)
 			return
 		}
 
 		obj, ok := o.(ConfigurationObject)
 		if !ok {
+			fmt.Println("not a configuration object!")
 			return
 		}
 		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
@@ -318,8 +327,10 @@ func CleanupBindings[T ConfigurationResource](
 		}
 
 		var gvk = obj.GetObjectKind().GroupVersionKind()
+		fmt.Printf("removing binding for %s: %s\n", gvk.String(), k)
 
 		if err = csr.RemoveBinding(ctx, obj); err != nil {
+			fmt.Println("couldn't remove binding:", err)
 			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
 		}
 	})
