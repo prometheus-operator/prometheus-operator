@@ -21,7 +21,7 @@ require (
 	github.com/prometheus-community/prom-label-proxy v0.12.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.86.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.86.1
-	github.com/prometheus/alertmanager v0.28.1
+	github.com/prometheus/alertmanager v0.29.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.2
 	github.com/prometheus/exporter-toolkit v0.15.0
@@ -42,7 +42,7 @@ require (
 	k8s.io/component-base v0.34.1
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
-	sigs.k8s.io/controller-runtime v0.22.3
+	sigs.k8s.io/controller-runtime v0.22.4
 	sigs.k8s.io/yaml v1.6.0
 )
 

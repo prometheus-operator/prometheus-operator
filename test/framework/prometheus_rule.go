@@ -197,7 +197,7 @@ func (f *Framework) WaitForRuleWorkloadBindingCleanup(ctx context.Context, pm *m
 		resource,
 		timeout,
 	); err != nil {
-		return nil, fmt.Errorf("podMonitor status %v/%v failed to reach expected condition: %w", pm.Namespace, pm.Name, err)
+		return nil, fmt.Errorf("prometheusRule status %v/%v failed to reach expected condition: %w", pm.Namespace, pm.Name, err)
 	}
 	return current, nil
 }
