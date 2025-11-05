@@ -595,6 +595,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
+	err = o.updateConfigResourcesStatus(ctx, tr, selectedRules)
+	if err != nil {
+		return err
+	}
+
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
 		return nil
@@ -626,8 +631,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("updating StatefulSet failed: %w", err)
 	}
 
-	err = o.updateConfigResourcesStatus(ctx, tr, selectedRules)
-	return err
+	return nil
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
@@ -639,8 +643,7 @@ func (o *Operator) updateConfigResourcesStatus(ctx context.Context, tr *monitori
 
 	var configResourceSyncer = operator.NewConfigResourceSyncer(tr, o.dclient, o.accessor)
 
-	selectedRules := rules.Selected()
-	for key, configResource := range selectedRules {
+	for key, configResource := range rules.Selected() {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
 		}
