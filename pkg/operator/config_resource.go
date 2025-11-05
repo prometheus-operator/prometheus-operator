@@ -177,6 +177,11 @@ type ConfigurationObject interface {
 	Bindings() []monitoringv1.WorkloadBinding
 }
 
+var _ = ConfigurationObject(&monitoringv1.ServiceMonitor{})
+var _ = ConfigurationObject(&monitoringv1.PodMonitor{})
+var _ = ConfigurationObject(&monitoringv1.Probe{})
+var _ = ConfigurationObject(&monitoringv1.PrometheusRule{})
+
 // UpdateBinding updates the workload's binding in the configuration resource's
 // status subresource.
 // If the binding is up-to-date, this is a no-operation.
@@ -321,6 +326,7 @@ func CleanupBindings[T ConfigurationResource](
 	if listErr != nil {
 		return fmt.Errorf("listing all items from cache failed: %w", listErr)
 	}
+
 	return err
 }
 

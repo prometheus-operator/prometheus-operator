@@ -115,7 +115,7 @@ func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceSta
 		}
 		return true, nil
 	}); err != nil {
-		return fmt.Errorf("%v: %w", pollErr, err)
+		return fmt.Errorf("%w: %w", err, pollErr)
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfi
 
 		return true, nil
 	}); err != nil {
-		return fmt.Errorf("%v: resource %q %s/%s: %w", err, resource, workload.GetNamespace(), workload.GetName(), pollErr)
+		return fmt.Errorf("%w: resource %q %s/%s: %w", err, resource, workload.GetNamespace(), workload.GetName(), pollErr)
 	}
 
 	return nil
@@ -187,16 +187,15 @@ func (f *Framework) WaitForConfigResourceCondition(ctx context.Context, getConfi
 // If the binding isn't removed within the given timeout, it returns an error.
 func (f *Framework) WaitForConfigResWorkloadBindingCleanup(ctx context.Context, getConfigResourceStatus func(context.Context) ([]monitoringv1.WorkloadBinding, error), workload metav1.Object, resource string, timeout time.Duration) error {
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, true, func(_ context.Context) (bool, error) {
 		var bindings []monitoringv1.WorkloadBinding
-		bindings, pollErr = getConfigResourceStatus(ctx)
+		bindings, pollErr = getConfigResourceStatus(context.Background())
 		if pollErr != nil {
 			return false, nil
 		}
 
 		for _, binding := range bindings {
 			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
-
 				pollErr = fmt.Errorf("binding for resource %q with name %q in namespace %q still exists", resource, workload.GetName(), workload.GetNamespace())
 				return false, nil
 			}
@@ -204,7 +203,7 @@ func (f *Framework) WaitForConfigResWorkloadBindingCleanup(ctx context.Context, 
 
 		return true, nil
 	}); err != nil {
-		return fmt.Errorf("%v: %w", err, pollErr)
+		return fmt.Errorf("%w: %w", err, pollErr)
 	}
 
 	return nil

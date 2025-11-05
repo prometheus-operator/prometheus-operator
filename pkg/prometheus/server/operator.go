@@ -809,7 +809,6 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 
 func (c *Operator) sync(ctx context.Context, key string) error {
 	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
-
 	if err != nil {
 		return err
 	}
@@ -824,6 +823,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	c.logDeprecatedFields(logger, p)
 
 	statusCleanup := func() error {
+		logger.Info("cleaning up status for bound configuration resources")
 		return c.configResStatusCleanup(ctx, p)
 	}
 
@@ -1136,7 +1136,9 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	return nil
 }
 
-// configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+// configResStatusCleanup updates the bindings of all configuration resources
+// (ServiceMonitor, PodMonitor, ScrapeConfig, PodMonitor and PrometheusRule) to
+// remove reference to the provided Prometheus resource.
 func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1168,6 +1170,7 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	if err := operator.CleanupBindings(ctx, c.ruleInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PrometheusRule]{}, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for prometheusRule: %w", err)
 	}
+
 	return nil
 }
 
