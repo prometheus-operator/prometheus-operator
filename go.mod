@@ -21,8 +21,8 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.2.0
 	github.com/prometheus-community/prom-label-proxy v0.12.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.86.1
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.86.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.86.2
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.86.2
 	github.com/prometheus/alertmanager v0.28.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.66.1
