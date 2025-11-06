@@ -102,7 +102,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - ""
+  - events.k8s.io
   resources:
   - events
   verbs:
