@@ -1032,7 +1032,7 @@ func testRmPrometheusRuleBindingDuringWorkloadDelete(t *testing.T) {
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
 
-	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+	pr := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
 		{
 			Name: "TestAlert1",
 			Rules: []monitoringv1.Rule{
@@ -1043,14 +1043,17 @@ func testRmPrometheusRuleBindingDuringWorkloadDelete(t *testing.T) {
 			},
 		},
 	})
-	pr1.Labels["group"] = name
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	pr.Labels["group"] = name
+	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr, err = framework.WaitForRuleCondition(ctx, pr, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
 	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
 
-	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, p, monitoringv1.PrometheusName, 1*time.Minute)
+	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr, p, monitoringv1.PrometheusName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
