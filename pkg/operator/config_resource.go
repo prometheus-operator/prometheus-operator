@@ -303,17 +303,23 @@ func CleanupBindings[T ConfigurationResource](
 			return
 		}
 
-		obj, ok := o.(ConfigurationObject)
+		runtimeObj, ok := o.(runtime.Object)
 		if !ok {
 			return
 		}
-		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+
+		runtimeObj = runtimeObj.DeepCopyObject()
+		if err = k8sutil.AddTypeInformationToObject(runtimeObj); err != nil {
 			err = fmt.Errorf("failed to add type information: %w", err)
 			return
 		}
 
-		var gvk = obj.GetObjectKind().GroupVersionKind()
+		obj, ok := runtimeObj.(ConfigurationObject)
+		if !ok {
+			return
+		}
 
+		var gvk = obj.GetObjectKind().GroupVersionKind()
 		if err = csr.RemoveBinding(ctx, obj); err != nil {
 			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
 		}
