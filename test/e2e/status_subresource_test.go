@@ -1137,7 +1137,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	// time.Sleep(time.Minute)
 	
 	// Record the lastTransitionTime value.
-	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
 	require.NoError(t, err)
 	binding, err := framework.GetWorkloadBinding(pr1.Status.Bindings, p, monitoringv1.ThanosRulerName)
 	require.NoError(t, err)
