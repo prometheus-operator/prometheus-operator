@@ -1115,7 +1115,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
 	// Create a first PrometheusRule to check that the operator only updates the binding when needed.
