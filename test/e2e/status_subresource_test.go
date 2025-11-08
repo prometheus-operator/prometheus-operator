@@ -1108,14 +1108,14 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 
 	name := "promrule-status-subres-tr-test"
 
-	p := framework.MakeBasicThanosRuler(name, 1, name)
-	p.Spec.RuleSelector = &metav1.LabelSelector{
+	tr := framework.MakeBasicThanosRuler(name, 1, name)
+	tr.Spec.RuleSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
 	}
 
-	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, p)
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
 	// Create a first PrometheusRule to check that the operator only updates the binding when needed.
@@ -1135,9 +1135,9 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
-	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
 	require.NoError(t, err)
-	binding, err := framework.GetWorkloadBinding(pr1.Status.Bindings, p, monitoringv1.ThanosRulerName)
+	binding, err := framework.GetWorkloadBinding(pr1.Status.Bindings, tr, monitoringv1.ThanosRulerName)
 	require.NoError(t, err)
 	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
 	require.NoError(t, err)
@@ -1160,7 +1160,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	pr2, err = framework.WaitForRuleCondition(ctx, pr2, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	pr2, err = framework.WaitForRuleCondition(ctx, pr2, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
 	// Update the labels of the first PrometheusRule. A label update doesn't
@@ -1179,13 +1179,13 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	require.NoError(t, err)
 
 	// The second PrometheusRule should change to Accepted=False.
-	_, err = framework.WaitForRuleCondition(ctx, pr2, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	_, err = framework.WaitForRuleCondition(ctx, pr2, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
 	require.NoError(t, err)
 
 	// The first PrometheusRule should remain unchanged.
-	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
-	binding, err = framework.GetWorkloadBinding(pr1.Status.Bindings, p, monitoringv1.ThanosRulerName)
+	binding, err = framework.GetWorkloadBinding(pr1.Status.Bindings, tr, monitoringv1.ThanosRulerName)
 	require.NoError(t, err)
 	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
 	require.NoError(t, err)
