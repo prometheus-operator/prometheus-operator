@@ -1115,7 +1115,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, p)
+	p, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
 
 	// Create a first PrometheusRule to check that the operator only updates the binding when needed.
@@ -1134,6 +1134,8 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
 	require.NoError(t, err)
 
+	time.Sleep(time.Minute)
+	
 	// Record the lastTransitionTime value.
 	pr1, err = framework.WaitForRuleCondition(ctx, pr1, p, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 2*time.Minute)
 	require.NoError(t, err)
