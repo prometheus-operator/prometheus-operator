@@ -109,6 +109,7 @@ type ProxyConfig struct {
 	//
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
+	// nolint:kubeapilinter
 	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
 	// proxyConnectHeader optionally specifies headers to send to
 	// proxies during CONNECT requests.
@@ -227,6 +228,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	// Setting this to true enhances security by preventing potential credential theft attacks.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	Deny bool `json:"deny,omitempty"`
 }
 
@@ -358,6 +360,7 @@ type WebHTTPConfig struct {
 	// When TLSConfig is not configured, HTTP/2 will be disabled.
 	// Whenever the value of the field changes, a rolling update will be triggered.
 	// +optional
+	// nolint:kubeapilinter
 	HTTP2 *bool `json:"http2,omitempty"`
 	// headers defines a list of headers that can be added to HTTP responses.
 	// +optional
@@ -483,6 +486,7 @@ type WebTLSConfig struct {
 	// the order of elements in cipherSuites, is used.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
 
 	// curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference
@@ -619,12 +623,14 @@ type Endpoint struct {
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
+	// nolint:kubeapilinter
 	HonorLabels bool `json:"honorLabels,omitempty"`
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
@@ -634,6 +640,7 @@ type Endpoint struct {
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 
 	// basicAuth defines the Basic Authentication credentials to use when
@@ -678,11 +685,13 @@ type Endpoint struct {
 	// 3xx redirects.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 
 	// enableHttp2 can be used to disable HTTP2 when scraping the target.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
 
 	// filterRunning when true, the pods which are not running (e.g. either in Failed or
@@ -693,6 +702,7 @@ type Endpoint struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	//
 	// +optional
+	// nolint:kubeapilinter
 	FilterRunning *bool `json:"filterRunning,omitempty"`
 }
 
@@ -704,6 +714,7 @@ type AttachMetadata struct {
 	// permissions on the `Nodes` objects.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	Node *bool `json:"node,omitempty"`
 }
 
@@ -859,6 +870,7 @@ type SafeTLSConfig struct {
 
 	// insecureSkipVerify defines how to disable target certificate validation.
 	// +optional
+	// nolint:kubeapilinter
 	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
 
 	// minVersion defines the minimum acceptable TLS version.
@@ -979,6 +991,7 @@ type NamespaceSelector struct {
 	// any defines the boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
 	// +optional
+	// nolint:kubeapilinter
 	Any bool `json:"any,omitempty"`
 	// matchNames defines the list of namespace names to select from.
 	// +optional
@@ -1020,6 +1033,7 @@ type NativeHistogramConfig struct {
 	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
 
 	// nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,
@@ -1040,6 +1054,7 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v3.0.0.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 }
 

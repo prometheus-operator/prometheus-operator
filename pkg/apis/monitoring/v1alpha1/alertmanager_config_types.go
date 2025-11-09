@@ -128,6 +128,7 @@ type Route struct {
 	// sibling nodes. It will always be overridden to true for the first-level
 	// route by the Prometheus operator.
 	// +optional
+	// nolint:kubeapilinter
 	Continue bool `json:"continue,omitempty"`
 	// routes defines the child routes.
 	// +optional
@@ -224,6 +225,7 @@ type Receiver struct {
 type PagerDutyConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// routingKey defines the secret's key that contains the PagerDuty integration key (when using
 	// Events API v2). Either this field or `serviceKey` needs to be defined.
@@ -307,6 +309,7 @@ type PagerDutyLinkConfig struct {
 type DiscordConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiURL defines the secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -340,6 +343,7 @@ type DiscordConfig struct {
 type SlackConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiURL defines the secret's key that contains the Slack webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -374,6 +378,7 @@ type SlackConfig struct {
 	// shortFields determines whether fields are displayed in a compact format.
 	// When true, fields are shown side by side when possible.
 	// +optional
+	// nolint:kubeapilinter
 	ShortFields bool `json:"shortFields,omitempty"`
 	// footer defines small text displayed at the bottom of the message attachment.
 	// +optional
@@ -400,6 +405,7 @@ type SlackConfig struct {
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
+	// nolint:kubeapilinter
 	LinkNames bool `json:"linkNames,omitempty"`
 	// mrkdwnIn defines which fields should be parsed as Slack markdown.
 	// Valid values include "pretext", "text", and "fields".
@@ -542,6 +548,7 @@ type SlackField struct {
 	// When true, Slack may display this field side by side with other short fields.
 	// When false or not specified, the field takes the full width of the message.
 	// +optional
+	// nolint:kubeapilinter
 	Short *bool `json:"short,omitempty"`
 }
 
@@ -563,6 +570,7 @@ func (sf *SlackField) Validate() error {
 type WebhookConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// url defines the URL to send HTTP POST requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
@@ -594,6 +602,7 @@ type WebhookConfig struct {
 type OpsGenieConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiKey defines the secret's key that contains the OpsGenie API key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -631,6 +640,7 @@ type OpsGenieConfig struct {
 	// updateAlerts defines Whether to update message and description of the alert in OpsGenie if it already exists
 	// By default, the alert is never updated in OpsGenie, the new message only appears in activity log.
 	// +optional
+	// nolint:kubeapilinter
 	UpdateAlerts *bool `json:"updateAlerts,omitempty"`
 	// details defines a set of arbitrary key/value pairs that provide further detail about the incident.
 	// These appear as additional fields in the OpsGenie alert.
@@ -748,11 +758,13 @@ type HTTPConfig struct {
 	// followRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// When true, the client will automatically follow redirect responses.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 
 	// enableHttp2 can be used to disable HTTP2.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
@@ -761,6 +773,7 @@ type HTTPConfig struct {
 type WebexConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 
 	// apiURL defines the Webex Teams API URL i.e. https://webexapis.com/v1/messages
@@ -786,6 +799,7 @@ type WebexConfig struct {
 type WeChatConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiSecret defines the secret's key that contains the WeChat API key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -833,6 +847,7 @@ type WeChatConfig struct {
 type EmailConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// to defines the email address to send notifications to.
 	// This is the recipient address for alert notifications.
@@ -884,6 +899,7 @@ type EmailConfig struct {
 	// requireTLS defines the SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
+	// nolint:kubeapilinter
 	RequireTLS *bool `json:"requireTLS,omitempty"`
 	// tlsConfig defines the TLS configuration for SMTP connections.
 	// This includes settings for certificates, CA validation, and TLS protocol options.
@@ -896,6 +912,7 @@ type EmailConfig struct {
 type VictorOpsConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiKey defines the secret's key that contains the API key to use when talking to the VictorOps API.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -940,6 +957,7 @@ type VictorOpsConfig struct {
 type PushoverConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// userKey defines the secret's key that contains the recipient user's user key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -1026,6 +1044,7 @@ type PushoverConfig struct {
 type SNSConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
@@ -1069,6 +1088,7 @@ type SNSConfig struct {
 type TelegramConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiURL defines the Telegram API URL, e.g. https://api.telegram.org.
 	// If not specified, the default Telegram API URL will be used.
@@ -1102,6 +1122,7 @@ type TelegramConfig struct {
 	// disableNotifications controls whether Telegram notifications are sent silently.
 	// When true, users will receive the message without notification sounds.
 	// +optional
+	// nolint:kubeapilinter
 	DisableNotifications *bool `json:"disableNotifications,omitempty"`
 	// parseMode defines the parse mode for telegram message formatting.
 	// Valid values are "MarkdownV2", "Markdown", and "HTML".
@@ -1119,6 +1140,7 @@ type TelegramConfig struct {
 type MSTeamsConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// webhookUrl defines the MSTeams webhook URL for sending notifications.
 	// This is the incoming webhook URL configured in your Teams channel.
@@ -1148,6 +1170,7 @@ type MSTeamsConfig struct {
 type MSTeamsV2Config struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// webhookURL defines the MSTeams incoming webhook URL for adaptive card notifications.
 	// This webhook must support the newer adaptive cards format required by Teams flows.
@@ -1173,6 +1196,7 @@ type MSTeamsV2Config struct {
 type RocketChatConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
+	// nolint:kubeapilinter
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// apiURL defines the API URL for RocketChat.
 	// Defaults to https://open.rocket.chat/ if not specified.
@@ -1228,6 +1252,7 @@ type RocketChatConfig struct {
 	// shortFields defines whether to use short fields in the message layout.
 	// When true, fields may be displayed side by side to save space.
 	// +optional
+	// nolint:kubeapilinter
 	ShortFields *bool `json:"shortFields,omitempty"`
 	// imageURL defines the image URL to display within the message.
 	// This embeds an image directly in the message attachment.
@@ -1240,6 +1265,7 @@ type RocketChatConfig struct {
 	// linkNames defines whether to enable automatic linking of usernames and channels.
 	// When true, @username and #channel references become clickable links.
 	// +optional
+	// nolint:kubeapilinter
 	LinkNames *bool `json:"linkNames,omitempty"`
 	// actions defines interactive actions to include in the message.
 	// These appear as buttons that users can click to trigger responses.
@@ -1266,6 +1292,7 @@ type RocketChatFieldConfig struct {
 	// short defines whether this field should be a short field.
 	// When true, the field may be displayed inline with other short fields to save space.
 	// +optional
+	// nolint:kubeapilinter
 	Short *bool `json:"short,omitempty"`
 }
 
@@ -1340,6 +1367,7 @@ type Matcher struct {
 	// regex defines whether to match on equality (false) or regular-expression (true).
 	// Deprecated: for AlertManager >= v0.22.0, `matchType` should be used instead.
 	// +optional
+	// nolint:kubeapilinter
 	Regex bool `json:"regex,omitempty"`
 }
 

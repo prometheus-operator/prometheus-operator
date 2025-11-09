@@ -40,6 +40,7 @@ type SDFile string
 type NamespaceDiscovery struct {
 	// ownNamespace includes the namespace in which the Prometheus pod runs to the list of watched namespaces.
 	// +optional
+	// nolint:kubeapilinter
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
 	// names defines a list of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
@@ -55,6 +56,7 @@ type AttachMetadata struct {
 	// Only valid for Pod, Endpoint and Endpointslice roles.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	Node *bool `json:"node,omitempty"`
 }
 
@@ -279,6 +281,7 @@ type ScrapeConfigSpec struct {
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	// +optional
+	// nolint:kubeapilinter
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamp present in scraped data.
@@ -286,10 +289,12 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
+	// nolint:kubeapilinter
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 	// params defines optional HTTP URL parameters
 	// +mapType:=atomic
@@ -304,9 +309,11 @@ type ScrapeConfigSpec struct {
 	//
 	// If unset, Prometheus uses true by default.
 	// +optional
+	// nolint:kubeapilinter
 	EnableCompression *bool `json:"enableCompression,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
@@ -437,9 +444,11 @@ type HTTPSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -488,9 +497,11 @@ type KubernetesSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Kubernetes API.
 	// +optional
@@ -559,6 +570,7 @@ type ConsulSDConfig struct {
 	// allowStale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional
+	// nolint:kubeapilinter
 	AllowStale *bool `json:"allowStale,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
@@ -580,9 +592,11 @@ type ConsulSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optional
@@ -679,10 +693,12 @@ type EC2SDConfig struct {
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// It requires Prometheus >= v2.41.0
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// It requires Prometheus >= v2.41.0
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -756,9 +772,11 @@ type AzureSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// tlsConfig defies the TLS configuration applying to the target HTTP endpoint.
 	// +optional
@@ -890,6 +908,7 @@ type OpenStackSDConfig struct {
 	// allTenants defines whether the service discovery should list all instances for all projects.
 	// It is only relevant for the 'instance' role and usually requires admin permissions.
 	// +optional
+	// nolint:kubeapilinter
 	AllTenants *bool `json:"allTenants,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
@@ -927,9 +946,11 @@ type DigitalOceanSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optional
@@ -982,9 +1003,11 @@ type KumaSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1016,9 +1039,11 @@ type EurekaSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
@@ -1056,6 +1081,7 @@ type DockerSDConfig struct {
 	// It requires Prometheus >= v2.54.1.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	MatchFirstNetwork *bool `json:"matchFirstNetwork,omitempty"`
 	// filters defines filters to limit the discovery process to a subset of the available resources.
 	// +optional
@@ -1076,9 +1102,11 @@ type DockerSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1106,9 +1134,11 @@ type HetznerSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optional
@@ -1136,6 +1166,7 @@ type NomadSDConfig struct {
 	// allowStale defines the information to access the Nomad API. It is to be defined
 	// as the Nomad documentation requires.
 	// +optional
+	// nolint:kubeapilinter
 	AllowStale *bool `json:"allowStale,omitempty"`
 	// namespace defines the Nomad namespace to query for service discovery.
 	// When specified, only resources within this namespace will be discovered.
@@ -1176,9 +1207,11 @@ type NomadSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1270,9 +1303,11 @@ type DockerSwarmSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1308,12 +1343,14 @@ type LinodeSDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1334,6 +1371,7 @@ type PuppetDBSDConfig struct {
 	// Note: Enabling this exposes parameters in the Prometheus UI and API. Make sure
 	// that you don't have secrets exposed as parameters if you enable this.
 	// +optional
+	// nolint:kubeapilinter
 	IncludeParameters *bool `json:"includeParameters,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
@@ -1362,9 +1400,11 @@ type PuppetDBSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1416,9 +1456,11 @@ type LightSailSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
@@ -1480,9 +1522,11 @@ type ScalewaySDConfig struct {
 	v1.ProxyConfig `json:",inline"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optional
@@ -1515,9 +1559,11 @@ type IonosSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional

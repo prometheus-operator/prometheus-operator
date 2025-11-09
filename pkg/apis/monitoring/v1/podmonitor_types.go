@@ -286,12 +286,14 @@ type PodMetricsEndpoint struct {
 	// honorLabels when true preserves the metric's labels when they collide
 	// with the target's labels.
 	// +optional
+	// nolint:kubeapilinter
 	HonorLabels bool `json:"honorLabels,omitempty"`
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
@@ -301,6 +303,7 @@ type PodMetricsEndpoint struct {
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 
 	// metricRelabelings defines the relabeling rules to apply to the
@@ -329,6 +332,7 @@ type PodMetricsEndpoint struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	//
 	// +optional
+	// nolint:kubeapilinter
 	FilterRunning *bool `json:"filterRunning,omitempty"`
 
 	HTTPConfigWithProxy `json:",inline"`

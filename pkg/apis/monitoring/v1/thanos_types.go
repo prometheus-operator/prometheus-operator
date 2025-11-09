@@ -111,6 +111,7 @@ type ThanosRulerSpec struct {
 	// paused defines when a ThanosRuler deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	// +optional
+	// nolint:kubeapilinter
 	Paused bool `json:"paused,omitempty"`
 
 	// replicas defines the number of thanos ruler instances to deploy.
@@ -154,6 +155,7 @@ type ThanosRulerSpec struct {
 
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
+	// nolint:kubeapilinter
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
 
 	// priorityClassName defines the priority class assigned to the Pods
@@ -210,6 +212,7 @@ type ThanosRulerSpec struct {
 	// listenLocal defines the Thanos ruler listen on loopback, so that it
 	// does not bind against the Pod IP.
 	// +optional
+	// nolint:kubeapilinter
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// podManagementPolicy defines the policy for creating/deleting pods when
@@ -536,6 +539,7 @@ type ThanosRulerSpec struct {
 	// Starting Kubernetes 1.33, the feature is enabled by default.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
@@ -554,6 +558,7 @@ type ThanosRulerStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
+	// nolint:kubeapilinter
 	Paused bool `json:"paused"`
 	// replicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
 	// (their labels match the selector).

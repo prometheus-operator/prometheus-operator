@@ -88,11 +88,13 @@ type HTTPConfig struct {
 	// redirects.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 
 	// enableHttp2 can be used to disable HTTP2.
 	//
 	// +optional
+	// nolint:kubeapilinter
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
