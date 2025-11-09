@@ -870,6 +870,21 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 	}
 
 	for _, rw := range tr.Spec.RemoteWrite {
+		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1.
+		if version.LT(semver.MustParse("0.40.0")) {
+			if azureAD := rw.AzureAD; azureAD != nil {
+				if mi := azureAD.ManagedIdentity; mi != nil {
+					if clientID := mi.ClientID; clientID != nil {
+						if *clientID == "" {
+							return fmt.Errorf("failed to parse remote-write configuration: azureAD.managedIdentity.clientID empty value supports from version %q: current version %q", semver.MustParse("0.40.0"), version)
+						}
+					} else {
+						return fmt.Errorf("failed to parse remote-write configuration: azureAD.managedIdentity.clientID empty value supports from version %q: current version %q", semver.MustParse("0.40.0"), version)
+					}
+				}
+			}
+		}
+
 		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
 		if version.LT(semver.MustParse("0.38.0")) {
 			reset := resetFieldFn("0.38.0")
