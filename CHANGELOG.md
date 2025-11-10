@@ -1,3 +1,7 @@
+## 0.86.2 / 2025-11-07
+
+* [CHANGE/BUGFIX] Fix operator's permissions to emit Kubernetes events. #8077
+
 ## 0.86.1 / 2025-10-13
 
 * [BUGFIX] Fix formatting of Kubernetes events. #8015
