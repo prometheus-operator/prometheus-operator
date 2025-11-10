@@ -111,6 +111,7 @@ type K8SSelectorConfig struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="scfg"
 // +kubebuilder:storageversion
+// +kubebuilder:subresource:status
 
 // ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across
 // multiple namespaces into the Prometheus configuration.
@@ -123,11 +124,23 @@ type ScrapeConfig struct {
 	// spec defines the specification of ScrapeConfigSpec.
 	// +required
 	Spec ScrapeConfigSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ScrapeConfig. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status v1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ScrapeConfig) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+func (l *ScrapeConfig) Bindings() []v1.WorkloadBinding {
+	return l.Status.Bindings
 }
 
 // ScrapeConfigList is a list of ScrapeConfigs.
@@ -283,10 +296,8 @@ type ScrapeConfigSpec struct {
 	// +optional
 	Params map[string][]string `json:"params,omitempty"`
 	// scheme defines the protocol scheme used for requests.
-	// If empty, Prometheus uses HTTP by default.
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +optional
-	Scheme *string `json:"scheme,omitempty"`
+	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// enableCompression when false, Prometheus will request uncompressed response from the scraped target.
 	//
 	// It requires Prometheus >= v2.49.0.
@@ -517,10 +528,9 @@ type ConsulSDConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Partition *string `json:"partition,omitempty"`
-	// scheme defines the HTTP Scheme default "http"
-	// +kubebuilder:validation:Enum=HTTP;HTTPS
+	// scheme defines the HTTP Scheme.
 	// +optional
-	Scheme *string `json:"scheme,omitempty"`
+	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
 	// +listType:=set
 	// +optional
@@ -940,10 +950,11 @@ type DigitalOceanSDConfig struct {
 // +k8s:openapi-gen=true
 type KumaSDConfig struct {
 	// server defines the address of the Kuma Control Plane's MADS xDS server.
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	Server string `json:"server"`
+	Server URL `json:"server"`
 	// clientID is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
+	// It requires Prometheus >= v2.50.0.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.

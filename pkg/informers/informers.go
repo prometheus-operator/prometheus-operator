@@ -16,7 +16,7 @@ package informers
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,7 +61,7 @@ func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVe
 
 func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource schema.GroupVersionResource, handler cache.TransformFunc) (*ForResource, error) {
 	namespaces := ifs.Namespaces().UnsortedList()
-	sort.Strings(namespaces)
+	slices.Sort(namespaces)
 
 	informers := make([]InformLister, 0, len(namespaces))
 

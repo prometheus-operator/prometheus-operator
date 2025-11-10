@@ -537,10 +537,9 @@ func (c *WebTLSConfig) Validate() error {
 	return nil
 }
 
-// LabelName is a valid Prometheus label name which may only contain ASCII
-// letters, numbers, as well as underscores.
-//
-// +kubebuilder:validation:Pattern:="^[a-zA-Z_][a-zA-Z0-9_]*$"
+// LabelName is a valid Prometheus label name.
+// For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+// For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
 type LabelName string
 
 // Endpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -566,16 +565,10 @@ type Endpoint struct {
 	// +optional
 	Path string `json:"path,omitempty"`
 
-	// scheme defines the HTTP scheme to use for scraping.
+	// scheme defines the HTTP scheme to use when scraping the metrics.
 	//
-	// `http` and `https` are the expected values unless you rewrite the
-	// `__scheme__` label via relabeling.
-	//
-	// If empty, Prometheus uses the default value `http`.
-	//
-	// +kubebuilder:validation:Enum=http;https
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
 	// +optional
@@ -759,6 +752,10 @@ type OAuth2 struct {
 }
 
 func (o *OAuth2) Validate() error {
+	if o == nil {
+		return nil
+	}
+
 	if o.TokenURL == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
@@ -1054,12 +1051,12 @@ const (
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
 
-// ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor and Probes). Read-only.
+// ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor, Probes, ScrapeConfig, PrometheusRule or AlertmanagerConfig). Read-only.
 // More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type ConfigResourceStatus struct {
-	// bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.
+	// bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.
 	// +listType=map
 	// +listMapKey=group
 	// +listMapKey=resource
@@ -1076,8 +1073,8 @@ type WorkloadBinding struct {
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
 	// +required
 	Group string `json:"group"`
-	// resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).
-	// +kubebuilder:validation:Enum=prometheuses;prometheusagents;thanosrulers
+	// resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
+	// +kubebuilder:validation:Enum=prometheuses;prometheusagents;thanosrulers;alertmanagers
 	// +required
 	Resource string `json:"resource"`
 	// name defines the name of the referenced object.
@@ -1088,14 +1085,14 @@ type WorkloadBinding struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Namespace string `json:"namespace"`
-	// conditions defines the current state of the configuration resource when bound to the referenced Prometheus object.
+	// conditions defines the current state of the configuration resource when bound to the referenced Workload object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
 	Conditions []ConfigResourceCondition `json:"conditions,omitempty"`
 }
 
-// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.
+// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 // +k8s:deepcopy-gen=true
 type ConfigResourceCondition struct {
 	// type of the condition being reported.
@@ -1122,3 +1119,24 @@ type ConfigResourceCondition struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+// Supported values are `HTTP` and `HTTPS`. You can also rewrite the
+// `__scheme__` label via relabeling configuration.
+//
+// If empty, the value defaults to `HTTP`.
+//
+// +kubebuilder:validation:Enum=http;https;HTTP;HTTPS
+type Scheme string
+
+func (s *Scheme) String() string {
+	if s == nil {
+		return ""
+	}
+
+	return strings.ToLower(string(*s))
+}
+
+const (
+	SchemeHTTP  Scheme = "HTTP"
+	SchemeHTTPS Scheme = "HTTPS"
+)

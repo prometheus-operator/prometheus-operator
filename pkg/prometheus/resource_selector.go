@@ -20,13 +20,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"regexp"
 	"slices"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/blang/semver/v4"
-	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,19 +42,13 @@ import (
 )
 
 const (
-	// Generic reason for selected resources that are not valid.
-	invalidConfiguration                  = "InvalidConfiguration"
 	selectingConfigurationResourcesAction = "SelectingConfigurationResources"
 )
 
-// validationScheme defines how to validate label names.
-// For now, the operator only supports the legacy scheme (e.g. not UTF-8).
-var validationScheme model.ValidationScheme = model.LegacyValidation
-
-// ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
-// selectable by Prometheus or PrometheusAgent.
-type ConfigurationResource interface {
-	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig
+// isValidLabelName validates a label name using version-aware validation scheme.
+func isValidLabelName(labelName string, version semver.Version) bool {
+	scheme := operator.ValidationSchemeForPrometheus(version)
+	return scheme.IsValidLabelName(labelName)
 }
 
 // ResourceSelector knows how to select and verify scrape configuration
@@ -71,51 +63,6 @@ type ResourceSelector struct {
 	accessor           *operator.Accessor
 
 	eventRecorder *operator.EventRecorder
-}
-
-// TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
-type TypedConfigurationResource[T ConfigurationResource] struct {
-	resource   T
-	err        error  // Error encountered during selection or validation (nil if valid).
-	reason     string // Reason for rejection; empty if accepted.
-	generation int64  // Generation of the desired state (spec).
-}
-
-func (r *TypedConfigurationResource[T]) Resource() T {
-	return r.resource
-}
-
-// Conditions returns a list of conditions based on the validation status of the configuration resource.
-func (r *TypedConfigurationResource[T]) Conditions() []monitoringv1.ConfigResourceCondition {
-	condition := monitoringv1.ConfigResourceCondition{
-		Type:               monitoringv1.Accepted,
-		Status:             monitoringv1.ConditionTrue,
-		LastTransitionTime: metav1.Now(),
-		Reason:             r.reason,
-		ObservedGeneration: r.generation,
-	}
-
-	if r.err != nil {
-		condition.Status = monitoringv1.ConditionFalse
-		condition.Message = r.err.Error()
-	}
-
-	return []monitoringv1.ConfigResourceCondition{condition}
-}
-
-// TypedResourcesSelection represents a map of configuration resources selected by Prometheus or PrometheusAgent.
-type TypedResourcesSelection[T ConfigurationResource] map[string]TypedConfigurationResource[T]
-
-// ValidResources returns only the resources which the operator considers to be valid.
-// The keys of the returned map identify the resources using the `<namespace>/<name>` format.
-func (resources TypedResourcesSelection[T]) ValidResources() map[string]T {
-	validRes := make(map[string]T)
-	for k, res := range resources {
-		if res.err == nil {
-			validRes[k] = res.resource
-		}
-	}
-	return validRes
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
@@ -146,7 +93,7 @@ func NewResourceSelector(
 	}, nil
 }
 
-func selectObjects[T ConfigurationResource](
+func selectObjects[T operator.ConfigurationResource](
 	ctx context.Context,
 	logger *slog.Logger,
 	rs *ResourceSelector,
@@ -155,35 +102,20 @@ func selectObjects[T ConfigurationResource](
 	nsSelector *metav1.LabelSelector,
 	listFn ListAllByNamespaceFn,
 	checkFn func(context.Context, T) error,
-) (TypedResourcesSelection[T], error) {
+) (operator.TypedResourcesSelection[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
-	namespaces := []string{}
+
+	namespaces, err := operator.SelectNamespacesFromCache(rs.p.GetObjectMeta(), nsSelector, rs.namespaceInformers)
+	if err != nil {
+		return nil, err
+	}
+	logger.Debug("selecting objects", "namespaces", strings.Join(namespaces, ","))
 
 	labelSelector, err := metav1.LabelSelectorAsSelector(selector)
 	if err != nil {
 		return nil, err
 	}
-
-	if nsSelector == nil {
-		namespaces = append(namespaces, rs.p.GetObjectMeta().GetNamespace())
-	} else {
-		nsLabelSelector, err := metav1.LabelSelectorAsSelector(nsSelector)
-		if err != nil {
-			return nil, err
-		}
-
-		namespaces, err = operator.ListMatchingNamespaces(nsLabelSelector, rs.namespaceInformers)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	logger.Debug(
-		"selecting objects",
-		"namespaces", strings.Join(namespaces, ","),
-	)
-
 	for _, ns := range namespaces {
 		err := listFn(ns, labelSelector, func(o any) {
 			k, ok := rs.accessor.MetaNamespaceKey(o)
@@ -207,7 +139,7 @@ func selectObjects[T ConfigurationResource](
 	var (
 		rejected int
 		valid    []string
-		res      = make(TypedResourcesSelection[T], len(objects))
+		res      = make(operator.TypedResourcesSelection[T], len(objects))
 	)
 
 	for namespaceAndName, obj := range objects {
@@ -216,19 +148,14 @@ func selectObjects[T ConfigurationResource](
 		err := checkFn(ctx, o)
 		if err != nil {
 			rejected++
-			reason = invalidConfiguration
+			reason = operator.InvalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
 			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
 
-		res[namespaceAndName] = TypedConfigurationResource[T]{
-			resource:   o,
-			err:        err,
-			reason:     reason,
-			generation: obj.(metav1.Object).GetGeneration(),
-		}
+		res[namespaceAndName] = operator.NewTypedConfigurationResource(o, err, reason, obj.(metav1.Object).GetGeneration())
 	}
 
 	logger.Debug("valid objects selected", "objects", strings.Join(valid, ","))
@@ -244,7 +171,7 @@ func selectObjects[T ConfigurationResource](
 // SelectServiceMonitors returns the ServiceMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
+func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -388,9 +315,17 @@ func (lcv *LabelConfigValidator) Validate(rcs []monitoringv1.RelabelConfig) erro
 	return nil
 }
 
-func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
-	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
+// From https://github.com/prometheus/prometheus/blob/747c5ee2b19a9e6a51acfafae9fa2c77e224803d/model/relabel/relabel.go#L378-L380
+func varInRegexTemplate(template string) bool {
+	return strings.Contains(template, "$")
+}
 
+func (lcv *LabelConfigValidator) isValidLabelName(labelName string) bool {
+	validationScheme := operator.ValidationSchemeForPrometheus(lcv.v)
+	return validationScheme.IsValidLabelName(labelName)
+}
+
+func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 	minimumVersionCaseActions := lcv.v.GTE(semver.MustParse("2.36.0"))
 	minimumVersionEqualActions := lcv.v.GTE(semver.MustParse("2.41.0"))
 	if rc.Action == "" {
@@ -418,7 +353,15 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("relabel configuration for %s action needs targetLabel value", rc.Action)
 	}
 
-	if (action == string(relabel.Replace) || action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !relabelTarget.MatchString(rc.TargetLabel) {
+	if (action == string(relabel.Replace)) && !varInRegexTemplate(rc.TargetLabel) && !lcv.isValidLabelName(rc.TargetLabel) {
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if (action == string(relabel.Replace)) && varInRegexTemplate(rc.TargetLabel) && !lcv.isValidLabelName(rc.TargetLabel) {
+		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+	}
+
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !lcv.isValidLabelName(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -426,13 +369,11 @@ func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
-	if action == string(relabel.LabelMap) {
-		if rc.Replacement != nil && !relabelTarget.MatchString(*rc.Replacement) {
-			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
-		}
+	if action == string(relabel.LabelMap) && (rc.Replacement != nil) && !lcv.isValidLabelName(*rc.Replacement) {
+		return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 	}
 
-	if action == string(relabel.HashMod) && !validationScheme.IsValidLabelName(rc.TargetLabel) {
+	if action == string(relabel.HashMod) && !lcv.isValidLabelName(rc.TargetLabel) {
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
@@ -488,7 +429,7 @@ func (rs *ResourceSelector) validateMonitorSelectorMechanism(selectorMechanism *
 // SelectPodMonitors returns the PodMonitors that match the selectors in the Prometheus custom resource.
 // This function also populates authentication stores and
 // performs validations against scrape intervals and relabel configs.
-func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
+func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.PodMonitor], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -515,29 +456,6 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 	for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 		epErr := fmt.Errorf("endpoint[%d]", i)
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
-			if _, err := rs.store.GetSecretKey(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret); err != nil {
-				return fmt.Errorf("%w: bearerTokenSecret: %w", epErr, err)
-			}
-		}
-
-		if err := rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth); err != nil {
-			return fmt.Errorf("%w: basicAuth: %w", epErr, err)
-		}
-
-		if err := rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
-			return fmt.Errorf("%w: tlsConfig: %w", epErr, err)
-		}
-
-		if err := rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2); err != nil {
-			return fmt.Errorf("%w: oauth2: %w", epErr, err)
-		}
-
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization); err != nil {
-			return fmt.Errorf("%w: authorization: %w", epErr, err)
-		}
-
 		if err := validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
@@ -550,8 +468,8 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, pm.GetNamespace()); err != nil {
-			return fmt.Errorf("%w: proxyConfig: %w", epErr, err)
+		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfig, pm.GetNamespace()); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
 		}
 	}
 
@@ -562,10 +480,48 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 	return nil
 }
 
+func (rs *ResourceSelector) addHTTPConfigToStore(
+	ctx context.Context,
+	httpConfig monitoringv1.HTTPConfig,
+	namespace string) error {
+	if err := httpConfig.Validate(); err != nil {
+		return err
+	}
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if httpConfig.BearerTokenSecret != nil && httpConfig.BearerTokenSecret.Name != "" && httpConfig.BearerTokenSecret.Key != "" {
+		if _, err := rs.store.GetSecretKey(ctx, namespace, *httpConfig.BearerTokenSecret); err != nil {
+			return fmt.Errorf("bearerTokenSecret: %w", err)
+		}
+	}
+
+	if err := rs.store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth); err != nil {
+		return fmt.Errorf("basicAuth: %w", err)
+	}
+
+	if err := rs.store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	if err := rs.store.AddOAuth2(ctx, namespace, httpConfig.OAuth2); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := rs.store.AddSafeAuthorizationCredentials(ctx, namespace, httpConfig.Authorization); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := addProxyConfigToStore(ctx, httpConfig.ProxyConfig, rs.store, namespace); err != nil {
+		return fmt.Errorf("proxyConfig: %w", err)
+	}
+
+	return nil
+}
+
 // SelectProbes returns the probes matching the selectors specified in the Prometheus CR.
 // This function also populates authentication stores and performs
 // validations against scrape intervals, relabel configs and Probe URLs.
-func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1.Probe], error) {
+func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1.Probe], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -675,7 +631,7 @@ func validateServer(server string) error {
 
 // SelectScrapeConfigs returns the ScrapeConfigs which match the selectors in the
 // Prometheus CR and filters them returning all the configuration.
-func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
+func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig], error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 
 	return selectObjects(
@@ -1164,7 +1120,11 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 }
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
-		if err := validateServer(config.Server); err != nil {
+		if config.ClientID != nil && rs.version.LT(semver.MustParse("2.50.0")) {
+			return fmt.Errorf("field `clientID` in kuma SD configuration is only supported for Prometheus version >= 2.50.0")
+		}
+
+		if err := validateServer(string(config.Server)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1428,7 +1388,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
 		for labelName := range config.Labels {
-			if !validationScheme.IsValidLabelName(labelName) {
+			if !isValidLabelName(labelName, rs.version) {
 				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 			}
 		}

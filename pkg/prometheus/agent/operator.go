@@ -123,6 +123,14 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
+// WithConfigResourceStatus tells that the controller can manage the status of
+// configuration resources.
+func WithConfigResourceStatus() ControllerOption {
+	return func(o *Operator) {
+		o.configResourcesStatusEnabled = true
+	}
+}
+
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -163,13 +171,17 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
-		finalizerSyncer:              operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName), c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature)),
+		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
 	)
 	for _, opt := range options {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName))
 	}
 
 	o.promInfs, err = informers.NewInformersForResource(
@@ -616,12 +628,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	logger := c.logger.With("key", key)
 
-	finalizersChanged, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
+	finalizersAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
 	if err != nil {
 		return err
 	}
 
-	if finalizersChanged {
+	if finalizersAdded {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
@@ -916,7 +928,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
-	var scrapeConfigs prompkg.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+	var scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {

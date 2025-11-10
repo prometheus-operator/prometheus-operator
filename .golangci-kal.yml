@@ -32,6 +32,8 @@ linters:
               - "uniquemarkers"
               - "jsontags"
               - "statusoptional"
+              - "nophase"
+              - "nonullable"
             disable:
               - "*"
           lintersConfig:

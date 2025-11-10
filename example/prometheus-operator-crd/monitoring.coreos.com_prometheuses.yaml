@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.85.0
+    operator.prometheus.io/version: 0.86.2
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -1212,9 +1212,9 @@ spec:
                                   configured regular expression.
                                 items:
                                   description: |-
-                                    LabelName is a valid Prometheus label name which may only contain ASCII
-                                    letters, numbers, as well as underscores.
-                                  pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                    LabelName is a valid Prometheus label name.
+                                    For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                    For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                                   type: string
                                 type: array
                               targetLabel:
@@ -1372,6 +1372,7 @@ spec:
                         pathPrefix:
                           description: pathPrefix defines the prefix for the HTTP
                             path alerts are pushed to.
+                          minLength: 1
                           type: string
                         port:
                           anyOf:
@@ -1495,9 +1496,9 @@ spec:
                                   configured regular expression.
                                 items:
                                   description: |-
-                                    LabelName is a valid Prometheus label name which may only contain ASCII
-                                    letters, numbers, as well as underscores.
-                                  pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                    LabelName is a valid Prometheus label name.
+                                    For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                    For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                                   type: string
                                 type: array
                               targetLabel:
@@ -1512,7 +1513,13 @@ spec:
                             type: object
                           type: array
                         scheme:
-                          description: scheme to use when firing alerts.
+                          description: scheme defines the HTTP scheme to use when
+                            sending alerts.
+                          enum:
+                          - http
+                          - https
+                          - HTTP
+                          - HTTPS
                           type: string
                         sigv4:
                           description: |-
@@ -1586,6 +1593,11 @@ spec:
                               - key
                               type: object
                               x-kubernetes-map-type: atomic
+                            useFIPSSTSEndpoint:
+                              description: |-
+                                useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
+                                It requires Prometheus >= v2.54.0.
+                              type: boolean
                           type: object
                         timeout:
                           description: timeout defines a per-target Alertmanager timeout
@@ -5762,7 +5774,7 @@ spec:
               maximumStartupDurationSeconds:
                 description: |-
                   maximumStartupDurationSeconds defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
-                  If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).
+                  If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).
                 format: int32
                 minimum: 60
                 type: integer
@@ -7256,8 +7268,11 @@ spec:
                       - V2.0
                       type: string
                     metadataConfig:
-                      description: metadataConfig defines how to send a series metadata
-                        to the remote storage.
+                      description: |-
+                        metadataConfig defines how to send a series metadata to the remote storage.
+
+                        When the field is empty, **no metadata** is sent. But when the field is
+                        null, metadata is sent.
                       properties:
                         maxSamplesPerSend:
                           description: |-
@@ -7827,6 +7842,11 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        useFIPSSTSEndpoint:
+                          description: |-
+                            useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
+                            It requires Prometheus >= v2.54.0.
+                          type: boolean
                       type: object
                     tlsConfig:
                       description: tlsConfig to use for the URL.
@@ -8084,9 +8104,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -8535,9 +8555,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -8634,9 +8654,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:

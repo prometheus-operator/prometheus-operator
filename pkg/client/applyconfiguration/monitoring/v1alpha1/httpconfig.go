@@ -32,6 +32,7 @@ type HTTPConfigApplyConfiguration struct {
 	ProxyURLOriginal                 *string                                 `json:"proxyURL,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                  *bool `json:"followRedirects,omitempty"`
+	EnableHTTP2                      *bool `json:"enableHttp2,omitempty"`
 }
 
 // HTTPConfigApplyConfiguration constructs a declarative configuration of the HTTPConfig type for use with
@@ -131,5 +132,13 @@ func (b *HTTPConfigApplyConfiguration) WithProxyConnectHeader(entries map[string
 // If called multiple times, the FollowRedirects field is set to the value of the last call.
 func (b *HTTPConfigApplyConfiguration) WithFollowRedirects(value bool) *HTTPConfigApplyConfiguration {
 	b.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *HTTPConfigApplyConfiguration) WithEnableHTTP2(value bool) *HTTPConfigApplyConfiguration {
+	b.EnableHTTP2 = &value
 	return b
 }

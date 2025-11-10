@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.86.2"
     },
     "name": "servicemonitors.monitoring.coreos.com"
   },
@@ -259,8 +259,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -700,8 +699,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -716,10 +714,12 @@
                           "type": "array"
                         },
                         "scheme": {
-                          "description": "scheme defines the HTTP scheme to use for scraping.\n\n`http` and `https` are the expected values unless you rewrite the\n`__scheme__` label via relabeling.\n\nIf empty, Prometheus uses the default value `http`.",
+                          "description": "scheme defines the HTTP scheme to use when scraping the metrics.",
                           "enum": [
                             "http",
-                            "https"
+                            "https",
+                            "HTTP",
+                            "HTTPS"
                           ],
                           "type": "string"
                         },
@@ -1082,6 +1082,14 @@
                     ],
                     "type": "string"
                   },
+                  "serviceDiscoveryRole": {
+                    "description": "serviceDiscoveryRole defines the service discovery role used to discover targets.\n\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nOtherwise it defaults to the value defined in the\nPrometheus/PrometheusAgent resource.",
+                    "enum": [
+                      "Endpoints",
+                      "EndpointSlice"
+                    ],
+                    "type": "string"
+                  },
                   "targetLabels": {
                     "description": "targetLabels defines the labels which are transferred from the\nassociated Kubernetes `Service` object onto the ingested metrics.",
                     "items": {
@@ -1105,14 +1113,14 @@
                 "description": "status defines the status subresource. It is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "bindings": {
-                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.",
+                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.",
                     "items": {
                       "description": "WorkloadBinding is a link between a configuration resource and a workload resource.",
                       "properties": {
                         "conditions": {
-                          "description": "conditions defines the current state of the configuration resource when bound to the referenced Prometheus object.",
+                          "description": "conditions defines the current state of the configuration resource when bound to the referenced Workload object.",
                           "items": {
-                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.",
+                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.",
                             "properties": {
                               "lastTransitionTime": {
                                 "description": "lastTransitionTime defines the time of the last update to the current status property.",
@@ -1177,11 +1185,12 @@
                           "type": "string"
                         },
                         "resource": {
-                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).",
+                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).",
                           "enum": [
                             "prometheuses",
                             "prometheusagents",
-                            "thanosrulers"
+                            "thanosrulers",
+                            "alertmanagers"
                           ],
                           "type": "string"
                         }

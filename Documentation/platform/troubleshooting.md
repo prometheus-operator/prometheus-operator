@@ -30,6 +30,62 @@ kubectl apply --server-side --force-conflicts -f $MANIFESTS
 
 If using ArgoCD, please refer to their [documentation](https://argo-cd.readthedocs.io/en/latest/user-guide/sync-options/#server-side-apply).
 
+### `v1 Endpoints is deprecated in v1.33+, ...` warning in the operator's logs
+
+> Since Kubernetes v1.33 the Endpoints API is deprecated in favor of the [EndpointSlice](https://kubernetes.io/docs/concepts/services-networking/endpoint-slices) API.
+
+If the operator's logs show messages like `v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice`, it means that the operator still reconciles the kubelet Endpoints resource. To migrate from Endpoints to EndpointSlice, the following operations should be done:
+1. Grant RBAC permissions to the operator's Service Account to manage the EndpointSlice resource (see below).
+2. Grant RBAC permissions to the Prometheus's Service Account to read/list/watch the EndpointSlice resource (see below).
+3. Start the operator with `--kubelet-endpoints=true` and `--kubelet-endpointslice=true`.
+4. Verify that the kubelet's Endpoint resource has the `endpointslice.kubernetes.io/skip-mirror=true` annotation.
+5. Verify that the kubelet's EndpointSlice resource(s) are up-to-date.
+6. Set `.spec.serviceDiscoveryRole: EndpointSlice` for all ServiceMonitor resources which point to the kubelet's Service.
+7. Verify that Prometheus discovers the expected targets.
+8. Start the operator with `--kubelet-endpoints=false` and `--kubelet-endpointslice=true`.
+9. Remove the kubelet's Endpoint resource.
+10. And voila!
+
+To migrate other ServiceMonitor resources (not just the one(s) depending on the kubelet Service), you need to grant read/list/watch permissions on the EndpointSlice resources in all watched namespaces to the Prometheus Service Account and set `.spec.serviceDiscoveryRole: EndpointSlice` either for all reconciled ServiceMonitor resources or globally in the Prometheus resource.
+
+Example of Role definition required by the Prometheus operator's Service Account to manage kubelet EndpointSlice resources (the permissions can also be added to the existing Prometheus operator's Role):
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+  name: prometheus-operator-kubelet
+rules:
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - create
+  - list
+  - update
+  - delete
+```
+
+Example of Role definition required by the Prometheus's Service Account to discover targets from the kubelet EndpointSlice resources (the permissions can also be added to the existing Prometheus's Role):
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+  name: prometheus-kubelet
+rules:
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - list
+  - watch
+```
+
+> For kube-prometheus users, `release-0.16` has switched to dual mode (Endpoints and EndpointSlice supported in parallel). A future release will complete the migration and remove usage of the Endpoints resources altogether.
+
 ### RBAC on Google Container Engine (GKE)
 
 When you try to create `ClusterRole` (`kube-state-metrics`, `prometheus` `prometheus-operator`, etc.) on GKE Kubernetes cluster running 1.6 version, you will probably run into permission errors:

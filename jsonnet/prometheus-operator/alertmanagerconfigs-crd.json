@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.86.2"
     },
     "name": "alertmanagerconfigs.monitoring.coreos.com"
   },
@@ -382,6 +382,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -1330,6 +1334,10 @@
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
+                                  },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
                                     "type": "boolean"
@@ -2018,6 +2026,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -2769,6 +2781,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -3528,6 +3544,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -4290,6 +4310,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -5100,6 +5124,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -5977,6 +6005,10 @@
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
+                                  },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
                                     "type": "boolean"
@@ -6690,6 +6722,10 @@
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
+                                  },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
                                     "type": "boolean"
@@ -7288,6 +7324,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "useFIPSSTSEndpoint": {
+                                    "description": "useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.",
+                                    "type": "boolean"
                                   }
                                 },
                                 "type": "object"
@@ -7464,6 +7504,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -8191,6 +8235,10 @@
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
+                                  },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
                                     "type": "boolean"
@@ -8863,6 +8911,10 @@
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
+                                  },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
                                     "type": "boolean"
@@ -9525,6 +9577,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",
@@ -10249,6 +10305,10 @@
                                     ],
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "enableHttp2": {
+                                    "description": "enableHttp2 can be used to disable HTTP2.",
+                                    "type": "boolean"
                                   },
                                   "followRedirects": {
                                     "description": "followRedirects specifies whether the client should follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.",

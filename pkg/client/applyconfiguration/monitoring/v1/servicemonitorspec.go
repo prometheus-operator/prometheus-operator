@@ -40,10 +40,11 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64                           `json:"keepDroppedTargets,omitempty"`
-	AttachMetadata                          *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
-	ScrapeClassName                         *string                           `json:"scrapeClass,omitempty"`
-	BodySizeLimit                           *monitoringv1.ByteSize            `json:"bodySizeLimit,omitempty"`
+	KeepDroppedTargets                      *uint64                            `json:"keepDroppedTargets,omitempty"`
+	AttachMetadata                          *AttachMetadataApplyConfiguration  `json:"attachMetadata,omitempty"`
+	ScrapeClassName                         *string                            `json:"scrapeClass,omitempty"`
+	BodySizeLimit                           *monitoringv1.ByteSize             `json:"bodySizeLimit,omitempty"`
+	ServiceDiscoveryRole                    *monitoringv1.ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // ServiceMonitorSpecApplyConfiguration constructs a declarative configuration of the ServiceMonitorSpec type for use with
@@ -236,5 +237,13 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassName(value string)
 // If called multiple times, the BodySizeLimit field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithBodySizeLimit(value monitoringv1.ByteSize) *ServiceMonitorSpecApplyConfiguration {
 	b.BodySizeLimit = &value
+	return b
+}
+
+// WithServiceDiscoveryRole sets the ServiceDiscoveryRole field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceDiscoveryRole field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithServiceDiscoveryRole(value monitoringv1.ServiceDiscoveryRole) *ServiceMonitorSpecApplyConfiguration {
+	b.ServiceDiscoveryRole = &value
 	return b
 }

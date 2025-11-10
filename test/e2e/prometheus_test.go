@@ -26,12 +26,13 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
@@ -138,7 +139,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 		{
 			Port:     "mtls",
 			Interval: "1s",
-			Scheme:   "https",
+			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					ServerName: ptr.To("caandserver.com"),
@@ -1549,68 +1550,67 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
+
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	prometheusRules := []*monitoringv1.PrometheusRule{}
-	for i := range 2 {
-		rule := generateHugePrometheusRule(ns, strconv.Itoa(i))
-		rule, err := framework.CreateRule(context.Background(), ns, rule)
-		if err != nil {
-			t.Fatal(err)
-		}
-		prometheusRules = append(prometheusRules, rule)
-	}
+
+	rule, err := framework.CreateRule(context.Background(), ns, generateHugePrometheusRule(ns, "a"))
+	require.NoError(t, err)
+	prometheusRules = append(prometheusRules, rule)
 
 	name := "test"
-
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	// Record the statefulset's generation.
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", p.Name), metav1.GetOptions{})
+	require.NoError(t, err)
+	generation := sts.Generation
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
-		t.Fatal(fmt.Errorf("creating Prometheus service failed: %w", err))
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
-
-	for i := range prometheusRules {
-		_, err := framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-"+strconv.Itoa(i))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	// Make sure both rule files ended up in the Prometheus Pod
-	for i := range prometheusRules {
-		err := framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, "my-alert-"+strconv.Itoa(i))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err = framework.DeleteRule(context.Background(), ns, prometheusRules[1].Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC)
+	require.NoError(t, err)
 
 	_, err = framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = framework.WaitForConfigMapNotExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-1")
-	if err != nil {
-		t.Fatal(err)
+	require.NoError(t, err)
+	require.NoError(t, framework.WaitForConfigMapNotExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-1"))
+
+	// Check that at least 1 alert of the PrometheusRule object fires.
+	for _, pr := range prometheusRules {
+		alertName := pr.Spec.Groups[0].Rules[0].Alert
+		require.NotEmpty(t, alertName)
+
+		require.NoError(t, framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, alertName))
 	}
 
-	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, "my-alert-0")
-	if err != nil {
-		t.Fatal(err)
+	// Generate another large PrometheusRule object.
+	rule, err = framework.CreateRule(context.Background(), ns, generateHugePrometheusRule(ns, "b"))
+	require.NoError(t, err)
+
+	// Verify that 2 configmaps exist.
+	prometheusRules = append(prometheusRules, rule)
+	for i := range 2 {
+		_, err := framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-"+strconv.Itoa(i))
+		require.NoError(t, err)
 	}
+
+	// Check that at least 1 alert from each PrometheusRule object fires.
+	for _, pr := range prometheusRules {
+		alertName := pr.Spec.Groups[0].Rules[0].Alert
+		require.NotEmpty(t, alertName)
+
+		require.NoError(t, framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, alertName))
+	}
+
+	// Verify that the statefulset's generation hasn't changed.
+	sts, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", p.Name), metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, generation, sts.Generation)
 }
 
 func testPromRulesMustBeAnnotated(t *testing.T) {
@@ -1685,26 +1685,24 @@ func testPromReconcileStatusWhenInvalidRuleCreated(t *testing.T) {
 	}
 }
 
-// generateHugePrometheusRule returns a Prometheus rule instance that would fill
+// generateHugePrometheusRule returns a Prometheus rule object that would fill
 // more than half of the space of a Kubernetes ConfigMap.
 func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusRule {
-	alertName := "my-alert"
-	groups := []monitoringv1.RuleGroup{
-		{
-			Name:  alertName,
-			Rules: []monitoringv1.Rule{},
-		},
-	}
 	// One rule marshaled as yaml is ~34 bytes long, the max is ~524288 bytes.
+	rules := make([]monitoringv1.Rule, 0, 12000)
 	for range 12000 {
-		groups[0].Rules = append(groups[0].Rules, monitoringv1.Rule{
-			Alert: alertName + "-" + identifier,
+		rules = append(rules, monitoringv1.Rule{
+			Alert: "alert-" + identifier,
 			Expr:  intstr.FromString("vector(1)"),
 		})
 	}
-	rule := framework.MakeBasicRule(ns, "prometheus-rule-"+identifier, groups)
 
-	return rule
+	return framework.MakeBasicRule(ns, "prometheus-rule-"+identifier, []monitoringv1.RuleGroup{
+		{
+			Name:  "rules-group",
+			Rules: rules,
+		},
+	})
 }
 
 // Make sure the Prometheus operator only updates the Prometheus config secret
@@ -3341,7 +3339,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		{
 			Port:     "mtls",
 			Interval: "30s",
-			Scheme:   "https",
+			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
@@ -3503,18 +3501,20 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "basic-auth-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: ptr.To("web"),
-				BasicAuth: &monitoringv1.BasicAuth{
-					Username: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+				HTTPConfig: monitoringv1.HTTPConfig{
+					BasicAuth: &monitoringv1.BasicAuth{
+						Username: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "user",
 						},
-						Key: "user",
-					},
-					Password: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+						Password: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "password",
 						},
-						Key: "password",
 					},
 				},
 			},
@@ -3526,11 +3526,13 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "bearer-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: ptr.To("web"),
-				BearerTokenSecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: name,
+				HTTPConfig: monitoringv1.HTTPConfig{
+					BearerTokenSecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "bearer-token",
 					},
-					Key: "bearer-token",
 				},
 				Path: "/bearer-metrics",
 			},
@@ -3542,30 +3544,32 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "tls-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
-				Scheme: "https",
-				TLSConfig: &monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: ptr.To(true),
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
+				HTTPConfig: monitoringv1.HTTPConfig{
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						CA: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "cert.pem",
+							Key: "key.pem",
 						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
 					},
 				},
 				Path: "/",
@@ -3575,30 +3579,32 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "tls-configmap",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
-				Scheme: "https",
-				TLSConfig: &monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: ptr.To(true),
-					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
+				HTTPConfig: monitoringv1.HTTPConfig{
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: ptr.To(true),
+						CA: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "cert.pem",
+							Key: "key.pem",
 						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
 					},
 				},
 				Path: "/",
@@ -4657,8 +4663,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 						{
 							Name:            "test",
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4686,8 +4692,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Name:            "test",
 							Namespace:       ptr.To("default"),
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4714,8 +4720,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 						{
 							Namespace:       ptr.To("default"),
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4930,22 +4936,15 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			scenario: "empty-source-lbl",
+			scenario: "accepts-utf-8-labels",
 			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					SourceLabels: []monitoringv1.LabelName{""},
+					SourceLabels: []monitoringv1.LabelName{"app.info"},
+					Action:       "replace",
+					TargetLabel:  "app.info",
+					Replacement:  ptr.To("test.app"),
 				},
 			},
-			expectedError: true,
-		},
-		{
-			scenario: "invalid-source-lbl",
-			relabelConfigs: []monitoringv1.RelabelConfig{
-				{
-					SourceLabels: []monitoringv1.LabelName{"metric%)"},
-				},
-			},
-			expectedError: true,
 		},
 	}
 
@@ -5495,6 +5494,414 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func testPrometheusUTF8MetricsSupport(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	// Disable admission webhook for rule since utf8 is not enabled by default and rule contain metric name with utf8 characters.
+	ruleNamespaceSelector := map[string]string{"excludeFromWebhook": "true"}
+	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleNamespaceSelector)
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "prometheus-utf8-test"
+
+	// Create deployment for instrumented sample app
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "instrumented-sample-app",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app": "instrumented-sample-app",
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: ptr.To(int32(1)),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "instrumented-sample-app"},
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "instrumented-sample-app",
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{{
+						Name:  "instrumented-sample-app",
+						Image: "quay.io/prometheus-operator/instrumented-sample-app:latest",
+						Ports: []v1.ContainerPort{{
+							Name:          "web",
+							ContainerPort: 8080,
+							Protocol:      v1.ProtocolTCP,
+						}},
+					}},
+				},
+			},
+		},
+	}
+	_, err = framework.KubeClient.AppsV1().Deployments(ns).Create(context.Background(), deployment, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-test-service",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app":   "instrumented-sample-app",
+				"group": "test-app",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports:    []v1.ServicePort{{Name: "web", Port: 8080, TargetPort: intstr.FromInt(8080)}},
+			Selector: map[string]string{"app": "instrumented-sample-app"},
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), service, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-servicemonitor",
+			Namespace: ns,
+			Labels:    map[string]string{"group": "test-app"},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "instrumented-sample-app"},
+			},
+			Endpoints: []monitoringv1.Endpoint{{
+				Port:     "web",
+				Interval: "30s",
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+						Key:                  "username",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+						Key:                  "password",
+					},
+				},
+			}},
+		},
+	}
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "basic-auth",
+			Namespace: ns,
+		},
+		Type: v1.SecretTypeOpaque,
+		StringData: map[string]string{
+			"username": "user",
+			"password": "pass",
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Wait for deployment to be ready
+	err = framework.WaitForDeploymentReady(context.Background(), ns, "instrumented-sample-app", 1)
+	require.NoError(t, err)
+
+	// Create PrometheusRule with UTF-8 metrics.
+	prometheusRule := &monitoringv1.PrometheusRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-prometheus-rule",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app":  "test-app",
+				"role": "rulefile",
+			},
+			Annotations: map[string]string{
+				"description": "Test rule",
+			},
+		},
+		Spec: monitoringv1.PrometheusRuleSpec{
+			Groups: []monitoringv1.RuleGroup{{
+				Name: "utf8.test.rules",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "UTF8TestAlert",
+						Expr:  intstr.FromString(`count by("app.version") ({"app.info"})`),
+						Labels: map[string]string{
+							"severity":     "warning",
+							"service.name": "web",
+						},
+						Annotations: map[string]string{
+							"summary":             "Service is down",
+							"description.cluster": "The cluster service is not responding",
+							"runbook":             "https://runbook.example.com/cluster",
+						},
+					},
+					{
+						Record: "cluster.app_info:5m",
+						Expr:   intstr.FromString(`avg_over_time({"app.info"}[5m])`),
+						Labels: map[string]string{
+							"service.cluster": "availability",
+						},
+					},
+				},
+			}},
+		},
+	}
+	_, err = framework.MonClientV1.PrometheusRules(ns).Create(context.Background(), prometheusRule, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	prom := framework.MakeBasicPrometheus(ns, name, "test-app", 1)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
+
+	// Default Prometheus service name is "prometheus-operated".
+	promSvcName := "prometheus-operated"
+
+	// Wait for the instrumented-sample-app target to be discovered
+	err = framework.WaitForHealthyTargets(context.Background(), ns, promSvcName, 1)
+	require.NoError(t, err)
+
+	// Verify UTF8 metrics work in queries.
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		// Query for UTF8 metric
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", `{"app.info"}`)
+		if err != nil {
+			t.Logf("UTF8 query failed: %v", err)
+			return false, nil
+		}
+
+		if len(results) == 0 {
+			t.Logf("UTF8 query returned no results")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, err, "UTF-8 metrics should work in Prometheus 3.0+ queries")
+
+	// Check UTF8 recording rule from PrometheusRule
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", `{"cluster.app_info:5m"}`)
+		if err != nil {
+			t.Logf("UTF8 PrometheusRule recording query failed: %v", err)
+			return false, nil
+		}
+
+		if len(results) == 0 {
+			t.Logf("UTF8 recording query returned no results")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, err, "UTF-8 PrometheusRule recording rule should work")
+
+	// Verify the alert rule exists in Prometheus
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", `ALERTS{alertname="UTF8TestAlert"}`)
+		if err != nil {
+			t.Logf("UTF8 alert rule query failed: %v", err)
+			return false, nil
+		}
+		if len(results) == 0 {
+			t.Logf("UTF8TestAlert rule not found - may not be loaded yet")
+			return false, nil
+		}
+
+		t.Logf("UTF8TestAlert rule found and loaded")
+		return true, nil
+	})
+	require.NoError(t, err, "UTF-8 alert rule should be queryable")
+}
+
+func testPrometheusUTF8LabelSupport(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "prometheus-utf8-test"
+
+	// Create deployment for instrumented sample app
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "instrumented-sample-app",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app": "instrumented-sample-app",
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: ptr.To(int32(1)),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app.name": "instrumented-sample-app"},
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app.name": "instrumented-sample-app",
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{{
+						Name:  "instrumented-sample-app",
+						Image: "quay.io/prometheus-operator/instrumented-sample-app:latest",
+						Ports: []v1.ContainerPort{{
+							Name:          "web",
+							ContainerPort: 8080,
+							Protocol:      v1.ProtocolTCP,
+						}},
+					}},
+				},
+			},
+		},
+	}
+	_, err := framework.KubeClient.AppsV1().Deployments(ns).Create(context.Background(), deployment, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-test-service",
+			Namespace: ns,
+			Labels: map[string]string{
+				"app.name": "instrumented-sample-app",
+				"group":    "test.app",
+				"cluster":  "dev",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports:    []v1.ServicePort{{Name: "web", Port: 8080, TargetPort: intstr.FromInt(8080)}},
+			Selector: map[string]string{"app.name": "instrumented-sample-app"},
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), service, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Determine the Prometheus version that will be used.
+	promVersion := operator.DefaultPrometheusVersion
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		promVersion = operator.DefaultPrometheusV2
+	}
+
+	// Parse the version to check if it supports UTF-8.
+	parsedVersion, err := semver.ParseTolerant(promVersion)
+	require.NoError(t, err)
+
+	supportsUTF8 := parsedVersion.GTE(semver.MustParse("3.0.0"))
+
+	var relabelConfigs []monitoringv1.RelabelConfig
+	var expectedLabelName string
+
+	if supportsUTF8 {
+		// Use UTF-8 label for Prometheus 3.0+
+		relabelConfigs = []monitoringv1.RelabelConfig{{
+			SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_service_label_cluster"},
+			TargetLabel:  "service_clustér_label",
+			Action:       "replace",
+		}}
+		expectedLabelName = "service_clustér_label"
+	} else {
+		// Use ASCII-only label for Prometheus 2.x
+		relabelConfigs = []monitoringv1.RelabelConfig{{
+			SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_service_label_cluster"},
+			TargetLabel:  "service_cluster_label",
+			Action:       "replace",
+		}}
+		expectedLabelName = "service_cluster_label"
+	}
+
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "utf8-servicemonitor",
+			Namespace: ns,
+			Labels:    map[string]string{"group": "test.app", "app.name": "instrumented-sample-app"},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{"app.name": "instrumented-sample-app"},
+			},
+			Endpoints: []monitoringv1.Endpoint{{
+				Port:           "web",
+				Interval:       "2s",
+				RelabelConfigs: relabelConfigs,
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+						Key:                  "username",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+						Key:                  "password",
+					},
+				},
+			}},
+		},
+	}
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "basic-auth",
+			Namespace: ns,
+		},
+		Type: v1.SecretTypeOpaque,
+		StringData: map[string]string{
+			"username": "user",
+			"password": "pass",
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	err = framework.WaitForDeploymentReady(context.Background(), ns, "instrumented-sample-app", 1)
+	require.NoError(t, err)
+
+	prom := framework.MakeBasicPrometheus(ns, name, "test.app", 1)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
+
+	// Default Prometheus service name is "prometheus-operated".
+	promSvcName := "prometheus-operated"
+
+	// Wait for the instrumented-sample-app target to be discovered.
+	err = framework.WaitForHealthyTargets(context.Background(), ns, promSvcName, 1)
+	require.NoError(t, err)
+
+	// Verify label queries work based on the Prometheus version.
+	queryLabel := fmt.Sprintf(`{"%s"="dev"}`, expectedLabelName)
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		results, err := framework.PrometheusQuery(ns, promSvcName, "http", queryLabel)
+		if err != nil {
+			t.Logf("Label query failed: %v", err)
+			return false, nil
+		}
+
+		if len(results) == 0 {
+			t.Logf("Label query returned no results")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if supportsUTF8 {
+		require.NoError(t, err, "UTF-8 label queries should work in Prometheus 3.0+")
+	} else {
+		require.NoError(t, err, "ASCII label queries should work in Prometheus 2.x")
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
@@ -5546,8 +5953,8 @@ func assertExpectedAlertmanagerTargets(ams []*alertmanagerTarget, expectedTarget
 		existingTargets = append(existingTargets, am.URL)
 	}
 
-	sort.Strings(expectedTargets)
-	sort.Strings(existingTargets)
+	slices.Sort(expectedTargets)
+	slices.Sort(existingTargets)
 
 	if !reflect.DeepEqual(expectedTargets, existingTargets) {
 		log.Printf("Existing Alertmanager Targets: %#+v\n", existingTargets)
