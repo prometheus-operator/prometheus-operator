@@ -1136,7 +1136,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	return nil
 }
 
-// configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+// configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig, PrometheusRule and PodMonitor).
 func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
