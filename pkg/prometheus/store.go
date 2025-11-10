@@ -31,10 +31,10 @@ func AddRemoteWritesToStore(
 	namespace string,
 	rws []monitoringv1.RemoteWriteSpec,
 	version semver.Version,
-	componentName ComponentName,
+	bypassVersionCheck bool,
 ) error {
 	for i, remote := range rws {
-		if err := validateRemoteWriteSpec(remote, version, componentName); err != nil {
+		if err := validateRemoteWriteSpec(remote, version, bypassVersionCheck); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 

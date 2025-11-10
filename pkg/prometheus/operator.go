@@ -97,7 +97,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version, componentName ComponentName) error {
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version, bypassVersionCheck bool) error {
 	var nonNilFields []string
 	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
@@ -136,7 +136,7 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 
 		// check azure managed identity client id
 		if spec.AzureAD.ManagedIdentity != nil {
-			if err := checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version, componentName); err != nil {
+			if err := checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version, bypassVersionCheck); err != nil {
 				return err
 			}
 		}
@@ -152,8 +152,8 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 	return spec.Validate()
 }
 
-func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version, componentName ComponentName) error {
-	if (version.LT(semver.MustParse("3.5.0")) && componentName == ComponentNamePrometheus) || componentName == ComponentNameThanos {
+func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version, bypassVersionCheck bool) error {
+	if version.LT(semver.MustParse("3.5.0")) && !bypassVersionCheck {
 
 		if mid.ClientID == nil {
 			return fmt.Errorf("nil clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
