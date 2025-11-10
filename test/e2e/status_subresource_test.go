@@ -1090,3 +1090,107 @@ func testFinalizerForThanosRulerWhenStatusForConfigResEnabled(t *testing.T) {
 	err = framework.DeleteThanosRulerAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
 }
+
+// testPrometheusRuleStatusSubresourceForThanosRuler validates PrometheusRule status updates upon ThanosRuler selection.
+func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "promrule-status-subres-tr-test"
+
+	tr := framework.MakeBasicThanosRuler(name, 1, name)
+	tr.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	require.NoError(t, err)
+
+	// Create a first PrometheusRule to check that the operator only updates the binding when needed.
+	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr1.Labels["group"] = name
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(pr1.Status.Bindings, tr, monitoringv1.ThanosRulerName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second PrometheusRule to check that the operator updates the binding when the condition changes.
+	pr2 := framework.MakeBasicRule(ns, "rule2", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert2",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert2",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr2.Labels["group"] = name
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr2, err = framework.WaitForRuleCondition(ctx, pr2, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first PrometheusRule. A label update doesn't
+	// change the status of the PrometheusRule and the observed timestamp
+	// should be the same as before.
+	pr1.Labels["test"] = "test"
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second PrometheusRule to have an invalid rule expression.
+	pr2.Spec.Groups[0].Rules = append(pr2.Spec.Groups[0].Rules, monitoringv1.Rule{
+		Record: "test:invalid",
+		Expr:   intstr.FromString("invalid_expr{"),
+	})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second PrometheusRule should change to Accepted=False.
+	_, err = framework.WaitForRuleCondition(ctx, pr2, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first PrometheusRule should remain unchanged.
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pr1.Status.Bindings, tr, monitoringv1.ThanosRulerName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}

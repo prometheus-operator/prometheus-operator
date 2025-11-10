@@ -17,6 +17,7 @@ package thanos
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -30,12 +31,11 @@ import (
 
 const labelThanosRulerName = "thanos-ruler-name"
 
-func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
-	logger := o.logger.With("thanos", t.Name, "namespace", t.Namespace)
-
+func (o *Operator) selectPrometheusRules(t *monitoringv1.ThanosRuler, logger *slog.Logger) (operator.PrometheusRuleSelection, error) {
 	namespaces, err := operator.SelectNamespacesFromCache(t, t.Spec.RuleNamespaceSelector, o.nsRuleInf)
+	var rules operator.PrometheusRuleSelection
 	if err != nil {
-		return nil, err
+		return rules, err
 	}
 	logger.Debug("selected RuleNamespaces", "namespaces", strings.Join(namespaces, ","))
 
@@ -66,19 +66,22 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		logger,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
+		return rules, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}
 
-	rules, err := promRuleSelector.Select(namespaces)
+	rules, err = promRuleSelector.Select(namespaces)
 	if err != nil {
-		return nil, fmt.Errorf("selecting PrometheusRules failed: %w", err)
+		return rules, fmt.Errorf("selecting PrometheusRules failed: %w", err)
 	}
 
 	if tKey, ok := o.accessor.MetaNamespaceKey(t); ok {
 		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, rules.SelectedLen())
 		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, rules.RejectedLen())
 	}
+	return rules, nil
+}
 
+func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler, rules operator.PrometheusRuleSelection, logger *slog.Logger) ([]string, error) {
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(
 		logger,
