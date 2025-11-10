@@ -924,7 +924,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		}
 	}
 
-	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite, cg.Version(), prompkg.ComponentNamePrometheus); err != nil {
+	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite, cg.Version(), false); err != nil {
 		return err
 	}
 

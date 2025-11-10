@@ -261,7 +261,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err = validateRemoteWriteSpec(test.spec, version, test.componentName)
+			err = validateRemoteWriteSpec(test.spec, version, false)
 			if test.expectErr {
 				require.Error(t, err)
 				return
