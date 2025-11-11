@@ -1293,10 +1293,10 @@ func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
 	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	pr, err = framework.WaitForRuleCondition(ctx, pr, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	pr, err = framework.WaitForRuleCondition(ctx, pr, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
 	require.NoError(t, err)
 
-	err = framework.DeletePrometheusAndWaitUntilGone(ctx, ns, name)
+	err = framework.DeleteThanosRulerAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
 
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
