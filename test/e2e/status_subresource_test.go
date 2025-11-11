@@ -1222,7 +1222,7 @@ func testGarbageCollectionOfPromRuleBindingForThanosRuler(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
 	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
@@ -1238,6 +1238,9 @@ func testGarbageCollectionOfPromRuleBindingForThanosRuler(t *testing.T) {
 	})
 	pr1.Labels["group"] = name
 	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
 	pr1.Labels = map[string]string{}
@@ -1275,7 +1278,7 @@ func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
 	pr := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
