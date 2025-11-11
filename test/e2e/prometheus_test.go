@@ -5494,6 +5494,9 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 }
 
 func testPrometheusUTF8MetricsSupport(t *testing.T) {
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		t.Skip("UTF-8 metrics support is not available in Prometheus v2")
+	}
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -5720,6 +5723,10 @@ func testPrometheusUTF8MetricsSupport(t *testing.T) {
 }
 
 func testPrometheusUTF8LabelSupport(t *testing.T) {
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		t.Skip("UTF-8 label support is not available in Prometheus v2")
+	}
+
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
