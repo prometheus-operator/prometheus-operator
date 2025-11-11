@@ -201,6 +201,53 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config.golden",
 		},
 		{
+			name:      "valid global config with global HTTPConfig CA",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						CA: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "proxy-ca-certificate",
+								},
+								Key: "certificate",
+							},
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_with_global_httpconfig_ca.golden",
+		},
+		{
 			name: "valid global config with Slack API URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SlackAPIURL: &corev1.SecretKeySelector{
@@ -1842,6 +1889,35 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Data: map[string]string{
 					"test": "clientID",
+				},
+			},
+			&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "proxy-ca-certificate",
+					Namespace: "mynamespace",
+				},
+				Data: map[string]string{
+					"certificate": `-----BEGIN CERTIFICATE-----
+MIIDbTCCAlWgAwIBAgIUM7xicCKY+p54CUpjWsTl7KTssbIwDQYJKoZIhvcNAQEL
+BQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
+GEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAgFw0yNTExMTExNjU5MTRaGA8yMTI1
+MTAxODE2NTkxNFowRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUx
+ITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAJZlFSLI4/t27LnnYnv+EsFXoyjryinP4NbaHjjB
+gEEEHMo+GgL8cOu3VbDuzgpC3opJ+AHGsltXc+gZ86YPu8EzwiKB+Ci4p8K5z9+g
+QW8WX9lpZn7z5WRm53llVLDZY/vCSzQ5KFQ8V/0vYJfxOYUapilH9mQqENnaw9dz
+0VckluLgSLKA/A95p8Rp2Zt1tAtwjD3ClRQ1wricymbt+5qVt45zLC6MD32WizyV
+vjCUc2kCZDyjHPZIauLoo0rQAiO/mX8nUJpxGf8yp/Rs7hL1tBAWSj9FFBvdUwz+
+z9qRyE6ojp1HVSDpGyLsRXZwqiP5IL72iZlcoDRr1+zmWTMCAwEAAaNTMFEwHQYD
+VR0OBBYEFC5yBxXPVqkvyq05rr7OzIdS1h2GMB8GA1UdIwQYMBaAFC5yBxXPVqkv
+yq05rr7OzIdS1h2GMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEB
+AFO+7n/RSw18NRZ8Z8uFLvZwWCc/PeZ5uo23m4AAVLr5vwWCIeh+DYG4u4xhyKd5
+B3U7zgxU2/pmSS1kPDAIBooVe90C804OxfL3/QOurRC9Eugi441DvpkJ2Uy91PWA
+E5G2s2fZRWUytKl0I7YqyeDlP96V34qi6P8e3GAWGoGExjJzQVomYXeVU/0eQkOC
+Z8Ja2z8jw1xUKxfurno8wsAgFAQLuUZ0sTpwHBtwzFEdIeaAHBbNkkuGq7leIw/u
+83OdaXOYthY8wG5jRwDRQSA0FGayQrKPj1+II2VMgU/ApF5zs7Gid32pi4iVyu1i
+9MFjFOe4ShaqsQ9HgZuAZls=
+-----END CERTIFICATE-----`,
 				},
 			},
 			&corev1.Secret{

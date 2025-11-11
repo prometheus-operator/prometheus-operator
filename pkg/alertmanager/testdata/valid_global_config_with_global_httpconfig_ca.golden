@@ -1,0 +1,17 @@
+global:
+  http_config:
+    tls_config:
+      ca_file: /etc/alertmanager/certs/1_mynamespace_proxy-ca-certificate_certificate
+      insecure_skip_verify: false
+    follow_redirects: true
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    matchers:
+    - mykey="myvalue"
+    - mykey1="myvalue1"
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+templates: []
