@@ -1194,3 +1194,114 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
+
+// testGarbageCollectionOfPromRuleBindingForThanosRuler validates that the operator removes the reference to the thanoousRuler resource when the PrometheusRule isn't selected anymore by the workload.
+func testGarbageCollectionOfPromRuleBindingForThanosRuler(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "prom-rule-status-binding-cleanup-tr"
+
+	tr := framework.MakeBasicThanosRuler(name, 1, name)
+	tr.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	require.NoError(t, err)
+
+	pr1 := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr1.Labels["group"] = name
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	pr1.Labels = map[string]string{}
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler validates that the operator removes the reference to the ThanosRuler resource when workload is deleted.
+func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "prom-rule-status-binding-cleanup-tr"
+
+	tr := framework.MakeBasicThanosRuler(name, 1, name)
+	tr.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+	require.NoError(t, err)
+
+	pr := framework.MakeBasicRule(ns, "rule1", []monitoringv1.RuleGroup{
+		{
+			Name: "TestAlert1",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "TestAlert1",
+					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	})
+	pr.Labels["group"] = name
+	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	pr, err = framework.WaitForRuleCondition(ctx, pr, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeleteThanosRulerAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
+	require.NoError(t, err)
+}

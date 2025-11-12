@@ -497,7 +497,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	logger := o.logger.With("key", key)
 
-	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), func() error { return nil })
+	statusCleanup := func() error {
+		return o.configResStatusCleanup(ctx, tr)
+	}
+
+	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), statusCleanup)
 	if err != nil {
 		return err
 	}
@@ -649,6 +653,23 @@ func (o *Operator) updateConfigResourcesStatus(ctx context.Context, tr *monitori
 		}
 	}
 
+	if err := operator.CleanupBindings(ctx, o.ruleInfs.ListAll, rules.Selected(), configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for prometheusRules: %w", err)
+	}
+	return nil
+}
+
+// configResStatusCleanup removes thanosRuler bindings from the configuration resources (PrometheusRule).
+func (o *Operator) configResStatusCleanup(ctx context.Context, tr *monitoringv1.ThanosRuler) error {
+	if !o.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(tr, o.dclient, o.accessor)
+
+	if err := operator.CleanupBindings(ctx, o.ruleInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PrometheusRule]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for prometheusRule: %w", err)
+	}
 	return nil
 }
 
