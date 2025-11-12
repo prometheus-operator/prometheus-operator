@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -2651,6 +2652,22 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	// statement but in case something goes wrong, let's return remote
 	// write v1.
 	return "prometheus.WriteRequest"
+}
+
+// AddRemoteWriteToStore validates the remote-write configurations and loads
+// all secret/configmap references into the store.
+func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	for i, rw := range rws {
+		if err := cg.validateRemoteWriteSpec(rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+
+		if err := addRemoteWritesToStore(ctx, store, namespace, rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+	}
+
+	return nil
 }
 
 func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapItem {

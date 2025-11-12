@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
@@ -95,7 +95,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.Version, bypassVersionCheck bool) error {
+func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	var nonNilFields []string
 	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
@@ -134,7 +134,7 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 
 		// check azure managed identity client id
 		if spec.AzureAD.ManagedIdentity != nil {
-			if err := checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity, version, bypassVersionCheck); err != nil {
+			if err := cg.checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity); err != nil {
 				return err
 			}
 		}
@@ -150,20 +150,16 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec, version semver.V
 	return spec.Validate()
 }
 
-func checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity, version semver.Version, bypassVersionCheck bool) error {
-	if version.LT(semver.MustParse("3.5.0")) && !bypassVersionCheck {
-
-		if mid.ClientID == nil {
-			return fmt.Errorf("nil clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
-				version.String())
-		}
-
-		if *mid.ClientID == "" {
-			return fmt.Errorf("empty clientID set in 'managedIdentity' supported in Prometheus >= 3.5.0 only - current %s",
-				version.String())
-		}
-
+func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity) error {
+	// Prometheus >= v3.5.0 allows empty clientID values.
+	if cg.WithMinimumVersion("3.5.0").IsCompatible() {
+		return nil
 	}
+
+	if ptr.Deref(mid.ClientID, "") == "" {
+		return fmt.Errorf("managedIdentidy: clientId is required with Prometheus < 3.5.0, current = %s", cg.version.String())
+	}
+
 	return nil
 }
 

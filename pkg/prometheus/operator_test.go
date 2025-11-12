@@ -17,14 +17,13 @@ package prometheus
 import (
 	"testing"
 
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestKeyToStatefulSetKey(t *testing.T) {
@@ -56,24 +55,21 @@ func TestKeyToStatefulSetKey(t *testing.T) {
 
 func TestValidateRemoteWriteConfig(t *testing.T) {
 	cases := []struct {
-		name          string
-		spec          monitoringv1.RemoteWriteSpec
-		expectErr     bool
-		version       string
-		componentName ComponentName
+		name      string
+		spec      monitoringv1.RemoteWriteSpec
+		expectErr bool
+		version   string
 	}{
 		{
 			name: "with_OAuth2",
 			spec: monitoringv1.RemoteWriteSpec{
 				OAuth2: &monitoringv1.OAuth2{},
 			},
-			componentName: ComponentNamePrometheus,
 		}, {
 			name: "with_SigV4",
 			spec: monitoringv1.RemoteWriteSpec{
 				Sigv4: &monitoringv1.Sigv4{},
 			},
-			componentName: ComponentNamePrometheus,
 		},
 		{
 			name: "with_OAuth2_and_SigV4",
@@ -81,24 +77,21 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				OAuth2: &monitoringv1.OAuth2{},
 				Sigv4:  &monitoringv1.Sigv4{},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		}, {
 			name: "with_OAuth2_and_BasicAuth",
 			spec: monitoringv1.RemoteWriteSpec{
 				OAuth2:    &monitoringv1.OAuth2{},
 				BasicAuth: &monitoringv1.BasicAuth{},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		}, {
 			name: "with_BasicAuth_and_SigV4",
 			spec: monitoringv1.RemoteWriteSpec{
 				BasicAuth: &monitoringv1.BasicAuth{},
 				Sigv4:     &monitoringv1.Sigv4{},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		}, {
 			name: "with_BasicAuth_and_SigV4_and_OAuth2",
 			spec: monitoringv1.RemoteWriteSpec{
@@ -106,8 +99,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				Sigv4:     &monitoringv1.Sigv4{},
 				OAuth2:    &monitoringv1.OAuth2{},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		},
 		{
 			name: "with_no_azure_managed_identity_and_no_azure_oAuth_and_no_azure_sdk",
@@ -117,8 +109,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					Cloud: ptr.To("AzureGovernment"),
 				},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		},
 		{
 			name: "with_azure_managed_identity_and_azure_oAuth",
@@ -141,8 +132,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		},
 		{
 			name: "with_azure_managed_identity_and_azure_sdk",
@@ -158,8 +148,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		},
 		{
 			name: "with_azure_managed_identity_empty_client_id",
@@ -172,8 +161,8 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			version:   "3.4.0",
+			expectErr: true,
 		},
 		{
 			name: "with_azure_managed_identity_empty_client_id_v3.5.0",
@@ -186,23 +175,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr:     false,
-			version:       "3.5.0",
-			componentName: ComponentNamePrometheus,
-		},
-		{
-			name: "with_azure_managed_identity_empty_client_id_thanos",
-			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To(""),
-					},
-				},
-			},
-			expectErr:     true,
-			componentName: ComponentNameThanos,
+			version: "3.5.0",
 		},
 		{
 			name: "with_azure_sdk_and_azure_oAuth",
@@ -225,8 +198,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		},
 		{
 			name: "with_invalid_azure_oAuth_clientID",
@@ -246,24 +218,30 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr:     true,
-			componentName: ComponentNamePrometheus,
+			expectErr: true,
 		},
 	}
-	for _, c := range cases {
-		test := c
-		t.Run(test.name, func(t *testing.T) {
-			v := operator.StringValOrDefault(test.version, operator.DefaultThanosVersion)
-			version, err := semver.ParseTolerant(v)
-			if err != nil {
-				require.NoError(t, err)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+					},
+				},
 			}
+			cg := mustNewConfigGenerator(t, p)
 
-			err = validateRemoteWriteSpec(test.spec, version, false)
-			if test.expectErr {
+			err := cg.validateRemoteWriteSpec(tc.spec)
+			if tc.expectErr {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 		})
 	}
