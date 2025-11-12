@@ -1010,11 +1010,11 @@ type PushoverConfig struct {
 	// html defines whether notification message is HTML or plain text.
 	// When true, the message can include HTML formatting tags.
 	// +optional
-	HTML bool `json:"html,omitempty"`
+	HTML *bool `json:"html,omitempty"`
 	// monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html
 	// html and monospace formatting are mutually exclusive.
 	// +optional
-	Monospace bool `json:"monospace,omitempty"`
+	Monospace *bool `json:"monospace,omitempty"`
 	// httpConfig defines the HTTP client configuration for Pushover API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

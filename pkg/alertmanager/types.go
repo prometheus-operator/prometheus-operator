@@ -340,8 +340,8 @@ type pushoverConfig struct {
 	Priority      string            `yaml:"priority,omitempty" json:"priority,omitempty"`
 	Retry         *model.Duration   `yaml:"retry,omitempty" json:"retry,omitempty"`
 	Expire        *model.Duration   `yaml:"expire,omitempty" json:"expire,omitempty"`
-	HTML          bool              `yaml:"html,omitempty" json:"html,omitempty"`
-	Monospace     bool              `yaml:"monospace,omitempty" json:"monospace,omitempty"`
+	HTML          *bool             `yaml:"html,omitempty" json:"html,omitempty"`
+	Monospace     *bool             `yaml:"monospace,omitempty" json:"monospace,omitempty"`
 }
 
 type snsConfig struct {

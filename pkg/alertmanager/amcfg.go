@@ -1283,8 +1283,6 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
-		HTML:          in.HTML,
-		Monospace:     in.Monospace,
 	}
 
 	if in.TTL != nil {
@@ -2494,14 +2492,14 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		poc.Device = ""
 	}
 
-	if poc.Monospace && lessThanV0_29 {
+	if poc.Monospace != nil && *poc.Monospace && lessThanV0_29 {
 		msg := "'monospace' supported in Alertmanager >= 0.29.0 only - dropping field from pushover receiver config"
 		logger.Warn(msg, "current_version", amVersion.String())
-		poc.Monospace = false
+		*poc.Monospace = false
 	}
 
-	if poc.HTML && poc.Monospace {
-		return errors.New("either monospace & html must be configured")
+	if poc.HTML != nil && *poc.HTML && poc.Monospace != nil && *poc.Monospace {
+		return errors.New("either monospace or html must be configured")
 	}
 
 	return poc.HTTPConfig.sanitize(amVersion, logger)

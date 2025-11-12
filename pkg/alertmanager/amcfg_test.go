@@ -5108,8 +5108,8 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 							{
 								UserKey:   "foo",
 								Token:     "bar",
-								HTML:      true,
-								Monospace: true,
+								HTML:      ptr.To(true),
+								Monospace: ptr.To(true),
 							},
 						},
 					},
@@ -5127,7 +5127,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 							{
 								UserKey: "foo",
 								Token:   "bar",
-								HTML:    true,
+								HTML:    ptr.To(true),
 							},
 						},
 					},
@@ -5145,7 +5145,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 							{
 								UserKey:   "foo",
 								Token:     "bar",
-								Monospace: true,
+								Monospace: ptr.To(true),
 							},
 						},
 					},
@@ -5163,7 +5163,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 							{
 								UserKey:   "foo",
 								Token:     "bar",
-								Monospace: true,
+								Monospace: ptr.To(true),
 							},
 						},
 					},

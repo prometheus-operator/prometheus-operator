@@ -3,4 +3,5 @@ receivers:
   pushover_configs:
   - user_key: foo
     token: bar
+    monospace: false
 templates: []
