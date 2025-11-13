@@ -12,6 +12,7 @@ linters:
     - godoclint
     - iface
     - iotamixing
+    - modernize
     - nilnesserr
     - recvcheck
     - revive
@@ -31,6 +32,9 @@ linters:
       exclude-functions:
         # Any error in HTTP handlers is handled by the server itself.
         - (net/http.ResponseWriter).Write
+    modernize:
+      disable:
+        - omitzero
   exclusions:
     generated: strict
     presets:
