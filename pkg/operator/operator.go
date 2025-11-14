@@ -326,7 +326,7 @@ func NewFakeRecorder(bufferSize int, related runtime.Object) *EventRecorder {
 }
 
 // Eventf records a Kubernetes event.
-func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
+func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...any) {
 	er.er.Eventf(
 		regarding,
 		er.related,

@@ -12226,6 +12226,11 @@ string
 <td>
 <em>(Optional)</em>
 <p>port defines the <code>Pod</code> port name which exposes the endpoint.</p>
+<p>If the pod doesn&rsquo;t expose a port with the same name, it will result
+in no targets being discovered.</p>
+<p>If a <code>Pod</code> has multiple <code>Port</code>s with the same name (which is not
+recommended), one target instance per unique port number will be
+generated.</p>
 <p>It takes precedence over the <code>portNumber</code> and <code>targetPort</code> fields.</p>
 </td>
 </tr>
@@ -12239,6 +12244,14 @@ int32
 <td>
 <em>(Optional)</em>
 <p>portNumber defines the <code>Pod</code> port number which exposes the endpoint.</p>
+<p>The <code>Pod</code> must declare the specified <code>Port</code> in its spec or the
+target will be dropped by Prometheus.</p>
+<p>This cannot be used to enable scraping of an undeclared port.
+To scrape targets on a port which isn&rsquo;t exposed, you need to use
+relabeling to override the <code>__address__</code> label (but beware of
+duplicate targets if the <code>Pod</code> has other declared ports).</p>
+<p>In practice Prometheus will select targets for which the
+matches the target&rsquo;s __meta_kubernetes_pod_container_port_number.</p>
 </td>
 </tr>
 <tr>

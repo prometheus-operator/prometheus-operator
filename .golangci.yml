@@ -12,6 +12,7 @@ linters:
     - godoclint
     - iface
     - iotamixing
+    - modernize
     - nilnesserr
     - recvcheck
     - revive
@@ -25,10 +26,15 @@ linters:
           deny:
             - pkg: github.com/pkg/errors
               desc: Should be replaced with standard lib errors or fmt.Errorf
+            - pkg: sort
+              desc: Should be replaced with slices package
     errcheck:
       exclude-functions:
         # Any error in HTTP handlers is handled by the server itself.
         - (net/http.ResponseWriter).Write
+    modernize:
+      disable:
+        - omitzero
   exclusions:
     generated: strict
     presets:

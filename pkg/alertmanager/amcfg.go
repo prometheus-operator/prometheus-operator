@@ -446,10 +446,16 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 			FollowRedirects:   in.HTTPConfig.FollowRedirects,
 			EnableHTTP2:       in.HTTPConfig.EnableHTTP2,
 		}
+
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid global httpConfig: %w", err)
 		}
+
+		if err := configureHTTPConfigInStore(ctx, &v1alpha1Config, crKey.Namespace, cb.store); err != nil {
+			return nil, err
+		}
+
 		out.HTTPConfig = httpConfig
 	}
 

@@ -17,7 +17,7 @@ package informers
 import (
 	"context"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -232,7 +232,7 @@ func TestNewInformerOptions(t *testing.T) {
 			// sort the field selector as entries are in non-deterministic order
 			sortFieldSelector := func(opts *metav1.ListOptions) {
 				fs := strings.Split(opts.FieldSelector, ",")
-				sort.Strings(fs)
+				slices.Sort(fs)
 				opts.FieldSelector = strings.Join(fs, ",")
 			}
 			sortFieldSelector(&opts)
@@ -243,8 +243,8 @@ func TestNewInformerOptions(t *testing.T) {
 			}
 
 			// sort namespaces as entries are in non-deterministic order
-			sort.Strings(namespaces)
-			sort.Strings(tc.expectedNamespaces)
+			slices.Sort(namespaces)
+			slices.Sort(tc.expectedNamespaces)
 
 			if !reflect.DeepEqual(tc.expectedNamespaces, namespaces) {
 				t.Errorf("expected namespaces %v, got %v", tc.expectedNamespaces, namespaces)

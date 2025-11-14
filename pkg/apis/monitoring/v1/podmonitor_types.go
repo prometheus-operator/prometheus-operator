@@ -218,11 +218,30 @@ func (l *PodMonitorList) DeepCopyObject() runtime.Object {
 type PodMetricsEndpoint struct {
 	// port defines the `Pod` port name which exposes the endpoint.
 	//
+	// If the pod doesn't expose a port with the same name, it will result
+	// in no targets being discovered.
+	//
+	// If a `Pod` has multiple `Port`s with the same name (which is not
+	// recommended), one target instance per unique port number will be
+	// generated.
+	//
 	// It takes precedence over the `portNumber` and `targetPort` fields.
 	// +optional
 	Port *string `json:"port,omitempty"`
 
 	// portNumber defines the `Pod` port number which exposes the endpoint.
+	//
+	// The `Pod` must declare the specified `Port` in its spec or the
+	// target will be dropped by Prometheus.
+	//
+	// This cannot be used to enable scraping of an undeclared port.
+	// To scrape targets on a port which isn't exposed, you need to use
+	// relabeling to override the `__address__` label (but beware of
+	// duplicate targets if the `Pod` has other declared ports).
+	//
+	// In practice Prometheus will select targets for which the
+	// matches the target's __meta_kubernetes_pod_container_port_number.
+	//
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
