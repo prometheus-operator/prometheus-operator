@@ -3071,7 +3071,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 					Port:     "web",
 					Interval: "30s",
 					Path:     "/federate",
-					Params:   []monitoringv1.ParamEntry{{Name: "metrics[]", Values: []string{"{__name__=~\"job:.*\"}"}}},
+					Params:   []monitoringv1.ParamEntry{{Name: "match[]", Values: []string{"{__name__=~\"job:.*\"}"}}},
 				},
 			},
 		},
