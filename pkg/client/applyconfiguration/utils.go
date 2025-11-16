@@ -128,6 +128,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ObjectReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OTLPConfig"):
 		return &monitoringv1.OTLPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ParamEntry"):
+		return &monitoringv1.ParamEntryApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodDNSConfig"):
 		return &monitoringv1.PodDNSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodDNSConfigOption"):
@@ -322,6 +324,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PagerDutyImageConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PagerDutyLinkConfig"):
 		return &monitoringv1alpha1.PagerDutyLinkConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ParamEntry"):
+		return &monitoringv1alpha1.ParamEntryApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgent"):
 		return &monitoringv1alpha1.PrometheusAgentApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgentSpec"):

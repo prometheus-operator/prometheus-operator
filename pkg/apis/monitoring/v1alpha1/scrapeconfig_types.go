@@ -15,6 +15,8 @@
 package v1alpha1
 
 import (
+	"sort"
+
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -292,9 +294,8 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 	// params defines optional HTTP URL parameters
-	// +mapType:=atomic
 	// +optional
-	Params map[string][]string `json:"params,omitempty"`
+	Params []ParamEntry `json:"params,omitempty"`
 	// scheme defines the protocol scheme used for requests.
 	// +optional
 	Scheme *v1.Scheme `json:"scheme,omitempty"`
@@ -1522,4 +1523,34 @@ type IonosSDConfig struct {
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+}
+
+type ParamEntry struct {
+	// name is the parameter name.
+	// +required
+	Name string `json:"name"`
+	// values is the parameter values.
+	// +optional
+	Values []string `json:"values,omitempty"`
+}
+
+func (p *ScrapeConfigSpec) ParamsMap() map[string][]string {
+	m := make(map[string][]string, len(p.Params))
+	for _, e := range p.Params {
+		m[e.Name] = e.Values
+	}
+	return m
+}
+
+func (p *ScrapeConfigSpec) SetParamsMap(m map[string][]string) {
+	if len(m) == 0 {
+		p.Params = nil
+		return
+	}
+	entries := make([]ParamEntry, 0, len(m))
+	for k, v := range m {
+		entries = append(entries, ParamEntry{Name: k, Values: v})
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Name < entries[j].Name })
+	p.Params = entries
 }

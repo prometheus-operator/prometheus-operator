@@ -695,12 +695,21 @@ spec:
                       - tokenUrl
                       type: object
                     params:
-                      additionalProperties:
-                        items:
-                          type: string
-                        type: array
                       description: params define optional HTTP URL parameters.
-                      type: object
+                      items:
+                        properties:
+                          name:
+                            description: name is the parameter name.
+                            type: string
+                          values:
+                            description: values is the parameter values.
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - name
+                        type: object
+                      type: array
                     path:
                       description: |-
                         path defines the HTTP path from which to scrape for metrics.

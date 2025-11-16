@@ -10591,7 +10591,9 @@ Scheme
 <td>
 <code>params</code><br/>
 <em>
-map[string][]string
+<a href="#monitoring.coreos.com/v1.ParamEntry">
+[]ParamEntry
+</a>
 </em>
 </td>
 <td>
@@ -12352,6 +12354,46 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ParamEntry">ParamEntry
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>name is the parameter name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>values is the parameter values.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.PodDNSConfig">PodDNSConfig
 </h3>
 <p>
@@ -12584,7 +12626,9 @@ Scheme
 <td>
 <code>params</code><br/>
 <em>
-map[string][]string
+<a href="#monitoring.coreos.com/v1.ParamEntry">
+[]ParamEntry
+</a>
 </em>
 </td>
 <td>
@@ -23830,7 +23874,9 @@ with the target&rsquo;s labels.</p>
 <td>
 <code>params</code><br/>
 <em>
-map[string][]string
+<a href="#monitoring.coreos.com/v1alpha1.ParamEntry">
+[]ParamEntry
+</a>
 </em>
 </td>
 <td>
@@ -30180,6 +30226,46 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.ParamEntry">ParamEntry
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>name is the parameter name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>values is the parameter values.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.ParsedRange">ParsedRange
 </h3>
 <div>
@@ -34102,7 +34188,9 @@ with the target&rsquo;s labels.</p>
 <td>
 <code>params</code><br/>
 <em>
-map[string][]string
+<a href="#monitoring.coreos.com/v1alpha1.ParamEntry">
+[]ParamEntry
+</a>
 </em>
 </td>
 <td>

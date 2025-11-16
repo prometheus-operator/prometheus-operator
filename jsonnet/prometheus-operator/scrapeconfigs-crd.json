@@ -10564,15 +10564,27 @@
                     "type": "array"
                   },
                   "params": {
-                    "additionalProperties": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array"
-                    },
                     "description": "params defines optional HTTP URL parameters",
-                    "type": "object",
-                    "x-kubernetes-map-type": "atomic"
+                    "items": {
+                      "properties": {
+                        "name": {
+                          "description": "name is the parameter name.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "values is the parameter values.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
                   },
                   "proxyConnectHeader": {
                     "additionalProperties": {

@@ -116,7 +116,8 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	// +mapType:=atomic
-	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	// +kubebuilder:validation:Type=object
+	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"` //nolint:kubeapilinter
 }
 
 // Validate semantically validates the given ProxyConfig.
@@ -572,7 +573,7 @@ type Endpoint struct {
 
 	// params define optional HTTP URL parameters.
 	// +optional
-	Params map[string][]string `json:"params,omitempty"`
+	Params []ParamEntry `json:"params,omitempty"`
 
 	// interval at which Prometheus scrapes the metrics from the target.
 	//
