@@ -317,6 +317,7 @@ type DiscordConfig struct {
 	// webhookURLFile defines the file to read the Discord webhook URL from.
 	// It is mutually exclusive with `apiURL`.
 	// Either `apiURL` or `webhookURLFile` is required.
+	// It requires Alertmanager >= 0.28.0.
 	// +optional
 	WebhookURLFile *string `json:"webhookURLFile,omitempty"`
 	// title defines the template of the message's title.
