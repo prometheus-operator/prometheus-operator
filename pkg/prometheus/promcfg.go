@@ -475,6 +475,10 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 		return cfg
 	}
 
+	if nhc.ScrapeNativeHistograms != nil {
+		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", nhc.ScrapeNativeHistograms)
+	}
+
 	if nhc.NativeHistogramBucketLimit != nil {
 		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "native_histogram_bucket_limit", nhc.NativeHistogramBucketLimit)
 	}

@@ -1014,6 +1014,13 @@ const (
 // NativeHistogramConfig extends the native histogram configuration settings.
 // +k8s:openapi-gen=true
 type NativeHistogramConfig struct {
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
+	// It requires Prometheus >= v3.8.0.
+	//
+	// +optional
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
 	//
