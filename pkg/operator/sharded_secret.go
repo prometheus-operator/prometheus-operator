@@ -96,13 +96,20 @@ func (s *ShardedSecret) newSecretAt(index int) *v1.Secret {
 func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient corev1.SecretInterface, lastSecretIndex int) error {
 	for i := lastSecretIndex + 1; ; i++ {
 		secretName := s.secretNameAt(i)
-		err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{})
+		_, err := sClient.Get(ctx, secretName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
-			// we reached the end of existing secrets
+			// No more shards exist, stop probing.
 			break
 		}
-
 		if err != nil {
+			return fmt.Errorf("failed to check secret %q existence: %w", secretName, err)
+		}
+
+		if err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{}); err != nil {
+			if apierrors.IsNotFound(err) {
+				// The shard vanished after the existence check, continue probing.
+				continue
+			}
 			return fmt.Errorf("failed to delete secret %q: %w", secretName, err)
 		}
 	}

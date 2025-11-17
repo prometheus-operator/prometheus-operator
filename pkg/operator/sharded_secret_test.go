@@ -15,10 +15,14 @@
 package operator
 
 import (
+	"context"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
+	clientgotesting "k8s.io/client-go/testing"
 )
 
 func TestShardedSecret(t *testing.T) {
@@ -85,5 +89,82 @@ func TestShardedSecret(t *testing.T) {
 				t.Errorf("sharding failed: got %d shards; want %d", len(secrets), tc.expectShards)
 			}
 		})
+	}
+}
+
+func TestCleanupExcessSecretShardsSkipsMissing(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	namespace := "ns"
+	client := fake.NewSimpleClientset(&v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "secret-0",
+			Namespace: namespace,
+		},
+	})
+
+	s := &ShardedSecret{
+		template: &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: namespace,
+			},
+		},
+	}
+
+	if err := s.cleanupExcessSecretShards(ctx, client.CoreV1().Secrets(namespace), 0); err != nil {
+		t.Fatalf("cleanupExcessSecretShards returned error: %v", err)
+	}
+
+	actions := client.Actions()
+	if len(actions) != 1 || actions[0].GetVerb() != "get" {
+		t.Fatalf("unexpected client actions: %#v", actions)
+	}
+}
+
+func TestCleanupExcessSecretShardsRemovesExtra(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	namespace := "ns"
+	client := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret-0",
+				Namespace: namespace,
+			},
+		},
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret-1",
+				Namespace: namespace,
+			},
+		},
+	)
+
+	s := &ShardedSecret{
+		template: &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: namespace,
+			},
+		},
+	}
+
+	if err := s.cleanupExcessSecretShards(ctx, client.CoreV1().Secrets(namespace), 0); err != nil {
+		t.Fatalf("cleanupExcessSecretShards returned error: %v", err)
+	}
+
+	actions := append([]clientgotesting.Action(nil), client.Actions()...)
+	if _, err := client.CoreV1().Secrets(namespace).Get(ctx, "secret-1", metav1.GetOptions{}); !apierrors.IsNotFound(err) {
+		t.Fatalf("expected secret-1 to be deleted, got err=%v", err)
+	}
+
+	if len(actions) != 3 {
+		t.Fatalf("unexpected number of client actions: %#v", actions)
+	}
+	if actions[0].GetVerb() != "get" || actions[1].GetVerb() != "delete" || actions[2].GetVerb() != "get" {
+		t.Fatalf("unexpected action order: %#v", actions)
 	}
 }
