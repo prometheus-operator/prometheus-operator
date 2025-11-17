@@ -71,6 +71,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 			return nil, fmt.Errorf("failed to validate 'webhookConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
+		if err := validateIncidentioConfigs(receiver.IncidentioConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'incidentioConfig' - receiver %s: %w", receiver.Name, err)
+		}
+
 		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'weChatConfig' - receiver %s: %w", receiver.Name, err)
 		}
@@ -180,6 +184,32 @@ func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
 			}
 		}
 
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateIncidentioConfigs(configs []monitoringv1beta1.IncidentioConfig) error {
+	for _, config := range configs {
+		if config.URL == nil && config.URLSecret == nil {
+			return errors.New("one of 'url' or 'urlSecret' must be specified")
+		}
+		if config.URL != nil {
+			if _, err := validation.ValidateURL(*config.URL); err != nil {
+				return fmt.Errorf("invalid 'url': %w", err)
+			}
+		}
+		if config.MaxAlerts < 0 {
+			return errors.New("'maxAlerts' must be greater than or equal to zero")
+		}
+		if config.AlertSourceToken != nil && config.HTTPConfig != nil && config.HTTPConfig.Authorization != nil {
+			return errors.New("cannot specify 'alertSourceToken' when 'httpConfig.authorization' is configured")
+		}
+		if (config.HTTPConfig == nil || config.HTTPConfig.Authorization == nil) && config.AlertSourceToken == nil {
+			return errors.New("one of 'alertSourceToken' or 'httpConfig.authorization' must be specified")
+		}
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

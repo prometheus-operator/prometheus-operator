@@ -107,6 +107,7 @@ type receiver struct {
 	PagerdutyConfigs  []*pagerdutyConfig  `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
 	SlackConfigs      []*slackConfig      `yaml:"slack_configs,omitempty" json:"slack_configs,omitempty"`
 	WebhookConfigs    []*webhookConfig    `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
+	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_configs,omitempty" json:"incidentio_configs,omitempty"`
 	WeChatConfigs     []*weChatConfig     `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
 	EmailConfigs      []*emailConfig      `yaml:"email_configs,omitempty" json:"email_configs,omitempty"`
 	PushoverConfigs   []*pushoverConfig   `yaml:"pushover_configs,omitempty" json:"pushover_configs,omitempty"`
@@ -128,6 +129,17 @@ type webhookConfig struct {
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
 	Timeout       *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+}
+
+type incidentioConfig struct {
+	VSendResolved        *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	HTTPConfig           *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	URL                  string            `yaml:"url,omitempty" json:"url,omitempty"`
+	URLFile              string            `yaml:"url_file,omitempty" json:"url_file,omitempty"`
+	AlertSourceToken     string            `yaml:"alert_source_token,omitempty" json:"alert_source_token,omitempty"`
+	AlertSourceTokenFile string            `yaml:"alert_source_token_file,omitempty" json:"alert_source_token_file,omitempty"`
+	MaxAlerts            uint64            `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
+	Timeout              *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 type pagerdutyConfig struct {

@@ -1,0 +1,16 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  incidentio_configs:
+  - url: https://incident.example.com/alerts
+    alert_source_token: incidentio-secret
+    max_alerts: 5
+    timeout: 30s
+templates: []

@@ -638,6 +638,18 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var incidentioConfigs []*incidentioConfig
+	if l := len(in.IncidentioConfigs); l > 0 {
+		incidentioConfigs = make([]*incidentioConfig, l)
+		for i := range in.IncidentioConfigs {
+			receiver, err := cb.convertIncidentioConfig(ctx, in.IncidentioConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("IncidentioConfig[%d]: %w", i, err)
+			}
+			incidentioConfigs[i] = receiver
+		}
+	}
+
 	var opsgenieConfigs []*opsgenieConfig
 	if l := len(in.OpsGenieConfigs); l > 0 {
 		opsgenieConfigs = make([]*opsgenieConfig, l)
@@ -777,6 +789,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		DiscordConfigs:    discordConfigs,
 		SlackConfigs:      slackConfigs,
 		WebhookConfigs:    webhookConfigs,
+		IncidentioConfigs: incidentioConfigs,
 		WeChatConfigs:     weChatConfigs,
 		EmailConfigs:      emailConfigs,
 		VictorOpsConfigs:  victorOpsConfigs,
@@ -853,6 +866,54 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 			}
 			out.Timeout = &timeout
 		}
+	}
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) (*incidentioConfig, error) {
+	out := &incidentioConfig{
+		VSendResolved: in.SendResolved,
+	}
+
+	if in.URLSecret != nil {
+		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
+		if err != nil {
+			return nil, err
+		}
+		out.URL = url
+	} else if in.URL != nil {
+		url, err := validation.ValidateURL(*in.URL)
+		if err != nil {
+			return nil, err
+		}
+		out.URL = url.String()
+	}
+
+	if in.AlertSourceToken != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AlertSourceToken)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get incident.io alert source token: %w", err)
+		}
+		out.AlertSourceToken = token
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	if in.MaxAlerts > 0 {
+		out.MaxAlerts = uint64(in.MaxAlerts)
+	}
+
+	if in.Timeout != nil && *in.Timeout != "" {
+		timeout, err := model.ParseDuration(string(*in.Timeout))
+		if err != nil {
+			return nil, err
+		}
+		out.Timeout = &timeout
 	}
 
 	return out, nil
@@ -2283,6 +2344,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.IncidentioConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	for _, conf := range r.WeChatConfigs {
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
@@ -2565,6 +2632,15 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 	}
 
 	return nil
+}
+
+func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	incidentioAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if !incidentioAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; incident.io integration is available in Alertmanager >= 0.29.0`)
+	}
+
+	return ic.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {

@@ -2046,6 +2046,9 @@ func TestGenerateConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version29, err := semver.ParseTolerant("v0.29.0")
+	require.NoError(t, err)
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
@@ -3070,6 +3073,55 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL_File.golden",
+		},
+		{
+			name: "CR with Incidentio Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "incidentio-token",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("incidentio-secret"),
+					},
+				},
+			),
+			amVersion: &version29,
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{{
+								URL: ptr.To("https://incident.example.com/alerts"),
+								AlertSourceToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "incidentio-token",
+									},
+									Key: "token",
+								},
+								MaxAlerts: 5,
+								Timeout:   ptr.To(monitoringv1.Duration("30s")),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Incidentio_Receiver.golden",
 		},
 		{
 			name: "CR with SNS Receiver with Access and Key",
