@@ -325,7 +325,7 @@ func run(fs *flag.FlagSet) int {
 		logger.Info("Disabling support for unmanaged Prometheus configurations")
 		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithoutUnmanagedConfiguration())
 	}
-	// Check if we can read the storage classs
+	// Check if we can read the storage class
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
 		logger,
