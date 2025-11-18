@@ -948,7 +948,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 			if elem.IsNil() {
 				return
 			}
-			o.logger.Warn(fmt.Sprintf("ignoring %q not supported by Thanos", field), "minimum_version", minVersion)
+			o.logger.Warn(fmt.Sprintf("ignoring %q not supported by Thanos", field), "minimumVersion", minVersion)
 			elem.Set(reflect.Zero(elem.Type()))
 		}
 	}
