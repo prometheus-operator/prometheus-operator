@@ -25,7 +25,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.86.2
 	github.com/prometheus/alertmanager v0.29.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/prometheus/common v0.67.2
+	github.com/prometheus/common v0.67.3
 	github.com/prometheus/exporter-toolkit v0.15.0
 	// Since we needed the change added in https://github.com/prometheus/prometheus/pull/16928 and it's not released yet.
 	github.com/prometheus/prometheus v0.307.3
@@ -78,6 +78,7 @@ require (
 	github.com/go-openapi/swag/typeutils v0.25.1 // indirect
 	github.com/go-openapi/swag/yamlutils v0.25.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect
