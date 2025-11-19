@@ -480,6 +480,8 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 		Priority:     in.Priority,
 		Retry:        in.Retry,
 		Expire:       in.Expire,
+		HTML:         in.HTML,
+		Monospace:    in.Monospace,
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 	}
 }
