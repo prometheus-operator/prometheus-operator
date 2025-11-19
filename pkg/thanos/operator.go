@@ -932,11 +932,6 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		if version.LT(minRemoteWriteVersion) {
 			return fmt.Errorf("thanos remote-write configuration requires at least version %q: current version %q", minRemoteWriteVersion, version)
 		}
-
-		err = prompkg.AddRemoteWritesToStore(ctx, store, tr.Namespace, tr.Spec.RemoteWrite)
-		if err != nil {
-			return err
-		}
 	}
 
 	// resetFieldFn resets the value of a field in the RemoteWriteSpec struct
@@ -953,7 +948,16 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		}
 	}
 
-	for _, rw := range tr.Spec.RemoteWrite {
+	for i, rw := range tr.Spec.RemoteWrite {
+		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1 which allows empty clientId values.
+		if version.LT(semver.MustParse("0.40.0")) {
+			if rw.AzureAD != nil && rw.AzureAD.ManagedIdentity != nil {
+				if ptr.Deref(rw.AzureAD.ManagedIdentity.ClientID, "") == "" {
+					return fmt.Errorf("remoteWrite[%d]: azureAD.managedIdentity.clientId is required with Thanos < 0.40.0, current = %s", i, version)
+				}
+			}
+		}
+
 		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
 		if version.LT(semver.MustParse("0.38.0")) {
 			reset := resetFieldFn("0.38.0")
@@ -1015,6 +1019,11 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 	}
 
 	cg, err := prompkg.NewConfigGenerator(o.logger, nil, prompkg.WithoutVersionCheck())
+	if err != nil {
+		return err
+	}
+
+	err = cg.AddRemoteWriteToStore(ctx, store, tr.Namespace, tr.Spec.RemoteWrite)
 	if err != nil {
 		return err
 	}

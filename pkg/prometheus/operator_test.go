@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -57,6 +58,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		name      string
 		spec      monitoringv1.RemoteWriteSpec
 		expectErr bool
+		version   string
 	}{
 		{
 			name: "with_OAuth2",
@@ -116,7 +118,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -139,7 +141,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 					SDK: &monitoringv1.AzureSDK{
 						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
@@ -147,6 +149,33 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name: "with_azure_managed_identity_empty_client_id",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To(""),
+					},
+				},
+			},
+			version:   "3.4.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_managed_identity_empty_client_id_v3.5.0",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To(""),
+					},
+				},
+			},
+			version: "3.5.0",
 		},
 		{
 			name: "with_azure_sdk_and_azure_oAuth",
@@ -192,14 +221,27 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			expectErr: true,
 		},
 	}
-	for _, c := range cases {
-		test := c
-		t.Run(test.name, func(t *testing.T) {
-			err := validateRemoteWriteSpec(test.spec)
-			if test.expectErr {
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+					},
+				},
+			}
+			cg := mustNewConfigGenerator(t, p)
+
+			err := cg.validateRemoteWriteSpec(tc.spec)
+			if tc.expectErr {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 		})
 	}
