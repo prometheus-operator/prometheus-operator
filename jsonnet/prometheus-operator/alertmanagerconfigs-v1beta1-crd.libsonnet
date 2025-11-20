@@ -4680,6 +4680,10 @@
                             description: 'message defines the notification message content.\nThis is the main body text of the Pushover notification.',
                             type: 'string',
                           },
+                          monospace: {
+                            description: 'monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html\nhtml and monospace formatting are mutually exclusive.',
+                            type: 'boolean',
+                          },
                           priority: {
                             description: 'priority defines the notification priority level.\nSee https://pushover.net/api#priority for valid values and behavior.',
                             type: 'string',

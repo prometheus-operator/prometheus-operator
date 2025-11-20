@@ -5295,6 +5295,11 @@ spec:
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
                             type: string
+                          monospace:
+                            description: |-
+                              monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html
+                              html and monospace formatting are mutually exclusive.
+                            type: boolean
                           priority:
                             description: |-
                               priority defines the notification priority level.
@@ -17164,6 +17169,11 @@ spec:
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
                             type: string
+                          monospace:
+                            description: |-
+                              monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html
+                              html and monospace formatting are mutually exclusive.
+                            type: boolean
                           priority:
                             description: |-
                               priority defines the notification priority level.
