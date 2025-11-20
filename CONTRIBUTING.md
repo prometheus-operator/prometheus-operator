@@ -70,6 +70,11 @@ Many files (documentation, manifests, ...) in this repository are auto-generated
 
 We also use [golangci-lint](https://golangci-lint.run/docs/) to lint the Go code (including the API definitions). Make sure to execute `make check` before creating/updating your PR.
 
+> **Note:** The `make format` and `make check-docs` targets invoke `mdox` with the `githubPullsIssues` link validator.
+> When running these targets from a fork, set the `GITHUB_TOKEN` environment variable (for example to a fine-grained
+> personal access token with read-only permissions). Without a token `mdox` cannot query GitHub and exits with a
+> `pulls API request failed (403)` error message even though your changes are valid.
+
 Thanks for your contributions!
 
 ### Changes to the APIs
