@@ -31958,7 +31958,8 @@ bool
 <td>
 <em>(Optional)</em>
 <p>html defines whether notification message is HTML or plain text.
-When true, the message can include HTML formatting tags.</p>
+When true, the message can include HTML formatting tags.
+html and monospace formatting are mutually exclusive.</p>
 </td>
 </tr>
 <tr>
@@ -37556,7 +37557,8 @@ bool
 <td>
 <em>(Optional)</em>
 <p>html defines whether notification message is HTML or plain text.
-When true, the message can include HTML formatting tags.</p>
+When true, the message can include HTML formatting tags.
+html and monospace formatting are mutually exclusive.</p>
 </td>
 </tr>
 <tr>

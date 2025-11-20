@@ -1009,6 +1009,7 @@ type PushoverConfig struct {
 	Expire string `json:"expire,omitempty"`
 	// html defines whether notification message is HTML or plain text.
 	// When true, the message can include HTML formatting tags.
+	// html and monospace formatting are mutually exclusive.
 	// +optional
 	HTML *bool `json:"html,omitempty"`
 	// monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html

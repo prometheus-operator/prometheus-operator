@@ -4035,7 +4035,7 @@
                             type: 'string',
                           },
                           html: {
-                            description: 'html defines whether notification message is HTML or plain text.\nWhen true, the message can include HTML formatting tags.',
+                            description: 'html defines whether notification message is HTML or plain text.\nWhen true, the message can include HTML formatting tags.\nhtml and monospace formatting are mutually exclusive.',
                             type: 'boolean',
                           },
                           httpConfig: {

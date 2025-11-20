@@ -4584,6 +4584,7 @@ spec:
                             description: |-
                               html defines whether notification message is HTML or plain text.
                               When true, the message can include HTML formatting tags.
+                              html and monospace formatting are mutually exclusive.
                             type: boolean
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration
