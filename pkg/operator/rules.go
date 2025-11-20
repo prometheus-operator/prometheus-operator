@@ -119,7 +119,7 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 }
 
 func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitoringv1.PrometheusRule) (string, error) {
-	logger := prs.logger.With("prometheusrule", promRule.Name, "prometheusrule-namespace", promRule.Namespace)
+	logger := prs.logger.With("prometheusRule", promRule.Name, "prometheusrule-namespace", promRule.Namespace)
 	promRuleSpec := promRule.Spec
 
 	promRuleSpec = prs.sanitizePrometheusRulesSpec(promRuleSpec, logger)
@@ -173,7 +173,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 
 		if promRuleSpec.Groups[i].QueryOffset != nil && prs.version.LT(minVersionQueryOffset) {
 			promRuleSpec.Groups[i].QueryOffset = nil
-			logger.Warn(fmt.Sprintf("ignoring `query_offset` not supported by %s", component), "minimum_version", minVersionQueryOffset)
+			logger.Warn(fmt.Sprintf("ignoring `queryOffset` not supported by %s", component), "minimumVersion", minVersionQueryOffset)
 		}
 
 		if prs.ruleFormat == PrometheusFormat {
@@ -189,7 +189,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		for j := range promRuleSpec.Groups[i].Rules {
 			if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
 				promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-				logger.Warn(fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
+				logger.Warn(fmt.Sprintf("ignoring 'keepFiringFor' not supported by %s", component), "minimumVersion", minVersionKeepFiringFor)
 			}
 		}
 	}
