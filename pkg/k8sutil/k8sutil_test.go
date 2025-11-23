@@ -26,7 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/kubernetes/fake"
@@ -528,7 +527,7 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 		},
 	}
 
-	var spec v1.PodSpec
+	var spec corev1.PodSpec
 	UpdateDNSConfig(&spec, monitoringDNSConfig)
 
 	// Verify the conversion matches the original content
@@ -647,18 +646,18 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 	ns := "test-ns"
 	testcases := []struct {
 		name           string
-		service        v1.Service
+		service        corev1.Service
 		selectorLabels map[string]string
 		expectedErr    bool
 	}{
 		{
 			name: "custom service selects k8sutil",
-			service: v1.Service{
+			service: corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      serviceName,
 					Namespace: ns,
 				},
-				Spec: v1.ServiceSpec{
+				Spec: corev1.ServiceSpec{
 					Selector: map[string]string{
 						"k8sutil":                      name,
 						"app.kubernetes.io/name":       "k8sutil",
@@ -677,12 +676,12 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 		},
 		{
 			name: "custom service does not select k8sutil",
-			service: v1.Service{
+			service: corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-svc",
 					Namespace: ns,
 				},
-				Spec: v1.ServiceSpec{
+				Spec: corev1.ServiceSpec{
 					Selector: map[string]string{
 						"k8sutil":                      "different-name",
 						"app.kubernetes.io/name":       "k8sutil",
@@ -701,12 +700,12 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 		},
 		{
 			name: "custom service selects k8sutil but in different ns",
-			service: v1.Service{
+			service: corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-svc",
 					Namespace: "wrong-ns",
 				},
-				Spec: v1.ServiceSpec{
+				Spec: corev1.ServiceSpec{
 					Selector: map[string]string{
 						"k8sutil":                      name,
 						"app.kubernetes.io/name":       "k8sutil",

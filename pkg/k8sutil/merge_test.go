@@ -19,94 +19,94 @@ import (
 
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestPodLabelsAnnotations(t *testing.T) {
-	build := func(name, image string, ports ...v1.ContainerPort) v1.Container {
-		return v1.Container{
+	build := func(name, image string, ports ...corev1.ContainerPort) corev1.Container {
+		return corev1.Container{
 			Name:  name,
 			Image: image,
 			Ports: ports,
 		}
 	}
 
-	port1A := v1.ContainerPort{
+	port1A := corev1.ContainerPort{
 		Name:          "portA",
 		ContainerPort: 1,
 	}
-	port1B := v1.ContainerPort{
+	port1B := corev1.ContainerPort{
 		Name:          "portB",
 		ContainerPort: 1,
 	}
-	port2A := v1.ContainerPort{
+	port2A := corev1.ContainerPort{
 		Name:          "portA",
 		ContainerPort: 2,
 	}
 
 	testCases := []struct {
 		name    string
-		base    []v1.Container
-		patches []v1.Container
-		result  []v1.Container
+		base    []corev1.Container
+		patches []corev1.Container
+		result  []corev1.Container
 	}{
 		// sanity checks
 		{
 			name: "everything nil",
 		}, {
 			name:   "no patch",
-			base:   []v1.Container{build("c1", "image:A")},
-			result: []v1.Container{build("c1", "image:A")},
+			base:   []corev1.Container{build("c1", "image:A")},
+			result: []corev1.Container{build("c1", "image:A")},
 		}, {
 			name:    "no Base",
-			patches: []v1.Container{build("c1", "image:A")},
-			result:  []v1.Container{build("c1", "image:A")},
+			patches: []corev1.Container{build("c1", "image:A")},
+			result:  []corev1.Container{build("c1", "image:A")},
 		}, {
 			name:    "no conflict",
-			base:    []v1.Container{build("c1", "image:A")},
-			patches: []v1.Container{build("c2", "image:A")},
-			result:  []v1.Container{build("c1", "image:A"), build("c2", "image:A")},
+			base:    []corev1.Container{build("c1", "image:A")},
+			patches: []corev1.Container{build("c2", "image:A")},
+			result:  []corev1.Container{build("c1", "image:A"), build("c2", "image:A")},
 		}, {
 			name:    "no conflict with port",
-			base:    []v1.Container{build("c1", "image:A", port1A)},
-			patches: []v1.Container{build("c2", "image:A", port1B)},
-			result:  []v1.Container{build("c1", "image:A", port1A), build("c2", "image:A", port1B)},
+			base:    []corev1.Container{build("c1", "image:A", port1A)},
+			patches: []corev1.Container{build("c2", "image:A", port1B)},
+			result:  []corev1.Container{build("c1", "image:A", port1A), build("c2", "image:A", port1B)},
 		},
 		// string conflicts
 		{
 			name:    "one conflict",
-			base:    []v1.Container{build("c1", "image:A")},
-			patches: []v1.Container{build("c1", "image:B")},
-			result:  []v1.Container{build("c1", "image:B")},
+			base:    []corev1.Container{build("c1", "image:A")},
+			patches: []corev1.Container{build("c1", "image:B")},
+			result:  []corev1.Container{build("c1", "image:B")},
 		}, {
 			name:    "one conflict with ports",
-			base:    []v1.Container{build("c1", "image:A", port1A)},
-			patches: []v1.Container{build("c1", "image:B", port1A)},
-			result:  []v1.Container{build("c1", "image:B", port1A)},
+			base:    []corev1.Container{build("c1", "image:A", port1A)},
+			patches: []corev1.Container{build("c1", "image:B", port1A)},
+			result:  []corev1.Container{build("c1", "image:B", port1A)},
 		}, {
 			name:    "out of order conflict",
-			base:    []v1.Container{build("c1", "image:A"), build("c2", "image:A")},
-			patches: []v1.Container{build("c2", "image:B"), build("c1", "image:B")},
-			result:  []v1.Container{build("c1", "image:B"), build("c2", "image:B")},
+			base:    []corev1.Container{build("c1", "image:A"), build("c2", "image:A")},
+			patches: []corev1.Container{build("c2", "image:B"), build("c1", "image:B")},
+			result:  []corev1.Container{build("c1", "image:B"), build("c2", "image:B")},
 		},
 		// struct conflict
 		{
 			name:    "port name conflict",
-			base:    []v1.Container{build("c1", "image:A", port1A)},
-			patches: []v1.Container{build("c1", "image:A", port2A)},
-			result:  []v1.Container{build("c1", "image:A", port2A, port1A)}, // port ordering doesn't matter here
+			base:    []corev1.Container{build("c1", "image:A", port1A)},
+			patches: []corev1.Container{build("c1", "image:A", port2A)},
+			result:  []corev1.Container{build("c1", "image:A", port2A, port1A)}, // port ordering doesn't matter here
 		},
 		{
 			name:    "port value conflict",
-			base:    []v1.Container{build("c1", "image:A", port1A)},
-			patches: []v1.Container{build("c1", "image:A", port1B)},
-			result:  []v1.Container{build("c1", "image:A", port1B)}, // port ordering doesn't matter here
+			base:    []corev1.Container{build("c1", "image:A", port1A)},
+			patches: []corev1.Container{build("c1", "image:A", port1B)},
+			result:  []corev1.Container{build("c1", "image:A", port1B)}, // port ordering doesn't matter here
 		},
 		{
 			name:    "empty image, add port",
-			base:    []v1.Container{build("c1", "image:A")},
-			patches: []v1.Container{build("c1", "", port1A)},
-			result:  []v1.Container{build("c1", "image:A", port1A)},
+			base:    []corev1.Container{build("c1", "image:A")},
+			patches: []corev1.Container{build("c1", "", port1A)},
+			result:  []corev1.Container{build("c1", "image:A", port1A)},
 		},
 	}
 
@@ -119,8 +119,8 @@ func TestPodLabelsAnnotations(t *testing.T) {
 }
 
 func TestMergePatchContainersOrderPreserved(t *testing.T) {
-	build := func(name, image string) v1.Container {
-		return v1.Container{
+	build := func(name, image string) corev1.Container {
+		return corev1.Container{
 			Name:  name,
 			Image: image,
 		}
@@ -128,11 +128,11 @@ func TestMergePatchContainersOrderPreserved(t *testing.T) {
 
 	for range 10 {
 		result, err := MergePatchContainers(
-			[]v1.Container{
+			[]corev1.Container{
 				build("c1", "image:base"),
 				build("c2", "image:base"),
 			},
-			[]v1.Container{
+			[]corev1.Container{
 				build("c1", "image:A"),
 				build("c3", "image:B"),
 				build("c4", "image:C"),
@@ -144,7 +144,7 @@ func TestMergePatchContainersOrderPreserved(t *testing.T) {
 
 		diff := pretty.Compare(
 			result,
-			[]v1.Container{
+			[]corev1.Container{
 				build("c1", "image:A"),
 				build("c2", "image:base"),
 				build("c3", "image:B"),

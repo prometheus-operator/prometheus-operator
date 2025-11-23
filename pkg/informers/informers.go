@@ -19,7 +19,7 @@ import (
 	"slices"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -83,8 +83,8 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 	}, nil
 }
 
-func partialObjectMetadataStrip(obj any) (*v1.PartialObjectMetadata, error) {
-	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
+func partialObjectMetadataStrip(obj any) (*metav1.PartialObjectMetadata, error) {
+	partialMeta, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
 		// Don't do anything if the cast isn't successful.
 		// The object might be of type "cache.DeletedFinalStateUnknown".
@@ -122,7 +122,7 @@ func PartialObjectMetadataStrip(gvk schema.GroupVersionKind) cache.TransformFunc
 			return obj, nil
 		}
 
-		partialMeta.TypeMeta = v1.TypeMeta{
+		partialMeta.TypeMeta = metav1.TypeMeta{
 			Kind:       gvk.Kind,
 			APIVersion: gvk.GroupVersion().String(),
 		}
@@ -216,18 +216,18 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 // then it returns it and a tweak function filtering denied namespaces using a field selector.
 //
 // Else, denied namespaces are ignored and just the set of allowed namespaces is returned.
-func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{}, tweaks func(*v1.ListOptions)) (func(*v1.ListOptions), []string) {
+func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{}, tweaks func(*metav1.ListOptions)) (func(*metav1.ListOptions), []string) {
 	if tweaks == nil {
-		tweaks = func(*v1.ListOptions) {} // nop
+		tweaks = func(*metav1.ListOptions) {} // nop
 	}
 
 	var namespaces []string
 
 	if listwatch.IsAllNamespaces(allowedNamespaces) {
-		return func(options *v1.ListOptions) {
+		return func(options *metav1.ListOptions) {
 			tweaks(options)
 			listwatch.DenyTweak(options, "metadata.namespace", deniedNamespaces)
-		}, []string{v1.NamespaceAll}
+		}, []string{metav1.NamespaceAll}
 	}
 
 	for ns := range allowedNamespaces {

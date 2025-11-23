@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
@@ -66,11 +66,11 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 // and the associated TLS files.
 // In addition, GetMountParameters returns a web.config.file command line option pointing
 // to the file in the volume mount.
-func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
+func (c Config) GetMountParameters() (monitoringv1.Argument, []corev1.Volume, []corev1.VolumeMount, error) {
 	destinationPath := path.Join(c.mountingDir, configFile)
 
-	var volumes []v1.Volume
-	var mounts []v1.VolumeMount
+	var volumes []corev1.Volume
+	var mounts []corev1.VolumeMount
 
 	arg := c.makeArg(destinationPath)
 	cfgVolume := c.makeVolume()
@@ -98,7 +98,7 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 // data for the web config file.
 // The format of the web config file is available in the official prometheus documentation:
 // https://prometheus.io/docs/prometheus/latest/configuration/https/#https-and-authentication
-func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, s *v1.Secret) error {
+func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, s *corev1.Secret) error {
 	data, err := c.generateConfigFileContents()
 	if err != nil {
 		return err
@@ -258,19 +258,19 @@ func (c Config) makeArg(filePath string) monitoringv1.Argument {
 	return monitoringv1.Argument{Name: "web.config.file", Value: filePath}
 }
 
-func (c Config) makeVolume() v1.Volume {
-	return v1.Volume{
+func (c Config) makeVolume() corev1.Volume {
+	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
 				SecretName: c.secretName,
 			},
 		},
 	}
 }
 
-func (c Config) makeVolumeMount(filePath string) v1.VolumeMount {
-	return v1.VolumeMount{
+func (c Config) makeVolumeMount(filePath string) corev1.VolumeMount {
+	return corev1.VolumeMount{
 		Name:      volumeName,
 		SubPath:   configFile,
 		ReadOnly:  true,

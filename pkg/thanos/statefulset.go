@@ -26,7 +26,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -60,10 +60,10 @@ var (
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Resources.Requests == nil {
-		tr.Spec.Resources.Requests = v1.ResourceList{}
+		tr.Spec.Resources.Requests = corev1.ResourceList{}
 	}
-	if _, ok := tr.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
-		tr.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
+	if _, ok := tr.Spec.Resources.Requests[corev1.ResourceMemory]; !ok {
+		tr.Spec.Resources.Requests[corev1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
 	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames, tlsSecrets)
@@ -92,27 +92,27 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	storageSpec := tr.Spec.Storage
 	switch {
 	case storageSpec == nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: volumeName(tr.Name),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		})
 
 	case storageSpec.EmptyDir != nil:
 		emptyDir := storageSpec.EmptyDir
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: volumeName(tr.Name),
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				EmptyDir: emptyDir,
 			},
 		})
 
 	case storageSpec.Ephemeral != nil:
 		ephemeral := storageSpec.Ephemeral
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: volumeName(tr.Name),
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				Ephemeral: ephemeral,
 			},
 		})
@@ -123,7 +123,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 			pvcTemplate.Name = volumeName(tr.Name)
 		}
 		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			pvcTemplate.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 		} else {
 			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
 		}
@@ -193,11 +193,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
 	}
 
-	trEnvVars := []v1.EnvVar{
+	trEnvVars := []corev1.EnvVar{
 		{
 			Name: "POD_NAME",
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
 			},
 		},
 	}
@@ -213,21 +213,21 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.label-drop", Value: lb})
 	}
 
-	ports := []v1.ContainerPort{
+	ports := []corev1.ContainerPort{
 		{
 			Name:          "grpc",
 			ContainerPort: 10901,
-			Protocol:      v1.ProtocolTCP,
+			Protocol:      corev1.ProtocolTCP,
 		},
 	}
 	if tr.Spec.ListenLocal {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "http-address", Value: "localhost:10902"})
 	} else {
 		ports = append(ports,
-			v1.ContainerPort{
+			corev1.ContainerPort{
 				Name:          tr.Spec.PortName,
 				ContainerPort: 10902,
-				Protocol:      v1.ProtocolTCP,
+				Protocol:      corev1.ProtocolTCP,
 			})
 	}
 
@@ -243,8 +243,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	trVolumes, trVolumeMounts, fullPath := mountSecretKey(
 		nil,
 		nil,
-		&v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		&corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: rulerConfigSecretName(tr.Name),
 			},
 			Key: rwConfigFile,
@@ -295,7 +295,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
-	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+	trVolumeMounts = append(trVolumeMounts, corev1.VolumeMount{
 		Name:      "tls-assets",
 		ReadOnly:  true,
 		MountPath: tlsAssetsDir,
@@ -342,16 +342,16 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	containerArgs = append([]string{"rule"}, containerArgs...)
 
 	var configReloaderWebConfigFile string
-	var additionalContainers []v1.Container
+	var additionalContainers []corev1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
 			watchedDirectories         []string
-			configReloaderVolumeMounts []v1.VolumeMount
+			configReloaderVolumeMounts []corev1.VolumeMount
 		)
 
 		for _, name := range ruleConfigMapNames {
 			mountPath := rulesDir + "/" + name
-			configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, corev1.VolumeMount{
 				Name:      name,
 				MountPath: mountPath,
 			})
@@ -426,24 +426,24 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			storageVolName = tr.Spec.Storage.VolumeClaimTemplate.Name
 		}
 	}
-	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+	trVolumeMounts = append(trVolumeMounts, corev1.VolumeMount{
 		Name:      storageVolName,
 		MountPath: storageDir,
 	})
 
 	for _, name := range ruleConfigMapNames {
-		trVolumes = append(trVolumes, v1.Volume{
+		trVolumes = append(trVolumes, corev1.Volume{
 			Name: name,
-			VolumeSource: v1.VolumeSource{
-				ConfigMap: &v1.ConfigMapVolumeSource{
-					LocalObjectReference: v1.LocalObjectReference{
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: name,
 					},
 					Optional: ptr.To(true),
 				},
 			},
 		})
-		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+		trVolumeMounts = append(trVolumeMounts, corev1.VolumeMount{
 			Name:      name,
 			MountPath: rulesDir + "/" + name,
 			ReadOnly:  true,
@@ -452,7 +452,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	trVolumeMounts = append(trVolumeMounts, tr.Spec.VolumeMounts...)
 
-	operatorContainers := append([]v1.Container{
+	operatorContainers := append([]corev1.Container{
 		{
 			Name:                     "thanos-ruler",
 			Image:                    trImagePath,
@@ -462,12 +462,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			VolumeMounts:             trVolumeMounts,
 			Resources:                tr.Spec.Resources,
 			Ports:                    ports,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
+			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &corev1.SecurityContext{
 				AllowPrivilegeEscalation: ptr.To(false),
 				ReadOnlyRootFilesystem:   ptr.To(true),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
 				},
 			},
 		},
@@ -491,12 +491,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalLabels,
 		},
-		Template: v1.PodTemplateSpec{
+		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
-			Spec: v1.PodSpec{
+			Spec: corev1.PodSpec{
 				NodeSelector:                  tr.Spec.NodeSelector,
 				PriorityClassName:             tr.Spec.PriorityClassName,
 				ServiceAccountName:            tr.Spec.ServiceAccountName,
@@ -521,26 +521,26 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	return &spec, nil
 }
 
-func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Service {
+func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *corev1.Service {
 	if tr.Spec.PortName == "" {
 		tr.Spec.PortName = defaultPortName
 	}
 
-	svc := &v1.Service{
-		Spec: v1.ServiceSpec{
+	svc := &corev1.Service{
+		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       tr.Spec.PortName,
 					Port:       10902,
 					TargetPort: intstr.FromString(tr.Spec.PortName),
-					Protocol:   v1.ProtocolTCP,
+					Protocol:   corev1.ProtocolTCP,
 				},
 				{
 					Name:       "grpc",
 					Port:       10901,
 					TargetPort: intstr.FromString("grpc"),
-					Protocol:   v1.ProtocolTCP,
+					Protocol:   corev1.ProtocolTCP,
 				},
 			},
 			Selector: map[string]string{
@@ -579,15 +579,15 @@ func webConfigSecretName(name string) string {
 
 // mountSecretKey adds the secret key to the mounted volumes and returns the
 // full path of the file on disk.
-func mountSecretKey(vols []v1.Volume, vmounts []v1.VolumeMount, secretSelector *v1.SecretKeySelector, volumeName string) ([]v1.Volume, []v1.VolumeMount, string) {
+func mountSecretKey(vols []corev1.Volume, vmounts []corev1.VolumeMount, secretSelector *corev1.SecretKeySelector, volumeName string) ([]corev1.Volume, []corev1.VolumeMount, string) {
 	mountpath := filepath.Join(configDir, volumeName)
 
-	return append(vols, v1.Volume{
+	return append(vols, corev1.Volume{
 			Name: volumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
 					SecretName: secretSelector.Name,
-					Items: []v1.KeyToPath{
+					Items: []corev1.KeyToPath{
 						{
 							Key:  secretSelector.Key,
 							Path: secretSelector.Key,
@@ -596,7 +596,7 @@ func mountSecretKey(vols []v1.Volume, vmounts []v1.VolumeMount, secretSelector *
 				},
 			},
 		}),
-		append(vmounts, v1.VolumeMount{
+		append(vmounts, corev1.VolumeMount{
 			Name:      volumeName,
 			MountPath: mountpath,
 			ReadOnly:  true,

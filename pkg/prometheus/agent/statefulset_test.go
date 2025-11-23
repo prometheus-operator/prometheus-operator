@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -155,7 +155,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 						CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 							MaxSkew:           1,
 							TopologyKey:       "kubernetes.io/hostname",
-							WhenUnsatisfiable: v1.DoNotSchedule,
+							WhenUnsatisfiable: corev1.DoNotSchedule,
 							LabelSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"app": "prometheus",
@@ -166,10 +166,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 				},
 			},
 		},
-		tsc: v1.TopologySpreadConstraint{
+		tsc: corev1.TopologySpreadConstraint{
 			MaxSkew:           1,
 			TopologyKey:       "kubernetes.io/hostname",
-			WhenUnsatisfiable: v1.DoNotSchedule,
+			WhenUnsatisfiable: corev1.DoNotSchedule,
 			LabelSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app":                          "prometheus",
@@ -210,7 +210,7 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	// Monitoring DNS settings
-	monitoringDNSPolicy := v1.DNSClusterFirst
+	monitoringDNSPolicy := corev1.DNSClusterFirst
 	monitoringDNSConfig := &monitoringv1.PodDNSConfig{
 		Nameservers: []string{"8.8.8.8", "8.8.4.4"},
 		Searches:    []string{"custom.search"},
@@ -238,7 +238,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// Validate the DNS Policy
-	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
+	require.Equal(t, corev1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
 
 	// Validate the DNS Config
 	require.NotNil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNS config to be set")

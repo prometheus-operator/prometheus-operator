@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -538,12 +538,12 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger *s
 
 // ConfigMapGVK returns the GroupVersionKind representing ConfigMap objects.
 func ConfigMapGVK() schema.GroupVersionKind {
-	return v1.SchemeGroupVersion.WithKind("ConfigMap")
+	return corev1.SchemeGroupVersion.WithKind("ConfigMap")
 }
 
 // SecretGVK returns the GroupVersionKind representing Secret objects.
 func SecretGVK() schema.GroupVersionKind {
-	return v1.SchemeGroupVersion.WithKind("Secret")
+	return corev1.SchemeGroupVersion.WithKind("Secret")
 }
 
 // SelectNamespacesFromCache returns the selected namespaces from the informer's cache.
@@ -560,7 +560,7 @@ func SelectNamespacesFromCache(obj metav1.Object, sel *metav1.LabelSelector, nsI
 
 	var ns []string
 	err = cache.ListAll(nsInfs.GetStore(), labelSelector, func(obj any) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
+		ns = append(ns, obj.(*corev1.Namespace).Name)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list namespaces: %w", err)

@@ -30,7 +30,7 @@ import (
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -71,16 +71,16 @@ func init() {
 
 // PodRunningAndReady returns whether a pod is running and each container has
 // passed it's ready state.
-func PodRunningAndReady(pod v1.Pod) (bool, error) {
+func PodRunningAndReady(pod corev1.Pod) (bool, error) {
 	switch pod.Status.Phase {
-	case v1.PodFailed, v1.PodSucceeded:
+	case corev1.PodFailed, corev1.PodSucceeded:
 		return false, fmt.Errorf("pod completed with phase %s", pod.Status.Phase)
-	case v1.PodRunning:
+	case corev1.PodRunning:
 		for _, cond := range pod.Status.Conditions {
-			if cond.Type != v1.PodReady {
+			if cond.Type != corev1.PodReady {
 				continue
 			}
-			return cond.Status == v1.ConditionTrue, nil
+			return cond.Status == corev1.ConditionTrue, nil
 		}
 		return false, fmt.Errorf("pod ready condition not found")
 	}
@@ -162,7 +162,7 @@ func IsAllowed(
 	}
 
 	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
+		namespaces = []string{corev1.NamespaceAll}
 	}
 
 	var missingPermissions []error
@@ -208,7 +208,7 @@ func IsAllowed(
 					}
 
 					switch ns {
-					case v1.NamespaceAll:
+					case corev1.NamespaceAll:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for all namespaces", verb, resource, ra.Group)
 					default:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for namespace %q", verb, resource, ra.Group, ns)
@@ -236,8 +236,8 @@ func IsResourceNotFoundError(err error) bool {
 	return false
 }
 
-func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *v1.Service) (*v1.Service, error) {
-	var ret *v1.Service
+func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *corev1.Service) (*corev1.Service, error) {
+	var ret *corev1.Service
 
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -270,7 +270,7 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 // CreateOrUpdateEndpoints creates or updates an endpoint resource.
 //
 //nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
-func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
+func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *corev1.Endpoints) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		endpoints, err := eclient.Get(ctx, eps.Name, metav1.GetOptions{})
@@ -352,7 +352,7 @@ func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterf
 }
 
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
-func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
+func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *corev1.Secret) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
@@ -365,7 +365,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 			return err
 		}
 
-		mutated := existingSecret.DeepCopyObject().(*v1.Secret)
+		mutated := existingSecret.DeepCopyObject().(*corev1.Secret)
 		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 		if apiequality.Semantic.DeepEqual(existingSecret, desired) {
 			return nil
@@ -547,18 +547,18 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 	return to
 }
 
-func UpdateDNSConfig(podSpec *v1.PodSpec, config *monitoringv1.PodDNSConfig) {
+func UpdateDNSConfig(podSpec *corev1.PodSpec, config *monitoringv1.PodDNSConfig) {
 	if config == nil {
 		return
 	}
 
-	dnsConfig := v1.PodDNSConfig{
+	dnsConfig := corev1.PodDNSConfig{
 		Nameservers: config.Nameservers,
 		Searches:    config.Searches,
 	}
 
 	for _, opt := range config.Options {
-		dnsConfig.Options = append(dnsConfig.Options, v1.PodDNSConfigOption{
+		dnsConfig.Options = append(dnsConfig.Options, corev1.PodDNSConfigOption{
 			Name:  opt.Name,
 			Value: opt.Value,
 		})
@@ -567,12 +567,12 @@ func UpdateDNSConfig(podSpec *v1.PodSpec, config *monitoringv1.PodDNSConfig) {
 	podSpec.DNSConfig = &dnsConfig
 }
 
-func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
+func UpdateDNSPolicy(podSpec *corev1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
 	if dnsPolicy == nil {
 		return
 	}
 
-	podSpec.DNSPolicy = v1.DNSPolicy(*dnsPolicy)
+	podSpec.DNSPolicy = corev1.DNSPolicy(*dnsPolicy)
 }
 
 // EnsureCustomGoverningService is responsible for the following:

@@ -26,7 +26,7 @@ import (
 
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/textparse"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
@@ -151,7 +151,7 @@ func WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
 	return nil
 }
 
-func podRunsImage(p v1.Pod, image string) bool {
+func podRunsImage(p corev1.Pod, image string) bool {
 	for _, c := range p.Spec.Containers {
 		if image == c.Image {
 			return true

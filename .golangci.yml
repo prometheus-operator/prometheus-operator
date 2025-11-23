@@ -11,6 +11,7 @@ linters:
     - godot
     - godoclint
     - iface
+    - importas
     - iotamixing
     - modernize
     - nilnesserr
@@ -32,6 +33,24 @@ linters:
       exclude-functions:
         # Any error in HTTP handlers is handled by the server itself.
         - (net/http.ResponseWriter).Write
+    importas:
+      alias:
+        # Kubernetes
+        - pkg: k8s.io/api/core/v1
+          alias: corev1
+        - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+          alias: apiextensionsv1
+        - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+          alias: metav1
+        - pkg: k8s.io/apimachinery/pkg/api/errors
+          alias: apierrors
+        - pkg: k8s.io/apimachinery/pkg/util/errors
+          alias: kerrors
+        - pkg: k8s.io/component-base/logs/api/v1
+          alias: logsv1
+        # Controller Runtime
+        - pkg: sigs.k8s.io/controller-runtime
+          alias: ctrl
     modernize:
       disable:
         - omitzero

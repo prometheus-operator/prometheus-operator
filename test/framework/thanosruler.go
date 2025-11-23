@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -133,17 +133,17 @@ func (f *Framework) WaitForThanosRulerReady(ctx context.Context, ns string, tr *
 	return nil
 }
 
-func (f *Framework) MakeThanosRulerService(name, group string, serviceType v1.ServiceType) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakeThanosRulerService(name, group string, serviceType corev1.ServiceType) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("thanos-ruler-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Type: serviceType,
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9090,

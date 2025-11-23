@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -180,8 +180,8 @@ func TestStatefulSetPVC(t *testing.T) {
 		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
 			Annotations: annotations,
 		},
-		Spec: v1.PersistentVolumeClaimSpec{
-			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 			StorageClassName: &storageClass,
 		},
 	}
@@ -213,8 +213,8 @@ func TestStatefulSetEmptyDir(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	emptyDir := v1.EmptyDirVolumeSource{
-		Medium: v1.StorageMediumMemory,
+	emptyDir := corev1.EmptyDirVolumeSource{
+		Medium: corev1.StorageMediumMemory,
 	}
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
@@ -247,10 +247,10 @@ func TestStatefulSetEphemeral(t *testing.T) {
 
 	storageClass := "storageclass"
 
-	ephemeral := v1.EphemeralVolumeSource{
-		VolumeClaimTemplate: &v1.PersistentVolumeClaimTemplate{
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+	ephemeral := corev1.EphemeralVolumeSource{
+		VolumeClaimTemplate: &corev1.PersistentVolumeClaimTemplate{
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 				StorageClassName: &storageClass,
 			},
 		},
@@ -292,11 +292,11 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 	expected := &appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
-							VolumeMounts: []v1.VolumeMount{
+							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "config-out",
 									ReadOnly:  true,
@@ -331,23 +331,23 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 					},
-					Volumes: []v1.Volume{
+					Volumes: []corev1.Volume{
 						{
 							Name: "config",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
 									SecretName: prompkg.ConfigSecretName(&p),
 								},
 							},
 						},
 						{
 							Name: "tls-assets",
-							VolumeSource: v1.VolumeSource{
-								Projected: &v1.ProjectedVolumeSource{
-									Sources: []v1.VolumeProjection{
+							VolumeSource: corev1.VolumeSource{
+								Projected: &corev1.ProjectedVolumeSource{
+									Sources: []corev1.VolumeProjection{
 										{
-											Secret: &v1.SecretProjection{
-												LocalObjectReference: v1.LocalObjectReference{
+											Secret: &corev1.SecretProjection{
+												LocalObjectReference: corev1.LocalObjectReference{
 													Name: prompkg.TLSAssetsSecretName(&p) + "-0",
 												},
 											},
@@ -358,25 +358,25 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 						},
 						{
 							Name: "config-out",
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{
-									Medium: v1.StorageMediumMemory,
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{
+									Medium: corev1.StorageMediumMemory,
 								},
 							},
 						},
 						{
 							Name: "secret-test-secret1",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
 									SecretName: "test-secret1",
 								},
 							},
 						},
 						{
 							Name: "rules-configmap-one",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
 									Optional: ptr.To(true),
@@ -385,16 +385,16 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 						},
 						{
 							Name: "web-config",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
 									SecretName: "prometheus-volume-init-test-web-config",
 								},
 							},
 						},
 						{
 							Name: "prometheus-volume-init-test-db",
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{},
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
 							},
 						},
 					},
@@ -412,7 +412,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		context.Background(),
 		map[string][]byte{},
 		fake.NewSimpleClientset(),
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      prompkg.TLSAssetsSecretName(&p),
 				Namespace: "test",
@@ -482,9 +482,9 @@ func TestListenLocal(t *testing.T) {
 
 	require.True(t, found, "Prometheus not listening on loopback when it should.")
 
-	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
-		return v1.ProbeHandler{
-			Exec: &v1.ExecAction{
+	expectedProbeHandler := func(probePath string) corev1.ProbeHandler {
+		return corev1.ProbeHandler{
+			Exec: &corev1.ExecAction{
 				Command: []string{
 					`sh`,
 					`-c`,
@@ -495,7 +495,7 @@ func TestListenLocal(t *testing.T) {
 	}
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
-	expectedStartupProbe := &v1.Probe{
+	expectedStartupProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
@@ -504,7 +504,7 @@ func TestListenLocal(t *testing.T) {
 	require.Equal(t, expectedStartupProbe, actualStartupProbe, "Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := &v1.Probe{
+	expectedLivenessProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
@@ -513,7 +513,7 @@ func TestListenLocal(t *testing.T) {
 	require.Equal(t, expectedLivenessProbe, actualLivenessProbe, "Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
+	expectedReadinessProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
@@ -531,14 +531,14 @@ func TestListenTLS(t *testing.T) {
 				Web: &monitoringv1.PrometheusWebSpec{
 					WebConfigFileFields: monitoringv1.WebConfigFileFields{
 						TLSConfig: &monitoringv1.WebTLSConfig{
-							KeySecret: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							KeySecret: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "some-secret",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								ConfigMap: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "some-configmap",
 									},
 								},
@@ -552,9 +552,9 @@ func TestListenTLS(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
-		return v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
+	expectedProbeHandler := func(probePath string) corev1.ProbeHandler {
+		return corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
 				Path:   probePath,
 				Port:   intstr.FromString("web"),
 				Scheme: "HTTPS",
@@ -563,7 +563,7 @@ func TestListenTLS(t *testing.T) {
 	}
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
-	expectedStartupProbe := &v1.Probe{
+	expectedStartupProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
@@ -572,7 +572,7 @@ func TestListenTLS(t *testing.T) {
 	require.Equal(t, expectedStartupProbe, actualStartupProbe, "Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := &v1.Probe{
+	expectedLivenessProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
@@ -581,7 +581,7 @@ func TestListenTLS(t *testing.T) {
 	require.Equal(t, expectedLivenessProbe, actualLivenessProbe, "Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
+	expectedReadinessProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
@@ -947,14 +947,14 @@ func TestThanosResourcesNotSet(t *testing.T) {
 }
 
 func TestThanosResourcesSet(t *testing.T) {
-	expected := v1.ResourceRequirements{
-		Limits: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("125m"),
-			v1.ResourceMemory: resource.MustParse("75Mi"),
+	expected := corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("125m"),
+			corev1.ResourceMemory: resource.MustParse("75Mi"),
 		},
-		Requests: v1.ResourceList{
-			v1.ResourceCPU:    resource.MustParse("100m"),
-			v1.ResourceMemory: resource.MustParse("50Mi"),
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("100m"),
+			corev1.ResourceMemory: resource.MustParse("50Mi"),
 		},
 	}
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
@@ -996,7 +996,7 @@ func TestThanosObjectStorage(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
-				ObjectStorageConfig: &v1.SecretKeySelector{
+				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
 				},
 				BlockDuration: "2h",
@@ -1123,7 +1123,7 @@ func TestThanosBlockDuration(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
 				BlockDuration: "1h",
-				ObjectStorageConfig: &v1.SecretKeySelector{
+				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
 				},
 			},
@@ -1148,8 +1148,8 @@ func TestThanosWithNamedPVC(t *testing.T) {
 		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
 			Name: testKey,
 		},
-		Spec: v1.PersistentVolumeClaimSpec{
-			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 			StorageClassName: &storageClass,
 		},
 	}
@@ -1163,7 +1163,7 @@ func TestThanosWithNamedPVC(t *testing.T) {
 			},
 			Thanos: &monitoringv1.ThanosSpec{
 				BlockDuration: "1h",
-				ObjectStorageConfig: &v1.SecretKeySelector{
+				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
 				},
 			},
@@ -1190,7 +1190,7 @@ func TestThanosTracing(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
-				TracingConfig: &v1.SecretKeySelector{
+				TracingConfig: &corev1.SecretKeySelector{
 					Key: testKey,
 				},
 			},
@@ -1224,17 +1224,17 @@ func TestThanosSideCarVolumes(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Volumes: []v1.Volume{
+				Volumes: []corev1.Volume{
 					{
 						Name: testVolume,
-						VolumeSource: v1.VolumeSource{
-							EmptyDir: &v1.EmptyDirVolumeSource{},
+						VolumeSource: corev1.VolumeSource{
+							EmptyDir: &corev1.EmptyDirVolumeSource{},
 						},
 					},
 				},
 			},
 			Thanos: &monitoringv1.ThanosSpec{
-				VolumeMounts: []v1.VolumeMount{
+				VolumeMounts: []corev1.VolumeMount{
 					{
 						Name:      testVolume,
 						MountPath: testVolumeMountPath,
@@ -1416,7 +1416,7 @@ func TestAdditionalContainers(t *testing.T) {
 	addSset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Containers: []v1.Container{
+				Containers: []corev1.Container{
 					{
 						Name: "extra-container",
 					},
@@ -1434,7 +1434,7 @@ func TestAdditionalContainers(t *testing.T) {
 	modSset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Containers: []v1.Container{
+				Containers: []corev1.Container{
 					{
 						Name:  existingContainerName,
 						Image: containerImage,
@@ -1644,7 +1644,7 @@ func TestTerminationPolicy(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
-		require.Equal(t, v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy, "Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
+		require.Equal(t, corev1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy, "Unexpected TermintationMessagePolicy. Expected %v got %v", corev1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
 	}
 }
 
@@ -2205,28 +2205,28 @@ func TestPodTemplateConfig(t *testing.T) {
 	nodeSelector := map[string]string{
 		"foo": "bar",
 	}
-	affinity := v1.Affinity{
-		NodeAffinity: &v1.NodeAffinity{},
-		PodAffinity: &v1.PodAffinity{
-			PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+	affinity := corev1.Affinity{
+		NodeAffinity: &corev1.NodeAffinity{},
+		PodAffinity: &corev1.PodAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
 				{
-					PodAffinityTerm: v1.PodAffinityTerm{
+					PodAffinityTerm: corev1.PodAffinityTerm{
 						Namespaces: []string{"foo"},
 					},
 					Weight: 100,
 				},
 			},
 		},
-		PodAntiAffinity: &v1.PodAntiAffinity{},
+		PodAntiAffinity: &corev1.PodAntiAffinity{},
 	}
 
-	tolerations := []v1.Toleration{
+	tolerations := []corev1.Toleration{
 		{
 			Key: "key",
 		},
 	}
 	userid := int64(1234)
-	securityContext := v1.PodSecurityContext{
+	securityContext := corev1.PodSecurityContext{
 		RunAsUser: &userid,
 	}
 	priorityClassName := "foo"
@@ -2237,8 +2237,8 @@ func TestPodTemplateConfig(t *testing.T) {
 			IP:        "1.1.1.1",
 		},
 	}
-	imagePullPolicy := v1.PullAlways
-	imagePullSecrets := []v1.LocalObjectReference{
+	imagePullPolicy := corev1.PullAlways
+	imagePullSecrets := []corev1.LocalObjectReference{
 		{
 			Name: "registry-secret",
 		},
@@ -2763,7 +2763,7 @@ func TestPodHostNetworkConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, hostNetwork, sset.Spec.Template.Spec.HostNetwork, "expected hostNetwork configuration to match but failed")
-	require.Equal(t, v1.DNSClusterFirstWithHostNet, sset.Spec.Template.Spec.DNSPolicy, "expected DNSPolicy configuration to match due to hostNetwork but failed")
+	require.Equal(t, corev1.DNSClusterFirstWithHostNet, sset.Spec.Template.Spec.DNSPolicy, "expected DNSPolicy configuration to match due to hostNetwork but failed")
 }
 
 func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
@@ -2788,7 +2788,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		spec monitoringv1.PrometheusSpec
-		tsc  v1.TopologySpreadConstraint
+		tsc  corev1.TopologySpreadConstraint
 	}{
 		{
 			name: "without labelSelector and additionalLabels",
@@ -2799,16 +2799,16 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 							},
 						},
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 			},
 		},
 		{
@@ -2820,7 +2820,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
 										"app": "prometheus",
@@ -2831,10 +2831,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app": "prometheus",
@@ -2852,7 +2852,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
 										"app": "prometheus",
@@ -2863,10 +2863,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                            "prometheus",
@@ -2890,7 +2890,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
 										"app": "prometheus",
@@ -2901,10 +2901,10 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                            "prometheus",
@@ -3080,46 +3080,46 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 func TestDNSPolicyAndDNSConfig(t *testing.T) {
 	tests := []struct {
 		name              string
-		dnsPolicy         v1.DNSPolicy
-		dnsConfig         *v1.PodDNSConfig
-		expectedDNSPolicy v1.DNSPolicy
-		expectedDNSConfig *v1.PodDNSConfig
+		dnsPolicy         corev1.DNSPolicy
+		dnsConfig         *corev1.PodDNSConfig
+		expectedDNSPolicy corev1.DNSPolicy
+		expectedDNSConfig *corev1.PodDNSConfig
 	}{
 		{
 			name:              "Default DNSPolicy and DNSConfig",
-			dnsPolicy:         v1.DNSClusterFirst,
+			dnsPolicy:         corev1.DNSClusterFirst,
 			dnsConfig:         nil,
-			expectedDNSPolicy: v1.DNSClusterFirst,
+			expectedDNSPolicy: corev1.DNSClusterFirst,
 			expectedDNSConfig: nil,
 		},
 		{
 			name:              "Custom DNSPolicy",
-			dnsPolicy:         v1.DNSDefault,
+			dnsPolicy:         corev1.DNSDefault,
 			dnsConfig:         nil,
-			expectedDNSPolicy: v1.DNSDefault,
+			expectedDNSPolicy: corev1.DNSDefault,
 			expectedDNSConfig: nil,
 		},
 		{
 			name:      "Custom DNSConfig",
-			dnsPolicy: v1.DNSClusterFirst,
-			dnsConfig: &v1.PodDNSConfig{
+			dnsPolicy: corev1.DNSClusterFirst,
+			dnsConfig: &corev1.PodDNSConfig{
 				Nameservers: []string{"8.8.8.8", "8.8.4.4"},
 				Searches:    []string{"custom.svc.cluster.local"},
 			},
-			expectedDNSPolicy: v1.DNSClusterFirst,
-			expectedDNSConfig: &v1.PodDNSConfig{
+			expectedDNSPolicy: corev1.DNSClusterFirst,
+			expectedDNSConfig: &corev1.PodDNSConfig{
 				Nameservers: []string{"8.8.8.8", "8.8.4.4"},
 				Searches:    []string{"custom.svc.cluster.local"},
 			},
 		},
 		{
 			name:      "Custom DNS Policy with Search Domains",
-			dnsPolicy: v1.DNSDefault,
-			dnsConfig: &v1.PodDNSConfig{
+			dnsPolicy: corev1.DNSDefault,
+			dnsConfig: &corev1.PodDNSConfig{
 				Searches: []string{"kitsos.com", "kitsos.org"},
 			},
-			expectedDNSPolicy: v1.DNSDefault,
-			expectedDNSConfig: &v1.PodDNSConfig{
+			expectedDNSPolicy: corev1.DNSDefault,
+			expectedDNSConfig: &corev1.PodDNSConfig{
 				Searches: []string{"kitsos.com", "kitsos.org"},
 			},
 		},

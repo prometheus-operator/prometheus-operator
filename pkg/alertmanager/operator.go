@@ -30,7 +30,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -255,7 +255,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 				options.LabelSelector = config.SecretListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceSecrets)),
 		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
@@ -270,7 +270,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			resyncPeriod,
 			nil,
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
@@ -320,7 +320,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 		c.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
-			&v1.Namespace{},
+			&corev1.Namespace{},
 			resyncPeriod,
 			cache.Indexers{},
 		), nil
@@ -446,7 +446,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		c.logger.Error(fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName))
 		return
 	}
-	ns := nsObject.(*v1.Namespace)
+	ns := nsObject.(*corev1.Namespace)
 
 	err = c.alrtInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Alertmanager instances in the namespace.
@@ -535,8 +535,8 @@ func alertmanagerKeyToStatefulSetKey(key string) string {
 }
 
 func (c *Operator) handleNamespaceUpdate(oldo, curo any) {
-	old := oldo.(*v1.Namespace)
-	cur := curo.(*v1.Namespace)
+	old := oldo.(*corev1.Namespace)
+	cur := curo.(*corev1.Namespace)
 
 	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -977,7 +977,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
-	generatedConfigSecret := &v1.Secret{
+	generatedConfigSecret := &corev1.Secret{
 		Data: map[string][]byte{},
 	}
 
@@ -1021,7 +1021,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		}
 
 		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj any) {
-			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
+			namespaces = append(namespaces, obj.(*corev1.Namespace).Name)
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list namespaces: %w", err)
@@ -1072,7 +1072,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			eventRecorder.Eventf(amc, corev1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 
@@ -1577,7 +1577,7 @@ func checkPushoverConfigs(
 	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
-	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
+	checkSecret := func(secret *corev1.SecretKeySelector, name string) error {
 		if secret == nil {
 			return fmt.Errorf("mandatory field %s is empty", name)
 		}
@@ -1808,8 +1808,8 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2)
 }
 
-func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
-	s := &v1.Secret{
+func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *corev1.Secret {
+	s := &corev1.Secret{
 		Data: make(map[string][]byte),
 	}
 
@@ -1840,7 +1840,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	s := &v1.Secret{}
+	s := &corev1.Secret{}
 	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),
@@ -1866,7 +1866,7 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 		return fmt.Errorf("failed to generate the configuration: %w", err)
 	}
 
-	s := &v1.Secret{
+	s := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterTLSConfig.GetSecretName(),
 		},

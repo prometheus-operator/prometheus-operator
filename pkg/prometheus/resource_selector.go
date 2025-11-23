@@ -26,7 +26,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/prometheus/model/relabel"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -150,7 +150,7 @@ func selectObjects[T operator.ConfigurationResource](
 			rejected++
 			reason = operator.InvalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
-			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+			rs.eventRecorder.Eventf(obj, corev1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}

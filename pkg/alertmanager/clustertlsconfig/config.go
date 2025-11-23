@@ -22,7 +22,7 @@ import (
 	"reflect"
 
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -108,7 +108,7 @@ func New(mountingDir string, a *monitoringv1.Alertmanager) (*Config, error) {
 // or "cluster-tls-client-config-" respectively, for server and client credentials.
 // The server and client TLS credentials are mounted in different paths: ~/{mountingDir}/server-tls/
 // and ~/{mountingDir}/client-tls/ respectively.
-func (c Config) GetMountParameters() (*monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
+func (c Config) GetMountParameters() (*monitoringv1.Argument, []corev1.Volume, []corev1.VolumeMount, error) {
 	destinationPath := path.Join(c.mountingDir, ConfigFileKey)
 
 	var arg *monitoringv1.Argument
@@ -117,11 +117,11 @@ func (c Config) GetMountParameters() (*monitoringv1.Argument, []v1.Volume, []v1.
 		arg = c.makeArg(destinationPath)
 	}
 
-	var volumes []v1.Volume
+	var volumes []corev1.Volume
 	cfgVolume := c.makeVolume()
 	volumes = append(volumes, cfgVolume)
 
-	var mounts []v1.VolumeMount
+	var mounts []corev1.VolumeMount
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
 
@@ -179,11 +179,11 @@ func (c Config) makeArg(filePath string) *monitoringv1.Argument {
 
 // makeVolume() creates a Volume with volumeName = "cluster-tls-config" which stores
 // the secret which contains the cluster TLS config.
-func (c Config) makeVolume() v1.Volume {
-	return v1.Volume{
+func (c Config) makeVolume() corev1.Volume {
+	return corev1.Volume{
 		Name: volumeName,
-		VolumeSource: v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
 				SecretName: c.secretName,
 			},
 		},
@@ -192,8 +192,8 @@ func (c Config) makeVolume() v1.Volume {
 
 // makeVolumeMount() creates a VolumeMount, mounting the cluster_tls_config.yaml SubPath
 // to the given filePath.
-func (c Config) makeVolumeMount(filePath string) v1.VolumeMount {
-	return v1.VolumeMount{
+func (c Config) makeVolumeMount(filePath string) corev1.VolumeMount {
+	return corev1.VolumeMount{
 		Name:      volumeName,
 		SubPath:   ConfigFileKey,
 		ReadOnly:  true,

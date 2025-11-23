@@ -29,7 +29,7 @@ import (
 	"github.com/cespare/xxhash/v2"
 	"github.com/gogo/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -143,17 +143,17 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 	return f, nil
 }
 
-func (f *Framework) MakeEchoService(name, group string, serviceType v1.ServiceType) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakeEchoService(name, group string, serviceType corev1.ServiceType) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("echo-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Type: serviceType,
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9090,
@@ -180,18 +180,18 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 					"echo": group,
 				},
 			},
-			Template: v1.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"echo": group,
 					},
 				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
 							Name:  "echoserver",
 							Image: "k8s.gcr.io/echoserver:1.10",
-							Ports: []v1.ContainerPort{
+							Ports: []corev1.ContainerPort{
 								{
 									Name:          "web",
 									ContainerPort: 8443,
@@ -321,70 +321,70 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.AlertmanagerName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.Alertmanagers(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize Alertmanager CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.PodMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.PodMonitors(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize PodMonitor CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.ProbeName, func(opts metav1.ListOptions) (object runtime.Object, err error) {
-		return f.MonClientV1.Probes(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.Probes(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize Probe CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.Prometheuses(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize Prometheus CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.PrometheusRuleName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.PrometheusRules(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize PrometheusRule CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.ServiceMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.ServiceMonitors(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize ServiceMonitor CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1.ThanosRulerName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ThanosRulers(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1.ThanosRulers(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize ThanosRuler CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.AlertmanagerConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1alpha1.AlertmanagerConfigs(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize AlertmanagerConfig v1alpha1 CRD: %w", err)
 	}
 
 	err = WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1beta1.AlertmanagerConfigs(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1beta1.AlertmanagerConfigs(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("wait for AlertmanagerConfig v1beta1 CRD: %w", err)
 	}
 
 	err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.PrometheusAgentName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1alpha1.PrometheusAgents(v1.NamespaceAll).List(ctx, opts)
+		return f.MonClientV1alpha1.PrometheusAgents(corev1.NamespaceAll).List(ctx, opts)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initialize PrometheusAgent v1alpha1 CRD: %w", err)
@@ -392,7 +392,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 
 	if opts.EnableScrapeConfigs {
 		err = f.CreateOrUpdateCRDAndWaitUntilReady(ctx, monitoringv1alpha1.ScrapeConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
-			return f.MonClientV1alpha1.ScrapeConfigs(v1.NamespaceAll).List(ctx, opts)
+			return f.MonClientV1alpha1.ScrapeConfigs(corev1.NamespaceAll).List(ctx, opts)
 		})
 		if err != nil {
 			return nil, fmt.Errorf("initialize ScrapeConfig v1alpha1 CRD: %w", err)
@@ -484,12 +484,12 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 
 	// Load the certificate and key from the created secret into the operator
 	deploy.Spec.Template.Spec.Volumes = append(deploy.Spec.Template.Spec.Volumes,
-		v1.Volume{
+		corev1.Volume{
 			Name:         "cert",
-			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: prometheusOperatorCertsSecretName}}})
+			VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: prometheusOperatorCertsSecretName}}})
 
 	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
-		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
+		corev1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
 
 	// The addition of rule admission webhooks requires TLS, so enable it and
 	// switch to a more common https port
@@ -518,7 +518,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 
 	service.Namespace = opts.Namespace
 	service.Spec.ClusterIP = ""
-	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
+	service.Spec.Ports = []corev1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
 	if _, err := f.CreateOrUpdateServiceAndWaitUntilReady(ctx, opts.Namespace, service); err != nil {
 		return finalizers, fmt.Errorf("failed to create or update prometheus operator service: %w", err)
@@ -715,7 +715,7 @@ func (f *Framework) SetupPrometheusRBACGlobal(ctx context.Context, t *testing.T,
 	testCtx.AddFinalizerFn(finalizerFn)
 }
 
-func (f *Framework) configureAlertmanagerConfigConversion(ctx context.Context, svc *v1.Service, cert []byte) (FinalizerFn, error) {
+func (f *Framework) configureAlertmanagerConfigConversion(ctx context.Context, svc *corev1.Service, cert []byte) (FinalizerFn, error) {
 	patch, err := f.MakeCRD(fmt.Sprintf("%s/alertmanager-crd-conversion/patch.json", f.exampleDir))
 	if err != nil {
 		return nil, err
@@ -790,7 +790,7 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	ctx context.Context,
 	namespace string,
 	image string,
-) (*v1.Service, []byte, error) {
+) (*corev1.Service, []byte, error) {
 
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
 		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),

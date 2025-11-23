@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,7 +33,7 @@ import (
 )
 
 // GetCRD gets a custom resource definition from the apiserver.
-func (f *Framework) GetCRD(ctx context.Context, name string) (*v1.CustomResourceDefinition, error) {
+func (f *Framework) GetCRD(ctx context.Context, name string) (*apiextensionsv1.CustomResourceDefinition, error) {
 	crd, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to get CRD with name %v: %w", name, err)
@@ -42,7 +42,7 @@ func (f *Framework) GetCRD(ctx context.Context, name string) (*v1.CustomResource
 }
 
 // ListCRDs gets a list of custom resource definitions from the apiserver.
-func (f *Framework) ListCRDs(ctx context.Context) (*v1.CustomResourceDefinitionList, error) {
+func (f *Framework) ListCRDs(ctx context.Context) (*apiextensionsv1.CustomResourceDefinitionList, error) {
 	crds, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to list CRDs: %w", err)
@@ -51,7 +51,7 @@ func (f *Framework) ListCRDs(ctx context.Context) (*v1.CustomResourceDefinitionL
 }
 
 // CreateOrUpdateCRD creates a custom resource definition on the apiserver.
-func (f *Framework) CreateOrUpdateCRD(ctx context.Context, crd *v1.CustomResourceDefinition) error {
+func (f *Framework) CreateOrUpdateCRD(ctx context.Context, crd *apiextensionsv1.CustomResourceDefinition) error {
 	c, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("getting CRD %s: %w", crd.Spec.Names.Kind, err)
@@ -86,7 +86,7 @@ func (f *Framework) DeleteCRD(ctx context.Context, name string) error {
 }
 
 // MakeCRD creates a CustomResourceDefinition object from yaml manifest.
-func (f *Framework) MakeCRD(source string) (*v1.CustomResourceDefinition, error) {
+func (f *Framework) MakeCRD(source string) (*apiextensionsv1.CustomResourceDefinition, error) {
 	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, fmt.Errorf("get manifest from source %s: %w", source, err)
@@ -97,7 +97,7 @@ func (f *Framework) MakeCRD(source string) (*v1.CustomResourceDefinition, error)
 		return nil, fmt.Errorf("get manifest content: %w", err)
 	}
 
-	crd := v1.CustomResourceDefinition{}
+	crd := apiextensionsv1.CustomResourceDefinition{}
 	err = yaml.Unmarshal(content, &crd)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal CRD asset file %s: %w", source, err)

@@ -23,7 +23,7 @@ import (
 	"path"
 	"path/filepath"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/yaml"
@@ -71,7 +71,7 @@ func main() {
 		log.Fatalf("failed to read file '%v': %v", ruleConfigMapName, err.Error())
 	}
 
-	configMap := v1.ConfigMap{}
+	configMap := corev1.ConfigMap{}
 
 	err = k8sYAML.NewYAMLOrJSONDecoder(file, 100).Decode(&configMap)
 	if err != nil {
@@ -99,7 +99,7 @@ func main() {
 // CMToRule takes a rule ConfigMap and transforms it to possibly multiple
 // rule file crds. It is used in `cmd/po-rule-cm-to-rule-file-crds`. Thereby it
 // needs to be public.
-func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
+func CMToRule(cm *corev1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
 	rules := []monitoringv1.PrometheusRule{}
 
 	for name, content := range cm.Data {

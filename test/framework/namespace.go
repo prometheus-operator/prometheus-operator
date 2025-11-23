@@ -20,7 +20,7 @@ import (
 	"maps"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -35,7 +35,7 @@ func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *
 		t.Fatalf("failed to generate namespace %v: %v", name, err)
 	}
 
-	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
 			Labels: map[string]string{"app.kubernetes.io/created-by": "e2e-test"},

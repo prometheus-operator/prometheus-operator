@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -59,8 +59,8 @@ func newUnstructured(namespace string) *unstructured.Unstructured {
 		}}
 }
 
-func newNamespace(name string) *v1.Namespace {
-	return &v1.Namespace{
+func newNamespace(name string) *corev1.Namespace {
+	return &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},

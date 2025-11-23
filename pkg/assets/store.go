@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -80,10 +80,10 @@ func newStoreBuilder() *StoreBuilder {
 // assetKeyFunc returns a unique key for a ConfigMap, a Secret or a runtime.Object.
 func assetKeyFunc(obj any) (string, error) {
 	switch v := obj.(type) {
-	case *v1.ConfigMap:
+	case *corev1.ConfigMap:
 		return configMapKey(v), nil
 
-	case *v1.Secret:
+	case *corev1.Secret:
 		return secretKey(v), nil
 
 	case runtime.Object:
@@ -275,12 +275,12 @@ func (s *StoreBuilder) GetKey(ctx context.Context, namespace string, sel monitor
 }
 
 // GetConfigMapKey processes the given ConfigMapKeySelector and returns the referenced data.
-func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, sel v1.ConfigMapKeySelector) (string, error) {
+func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, sel corev1.ConfigMapKeySelector) (string, error) {
 	if namespace == "" {
 		return "", errors.New("namespace cannot be empty")
 	}
 
-	cm := &v1.ConfigMap{
+	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
 			Namespace: namespace,
@@ -303,7 +303,7 @@ func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, se
 		obj = cm
 	}
 
-	cm = obj.(*v1.ConfigMap)
+	cm = obj.(*corev1.ConfigMap)
 	if _, found := cm.Data[sel.Key]; !found {
 		return "", fmt.Errorf("key %q in configmap %q not found", sel.Key, sel.Name)
 	}
@@ -312,12 +312,12 @@ func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, se
 }
 
 // GetSecretKey processes the given SecretKeySelector and returns the referenced data.
-func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel v1.SecretKeySelector) (string, error) {
+func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel corev1.SecretKeySelector) (string, error) {
 	if namespace == "" {
 		return "", errors.New("namespace cannot be empty")
 	}
 
-	sec := &v1.Secret{
+	sec := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
 			Namespace: namespace,
@@ -340,7 +340,7 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel v
 		obj = secret
 	}
 
-	secret := obj.(*v1.Secret)
+	secret := obj.(*corev1.Secret)
 	if _, found := secret.Data[sel.Key]; !found {
 		return "", fmt.Errorf("key %q in secret %q not found", sel.Key, sel.Name)
 	}
@@ -368,8 +368,8 @@ type cacheOnlyStore struct {
 
 var _ = StoreGetter(&cacheOnlyStore{})
 
-func (cos *cacheOnlyStore) GetConfigMapKey(sel v1.ConfigMapKeySelector) (string, error) {
-	obj, exists, err := cos.c.Get(&v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
+func (cos *cacheOnlyStore) GetConfigMapKey(sel corev1.ConfigMapKeySelector) (string, error) {
+	obj, exists, err := cos.c.Get(&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
 	if err != nil {
 		return "", fmt.Errorf("failed to get configmap %s/%s: %w", cos.ns, sel.Name, err)
 	}
@@ -378,7 +378,7 @@ func (cos *cacheOnlyStore) GetConfigMapKey(sel v1.ConfigMapKeySelector) (string,
 		return "", fmt.Errorf("configmap %s/%s not found", cos.ns, sel.Name)
 	}
 
-	cm := obj.(*v1.ConfigMap)
+	cm := obj.(*corev1.ConfigMap)
 	if _, found := cm.Data[sel.Key]; !found {
 		return "", fmt.Errorf("key %q in configmap %s/%s not found", sel.Key, cos.ns, sel.Name)
 	}
@@ -386,8 +386,8 @@ func (cos *cacheOnlyStore) GetConfigMapKey(sel v1.ConfigMapKeySelector) (string,
 	return cm.Data[sel.Key], nil
 }
 
-func (cos *cacheOnlyStore) GetSecretKey(sel v1.SecretKeySelector) ([]byte, error) {
-	obj, exists, err := cos.c.Get(&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
+func (cos *cacheOnlyStore) GetSecretKey(sel corev1.SecretKeySelector) ([]byte, error) {
+	obj, exists, err := cos.c.Get(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret %s/%s: %w", cos.ns, sel.Name, err)
 	}
@@ -396,7 +396,7 @@ func (cos *cacheOnlyStore) GetSecretKey(sel v1.SecretKeySelector) ([]byte, error
 		return nil, fmt.Errorf("secret %s/%s not found", cos.ns, sel.Name)
 	}
 
-	s := obj.(*v1.Secret)
+	s := obj.(*corev1.Secret)
 	if _, found := s.Data[sel.Key]; !found {
 		return nil, fmt.Errorf("key %q in secret %s/%s not found", sel.Key, cos.ns, sel.Name)
 	}
@@ -427,7 +427,7 @@ func (cos *cacheOnlyStore) TLSAsset(sel any) string {
 	switch v := sel.(type) {
 	case monitoringv1.SecretOrConfigMap:
 		k = tlsAssetKeyFromSelector(cos.ns, v)
-	case *v1.SecretKeySelector:
+	case *corev1.SecretKeySelector:
 		k = tlsAssetKeyFromSecretSelector(cos.ns, v)
 	default:
 		return ""
