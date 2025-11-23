@@ -985,12 +985,12 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		VSendResolved: in.SendResolved,
 		Class:         in.Class,
 		Client:        in.Client,
-		ClientURL:     in.ClientURL,
+		ClientURL:     string(in.ClientURL),
 		Component:     in.Component,
 		Description:   in.Description,
 		Group:         in.Group,
 		Severity:      in.Severity,
-		URL:           in.URL,
+		URL:           string(in.URL),
 	}
 
 	if in.RoutingKey != nil {

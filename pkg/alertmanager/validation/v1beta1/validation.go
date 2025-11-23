@@ -123,8 +123,13 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error {
 	for _, conf := range configs {
 		if conf.URL != "" {
-			if _, err := validation.ValidateURL(conf.URL); err != nil {
+			if _, err := validation.ValidateURL(string(conf.URL)); err != nil {
 				return fmt.Errorf("pagerduty validation failed for 'url': %w", err)
+			}
+		}
+		if conf.ClientURL != "" {
+			if _, err := validation.ValidateURL(string(conf.ClientURL)); err != nil {
+				return fmt.Errorf("pagerduty validation failed for 'clientURL': %w", err)
 			}
 		}
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {

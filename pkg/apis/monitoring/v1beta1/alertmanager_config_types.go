@@ -237,13 +237,13 @@ type PagerDutyConfig struct {
 	ServiceKey *SecretKeySelector `json:"serviceKey,omitempty"`
 	// url defines the URL to send requests to.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL URL `json:"url,omitempty"`
 	// client defines the client identification.
 	// +optional
 	Client string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	ClientURL string `json:"clientURL,omitempty"`
+	ClientURL URL `json:"clientURL,omitempty"`
 	// description of the incident.
 	// +optional
 	Description string `json:"description,omitempty"`
