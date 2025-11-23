@@ -30,7 +30,7 @@ type PodMetricsEndpointApplyConfiguration struct {
 	TargetPort                   *intstr.IntOrString               `json:"targetPort,omitempty"`
 	Path                         *string                           `json:"path,omitempty"`
 	Scheme                       *monitoringv1.Scheme              `json:"scheme,omitempty"`
-	Params                       []ParamEntryApplyConfiguration    `json:"params,omitempty"`
+	Params                       map[string][]string               `json:"params,omitempty"`
 	Interval                     *monitoringv1.Duration            `json:"interval,omitempty"`
 	ScrapeTimeout                *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
 	HonorLabels                  *bool                             `json:"honorLabels,omitempty"`
@@ -88,15 +88,16 @@ func (b *PodMetricsEndpointApplyConfiguration) WithScheme(value monitoringv1.Sch
 	return b
 }
 
-// WithParams adds the given value to the Params field in the declarative configuration
+// WithParams puts the entries into the Params field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Params field.
-func (b *PodMetricsEndpointApplyConfiguration) WithParams(values ...*ParamEntryApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithParams")
-		}
-		b.Params = append(b.Params, *values[i])
+// If called multiple times, the entries provided by each call will be put on the Params field,
+// overwriting an existing map entries in Params field with the same key.
+func (b *PodMetricsEndpointApplyConfiguration) WithParams(entries map[string][]string) *PodMetricsEndpointApplyConfiguration {
+	if b.Params == nil && len(entries) > 0 {
+		b.Params = make(map[string][]string, len(entries))
+	}
+	for k, v := range entries {
+		b.Params[k] = v
 	}
 	return b
 }

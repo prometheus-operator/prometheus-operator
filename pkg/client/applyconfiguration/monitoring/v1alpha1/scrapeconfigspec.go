@@ -59,7 +59,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	HonorTimestamps                            *bool                                    `json:"honorTimestamps,omitempty"`
 	TrackTimestampsStaleness                   *bool                                    `json:"trackTimestampsStaleness,omitempty"`
 	HonorLabels                                *bool                                    `json:"honorLabels,omitempty"`
-	Params                                     []ParamEntryApplyConfiguration           `json:"params,omitempty"`
+	Params                                     map[string][]string                      `json:"params,omitempty"`
 	Scheme                                     *monitoringv1.Scheme                     `json:"scheme,omitempty"`
 	EnableCompression                          *bool                                    `json:"enableCompression,omitempty"`
 	EnableHTTP2                                *bool                                    `json:"enableHTTP2,omitempty"`
@@ -473,15 +473,16 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithHonorLabels(value bool) *Scrape
 	return b
 }
 
-// WithParams adds the given value to the Params field in the declarative configuration
+// WithParams puts the entries into the Params field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Params field.
-func (b *ScrapeConfigSpecApplyConfiguration) WithParams(values ...*ParamEntryApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithParams")
-		}
-		b.Params = append(b.Params, *values[i])
+// If called multiple times, the entries provided by each call will be put on the Params field,
+// overwriting an existing map entries in Params field with the same key.
+func (b *ScrapeConfigSpecApplyConfiguration) WithParams(entries map[string][]string) *ScrapeConfigSpecApplyConfiguration {
+	if b.Params == nil && len(entries) > 0 {
+		b.Params = make(map[string][]string, len(entries))
+	}
+	for k, v := range entries {
+		b.Params[k] = v
 	}
 	return b
 }

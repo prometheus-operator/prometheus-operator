@@ -10564,27 +10564,14 @@
                     "type": "array"
                   },
                   "params": {
-                    "description": "params defines optional HTTP URL parameters",
-                    "items": {
-                      "properties": {
-                        "name": {
-                          "description": "name is the parameter name.",
-                          "type": "string"
-                        },
-                        "values": {
-                          "description": "values is the parameter values.",
-                          "items": {
-                            "type": "string"
-                          },
-                          "type": "array"
-                        }
+                    "additionalProperties": {
+                      "items": {
+                        "type": "string"
                       },
-                      "required": [
-                        "name"
-                      ],
-                      "type": "object"
+                      "type": "array"
                     },
-                    "type": "array"
+                    "description": "params defines optional HTTP URL parameters",
+                    "type": "object"
                   },
                   "proxyConnectHeader": {
                     "additionalProperties": {

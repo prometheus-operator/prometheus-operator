@@ -267,7 +267,8 @@ type PodMetricsEndpoint struct {
 
 	// params define optional HTTP URL parameters.
 	// +optional
-	Params []ParamEntry `json:"params,omitempty"`
+	//nolint:kubeapilinter
+	Params map[string][]string `json:"params,omitempty"`
 
 	// interval at which Prometheus scrapes the metrics from the target.
 	//

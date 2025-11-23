@@ -3231,7 +3231,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	if len(sc.Spec.Params) > 0 {
-		cfg = append(cfg, yaml.MapItem{Key: "params", Value: stringMapToMapSlice(sc.Spec.ParamsMap())})
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: stringMapToMapSlice(sc.Spec.Params)})
 	}
 
 	if sc.Spec.EnableCompression != nil {
