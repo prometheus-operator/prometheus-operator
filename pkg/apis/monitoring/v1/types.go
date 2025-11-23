@@ -331,6 +331,7 @@ type EmbeddedObjectMetadata struct {
 	// and services.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
 
 	// annotations defines an unstructured key value map stored with a resource that may be
@@ -338,6 +339,7 @@ type EmbeddedObjectMetadata struct {
 	// queryable and should be preserved when modifying objects.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	// +optional
+	//nolint:kubeapilinter
 	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
 }
 
@@ -442,7 +444,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `clientCAFile`.
 	//
 	// +optional
-	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
+	//nolint:kubeapilinter
 	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
 	// clientCAFile defines the path to the CA certificate file for client certificate authentication to
 	// the server.
@@ -738,6 +740,7 @@ type OAuth2 struct {
 	// URL.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 
 	// tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.

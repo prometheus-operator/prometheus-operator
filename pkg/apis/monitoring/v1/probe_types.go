@@ -219,6 +219,7 @@ type ProbeTargetStaticConfig struct {
 	Targets []string `json:"static,omitempty"`
 	// labels defines all labels assigned to all metrics scraped from the targets.
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 	// relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
 	// scraped.
