@@ -35,7 +35,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -81,7 +81,7 @@ type Operator struct {
 	kclient    kubernetes.Interface
 	mdClient   metadata.Interface
 	mclient    monitoringclient.Interface
-	ssarClient authv1.SelfSubjectAccessReviewInterface
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface
 
 	controllerID string
 

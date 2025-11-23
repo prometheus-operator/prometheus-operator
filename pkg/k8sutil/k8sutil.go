@@ -42,8 +42,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	clientauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	clientdiscoveryv1 "k8s.io/client-go/kubernetes/typed/discovery/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -153,7 +153,7 @@ type ResourceAttribute struct {
 // the requirements aren't met.
 func IsAllowed(
 	ctx context.Context,
-	ssarClient clientauthv1.SelfSubjectAccessReviewInterface,
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface,
 	namespaces []string,
 	attributes ...ResourceAttribute,
 ) (bool, []error, error) {
@@ -236,7 +236,7 @@ func IsResourceNotFoundError(err error) bool {
 	return false
 }
 
-func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *corev1.Service) (*corev1.Service, error) {
+func CreateOrUpdateService(ctx context.Context, sclient typedcorev1.ServiceInterface, svc *corev1.Service) (*corev1.Service, error) {
 	var ret *corev1.Service
 
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
@@ -270,7 +270,7 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 // CreateOrUpdateEndpoints creates or updates an endpoint resource.
 //
 //nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
-func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *corev1.Endpoints) error {
+func CreateOrUpdateEndpoints(ctx context.Context, eclient typedcorev1.EndpointsInterface, eps *corev1.Endpoints) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		endpoints, err := eclient.Get(ctx, eps.Name, metav1.GetOptions{})
@@ -352,7 +352,7 @@ func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterf
 }
 
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
-func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *corev1.Secret) error {
+func CreateOrUpdateSecret(ctx context.Context, secretClient typedcorev1.SecretInterface, desired *corev1.Secret) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
@@ -585,7 +585,7 @@ func UpdateDNSPolicy(podSpec *corev1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy)
 // labels.
 // If it is not selected, fail the reconciliation
 // Warning: the function will panic if the resource's ServiceName is nil..
-func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
+func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient typedcorev1.ServiceInterface, selectorLabels map[string]string) error {
 	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
 	svc, err := svcClient.Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {

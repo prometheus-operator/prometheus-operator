@@ -22,7 +22,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -42,7 +42,7 @@ type ShardedSecret struct {
 }
 
 // updateSecrets updates the concrete Secrets from the stored data.
-func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.SecretInterface) error {
+func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient typedcorev1.SecretInterface) error {
 	secrets := s.shard()
 
 	for _, secret := range secrets {
@@ -93,7 +93,7 @@ func (s *ShardedSecret) newSecretAt(index int) *corev1.Secret {
 // cleanupExcessSecretShards removes excess secret shards that are no longer in use.
 // It also tries to remove a non-sharded secret that exactly matches the name
 // prefix in order to make sure that operator version upgrades run smoothly.
-func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient corev1.SecretInterface, lastSecretIndex int) error {
+func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient typedcorev1.SecretInterface, lastSecretIndex int) error {
 	for i := lastSecretIndex + 1; ; i++ {
 		secretName := s.secretNameAt(i)
 		err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{})

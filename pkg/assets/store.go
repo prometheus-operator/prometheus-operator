@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -38,8 +38,8 @@ import (
 //
 // StoreBuilder doesn't support concurrent access.
 type StoreBuilder struct {
-	cmClient   corev1client.ConfigMapsGetter
-	sClient    corev1client.SecretsGetter
+	cmClient   typedcorev1.ConfigMapsGetter
+	sClient    typedcorev1.SecretsGetter
 	objStore   cache.Store
 	refTracker RefTracker
 
@@ -61,7 +61,7 @@ func NewTestStoreBuilder(objects ...any) *StoreBuilder {
 }
 
 // NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
-func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
+func NewStoreBuilder(cmClient typedcorev1.ConfigMapsGetter, sClient typedcorev1.SecretsGetter) *StoreBuilder {
 	sb := newStoreBuilder()
 	sb.cmClient = cmClient
 	sb.sClient = sClient
@@ -500,6 +500,6 @@ func (s *StoreBuilder) DeleteObject(obj any) error {
 // GetSecretClient returns the store's secret client.
 // This method is only used by external clients of the assets package such as the OpenTelemetry collector operator.
 // Example usage - Update asset store on a watch event requires the secret client to fetch the latest secrets.
-func (s *StoreBuilder) GetSecretClient() corev1client.SecretsGetter {
+func (s *StoreBuilder) GetSecretClient() typedcorev1.SecretsGetter {
 	return s.sClient
 }

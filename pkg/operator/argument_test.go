@@ -20,17 +20,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestBuildArgs(t *testing.T) {
-	args := []v1.Argument{
+	args := []monitoringv1.Argument{
 		{Name: "test", Value: "value"},
 		{Name: "test2-test", Value: "value2"},
 		{Name: "test3.test", Value: "value3"},
 	}
 
-	additionalArgs := []v1.Argument{
+	additionalArgs := []monitoringv1.Argument{
 		{Name: "addtest", Value: "value"},
 		{Name: "addtest2-test", Value: "value2"},
 		{Name: "addtest3.test", Value: "value3"},

@@ -30,7 +30,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
@@ -315,7 +315,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 type PrometheusRuleSyncer struct {
 	namePrefix string
 	opts       []ObjectOption
-	cmClient   clientv1.ConfigMapInterface
+	cmClient   typedcorev1.ConfigMapInterface
 	cmSelector labels.Set
 
 	logger *slog.Logger
@@ -324,7 +324,7 @@ type PrometheusRuleSyncer struct {
 func NewPrometheusRuleSyncer(
 	logger *slog.Logger,
 	namePrefix string,
-	cmClient clientv1.ConfigMapInterface,
+	cmClient typedcorev1.ConfigMapInterface,
 	cmSelector labels.Set,
 	options []ObjectOption,
 ) *PrometheusRuleSyncer {

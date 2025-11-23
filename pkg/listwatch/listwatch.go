@@ -31,8 +31,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
-	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
@@ -61,8 +61,8 @@ func NewNamespaceListWatchFromClient(
 	ctx context.Context,
 	l *slog.Logger,
 	k8sVersion semver.Version,
-	corev1Client corev1.CoreV1Interface,
-	ssarClient authv1.SelfSubjectAccessReviewInterface,
+	corev1Client typedcorev1.CoreV1Interface,
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
 ) (cache.ListerWatcher, bool, error) {
 	if l == nil {
@@ -241,7 +241,7 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 }
 
 type pollBasedListerWatcher struct {
-	corev1Client corev1.CoreV1Interface
+	corev1Client typedcorev1.CoreV1Interface
 	ch           chan watch.Event
 
 	ctx context.Context
@@ -258,7 +258,7 @@ type cacheEntry struct {
 var _ = watch.Interface(&pollBasedListerWatcher{})
 var _ = cache.ListerWatcher(&pollBasedListerWatcher{})
 
-func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client corev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
+func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client typedcorev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
 	if l == nil {
 		l = slog.New(slog.DiscardHandler)
 	}

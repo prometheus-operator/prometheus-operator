@@ -22,7 +22,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -98,7 +98,7 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []corev1.Volume, []
 // data for the web config file.
 // The format of the web config file is available in the official prometheus documentation:
 // https://prometheus.io/docs/prometheus/latest/configuration/https/#https-and-authentication
-func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, s *corev1.Secret) error {
+func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient typedcorev1.SecretInterface, s *corev1.Secret) error {
 	data, err := c.generateConfigFileContents()
 	if err != nil {
 		return err
