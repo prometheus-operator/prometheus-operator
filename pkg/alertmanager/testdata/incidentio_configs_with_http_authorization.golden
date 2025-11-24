@@ -1,0 +1,9 @@
+receivers:
+- name: ""
+  incidentio_config:
+  - http_config:
+      authorization:
+        type: Bearer
+        credentials: creds123
+    url: http://example.com
+templates: []
