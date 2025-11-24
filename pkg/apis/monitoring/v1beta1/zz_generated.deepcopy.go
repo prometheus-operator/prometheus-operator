@@ -603,6 +603,16 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.HTML != nil {
+		in, out := &in.HTML, &out.HTML
+		*out = new(bool)
+		**out = **in
+	}
+	if in.Monospace != nil {
+		in, out := &in.Monospace, &out.Monospace
+		*out = new(bool)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

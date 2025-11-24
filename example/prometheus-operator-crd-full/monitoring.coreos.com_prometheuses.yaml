@@ -7086,11 +7086,12 @@ spec:
                             Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
-                              description: clientId defines defines the Azure User-assigned
-                                Managed identity.
+                              description: |-
+                                clientId defines the Azure User-assigned Managed identity.
+
+                                For Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.
+                              minLength: 1
                               type: string
-                          required:
-                          - clientId
                           type: object
                         oauth:
                           description: |-

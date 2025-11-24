@@ -28,6 +28,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
@@ -87,7 +88,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	var nonNilFields []string
 	for k, v := range map[string]any{
 		"basicAuth":     spec.BasicAuth,
@@ -124,6 +125,13 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
+		// check azure managed identity client id
+		if spec.AzureAD.ManagedIdentity != nil {
+			if err := cg.checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity); err != nil {
+				return err
+			}
+		}
+
 		if spec.AzureAD.OAuth != nil {
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
@@ -133,6 +141,19 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	return spec.Validate()
+}
+
+func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity) error {
+	// Prometheus >= v3.5.0 allows empty clientID values.
+	if cg.WithMinimumVersion("3.5.0").IsCompatible() {
+		return nil
+	}
+
+	if ptr.Deref(mid.ClientID, "") == "" {
+		return fmt.Errorf("managedIdentidy: clientId is required with Prometheus < 3.5.0, current = %s", cg.version.String())
+	}
+
+	return nil
 }
 
 // Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.

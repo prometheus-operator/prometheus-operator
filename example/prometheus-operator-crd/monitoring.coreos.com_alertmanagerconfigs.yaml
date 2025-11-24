@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.86.2
+    operator.prometheus.io/version: 0.87.0
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -5296,6 +5296,11 @@ spec:
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
                             type: string
+                          monospace:
+                            description: |-
+                              monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html
+                              html and monospace formatting are mutually exclusive.
+                            type: boolean
                           priority:
                             description: |-
                               priority defines the notification priority level.

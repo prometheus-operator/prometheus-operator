@@ -46,6 +46,9 @@ validators:
   # Ignore all istio.io URLs because of http request timeout.
   - regex: 'istio.io'
     type: ignore
+  # Medium rejects bot's requests.
+  - regex: 'medium.com'
+    type: ignore
   # Use the githubPullsIssues validator to avoid rate-limiting.
   - regex: '(^http[s]?:\/\/)(www\.)?(github\.com\/)prometheus-operator\/prometheus-operator(\/pull\/|\/issues\/)'
     type: githubPullsIssues

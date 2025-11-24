@@ -279,6 +279,10 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return fmt.Errorf("one of token or tokenFile must be configured")
 		}
 
+		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
+			return fmt.Errorf("html and monospace options are mutually exclusive")
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

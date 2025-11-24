@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -2653,6 +2654,22 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	return "prometheus.WriteRequest"
 }
 
+// AddRemoteWriteToStore validates the remote-write configurations and loads
+// all secret/configmap references into the store.
+func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	for i, rw := range rws {
+		if err := cg.validateRemoteWriteSpec(rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+
+		if err := addRemoteWritesToStore(ctx, store, namespace, rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapItem {
 	var cfgs []yaml.MapSlice
 
@@ -2752,11 +2769,11 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			azureAd := yaml.MapSlice{}
 
 			if spec.AzureAD.ManagedIdentity != nil {
-				azureAd = append(azureAd,
-					yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
-						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-					}},
-				)
+				managedIdentity := yaml.MapSlice{}
+				if clientID := ptr.Deref(spec.AzureAD.ManagedIdentity.ClientID, ""); clientID != "" {
+					managedIdentity = append(managedIdentity, yaml.MapItem{Key: "client_id", Value: clientID})
+				}
+				azureAd = append(azureAd, yaml.MapItem{Key: "managed_identity", Value: managedIdentity})
 			}
 
 			if spec.AzureAD.OAuth != nil {
