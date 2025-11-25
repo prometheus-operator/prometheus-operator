@@ -40,6 +40,11 @@ func TestValidateUrl(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:      "Test empty string",
+			in:        "",
+			expectErr: true,
+		},
+		{
 			name: "Test happy path",
 			in:   "https://u:p@is.compliant.with.upstream.unmarshal",
 			expectResult: func() *config.URL {
