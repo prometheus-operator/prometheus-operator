@@ -101,6 +101,8 @@ type RuleGroup struct {
 	QueryOffset *Duration `json:"query_offset,omitempty"`
 	// rules defines the list of alerting and recording rules.
 	// +optional
+	// +listType=map
+	// +listMapKey=alert
 	Rules []Rule `json:"rules,omitempty"`
 	// partial_response_strategy is only used by ThanosRuler and will
 	// be ignored by Prometheus instances.
