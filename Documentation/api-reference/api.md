@@ -11506,7 +11506,9 @@ string
 </em>
 </td>
 <td>
-<p>clientId defines defines the Azure User-assigned Managed identity.</p>
+<em>(Optional)</em>
+<p>clientId defines the Azure User-assigned Managed identity.</p>
+<p>For Prometheus &gt;= 3.5.0 and Thanos &gt;= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.</p>
 </td>
 </tr>
 </tbody>
@@ -31990,6 +31992,19 @@ When true, the message can include HTML formatting tags.</p>
 </tr>
 <tr>
 <td>
+<code>monospace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>monospace optional HTML/monospace formatting for the message, see <a href="https://pushover.net/api#html">https://pushover.net/api#html</a>
+html and monospace formatting are mutually exclusive.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -37571,6 +37586,19 @@ bool
 <em>(Optional)</em>
 <p>html defines whether notification message is HTML or plain text.
 When true, the message can include HTML formatting tags.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>monospace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>monospace optional HTML/monospace formatting for the message, see <a href="https://pushover.net/api#html">https://pushover.net/api#html</a>
+html and monospace formatting are mutually exclusive.</p>
 </td>
 </tr>
 <tr>

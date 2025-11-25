@@ -477,6 +477,7 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 		Retry:        in.Retry,
 		Expire:       in.Expire,
 		HTML:         in.HTML,
+		Monospace:    in.Monospace,
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 	}
 }
