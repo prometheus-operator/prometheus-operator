@@ -599,6 +599,26 @@ UI, not the gossip communication.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -2756,6 +2776,26 @@ instead of the Pod IP&rsquo;s address.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -4903,6 +4943,26 @@ does not bind against the Pod IP.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>queryEndpoints</code><br/>
 <em>
 []string
@@ -6941,6 +7001,26 @@ UI, not the gossip communication.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -8747,6 +8827,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -12355,6 +12455,33 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.PodManagementPolicyType">PodManagementPolicyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;OrderedReady&#34;</p></td>
+<td><p>OrderedReadyPodManagement will create pods in strictly increasing order on
+scale up and strictly decreasing order on scale down, progressing only when
+the previous pod is ready or terminated. At most one pod will be changed
+at any time.</p>
+</td>
+</tr><tr><td><p>&#34;Parallel&#34;</p></td>
+<td><p>ParallelPodManagement will create and delete pods as soon as the stateful set
+replica count is changed, and will not wait for pods to be ready or complete
+termination.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint
 </h3>
 <p>
@@ -14734,6 +14861,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -19428,6 +19575,26 @@ does not bind against the Pod IP.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>queryEndpoints</code><br/>
 <em>
 []string
@@ -22263,6 +22430,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -30891,6 +31078,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>

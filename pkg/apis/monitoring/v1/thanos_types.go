@@ -212,6 +212,19 @@ type ThanosRulerSpec struct {
 	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+
 	// queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.
 	//
 	// For Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.

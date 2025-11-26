@@ -499,6 +499,19 @@ type CommonPrometheusFields struct {
 	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`

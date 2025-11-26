@@ -1140,3 +1140,18 @@ const (
 	SchemeHTTP  Scheme = "HTTP"
 	SchemeHTTPS Scheme = "HTTPS"
 )
+
+// +kubebuilder:validation:Enum=OrderedReady;Parallel
+type PodManagementPolicyType string
+
+const (
+	// OrderedReadyPodManagement will create pods in strictly increasing order on
+	// scale up and strictly decreasing order on scale down, progressing only when
+	// the previous pod is ready or terminated. At most one pod will be changed
+	// at any time.
+	OrderedReadyPodManagement PodManagementPolicyType = "OrderedReady"
+	// ParallelPodManagement will create and delete pods as soon as the stateful set
+	// replica count is changed, and will not wait for pods to be ready or complete
+	// termination.
+	ParallelPodManagement PodManagementPolicyType = "Parallel"
+)

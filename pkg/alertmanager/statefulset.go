@@ -767,13 +767,17 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
 
+	// By default, podManagementPolicy is set to Parallel to mitigate rollout
+	// issues in Kubernetes (see https://github.com/kubernetes/kubernetes/issues/60164).
+	// This is also mentioned as one of limitations of StatefulSets:
+	// https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
+	podManagementPolicy := ptr.Deref(a.Spec.PodManagementPolicy, monitoringv1.ParallelPodManagement)
+
 	spec := appsv1.StatefulSetSpec{
-		ServiceName:     getServiceName(a),
-		Replicas:        a.Spec.Replicas,
-		MinReadySeconds: ptr.Deref(a.Spec.MinReadySeconds, 0),
-		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-		PodManagementPolicy: appsv1.ParallelPodManagement,
+		ServiceName:         getServiceName(a),
+		Replicas:            a.Spec.Replicas,
+		MinReadySeconds:     ptr.Deref(a.Spec.MinReadySeconds, 0),
+		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},

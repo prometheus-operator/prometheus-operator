@@ -1,3 +1,7 @@
+## Unreleased
+
+* [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
+
 ## 0.87.0 / 2025-11-20
 
 * [FEATURE] Add status subresource for `PrometheusRule` custom resources (requires the `StatusForConfigurationResources` feature gate). #8069 #8086 #8024 #8005
