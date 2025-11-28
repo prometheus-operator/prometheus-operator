@@ -1124,6 +1124,10 @@ func testPromStorageUpdate(t *testing.T) {
 	}
 }
 
+// testPromReloadConfig checks that the Prometheus configuration gets reloaded
+// when users provision the configuration only via additionalScrapeConfigs.
+// The test also ensures that the Reconciled condition highlights that no
+// resources have been selected.
 func testPromReloadConfig(t *testing.T) {
 	for _, tc := range []struct {
 		reloadStrategy monitoringv1.ReloadStrategyType
@@ -1172,23 +1176,25 @@ func testPromReloadConfig(t *testing.T) {
 			}
 
 			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
-			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
-				t.Fatal(err)
-			}
+			p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			require.NoError(t, err)
 
-			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-				t.Fatal(err)
-			} else {
-				testCtx.AddFinalizerFn(finalizerFn)
+			var found bool
+			for _, cond := range p.Status.Conditions {
+				if cond.Type == monitoringv1.Reconciled {
+					require.Equal(t, operator.NoSelectedResourcesReason, cond.Reason)
+					found = true
+				}
 			}
+			require.True(t, found)
 
-			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1); err != nil {
-				t.Fatal(err)
-			}
+			_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
+			require.NoError(t, err)
+
+			err = framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1)
+			require.NoError(t, err)
 
 			cfg.Data["config.yaml"] = []byte(`
 - job_name: testReloadConfig
@@ -1198,13 +1204,11 @@ func testPromReloadConfig(t *testing.T) {
       - 111.111.111.111:9090
       - 111.111.111.112:9090
 `)
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-				t.Fatal(err)
-			}
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+			require.NoError(t, err)
 
-			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2); err != nil {
-				t.Fatal(err)
-			}
+			err = framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2)
+			require.NoError(t, err)
 		})
 	}
 }
