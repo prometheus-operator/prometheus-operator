@@ -180,8 +180,6 @@ func TestAllNS(t *testing.T) {
 			EnableAdmissionWebhook: true,
 			ClusterRoleBindings:    true,
 			EnableScrapeConfigs:    true,
-			// testPrometheusReconciliationOnSecretChanges needs this flag to be turned on.
-			AdditionalArgs: []string{"--watch-referenced-objects-in-all-namespaces=true"},
 		},
 	)
 	require.NoError(t, err)
