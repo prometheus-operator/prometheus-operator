@@ -1146,38 +1146,33 @@ func testPromReloadConfig(t *testing.T) {
 			p := framework.MakeBasicPrometheus(ns, name, name, 1)
 			p.Spec.ServiceMonitorSelector = nil
 			p.Spec.PodMonitorSelector = nil
+			p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: fmt.Sprintf("additional-config-%s", name),
+				},
+				Key: "config.yaml",
+			}
 			p.Spec.ReloadStrategy = ptr.To(tc.reloadStrategy)
-
-			firstConfig := `
-global:
-  scrape_interval: 1m
-scrape_configs:
-  - job_name: testReloadConfig
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-        - 111.111.111.111:9090
-`
-
-			var bufOne bytes.Buffer
-			if err := operator.GzipConfig(&bufOne, []byte(firstConfig)); err != nil {
-				t.Fatal(err)
-			}
-			firstConfigCompressed := bufOne.Bytes()
-
-			cfg := &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: fmt.Sprintf("prometheus-%s", name),
-				},
-				Data: map[string][]byte{
-					"prometheus.yaml.gz": firstConfigCompressed,
-					"configmaps.json":    []byte("{}"),
-				},
-			}
 
 			svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{}); err != nil {
+			cfg := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: fmt.Sprintf("additional-config-%s", name),
+				},
+				Data: map[string][]byte{
+					"config.yaml": []byte(`
+- job_name: testReloadConfig
+  metrics_path: /metrics
+  static_configs:
+    - targets:
+      - 111.111.111.111:9090
+`),
+				},
+			}
+
+			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{})
+			if err != nil {
 				t.Fatal(err)
 			}
 
@@ -1195,30 +1190,14 @@ scrape_configs:
 				t.Fatal(err)
 			}
 
-			secondConfig := `
-global:
-  scrape_interval: 1m
-scrape_configs:
-  - job_name: testReloadConfig
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-        - 111.111.111.111:9090
-        - 111.111.111.112:9090
-`
-
-			var bufTwo bytes.Buffer
-			if err := operator.GzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
-				t.Fatal(err)
-			}
-			secondConfigCompressed := bufTwo.Bytes()
-
-			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), cfg.Name, metav1.GetOptions{})
-			if err != nil {
-				t.Fatal(fmt.Errorf("could not retrieve previous secret: %w", err))
-			}
-
-			cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
+			cfg.Data["config.yaml"] = []byte(`
+- job_name: testReloadConfig
+  metrics_path: /metrics
+  static_configs:
+    - targets:
+      - 111.111.111.111:9090
+      - 111.111.111.112:9090
+`)
 			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
 				t.Fatal(err)
 			}
