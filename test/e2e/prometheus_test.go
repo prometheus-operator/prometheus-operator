@@ -5905,13 +5905,13 @@ func testStuckStatefulSetRollout(t *testing.T) {
 			return false, nil
 		}
 
-		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Available, monitoringv1.ConditionFalse); err != nil {
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Available, monitoringv1.ConditionDegraded); err != nil {
 			loopError = err
 			return false, nil
 		}
 
 		// The rollout should start from the highest pod ordinal.
-		pod, err := framework.KubeClient.CoreV1().Pods(prom.Namespace).Get(ctx, "prometheus"+prom.Name+"-1", metav1.GetOptions{})
+		pod, err := framework.KubeClient.CoreV1().Pods(prom.Namespace).Get(ctx, "prometheus-"+prom.Name+"-1", metav1.GetOptions{})
 		if err != nil {
 			loopError = err
 			return false, nil
@@ -5950,7 +5950,7 @@ func testStuckStatefulSetRollout(t *testing.T) {
 		prom.Namespace,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Image: ptr.To(""),
+				Image: ptr.To(operator.DefaultPrometheusImage),
 			},
 		},
 	)
