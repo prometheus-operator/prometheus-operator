@@ -3,6 +3,8 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: kind
 
+featureGates:
+  MaxUnavailableStatefulSet: true
 # We decrease the interval at which kubelet synchronizes the mounted configmaps
 # and secrets from the default 1 minute to 10 seconds. It helps speeding up the
 # tests because the configuration changes are propagated faster to the
