@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -25,7 +26,7 @@ import (
 // with apply.
 type WebhookConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	URL          *string                       `json:"url,omitempty"`
+	URL          *monitoringv1alpha1.URL       `json:"url,omitempty"`
 	URLSecret    *v1.SecretKeySelector         `json:"urlSecret,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 	MaxAlerts    *int32                        `json:"maxAlerts,omitempty"`
@@ -49,7 +50,7 @@ func (b *WebhookConfigApplyConfiguration) WithSendResolved(value bool) *WebhookC
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *WebhookConfigApplyConfiguration) WithURL(value string) *WebhookConfigApplyConfiguration {
+func (b *WebhookConfigApplyConfiguration) WithURL(value monitoringv1alpha1.URL) *WebhookConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }
