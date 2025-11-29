@@ -406,7 +406,7 @@ func convertWebexConfigFrom(in v1alpha1.WebexConfig) WebexConfig {
 func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 	return WebhookConfig{
 		SendResolved: in.SendResolved,
-		URL:          in.URL,
+		URL:          (*URL)(in.URL),
 		URLSecret:    convertSecretKeySelectorFrom(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
