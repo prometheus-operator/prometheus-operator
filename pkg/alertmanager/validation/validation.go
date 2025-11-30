@@ -37,6 +37,21 @@ func ValidateURLPtr(url *string) error {
 }
 
 // ValidateURL validates a URL string against the config.URL.
+	"github.com/prometheus/common/model"
+)
+
+func ValidateNonZeroDuration(duration string) error {
+	d, err := model.ParseDuration(duration)
+	if err != nil {
+		return fmt.Errorf("invalid duration %q: %w", duration, err)
+	}
+	if d == 0 {
+		return fmt.Errorf("duration cannot be zero")
+	}
+	return nil
+}
+
+// ValidateURL against the config.URL
 // This could potentially become a regex and be validated via OpenAPI
 // but right now, since we know we need to unmarshal into an upstream type
 // after conversion, we validate we don't error when doing so.

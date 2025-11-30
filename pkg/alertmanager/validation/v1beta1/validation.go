@@ -426,16 +426,22 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 		}
 	}
 
-	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
-		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
-
-	}
-	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
-		return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
+	if r.GroupInterval != "" {
+		if err := validation.ValidateNonZeroDuration(r.GroupInterval); err != nil {
+			return fmt.Errorf("groupInterval: %w", err)
+		}
 	}
 
-	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
+	if r.GroupWait != "" {
+		if !durationRe.MatchString(r.GroupWait) {
+			return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
+		}
+	}
+
+	if r.RepeatInterval != "" {
+		if err := validation.ValidateNonZeroDuration(r.RepeatInterval); err != nil {
+			return fmt.Errorf("repeatInterval: %w", err)
+		}
 	}
 
 	for i, v := range r.Matchers {
