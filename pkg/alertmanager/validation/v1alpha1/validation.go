@@ -426,8 +426,13 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 	}
 
 	if r.GroupInterval != "" {
-		if err := validation.ValidateNonZeroDuration(r.GroupInterval); err != nil {
-			return fmt.Errorf("groupInterval: %w", err)
+		if !durationRe.MatchString(r.GroupInterval) {
+			return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+		}
+		if topLevelRoute {
+			if err := validation.ValidateNonZeroDuration(r.GroupInterval); err != nil {
+				return fmt.Errorf("groupInterval: %w", err)
+			}
 		}
 	}
 
@@ -438,8 +443,13 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 	}
 
 	if r.RepeatInterval != "" {
-		if err := validation.ValidateNonZeroDuration(r.RepeatInterval); err != nil {
-			return fmt.Errorf("repeatInterval: %w", err)
+		if !durationRe.MatchString(r.RepeatInterval) {
+			return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
+		}
+		if topLevelRoute {
+			if err := validation.ValidateNonZeroDuration(r.RepeatInterval); err != nil {
+				return fmt.Errorf("repeatInterval: %w", err)
+			}
 		}
 	}
 
