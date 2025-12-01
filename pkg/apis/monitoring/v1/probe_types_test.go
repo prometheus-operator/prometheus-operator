@@ -89,7 +89,7 @@ func TestMarshallProbe(t *testing.T) {
 			},
 		},
 	}
-	expected := `{"metadata":{"name":"test","namespace":"default","labels":{"group":"group1"}},"spec":{"prober":{"url":""},"targets":{"staticConfig":{"static":["prometheus.io"],"labels":{"env":"prometheus"}}},"bearerTokenSecret":{"key":""}}}`
+	expected := `{"metadata":{"name":"test","namespace":"default","labels":{"group":"group1"}},"spec":{"prober":{"url":""},"targets":{"staticConfig":{"static":["prometheus.io"],"labels":{"env":"prometheus"}}}}}`
 
 	r, err := json.Marshal(sm)
 	if err != nil {
@@ -97,6 +97,6 @@ func TestMarshallProbe(t *testing.T) {
 	}
 	rs := string(r)
 	if rs != expected {
-		t.Fatalf("Got %s expected: %s ", rs, expected)
+		t.Fatalf("Got %s\nExpected: %s ", rs, expected)
 	}
 }

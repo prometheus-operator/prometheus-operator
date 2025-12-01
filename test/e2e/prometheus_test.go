@@ -1146,38 +1146,33 @@ func testPromReloadConfig(t *testing.T) {
 			p := framework.MakeBasicPrometheus(ns, name, name, 1)
 			p.Spec.ServiceMonitorSelector = nil
 			p.Spec.PodMonitorSelector = nil
+			p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: fmt.Sprintf("additional-config-%s", name),
+				},
+				Key: "config.yaml",
+			}
 			p.Spec.ReloadStrategy = ptr.To(tc.reloadStrategy)
 
-			firstConfig := `
-global:
-  scrape_interval: 1m
-scrape_configs:
-  - job_name: testReloadConfig
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-        - 111.111.111.111:9090
-`
-
-			var bufOne bytes.Buffer
-			if err := operator.GzipConfig(&bufOne, []byte(firstConfig)); err != nil {
-				t.Fatal(err)
-			}
-			firstConfigCompressed := bufOne.Bytes()
+			svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 
 			cfg := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: fmt.Sprintf("prometheus-%s", name),
+					Name: fmt.Sprintf("additional-config-%s", name),
 				},
 				Data: map[string][]byte{
-					"prometheus.yaml.gz": firstConfigCompressed,
-					"configmaps.json":    []byte("{}"),
+					"config.yaml": []byte(`
+- job_name: testReloadConfig
+  metrics_path: /metrics
+  static_configs:
+    - targets:
+      - 111.111.111.111:9090
+`),
 				},
 			}
 
-			svc := framework.MakePrometheusService(p.Name, "not-relevant", corev1.ServiceTypeClusterIP)
-
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{}); err != nil {
+			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{})
+			if err != nil {
 				t.Fatal(err)
 			}
 
@@ -1195,30 +1190,14 @@ scrape_configs:
 				t.Fatal(err)
 			}
 
-			secondConfig := `
-global:
-  scrape_interval: 1m
-scrape_configs:
-  - job_name: testReloadConfig
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-        - 111.111.111.111:9090
-        - 111.111.111.112:9090
-`
-
-			var bufTwo bytes.Buffer
-			if err := operator.GzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
-				t.Fatal(err)
-			}
-			secondConfigCompressed := bufTwo.Bytes()
-
-			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), cfg.Name, metav1.GetOptions{})
-			if err != nil {
-				t.Fatal(fmt.Errorf("could not retrieve previous secret: %w", err))
-			}
-
-			cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
+			cfg.Data["config.yaml"] = []byte(`
+- job_name: testReloadConfig
+  metrics_path: /metrics
+  static_configs:
+    - targets:
+      - 111.111.111.111:9090
+      - 111.111.111.112:9090
+`)
 			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
 				t.Fatal(err)
 			}
@@ -3500,19 +3479,21 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "basic-auth-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: ptr.To("web"),
-				HTTPConfig: monitoringv1.HTTPConfig{
-					BasicAuth: &monitoringv1.BasicAuth{
-						Username: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: name,
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "user",
 							},
-							Key: "user",
-						},
-						Password: corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: name,
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "password",
 							},
-							Key: "password",
 						},
 					},
 				},
@@ -3525,12 +3506,14 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "bearer-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: ptr.To("web"),
-				HTTPConfig: monitoringv1.HTTPConfig{
-					BearerTokenSecret: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: name,
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						BearerTokenSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "bearer-token",
 						},
-						Key: "bearer-token",
 					},
 				},
 				Path: "/bearer-metrics",
@@ -3544,30 +3527,32 @@ func testPromSecurePodMonitor(t *testing.T) {
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
 				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
-				HTTPConfig: monitoringv1.HTTPConfig{
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &corev1.SecretKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: "key.pem",
 							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &corev1.SecretKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						KeySecret: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -3579,30 +3564,32 @@ func testPromSecurePodMonitor(t *testing.T) {
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
 				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
-				HTTPConfig: monitoringv1.HTTPConfig{
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: "key.pem",
 							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &corev1.ConfigMapKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						KeySecret: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -5871,6 +5858,103 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 		return true, nil
 	})
 	require.NoError(t, err, "UTF-8 label queries should work in Prometheus 3.0+ queries")
+}
+
+// testStuckStatefulSetRollout ensures that when the rollout of a statefulset
+// pod gets stuck, it will get unstuck after fixing the spec.
+func testStuckStatefulSetRollout(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	prom, err := framework.CreatePrometheusAndWaitUntilReady(
+		context.Background(),
+		ns,
+		framework.MakeBasicPrometheus(ns, "statefulset-rollout", "test", 2),
+	)
+	require.NoError(t, err)
+
+	badImage := "quay.io/prometheus/prometheus:foobar"
+	prom, err = framework.PatchPrometheus(
+		context.Background(),
+		prom.Name,
+		prom.Namespace,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Image: &badImage,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	var loopError error
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+		current, err := framework.MonClientV1.Prometheuses(prom.Namespace).Get(ctx, prom.Name, metav1.GetOptions{})
+		if err != nil {
+			loopError = fmt.Errorf("failed to get object: %w", err)
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionTrue); err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Available, monitoringv1.ConditionDegraded); err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		// The rollout should start from the highest pod ordinal.
+		pod, err := framework.KubeClient.CoreV1().Pods(prom.Namespace).Get(ctx, "prometheus-"+prom.Name+"-1", metav1.GetOptions{})
+		if err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		// Ensure that the Prometheus container is stuck on ErrImagePull or ImagePullBackOff.
+		for _, cs := range pod.Status.ContainerStatuses {
+			if cs.Image != badImage {
+				continue
+			}
+
+			if cs.State.Waiting == nil {
+				loopError = fmt.Errorf("container not waiting")
+				return false, nil
+			}
+
+			if cs.State.Waiting.Reason != "ErrPullImage" && cs.State.Waiting.Reason != "ImagePullBackOff" {
+				loopError = fmt.Errorf("container waiting with reason %q", cs.State.Waiting.Reason)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		loopError = fmt.Errorf("found no container with image %q", badImage)
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("%v: %v", err, loopError)
+	}
+
+	// Fix the bad image location and ensure that the resource goes back to ready.
+	prom, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		prom.Name,
+		prom.Namespace,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Image: ptr.To(operator.DefaultPrometheusImage),
+			},
+		},
+	)
+	require.NoError(t, err)
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {

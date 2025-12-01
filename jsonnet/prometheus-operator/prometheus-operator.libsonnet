@@ -197,6 +197,8 @@ function(params) {
       args: [
               '--kubelet-service=' + po.config.kubeletService,
               '--prometheus-config-reloader=' + po.config.configReloaderImage,
+              '--watch-referenced-objects-in-all-namespaces=true',
+              '--disable-unmanaged-prometheus-configuration=true',
             ] +
             [std.format('--kubelet-endpoints=%s', po.config.kubeletEndpointsEnabled)] +
             [std.format('--kubelet-endpointslice=%s', po.config.kubeletEndpointSliceEnabled)] +

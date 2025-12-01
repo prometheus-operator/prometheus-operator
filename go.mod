@@ -1,8 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25.0
 
 require (
 	github.com/KimMachineGun/automemlimit v0.7.5
@@ -25,12 +23,12 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.87.0
 	github.com/prometheus/alertmanager v0.29.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/prometheus/common v0.67.3
+	github.com/prometheus/common v0.67.4
 	github.com/prometheus/exporter-toolkit v0.15.0
 	// Since we needed the change added in https://github.com/prometheus/prometheus/pull/16928 and it's not released yet.
 	github.com/prometheus/prometheus v0.307.3
 	github.com/stretchr/testify v1.11.1
-	github.com/thanos-io/thanos v0.39.2
+	github.com/thanos-io/thanos v0.40.1
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.47.0
 	golang.org/x/sync v0.18.0
@@ -146,7 +144,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect

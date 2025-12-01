@@ -1804,8 +1804,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
-	if m.Spec.BearerTokenSecret.Name != "" {
-		b, err := s.GetSecretKey(m.Spec.BearerTokenSecret)
+	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		b, err := s.GetSecretKey(*m.Spec.BearerTokenSecret) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if err != nil {
 			cg.logger.Error("invalid bearer token reference", "err", err)
 		} else {
