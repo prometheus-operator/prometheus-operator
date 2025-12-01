@@ -25,28 +25,21 @@ import (
 // EndpointApplyConfiguration represents a declarative configuration of the Endpoint type for use
 // with apply.
 type EndpointApplyConfiguration struct {
-	Port                          *string                              `json:"port,omitempty"`
-	TargetPort                    *intstr.IntOrString                  `json:"targetPort,omitempty"`
-	Path                          *string                              `json:"path,omitempty"`
-	Scheme                        *monitoringv1.Scheme                 `json:"scheme,omitempty"`
-	Params                        map[string][]string                  `json:"params,omitempty"`
-	Interval                      *monitoringv1.Duration               `json:"interval,omitempty"`
-	ScrapeTimeout                 *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
-	BearerTokenFile               *string                              `json:"bearerTokenFile,omitempty"`
-	BearerTokenSecret             *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
-	Authorization                 *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	HonorLabels                   *bool                                `json:"honorLabels,omitempty"`
-	HonorTimestamps               *bool                                `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness      *bool                                `json:"trackTimestampsStaleness,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	MetricRelabelConfigs          []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
-	RelabelConfigs                []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects               *bool `json:"followRedirects,omitempty"`
-	EnableHttp2                   *bool `json:"enableHttp2,omitempty"`
-	FilterRunning                 *bool `json:"filterRunning,omitempty"`
+	Port                                             *string                           `json:"port,omitempty"`
+	TargetPort                                       *intstr.IntOrString               `json:"targetPort,omitempty"`
+	Path                                             *string                           `json:"path,omitempty"`
+	Scheme                                           *monitoringv1.Scheme              `json:"scheme,omitempty"`
+	Params                                           map[string][]string               `json:"params,omitempty"`
+	Interval                                         *monitoringv1.Duration            `json:"interval,omitempty"`
+	ScrapeTimeout                                    *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
+	HonorLabels                                      *bool                             `json:"honorLabels,omitempty"`
+	HonorTimestamps                                  *bool                             `json:"honorTimestamps,omitempty"`
+	TrackTimestampsStaleness                         *bool                             `json:"trackTimestampsStaleness,omitempty"`
+	MetricRelabelConfigs                             []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	RelabelConfigs                                   []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	FilterRunning                                    *bool                             `json:"filterRunning,omitempty"`
+	BearerTokenFile                                  *string                           `json:"bearerTokenFile,omitempty"`
+	HTTPConfigWithProxyAndTLSFilesApplyConfiguration `json:",inline"`
 }
 
 // EndpointApplyConfiguration constructs a declarative configuration of the Endpoint type for use with
@@ -117,38 +110,6 @@ func (b *EndpointApplyConfiguration) WithScrapeTimeout(value monitoringv1.Durati
 	return b
 }
 
-// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TLSConfig field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfiguration) *EndpointApplyConfiguration {
-	b.TLSConfig = value
-	return b
-}
-
-// WithBearerTokenFile sets the BearerTokenFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the BearerTokenFile field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithBearerTokenFile(value string) *EndpointApplyConfiguration {
-	b.BearerTokenFile = &value
-	return b
-}
-
-// WithBearerTokenSecret sets the BearerTokenSecret field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the BearerTokenSecret field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithBearerTokenSecret(value corev1.SecretKeySelector) *EndpointApplyConfiguration {
-	b.BearerTokenSecret = &value
-	return b
-}
-
-// WithAuthorization sets the Authorization field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Authorization field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithAuthorization(value *SafeAuthorizationApplyConfiguration) *EndpointApplyConfiguration {
-	b.Authorization = value
-	return b
-}
-
 // WithHonorLabels sets the HonorLabels field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HonorLabels field is set to the value of the last call.
@@ -170,22 +131,6 @@ func (b *EndpointApplyConfiguration) WithHonorTimestamps(value bool) *EndpointAp
 // If called multiple times, the TrackTimestampsStaleness field is set to the value of the last call.
 func (b *EndpointApplyConfiguration) WithTrackTimestampsStaleness(value bool) *EndpointApplyConfiguration {
 	b.TrackTimestampsStaleness = &value
-	return b
-}
-
-// WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the BasicAuth field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfiguration) *EndpointApplyConfiguration {
-	b.BasicAuth = value
-	return b
-}
-
-// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the OAuth2 field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *EndpointApplyConfiguration {
-	b.OAuth2 = value
 	return b
 }
 
@@ -212,6 +157,78 @@ func (b *EndpointApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfig
 		}
 		b.RelabelConfigs = append(b.RelabelConfigs, *values[i])
 	}
+	return b
+}
+
+// WithFilterRunning sets the FilterRunning field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FilterRunning field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithFilterRunning(value bool) *EndpointApplyConfiguration {
+	b.FilterRunning = &value
+	return b
+}
+
+// WithBearerTokenFile sets the BearerTokenFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BearerTokenFile field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithBearerTokenFile(value string) *EndpointApplyConfiguration {
+	b.BearerTokenFile = &value
+	return b
+}
+
+// WithAuthorization sets the Authorization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Authorization field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithAuthorization(value *SafeAuthorizationApplyConfiguration) *EndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.Authorization = value
+	return b
+}
+
+// WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BasicAuth field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfiguration) *EndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.BasicAuth = value
+	return b
+}
+
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *EndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.OAuth2 = value
+	return b
+}
+
+// WithBearerTokenSecret sets the BearerTokenSecret field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BearerTokenSecret field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithBearerTokenSecret(value corev1.SecretKeySelector) *EndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.BearerTokenSecret = &value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithFollowRedirects(value bool) *EndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithEnableHTTP2(value bool) *EndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.EnableHTTP2 = &value
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *EndpointApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfiguration) *EndpointApplyConfiguration {
+	b.HTTPConfigWithTLSFilesApplyConfiguration.TLSConfig = value
 	return b
 }
 
@@ -250,29 +267,5 @@ func (b *EndpointApplyConfiguration) WithProxyConnectHeader(entries map[string][
 	for k, v := range entries {
 		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
-	return b
-}
-
-// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FollowRedirects field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithFollowRedirects(value bool) *EndpointApplyConfiguration {
-	b.FollowRedirects = &value
-	return b
-}
-
-// WithEnableHttp2 sets the EnableHttp2 field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableHttp2 field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithEnableHttp2(value bool) *EndpointApplyConfiguration {
-	b.EnableHttp2 = &value
-	return b
-}
-
-// WithFilterRunning sets the FilterRunning field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FilterRunning field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithFilterRunning(value bool) *EndpointApplyConfiguration {
-	b.FilterRunning = &value
 	return b
 }

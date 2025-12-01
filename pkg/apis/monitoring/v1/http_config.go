@@ -21,7 +21,29 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// HTTPConfigWithProxy defines the configuration for the HTTP client with proxy configuration.
+// HTTPConfigWithProxyAndTLSFiles defines the configuration for the HTTP client
+// with proxy configuration and TLS configuration. It is used for
+// ServiceMonitor endpoints.
+type HTTPConfigWithProxyAndTLSFiles struct {
+	HTTPConfigWithTLSFiles `json:",inline"`
+	ProxyConfig            `json:",inline"`
+}
+
+// Validate semantically validates the given TLSConfig.
+func (c *HTTPConfigWithProxyAndTLSFiles) Validate() error {
+	if err := c.HTTPConfigWithTLSFiles.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.ProxyConfig.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// HTTPConfigWithProxy defines the configuration for the HTTP client with proxy
+// configuration. It is used for PodMonitor endpoints and Probes.
 type HTTPConfigWithProxy struct {
 	HTTPConfig  `json:",inline"`
 	ProxyConfig `json:",inline"`
@@ -40,8 +62,8 @@ func (hc *HTTPConfigWithProxy) Validate() error {
 	return hc.ProxyConfig.Validate()
 }
 
-// HTTPConfig defines the configuration for the HTTP client.
-type HTTPConfig struct {
+// HTTPConfigWithoutTLS defines the configuration for the HTTP client.
+type HTTPConfigWithoutTLS struct {
 	// authorization configures the Authorization header credentials used by
 	// the client.
 	//
@@ -79,11 +101,6 @@ type HTTPConfig struct {
 	// Deprecated: use `authorization` instead.
 	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 
-	// tlsConfig defines the TLS configuration used by the client.
-	//
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
 	// followRedirects defines whether the client should follow HTTP 3xx
 	// redirects.
 	//
@@ -96,8 +113,8 @@ type HTTPConfig struct {
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
-// Validate semantically validates the given HTTPConfig.
-func (hc *HTTPConfig) Validate() error {
+// Validate semantically validates the given HTTPConfigWithoutTLS.
+func (hc *HTTPConfigWithoutTLS) Validate() error {
 	if hc == nil {
 		return nil
 	}
@@ -135,7 +152,54 @@ func (hc *HTTPConfig) Validate() error {
 		return fmt.Errorf("oauth2: %w", err)
 	}
 
+	return nil
+}
+
+// HTTPConfig defines the HTTP configuration + TLS configuration (only from
+// secret/configmap references).
+type HTTPConfig struct {
+	HTTPConfigWithoutTLS `json:",inline"`
+
+	// tlsConfig defines the TLS configuration used by the client.
+	//
+	// +optional
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// Validate semantically validates the given HTTPConfig.
+func (hc *HTTPConfig) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	if err := hc.HTTPConfigWithoutTLS.Validate(); err != nil {
+		return err
+	}
 	if err := hc.TLSConfig.Validate(); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	return nil
+}
+
+// HTTPConfigWithTLSFiles defines HTTP configuration + TLS configuration
+// (from secret/configmap references as well as files).
+type HTTPConfigWithTLSFiles struct {
+	HTTPConfigWithoutTLS `json:",inline"`
+
+	// tlsConfig defines TLS configuration used by the client.
+	//
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// Validate semantically validates the given HTTPConfigWithTLSFiles.
+func (c *HTTPConfigWithTLSFiles) Validate() error {
+	if err := c.HTTPConfigWithoutTLS.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.TLSConfig.Validate(); err != nil {
 		return fmt.Errorf("tlsConfig: %w", err)
 	}
 
