@@ -453,6 +453,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.PodManagementPolicy != nil {
+		in, out := &in.PodManagementPolicy, &out.PodManagementPolicy
+		*out = new(PodManagementPolicyType)
+		**out = **in
+	}
 	if in.Containers != nil {
 		in, out := &in.Containers, &out.Containers
 		*out = make([]corev1.Container, len(*in))
@@ -978,6 +983,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		in, out := &in.DNSConfig, &out.DNSConfig
 		*out = new(PodDNSConfig)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.PodManagementPolicy != nil {
+		in, out := &in.PodManagementPolicy, &out.PodManagementPolicy
+		*out = new(PodManagementPolicyType)
+		**out = **in
 	}
 	if in.EnableServiceLinks != nil {
 		in, out := &in.EnableServiceLinks, &out.EnableServiceLinks
@@ -3822,6 +3832,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 	if in.ObjectStorageConfigFile != nil {
 		in, out := &in.ObjectStorageConfigFile, &out.ObjectStorageConfigFile
 		*out = new(string)
+		**out = **in
+	}
+	if in.PodManagementPolicy != nil {
+		in, out := &in.PodManagementPolicy, &out.PodManagementPolicy
+		*out = new(PodManagementPolicyType)
 		**out = **in
 	}
 	if in.QueryEndpoints != nil {

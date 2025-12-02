@@ -401,3 +401,36 @@ func TestStatefulSetenableServiceLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestStatefulPodManagementPolicy(t *testing.T) {
+	for _, tc := range []struct {
+		podManagementPolicy *monitoringv1.PodManagementPolicyType
+		exp                 appsv1.PodManagementPolicyType
+	}{
+		{
+			podManagementPolicy: nil,
+			exp:                 appsv1.ParallelPodManagement,
+		},
+		{
+			podManagementPolicy: ptr.To(monitoringv1.ParallelPodManagement),
+			exp:                 appsv1.ParallelPodManagement,
+		},
+		{
+			podManagementPolicy: ptr.To(monitoringv1.OrderedReadyPodManagement),
+			exp:                 appsv1.OrderedReadyPodManagement,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+				Spec: monitoringv1alpha1.PrometheusAgentSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						PodManagementPolicy: tc.podManagementPolicy,
+					},
+				},
+			})
+
+			require.NoError(t, err)
+			require.Equal(t, tc.exp, sset.Spec.PodManagementPolicy)
+		})
+	}
+}

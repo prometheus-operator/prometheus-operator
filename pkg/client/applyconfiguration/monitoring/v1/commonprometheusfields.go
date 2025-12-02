@@ -76,6 +76,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
 	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
@@ -569,6 +570,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithDNSConfig(value *PodDNSCo
 // If called multiple times, the ListenLocal field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithListenLocal(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.ListenLocal = &value
+	return b
+}
+
+// WithPodManagementPolicy sets the PodManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PodManagementPolicy field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *CommonPrometheusFieldsApplyConfiguration {
+	b.PodManagementPolicy = &value
 	return b
 }
 
