@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 ---
 title: "API reference"
 description: "Prometheus operator generated API reference docs"
@@ -597,6 +595,26 @@ bool
 <p>listenLocal defines the Alertmanager server listen on loopback, so that it
 does not bind against the Pod IP. Note this is only for the Alertmanager
 UI, not the gossip communication.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -1536,65 +1554,6 @@ The value cannot be greater than the scrape interval otherwise the operator will
 </tr>
 <tr>
 <td>
-<code>tlsConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
-SafeTLSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to use when scraping the endpoint.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerTokenSecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>bearerTokenSecret defines the secret to mount to read bearer token for scraping targets. The secret
-needs to be in the same namespace as the probe and accessible by
-the Prometheus Operator.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>basicAuth allow an endpoint to authenticate over basic authentication.
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoint">https://prometheus.io/docs/operating/configuration/#endpoint</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>oauth2</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>oauth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>metricRelabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -1813,6 +1772,112 @@ string
 <p>params defines the list of HTTP query parameters for the scrape.
 Please note that the <code>.spec.module</code> field takes precedence over the <code>module</code> parameter from this list when both are defined.
 The module name must be added using Module under ProbeSpec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorization configures the Authorization header credentials used by
+the client.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuth defines the Basic Authentication credentials used by the
+client.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>oauth2 defines the OAuth2 settings used by the client.</p>
+<p>It requires Prometheus &gt;= 2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>bearerTokenSecret</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bearerTokenSecret defines a key of a Secret containing the bearer token
+used by the client for authentication. The secret needs to be in the
+same namespace as the custom resource and readable by the Prometheus
+Operator.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>oauth2</code>.</p>
+<p>Deprecated: use <code>authorization</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration used by the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
 </table>
@@ -2707,6 +2772,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -4858,6 +4943,26 @@ does not bind against the Pod IP.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>queryEndpoints</code><br/>
 <em>
 []string
@@ -5904,12 +6009,14 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme to use when firing alerts.</p>
+<p>scheme defines the HTTP scheme to use when sending alerts.</p>
 </td>
 </tr>
 <tr>
@@ -6178,8 +6285,8 @@ This has no impact on alerts from Prometheus, as they always include EndsAt.</p>
 <td>
 <code>httpConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HTTPConfig">
-HTTPConfig
+<a href="#monitoring.coreos.com/v1.HTTPConfigWithProxy">
+HTTPConfigWithProxy
 </a>
 </em>
 </td>
@@ -6890,6 +6997,26 @@ bool
 <p>listenLocal defines the Alertmanager server listen on loopback, so that it
 does not bind against the Pod IP. Note this is only for the Alertmanager
 UI, not the gossip communication.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -7781,7 +7908,7 @@ string
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>BasicAuth configures HTTP Basic Authentication settings.</p>
@@ -8700,6 +8827,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -10430,15 +10577,14 @@ string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the HTTP scheme to use for scraping.</p>
-<p><code>http</code> and <code>https</code> are the expected values unless you rewrite the
-<code>__scheme__</code> label via relabeling.</p>
-<p>If empty, Prometheus uses the default value <code>http</code>.</p>
+<p>scheme defines the HTTP scheme to use when scraping the metrics.</p>
 </td>
 </tr>
 <tr>
@@ -11198,7 +11344,7 @@ Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</
 <h3 id="monitoring.coreos.com/v1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfigWithProxy">HTTPConfigWithProxy</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
 </p>
 <div>
 <p>HTTPConfig defines the configuration for the HTTP client.</p>
@@ -11294,6 +11440,155 @@ SafeTLSConfig
 </tr>
 <tr>
 <td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.HTTPConfigWithProxy">HTTPConfigWithProxy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
+</p>
+<div>
+<p>HTTPConfigWithProxy defines the configuration for the HTTP client with proxy configuration.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorization configures the Authorization header credentials used by
+the client.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuth defines the Basic Authentication credentials used by the
+client.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>oauth2 defines the OAuth2 settings used by the client.</p>
+<p>It requires Prometheus &gt;= 2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>bearerTokenSecret</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bearerTokenSecret defines a key of a Secret containing the bearer token
+used by the client for authentication. The secret needs to be in the
+same namespace as the custom resource and readable by the Prometheus
+Operator.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>oauth2</code>.</p>
+<p>Deprecated: use <code>authorization</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration used by the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>proxyUrl</code><br/>
 <em>
 string
@@ -11346,31 +11641,6 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>proxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>followRedirects</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>followRedirects defines whether the client should follow HTTP 3xx
-redirects.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableHttp2</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
 </tbody>
@@ -11490,7 +11760,9 @@ string
 </em>
 </td>
 <td>
-<p>clientId defines defines the Azure User-assigned Managed identity.</p>
+<em>(Optional)</em>
+<p>clientId defines the Azure User-assigned Managed identity.</p>
+<p>For Prometheus &gt;= 3.5.0 and Thanos &gt;= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.</p>
 </td>
 </tr>
 </tbody>
@@ -11751,7 +12023,7 @@ Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</c
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.StackitSDConfig">StackitSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.StackitSDConfig">StackitSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>OAuth2 configures OAuth2 settings.</p>
@@ -12183,6 +12455,33 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.PodManagementPolicyType">PodManagementPolicyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;OrderedReady&#34;</p></td>
+<td><p>OrderedReadyPodManagement will create pods in strictly increasing order on
+scale up and strictly decreasing order on scale down, progressing only when
+the previous pod is ready or terminated. At most one pod will be changed
+at any time.</p>
+</td>
+</tr><tr><td><p>&#34;Parallel&#34;</p></td>
+<td><p>ParallelPodManagement will create and delete pods as soon as the stateful set
+replica count is changed, and will not wait for pods to be ready or complete
+termination.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint
 </h3>
 <p>
@@ -12210,6 +12509,11 @@ string
 <td>
 <em>(Optional)</em>
 <p>port defines the <code>Pod</code> port name which exposes the endpoint.</p>
+<p>If the pod doesn&rsquo;t expose a port with the same name, it will result
+in no targets being discovered.</p>
+<p>If a <code>Pod</code> has multiple <code>Port</code>s with the same name (which is not
+recommended), one target instance per unique port number will be
+generated.</p>
 <p>It takes precedence over the <code>portNumber</code> and <code>targetPort</code> fields.</p>
 </td>
 </tr>
@@ -12223,6 +12527,14 @@ int32
 <td>
 <em>(Optional)</em>
 <p>portNumber defines the <code>Pod</code> port number which exposes the endpoint.</p>
+<p>The <code>Pod</code> must declare the specified <code>Port</code> in its spec or the
+target will be dropped by Prometheus.</p>
+<p>This cannot be used to enable scraping of an undeclared port.
+To scrape targets on a port which isn&rsquo;t exposed, you need to use
+relabeling to override the <code>__address__</code> label (but beware of
+duplicate targets if the <code>Pod</code> has other declared ports).</p>
+<p>In practice Prometheus will select targets for which the
+matches the target&rsquo;s __meta_kubernetes_pod_container_port_number.</p>
 </td>
 </tr>
 <tr>
@@ -12258,15 +12570,14 @@ string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>scheme defines the HTTP scheme to use for scraping.</p>
-<p><code>http</code> and <code>https</code> are the expected values unless you rewrite the
-<code>__scheme__</code> label via relabeling.</p>
-<p>If empty, Prometheus uses the default value <code>http</code>.</p>
 </td>
 </tr>
 <tr>
@@ -12485,6 +12796,31 @@ SafeTLSConfig
 </tr>
 <tr>
 <td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>proxyUrl</code><br/>
 <em>
 string
@@ -12537,31 +12873,6 @@ map[string][]Kubernetes core/v1.SecretKeySelector
 <p>proxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>followRedirects</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>followRedirects defines whether the client should follow HTTP 3xx
-redirects.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableHttp2</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
 </tbody>
@@ -13033,65 +13344,6 @@ The value cannot be greater than the scrape interval otherwise the operator will
 </tr>
 <tr>
 <td>
-<code>tlsConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
-SafeTLSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to use when scraping the endpoint.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bearerTokenSecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>bearerTokenSecret defines the secret to mount to read bearer token for scraping targets. The secret
-needs to be in the same namespace as the probe and accessible by
-the Prometheus Operator.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>basicAuth allow an endpoint to authenticate over basic authentication.
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoint">https://prometheus.io/docs/operating/configuration/#endpoint</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>oauth2</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.OAuth2">
-OAuth2
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>oauth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>metricRelabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -13312,6 +13564,112 @@ Please note that the <code>.spec.module</code> field takes precedence over the <
 The module name must be added using Module under ProbeSpec.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorization configures the Authorization header credentials used by
+the client.</p>
+<p>Cannot be set at the same time as <code>basicAuth</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuth defines the Basic Authentication credentials used by the
+client.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>bearerTokenSecret</code> or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>oauth2 defines the OAuth2 settings used by the client.</p>
+<p>It requires Prometheus &gt;= 2.27.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>bearerTokenSecret</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenSecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bearerTokenSecret defines a key of a Secret containing the bearer token
+used by the client for authentication. The secret needs to be in the
+same namespace as the custom resource and readable by the Prometheus
+Operator.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code> or <code>oauth2</code>.</p>
+<p>Deprecated: use <code>authorization</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration used by the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>followRedirects defines whether the client should follow HTTP 3xx
+redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHttp2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress
@@ -13516,21 +13874,24 @@ string
 </em>
 </td>
 <td>
-<p>url defines the mandatory URL of the prober.</p>
+<p>url defines the address of the prober.</p>
+<p>Unlike what the name indicates, the value should be in the form of
+<code>address:port</code> without any scheme which should be specified in the
+<code>scheme</code> field.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the HTTP scheme to use for scraping.
-<code>http</code> and <code>https</code> are the expected values unless you rewrite the <code>__scheme__</code> label via relabeling.
-If empty, Prometheus uses the default value <code>http</code>.</p>
+<p>scheme defines the HTTP scheme to use when scraping the prober.</p>
 </td>
 </tr>
 <tr>
@@ -14500,6 +14861,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal when true, the Prometheus server listens on the loopback address
 instead of the Pod IP&rsquo;s address.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -16018,7 +16399,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.ProberSpec">ProberSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.StackitSDConfig">StackitSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfigWithProxy">HTTPConfigWithProxy</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.ProberSpec">ProberSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.StackitSDConfig">StackitSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 </div>
@@ -17088,6 +17469,8 @@ MetadataConfig
 <td>
 <em>(Optional)</em>
 <p>metadataConfig defines how to send a series metadata to the remote storage.</p>
+<p>When the field is empty, <strong>no metadata</strong> is sent. But when the field is
+null, metadata is sent.</p>
 </td>
 </tr>
 <tr>
@@ -17554,7 +17937,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.StackitSDConfig">StackitSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalSMTPConfig">GlobalSMTPConfig</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.StackitSDConfig">StackitSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -17664,6 +18047,29 @@ TLSVersion
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.Scheme">Scheme
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProberSpec">ProberSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>Supported values are <code>HTTP</code> and <code>HTTPS</code>. You can also rewrite the
+<code>__scheme__</code> label via relabeling configuration.</p>
+<p>If empty, the value defaults to <code>HTTP</code>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;HTTP&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;HTTPS&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ScrapeClass">ScrapeClass
 </h3>
@@ -19165,6 +19571,26 @@ bool
 <em>(Optional)</em>
 <p>listenLocal defines the Thanos ruler listen on loopback, so that it
 does not bind against the Pod IP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
 </td>
 </tr>
 <tr>
@@ -22008,6 +22434,26 @@ instead of the Pod IP&rsquo;s address.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -23410,13 +23856,14 @@ map[string][]string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the protocol scheme used for requests.
-If empty, Prometheus uses HTTP by default.</p>
+<p>scheme defines the protocol scheme used for requests.</p>
 </td>
 </tr>
 <tr>
@@ -24279,12 +24726,14 @@ string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the HTTP Scheme default &ldquo;http&rdquo;</p>
+<p>scheme defines the HTTP Scheme.</p>
 </td>
 </tr>
 <tr>
@@ -30647,6 +31096,26 @@ instead of the Pod IP&rsquo;s address.</p>
 </tr>
 <tr>
 <td>
+<code>podManagementPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodManagementPolicyType">
+PodManagementPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>podManagementPolicy defines the policy for creating/deleting pods when
+scaling up and down.</p>
+<p>Unlike the default StatefulSet behavior, the default policy is
+<code>Parallel</code> to avoid manual intervention in case a pod gets stuck during
+a rollout.</p>
+<p>Note that updating this value implies the recreation of the StatefulSet
+which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -31928,7 +32397,21 @@ bool
 <td>
 <em>(Optional)</em>
 <p>html defines whether notification message is HTML or plain text.
-When true, the message can include HTML formatting tags.</p>
+When true, the message can include HTML formatting tags.
+html and monospace formatting are mutually exclusive.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>monospace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>monospace optional HTML/monospace formatting for the message, see <a href="https://pushover.net/api#html">https://pushover.net/api#html</a>
+html and monospace formatting are mutually exclusive.</p>
 </td>
 </tr>
 <tr>
@@ -33659,13 +34142,14 @@ map[string][]string
 <td>
 <code>scheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.Scheme">
+Scheme
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>scheme defines the protocol scheme used for requests.
-If empty, Prometheus uses HTTP by default.</p>
+<p>scheme defines the protocol scheme used for requests.</p>
 </td>
 </tr>
 <tr>
@@ -37750,7 +38234,21 @@ bool
 <td>
 <em>(Optional)</em>
 <p>html defines whether notification message is HTML or plain text.
-When true, the message can include HTML formatting tags.</p>
+When true, the message can include HTML formatting tags.
+html and monospace formatting are mutually exclusive.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>monospace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>monospace optional HTML/monospace formatting for the message, see <a href="https://pushover.net/api#html">https://pushover.net/api#html</a>
+html and monospace formatting are mutually exclusive.</p>
 </td>
 </tr>
 <tr>
@@ -40184,4 +40682,3 @@ Days can be specified by name (e.g &lsquo;Sunday&rsquo;) or as an inclusive rang
 <p>YearRange is an inclusive range of years</p>
 </div>
 <hr/>
->>>>>>> 4f363b0d9 (feat: updade docs)
