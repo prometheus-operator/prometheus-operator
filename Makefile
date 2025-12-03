@@ -50,10 +50,8 @@ PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
-# Disable custom kube-api linter due to https://github.com/golangci/golangci-lint/issues/6205
-#GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
-#TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
-TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
+GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
+TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
@@ -330,10 +328,9 @@ check: check-golang check-api
 check-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run -v
 
-# Disable custom kube-api linter due to https://github.com/golangci/golangci-lint/issues/6205
-#.PHONY: check-api
-#check-api: $(GOLANGCIKUBEAPILINTER_BINARY)
-#	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml
+.PHONY: check-api
+check-api: $(GOLANGCIKUBEAPILINTER_BINARY)
+	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml
 
 .PHONY: check
 fix: fix-golang fix-api
@@ -342,10 +339,9 @@ fix: fix-golang fix-api
 fix-golang: $(GOLANGCILINTER_BINARY)
 	$(GOLANGCILINTER_BINARY) run --fix
 
-# Disable custom kube-api linter due to https://github.com/golangci/golangci-lint/issues/6205
-#.PHONY: fix-api
-#fix-api: $(GOLANGCIKUBEAPILINTER_BINARY)
-#	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml --fix
+.PHONY: fix-api
+fix-api: $(GOLANGCIKUBEAPILINTER_BINARY)
+	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml --fix
 
 MDOX_VALIDATE_CONFIG?=.mdox.validate.yaml
 MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -name "*.md")) $(filter-out ADOPTERS.md, $(shell ls *.md))
@@ -444,8 +440,7 @@ $(TOOLING): $(TOOLS_BIN_DIR)
 	@echo Installing tools from scripts/tools.go
 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
-	# Disable custom kube-api linter due to https://github.com/golangci/golangci-lint/issues/6205
-	#@GOBIN=$(TOOLS_BIN_DIR) $(GOLANGCILINTER_BINARY) custom
+	@GOBIN=$(TOOLS_BIN_DIR) $(GOLANGCILINTER_BINARY) custom
 	@echo Downloading shellcheck
 	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
