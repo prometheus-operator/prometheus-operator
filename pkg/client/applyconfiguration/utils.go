@@ -112,8 +112,14 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.HostPortApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1.HTTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("HTTPConfigWithoutTLS"):
+		return &monitoringv1.HTTPConfigWithoutTLSApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfigWithProxy"):
 		return &monitoringv1.HTTPConfigWithProxyApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("HTTPConfigWithProxyAndTLSFiles"):
+		return &monitoringv1.HTTPConfigWithProxyAndTLSFilesApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("HTTPConfigWithTLSFiles"):
+		return &monitoringv1.HTTPConfigWithTLSFilesApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ManagedIdentity"):
 		return &monitoringv1.ManagedIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):
@@ -224,6 +230,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ThanosSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TLSConfig"):
 		return &monitoringv1.TLSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("TLSFilesConfig"):
+		return &monitoringv1.TLSFilesConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TopologySpreadConstraint"):
 		return &monitoringv1.TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TSDBSpec"):
