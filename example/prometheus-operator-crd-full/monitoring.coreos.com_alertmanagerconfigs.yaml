@@ -11138,6 +11138,7 @@ spec:
                             description: |-
                               url defines the URL to send HTTP POST requests to.
                               urlSecret takes precedence over url. One of urlSecret and url should be defined.
+                            pattern: ^https?://.+$
                             type: string
                           urlSecret:
                             description: |-
@@ -22931,6 +22932,7 @@ spec:
                             description: |-
                               url defines the URL to send HTTP POST requests to.
                               urlSecret takes precedence over url. One of urlSecret and url should be defined.
+                            pattern: ^https?://.+$
                             type: string
                           urlSecret:
                             description: |-
