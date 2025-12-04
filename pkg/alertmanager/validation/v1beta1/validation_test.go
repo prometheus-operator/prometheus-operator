@@ -443,6 +443,40 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "Test fails to validate zero groupInterval",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver:      "same",
+						GroupInterval: "0s",
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fails to validate zero repeatInterval",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver:       "same",
+						RepeatInterval: "0m",
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test happy path",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
