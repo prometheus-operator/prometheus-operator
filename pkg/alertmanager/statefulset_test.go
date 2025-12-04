@@ -1525,3 +1525,34 @@ func TestStatefulSetEnableServiceLinks(t *testing.T) {
 		}
 	}
 }
+
+func TestStatefulSetPodManagementPolicy(t *testing.T) {
+	for _, tc := range []struct {
+		podManagementPolicy *monitoringv1.PodManagementPolicyType
+		exp                 appsv1.PodManagementPolicyType
+	}{
+		{
+			podManagementPolicy: nil,
+			exp:                 appsv1.ParallelPodManagement,
+		},
+		{
+			podManagementPolicy: ptr.To(monitoringv1.ParallelPodManagement),
+			exp:                 appsv1.ParallelPodManagement,
+		},
+		{
+			podManagementPolicy: ptr.To(monitoringv1.OrderedReadyPodManagement),
+			exp:                 appsv1.OrderedReadyPodManagement,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					PodManagementPolicy: tc.podManagementPolicy,
+				},
+			}, defaultTestConfig, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+			require.Equal(t, tc.exp, sset.Spec.PodManagementPolicy)
+		})
+	}
+}

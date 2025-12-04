@@ -55,6 +55,8 @@ const (
 	applicationNameLabelValue = "thanos-ruler"
 	controllerName            = "thanos-controller"
 	rwConfigFile              = "remote-write.yaml"
+
+	noSelectedResourcesMessage = "No PrometheusRule have been selected."
 )
 
 var minRemoteWriteVersion = semver.MustParse("0.24.0")
@@ -527,6 +529,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	selectedRules, err := o.selectPrometheusRules(tr, logger)
 	if err != nil {
 		return err
+	}
+
+	if selectedRules.SelectedLen() == 0 {
+		o.reconciliations.SetReasonAndMessage(key, operator.NoSelectedResourcesReason, noSelectedResourcesMessage)
 	}
 
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr, selectedRules, logger)

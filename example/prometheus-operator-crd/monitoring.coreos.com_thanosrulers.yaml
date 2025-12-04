@@ -4644,6 +4644,21 @@ spec:
                   paused defines when a ThanosRuler deployment is paused, no actions except for deletion
                   will be performed on the underlying objects.
                 type: boolean
+              podManagementPolicy:
+                description: |-
+                  podManagementPolicy defines the policy for creating/deleting pods when
+                  scaling up and down.
+
+                  Unlike the default StatefulSet behavior, the default policy is
+                  `Parallel` to avoid manual intervention in case a pod gets stuck during
+                  a rollout.
+
+                  Note that updating this value implies the recreation of the StatefulSet
+                  which incurs a service outage.
+                enum:
+                - OrderedReady
+                - Parallel
+                type: string
               podMetadata:
                 description: |-
                   podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.

@@ -5136,6 +5136,21 @@ spec:
                       the replica count to be deleted.
                     type: string
                 type: object
+              podManagementPolicy:
+                description: |-
+                  podManagementPolicy defines the policy for creating/deleting pods when
+                  scaling up and down.
+
+                  Unlike the default StatefulSet behavior, the default policy is
+                  `Parallel` to avoid manual intervention in case a pod gets stuck during
+                  a rollout.
+
+                  Note that updating this value implies the recreation of the StatefulSet
+                  which incurs a service outage.
+                enum:
+                - OrderedReady
+                - Parallel
+                type: string
               podMetadata:
                 description: |-
                   podMetadata defines labels and annotations which are propagated to the Prometheus pods.

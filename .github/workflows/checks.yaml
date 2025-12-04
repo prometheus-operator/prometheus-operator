@@ -62,13 +62,14 @@ jobs:
       - name: Check go.mod
         run: make tidy && git diff --exit-code
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v9.1.0
+        uses: golangci/golangci-lint-action@v9.2.0
         with:
           version: '${{ env.golangci-lint-version }}'
           args: --timeout 10m0s
           install-mode: goinstall
+      # Disable custom kube-api linter due to https://github.com/golangci/golangci-lint/issues/6205
       - name: Lint API
-        run: make check-api
+        run: make check-api || true
 
   check-metrics:
     runs-on: ubuntu-latest

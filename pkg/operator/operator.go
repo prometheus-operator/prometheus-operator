@@ -59,12 +59,14 @@ var (
 )
 
 type ReconciliationStatus struct {
-	err error
+	err     error
+	reason  string
+	message string
 }
 
 func (rs ReconciliationStatus) Reason() string {
 	if rs.Ok() {
-		return ""
+		return rs.reason
 	}
 
 	return "ReconciliationFailed"
@@ -72,7 +74,7 @@ func (rs ReconciliationStatus) Reason() string {
 
 func (rs ReconciliationStatus) Message() string {
 	if rs.Ok() {
-		return ""
+		return rs.message
 	}
 
 	return rs.err.Error()
@@ -131,13 +133,37 @@ func (rt *ReconciliationTracker) UpdateReferenceTracker(key string, refTracker R
 	rt.refTracker[key] = refTracker
 }
 
+// ResetStatus resets the reconciliation status for the object identified by key.
+func (rt *ReconciliationTracker) ResetStatus(key string) {
+	rt.init()
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rt.statusByObject[key] = ReconciliationStatus{}
+}
+
 // SetStatus updates the last reconciliation status for the object identified by key.
 func (rt *ReconciliationTracker) SetStatus(key string, err error) {
 	rt.init()
 	rt.mtx.Lock()
 	defer rt.mtx.Unlock()
 
-	rt.statusByObject[key] = ReconciliationStatus{err: err}
+	rs := rt.statusByObject[key]
+	rs.err = err
+	rt.statusByObject[key] = rs
+}
+
+// SetReasonAndMessage updates the reason and message for the object identified by key.
+// The reason and message are only used when the reconciliation returned no error.
+func (rt *ReconciliationTracker) SetReasonAndMessage(key string, reason, message string) {
+	rt.init()
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rs := rt.statusByObject[key]
+	rs.reason = reason
+	rs.message = message
+	rt.statusByObject[key] = rs
 }
 
 // GetStatus returns the last reconciliation status for the given object.

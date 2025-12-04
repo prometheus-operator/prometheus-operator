@@ -57,6 +57,10 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
 	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
 	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
+	t.Run("shouldAcceptRuleWithQueryOffsetThanos", shouldAcceptRuleWithQueryOffsetThanos)
+	t.Run("shouldDropQueryOffsetFieldForUnsupportedThanosVersion", shouldDropQueryOffsetFieldForUnsupportedThanosVersion)
+	t.Run("shouldDropGroupLabelsForUnsupportedThanosVersion", shouldDropGroupLabelsForUnsupportedThanosVersion)
+	t.Run("shouldAcceptRuleWithGroupLabelsThanos", shouldAcceptRuleWithGroupLabelsThanos)
 
 	// UTF-8 validation.
 	t.Run("UTF8Validation", TestUTF8Validation)
@@ -350,6 +354,30 @@ func shouldAcceptRuleWithLimitThanos(t *testing.T) {
 	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
 
+func shouldAcceptRuleWithQueryOffsetThanos(t *testing.T) {
+	var queryOffset monitoringv1.Duration = "30s"
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+				QueryOffset: &queryOffset,
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+	require.Contains(t, content, "query_offset", "expected `query_offset` to be present in PrometheusRule")
+}
+
 func shouldAcceptRuleWithQueryOffsetPrometheus(t *testing.T) {
 	var queryOffset monitoringv1.Duration = "30s"
 	rules := &monitoringv1.PrometheusRule{
@@ -423,6 +451,31 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
 }
 
+func shouldDropQueryOffsetFieldForUnsupportedThanosVersion(t *testing.T) {
+	var queryOffset monitoringv1.Duration = "30s"
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+				QueryOffset: &queryOffset,
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant("0.37.0")
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+
+	require.NotContains(t, content, "query_offset", "expected `query_offset` not to be present in PrometheusRule")
+}
+
 func shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion(t *testing.T) {
 	var queryOffset monitoringv1.Duration = "30s"
 	rules := &monitoringv1.PrometheusRule{
@@ -477,6 +530,33 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with LegacyValidation")
 }
 
+func shouldDropGroupLabelsForUnsupportedThanosVersion(t *testing.T) {
+	labels := map[string]string{
+		"key": "value",
+	}
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name:   "group",
+				Labels: labels,
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant("0.38.0")
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+
+	require.NotContains(t, content, "key", "expected group labels not to be present in PrometheusRule")
+	require.NotContains(t, content, "value", "expected group labels not to be present in PrometheusRule")
+}
+
 func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
 	labels := map[string]string{
 		"key": "value",
@@ -504,6 +584,33 @@ func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
 	require.NotContains(t, content, "value", "expected group labels not to be present in PrometheusRule")
 }
 
+func shouldAcceptRuleWithGroupLabelsThanos(t *testing.T) {
+	labels := map[string]string{
+		"key": "value",
+	}
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name:   "group",
+				Labels: labels,
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+	require.Contains(t, content, "key", "expected group labels to be present in PrometheusRule")
+	require.Contains(t, content, "value", "expected group labels to be present in PrometheusRule")
+}
+
 func shouldAcceptRuleWithGroupLabels(t *testing.T) {
 	labels := map[string]string{
 		"key": "value",
@@ -525,8 +632,10 @@ func shouldAcceptRuleWithGroupLabels(t *testing.T) {
 
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	content, err := pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
+	require.Contains(t, content, "key", "expected group labels to be present in PrometheusRule")
+	require.Contains(t, content, "value", "expected group labels to be present in PrometheusRule")
 }
 
 func TestUTF8Validation(t *testing.T) {
