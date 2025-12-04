@@ -1859,6 +1859,16 @@ func (in *PagerDutyConfig) DeepCopyInto(out *PagerDutyConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.URL != nil {
+		in, out := &in.URL, &out.URL
+		*out = new(URL)
+		**out = **in
+	}
+	if in.ClientURL != nil {
+		in, out := &in.ClientURL, &out.ClientURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.Details != nil {
 		in, out := &in.Details, &out.Details
 		*out = make([]KeyValue, len(*in))
