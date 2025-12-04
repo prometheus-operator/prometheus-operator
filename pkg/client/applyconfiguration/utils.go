@@ -356,6 +356,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.SlackFieldApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("SNSConfig"):
 		return &monitoringv1alpha1.SNSConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("StackitSDConfig"):
+		return &monitoringv1alpha1.StackitSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("StaticConfig"):
 		return &monitoringv1alpha1.StaticConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("TelegramConfig"):
