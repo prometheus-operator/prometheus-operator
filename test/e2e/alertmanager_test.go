@@ -1666,6 +1666,167 @@ templates: []
 	require.NoError(t, err)
 }
 
+func testAlertmanagerConfigCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+
+	tests := []struct {
+		name          string
+		route         *monitoringv1alpha1.Route
+		expectedError bool
+	}{
+		//
+		// GroupInterval validation:
+		//
+		{
+			name: "valid-group-interval-seconds",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "30s",
+			},
+		},
+		{
+			name: "valid-group-interval-minutes",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "8m",
+			},
+		},
+		{
+			name: "valid-group-interval-complex",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "1h10m15s",
+			},
+		},
+		{
+			name: "valid-group-interval-all-units",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "1y2w3d4h5m6s7ms",
+			},
+		},
+		{
+			name: "invalid-group-interval-missing-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "500",
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-group-interval-wrong-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "30sec",
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-group-interval-invalid-format",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: "invalid",
+			},
+			expectedError: true,
+		},
+		//
+		// RepeatInterval validation:
+		//
+		{
+			name: "valid-repeat-interval-hours",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: "4h",
+			},
+		},
+		{
+			name: "valid-repeat-interval-complex",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: "2d12h30m",
+			},
+		},
+		{
+			name: "invalid-repeat-interval-missing-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: "3600",
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-repeat-interval-wrong-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: "4hrs",
+			},
+			expectedError: true,
+		},
+		//
+		// Both intervals together:
+		//
+		{
+			name: "valid-both-intervals",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				GroupInterval:  "5m",
+				RepeatInterval: "4h",
+			},
+		},
+		//
+		// Empty values (should be valid these are optional fields):
+		//
+		{
+			name: "empty-intervals",
+			route: &monitoringv1alpha1.Route{
+				Receiver: "e2e",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			amConfig := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: ns,
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: test.route,
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: ptr.To("http://test.url"),
+						}},
+					}},
+				},
+			}
+
+			_, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.Background(), amConfig, metav1.CreateOptions{})
+
+			if test.expectedError {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
+
 func testUserDefinedAlertmanagerConfigFromSecret(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
