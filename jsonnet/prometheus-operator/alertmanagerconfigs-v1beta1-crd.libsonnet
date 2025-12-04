@@ -10852,6 +10852,112 @@
             },
             type: 'object',
           },
+          status: {
+            description: 'status defines the status subresource. It is under active development and is updated only when the\n"StatusForConfigurationResources" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status',
+            properties: {
+              bindings: {
+                description: 'bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.',
+                items: {
+                  description: 'WorkloadBinding is a link between a configuration resource and a workload resource.',
+                  properties: {
+                    conditions: {
+                      description: 'conditions defines the current state of the configuration resource when bound to the referenced Workload object.',
+                      items: {
+                        description: 'ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.',
+                        properties: {
+                          lastTransitionTime: {
+                            description: 'lastTransitionTime defines the time of the last update to the current status property.',
+                            format: 'date-time',
+                            type: 'string',
+                          },
+                          message: {
+                            description: "message defines the human-readable message indicating details for the condition's last transition.",
+                            type: 'string',
+                          },
+                          observedGeneration: {
+                            description: 'observedGeneration defines the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the object.',
+                            format: 'int64',
+                            type: 'integer',
+                          },
+                          reason: {
+                            description: "reason for the condition's last transition.",
+                            type: 'string',
+                          },
+                          status: {
+                            description: 'status of the condition.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          type: {
+                            description: 'type of the condition being reported.\nCurrently, only "Accepted" is supported.',
+                            enum: [
+                              'Accepted',
+                            ],
+                            minLength: 1,
+                            type: 'string',
+                          },
+                        },
+                        required: [
+                          'lastTransitionTime',
+                          'status',
+                          'type',
+                        ],
+                        type: 'object',
+                      },
+                      type: 'array',
+                      'x-kubernetes-list-map-keys': [
+                        'type',
+                      ],
+                      'x-kubernetes-list-type': 'map',
+                    },
+                    group: {
+                      description: 'group defines the group of the referenced resource.',
+                      enum: [
+                        'monitoring.coreos.com',
+                      ],
+                      type: 'string',
+                    },
+                    name: {
+                      description: 'name defines the name of the referenced object.',
+                      minLength: 1,
+                      type: 'string',
+                    },
+                    namespace: {
+                      description: 'namespace defines the namespace of the referenced object.',
+                      minLength: 1,
+                      type: 'string',
+                    },
+                    resource: {
+                      description: 'resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).',
+                      enum: [
+                        'prometheuses',
+                        'prometheusagents',
+                        'thanosrulers',
+                        'alertmanagers',
+                      ],
+                      type: 'string',
+                    },
+                  },
+                  required: [
+                    'group',
+                    'name',
+                    'namespace',
+                    'resource',
+                  ],
+                  type: 'object',
+                },
+                type: 'array',
+                'x-kubernetes-list-map-keys': [
+                  'group',
+                  'resource',
+                  'name',
+                  'namespace',
+                ],
+                'x-kubernetes-list-type': 'map',
+              },
+            },
+            type: 'object',
+          },
         },
         required: [
           'spec',
@@ -10861,5 +10967,8 @@
     },
     served: true,
     storage: false,
+    subresources: {
+      status: {},
+    },
   },
 ] } }
