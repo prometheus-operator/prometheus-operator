@@ -1781,7 +1781,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			},
 		},
 		//
-		// Empty values (should be valid these are optional fields):
+		// Empty values (these should be valid optional fields):
 		//
 		{
 			name: "empty-intervals",
