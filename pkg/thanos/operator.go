@@ -27,7 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -191,7 +191,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				options.LabelSelector = labelThanosRulerName
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceConfigMaps)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configmap informers: %w", err)
@@ -285,7 +285,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
-			&v1.Namespace{},
+			&corev1.Namespace{},
 			resyncPeriod,
 			cache.Indexers{},
 		), nil
@@ -433,8 +433,8 @@ func thanosKeyToStatefulSetKey(key string) string {
 }
 
 func (o *Operator) handleNamespaceUpdate(oldo, curo any) {
-	old := oldo.(*v1.Namespace)
-	cur := curo.(*v1.Namespace)
+	old := oldo.(*corev1.Namespace)
+	cur := curo.(*corev1.Namespace)
 
 	o.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -795,7 +795,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 		return
 	}
-	ns := nsObject.(*v1.Namespace)
+	ns := nsObject.(*corev1.Namespace)
 
 	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for ThanosRuler instances in the namespace.
@@ -845,7 +845,7 @@ func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monito
 		return fmt.Errorf("failed to initialize the web config: %w", err)
 	}
 
-	s := &v1.Secret{}
+	s := &corev1.Secret{}
 	operator.UpdateObject(
 		s,
 		operator.WithLabels(o.config.Labels),
@@ -883,8 +883,8 @@ func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv
 	return monitoringv1ac.ThanosRuler(a.Name, a.Namespace).WithStatus(trac)
 }
 
-func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
-	s := &v1.Secret{
+func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *corev1.Secret {
+	s := &corev1.Secret{
 		Data: map[string][]byte{},
 	}
 
@@ -916,7 +916,7 @@ func makeSelectorLabels(name string) map[string]string {
 func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *assets.StoreBuilder, tr *monitoringv1.ThanosRuler) error {
 	sClient := o.kclient.CoreV1().Secrets(tr.GetNamespace())
 
-	s := &v1.Secret{
+	s := &corev1.Secret{
 		Data: map[string][]byte{},
 	}
 

@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,28 +39,28 @@ import (
 func TestGetNodeAddresses(t *testing.T) {
 	for _, c := range []struct {
 		name              string
-		nodes             []v1.Node
+		nodes             []corev1.Node
 		expectedAddresses []string
 		expectedErrors    int
 	}{
 		{
 			name: "simple",
-			nodes: []v1.Node{
+			nodes: []corev1.Node{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-0",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.1",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionTrue,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
 							},
 						},
 					},
@@ -72,22 +72,22 @@ func TestGetNodeAddresses(t *testing.T) {
 		{
 			// Replicates #1815
 			name: "missing ip on one node",
-			nodes: []v1.Node{
+			nodes: []corev1.Node{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-0",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "node-0",
-								Type:    v1.NodeHostName,
+								Type:    corev1.NodeHostName,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionTrue,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
 							},
 						},
 					},
@@ -96,17 +96,17 @@ func TestGetNodeAddresses(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-1",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.1",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionTrue,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
 							},
 						},
 					},
@@ -117,22 +117,22 @@ func TestGetNodeAddresses(t *testing.T) {
 		},
 		{
 			name: "not ready node unique ip",
-			nodes: []v1.Node{
+			nodes: []corev1.Node{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-0",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.1",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionTrue,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
 							},
 						},
 					},
@@ -141,17 +141,17 @@ func TestGetNodeAddresses(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-1",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.2",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionUnknown,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionUnknown,
 							},
 						},
 					},
@@ -160,17 +160,17 @@ func TestGetNodeAddresses(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-2",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.3",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionFalse,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionFalse,
 							},
 						},
 					},
@@ -181,22 +181,22 @@ func TestGetNodeAddresses(t *testing.T) {
 		},
 		{
 			name: "not ready node duplicate ip",
-			nodes: []v1.Node{
+			nodes: []corev1.Node{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-0",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.1",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionTrue,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
 							},
 						},
 					},
@@ -205,17 +205,17 @@ func TestGetNodeAddresses(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-1",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.1",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionUnknown,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionUnknown,
 							},
 						},
 					},
@@ -224,17 +224,17 @@ func TestGetNodeAddresses(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "node-2",
 					},
-					Status: v1.NodeStatus{
-						Addresses: []v1.NodeAddress{
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
 							{
 								Address: "10.0.0.3",
-								Type:    v1.NodeInternalIP,
+								Type:    corev1.NodeInternalIP,
 							},
 						},
-						Conditions: []v1.NodeCondition{
+						Conditions: []corev1.NodeCondition{
 							{
-								Type:   v1.NodeReady,
-								Status: v1.ConditionFalse,
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionFalse,
 							},
 						},
 					},
@@ -258,26 +258,26 @@ func TestGetNodeAddresses(t *testing.T) {
 }
 
 func TestNodeAddressPriority(t *testing.T) {
-	nodes := []v1.Node{
+	nodes := []corev1.Node{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "node-0",
 			},
-			Status: v1.NodeStatus{
-				Addresses: []v1.NodeAddress{
+			Status: corev1.NodeStatus{
+				Addresses: []corev1.NodeAddress{
 					{
 						Address: "192.168.0.100",
-						Type:    v1.NodeInternalIP,
+						Type:    corev1.NodeInternalIP,
 					},
 					{
 						Address: "203.0.113.100",
-						Type:    v1.NodeExternalIP,
+						Type:    corev1.NodeExternalIP,
 					},
 				},
-				Conditions: []v1.NodeCondition{
+				Conditions: []corev1.NodeCondition{
 					{
-						Type:   v1.NodeReady,
-						Status: v1.ConditionTrue,
+						Type:   corev1.NodeReady,
+						Status: corev1.ConditionTrue,
 					},
 				},
 			},
@@ -287,21 +287,21 @@ func TestNodeAddressPriority(t *testing.T) {
 				Name:      "node-1",
 				Namespace: "abc",
 			},
-			Status: v1.NodeStatus{
-				Addresses: []v1.NodeAddress{
+			Status: corev1.NodeStatus{
+				Addresses: []corev1.NodeAddress{
 					{
 						Address: "104.27.131.189",
-						Type:    v1.NodeExternalIP,
+						Type:    corev1.NodeExternalIP,
 					},
 					{
 						Address: "192.168.1.100",
-						Type:    v1.NodeInternalIP,
+						Type:    corev1.NodeInternalIP,
 					},
 				},
-				Conditions: []v1.NodeCondition{
+				Conditions: []corev1.NodeCondition{
 					{
-						Type:   v1.NodeReady,
-						Status: v1.ConditionTrue,
+						Type:   corev1.NodeReady,
+						Status: corev1.ConditionTrue,
 					},
 				},
 			},
@@ -535,23 +535,23 @@ func TestSync(t *testing.T) {
 	})
 }
 
-func newNode(name, address string) *v1.Node {
-	return &v1.Node{
+func newNode(name, address string) *corev1.Node {
+	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			UID:  types.UID(name + "-" + address),
 		},
-		Status: v1.NodeStatus{
-			Addresses: []v1.NodeAddress{
+		Status: corev1.NodeStatus{
+			Addresses: []corev1.NodeAddress{
 				{
 					Address: address,
-					Type:    v1.NodeInternalIP,
+					Type:    corev1.NodeInternalIP,
 				},
 			},
-			Conditions: []v1.NodeCondition{
+			Conditions: []corev1.NodeCondition{
 				{
-					Type:   v1.NodeReady,
-					Status: v1.ConditionTrue,
+					Type:   corev1.NodeReady,
+					Status: corev1.ConditionTrue,
 				},
 			},
 		},

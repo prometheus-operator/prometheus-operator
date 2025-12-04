@@ -21,8 +21,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -63,7 +63,7 @@ func testDenyPrometheus(t *testing.T) {
 		// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 		// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(context.Background(), "prometheus-denied", metav1.GetOptions{})
-		if !api_errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 		}
 	}
@@ -103,18 +103,18 @@ func testDenyServiceMonitor(t *testing.T) {
 						"prometheus": "denied",
 					},
 				},
-				Template: v1.PodTemplateSpec{
+				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
 							"prometheus": "denied",
 						},
 					},
-					Spec: v1.PodSpec{
-						Containers: []v1.Container{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
 							{
 								Name:  "echoserver",
 								Image: "k8s.gcr.io/echoserver:1.10",
-								Ports: []v1.ContainerPort{
+								Ports: []corev1.ContainerPort{
 									{
 										Name:          "web",
 										ContainerPort: 8443,
@@ -131,7 +131,7 @@ func testDenyServiceMonitor(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakePrometheusService("denied", "denied", v1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService("denied", "denied", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), denied, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -153,7 +153,7 @@ func testDenyServiceMonitor(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakePrometheusService("allowed", "allowed", v1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService("allowed", "allowed", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowed, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -228,7 +228,7 @@ func testDenyThanosRuler(t *testing.T) {
 		// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied thanos ruler.
 		// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(context.Background(), "thanosruler-denied", metav1.GetOptions{})
-		if !api_errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 		}
 	}

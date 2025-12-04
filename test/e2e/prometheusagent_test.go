@@ -30,7 +30,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -139,11 +139,11 @@ func testAgentCheckStorageClass(t *testing.T) {
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-						Spec: v1.PersistentVolumeClaimSpec{
+						Spec: corev1.PersistentVolumeClaimSpec{
 							StorageClassName: ptr.To("unknown-storage-class"),
-							Resources: v1.VolumeResourceRequirements{
-								Requests: v1.ResourceList{
-									v1.ResourceStorage: resource.MustParse("200Mi"),
+							Resources: corev1.VolumeResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceStorage: resource.MustParse("200Mi"),
 								},
 							},
 						},
@@ -214,9 +214,9 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 	name := "test"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("100Mi"),
+	p.Spec.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
 
@@ -236,9 +236,9 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 		ns,
 		monitoringv1alpha1.PrometheusAgentSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("200Mi"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("200Mi"),
 					},
 				},
 			},
@@ -286,9 +286,9 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	name := "test"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("100Mi"),
+	p.Spec.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
 
@@ -302,9 +302,9 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	res := dms.Spec.Template.Spec.Containers[0].Resources
 	require.Equal(t, res, p.Spec.Resources)
 
-	dms.Spec.Template.Spec.Containers[0].Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("200Mi"),
+	dms.Spec.Template.Spec.Containers[0].Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
 	framework.KubeClient.AppsV1().DaemonSets(ns).Update(ctx, dms, metav1.UpdateOptions{})
@@ -394,7 +394,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NoError(t, err)
 
 	var pollErr error
-	var paPods *v1.PodList
+	var paPods *corev1.PodList
 	var firstTargetIP string
 	var secondTargetIP string
 
@@ -594,14 +594,14 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	name := "test-agent-servicename"
 
-	svc := &v1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-service", name),
 			Namespace: ns,
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
 				{
 					Name: "web",
 					Port: 9090,
@@ -711,11 +711,11 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 	// storage should not be set in Daemonsets
 	p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
 		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-			Spec: v1.PersistentVolumeClaimSpec{
+			Spec: corev1.PersistentVolumeClaimSpec{
 				StorageClassName: ptr.To("standard"),
-				Resources: v1.VolumeResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceStorage: resource.MustParse("200Mi"),
+				Resources: corev1.VolumeResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: resource.MustParse("200Mi"),
 					},
 				},
 			},

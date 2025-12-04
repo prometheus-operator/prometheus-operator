@@ -20,7 +20,7 @@ import (
 	"os"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	networkv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -82,7 +82,7 @@ func (f *Framework) SetupNginxIngressControllerIncDefaultBackend(ctx context.Con
 		return fmt.Errorf("reading default http backend service yaml failed: %w", err)
 	}
 
-	service := v1.Service{}
+	service := corev1.Service{}
 	err = yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&service)
 	if err != nil {
 		return fmt.Errorf("decoding http backend service yaml failed: %w", err)
@@ -116,7 +116,7 @@ func (f *Framework) DeleteNginxIngressControllerIncDefaultBackend(ctx context.Co
 		return fmt.Errorf("reading default http backend service yaml failed: %w", err)
 	}
 
-	service := v1.Service{}
+	service := corev1.Service{}
 	err = yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&service)
 	if err != nil {
 		return fmt.Errorf("decoding http backend service yaml failed: %w", err)

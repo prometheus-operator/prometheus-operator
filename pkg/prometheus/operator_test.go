@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -123,8 +123,8 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "00000000-0000-0000-0000-000000000000",
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "azure-oauth-secret",
 							},
 							Key: "secret-key",
@@ -189,8 +189,8 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "00000000-0000-0000-0000-000000000000",
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "azure-oauth-secret",
 							},
 							Key: "secret-key",
@@ -209,8 +209,8 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "invalid",
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "azure-oauth-secret",
 							},
 							Key: "secret-key",
