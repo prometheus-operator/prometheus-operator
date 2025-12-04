@@ -5,3 +5,4 @@ kubernetes_sd_configs:
     - test
   attach_metadata:
     node: true
+    namespace: false

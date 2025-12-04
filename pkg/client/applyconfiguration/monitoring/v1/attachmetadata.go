@@ -19,7 +19,8 @@ package v1
 // AttachMetadataApplyConfiguration represents a declarative configuration of the AttachMetadata type for use
 // with apply.
 type AttachMetadataApplyConfiguration struct {
-	Node *bool `json:"node,omitempty"`
+	Node      *bool `json:"node,omitempty"`
+	Namespace *bool `json:"namespace,omitempty"`
 }
 
 // AttachMetadataApplyConfiguration constructs a declarative configuration of the AttachMetadata type for use with
@@ -33,5 +34,13 @@ func AttachMetadata() *AttachMetadataApplyConfiguration {
 // If called multiple times, the Node field is set to the value of the last call.
 func (b *AttachMetadataApplyConfiguration) WithNode(value bool) *AttachMetadataApplyConfiguration {
 	b.Node = &value
+	return b
+}
+
+// WithNamespace sets the Namespace field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Namespace field is set to the value of the last call.
+func (b *AttachMetadataApplyConfiguration) WithNamespace(value bool) *AttachMetadataApplyConfiguration {
+	b.Namespace = &value
 	return b
 }
