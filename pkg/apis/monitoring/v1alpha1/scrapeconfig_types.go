@@ -294,6 +294,7 @@ type ScrapeConfigSpec struct {
 	// params defines optional HTTP URL parameters
 	// +mapType:=atomic
 	// +optional
+	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
 	// scheme defines the protocol scheme used for requests.
 	// +optional
@@ -384,6 +385,7 @@ type StaticConfig struct {
 	// labels defines labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
@@ -549,6 +551,7 @@ type ConsulSDConfig struct {
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
 	// +mapType:=atomic
 	// +optional
+	//nolint:kubeapilinter
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// filter defines the filter expression used to filter the catalog results.
 	// See https://www.consul.io/api-docs/catalog#list-services
