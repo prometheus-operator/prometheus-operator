@@ -771,7 +771,6 @@ type CommonPrometheusFields struct {
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
 	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
-	// In v3.9.0+, this becomes a no-op and this configuration is required.
 	// It requires Prometheus >= v3.8.0.
 	//
 	// +optional

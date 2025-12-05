@@ -1274,7 +1274,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -1699,7 +1698,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -3252,7 +3250,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, this becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -4421,7 +4418,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -9335,7 +9331,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, this becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -12030,7 +12025,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -13176,7 +13170,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -13573,7 +13566,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -15425,7 +15417,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, this becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -18688,7 +18679,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -23022,7 +23012,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, this becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -24161,7 +24150,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -31698,7 +31686,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, this becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
@@ -34461,7 +34448,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
-In v3.9.0+, the feature flag becomes a no-op and this configuration is required.
 It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>

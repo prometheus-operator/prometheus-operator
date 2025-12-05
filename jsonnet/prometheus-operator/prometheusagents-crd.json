@@ -6149,7 +6149,7 @@
                     "type": "string"
                   },
                   "scrapeNativeHistograms": {
-                    "description": "scrapeNativeHistograms defines whether to enable scraping of native histograms.\nIn v3.9.0+, this becomes a no-op and this configuration is required.\nIt requires Prometheus >= v3.8.0.",
+                    "description": "scrapeNativeHistograms defines whether to enable scraping of native histograms.\nIt requires Prometheus >= v3.8.0.",
                     "type": "boolean"
                   },
                   "scrapeProtocols": {
