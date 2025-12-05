@@ -7280,6 +7280,11 @@ spec:
                   Default: "30s"
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
+              scrapeNativeHistograms:
+                description: |-
+                  scrapeNativeHistograms defines whether to enable scraping of native histograms.
+                  It requires Prometheus >= v3.8.0.
+                type: boolean
               scrapeProtocols:
                 description: |-
                   scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the

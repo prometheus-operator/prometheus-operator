@@ -164,6 +164,14 @@ func (b *PodMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint6
 	return b
 }
 
+// WithScrapeNativeHistograms sets the ScrapeNativeHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeNativeHistograms field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithScrapeNativeHistograms(value bool) *PodMonitorSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.ScrapeNativeHistograms = &value
+	return b
+}
+
 // WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.

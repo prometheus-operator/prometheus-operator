@@ -1266,6 +1266,19 @@ uint64
 </tr>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -1673,6 +1686,19 @@ uint64
 <em>(Optional)</em>
 <p>labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -3216,6 +3242,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -4367,6 +4406,19 @@ uint64
 <em>(Optional)</em>
 <p>labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -9271,6 +9323,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -11952,6 +12017,19 @@ list restricting them.</p>
 <tbody>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -13084,6 +13162,19 @@ uint64
 </tr>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -13463,6 +13554,19 @@ uint64
 <em>(Optional)</em>
 <p>labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -15301,6 +15405,19 @@ bool
 <p>convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native
 histogram with custom buckets.</p>
 <p>It requires Prometheus &gt;= v3.4.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -18550,6 +18667,19 @@ uint64
 <em>(Optional)</em>
 <p>labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -22874,6 +23004,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -23995,6 +24138,19 @@ uint64
 <em>(Optional)</em>
 <p>labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -31522,6 +31678,19 @@ histogram with custom buckets.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClassicHistograms</code><br/>
 <em>
 bool
@@ -34267,6 +34436,19 @@ uint64
 <em>(Optional)</em>
 <p>labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scrapeNativeHistograms defines whether to enable scraping of native histograms.
+It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 <tr>
