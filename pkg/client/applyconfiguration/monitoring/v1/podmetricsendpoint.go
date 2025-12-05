@@ -25,21 +25,21 @@ import (
 // PodMetricsEndpointApplyConfiguration represents a declarative configuration of the PodMetricsEndpoint type for use
 // with apply.
 type PodMetricsEndpointApplyConfiguration struct {
-	Port                         *string                           `json:"port,omitempty"`
-	PortNumber                   *int32                            `json:"portNumber,omitempty"`
-	TargetPort                   *intstr.IntOrString               `json:"targetPort,omitempty"`
-	Path                         *string                           `json:"path,omitempty"`
-	Scheme                       *monitoringv1.Scheme              `json:"scheme,omitempty"`
-	Params                       map[string][]string               `json:"params,omitempty"`
-	Interval                     *monitoringv1.Duration            `json:"interval,omitempty"`
-	ScrapeTimeout                *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
-	HonorLabels                  *bool                             `json:"honorLabels,omitempty"`
-	HonorTimestamps              *bool                             `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness     *bool                             `json:"trackTimestampsStaleness,omitempty"`
-	MetricRelabelConfigs         []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
-	RelabelConfigs               []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
-	FilterRunning                *bool                             `json:"filterRunning,omitempty"`
-	HTTPConfigApplyConfiguration `json:",inline"`
+	Port                                  *string                           `json:"port,omitempty"`
+	PortNumber                            *int32                            `json:"portNumber,omitempty"`
+	TargetPort                            *intstr.IntOrString               `json:"targetPort,omitempty"`
+	Path                                  *string                           `json:"path,omitempty"`
+	Scheme                                *monitoringv1.Scheme              `json:"scheme,omitempty"`
+	Params                                map[string][]string               `json:"params,omitempty"`
+	Interval                              *monitoringv1.Duration            `json:"interval,omitempty"`
+	ScrapeTimeout                         *monitoringv1.Duration            `json:"scrapeTimeout,omitempty"`
+	HonorLabels                           *bool                             `json:"honorLabels,omitempty"`
+	HonorTimestamps                       *bool                             `json:"honorTimestamps,omitempty"`
+	TrackTimestampsStaleness              *bool                             `json:"trackTimestampsStaleness,omitempty"`
+	MetricRelabelConfigs                  []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	RelabelConfigs                        []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	FilterRunning                         *bool                             `json:"filterRunning,omitempty"`
+	HTTPConfigWithProxyApplyConfiguration `json:",inline"`
 }
 
 // PodMetricsEndpointApplyConfiguration constructs a declarative configuration of the PodMetricsEndpoint type for use with
