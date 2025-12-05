@@ -116,7 +116,6 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	// +mapType:=atomic
-	// +kubebuilder:validation:Type=object
 	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"` //nolint:kubeapilinter
 }
 
@@ -444,7 +443,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `clientCAFile`.
 	//
 	// +optional
-	//nolint:kubeapilinter
+	//nolint:kubeapilinter // The json tag doesn't meet the conventions to be compatible with Prometheus format.
 	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
 	// clientCAFile defines the path to the CA certificate file for client certificate authentication to
 	// the server.

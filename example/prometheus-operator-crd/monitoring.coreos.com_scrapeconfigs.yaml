@@ -11353,6 +11353,7 @@ spec:
                   type: array
                 description: params defines optional HTTP URL parameters
                 type: object
+                x-kubernetes-map-type: atomic
               proxyConnectHeader:
                 additionalProperties:
                   items:

@@ -292,6 +292,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 	// params defines optional HTTP URL parameters
+	// +mapType:=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
