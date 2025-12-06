@@ -222,8 +222,7 @@ type CommonPrometheusFields struct {
 	// paused defines when a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	// +optional
-	// nolint:kubeapilinter
-	Paused bool `json:"paused,omitempty"`
+	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 
 	// image defines the container image name for Prometheus. If specified, it takes precedence
 	// over the `spec.baseImage`, `spec.tag` and `spec.sha` fields.
@@ -351,8 +350,7 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.33.0.
 	// +optional
-	// nolint:kubeapilinter
-	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
+	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"` // nolint:kubeapilinter
 
 	// enableOTLPReceiver defines the Prometheus to be used as a receiver for the OTLP Metrics protocol.
 	//
@@ -360,8 +358,7 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	// +optional
-	// nolint:kubeapilinter
-	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
+	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"` // nolint:kubeapilinter
 
 	// remoteWriteReceiverMessageVersions list of the protobuf message versions to accept when receiving the
 	// remote writes.
@@ -446,8 +443,7 @@ type CommonPrometheusFields struct {
 	// **Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
 	// It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
 	// +optional
-	// nolint:kubeapilinter
-	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
+	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"` // nolint:kubeapilinter
 
 	// secrets defines a list of Secrets in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
@@ -501,8 +497,7 @@ type CommonPrometheusFields struct {
 	// instead of the Pod IP's address.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	ListenLocal bool `json:"listenLocal,omitempty"`
+	ListenLocal bool `json:"listenLocal,omitempty"` // nolint:kubeapilinter
 
 	// podManagementPolicy defines the policy for creating/deleting pods when
 	// scaling up and down.
@@ -519,8 +514,7 @@ type CommonPrometheusFields struct {
 
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
-	// nolint:kubeapilinter
-	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"` // nolint:kubeapilinter
 
 	// containers allows injecting additional containers or modifying operator
 	// generated containers. This can be used to allow adding an authentication
@@ -607,22 +601,19 @@ type CommonPrometheusFields struct {
 	// In practice,`OverrideHonorLabels:true` enforces `honorLabels:false`
 	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	// +optional
-	// nolint:kubeapilinter
-	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
+	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"` // nolint:kubeapilinter
 	// overrideHonorTimestamps when true, Prometheus ignores the timestamps for all the targets created
 	// from service and pod monitors.
 	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
 	// +optional
-	// nolint:kubeapilinter
-	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
+	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"` // nolint:kubeapilinter
 
 	// ignoreNamespaceSelectors when true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
 	// and Probe objects will be ignored. They will only discover targets
 	// within the namespace of the PodMonitor, ServiceMonitor and Probe
 	// object.
 	// +optional
-	// nolint:kubeapilinter
-	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
+	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"` // nolint:kubeapilinter
 
 	// enforcedNamespaceLabel when not empty, a label will be added to:
 	//
@@ -777,8 +768,7 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v3.4.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"` // nolint:kubeapilinter
 
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	//
@@ -787,8 +777,7 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v3.5.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"` // nolint:kubeapilinter
 
 	// minReadySeconds defines the minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
@@ -828,8 +817,7 @@ type CommonPrometheusFields struct {
 	// Requires Prometheus v2.11.0 and above.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	WALCompression *bool `json:"walCompression,omitempty"`
+	WALCompression *bool `json:"walCompression,omitempty"` // nolint:kubeapilinter
 
 	// excludedFromEnforcement defines the list of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
 	// to be excluded from enforcing a namespace label of origin.
@@ -849,8 +837,7 @@ type CommonPrometheusFields struct {
 	// to a different value).
 	//
 	// +optional
-	// nolint:kubeapilinter
-	HostNetwork bool `json:"hostNetwork,omitempty"`
+	HostNetwork bool `json:"hostNetwork,omitempty"` // nolint:kubeapilinter
 
 	// podTargetLabels are appended to the `spec.podTargetLabels` field of all
 	// PodMonitor and ServiceMonitor objects.
@@ -1007,8 +994,7 @@ type CommonPrometheusFields struct {
 	// Starting Kubernetes 1.33, the feature is enabled by default.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	HostUsers *bool `json:"hostUsers,omitempty"`
+	HostUsers *bool `json:"hostUsers,omitempty"` // nolint:kubeapilinter
 }
 
 // Specifies the validation scheme for metric and label names.
@@ -1189,8 +1175,7 @@ type PrometheusSpec struct {
 	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
 	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
 	// +optional
-	// nolint:kubeapilinter
-	DisableCompaction bool `json:"disableCompaction,omitempty"`
+	DisableCompaction bool `json:"disableCompaction,omitempty"` // nolint:kubeapilinter
 
 	// rules defines the configuration of the Prometheus rules' engine.
 	// +optional
@@ -1280,8 +1265,7 @@ type PrometheusSpec struct {
 	//
 	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	// +optional
-	// nolint:kubeapilinter
-	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
+	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"` // nolint:kubeapilinter
 
 	// exemplars related settings that are runtime reloadable.
 	// It requires to enable the `exemplar-storage` feature flag to be effective.
@@ -1309,8 +1293,7 @@ type PrometheusSpec struct {
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	// +optional
-	// nolint:kubeapilinter
-	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"` // nolint:kubeapilinter
 }
 
 type WhenScaledRetentionType string
@@ -1358,8 +1341,7 @@ type PrometheusTracingConfig struct {
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	// nolint:kubeapilinter
-	Insecure *bool `json:"insecure"`
+	Insecure *bool `json:"insecure"` // nolint:kubeapilinter
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
@@ -1387,8 +1369,7 @@ type PrometheusStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	// nolint:kubeapilinter
-	Paused bool `json:"paused"`
+	Paused bool `json:"paused"` // nolint:kubeapilinter
 	// replicas defines the total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
 	// +optional
@@ -1442,8 +1423,7 @@ type AlertingSpec struct {
 type StorageSpec struct {
 	// disableMountSubPath deprecated: subPath usage will be removed in a future release.
 	// +optional
-	// nolint:kubeapilinter
-	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
+	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"` // nolint:kubeapilinter
 	// emptyDir to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
@@ -1555,24 +1535,21 @@ type ThanosSpec struct {
 
 	// listenLocal is deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
 	// +optional
-	// nolint:kubeapilinter
-	ListenLocal bool `json:"listenLocal,omitempty"`
+	ListenLocal bool `json:"listenLocal,omitempty"` // nolint:kubeapilinter
 
 	// grpcListenLocal defines when true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the gRPC endpoints.
 	//
 	// It has no effect if `listenLocal` is true.
 	// +optional
-	// nolint:kubeapilinter
-	GRPCListenLocal bool `json:"grpcListenLocal,omitempty"`
+	GRPCListenLocal bool `json:"grpcListenLocal,omitempty"` // nolint:kubeapilinter
 
 	// httpListenLocal when true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the HTTP endpoints.
 	//
 	// It has no effect if `listenLocal` is true.
 	// +optional
-	// nolint:kubeapilinter
-	HTTPListenLocal bool `json:"httpListenLocal,omitempty"`
+	HTTPListenLocal bool `json:"httpListenLocal,omitempty"` // nolint:kubeapilinter
 
 	// tracingConfig defines the tracing configuration for the Thanos sidecar.
 	//
@@ -1699,8 +1676,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	SendExemplars *bool `json:"sendExemplars,omitempty"`
+	SendExemplars *bool `json:"sendExemplars,omitempty"` // nolint:kubeapilinter
 
 	// sendNativeHistograms enables sending of native histograms, also known as sparse histograms
 	// over remote write.
@@ -1708,8 +1684,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
+	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"` // nolint:kubeapilinter
 
 	// remoteTimeout defines the timeout for requests to the remote write endpoint.
 	// +optional
@@ -1795,8 +1770,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
 
 	// queueConfig allows tuning of the remote write queue parameters.
 	// +optional
@@ -1812,8 +1786,7 @@ type RemoteWriteSpec struct {
 
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
-	// nolint:kubeapilinter
-	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+	EnableHttp2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 
 	// roundRobinDNS controls the DNS resolution behavior for remote-write connections.
 	// When enabled:
@@ -1831,8 +1804,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
+	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"` // nolint:kubeapilinter
 }
 
 // +kubebuilder:validation:Enum=V1.0;V2.0
@@ -1879,8 +1851,7 @@ type QueueConfig struct {
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	// +optional
-	// nolint:kubeapilinter
-	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
+	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"` // nolint:kubeapilinter
 	// sampleAgeLimit drops samples older than the limit.
 	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
 	//
@@ -1913,8 +1884,7 @@ type Sigv4 struct {
 	// It requires Prometheus >= v2.54.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"`
+	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"` // nolint:kubeapilinter
 }
 
 // AzureAD defines the configuration for remote write's azuread parameters.
@@ -2016,8 +1986,7 @@ type RemoteReadSpec struct {
 	// readRecent defines whether reads should be made for queries for time ranges that
 	// the local storage should have complete data for.
 	// +optional
-	// nolint:kubeapilinter
-	ReadRecent bool `json:"readRecent,omitempty"`
+	ReadRecent bool `json:"readRecent,omitempty"` // nolint:kubeapilinter
 
 	// oauth2 configuration for the URL.
 	//
@@ -2067,16 +2036,14 @@ type RemoteReadSpec struct {
 	// It requires Prometheus >= v2.26.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
 
 	// filterExternalLabels defines whether to use the external labels as selectors for the remote read endpoint.
 	//
 	// It requires Prometheus >= v2.34.0.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`
+	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"` // nolint:kubeapilinter
 }
 
 // RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -2286,8 +2253,7 @@ type AlertmanagerEndpoints struct {
 	// enableHttp2 defines whether to enable HTTP2.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
+	EnableHttp2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
 
 	// relabelings defines the relabel configuration applied to the discovered Alertmanagers.
 	//
@@ -2337,8 +2303,7 @@ type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	Send bool `json:"send,omitempty"`
+	Send bool `json:"send,omitempty"` // nolint:kubeapilinter
 
 	// sendInterval defines how frequently metric metadata is sent to the remote storage.
 	//
@@ -2477,8 +2442,7 @@ type ScrapeClass struct {
 	// Only one scrape class can be set as the default.
 	//
 	// +optional
-	// nolint:kubeapilinter
-	Default *bool `json:"default,omitempty"`
+	Default *bool `json:"default,omitempty"` // nolint:kubeapilinter
 
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
@@ -2559,8 +2523,7 @@ type OTLPConfig struct {
 	// Cannot be true when `promoteResourceAttributes` is defined.
 	// It requires Prometheus >= v3.5.0.
 	// +optional
-	// nolint:kubeapilinter
-	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"`
+	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"` // nolint:kubeapilinter
 
 	// ignoreResourceAttributes defines the list of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
 	//
@@ -2592,21 +2555,18 @@ type OTLPConfig struct {
 	//
 	// It requires Prometheus >= v3.1.0.
 	// +optional
-	// nolint:kubeapilinter
-	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
+	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"` // nolint:kubeapilinter
 
 	// convertHistogramsToNHCB defines optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
 	// It requires Prometheus >= v3.4.0.
 	// +optional
-	// nolint:kubeapilinter
-	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
+	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"` // nolint:kubeapilinter
 
 	// promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
 	// As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
 	// It requires Prometheus >= v3.6.0.
 	// +optional
-	// nolint:kubeapilinter
-	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"`
+	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"` // nolint:kubeapilinter
 }
 
 // Validate semantically validates the given OTLPConfig section.
