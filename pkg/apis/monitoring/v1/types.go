@@ -627,6 +627,7 @@ type Endpoint struct {
 	// when exposed by the target.
 	//
 	// +optional
+	// nolint:kubeapilinter // allowed legacy field name: HonorTimestamps (v1 API compatibility)
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
