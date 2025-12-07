@@ -242,6 +242,8 @@ type Condition struct {
 	Status ConditionStatus `json:"status"`
 	// lastTransitionTime is the time of the last update to the current status property.
 	// +required
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format=date-time
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// reason for the condition's last transition.
 	// +optional
@@ -1105,6 +1107,8 @@ type ConfigResourceCondition struct {
 	Status ConditionStatus `json:"status"`
 	// lastTransitionTime defines the time of the last update to the current status property.
 	// +required
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format=date-time
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// reason for the condition's last transition.
 	// +optional
