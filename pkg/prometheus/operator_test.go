@@ -220,6 +220,124 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name: "with_azure_workload_identity",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+					},
+				},
+			},
+			version: "3.7.0",
+		},
+		{
+			name: "with_azure_workload_identity_unsupported_version",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+					},
+				},
+			},
+			version:   "3.6.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_workload_identity_and_managed_identity",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+					},
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To("client-id"),
+					},
+				},
+			},
+			version:   "3.7.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_workload_identity_and_oauth",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+					},
+					OAuth: &monitoringv1.AzureOAuth{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "azure-oauth-secret",
+							},
+							Key: "secret-key",
+						},
+					},
+				},
+			},
+			version:   "3.7.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_workload_identity_and_sdk",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+						ClientID: "00000000-0000-0000-0000-000000000000",
+					},
+					SDK: &monitoringv1.AzureSDK{
+						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+				},
+			},
+			version:   "3.7.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_workload_identity_missing_tenant_id",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						ClientID: "00000000-0000-0000-0000-000000000000",
+					},
+				},
+			},
+			version:   "3.7.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_workload_identity_missing_client_id",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+					},
+				},
+			},
+			version:   "3.7.0",
+			expectErr: true,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

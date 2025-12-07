@@ -2798,6 +2798,16 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 					})
 			}
 
+			if spec.AzureAD.WorkloadIdentity != nil {
+				azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(
+					azureAd,
+					"workload_identity",
+					yaml.MapSlice{
+						{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
+						{Key: "client_id", Value: spec.AzureAD.WorkloadIdentity.ClientID},
+					})
+			}
+
 			if spec.AzureAD.Cloud != nil {
 				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
 			}
