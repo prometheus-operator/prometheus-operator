@@ -255,6 +255,8 @@ spec:
                       description: |-
                         honorTimestamps defines whether Prometheus preserves the timestamps
                         when exposed by the target.
+
+                        nolint:kubeapilinter // allowed legacy field name: HonorTimestamps (v1 API compatibility)
                       type: boolean
                     interval:
                       description: |-
