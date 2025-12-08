@@ -108,7 +108,7 @@ type TopologySpreadConstraint struct {
 	AdditionalLabelSelectors *AdditionalLabelSelectors `json:"additionalLabelSelectors,omitempty"`
 }
 
-// +kubebuilder:validation:MinLength:=1
+// +kubebuilder:validation:MinLength=1
 type EnableFeature string
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
@@ -311,7 +311,7 @@ type CommonPrometheusFields struct {
 	// scrapeInterval defines interval between consecutive scrapes.
 	//
 	// Default: "30s"
-	// +kubebuilder:default:="30s"
+	// +kubebuilder:default="30s"
 	// +optional
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// scrapeTimeout defines the number of seconds to wait until a scrape request times out.
@@ -366,7 +366,7 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v2.54.0.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +listType:=set
+	// +listType=set
 	// +optional
 	RemoteWriteReceiverMessageVersions []RemoteWriteMessageVersion `json:"remoteWriteReceiverMessageVersions,omitempty"`
 
@@ -378,7 +378,7 @@ type CommonPrometheusFields struct {
 	//
 	// For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/
 	//
-	// +listType:=set
+	// +listType=set
 	// +optional
 	EnableFeatures []EnableFeature `json:"enableFeatures,omitempty"`
 
@@ -449,7 +449,7 @@ type CommonPrometheusFields struct {
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
-	// +listType:=set
+	// +listType=set
 	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// configMaps defines a list of ConfigMaps in the same namespace as the Prometheus
@@ -578,7 +578,7 @@ type CommonPrometheusFields struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// portName used for the pods and governing service.
 	// Default: "web"
-	// +kubebuilder:default:="web"
+	// +kubebuilder:default="web"
 	// +optional
 	PortName string `json:"portName,omitempty"`
 
@@ -784,7 +784,7 @@ type CommonPrometheusFields struct {
 	//
 	// If unset, pods will be considered available as soon as they are ready.
 	//
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 
@@ -981,7 +981,7 @@ type CommonPrometheusFields struct {
 	//
 	// Defaults to 600 seconds.
 	//
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
@@ -1274,7 +1274,7 @@ type PrometheusSpec struct {
 
 	// evaluationInterval defines the interval between rule evaluations.
 	// Default: "30s"
-	// +kubebuilder:default:="30s"
+	// +kubebuilder:default="30s"
 	// +optional
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
@@ -1331,7 +1331,7 @@ type PrometheusTracingConfig struct {
 	ClientType *string `json:"clientType"`
 
 	// endpoint to send the traces to. Should be provided in format <host>:<port>.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Endpoint string `json:"endpoint"`
 
@@ -1449,7 +1449,7 @@ type QuerySpec struct {
 	// +optional
 	LookbackDelta *string `json:"lookbackDelta,omitempty"`
 	// maxConcurrency defines the number of concurrent queries that can be run at once.
-	// +kubebuilder:validation:Minimum:=1
+	// +kubebuilder:validation:Minimum=1
 	// +optional
 	MaxConcurrency *int32 `json:"maxConcurrency,omitempty"`
 	// maxSamples defines the maximum number of samples a single query can load into memory. Note that
@@ -1473,7 +1473,7 @@ type PrometheusWebSpec struct {
 
 	// maxConnections defines the maximum number of simultaneous connections
 	// A zero value means that Prometheus doesn't accept any incoming connection.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	MaxConnections *int32 `json:"maxConnections,omitempty"`
 }
@@ -1605,7 +1605,7 @@ type ThanosSpec struct {
 	// set to a multiple of 120 times your longest scrape or rule interval. For
 	// example, 30s * 120 = 1h.
 	//
-	// +kubebuilder:default:="2h"
+	// +kubebuilder:default="2h"
 	// +optional
 	BlockDuration Duration `json:"blockSize,omitempty"`
 
@@ -1927,7 +1927,7 @@ type AzureOAuth struct {
 	// clientId defines the clientId of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern:=^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	ClientID string `json:"clientId"`
 	// clientSecret specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
 	// +required
@@ -1935,7 +1935,7 @@ type AzureOAuth struct {
 	// tenantId is the tenant ID of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern:=^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	TenantID string `json:"tenantId"`
 }
 
@@ -1948,7 +1948,7 @@ type ManagedIdentity struct {
 	//
 	// +optional
 	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Pattern:=^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	ClientID *string `json:"clientId"`
 }
 
@@ -1956,7 +1956,7 @@ type ManagedIdentity struct {
 type AzureSDK struct {
 	// tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.
 	// +optional
-	// +kubebuilder:validation:Pattern:=^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	TenantID *string `json:"tenantId,omitempty"`
 }
 
@@ -2005,7 +2005,7 @@ type AzureWorkloadIdentity struct {
 	// tenantId is the tenant ID of the Azure Active Directory application.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	// +kubebuilder:validation:Pattern="^[0-9a-zA-Z-.]+$"
 	TenantID string `json:"tenantId"`
 	// clientId is the client ID of the Azure Active Directory application.
 	// +required
