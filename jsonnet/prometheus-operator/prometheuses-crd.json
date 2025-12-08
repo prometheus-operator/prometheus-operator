@@ -7665,6 +7665,10 @@
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
+                  "scrapeNativeHistograms": {
+                    "description": "scrapeNativeHistograms defines whether to enable scraping of native histograms.\nIt requires Prometheus >= v3.8.0.",
+                    "type": "boolean"
+                  },
                   "scrapeProtocols": {
                     "description": "scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.\n\n`PrometheusText1.0.0` requires Prometheus >= v3.0.0.",
                     "items": {

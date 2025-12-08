@@ -815,6 +815,11 @@ spec:
 
                   Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
                 type: boolean
+              scrapeNativeHistograms:
+                description: |-
+                  scrapeNativeHistograms defines whether to enable scraping of native histograms.
+                  It requires Prometheus >= v3.8.0.
+                type: boolean
               scrapeProtocols:
                 description: |-
                   scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
