@@ -16,6 +16,7 @@ package thanos
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -88,4 +89,35 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			golden.Assert(t, string(sec.Data[rwConfigFile]), tc.golden)
 		})
 	}
+	t.Run("workload_identity_rejected", func(t *testing.T) {
+		cs := fake.NewClientset()
+		o := &Operator{kclient: cs}
+		tr := &monitoringv1.ThanosRuler{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo-wi",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.ThanosRulerSpec{
+				Version: ptr.To(operator.DefaultThanosVersion),
+				RemoteWrite: []monitoringv1.RemoteWriteSpec{
+					{
+						URL: "http://example.com",
+						AzureAD: &monitoringv1.AzureAD{
+							WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+								TenantID: "00000000-a12b-3cd4-e56f-000000000000",
+								ClientID: "00000000-0000-0000-0000-000000000000",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		sb := &assets.StoreBuilder{}
+
+		err := o.createOrUpdateRulerConfigSecret(context.Background(), sb, tr)
+		require.Error(t, err)
+		// ensure the error is about workloadIdentity being unsupported
+		require.True(t, strings.Contains(err.Error(), "workloadIdentity"))
+	})
 }
