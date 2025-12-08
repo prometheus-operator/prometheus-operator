@@ -2,9 +2,11 @@
 
 _Describe the big picture of your changes here to communicate to the maintainers why we should accept this pull request._
 
-_If it fixes an existing issue (bug or feature), use the following keyword:_
+<!-- If it fixes an existing issue (bug or feature), use the following keyword -->
 
-_Closes: #ISSUE-NUMBER_
+Closes: #ISSUE-NUMBER
+
+If you're contributing for the first-time, check our [contribution guidelines](../CONTRIBUTING.md).
 
 ## Type of change
 
