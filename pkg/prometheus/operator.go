@@ -109,27 +109,9 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 	}
 
 	if spec.AzureAD != nil {
-		// Check that at least one authentication method is provided
-		authMethods := 0
-		if spec.AzureAD.ManagedIdentity != nil {
-			authMethods++
-		}
-		if spec.AzureAD.OAuth != nil {
-			authMethods++
-		}
-		if spec.AzureAD.SDK != nil {
-			authMethods++
-		}
-		if spec.AzureAD.WorkloadIdentity != nil {
-			authMethods++
-		}
-
-		if authMethods == 0 {
-			return fmt.Errorf("must provide Azure Managed Identity, Azure OAuth, Azure SDK, or Azure Workload Identity in the Azure AD config")
-		}
-
-		if authMethods > 1 {
-			return fmt.Errorf("cannot provide multiple Azure authentication methods (managedIdentity, oauth, sdk, workloadIdentity) at the same time, only one must be defined")
+		// Validate AzureAD configuration
+		if err := spec.AzureAD.Validate(); err != nil {
+			return err
 		}
 
 		// check azure managed identity client id
@@ -175,17 +157,6 @@ func (cg *ConfigGenerator) checkAzureADWorkloadIdentity(wi *monitoringv1.AzureWo
 	if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
 		return fmt.Errorf("workloadIdentity: Azure Workload Identity is only supported with Prometheus >= 3.7.0, current = %s", cg.version.String())
 	}
-
-	// Validate tenant ID format
-	if wi.TenantID == "" {
-		return fmt.Errorf("workloadIdentity: tenantId is required")
-	}
-
-	// Validate client ID format
-	if wi.ClientID == "" {
-		return fmt.Errorf("workloadIdentity: clientId is required")
-	}
-
 	return nil
 }
 
