@@ -42,6 +42,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
+// +kubebuilder:subresource:status
 
 // The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
 //
@@ -55,6 +56,14 @@ type AlertmanagerConfig struct {
 	// spec defines the specification of AlertmanagerConfigSpec
 	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ServiceMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
