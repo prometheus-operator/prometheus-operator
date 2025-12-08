@@ -1,6 +1,6 @@
 ## Unreleased
 
-* [FEATURE] Add Azure Workload Identity authentication support for remote write configuration in Prometheus and PrometheusAgent CRDs. Requires Prometheus >= v3.7.0. #8118
+* [FEATURE] Add `workloadIdentity` field to the remote-write configuration in Prometheus and PrometheusAgent CRDs. #8118
 * [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
 
 ## 0.87.0 / 2025-11-20

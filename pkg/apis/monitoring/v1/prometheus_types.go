@@ -1958,6 +1958,38 @@ type AzureSDK struct {
 	TenantID *string `json:"tenantId,omitempty"`
 }
 
+// Validate semantically validates the given AzureAD section.
+func (a *AzureAD) Validate() error {
+	if a == nil {
+		return nil
+	}
+
+	// Check that at least one authentication method is provided
+	authMethods := 0
+	if a.ManagedIdentity != nil {
+		authMethods++
+	}
+	if a.OAuth != nil {
+		authMethods++
+	}
+	if a.SDK != nil {
+		authMethods++
+	}
+	if a.WorkloadIdentity != nil {
+		authMethods++
+	}
+
+	if authMethods == 0 {
+		return fmt.Errorf("must provide Azure Managed Identity, Azure OAuth, Azure SDK, or Azure Workload Identity in the Azure AD config")
+	}
+
+	if authMethods > 1 {
+		return fmt.Errorf("cannot provide multiple Azure authentication methods (managedIdentity, oauth, sdk, workloadIdentity) at the same time, only one must be defined")
+	}
+
+	return nil
+}
+
 // AzureWorkloadIdentity defines the configuration for Azure Workload Identity authentication.
 // +k8s:openapi-gen=true
 type AzureWorkloadIdentity struct {
