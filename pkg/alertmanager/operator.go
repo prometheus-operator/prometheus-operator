@@ -34,6 +34,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -79,6 +80,7 @@ type Config struct {
 // configurations.
 type Operator struct {
 	kclient    kubernetes.Interface
+	dclient    dynamic.Interface
 	mdClient   metadata.Interface
 	mclient    monitoringclient.Interface
 	ssarClient authv1.SelfSubjectAccessReviewInterface
@@ -109,6 +111,7 @@ type Operator struct {
 	config Config
 
 	configResourcesStatusEnabled bool
+	finalizerSyncer              *operator.FinalizerSyncer
 }
 
 type ControllerOption func(*Operator)
@@ -138,9 +141,14 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
-		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
+		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
 	}
 
 	mclient, err := monitoringclient.NewForConfig(restConfig)
@@ -153,6 +161,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o := &Operator{
 		kclient:    client,
+		dclient:    dclient,
 		mdClient:   mdClient,
 		mclient:    mclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
@@ -174,9 +183,14 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName))
 	}
 
 	if err := o.bootstrap(ctx, c); err != nil {
@@ -597,17 +611,33 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	logger := c.logger.With("key", key)
+	logDeprecatedFields(logger, am)
+
+	statusCleanup := func() error {
+		return c.configResStatusCleanup(ctx, am)
+	}
+
+	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, am, c.rr.DeletionInProgress(am), statusCleanup)
+	if err != nil {
+		return err
+	}
+
+	if finalizerAdded {
+		// Since the object has been updated, let's trigger another sync.
+		c.rr.EnqueueForReconciliation(am)
+		return nil
+	}
+
 	// Check if the Alertmanager instance is marked for deletion.
 	if c.rr.DeletionInProgress(am) {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
 	if am.Spec.Paused {
 		return nil
 	}
-
-	logger := c.logger.With("key", key)
-	logDeprecatedFields(logger, am)
 
 	logger.Info("sync alertmanager")
 
@@ -735,6 +765,61 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 	}
 
 	return obj.(*appsv1.StatefulSet).DeepCopy(), nil
+}
+
+// updateConfigResourcesStatus updates the status of the selected configuration
+// resources (AlertmanagerConfig).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitoringv1.Alertmanager, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
+
+	// Convert the map to TypedResourcesSelection for use with CleanupBindings
+	selectedConfigs := make(operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig])
+
+	// Update the status of selected alertmanagerConfigs.
+	for key, amConfig := range amConfigs {
+		// Create a condition indicating the config was accepted
+		conditions := []monitoringv1.ConfigResourceCondition{
+			{
+				Type:               monitoringv1.Accepted,
+				Status:             monitoringv1.ConditionTrue,
+				ObservedGeneration: amConfig.Generation,
+				LastTransitionTime: metav1.Now(),
+			},
+		}
+
+		if err := configResourceSyncer.UpdateBinding(ctx, amConfig, conditions); err != nil {
+			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
+		}
+
+		// Add to selected configs for cleanup
+		selectedConfigs[key] = operator.NewTypedConfigurationResource(amConfig, nil, "", amConfig.Generation)
+	}
+
+	// Remove bindings from alertmanagerConfigs which reference the
+	// workload but aren't selected anymore.
+	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, selectedConfigs, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for alertmanagerConfigs: %w", err)
+	}
+
+	return nil
+}
+
+// configResStatusCleanup removes alertmanager bindings from the configuration resources (AlertmanagerConfig).
+func (c *Operator) configResStatusCleanup(ctx context.Context, am *monitoringv1.Alertmanager) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
+
+	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for alertmanagerConfig: %w", err)
+	}
+	return nil
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given
@@ -913,6 +998,11 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
 	if err != nil {
 		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
+	}
+
+	// Update the status of selected AlertmanagerConfig resources.
+	if err := c.updateConfigResourcesStatus(ctx, am, amConfigs); err != nil {
+		return fmt.Errorf("failed to update AlertmanagerConfig status: %w", err)
 	}
 
 	var (
