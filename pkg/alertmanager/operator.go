@@ -148,7 +148,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
-		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
+		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
 	mclient, err := monitoringclient.NewForConfig(restConfig)
@@ -624,7 +624,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if finalizerAdded {
-		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(am)
 		return nil
 	}
@@ -767,8 +766,6 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 	return obj.(*appsv1.StatefulSet).DeepCopy(), nil
 }
 
-// updateConfigResourcesStatus updates the status of the selected configuration
-// resources (AlertmanagerConfig).
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitoringv1.Alertmanager, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -776,12 +773,9 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitori
 
 	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
 
-	// Convert the map to TypedResourcesSelection for use with CleanupBindings
 	selectedConfigs := make(operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig])
 
-	// Update the status of selected alertmanagerConfigs.
 	for key, amConfig := range amConfigs {
-		// Create a condition indicating the config was accepted
 		conditions := []monitoringv1.ConfigResourceCondition{
 			{
 				Type:               monitoringv1.Accepted,
@@ -795,12 +789,9 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitori
 			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
 		}
 
-		// Add to selected configs for cleanup
 		selectedConfigs[key] = operator.NewTypedConfigurationResource(amConfig, nil, "", amConfig.Generation)
 	}
 
-	// Remove bindings from alertmanagerConfigs which reference the
-	// workload but aren't selected anymore.
 	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, selectedConfigs, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for alertmanagerConfigs: %w", err)
 	}
@@ -808,7 +799,6 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitori
 	return nil
 }
 
-// configResStatusCleanup removes alertmanager bindings from the configuration resources (AlertmanagerConfig).
 func (c *Operator) configResStatusCleanup(ctx context.Context, am *monitoringv1.Alertmanager) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1000,7 +990,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
 	}
 
-	// Update the status of selected AlertmanagerConfig resources.
 	if err := c.updateConfigResourcesStatus(ctx, am, amConfigs); err != nil {
 		return fmt.Errorf("failed to update AlertmanagerConfig status: %w", err)
 	}
