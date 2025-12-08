@@ -1987,6 +1987,13 @@ func (a *AzureAD) Validate() error {
 		return fmt.Errorf("cannot provide multiple Azure authentication methods (managedIdentity, oauth, sdk, workloadIdentity) at the same time, only one must be defined")
 	}
 
+	// Validate workloadIdentity fields if provided
+	if a.WorkloadIdentity != nil {
+		if err := a.WorkloadIdentity.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2002,6 +2009,23 @@ type AzureWorkloadIdentity struct {
 	// +required
 	// +kubebuilder:validation:MinLength=1
 	ClientID string `json:"clientId"`
+}
+
+// Validate semantically validates the given AzureWorkloadIdentity section.
+func (w *AzureWorkloadIdentity) Validate() error {
+	if w == nil {
+		return nil
+	}
+
+	if strings.TrimSpace(w.TenantID) == "" {
+		return fmt.Errorf("azureAD.workloadIdentity.tenantId is required")
+	}
+
+	if strings.TrimSpace(w.ClientID) == "" {
+		return fmt.Errorf("azureAD.workloadIdentity.clientId is required")
+	}
+
+	return nil
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples
