@@ -5516,6 +5516,7 @@ spec:
 
                                 For Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.
                               minLength: 1
+                              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
                               type: string
                           type: object
                         oauth:
@@ -5530,6 +5531,7 @@ spec:
                                 Active Directory application that is being used to
                                 authenticate.
                               minLength: 1
+                              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
                               type: string
                             clientSecret:
                               description: clientSecret specifies a key of a Secret
@@ -5562,7 +5564,7 @@ spec:
                                 Active Directory application that is being used to
                                 authenticate.
                               minLength: 1
-                              pattern: ^[0-9a-zA-Z-.]+$
+                              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
                               type: string
                           required:
                           - clientId
@@ -5581,7 +5583,7 @@ spec:
                               description: tenantId defines the tenant ID of the azure
                                 active directory application that is being used to
                                 authenticate.
-                              pattern: ^[0-9a-zA-Z-.]+$
+                              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
                               type: string
                           type: object
                         workloadIdentity:

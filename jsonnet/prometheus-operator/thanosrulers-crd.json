@@ -4200,6 +4200,7 @@
                                 "clientId": {
                                   "description": "clientId defines the Azure User-assigned Managed identity.\n\nFor Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.",
                                   "minLength": 1,
+                                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
                                   "type": "string"
                                 }
                               },
@@ -4211,6 +4212,7 @@
                                 "clientId": {
                                   "description": "clientId defines the clientId of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
+                                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
                                   "type": "string"
                                 },
                                 "clientSecret": {
@@ -4239,7 +4241,7 @@
                                 "tenantId": {
                                   "description": "tenantId is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
-                                  "pattern": "^[0-9a-zA-Z-.]+$",
+                                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
                                   "type": "string"
                                 }
                               },
@@ -4255,7 +4257,7 @@
                               "properties": {
                                 "tenantId": {
                                   "description": "tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.",
-                                  "pattern": "^[0-9a-zA-Z-.]+$",
+                                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
                                   "type": "string"
                                 }
                               },
