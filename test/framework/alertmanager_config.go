@@ -25,14 +25,14 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-func (f *Framework) WaitForAlertmanagerConfigCondition(ctx context.Context, pm *monitoringv1alpha1.AlertmanagerConfig, workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (f *Framework) WaitForAlertmanagerConfigCondition(ctx context.Context, alc *monitoringv1alpha1.AlertmanagerConfig, workload metav1.Object, resource string, conditionType monitoringv1.ConditionType, conditionStatus monitoringv1.ConditionStatus, timeout time.Duration) (*monitoringv1alpha1.AlertmanagerConfig, error) {
 	var current *monitoringv1alpha1.AlertmanagerConfig
 
 	if err := f.WaitForConfigResourceCondition(
 		ctx,
 		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
 			var err error
-			current, err = f.MonClientV1alpha1.AlertmanagerConfigs(pm.Namespace).Get(ctx, pm.Name, metav1.GetOptions{})
+			current, err = f.MonClientV1alpha1.AlertmanagerConfigs(alc.Namespace).Get(ctx, alc.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, err
 			}
@@ -44,19 +44,19 @@ func (f *Framework) WaitForAlertmanagerConfigCondition(ctx context.Context, pm *
 		conditionStatus,
 		timeout,
 	); err != nil {
-		return nil, fmt.Errorf("alertmanagerConfig status %v/%v failed to reach expected condition: %w", pm.Namespace, pm.Name, err)
+		return nil, fmt.Errorf("alertmanagerConfig status %v/%v failed to reach expected condition: %w", alc.Namespace, alc.Name, err)
 	}
 	return current, nil
 }
 
-func (f *Framework) WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx context.Context, pm *monitoringv1alpha1.AlertmanagerConfig, workload metav1.Object, resource string, timeout time.Duration) (*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (f *Framework) WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx context.Context, alc *monitoringv1alpha1.AlertmanagerConfig, workload metav1.Object, resource string, timeout time.Duration) (*monitoringv1alpha1.AlertmanagerConfig, error) {
 	var current *monitoringv1alpha1.AlertmanagerConfig
 
 	if err := f.WaitForConfigResWorkloadBindingCleanup(
 		ctx,
 		func(ctx context.Context) ([]monitoringv1.WorkloadBinding, error) {
 			var err error
-			current, err = f.MonClientV1alpha1.AlertmanagerConfigs(pm.Namespace).Get(ctx, pm.Name, metav1.GetOptions{})
+			current, err = f.MonClientV1alpha1.AlertmanagerConfigs(alc.Namespace).Get(ctx, alc.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, err
 			}
@@ -66,7 +66,7 @@ func (f *Framework) WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx context.
 		resource,
 		timeout,
 	); err != nil {
-		return nil, fmt.Errorf("alertmanagerConfig status %v/%v failed to reach expected condition: %w", pm.Namespace, pm.Name, err)
+		return nil, fmt.Errorf("alertmanagerConfig status %v/%v failed to reach expected condition: %w", alc.Namespace, alc.Name, err)
 	}
 	return current, nil
 }
