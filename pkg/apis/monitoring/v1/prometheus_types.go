@@ -108,7 +108,7 @@ type TopologySpreadConstraint struct {
 	AdditionalLabelSelectors *AdditionalLabelSelectors `json:"additionalLabelSelectors,omitempty"`
 }
 
-// +kubebuilder:validation:MinLength=1
+// +kubebuilder:validation:MinLength:=1
 type EnableFeature string
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
@@ -1927,7 +1927,6 @@ type AzureOAuth struct {
 	// clientId defines the clientId of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	ClientID string `json:"clientId"`
 	// clientSecret specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
 	// +required
@@ -1935,7 +1934,6 @@ type AzureOAuth struct {
 	// tenantId is the tenant ID of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	TenantID string `json:"tenantId"`
 }
 
@@ -1948,7 +1946,6 @@ type ManagedIdentity struct {
 	//
 	// +optional
 	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	ClientID *string `json:"clientId"`
 }
 
