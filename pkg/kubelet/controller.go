@@ -205,7 +205,7 @@ func New(
 		),
 	)
 
-	c.logger = logger.With("kubelet_object", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
+	c.logger = logger.With("kubeletObject", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
 
 	return c, nil
 }
