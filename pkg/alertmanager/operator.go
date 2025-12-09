@@ -959,7 +959,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
-	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs); err != nil {
+	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs.ValidResources()); err != nil {
 		return fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
 	}
 
@@ -1006,7 +1006,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -1058,13 +1058,18 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		}
 	}
 
-	var rejected int
-	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
+	var (
+		rejected int
+		valid    []string
+		res      = make(operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], len(amConfigs))
+	)
 
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
+		var reason string
 		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
+			reason = operator.InvalidConfiguration
 			c.logger.Warn(
 				"skipping alertmanagerconfig",
 				"error", err.Error(),
@@ -1074,16 +1079,14 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			)
 			eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
+		} else {
+			valid = append(valid, namespaceAndName)
 		}
 
-		res[namespaceAndName] = amc
+		res[namespaceAndName] = operator.NewTypedConfigurationResource(amc, err, reason, amc.GetGeneration())
 	}
 
-	amcKeys := []string{}
-	for k := range res {
-		amcKeys = append(amcKeys, k)
-	}
-	c.logger.Debug("selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
+	c.logger.Debug("selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(valid, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
 	if amKey, ok := c.accessor.MetaNamespaceKey(am); ok {
 		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
