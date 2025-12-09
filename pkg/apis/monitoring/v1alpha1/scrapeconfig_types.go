@@ -242,6 +242,9 @@ type ScrapeConfigSpec struct {
 	// ionosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
+	// awsSDConfigs defines a list of AWS service discovery
+	// +optional
+	AWSSDConfigs []AWSSDConfig `json:"awsSDConfigs,omitempty"`
 	// relabelings defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1522,4 +1525,73 @@ type IonosSDConfig struct {
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+}
+
+// AWSRole is the role of the AWS service to discover.
+// +kubebuilder:validation:Enum=ec2;ecs;lightsail
+type AWSRole string
+
+const (
+	AWSRoleEC2       AWSRole = "ec2"
+	AWSRoleECS       AWSRole = "ecs"
+	AWSRoleLightsail AWSRole = "lightsail"
+)
+
+// AWSSDConfig configures AWS service discovery (EC2, ECS, Lightsail).
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
+// +k8s:openapi-gen=true
+type AWSSDConfig struct {
+	// role specifies which AWS service to discover targets from.
+	// Must be one of: ec2, ecs, lightsail.
+	// +required
+	Role AWSRole `json:"role"`
+	// region is the AWS region. If blank, the region from the instance metadata is used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// endpoint is a custom AWS API endpoint to use.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// accessKey is the AWS API access key.
+	// +optional
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// secretKey is the AWS API secret key.
+	// +optional
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// profile is the named AWS profile to use for credentials.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Profile *string `json:"profile,omitempty"`
+	// roleARN defines an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	RoleARN *string `json:"roleARN,omitempty"`
+	// refreshInterval is the refresh interval for the target list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// port is the port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// filters is a list of EC2 filters to limit discovery (only for role: ec2).
+	// +optional
+	Filters Filters `json:"filters,omitempty"`
+	// clusters is a list of ECS cluster names to limit discovery (only for role: ecs).
+	// If empty, all clusters are scraped.
+	// +listType=set
+	// +optional
+	Clusters []string `json:"clusters,omitempty"`
+	// HTTP client configuration (proxy, TLS, etc.)
+	v1.ProxyConfig `json:",inline"`
+	// tlsConfig specifies TLS configuration settings.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// followRedirects configures whether HTTP requests follow redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 configures whether HTTP2 is enabled.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }

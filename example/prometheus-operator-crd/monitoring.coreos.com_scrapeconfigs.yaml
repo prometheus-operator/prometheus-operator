@@ -84,6 +84,363 @@ spec:
                       Default: "Bearer"
                     type: string
                 type: object
+              awsSDConfigs:
+                description: awsSDConfigs defines a list of AWS service discovery
+                items:
+                  description: |-
+                    AWSSDConfig configures AWS service discovery (EC2, ECS, Lightsail).
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
+                  properties:
+                    accessKey:
+                      description: accessKey is the AWS API access key.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          default: ""
+                          description: |-
+                            Name of the referent.
+                            This field is effectively required, but due to backwards compatibility is
+                            allowed to be empty. Instances of this type with an empty value here are
+                            almost certainly wrong.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    clusters:
+                      description: |-
+                        clusters is a list of ECS cluster names to limit discovery (only for role: ecs).
+                        If empty, all clusters are scraped.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: set
+                    enableHTTP2:
+                      description: enableHTTP2 configures whether HTTP2 is enabled.
+                      type: boolean
+                    endpoint:
+                      description: endpoint is a custom AWS API endpoint to use.
+                      minLength: 1
+                      type: string
+                    filters:
+                      description: 'filters is a list of EC2 filters to limit discovery
+                        (only for role: ec2).'
+                      items:
+                        description: Filter name and value pairs to limit the discovery
+                          process to a subset of available resources.
+                        properties:
+                          name:
+                            description: name of the Filter.
+                            type: string
+                          values:
+                            description: values defines values to filter on.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        required:
+                        - name
+                        - values
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
+                    followRedirects:
+                      description: followRedirects configures whether HTTP requests
+                        follow redirects.
+                      type: boolean
+                    noProxy:
+                      description: |-
+                        noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
+                        that should be excluded from proxying. IP and domain names can
+                        contain port numbers.
+
+                        It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                      type: string
+                    port:
+                      description: port is the port to scrape metrics from.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
+                      type: integer
+                    profile:
+                      description: profile is the named AWS profile to use for credentials.
+                      minLength: 1
+                      type: string
+                    proxyConnectHeader:
+                      additionalProperties:
+                        items:
+                          description: SecretKeySelector selects a key of a Secret.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        type: array
+                      description: |-
+                        proxyConnectHeader optionally specifies headers to send to
+                        proxies during CONNECT requests.
+
+                        It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    proxyFromEnvironment:
+                      description: |-
+                        proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+
+                        It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                      type: boolean
+                    proxyUrl:
+                      description: proxyUrl defines the HTTP proxy server to use.
+                      pattern: ^(http|https|socks5)://.+$
+                      type: string
+                    refreshInterval:
+                      description: refreshInterval is the refresh interval for the
+                        target list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    region:
+                      description: region is the AWS region. If blank, the region
+                        from the instance metadata is used.
+                      minLength: 1
+                      type: string
+                    role:
+                      description: |-
+                        role specifies which AWS service to discover targets from.
+                        Must be one of: ec2, ecs, lightsail.
+                      enum:
+                      - ec2
+                      - ecs
+                      - lightsail
+                      type: string
+                    roleARN:
+                      description: roleARN defines an alternative to using AWS API
+                        keys.
+                      minLength: 1
+                      type: string
+                    secretKey:
+                      description: secretKey is the AWS API secret key.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          default: ""
+                          description: |-
+                            Name of the referent.
+                            This field is effectively required, but due to backwards compatibility is
+                            allowed to be empty. Instances of this type with an empty value here are
+                            almost certainly wrong.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    tlsConfig:
+                      description: tlsConfig specifies TLS configuration settings.
+                      properties:
+                        ca:
+                          description: ca defines the Certificate authority used when
+                            verifying server certificates.
+                          properties:
+                            configMap:
+                              description: configMap defines the ConfigMap containing
+                                data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            secret:
+                              description: secret defines the Secret containing data
+                                to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
+                        cert:
+                          description: cert defines the Client certificate to present
+                            when doing client-authentication.
+                          properties:
+                            configMap:
+                              description: configMap defines the ConfigMap containing
+                                data to use for the targets.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            secret:
+                              description: secret defines the Secret containing data
+                                to use for the targets.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
+                        insecureSkipVerify:
+                          description: insecureSkipVerify defines how to disable target
+                            certificate validation.
+                          type: boolean
+                        keySecret:
+                          description: keySecret defines the Secret containing the
+                            client key file for the targets.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        maxVersion:
+                          description: |-
+                            maxVersion defines the maximum acceptable TLS version.
+
+                            It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
+                          enum:
+                          - TLS10
+                          - TLS11
+                          - TLS12
+                          - TLS13
+                          type: string
+                        minVersion:
+                          description: |-
+                            minVersion defines the minimum acceptable TLS version.
+
+                            It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
+                          enum:
+                          - TLS10
+                          - TLS11
+                          - TLS12
+                          - TLS13
+                          type: string
+                        serverName:
+                          description: serverName is used to verify the hostname for
+                            the targets.
+                          type: string
+                      type: object
+                  required:
+                  - role
+                  type: object
+                type: array
               azureSDConfigs:
                 description: azureSDConfigs defines a list of Azure service discovery
                   configurations.
