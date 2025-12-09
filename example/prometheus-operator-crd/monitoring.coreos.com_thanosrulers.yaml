@@ -4924,7 +4924,6 @@ spec:
                               description: tenantId defines the tenant ID of the azure
                                 active directory application that is being used to
                                 authenticate.
-                              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
                               type: string
                           type: object
                         workloadIdentity:

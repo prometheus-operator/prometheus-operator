@@ -1953,7 +1953,6 @@ type ManagedIdentity struct {
 type AzureSDK struct {
 	// tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.
 	// +optional
-	// +kubebuilder:validation:Pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 	TenantID *string `json:"tenantId,omitempty"`
 }
 
