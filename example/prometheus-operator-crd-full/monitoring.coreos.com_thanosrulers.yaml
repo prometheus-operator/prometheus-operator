@@ -4927,6 +4927,27 @@ spec:
                               pattern: ^[0-9a-zA-Z-.]+$
                               type: string
                           type: object
+                        workloadIdentity:
+                          description: |-
+                            workloadIdentity defines the Azure Workload Identity authentication.
+                            Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
+
+                            It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
+                          properties:
+                            clientId:
+                              description: clientId is the clientID of the Azure Active
+                                Directory application.
+                              minLength: 1
+                              type: string
+                            tenantId:
+                              description: tenantId is the tenant ID of the Azure
+                                Active Directory application.
+                              minLength: 1
+                              type: string
+                          required:
+                          - clientId
+                          - tenantId
+                          type: object
                       type: object
                     basicAuth:
                       description: |-
