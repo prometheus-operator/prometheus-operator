@@ -209,6 +209,10 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 			}
 		}
 
+		if err := endpoint.Validate(); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
 			if _, err := rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
