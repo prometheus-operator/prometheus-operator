@@ -7954,6 +7954,22 @@ Cannot be set at the same time as <code>oauth</code> or <code>managedIdentity</c
 <p>It requires Prometheus &gt;= v2.52.0 or Thanos &gt;= v0.36.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>workloadIdentity</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureWorkloadIdentity">
+AzureWorkloadIdentity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>workloadIdentity defines the Azure Workload Identity authentication.
+Cannot be set at the same time as <code>oauth</code>, <code>managedIdentity</code>, or <code>sdk</code>.</p>
+<p>It requires Prometheus &gt;= 3.7.0. Currently not supported by Thanos.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AzureOAuth">AzureOAuth
@@ -8035,6 +8051,46 @@ string
 <td>
 <em>(Optional)</em>
 <p>tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AzureWorkloadIdentity">AzureWorkloadIdentity
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AzureAD">AzureAD</a>)
+</p>
+<div>
+<p>AzureWorkloadIdentity defines the Azure Workload Identity authentication configuration.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>clientId is the clientID of the Azure Active Directory application.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tenantId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>tenantId is the tenant ID of the Azure Active Directory application.</p>
 </td>
 </tr>
 </tbody>
