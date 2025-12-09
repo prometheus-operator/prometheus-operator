@@ -109,7 +109,6 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 	}
 
 	if spec.AzureAD != nil {
-		// Validate AzureAD configuration
 		if err := spec.AzureAD.Validate(); err != nil {
 			return err
 		}
@@ -133,15 +132,6 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 			if err := cg.checkAzureADWorkloadIdentity(spec.AzureAD.WorkloadIdentity); err != nil {
 				return err
 			}
-
-			// ensure tenantId and clientId are valid UUIDs
-			if _, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.TenantID); err != nil {
-				return fmt.Errorf("the provided Azure Workload Identity tenantId is invalid")
-			}
-
-			if _, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.ClientID); err != nil {
-				return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
-			}
 		}
 	}
 
@@ -161,11 +151,21 @@ func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.Managed
 	return nil
 }
 
-func (cg *ConfigGenerator) checkAzureADWorkloadIdentity(_ *monitoringv1.AzureWorkloadIdentity) error {
+func (cg *ConfigGenerator) checkAzureADWorkloadIdentity(wi *monitoringv1.AzureWorkloadIdentity) error {
 	// Workload Identity is supported in Prometheus >= v3.7.0
 	if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
 		return fmt.Errorf("workloadIdentity: Azure Workload Identity is only supported with Prometheus >= 3.7.0, current = %s", cg.version.String())
 	}
+
+	// ensure tenantId and clientId are valid UUIDs
+	if _, err := uuid.Parse(wi.TenantID); err != nil {
+		return fmt.Errorf("the provided Azure Workload Identity tenantId is invalid")
+	}
+
+	if _, err := uuid.Parse(wi.ClientID); err != nil {
+		return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
+	}
+
 	return nil
 }
 
