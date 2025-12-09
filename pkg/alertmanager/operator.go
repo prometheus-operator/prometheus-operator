@@ -34,6 +34,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -79,6 +80,7 @@ type Config struct {
 // configurations.
 type Operator struct {
 	kclient    kubernetes.Interface
+	dclient    dynamic.Interface
 	mdClient   metadata.Interface
 	mclient    monitoringclient.Interface
 	ssarClient authv1.SelfSubjectAccessReviewInterface
@@ -714,6 +716,26 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if err != nil {
 		return fmt.Errorf("updating StatefulSet failed: %w", err)
+	}
+
+	// err = c.updateConfigResourcesStatus(ctx, am, amConfigs)
+
+	return nil
+}
+
+// updateConfigResourcesStatus updates the status of the selected configuration
+// resources (AlertmanagerConfigs).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitoringv1.Alertmanager, amConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig]) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
+
+	for key, configResource := range amConfigs {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
+		}
 	}
 
 	return nil
