@@ -2919,6 +2919,7 @@ func TestGenerateConfig(t *testing.T) {
 								},
 								Retry:  "5m",
 								Expire: "30s",
+								HTML:   ptr.To(true),
 							}},
 						}},
 					},
