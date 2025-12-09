@@ -619,7 +619,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
+	amVersion, err := c.getAlertmanagerVersion(am)
+	if err != nil {
+		return err
+	}
+
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, assetStore, amVersion)
+	if err != nil {
+		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
+	}
+
+	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore, amVersion, amConfigs.ValidResources()); err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
 	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
@@ -718,9 +728,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("updating StatefulSet failed: %w", err)
 	}
 
-	// err = c.updateConfigResourcesStatus(ctx, am, amConfigs)
-
-	return nil
+	err = c.updateConfigResourcesStatus(ctx, am, amConfigs)
+	return err
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
@@ -901,17 +910,21 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	return rawAlertmanagerConfig, secret.Data, nil
 }
 
-func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
+func (c *Operator) getAlertmanagerVersion(am *monitoringv1.Alertmanager) (semver.Version, error) {
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
-		return fmt.Errorf("failed to parse alertmanager version: %w", err)
+		return version, fmt.Errorf("failed to parse alertmanager version: %w", err)
 	}
 
 	if version.LT(semver.MustParse("0.15.0")) || version.Major > 0 {
-		return fmt.Errorf("unsupported Alertmanager version %q", amVersion)
+		return version, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
 	}
 
+	return version, nil
+}
+
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder, version semver.Version, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
 	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
@@ -930,11 +943,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 
 		return nil
-	}
-
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
-	if err != nil {
-		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
 	}
 
 	var (
@@ -981,7 +989,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
-	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs.ValidResources()); err != nil {
+	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs); err != nil {
 		return fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
 	}
 
@@ -1028,7 +1036,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder, amVersion semver.Version) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
