@@ -1295,6 +1295,9 @@ type RocketChatActionConfig struct {
 // alerts are already firing.
 // See https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule
 type InhibitRule struct {
+	// name is an optional name for the inhibition rule.
+	// +optional
+	Name *string `json:"name,omitempty"`
 	// targetMatch defines matchers that have to be fulfilled in the alerts to be muted.
 	// The operator enforces that the alert matches the resource's namespace.
 	// When these conditions are met, matching alerts will be inhibited (silenced).

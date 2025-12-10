@@ -56,6 +56,10 @@
                           },
                           "type": "array"
                         },
+                        "name": {
+                          "description": "name is an optional name for the inhibition rule.",
+                          "type": "string"
+                        },
                         "sourceMatch": {
                           "description": "sourceMatch defines matchers for which one or more alerts have to exist for the inhibition\nto take effect. The operator enforces that the alert matches the resource's namespace.\nThese are the \"trigger\" alerts that cause other alerts to be inhibited.",
                           "items": {

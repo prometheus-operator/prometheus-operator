@@ -19,6 +19,7 @@ package v1alpha1
 // InhibitRuleApplyConfiguration represents a declarative configuration of the InhibitRule type for use
 // with apply.
 type InhibitRuleApplyConfiguration struct {
+	Name        *string                     `json:"name,omitempty"`
 	TargetMatch []MatcherApplyConfiguration `json:"targetMatch,omitempty"`
 	SourceMatch []MatcherApplyConfiguration `json:"sourceMatch,omitempty"`
 	Equal       []string                    `json:"equal,omitempty"`
@@ -28,6 +29,14 @@ type InhibitRuleApplyConfiguration struct {
 // apply.
 func InhibitRule() *InhibitRuleApplyConfiguration {
 	return &InhibitRuleApplyConfiguration{}
+}
+
+// WithName sets the Name field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Name field is set to the value of the last call.
+func (b *InhibitRuleApplyConfiguration) WithName(value string) *InhibitRuleApplyConfiguration {
+	b.Name = &value
+	return b
 }
 
 // WithTargetMatch adds the given value to the TargetMatch field in the declarative configuration
