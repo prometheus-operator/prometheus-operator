@@ -12407,7 +12407,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 		expectedErr bool
 	}{
 		{
-			name: "ec2_sd_config_valid_with_api_keys",
+			name: "aws_sd_ec2_config_valid_with_api_keys",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
@@ -12430,10 +12430,10 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SDConfigValidAPIKeys.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSDConfigValidAPIKeys.golden",
 		},
 		{
-			name: "ec2_sd_config_valid_with_role_arn",
+			name: "aws_sd_ec2_config_valid_with_role_arn",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
@@ -12494,8 +12494,8 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			version: "2.2.0",
-			golden:  "ScrapeConfigSpecConfig_EC2SDConfigFilters_Unsupported_Version.golden",
+			version: "2.7.0",
+			golden:  "ScrapeConfigSpecConfig_AWSSDConfigFilters_Unsupported_Version.golden",
 		},
 		{
 			name: "ec2_sd_config_invalid",
@@ -12521,11 +12521,11 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "ec2_sd_config_empty",
+			name: "aws_sd_config_empty",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{},
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SDConfigEmpty.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSDConfigEmpty.golden",
 		},
 		{
 			name: "ec2_sd_config_proxyconfig",
