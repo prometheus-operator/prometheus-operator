@@ -149,6 +149,7 @@ type pagerdutyConfig struct {
 	Component      string            `yaml:"component,omitempty" json:"component,omitempty"`
 	Group          string            `yaml:"group,omitempty" json:"group,omitempty"`
 	Source         string            `yaml:"source,omitempty" json:"source,omitempty"`
+	Timeout        *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 type opsgenieConfig struct {
