@@ -1,4 +1,4 @@
-## 0.87.1 / 2025-12-09
+## 0.87.1 / 2025-12-10
 
 * [BUGFIX] Fix the generated Alertmanager configuration for `html` and `monospace` fields of `pushoverConfig` receiver in AlertmanagerConfig CRD. #8153
 
