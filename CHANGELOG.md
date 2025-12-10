@@ -2,6 +2,10 @@
 
 * [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
 
+## 0.87.1 / 2025-12-10
+
+* [BUGFIX] Fix the generated Alertmanager configuration for `html` and `monospace` fields of `pushoverConfig` receiver in AlertmanagerConfig CRD. #8153
+
 ## 0.87.0 / 2025-11-20
 
 * [FEATURE] Add status subresource for `PrometheusRule` custom resources (requires the `StatusForConfigurationResources` feature gate). #8069 #8086 #8024 #8005
