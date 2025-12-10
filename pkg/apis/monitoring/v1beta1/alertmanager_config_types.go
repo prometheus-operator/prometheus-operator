@@ -283,6 +283,10 @@ type PagerDutyConfig struct {
 	// source defines the unique location of the affected system.
 	// +optional
 	Source *string `json:"source,omitempty"`
+	// Timeout is the maximum time allowed to invoke the pagerduty
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
