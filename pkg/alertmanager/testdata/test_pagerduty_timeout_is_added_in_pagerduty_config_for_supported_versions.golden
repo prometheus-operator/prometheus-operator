@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  pagerduty_configs:
+  - timeout: 1m
+templates: []

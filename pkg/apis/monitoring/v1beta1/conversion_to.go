@@ -254,6 +254,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		PagerDutyLinkConfigs:  convertPagerDutyLinkConfigsTo(in.PagerDutyLinkConfigs),
 		HTTPConfig:            convertHTTPConfigTo(in.HTTPConfig),
 		Source:                in.Source,
+		Timeout:               in.Timeout,
 	}
 }
 
