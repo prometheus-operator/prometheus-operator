@@ -242,6 +242,11 @@ type ScrapeConfigSpec struct {
 	// ionosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
+	// awsSDConfigs defines a list of AWS service discovery configurations.
+	//
+	// It requires Prometheus >= 3.8.0.
+	// +optional
+	AWSSDConfigs []AWSSDConfig `json:"awsSDConfigs,omitempty"`
 	// relabelings defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1522,4 +1527,66 @@ type IonosSDConfig struct {
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+}
+
+// AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
+type AWSSDConfig struct {
+	// role defines the AWS service to collect metrics from.
+	// Support only ec2, lightsail or ecs.
+	// +required
+	// +kubebuilder:validation:Enum=ec2;lightsail;ecs
+	Role string `json:"role"`
+	// region defines the AWS region.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// accessKey defines the AWS API key.
+	// +optional
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// secretKey defines the AWS API secret.
+	// +optional
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// roleARN defines an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	RoleARN *string `json:"roleARN,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// filters can be used optionally to filter the instance list by other criteria.
+	// Available filter criteria can be found here:
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// It requires Prometheus >= v2.3.0
+	// +optional
+	Filters        Filters `json:"filters,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// profile defines Named AWS profile used to authenticate.
+	// +optional
+	Profile *string `json:"profile,omitempty"`
+	// clusters define the list of ECS cluster ARNs to discover.
+	// If empty, all clusters in the region are discovered.
+	// This can significantly improve performance when you only need to monitor specific clusters.
+	// +optional
+	Clusters []string `json:"clusters,omitempty"`
 }
