@@ -1095,6 +1095,7 @@ type WorkloadBinding struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
+	//nolint:kubeapilinter // changing to metav1.Condition would break compatibility
 	Conditions []ConfigResourceCondition `json:"conditions,omitempty"`
 }
 

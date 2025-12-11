@@ -34,6 +34,7 @@ linters:
               - "statusoptional"
               - "nophase"
               - "nonullable"
+              - "conditions"
             disable:
               - "*"
           lintersConfig:
