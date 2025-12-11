@@ -8,10 +8,16 @@ scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   aws_sd_configs:
   - role: ec2
+    proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: true
+    proxy_connect_header:
+      header:
+      - ""
     region: us-east-1
-    role_arn: arn:aws:iam::123456789:role/prometheus-role
     refresh_interval: 30s
-    port: 9100
+    follow_redirects: true
+    enable_http2: true
   relabel_configs:
   - source_labels:
     - job

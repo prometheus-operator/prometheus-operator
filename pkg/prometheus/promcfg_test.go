@@ -12498,10 +12498,11 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			golden:  "ScrapeConfigSpecConfig_AWSSDConfigFilters_Unsupported_Version.golden",
 		},
 		{
-			name: "ec2_sd_config_invalid",
+			name: "aws_sd_config_wrong_secret",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
+						Role:   "ec2",
 						Region: ptr.To("us-east-1"),
 						AccessKey: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -12528,10 +12529,11 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_AWSSDConfigEmpty.golden",
 		},
 		{
-			name: "ec2_sd_config_proxyconfig",
+			name: "aws_sd_config_proxyconfig",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
+						Role:   "ec2",
 						Region: ptr.To("us-east-1"),
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
@@ -12554,13 +12556,14 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SD_withProxyConfig.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSD_withProxyConfig.golden",
 		},
 		{
-			name: "ec2_sd_config_http_and_tls",
+			name: "aws_sd_config_http_and_tls",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
+						Role:   "ec2",
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
@@ -12591,8 +12594,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			version: "2.41.0",
-			golden:  "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig.golden",
+			golden: "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig.golden",
 		},
 		{
 			name: "ec2_sd_config_http_and_tls_unsupported_version",

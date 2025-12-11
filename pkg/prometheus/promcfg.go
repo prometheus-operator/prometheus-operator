@@ -4798,6 +4798,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		for i, config := range sc.Spec.AWSSDConfigs {
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
+			if config.Role != "" {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role",
+					Value: config.Role,
+				})
+			}
+
 			if config.Region != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "region",
