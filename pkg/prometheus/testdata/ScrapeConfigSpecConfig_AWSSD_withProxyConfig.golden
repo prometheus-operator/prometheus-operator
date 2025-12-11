@@ -7,7 +7,7 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   aws_sd_configs:
-  -  proxy_url: http://no-proxy.com
+  - proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
     proxy_from_environment: true
     proxy_connect_header:

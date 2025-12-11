@@ -12587,6 +12587,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
+						Role:   "ec2",
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
