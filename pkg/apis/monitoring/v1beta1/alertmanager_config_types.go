@@ -421,6 +421,11 @@ type SlackConfig struct {
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // Validate ensures SlackConfig is valid.

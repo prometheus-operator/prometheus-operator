@@ -6587,6 +6587,11 @@
                                 "description": "thumbURL defines the URL to an image file that will be displayed as a thumbnail\non the right side of the message attachment.",
                                 "type": "string"
                               },
+                              "timeout": {
+                                "description": "timeout defines the maximum time to wait for a webhook request to complete,\nbefore failing the request and allowing it to be retried.\nIt requires Alertmanager >= v0.30.0.",
+                                "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                                "type": "string"
+                              },
                               "title": {
                                 "description": "title defines the title text displayed in the Slack message attachment.",
                                 "type": "string"

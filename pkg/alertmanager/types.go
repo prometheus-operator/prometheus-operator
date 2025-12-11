@@ -209,6 +209,7 @@ type slackConfig struct {
 	LinkNames     bool              `yaml:"link_names,omitempty"`
 	MrkdwnIn      []string          `yaml:"mrkdwn_in,omitempty"`
 	Actions       []slackAction     `yaml:"actions,omitempty"`
+	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
 }
 
 type httpClientConfig struct {
