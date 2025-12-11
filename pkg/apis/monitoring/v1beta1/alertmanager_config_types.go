@@ -282,7 +282,7 @@ type PagerDutyConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
 	// +optional
-	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
