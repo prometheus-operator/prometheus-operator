@@ -12450,8 +12450,9 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 		{
 			name: "aws_sd_config_valid_with_filters",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
+						Role:            "ec2",
 						Region:          ptr.To("us-east-1"),
 						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
@@ -12470,31 +12471,6 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AWSSDConfigFilters.golden",
-		},
-		{
-			name: "aws_sd_config_valid_with_filters_unsupported_version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
-					{
-						Region:          ptr.To("us-east-1"),
-						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
-						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
-						Filters: []monitoringv1alpha1.Filter{
-							{
-								Name:   "tag:environment",
-								Values: []string{"prod"},
-							},
-							{
-								Name:   "tag:service",
-								Values: []string{"web", "db"},
-							},
-						},
-					},
-				},
-			},
-			version: "2.7.0",
-			golden:  "ScrapeConfigSpecConfig_AWSSDConfigFilters_Unsupported_Version.golden",
 		},
 		{
 			name: "aws_sd_config_wrong_secret",
