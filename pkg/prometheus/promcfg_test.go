@@ -12448,7 +12448,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_AWSSDConfigValidRoleARN.golden",
 		},
 		{
-			name: "ec2_sd_config_valid_with_filters",
+			name: "aws_sd_config_valid_with_filters",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
@@ -12469,11 +12469,10 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			version: "2.3.0",
-			golden:  "ScrapeConfigSpecConfig_SDConfigFilters.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSDConfigFilters.golden",
 		},
 		{
-			name: "ec2_sd_config_valid_with_filters_unsupported_version",
+			name: "aws_sd_config_valid_with_filters_unsupported_version",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
@@ -12642,8 +12641,22 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			version: "2.31.0",
-			golden:  "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig_Unsupported_Version.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig_Unsupported_Version.golden",
+		},
+		{
+			name: "aws_sd_config_ecs_cluster",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role: "ecs",
+						Clusters: []string{
+							"cluster-1",
+							"cluster-2",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig_Unsupported_Version.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

@@ -4878,6 +4878,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.TLSConfig != nil {
 				configs[i] = cgForHTTPClientConfig.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
+
+			if len(config.Clusters) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "clusters",
+					Value: config.Clusters,
+				})
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "aws_sd_configs",
