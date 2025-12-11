@@ -12585,7 +12585,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 		{
 			name: "aws_sd_config_http_and_tls_unsupported_version",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
 						Role:   "ec2",
 						Region: ptr.To("us-east-1"),
