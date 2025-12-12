@@ -3709,6 +3709,7 @@ spec:
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
+                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
@@ -4558,6 +4559,7 @@ spec:
                             type: string
                           url:
                             description: url defines the URL to send requests to.
+                            pattern: ^https?://.+$
                             type: string
                         type: object
                       type: array
@@ -15717,6 +15719,7 @@ spec:
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
+                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
@@ -16545,6 +16548,7 @@ spec:
                             type: string
                           url:
                             description: url defines the URL to send requests to.
+                            pattern: ^https?://.+$
                             type: string
                         type: object
                       type: array
