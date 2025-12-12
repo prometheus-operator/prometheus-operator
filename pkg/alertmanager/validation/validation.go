@@ -19,7 +19,19 @@ import (
 	"fmt"
 
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/common/model"
 )
+
+func ValidateNonZeroDuration(duration string) error {
+	d, err := model.ParseDuration(duration)
+	if err != nil {
+		return fmt.Errorf("invalid duration %q: %w", duration, err)
+	}
+	if d == 0 {
+		return fmt.Errorf("duration cannot be zero")
+	}
+	return nil
+}
 
 // ValidateURL against the config.URL
 // This could potentially become a regex and be validated via OpenAPI
