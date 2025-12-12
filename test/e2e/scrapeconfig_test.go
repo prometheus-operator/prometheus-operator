@@ -5169,4 +5169,15 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role: "none",
+				},
+			},
+		},
+		expectedError: true,
+	},
 }

@@ -12497,24 +12497,6 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "aws_sd_config_empty",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{},
-			},
-			expectedErr: true,
-		},
-		{
-			name: "aws_sd_config_unsupported_role",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
-					{
-						Role: "none",
-					},
-				},
-			},
-			expectedErr: true,
-		},
-		{
 			name: "aws_sd_config_proxyconfig",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
