@@ -108,6 +108,9 @@ func main() {
 	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
 		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
 
+	basicAuthUser := app.Flag("user", "Username for HTTP basic authentication").String()
+	basicAuthPassword := app.Flag("password", "Password for HTTP basic authentication").String()
+
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
@@ -173,7 +176,7 @@ func main() {
 			opts.ProcessName = *processName
 		default:
 			opts.ReloadURL = *reloadURL
-			opts.HTTPClient = createHTTPClient(reloadTimeout)
+			opts.HTTPClient = createHTTPClient(reloadTimeout, *basicAuthUser, *basicAuthPassword)
 		}
 
 		rel := reloader.New(
@@ -227,7 +230,18 @@ func main() {
 	}
 }
 
-func createHTTPClient(timeout *time.Duration) http.Client {
+type basicAuthRoundTripper struct {
+	username string
+	password string
+	next     http.RoundTripper
+}
+
+func (b *basicAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.SetBasicAuth(b.username, b.password)
+	return b.next.RoundTrip(req)
+}
+
+func createHTTPClient(timeout *time.Duration, username, password string) http.Client {
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
@@ -242,9 +256,18 @@ func createHTTPClient(timeout *time.Duration) http.Client {
 		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
 
+	var finalTransport http.RoundTripper = transport
+	if username != "" && password != "" {
+		finalTransport = &basicAuthRoundTripper{
+			username: username,
+			password: password,
+			next:     transport,
+		}
+	}
+
 	return http.Client{
 		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
-		Transport: transport,
+		Transport: finalTransport,
 	}
 }
 
