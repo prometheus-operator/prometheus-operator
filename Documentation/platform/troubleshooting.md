@@ -53,6 +53,7 @@ Example of Role definition required by the Prometheus operator's Service Account
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
+metadata:
   name: prometheus-operator-kubelet
 rules:
 - apiGroups:
@@ -72,6 +73,7 @@ Example of Role definition required by the Prometheus's Service Account to disco
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
+metadata:
   name: prometheus-kubelet
 rules:
 - apiGroups:

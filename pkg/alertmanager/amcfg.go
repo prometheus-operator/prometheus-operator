@@ -1283,6 +1283,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
+		HTML:          in.HTML,
+		Monospace:     in.Monospace,
 	}
 
 	if in.TTL != nil {
