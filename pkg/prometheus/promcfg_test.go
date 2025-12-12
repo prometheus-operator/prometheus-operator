@@ -12580,45 +12580,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig.golden",
-		},
-		{
-			name: "aws_sd_config_http_and_tls_unsupported_version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
-					{
-						Role:   "ec2",
-						Region: ptr.To("us-east-1"),
-						TLSConfig: &monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "ca",
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "cert",
-								},
-							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "tls",
-								},
-								Key: "private-key",
-							},
-						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-					},
-				},
-			},
-			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig_Unsupported_Version.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig.golden",
 		},
 		{
 			name: "aws_sd_config_ecs_cluster",
@@ -12633,7 +12595,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig_Unsupported_Version.golden",
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_ECS_clusters.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

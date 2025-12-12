@@ -1529,14 +1529,23 @@ type IonosSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 }
 
+// Service of the targets to retrieve. Must be `ec2`, `lightsail` or `ecs`.
+// +kubebuilder:validation:Enum=ec2;lightsail;ecs
+type AWSRole string
+
+const (
+	AWSRoleEC2       AWSRole = "ec2"
+	AWSRoleLightsail AWSRole = "lightsail"
+	AWSRoleECS       AWSRole = "ecs"
+)
+
 // AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
 type AWSSDConfig struct {
 	// role defines the AWS service to collect metrics from.
 	// Support only ec2, lightsail or ecs.
 	// +required
-	// +kubebuilder:validation:Enum=ec2;lightsail;ecs
-	Role string `json:"role"`
+	Role AWSRole `json:"role"`
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

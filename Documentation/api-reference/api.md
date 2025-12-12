@@ -24392,6 +24392,29 @@ More info:
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.AWSRole">AWSRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.AWSSDConfig">AWSSDConfig</a>)
+</p>
+<div>
+<p>Service of the targets to retrieve. Must be <code>ec2</code>, <code>lightsail</code> or <code>ecs</code>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;ec2&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;ecs&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;lightsail&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.AWSSDConfig">AWSSDConfig
 </h3>
 <p>
@@ -24413,7 +24436,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.AWSRole">
+AWSRole
+</a>
 </em>
 </td>
 <td>

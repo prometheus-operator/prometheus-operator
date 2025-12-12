@@ -4798,11 +4798,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		for i, config := range sc.Spec.AWSSDConfigs {
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
-			if config.Role != "" {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "role",
-					Value: config.Role,
-				})
+			switch config.Role {
+			case monitoringv1alpha1.AWSRoleEC2:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "ec2"})
+			case monitoringv1alpha1.AWSRoleLightsail:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "lightsail"})
+			case monitoringv1alpha1.AWSRoleECS:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "ecs"})
+			default:
+				cg.logger.Warn(fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Role)))
 			}
 
 			if config.Region != nil {

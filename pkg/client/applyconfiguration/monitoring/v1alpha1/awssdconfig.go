@@ -26,7 +26,7 @@ import (
 // AWSSDConfigApplyConfiguration represents a declarative configuration of the AWSSDConfig type for use
 // with apply.
 type AWSSDConfigApplyConfiguration struct {
-	Role                                                         *string                     `json:"role,omitempty"`
+	Role                                                         *monitoringv1alpha1.AWSRole `json:"role,omitempty"`
 	Region                                                       *string                     `json:"region,omitempty"`
 	AccessKey                                                    *v1.SecretKeySelector       `json:"accessKey,omitempty"`
 	SecretKey                                                    *v1.SecretKeySelector       `json:"secretKey,omitempty"`
@@ -51,7 +51,7 @@ func AWSSDConfig() *AWSSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *AWSSDConfigApplyConfiguration) WithRole(value string) *AWSSDConfigApplyConfiguration {
+func (b *AWSSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.AWSRole) *AWSSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }
