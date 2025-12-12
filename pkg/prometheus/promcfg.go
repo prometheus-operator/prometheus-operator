@@ -4806,7 +4806,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			case monitoringv1alpha1.AWSRoleECS:
 				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "ecs"})
 			default:
-				cg.logger.Warn(fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Role)))
+				cg.logger.Warn(fmt.Sprintf("ignoring role not supported by Prometheus: %s", string(config.Role)))
 			}
 
 			if config.Region != nil {
@@ -4884,10 +4884,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if len(config.Clusters) > 0 {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "clusters",
-					Value: config.Clusters,
-				})
+				switch config.Role {
+				case "ecs":
+					configs[i] = append(configs[i], yaml.MapItem{
+						Key:   "clusters",
+						Value: config.Clusters,
+					})
+				default:
+					cg.logger.Warn(fmt.Sprintf("ignoring clusters field not supported by role: %s", string(config.Role)))
+				}
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{

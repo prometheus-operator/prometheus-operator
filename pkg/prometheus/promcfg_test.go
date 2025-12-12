@@ -12565,7 +12565,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig.golden",
 		},
 		{
-			name: "aws_sd_config_ecs_cluster",
+			name: "aws_sd_config_ecs_clusters",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
@@ -12578,6 +12578,21 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AWSSD_with_ECS_clusters.golden",
+		},
+		{
+			name: "aws_sd_config_clusters_not_ecs",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role: "lightsail",
+						Clusters: []string{
+							"cluster-1",
+							"cluster-2",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_clusters_non_ECS.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
