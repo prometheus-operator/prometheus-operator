@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -81,16 +81,16 @@ func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
 				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{},
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					ConfigMap: &corev1.ConfigMapKeySelector{},
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "tls-cert",
 						},
 						Key: "tls.crt",
 					},
 				},
-				KeySecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				KeySecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "tls-cert",
 					},
 					Key: "tls.key",
@@ -216,11 +216,11 @@ func testAMStorageUpdate(t *testing.T) {
 							"test": "testAMStorageUpdate",
 						},
 					},
-					Spec: v1.PersistentVolumeClaimSpec{
-						AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-						Resources: v1.VolumeResourceRequirements{
-							Requests: v1.ResourceList{
-								v1.ResourceStorage: resource.MustParse("200Mi"),
+					Spec: corev1.PersistentVolumeClaimSpec{
+						AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("200Mi"),
 							},
 						},
 					},
@@ -246,11 +246,11 @@ func testAMStorageUpdate(t *testing.T) {
 							"test": "testAMStorageUpdate",
 						},
 					},
-					Spec: v1.PersistentVolumeClaimSpec{
+					Spec: corev1.PersistentVolumeClaimSpec{
 						StorageClassName: ptr.To("unknown-storage-class"),
-						Resources: v1.VolumeResourceRequirements{
-							Requests: v1.ResourceList{
-								v1.ResourceStorage: resource.MustParse("200Mi"),
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("200Mi"),
 							},
 						},
 					},
@@ -288,7 +288,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test-alertmanager", 1)
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", corev1.ServiceTypeClusterIP)
 
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
@@ -312,7 +312,7 @@ func testAMClusterInitialization(t *testing.T) {
 
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", corev1.ServiceTypeClusterIP)
 
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
@@ -379,23 +379,23 @@ func testAMClusterGossipSilences(t *testing.T) {
 			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
 				ServerTLS: monitoringv1.WebTLSConfig{
 					ClientCA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "ca.crt",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "cert.pem",
 						},
 					},
-					KeySecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: secretName,
 						},
 						Key: "key.pem",
@@ -404,23 +404,23 @@ func testAMClusterGossipSilences(t *testing.T) {
 				},
 				ClientTLS: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "ca.crt",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "cert.pem",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: secretName,
 						},
 						Key: "key.pem",
@@ -552,7 +552,7 @@ An Alert test
 </body>
 `
 
-	cfg := &v1.Secret{
+	cfg := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
@@ -563,7 +563,7 @@ An Alert test
 
 	templateFileKey := "test-emails.tmpl"
 	templateSecretFileKey := "test-emails-secret.tmpl"
-	templateCfg := &v1.ConfigMap{
+	templateCfg := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: templateResourceName,
 		},
@@ -571,7 +571,7 @@ An Alert test
 			templateFileKey: template,
 		},
 	}
-	templateSecret := &v1.Secret{
+	templateSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: templateResourceName,
 		},
@@ -676,7 +676,7 @@ An Alert test
 </body>
 `
 
-	cfg := &v1.Secret{
+	cfg := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
@@ -721,18 +721,18 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 					"app.kubernetes.io/name": "alertmanager-webhook",
 				},
 			},
-			Template: v1.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"app.kubernetes.io/name": "alertmanager-webhook",
 					},
 				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
 							Name:  "webhook-server",
 							Image: "quay.io/prometheus-operator/prometheus-alertmanager-test-webhook:latest",
-							Ports: []v1.ContainerPort{
+							Ports: []corev1.ContainerPort{
 								{
 									Name:          "web",
 									ContainerPort: 5001,
@@ -744,13 +744,13 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			},
 		},
 	}
-	whsvc := &v1.Service{
+	whsvc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "alertmanager-webhook",
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeClusterIP,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       5001,
@@ -776,8 +776,8 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	require.NoError(t, err)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "rolling-deploy", 3)
-	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
-	amcfg := &v1.Secret{
+	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", corev1.ServiceTypeClusterIP)
+	amcfg := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
@@ -1017,7 +1017,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// reuse the secret for pagerduty, wechat and sns
 	testingSecret := "testing-secret"
 	testingSecretKey := "testing-secret-key"
-	testingKeySecret := &v1.Secret{
+	testingKeySecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testingSecret,
 		},
@@ -1031,7 +1031,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// telegram secret
 	telegramTestingSecret := "telegram-testing-secret"
 	telegramTestingbotTokenKey := "telegram-testing-bottoken-key"
-	telegramTestingKeySecret := &v1.Secret{
+	telegramTestingKeySecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: telegramTestingSecret,
 		},
@@ -1042,7 +1042,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), telegramTestingKeySecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	apiKeySecret := &v1.Secret{
+	apiKeySecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "og-receiver-api-key",
 		},
@@ -1053,7 +1053,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), apiKeySecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	slackAPIURLSecret := &v1.Secret{
+	slackAPIURLSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "s-receiver-api-url",
 		},
@@ -1065,7 +1065,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	require.NoError(t, err)
 
 	webexAPIToken := "super-secret-token"
-	webexAPITokenSecret := &v1.Secret{
+	webexAPITokenSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "webex-api-token",
 		},
@@ -1090,24 +1090,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-					APIKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "og-receiver-api-key",
 						},
 						Key: "api-key",
 					},
 				}},
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
 					},
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-					APIURL: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APIURL: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "s-receiver-api-url",
 						},
 						Key: "api-url",
@@ -1135,8 +1135,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					}("http://test.url"),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
-					APISecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APISecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1150,14 +1150,14 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					Smarthost: "example.com:25",
 					From:      "admin@example.com",
 					To:        "test@example.com",
-					AuthPassword: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
 					},
-					AuthSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1171,8 +1171,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					HTML: ptr.To(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
-					APIKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1180,14 +1180,14 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					RoutingKey: "abc",
 				}},
 				PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
-					UserKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					UserKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
 					},
-					Token: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1195,8 +1195,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
 					APIURL: "https://telegram.api.url",
-					BotToken: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					BotToken: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: telegramTestingSecret,
 						},
 						Key: telegramTestingbotTokenKey,
@@ -1208,14 +1208,14 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						ApiURL: "https://sns.us-east-2.amazonaws.com",
 						Sigv4: &monitoringv1.Sigv4{
 							Region: "us-east-2",
-							AccessKey: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							AccessKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: testingSecret,
 								},
 								Key: testingSecretKey,
 							},
-							SecretKey: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							SecretKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: testingSecret,
 								},
 								Key: testingSecretKey,
@@ -1237,8 +1237,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 						Authorization: &monitoringv1.SafeAuthorization{
 							Type: "Bearer",
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webex-api-token",
 								},
 								Key: "api-token",
@@ -1399,8 +1399,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: "non-existing-key",
@@ -1428,8 +1428,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1459,8 +1459,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: "non-existing-key",
@@ -1692,7 +1692,7 @@ inhibit_rules:
   - test!=dropped
   - expect=~this-value
 `
-	amConfig := &v1.Secret{
+	amConfig := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amconfig",
 		},
@@ -1767,15 +1767,15 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				},
 				Hello:        ptr.To("smtp.example.org"),
 				AuthUsername: ptr.To("dev@smtp.example.org"),
-				AuthPassword: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				AuthPassword: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "password",
 				},
 				AuthIdentity: ptr.To("dev@smtp.example.org"),
-				AuthSecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				AuthSecret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "secret",
@@ -1787,15 +1787,15 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				HTTPConfig: monitoringv1.HTTPConfig{
 					OAuth2: &monitoringv1.OAuth2{
 						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webhook-client-id",
 								},
 								Key: "test",
 							},
 						},
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "webhook-client-secret",
 							},
 							Key: "test",
@@ -1812,16 +1812,16 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
-				Secret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				Secret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "template1",
 					},
 					Key: "template1.tmpl",
 				},
 			},
 			{
-				ConfigMap: &v1.ConfigMapKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				ConfigMap: &corev1.ConfigMapKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "template2",
 					},
 					Key: "template2.tmpl",
@@ -1830,7 +1830,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		},
 	}
 
-	cm := v1.ConfigMap{
+	cm := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "webhook-client-id",
 			Namespace: ns,
@@ -1839,7 +1839,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"test": "clientID",
 		},
 	}
-	smtp := v1.Secret{
+	smtp := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "smtp-auth",
 			Namespace: ns,
@@ -1849,7 +1849,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"secret":   []byte("secret"),
 		},
 	}
-	sec := v1.Secret{
+	sec := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "webhook-client-secret",
 			Namespace: ns,
@@ -1858,7 +1858,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"test": []byte("clientSecret"),
 		},
 	}
-	tpl1 := v1.Secret{
+	tpl1 := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "template1",
 		},
@@ -1866,7 +1866,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"template1.tmpl": []byte(`template1`),
 		},
 	}
-	tpl2 := v1.ConfigMap{
+	tpl2 := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "template2",
 		},
@@ -2120,15 +2120,15 @@ func testAMWeb(t *testing.T) {
 	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
-				KeySecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				KeySecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "web-tls",
 					},
 					Key: "tls.key",
 				},
 				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "web-tls",
 						},
 						Key: "tls.crt",
@@ -2692,14 +2692,14 @@ func testAlertManagerServiceName(t *testing.T) {
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 	name := "test-servicename"
 
-	svc := &v1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-service", name),
 			Namespace: ns,
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
 				{
 					Name: "web",
 					Port: 9090,

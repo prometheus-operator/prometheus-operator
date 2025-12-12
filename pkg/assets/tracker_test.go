@@ -19,20 +19,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestHasRefTo(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Pod{
+		&corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "pod",
 				Namespace: "ns1",
 			},
 		},
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -41,7 +41,7 @@ func TestHasRefTo(t *testing.T) {
 				"key1": []byte("val1"),
 			},
 		},
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret2",
 				Namespace: "ns1",
@@ -50,7 +50,7 @@ func TestHasRefTo(t *testing.T) {
 				"key1": []byte("val1"),
 			},
 		},
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm",
 				Namespace: "ns1",
@@ -69,8 +69,8 @@ func TestHasRefTo(t *testing.T) {
 	_, err := store.GetSecretKey(
 		context.Background(),
 		"ns1",
-		v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "secret",
 			},
 			Key: "key1",
@@ -81,8 +81,8 @@ func TestHasRefTo(t *testing.T) {
 	_, err = store.GetSecretKey(
 		context.Background(),
 		"ns1",
-		v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "nosecret",
 			},
 			Key: "key1",
@@ -93,8 +93,8 @@ func TestHasRefTo(t *testing.T) {
 	_, err = store.GetConfigMapKey(
 		context.Background(),
 		"ns1",
-		v1.ConfigMapKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		corev1.ConfigMapKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "cm",
 			},
 			Key: "cmCA",
@@ -105,8 +105,8 @@ func TestHasRefTo(t *testing.T) {
 	_, err = store.GetConfigMapKey(
 		context.Background(),
 		"ns1",
-		v1.ConfigMapKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		corev1.ConfigMapKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "nocm",
 			},
 			Key: "key1",
@@ -122,7 +122,7 @@ func TestHasRefTo(t *testing.T) {
 	_, err = c.CoreV1().Secrets("ns1").Get(context.Background(), "nosecret", metav1.GetOptions{})
 	require.Error(t, err)
 	require.True(t, refTracker.Has(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nosecret",
 				Namespace: "ns1",
@@ -137,7 +137,7 @@ func TestHasRefTo(t *testing.T) {
 	_, err = c.CoreV1().Secrets("ns1").Get(context.Background(), "nocm", metav1.GetOptions{})
 	require.Error(t, err)
 	require.True(t, refTracker.Has(
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nocm",
 				Namespace: "ns1",

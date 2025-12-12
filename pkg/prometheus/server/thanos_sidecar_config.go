@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -34,7 +34,7 @@ const (
 // buildPrometheusHTTPClientConfigSecret returns a kubernetes secret with the HTTP configuration for the Thanos sidecar
 // to communicated with prometheus server.
 // https://thanos.io/tip/components/sidecar.md/#prometheus-http-client
-func buildPrometheusHTTPClientConfigSecret(p *monitoringv1.Prometheus) (*v1.Secret, error) {
+func buildPrometheusHTTPClientConfigSecret(p *monitoringv1.Prometheus) (*corev1.Secret, error) {
 	dataYaml := yaml.MapSlice{}
 	dataYaml = append(dataYaml, yaml.MapItem{
 		Key: "tls_config",
@@ -51,7 +51,7 @@ func buildPrometheusHTTPClientConfigSecret(p *monitoringv1.Prometheus) (*v1.Secr
 		return nil, err
 	}
 
-	return &v1.Secret{
+	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      thanosPrometheusHTTPClientConfigSecretName(p),
 			Namespace: p.Namespace,

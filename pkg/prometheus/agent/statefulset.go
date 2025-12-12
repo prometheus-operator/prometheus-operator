@@ -19,7 +19,7 @@ import (
 	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -86,25 +86,25 @@ func makeStatefulSet(
 	storageSpec := cpf.Storage
 	switch {
 	case storageSpec == nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: prompkg.VolumeName(p),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		})
 
 	case storageSpec.EmptyDir != nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: prompkg.VolumeName(p),
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				EmptyDir: storageSpec.EmptyDir,
 			},
 		})
 
 	case storageSpec.Ephemeral != nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: prompkg.VolumeName(p),
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				Ephemeral: storageSpec.Ephemeral,
 			},
 		})
@@ -115,7 +115,7 @@ func makeStatefulSet(
 			pvcTemplate.Name = prompkg.VolumeName(p)
 		}
 		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			pvcTemplate.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 		} else {
 			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
 		}
@@ -202,7 +202,7 @@ func makeStatefulSetSpec(
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
-	var additionalContainers, operatorInitContainers []v1.Container
+	var additionalContainers, operatorInitContainers []corev1.Container
 
 	var watchedDirectories []string
 
@@ -227,7 +227,7 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	operatorContainers := append([]v1.Container{
+	operatorContainers := append([]corev1.Container{
 		{
 			Name:                     "prometheus",
 			Image:                    pImagePath,
@@ -239,12 +239,12 @@ func makeStatefulSetSpec(
 			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                cpf.Resources,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
+			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &corev1.SecurityContext{
 				ReadOnlyRootFilesystem:   ptr.To(true),
 				AllowPrivilegeEscalation: ptr.To(false),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
 				},
 			},
 		},
@@ -264,7 +264,7 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	spec := v1.PodSpec{
+	spec := corev1.PodSpec{
 		ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
 		Containers:                    containers,
 		InitContainers:                initContainers,
@@ -285,7 +285,7 @@ func makeStatefulSetSpec(
 	}
 
 	if cpf.HostNetwork {
-		spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+		spec.DNSPolicy = corev1.DNSClusterFirstWithHostNet
 	}
 	k8sutil.UpdateDNSPolicy(&spec, cpf.DNSPolicy)
 	k8sutil.UpdateDNSConfig(&spec, cpf.DNSConfig)
@@ -307,7 +307,7 @@ func makeStatefulSetSpec(
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
-		Template: v1.PodTemplateSpec{
+		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
 				Annotations: podAnnotations,

@@ -27,10 +27,10 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
@@ -58,7 +58,7 @@ const (
 // maximum `Data` size of a ConfigMap seems to differ between environments.
 // This is probably due to different meta data sizes which count into the
 // overall maximum size of a ConfigMap. Thereby lets leave a large buffer.
-var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
+var MaxConfigMapDataSize = int(float64(corev1.MaxSecretSize) * 0.5)
 
 // PrometheusRuleSelector selects PrometheusRule resources and translates them
 // to Prometheus/Thanos configuration format.
@@ -282,7 +282,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
+			prs.eventRecorder.Eventf(promRule, corev1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			reason = InvalidConfigurationEvent
 		} else {
 			marshalRules[ruleName] = content
@@ -315,7 +315,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 type PrometheusRuleSyncer struct {
 	namePrefix string
 	opts       []ObjectOption
-	cmClient   clientv1.ConfigMapInterface
+	cmClient   typedcorev1.ConfigMapInterface
 	cmSelector labels.Set
 
 	logger *slog.Logger
@@ -324,7 +324,7 @@ type PrometheusRuleSyncer struct {
 func NewPrometheusRuleSyncer(
 	logger *slog.Logger,
 	namePrefix string,
-	cmClient clientv1.ConfigMapInterface,
+	cmClient typedcorev1.ConfigMapInterface,
 	cmSelector labels.Set,
 	options []ObjectOption,
 ) *PrometheusRuleSyncer {
@@ -414,7 +414,7 @@ func (prs *PrometheusRuleSyncer) Sync(ctx context.Context, rules map[string]stri
 	return configMapNames(configMaps), nil
 }
 
-func configMapNames(cms []v1.ConfigMap) []string {
+func configMapNames(cms []corev1.ConfigMap) []string {
 	return slices.Sorted(slices.Values(slices.Collect(func(yield func(string) bool) {
 		for _, cm := range cms {
 			if !yield(cm.Name) {
@@ -438,7 +438,7 @@ type bucket struct {
 // simplicity should be sufficient.
 //
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string) ([]v1.ConfigMap, error) {
+func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string) ([]corev1.ConfigMap, error) {
 	var (
 		i       int
 		buckets = []bucket{{rules: map[string]string{}}}
@@ -456,9 +456,9 @@ func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string
 		buckets[i].size += len(rules[filename])
 	}
 
-	configMaps := make([]v1.ConfigMap, 0, len(buckets))
+	configMaps := make([]corev1.ConfigMap, 0, len(buckets))
 	for i, bucket := range buckets {
-		cm := v1.ConfigMap{
+		cm := corev1.ConfigMap{
 			Data: bucket.rules,
 		}
 

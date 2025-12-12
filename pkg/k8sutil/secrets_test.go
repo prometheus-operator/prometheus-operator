@@ -21,7 +21,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
@@ -43,7 +42,7 @@ func TestLoadSecretRef(t *testing.T) {
 
 	for _, tc := range []struct {
 		name     string
-		ref      *v1.SecretKeySelector
+		ref      *corev1.SecretKeySelector
 		expected []byte
 		err      bool
 	}{
@@ -52,8 +51,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "valid ref",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret",
 				},
 				Key: "key1",
@@ -62,8 +61,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing secret",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret2",
 				},
 				Key: "key1",
@@ -72,8 +71,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing key",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret",
 				},
 				Key: "key2",
@@ -82,8 +81,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing optional secret",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret2",
 				},
 				Key:      "key1",
@@ -93,8 +92,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing optional key",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret",
 				},
 				Key:      "key2",

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -57,9 +57,9 @@ func (f *Framework) MakeBasicPrometheusAgent(ns, name, group string, replicas in
 					},
 				},
 				ServiceAccountName: "prometheus",
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("400Mi"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
 			},
@@ -79,9 +79,9 @@ func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitori
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Version:            operator.DefaultPrometheusVersion,
 				ServiceAccountName: "prometheus",
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("400Mi"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
 				PodMonitorSelector: &metav1.LabelSelector{

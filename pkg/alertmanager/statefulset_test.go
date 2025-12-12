@@ -24,7 +24,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -179,8 +179,8 @@ func TestStatefulSetPVC(t *testing.T) {
 		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
 			Annotations: annotations,
 		},
-		Spec: v1.PersistentVolumeClaimSpec{
-			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 			StorageClassName: &storageClass,
 		},
 	}
@@ -210,8 +210,8 @@ func TestStatefulEmptyDir(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	emptyDir := v1.EmptyDirVolumeSource{
-		Medium: v1.StorageMediumMemory,
+	emptyDir := corev1.EmptyDirVolumeSource{
+		Medium: corev1.StorageMediumMemory,
 	}
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
@@ -242,10 +242,10 @@ func TestStatefulSetEphemeral(t *testing.T) {
 
 	storageClass := "storageclass"
 
-	ephemeral := v1.EphemeralVolumeSource{
-		VolumeClaimTemplate: &v1.PersistentVolumeClaimTemplate{
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+	ephemeral := corev1.EphemeralVolumeSource{
+		VolumeClaimTemplate: &corev1.PersistentVolumeClaimTemplate{
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 				StorageClassName: &storageClass,
 			},
 		},
@@ -307,14 +307,14 @@ func TestListenTLS(t *testing.T) {
 			Web: &monitoringv1.AlertmanagerWebSpec{
 				WebConfigFileFields: monitoringv1.WebConfigFileFields{
 					TLSConfig: &monitoringv1.WebTLSConfig{
-						KeySecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						KeySecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "some-secret",
 							},
 						},
 						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "some-configmap",
 								},
 							},
@@ -326,9 +326,9 @@ func TestListenTLS(t *testing.T) {
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
-	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
-		return v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
+	expectedProbeHandler := func(probePath string) corev1.ProbeHandler {
+		return corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
 				Path:   probePath,
 				Port:   intstr.FromString("web"),
 				Scheme: "HTTPS",
@@ -337,7 +337,7 @@ func TestListenTLS(t *testing.T) {
 	}
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := &v1.Probe{
+	expectedLivenessProbe := &corev1.Probe{
 		ProbeHandler:     expectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		FailureThreshold: 10,
@@ -345,7 +345,7 @@ func TestListenTLS(t *testing.T) {
 	require.Equal(t, expectedLivenessProbe, actualLivenessProbe, "Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
+	expectedReadinessProbe := &corev1.Probe{
 		ProbeHandler:        expectedProbeHandler("/-/ready"),
 		InitialDelaySeconds: 3,
 		TimeoutSeconds:      3,
@@ -761,8 +761,8 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 			AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 				Templates: []monitoringv1.SecretOrConfigMap{
 					{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "template1",
 							},
 							Key: "template1.tmpl",
@@ -1005,7 +1005,7 @@ func TestTerminationPolicy(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
-		require.Equal(t, v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy, "Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
+		require.Equal(t, corev1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy, "Unexpected TermintationMessagePolicy. Expected %v got %v", corev1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
 	}
 }
 
@@ -1091,28 +1091,28 @@ func TestPodTemplateConfig(t *testing.T) {
 	nodeSelector := map[string]string{
 		"foo": "bar",
 	}
-	affinity := v1.Affinity{
-		NodeAffinity: &v1.NodeAffinity{},
-		PodAffinity: &v1.PodAffinity{
-			PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+	affinity := corev1.Affinity{
+		NodeAffinity: &corev1.NodeAffinity{},
+		PodAffinity: &corev1.PodAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
 				{
-					PodAffinityTerm: v1.PodAffinityTerm{
+					PodAffinityTerm: corev1.PodAffinityTerm{
 						Namespaces: []string{"foo"},
 					},
 					Weight: 100,
 				},
 			},
 		},
-		PodAntiAffinity: &v1.PodAntiAffinity{},
+		PodAntiAffinity: &corev1.PodAntiAffinity{},
 	}
 
-	tolerations := []v1.Toleration{
+	tolerations := []corev1.Toleration{
 		{
 			Key: "key",
 		},
 	}
 	userid := int64(1234)
-	securityContext := v1.PodSecurityContext{
+	securityContext := corev1.PodSecurityContext{
 		RunAsUser: &userid,
 	}
 	priorityClassName := "foo"
@@ -1123,12 +1123,12 @@ func TestPodTemplateConfig(t *testing.T) {
 			IP:        "1.1.1.1",
 		},
 	}
-	imagePullSecrets := []v1.LocalObjectReference{
+	imagePullSecrets := []corev1.LocalObjectReference{
 		{
 			Name: "registry-secret",
 		},
 	}
-	imagePullPolicy := v1.PullAlways
+	imagePullPolicy := corev1.PullAlways
 	hostUsers := true
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
@@ -1281,16 +1281,16 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Templates: []monitoringv1.SecretOrConfigMap{
 							{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "template1",
 									},
 									Key: "template1.tmpl",
 								},
 							},
 							{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "template2",
 									},
 									Key: "template1.tmpl",
@@ -1309,16 +1309,16 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Templates: []monitoringv1.SecretOrConfigMap{
 							{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "template1",
 									},
 									Key: "template1.tmpl",
 								},
 							},
 							{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "template2",
 									},
 									Key: "template2.tmpl",
@@ -1337,8 +1337,8 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Templates: []monitoringv1.SecretOrConfigMap{
 							{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "template1",
 									},
 									Key: "template1.tmpl",
@@ -1465,12 +1465,12 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
-	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+	require.Equal(t, corev1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
 	require.Equal(t,
-		&v1.PodDNSConfig{
+		&corev1.PodDNSConfig{
 			Nameservers: []string{"8.8.8.8"},
 			Searches:    []string{"custom.search"},
-			Options: []v1.PodDNSConfigOption{
+			Options: []corev1.PodDNSConfigOption{
 				{
 					Name:  "ndots",
 					Value: ptr.To("5"),
