@@ -540,6 +540,7 @@ type AlertmanagerStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	// +optional
+	//nolint:kubeapilinter // changing to metav1.Condition would break compatibility
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
