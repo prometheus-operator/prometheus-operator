@@ -12593,6 +12593,17 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AWSSD_with_clusters_non_ECS.golden",
+		},
+		{
+			name: "aws_sd_config_version_not_supported",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role: "ec2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_version_not_supported.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{

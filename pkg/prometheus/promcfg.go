@@ -4894,10 +4894,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				}
 			}
 		}
-		cfg = append(cfg, yaml.MapItem{
-			Key:   "aws_sd_configs",
-			Value: configs,
-		})
+		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "aws_sd_configs", configs)
 	}
 
 	if len(sc.Spec.RelabelConfigs) > 0 {
