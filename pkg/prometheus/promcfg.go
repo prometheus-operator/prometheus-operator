@@ -4885,7 +4885,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			if len(config.Clusters) > 0 {
 				switch config.Role {
-				case "ecs":
+				case monitoringv1alpha1.AWSRoleECS:
 					configs[i] = append(configs[i], yaml.MapItem{
 						Key:   "clusters",
 						Value: config.Clusters,
