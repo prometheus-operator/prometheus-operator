@@ -12603,7 +12603,8 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_AWSSD_version_not_supported.golden",
+			version: "3.7.0",
+			golden:  "ScrapeConfigSpecConfig_AWSSD_version_not_supported.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
