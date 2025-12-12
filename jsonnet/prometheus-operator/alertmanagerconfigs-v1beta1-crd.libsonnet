@@ -112,27 +112,24 @@
                         description: 'DiscordConfig configures notifications via Discord.\nSee https://prometheus.io/docs/alerting/latest/configuration/#discord_config',
                         properties: {
                           apiURL: {
-                            description: "apiURL defines the secret's key that contains the Discord webhook URL.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
+                            description: "apiURL defines the secret's key that contains the Discord webhook URL.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.\nEither `apiURL` or `webhookURLFile` is required.",
                             properties: {
                               key: {
-                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                minLength: 1,
                                 type: 'string',
                               },
                               name: {
-                                default: '',
-                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                description: "name defines the name of the secret in the object's namespace to select from.",
+                                minLength: 1,
                                 type: 'string',
-                              },
-                              optional: {
-                                description: 'Specify whether the Secret or its key must be defined',
-                                type: 'boolean',
                               },
                             },
                             required: [
                               'key',
+                              'name',
                             ],
                             type: 'object',
-                            'x-kubernetes-map-type': 'atomic',
                           },
                           avatarURL: {
                             description: 'avatarURL defines the avatar url of the message sender.',
@@ -799,10 +796,11 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          webhookURLFile: {
+                            description: 'webhookURLFile defines the file to read the Discord webhook URL from.\nIt is mutually exclusive with `apiURL`.\nEither `apiURL` or `webhookURLFile` is required.',
+                            type: 'string',
+                          },
                         },
-                        required: [
-                          'apiURL',
-                        ],
                         type: 'object',
                       },
                       type: 'array',
