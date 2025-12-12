@@ -27440,6 +27440,18 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#inhibit_r
 <tbody>
 <tr>
 <td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>name is an optional name for the inhibition rule.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>targetMatch</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.Matcher">
@@ -36915,6 +36927,18 @@ See <a href="https://prometheus.io/docs/alerting/latest/configuration/#inhibit_r
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>name is an optional name for the inhibition rule.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>targetMatch</code><br/>

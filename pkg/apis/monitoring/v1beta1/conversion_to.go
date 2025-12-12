@@ -659,6 +659,7 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 				TargetMatch: convertMatchersTo(in.TargetMatch),
 				SourceMatch: convertMatchersTo(in.SourceMatch),
 				Equal:       in.Equal,
+				Name:        in.Name,
 			},
 		)
 

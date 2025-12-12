@@ -92,6 +92,7 @@ type route struct {
 }
 
 type inhibitRule struct {
+	Name           *string           `yaml:"name,omitempty" json:"name,omitempty"`
 	TargetMatch    map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
 	TargetMatchRE  map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
 	TargetMatchers []string          `yaml:"target_matchers,omitempty" json:"target_matchers,omitempty"`

@@ -62,6 +62,9 @@ spec:
                       items:
                         type: string
                       type: array
+                    name:
+                      description: name is an optional name for the inhibition rule.
+                      type: string
                     sourceMatch:
                       description: |-
                         sourceMatch defines matchers for which one or more alerts have to exist for the inhibition
@@ -12216,6 +12219,9 @@ spec:
                       items:
                         type: string
                       type: array
+                    name:
+                      description: name is an optional name for the inhibition rule.
+                      type: string
                     sourceMatch:
                       description: |-
                         sourceMatch defines matchers for which one or more alerts have to exist for the inhibition

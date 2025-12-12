@@ -663,6 +663,7 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 				TargetMatch: convertMatchersFrom(in.TargetMatch),
 				SourceMatch: convertMatchersFrom(in.SourceMatch),
 				Equal:       in.Equal,
+				Name:        in.Name,
 			},
 		)
 	}

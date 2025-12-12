@@ -1495,6 +1495,7 @@ func (cb *ConfigBuilder) convertInhibitRule(in *monitoringv1alpha1.InhibitRule) 
 	targetMatchers, targetMatch, targetMatchRE := cb.convertMatchersV2(in.TargetMatch)
 
 	return &inhibitRule{
+		Name:           in.Name,
 		SourceMatch:    sourceMatch,
 		SourceMatchRE:  sourceMatchRE,
 		SourceMatchers: sourceMatchers,
@@ -2735,6 +2736,13 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+
+	if ir.Name != nil && lessThanV0_30 {
+		msg := "'name' in inhibit_rule supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		ir.Name = nil
+	}
 
 	if !matchersV2Allowed {
 		// check if rule has provided invalid syntax and error if true
