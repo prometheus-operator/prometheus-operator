@@ -4884,13 +4884,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if len(config.Clusters) > 0 {
-				switch config.Role {
-				case monitoringv1alpha1.AWSRoleECS:
+				if config.Role == monitoringv1alpha1.AWSRoleECS {
 					configs[i] = append(configs[i], yaml.MapItem{
 						Key:   "clusters",
 						Value: config.Clusters,
 					})
-				default:
+				} else {
 					cg.logger.Warn(fmt.Sprintf("ignoring clusters field not supported by role: %s", string(config.Role)))
 				}
 			}
