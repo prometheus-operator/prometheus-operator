@@ -109,20 +109,8 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 	}
 
 	if spec.AzureAD != nil {
-		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil && spec.AzureAD.SDK == nil {
-			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth or Azure SDK in the Azure AD config")
-		}
-
-		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.OAuth != nil {
-			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure OAuth in the Azure AD config")
-		}
-
-		if spec.AzureAD.OAuth != nil && spec.AzureAD.SDK != nil {
-			return fmt.Errorf("cannot provide both Azure OAuth and Azure SDK in the Azure AD config")
-		}
-
-		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.SDK != nil {
-			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
+		if err := spec.AzureAD.Validate(); err != nil {
+			return err
 		}
 
 		// check azure managed identity client id
@@ -138,6 +126,13 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
 			}
 		}
+
+		// validate workload identity
+		if spec.AzureAD.WorkloadIdentity != nil {
+			if err := cg.checkAzureADWorkloadIdentity(spec.AzureAD.WorkloadIdentity); err != nil {
+				return err
+			}
+		}
 	}
 
 	return spec.Validate()
@@ -151,6 +146,24 @@ func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.Managed
 
 	if ptr.Deref(mid.ClientID, "") == "" {
 		return fmt.Errorf("managedIdentidy: clientId is required with Prometheus < 3.5.0, current = %s", cg.version.String())
+	}
+
+	return nil
+}
+
+func (cg *ConfigGenerator) checkAzureADWorkloadIdentity(wi *monitoringv1.AzureWorkloadIdentity) error {
+	// Workload Identity is supported in Prometheus >= v3.7.0
+	if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
+		return fmt.Errorf("workloadIdentity: Azure Workload Identity is only supported with Prometheus >= 3.7.0, current = %s", cg.version.String())
+	}
+
+	// ensure tenantId and clientId are valid UUIDs
+	if _, err := uuid.Parse(wi.TenantID); err != nil {
+		return fmt.Errorf("the provided Azure Workload Identity tenantId is invalid")
+	}
+
+	if _, err := uuid.Parse(wi.ClientID); err != nil {
+		return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
 	}
 
 	return nil

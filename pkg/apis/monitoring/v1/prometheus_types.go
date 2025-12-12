@@ -311,7 +311,7 @@ type CommonPrometheusFields struct {
 	// scrapeInterval defines interval between consecutive scrapes.
 	//
 	// Default: "30s"
-	// +kubebuilder:default:="30s"
+	// +kubebuilder:default="30s"
 	// +optional
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// scrapeTimeout defines the number of seconds to wait until a scrape request times out.
@@ -366,7 +366,7 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v2.54.0.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +listType:=set
+	// +listType=set
 	// +optional
 	RemoteWriteReceiverMessageVersions []RemoteWriteMessageVersion `json:"remoteWriteReceiverMessageVersions,omitempty"`
 
@@ -378,7 +378,7 @@ type CommonPrometheusFields struct {
 	//
 	// For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/
 	//
-	// +listType:=set
+	// +listType=set
 	// +optional
 	EnableFeatures []EnableFeature `json:"enableFeatures,omitempty"`
 
@@ -449,7 +449,7 @@ type CommonPrometheusFields struct {
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
-	// +listType:=set
+	// +listType=set
 	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// configMaps defines a list of ConfigMaps in the same namespace as the Prometheus
@@ -578,7 +578,7 @@ type CommonPrometheusFields struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// portName used for the pods and governing service.
 	// Default: "web"
-	// +kubebuilder:default:="web"
+	// +kubebuilder:default="web"
 	// +optional
 	PortName string `json:"portName,omitempty"`
 
@@ -790,7 +790,7 @@ type CommonPrometheusFields struct {
 	//
 	// If unset, pods will be considered available as soon as they are ready.
 	//
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 
@@ -987,7 +987,7 @@ type CommonPrometheusFields struct {
 	//
 	// Defaults to 600 seconds.
 	//
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
@@ -1280,7 +1280,7 @@ type PrometheusSpec struct {
 
 	// evaluationInterval defines the interval between rule evaluations.
 	// Default: "30s"
-	// +kubebuilder:default:="30s"
+	// +kubebuilder:default="30s"
 	// +optional
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
@@ -1337,7 +1337,7 @@ type PrometheusTracingConfig struct {
 	ClientType *string `json:"clientType"`
 
 	// endpoint to send the traces to. Should be provided in format <host>:<port>.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Endpoint string `json:"endpoint"`
 
@@ -1455,7 +1455,7 @@ type QuerySpec struct {
 	// +optional
 	LookbackDelta *string `json:"lookbackDelta,omitempty"`
 	// maxConcurrency defines the number of concurrent queries that can be run at once.
-	// +kubebuilder:validation:Minimum:=1
+	// +kubebuilder:validation:Minimum=1
 	// +optional
 	MaxConcurrency *int32 `json:"maxConcurrency,omitempty"`
 	// maxSamples defines the maximum number of samples a single query can load into memory. Note that
@@ -1479,7 +1479,7 @@ type PrometheusWebSpec struct {
 
 	// maxConnections defines the maximum number of simultaneous connections
 	// A zero value means that Prometheus doesn't accept any incoming connection.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	MaxConnections *int32 `json:"maxConnections,omitempty"`
 }
@@ -1611,7 +1611,7 @@ type ThanosSpec struct {
 	// set to a multiple of 120 times your longest scrape or rule interval. For
 	// example, 30s * 120 = 1h.
 	//
-	// +kubebuilder:default:="2h"
+	// +kubebuilder:default="2h"
 	// +optional
 	BlockDuration Duration `json:"blockSize,omitempty"`
 
@@ -1901,11 +1901,11 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// managedIdentity defines the Azure User-assigned Managed identity.
-	// Cannot be set at the same time as `oauth` or `sdk`.
+	// Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
 	// +optional
 	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
 	// oauth defines the oauth config that is being used to authenticate.
-	// Cannot be set at the same time as `managedIdentity` or `sdk`.
+	// Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
 	//
@@ -1913,11 +1913,18 @@ type AzureAD struct {
 	OAuth *AzureOAuth `json:"oauth,omitempty"`
 	// sdk defines the Azure SDK config that is being used to authenticate.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-	// Cannot be set at the same time as `oauth` or `managedIdentity`.
+	// Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
 	// +optional
 	SDK *AzureSDK `json:"sdk,omitempty"`
+	// workloadIdentity defines the Azure Workload Identity config that is being used to authenticate.
+	// Cannot be set at the same time as `oauth`, `managedIdentity` or `sdk`.
+	//
+	// It requires Prometheus >= v3.7.0.
+	//
+	// +optional
+	WorkloadIdentity *AzureWorkloadIdentity `json:"workloadIdentity,omitempty"`
 }
 
 // AzureOAuth defines the Azure OAuth settings.
@@ -1933,7 +1940,6 @@ type AzureOAuth struct {
 	// tenantId is the tenant ID of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
 	TenantID string `json:"tenantId"`
 }
 
@@ -1953,8 +1959,77 @@ type ManagedIdentity struct {
 type AzureSDK struct {
 	// tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.
 	// +optional
-	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
 	TenantID *string `json:"tenantId,omitempty"`
+}
+
+// Validate semantically validates the given AzureAD section.
+func (a *AzureAD) Validate() error {
+	if a == nil {
+		return nil
+	}
+
+	// Check that at least one authentication method is provided
+	authMethods := 0
+	if a.ManagedIdentity != nil {
+		authMethods++
+	}
+	if a.OAuth != nil {
+		authMethods++
+	}
+	if a.SDK != nil {
+		authMethods++
+	}
+	if a.WorkloadIdentity != nil {
+		authMethods++
+	}
+
+	if authMethods == 0 {
+		return fmt.Errorf("must provide Azure Managed Identity, Azure OAuth, Azure SDK, or Azure Workload Identity in the Azure AD config")
+	}
+
+	if authMethods > 1 {
+		return fmt.Errorf("cannot provide multiple Azure authentication methods (managedIdentity, oauth, sdk, workloadIdentity) at the same time, only one must be defined")
+	}
+
+	// Validate workloadIdentity fields if provided
+	if a.WorkloadIdentity != nil {
+		if err := a.WorkloadIdentity.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// AzureWorkloadIdentity defines the configuration for Azure Workload Identity authentication.
+// +k8s:openapi-gen=true
+type AzureWorkloadIdentity struct {
+	// tenantId is the tenant ID of the Azure Active Directory application.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern="^[0-9a-zA-Z-.]+$"
+	TenantID string `json:"tenantId"`
+	// clientId is the client ID of the Azure Active Directory application.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	ClientID string `json:"clientId"`
+}
+
+// Validate semantically validates the given AzureWorkloadIdentity section.
+func (w *AzureWorkloadIdentity) Validate() error {
+	if w == nil {
+		return nil
+	}
+
+	if strings.TrimSpace(w.TenantID) == "" {
+		return fmt.Errorf("azureAD.workloadIdentity.tenantId is required")
+	}
+
+	if strings.TrimSpace(w.ClientID) == "" {
+		return fmt.Errorf("azureAD.workloadIdentity.clientId is required")
+	}
+
+	return nil
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples
