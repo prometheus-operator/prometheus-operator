@@ -386,6 +386,7 @@ func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsTo(in.Actions),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		Timeout:      in.Timeout,
 	}
 }
 
