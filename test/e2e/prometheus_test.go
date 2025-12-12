@@ -1150,15 +1150,15 @@ func testPromReloadConfig(t *testing.T) {
 			p := framework.MakeBasicPrometheus(ns, name, name, 1)
 			p.Spec.ServiceMonitorSelector = nil
 			p.Spec.PodMonitorSelector = nil
-			p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.AdditionalScrapeConfigs = &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: fmt.Sprintf("additional-config-%s", name),
 				},
 				Key: "config.yaml",
 			}
 			p.Spec.ReloadStrategy = ptr.To(tc.reloadStrategy)
 
-			svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+			svc := framework.MakePrometheusService(p.Name, "not-relevant", corev1.ServiceTypeClusterIP)
 
 			cfg := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
@@ -3486,14 +3486,14 @@ func testPromSecurePodMonitor(t *testing.T) {
 				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 					HTTPConfig: monitoringv1.HTTPConfig{
 						BasicAuth: &monitoringv1.BasicAuth{
-							Username: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Username: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: name,
 								},
 								Key: "user",
 							},
-							Password: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Password: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: name,
 								},
 								Key: "password",
@@ -3512,8 +3512,8 @@ func testPromSecurePodMonitor(t *testing.T) {
 				Port: ptr.To("web"),
 				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 					HTTPConfig: monitoringv1.HTTPConfig{
-						BearerTokenSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						BearerTokenSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: name,
 							},
 							Key: "bearer-token",
@@ -3536,23 +3536,23 @@ func testPromSecurePodMonitor(t *testing.T) {
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							InsecureSkipVerify: ptr.To(true),
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: name,
 									},
 									Key: "cert.pem",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: name,
 									},
 									Key: "cert.pem",
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							KeySecret: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: name,
 								},
 								Key: "key.pem",
@@ -3573,23 +3573,23 @@ func testPromSecurePodMonitor(t *testing.T) {
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							InsecureSkipVerify: ptr.To(true),
 							CA: monitoringv1.SecretOrConfigMap{
-								ConfigMap: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: name,
 									},
 									Key: "cert.pem",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								ConfigMap: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: name,
 									},
 									Key: "cert.pem",
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							KeySecret: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: name,
 								},
 								Key: "key.pem",

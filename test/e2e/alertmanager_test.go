@@ -1787,15 +1787,15 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				HTTPConfig: monitoringv1.HTTPConfig{
 					OAuth2: &monitoringv1.OAuth2{
 						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webhook-client-id",
 								},
 								Key: "test",
 							},
 						},
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "webhook-client-secret",
 							},
 							Key: "test",
