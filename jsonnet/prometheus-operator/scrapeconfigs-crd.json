@@ -6474,8 +6474,12 @@
                         "attachMetadata": {
                           "description": "attachMetadata defines the metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 when using the `Pod` role and\nPrometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.",
                           "properties": {
+                            "namespace": {
+                              "description": "namespace when set to true, Prometheus attaches namespace metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Namespaces` objects.\n\nOnly valid for pod, endpoints, endpointslice, service, ingress.\n\nIt requires Prometheus >= v3.6.0.",
+                              "type": "boolean"
+                            },
                             "node": {
-                              "description": "node attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.",
+                              "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
                               "type": "boolean"
                             }
                           },
