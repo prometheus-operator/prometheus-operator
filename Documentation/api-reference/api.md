@@ -28969,10 +28969,9 @@ Deprecated: for AlertManager &gt;= v0.22.0, <code>matchType</code> should be use
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
-<p>MattermostAttachmentConfig configures notifications via RocketChat.
+<p>MattermostAttachmentConfig configures attachmeent parameters for the notifications.
 For more information, please refer to the Mattermost document:
-<a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a>
-It requires Alertmanager &gt;= 0.30.0.</p>
+<a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a></p>
 </div>
 <table>
 <thead>
@@ -29052,7 +29051,9 @@ It will be included in a small section at the top of the attachment.</p>
 <td>
 <code>authorLink</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -29182,8 +29183,7 @@ URL
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
 </p>
 <div>
-<p>MattermostConfig configures notifications via Mattermost.
-It requires Alertmanager &gt;= 0.30.0.</p>
+<p>MattermostConfig defines actions for Mattermost messages.</p>
 </div>
 <table>
 <thead>
@@ -29308,7 +29308,7 @@ MattermostPropsConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>props</p>
+<p>props defines the extra information to be sent to Mattermost.</p>
 </td>
 </tr>
 <tr>
@@ -29322,7 +29322,7 @@ MattermostPriorityConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>priority</p>
+<p>priority defines the priority parameters of the message.</p>
 </td>
 </tr>
 <tr>
@@ -29371,6 +29371,7 @@ Supported values are: <code>Urgent</code>, <code>Important</code> and <code>Stan
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
+<p>MattermostPriorityConfig configures the parameters related to the priority of the message.</p>
 </div>
 <table>
 <thead>
@@ -29435,8 +29436,7 @@ every five minutes until they acknowledge the message.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
-<p>MattermostPropsConfig configures notifications via RocketChat.
-It requires Alertmanager &gt;= 0.30.0.</p>
+<p>MattermostPropsConfig configures extra information to be sent to Mattermost.</p>
 </div>
 <table>
 <thead>
@@ -37794,10 +37794,9 @@ Valid values: &ldquo;=&rdquo; (equality), &ldquo;!=&rdquo; (inequality), &ldquo;
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
-<p>MattermostAttachmentConfig configures notifications via RocketChat.
+<p>MattermostAttachmentConfig configures attachmeent parameters for the notifications.
 For more information, please refer to the Mattermost document:
-<a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a>
-It requires Alertmanager &gt;= 0.30.0.</p>
+<a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a></p>
 </div>
 <table>
 <thead>
@@ -37877,7 +37876,9 @@ It will be included in a small section at the top of the attachment.</p>
 <td>
 <code>authorLink</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -38007,8 +38008,7 @@ URL
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
 </p>
 <div>
-<p>MattermostConfig configures notifications via Mattermost.
-It requires Alertmanager &gt;= 0.30.0.</p>
+<p>MattermostConfig defines actions for Mattermost messages.</p>
 </div>
 <table>
 <thead>
@@ -38133,7 +38133,7 @@ MattermostPropsConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>props</p>
+<p>props defines the extra information to be sent to Mattermost.</p>
 </td>
 </tr>
 <tr>
@@ -38147,7 +38147,7 @@ MattermostPriorityConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>priority</p>
+<p>priority defines the priority parameters of the message.</p>
 </td>
 </tr>
 <tr>
@@ -38196,6 +38196,7 @@ Supported values are: <code>Urgent</code>, <code>Important</code> and <code>Stan
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
+<p>MattermostPriorityConfig configures the parameters related to the priority of the message.</p>
 </div>
 <table>
 <thead>
@@ -38260,8 +38261,7 @@ every five minutes until they acknowledge the message.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
-<p>MattermostPropsConfig configures notifications via RocketChat.
-It requires Alertmanager &gt;= 0.30.0.</p>
+<p>MattermostPropsConfig configures extra information to be sent to Mattermost.</p>
 </div>
 <table>
 <thead>

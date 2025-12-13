@@ -28,7 +28,7 @@ type MattermostAttachmentConfigApplyConfiguration struct {
 	Pretext    *string                        `json:"pretext,omitempty"`
 	Text       *string                        `json:"text,omitempty"`
 	AuthorName *string                        `json:"authorName,omitempty"`
-	AuthorLink *string                        `json:"authorLink,omitempty"`
+	AuthorLink *monitoringv1alpha1.URL        `json:"authorLink,omitempty"`
 	AuthorIcon *monitoringv1alpha1.URL        `json:"authorIcon,omitempty"`
 	Title      *string                        `json:"title,omitempty"`
 	TitleLink  *monitoringv1alpha1.URL        `json:"titleLink,omitempty"`
@@ -88,7 +88,7 @@ func (b *MattermostAttachmentConfigApplyConfiguration) WithAuthorName(value stri
 // WithAuthorLink sets the AuthorLink field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AuthorLink field is set to the value of the last call.
-func (b *MattermostAttachmentConfigApplyConfiguration) WithAuthorLink(value string) *MattermostAttachmentConfigApplyConfiguration {
+func (b *MattermostAttachmentConfigApplyConfiguration) WithAuthorLink(value monitoringv1alpha1.URL) *MattermostAttachmentConfigApplyConfiguration {
 	b.AuthorLink = &value
 	return b
 }

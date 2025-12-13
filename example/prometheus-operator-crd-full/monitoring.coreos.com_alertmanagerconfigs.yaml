@@ -1307,9 +1307,8 @@ spec:
                         mattermostConfigs defines the list of Mattermost configurations.
                         It requires Alertmanager >= 0.30.0.
                       items:
-                        description: |-
-                          MattermostConfig configures notifications via Mattermost.
-                          It requires Alertmanager >= 0.30.0.
+                        description: MattermostConfig defines actions for Mattermost
+                          messages.
                         properties:
                           attachments:
                             description: |-
@@ -1317,10 +1316,9 @@ spec:
                               It is for compatibility with Slack.
                             items:
                               description: |-
-                                MattermostAttachmentConfig configures notifications via RocketChat.
+                                MattermostAttachmentConfig configures attachmeent parameters for the notifications.
                                 For more information, please refer to the Mattermost document:
                                 https://developers.mattermost.com/integrate/reference/message-attachments/
-                                It requires Alertmanager >= 0.30.0.
                               properties:
                                 authorIcon:
                                   description: authorIcon defines an optional URL
@@ -1332,6 +1330,7 @@ spec:
                                   description: |-
                                     authorLink defines optional URL used to hyperlink the author_name.
                                     If no author_name is specified, this field does nothing.
+                                  pattern: ^https?://.+$
                                   type: string
                                 authorName:
                                   description: |-
@@ -2151,7 +2150,8 @@ spec:
                             pattern: ^https?://.+$
                             type: string
                           priority:
-                            description: priority
+                            description: priority defines the priority parameters
+                              of the message.
                             properties:
                               persistentNotifications:
                                 description: |-
@@ -2186,7 +2186,8 @@ spec:
                                 type: boolean
                             type: object
                           props:
-                            description: props
+                            description: props defines the extra information to be
+                              sent to Mattermost.
                             properties:
                               card:
                                 description: |-
@@ -2237,6 +2238,7 @@ spec:
                             x-kubernetes-map-type: atomic
                         required:
                         - text
+                        - webhookURL
                         type: object
                       type: array
                     msteamsConfigs:
@@ -14285,9 +14287,8 @@ spec:
                         mattermostConfigs defines the list of Mattermost configurations.
                         It requires Alertmanager >= 0.30.0.
                       items:
-                        description: |-
-                          MattermostConfig configures notifications via Mattermost.
-                          It requires Alertmanager >= 0.30.0.
+                        description: MattermostConfig defines actions for Mattermost
+                          messages.
                         properties:
                           attachments:
                             description: |-
@@ -14295,10 +14296,9 @@ spec:
                               It is for compatibility with Slack.
                             items:
                               description: |-
-                                MattermostAttachmentConfig configures notifications via RocketChat.
+                                MattermostAttachmentConfig configures attachmeent parameters for the notifications.
                                 For more information, please refer to the Mattermost document:
                                 https://developers.mattermost.com/integrate/reference/message-attachments/
-                                It requires Alertmanager >= 0.30.0.
                               properties:
                                 authorIcon:
                                   description: authorIcon defines an optional URL
@@ -14310,6 +14310,7 @@ spec:
                                   description: |-
                                     authorLink defines optional URL used to hyperlink the author_name.
                                     If no author_name is specified, this field does nothing.
+                                  pattern: ^https?://.+$
                                   type: string
                                 authorName:
                                   description: |-
@@ -15122,7 +15123,8 @@ spec:
                             pattern: ^https?://.+$
                             type: string
                           priority:
-                            description: priority
+                            description: priority defines the priority parameters
+                              of the message.
                             properties:
                               persistentNotifications:
                                 description: |-
@@ -15157,7 +15159,8 @@ spec:
                                 type: boolean
                             type: object
                           props:
-                            description: props
+                            description: props defines the extra information to be
+                              sent to Mattermost.
                             properties:
                               card:
                                 description: |-
@@ -15208,6 +15211,7 @@ spec:
                             x-kubernetes-map-type: atomic
                         required:
                         - text
+                        - webhookURL
                         type: object
                       type: array
                     msteamsConfigs:

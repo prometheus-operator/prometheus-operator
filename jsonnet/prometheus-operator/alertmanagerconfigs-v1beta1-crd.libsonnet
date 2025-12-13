@@ -1084,12 +1084,12 @@
                     mattermostConfigs: {
                       description: 'mattermostConfigs defines the list of Mattermost configurations.\nIt requires Alertmanager >= 0.30.0.',
                       items: {
-                        description: 'MattermostConfig configures notifications via Mattermost.\nIt requires Alertmanager >= 0.30.0.',
+                        description: 'MattermostConfig defines actions for Mattermost messages.',
                         properties: {
                           attachments: {
                             description: 'attachments define the message attachments used for richer formatting options.\nIt is for compatibility with Slack.',
                             items: {
-                              description: 'MattermostAttachmentConfig configures notifications via RocketChat.\nFor more information, please refer to the Mattermost document:\nhttps://developers.mattermost.com/integrate/reference/message-attachments/\nIt requires Alertmanager >= 0.30.0.',
+                              description: 'MattermostAttachmentConfig configures attachmeent parameters for the notifications.\nFor more information, please refer to the Mattermost document:\nhttps://developers.mattermost.com/integrate/reference/message-attachments/',
                               properties: {
                                 authorIcon: {
                                   description: "authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.",
@@ -1098,6 +1098,7 @@
                                 },
                                 authorLink: {
                                   description: 'authorLink defines optional URL used to hyperlink the author_name.\nIf no author_name is specified, this field does nothing.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 authorName: {
@@ -1834,7 +1835,7 @@
                             type: 'string',
                           },
                           priority: {
-                            description: 'priority',
+                            description: 'priority defines the priority parameters of the message.',
                             properties: {
                               persistentNotifications: {
                                 description: 'persistentNotification defines whether the message notification will be persisted.\n\nThis can be used only with the `Urgent`` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
@@ -1858,7 +1859,7 @@
                             type: 'object',
                           },
                           props: {
-                            description: 'props',
+                            description: 'props defines the extra information to be sent to Mattermost.',
                             properties: {
                               card: {
                                 description: 'card allows for extra information (Markdown-formatted text)\nto be sent to Mattermost that will only be displayed in the RHS panel\nafter a user selects the info icon displayed alongside the post.',
@@ -1906,6 +1907,7 @@
                         },
                         required: [
                           'text',
+                          'webhookURL',
                         ],
                         type: 'object',
                       },
