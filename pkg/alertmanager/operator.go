@@ -1249,6 +1249,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkMattermostConfigs(ctx, receiver.MattermostConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

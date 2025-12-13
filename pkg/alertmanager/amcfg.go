@@ -1528,7 +1528,7 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 	}
 
 	if in.IconEmoji != nil {
-		out.IconURL = string(*in.IconEmoji)
+		out.IconURL = *in.IconEmoji
 	}
 
 	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
@@ -1569,13 +1569,21 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			out.Attachments[i].TitleLink = string(*c.TitleLink)
 		}
 
-		// Fields
-		/*
+		if l := len(c.Fields); l > 0 {
+			fields := make([]slackField, l)
+			for i, f := range c.Fields {
+				field := slackField{
+					Title: f.Title,
+					Value: f.Value,
+				}
 
-			// fields defines a list of Slack fields that are sent with each notification.
-			// +optional
-			Fields []SlackField `json:"fields,omitempty"`
-		*/
+				if f.Short != nil {
+					field.Short = *f.Short
+				}
+				fields[i] = field
+			}
+			out.Attachments[i].Fields = fields
+		}
 
 		if c.ThumbURL != nil {
 			out.Attachments[i].ThumbURL = string(*c.ThumbURL)

@@ -115,6 +115,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
 
+		if err := validateMattermostConfigs(receiver.MattermostConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'mattermostConfig' - receiver %s: %w", receiver.Name, err)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -377,6 +381,22 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func validateMattermostConfigs(configs []monitoringv1alpha1.MattermostConfig) error {
+	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+
+		if config.IconURL != nil {
+			if _, err := validation.ValidateURL(string(*config.IconURL)); err != nil {
+				return fmt.Errorf("invalid 'iconURL': %w", err)
+			}
 		}
 	}
 
