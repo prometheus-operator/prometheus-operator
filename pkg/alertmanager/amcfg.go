@@ -770,6 +770,18 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var mattermostConfigs []*mattermostConfig
+	if l := len(in.MattermostConfigs); l > 0 {
+		mattermostConfigs = make([]*mattermostConfig, l)
+		for i := range in.RocketChatConfigs {
+			receiver, err := cb.convertMattermostConfig(ctx, in.MattermostConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("MattermostConfig[%d]: %w", i, err)
+			}
+			mattermostConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:              makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:   opsgenieConfigs,
@@ -787,6 +799,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		MSTeamsConfigs:    msTeamsConfigs,
 		MSTeamsV2Configs:  msTeamsV2Configs,
 		RocketChatConfigs: rocketchatConfigs,
+		MattermostConfigs: mattermostConfigs,
 	}, nil
 }
 
@@ -955,21 +968,11 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.Actions = actions
 	}
 
-	if l := len(in.Fields); l > 0 {
-		fields := make([]slackField, l)
-		for i, f := range in.Fields {
-			field := slackField{
-				Title: f.Title,
-				Value: f.Value,
-			}
-
-			if f.Short != nil {
-				field.Short = *f.Short
-			}
-			fields[i] = field
-		}
-		out.Fields = fields
+	fields, err := cb.convertSlackFields(in.Fields)
+	if err != nil {
+		return nil, err
 	}
+	out.Fields = fields
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
@@ -978,6 +981,29 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	out.HTTPConfig = httpConfig
 
 	return out, nil
+}
+
+func (cb *ConfigBuilder) convertSlackFields(in []monitoringv1alpha1.SlackField) ([]slackField, error) {
+	l := len(in)
+
+	if l == 0 {
+		return nil, nil
+	}
+
+	fields := make([]slackField, l)
+	for i, f := range in {
+		field := slackField{
+			Title: f.Title,
+			Value: f.Value,
+		}
+
+		if f.Short != nil {
+			field.Short = *f.Short
+		}
+		fields[i] = field
+	}
+
+	return fields, nil
 }
 
 func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
@@ -1479,6 +1505,124 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 		}
 
 		out.WebhookURL = webHookURL
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitoringv1alpha1.MattermostConfig, crKey types.NamespacedName) (*mattermostConfig, error) {
+	out := &mattermostConfig{
+		SendResolved: in.SendResolved,
+		Text:         in.Text,
+	}
+
+	webhookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Mattermost webhookURL: %w", err)
+	}
+	out.WebhookURL = webhookURL
+
+	if in.Channel != nil {
+		out.Channel = *in.Channel
+	}
+
+	if in.Username != nil {
+		out.Username = *in.Username
+	}
+
+	if in.IconURL != nil {
+		out.IconURL = string(*in.IconURL)
+	}
+
+	if in.IconEmoji != nil {
+		out.IconURL = *in.IconEmoji
+	}
+
+	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
+	for i, c := range in.Attachments {
+		if c.Fallback != nil {
+			out.Attachments[i].Fallback = *c.Fallback
+		}
+
+		if c.Color != nil {
+			out.Attachments[i].Color = *c.Color
+		}
+
+		if c.Pretext != nil {
+			out.Attachments[i].Pretext = *c.Pretext
+		}
+
+		if c.Text != nil {
+			out.Attachments[i].Text = *c.Text
+		}
+
+		if c.AuthorName != nil {
+			out.Attachments[i].AuthorName = *c.AuthorName
+		}
+
+		if c.AuthorLink != nil {
+			out.Attachments[i].AuthorLink = string(*c.AuthorLink)
+		}
+
+		if c.AuthorIcon != nil {
+			out.Attachments[i].AuthorIcon = string(*c.AuthorIcon)
+		}
+
+		if c.Title != nil {
+			out.Attachments[i].Title = *c.Title
+		}
+
+		if c.TitleLink != nil {
+			out.Attachments[i].TitleLink = string(*c.TitleLink)
+		}
+
+		fields, err := cb.convertSlackFields(c.Fields)
+		if err != nil {
+			return nil, err
+		}
+		out.Attachments[i].Fields = fields
+
+		if c.ThumbURL != nil {
+			out.Attachments[i].ThumbURL = string(*c.ThumbURL)
+		}
+
+		if c.Footer != nil {
+			out.Attachments[i].Footer = *c.Footer
+		}
+
+		if c.FooterIcon != nil {
+			out.Attachments[i].FooterIcon = string(*c.FooterIcon)
+		}
+
+		if c.ImageURL != nil {
+			out.Attachments[i].ImageURL = string(*c.ImageURL)
+		}
+	}
+
+	if in.Props != nil {
+		out.Props = &mattermostPropsConfig{}
+
+		if in.Props.Card != nil {
+			out.Props.Card = in.Props.Card
+		}
+	}
+
+	if in.Priority != nil {
+		p := in.Priority
+		out.Priority = &mattermostPriorityConfig{
+			RequestedAck:            p.RequestedAck,
+			PersistentNotifications: p.PersistentNotifications,
+		}
+
+		if p.Priority != nil {
+			out.Priority.Priority = string(*p.Priority)
+		}
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

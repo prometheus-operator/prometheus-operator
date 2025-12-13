@@ -1249,6 +1249,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkMattermostConfigs(ctx, receiver.MattermostConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1724,6 +1729,40 @@ func checkMSTeamsV2Configs(
 
 	if amVersion.LT(semver.MustParse("0.28.0")) {
 		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+	}
+
+	for _, config := range configs {
+		if config.WebhookURL != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
+				return err
+			}
+		}
+
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkMattermostConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.MattermostConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.30.0")) {
+		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is only available in Alertmanager >= 0.30.0`)
 	}
 
 	for _, config := range configs {
