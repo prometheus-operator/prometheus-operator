@@ -770,6 +770,18 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var mattermostConfigs []*mattermostConfig
+	if l := len(in.MattermostConfigs); l > 0 {
+		mattermostConfigs = make([]*mattermostConfig, l)
+		for i := range in.RocketChatConfigs {
+			receiver, err := cb.convertMattermostConfig(ctx, in.MattermostConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("MattermostConfig[%d]: %w", i, err)
+			}
+			mattermostConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:              makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:   opsgenieConfigs,
@@ -1479,6 +1491,126 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 		}
 
 		out.WebhookURL = webHookURL
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitoringv1alpha1.MattermostConfig, crKey types.NamespacedName) (*mattermostConfig, error) {
+	out := &mattermostConfig{
+		SendResolved: in.SendResolved,
+		Text:         in.Text,
+	}
+
+	webhookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Mattermost webhookURL: %w", err)
+	}
+	out.WebhookURL = webhookURL
+
+	if in.Channel != nil {
+		out.Channel = *in.Channel
+	}
+
+	if in.Username != nil {
+		out.Username = *in.Username
+	}
+
+	if in.IconURL != nil {
+		out.IconURL = string(*in.IconURL)
+	}
+
+	if in.IconEmoji != nil {
+		out.IconURL = string(*in.IconEmoji)
+	}
+
+	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
+	for i, c := range in.Attachments {
+		if c.Fallback != nil {
+			out.Attachments[i].Fallback = *c.Fallback
+		}
+
+		if c.Color != nil {
+			out.Attachments[i].Color = *c.Color
+		}
+
+		if c.Pretext != nil {
+			out.Attachments[i].Pretext = *c.Pretext
+		}
+
+		if c.Text != nil {
+			out.Attachments[i].Text = *c.Text
+		}
+
+		if c.AuthorName != nil {
+			out.Attachments[i].AuthorName = *c.AuthorName
+		}
+
+		if c.AuthorLink != nil {
+			out.Attachments[i].AuthorLink = string(*c.AuthorLink)
+		}
+
+		if c.AuthorIcon != nil {
+			out.Attachments[i].AuthorIcon = string(*c.AuthorIcon)
+		}
+
+		if c.Title != nil {
+			out.Attachments[i].Title = *c.Title
+		}
+
+		if c.TitleLink != nil {
+			out.Attachments[i].TitleLink = string(*c.TitleLink)
+		}
+
+		// Fields
+		/*
+
+			// fields defines a list of Slack fields that are sent with each notification.
+			// +optional
+			Fields []SlackField `json:"fields,omitempty"`
+		*/
+
+		if c.ThumbURL != nil {
+			out.Attachments[i].ThumbURL = string(*c.ThumbURL)
+		}
+
+		if c.Footer != nil {
+			out.Attachments[i].Footer = *c.Footer
+		}
+
+		if c.FooterIcon != nil {
+			out.Attachments[i].FooterIcon = string(*c.FooterIcon)
+		}
+
+		if c.ImageURL != nil {
+			out.Attachments[i].ImageURL = string(*c.ImageURL)
+		}
+	}
+
+	if in.Props != nil {
+		out.Props = &mattermostPropsConfig{}
+
+		if in.Props.Card != nil {
+			out.Props.Card = in.Props.Card
+		}
+	}
+
+	if in.Priority != nil {
+		p := in.Priority
+		out.Priority = &mattermostPriorityConfig{
+			RequestedAck:            p.RequestedAck,
+			PersistentNotifications: p.PersistentNotifications,
+		}
+
+		if p.Priority != nil {
+			out.Priority.Priority = string(*p.Priority)
+		}
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

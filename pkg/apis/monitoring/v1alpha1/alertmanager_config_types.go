@@ -1371,7 +1371,7 @@ type MattermostAttachmentConfig struct {
 	// authorLink defines optional URL used to hyperlink the author_name.
 	// If no author_name is specified, this field does nothing.
 	// +optional
-	AuthorLink *string `json:"authorLink,omitempty"`
+	AuthorLink *URL `json:"authorLink,omitempty"`
 	// authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.
 	// +optional
 	AuthorIcon *URL `json:"authorIcon,omitempty"`

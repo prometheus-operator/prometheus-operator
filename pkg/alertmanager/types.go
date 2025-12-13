@@ -488,4 +488,45 @@ type rocketChatConfig struct {
 	Actions     []*rocketchatAttachmentAction `yaml:"actions,omitempty"`
 }
 
+type mattermostConfig struct {
+	SendResolved *bool                         `yaml:"send_resolved,omitempty"`
+	WebhookURL   string                        `yaml:"webhook_url"`
+	Channel      string                        `yaml:"channel,omitempty"`
+	Username     string                        `yaml:"username,omitempty"`
+	Text         string                        `yaml:"text"`
+	IconURL      string                        `yaml:"icon_url,omitempty"`
+	IconEmoji    string                        `yaml:"icon_emoji,omitempty"`
+	Attachments  []*mattermostAttachmentConfig `yaml:"attachments,omitempty"`
+	Props        *mattermostPropsConfig        `json:"props,omitempty"`
+	Priority     *mattermostPriorityConfig     `json:"priority,omitempty"`
+	HTTPConfig   *httpClientConfig             `yaml:"http_config,omitempty"`
+}
+
+type mattermostAttachmentConfig struct {
+	Fallback   string       `json:"fallback,omitempty"`
+	Color      string       `json:"color,omitempty"`
+	Pretext    string       `json:"pretext,omitempty"`
+	Text       string       `json:"text,omitempty"`
+	AuthorName string       `json:"author_name,omitempty"`
+	AuthorLink string       `json:"author_link,omitempty"`
+	AuthorIcon string       `json:"author_icon,omitempty"`
+	Title      string       `json:"title,omitempty"`
+	TitleLink  string       `json:"title_link,omitempty"`
+	Fields     []slackField `json:"fields,omitempty"`
+	ThumbURL   string       `json:"thumb_url,omitempty"`
+	Footer     string       `json:"footer,omitempty"`
+	FooterIcon string       `json:"footer_icon,omitempty"`
+	ImageURL   string       `json:"image_url,omitempty"`
+}
+
+type mattermostPropsConfig struct {
+	Card *string `json:"card,omitempty"`
+}
+
+type mattermostPriorityConfig struct {
+	Priority                string `json:"priority,omitempty"`
+	RequestedAck            *bool  `json:"requested_ack,omitempty"`
+	PersistentNotifications *bool  `json:"persistent_notifications,omitempty"`
+}
+
 type timeInterval config.TimeInterval

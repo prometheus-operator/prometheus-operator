@@ -351,7 +351,7 @@ func convertMattermostAttachmentsTo(in []MattermostAttachmentConfig) []v1alpha1.
 			Pretext:    c.Pretext,
 			Text:       c.Text,
 			AuthorName: c.AuthorName,
-			AuthorLink: c.AuthorLink,
+			AuthorLink: (*v1alpha1.URL)(c.AuthorLink),
 			AuthorIcon: (*v1alpha1.URL)(c.AuthorIcon),
 			Title:      c.Title,
 			TitleLink:  (*v1alpha1.URL)(c.TitleLink),
