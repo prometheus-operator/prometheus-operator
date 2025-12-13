@@ -968,7 +968,7 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.Actions = actions
 	}
 
-	fields, err := cb.convertSlackFields(ctx, in.Fields, crKey)
+	fields, err := cb.convertSlackFields(in.Fields)
 	if err != nil {
 		return nil, err
 	}
@@ -983,7 +983,7 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	return out, nil
 }
 
-func (cb *ConfigBuilder) convertSlackFields(ctx context.Context, in []monitoringv1alpha1.SlackField, crKey types.NamespacedName) ([]slackField, error) {
+func (cb *ConfigBuilder) convertSlackFields(in []monitoringv1alpha1.SlackField) ([]slackField, error) {
 	l := len(in)
 
 	if l == 0 {
@@ -1582,7 +1582,7 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			out.Attachments[i].TitleLink = string(*c.TitleLink)
 		}
 
-		fields, err := cb.convertSlackFields(ctx, c.Fields, crKey)
+		fields, err := cb.convertSlackFields(c.Fields)
 		if err != nil {
 			return nil, err
 		}
