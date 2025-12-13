@@ -8092,7 +8092,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				},
 			},
 			version: "3.8.0",
-			golden:  "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig_Unsupported_Version.golden",
+			golden:  "ScrapeConfigSpecConfig_EC2SD_Unsupported_Version.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
