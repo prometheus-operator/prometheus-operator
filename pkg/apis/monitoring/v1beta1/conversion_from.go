@@ -327,6 +327,62 @@ func convertRocketchatConfigFrom(in v1alpha1.RocketChatConfig) RocketChatConfig 
 	}
 }
 
+func convertMattermostConfigFrom(in v1alpha1.MattermostConfig) MattermostConfig {
+	return MattermostConfig{
+		SendResolved: in.SendResolved,
+		WebhookURL:   in.WebhookURL,
+		Channel:      in.Channel,
+		Text:         in.Text,
+		IconURL:      (*URL)(in.IconURL),
+		IconEmoji:    in.IconEmoji,
+		Attachments:  convertMattermostAttachmentsFrom(in.Attachments),
+		Props:        convertMattermostPropsConfigFrom(in.Props),
+		Priority:     convertMattermostPriorityConfigFrom(in.Priority),
+		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+	}
+}
+
+func convertMattermostAttachmentsFrom(in []v1alpha1.MattermostAttachmentConfig) []MattermostAttachmentConfig {
+	if in == nil {
+		return nil
+	}
+
+	out := make([]MattermostAttachmentConfig, len(in))
+	for i, c := range in {
+		out[i] = MattermostAttachmentConfig{
+			Fallback:   c.Fallback,
+			Color:      c.Color,
+			Pretext:    c.Pretext,
+			Text:       c.Text,
+			AuthorName: c.AuthorName,
+			AuthorLink: c.AuthorLink,
+			AuthorIcon: (*URL)(c.AuthorIcon),
+			Title:      c.Title,
+			TitleLink:  (*URL)(c.TitleLink),
+			Fields:     convertSlackFieldsFrom(c.Fields),
+			ThumbURL:   (*URL)(c.ThumbURL),
+			Footer:     c.Footer,
+			FooterIcon: (*URL)(c.FooterIcon),
+			ImageURL:   (*URL)(c.ImageURL),
+		}
+	}
+	return out
+}
+
+func convertMattermostPropsConfigFrom(in *v1alpha1.MattermostPropsConfig) *MattermostPropsConfig {
+	return &MattermostPropsConfig{
+		Card: in.Card,
+	}
+}
+
+func convertMattermostPriorityConfigFrom(in *v1alpha1.MattermostPriorityConfig) *MattermostPriorityConfig {
+	return &MattermostPriorityConfig{
+		Priority:                (*MattermostPriority)(in.Priority),
+		RequestedAck:            in.RequestedAck,
+		PersistentNotifications: in.PersistentNotifications,
+	}
+}
+
 func convertSlackFieldsFrom(in []v1alpha1.SlackField) []SlackField {
 	out := make([]SlackField, len(in))
 
@@ -650,6 +706,13 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 			out.RocketChatConfigs = append(
 				out.RocketChatConfigs,
 				convertRocketchatConfigFrom(in),
+			)
+		}
+
+		for _, in := range in.MattermostConfigs {
+			out.MattermostConfigs = append(
+				out.MattermostConfigs,
+				convertMattermostConfigFrom(in),
 			)
 		}
 

@@ -226,6 +226,10 @@ type Receiver struct {
 	// It requires Alertmanager >= 0.28.0.
 	// +optional
 	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
+	// mattermostConfigs defines the list of Mattermost configurations.
+	// It requires Alertmanager >= 0.30.0.
+	// +optional
+	MattermostConfigs []MattermostConfig `json:"mattermostConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -1296,12 +1300,14 @@ type RocketChatActionConfig struct {
 	Msg *string `json:"msg,omitempty"`
 }
 
-// MattermostConfig configures notifications via RocketChat.
+// MattermostConfig configures notifications via Mattermost.
 // It requires Alertmanager >= 0.30.0.
 type MattermostConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
+	// webhookURL defines the Mattermost webhook URL.
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
 	// channel overrides the channel the message posts in.
 	// Use the channel’s name and not the display name, e.g. use town-square, not Town Square.
 	// +kubebuilder:validation:MinLength=1
@@ -1309,6 +1315,7 @@ type MattermostConfig struct {
 	Channel *string `json:"channel,omitempty"`
 	// username overrides the username the message posts as.
 	// Defaults to the username set during webhook creation; if no username was set during creation, webhook is used.
+	// +optional
 	Username *string `json:"username,omitempty"`
 	// text defines the markdown-formatted message to display in the post.
 	// To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.
@@ -1319,7 +1326,7 @@ type MattermostConfig struct {
 	IconURL *URL `json:"iconURL,omitempty"`
 	// iconEmoji overrides the profile picture and icon_url parameter.
 	// +optional
-	IconEmoji *URL `json:"iconEmoji,omitempty"`
+	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// attachments define the message attachments used for richer formatting options.
 	// It is for compatibility with Slack.
 	// +optional
@@ -1336,52 +1343,78 @@ type MattermostConfig struct {
 }
 
 // MattermostAttachmentConfig configures notifications via RocketChat.
+// For more information, please refer to the Mattermost document:
+// https://developers.mattermost.com/integrate/reference/message-attachments/
 // It requires Alertmanager >= 0.30.0.
 type MattermostAttachmentConfig struct {
+	// fallback defines a required plain-text summary of the attachment.
+	// This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
+	// +optional
 	Fallback *string `json:"fallback,omitempty"`
-
+	// color defines a hex color code that will be used as
+	// the left border color for the attachment.
+	// If not specified, it will default to match the channel sidebar header background color.
+	// +optional
 	Color *string `json:"color,omitempty"`
-
+	// pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.
+	// +optional
 	Pretext *string `json:"pretext,omitempty"`
-
+	// text defines the text to be included in the attachment.
+	// It can be formatted using Markdown.
+	// For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.
+	// +optional
 	Text *string `json:"text,omitempty"`
-
+	// authorName defines an optional name used to identify the author.
+	// It will be included in a small section at the top of the attachment.
+	// +optional
 	AuthorName *string `json:"authorName,omitempty"`
-
+	// authorLink defines optional URL used to hyperlink the author_name.
+	// If no author_name is specified, this field does nothing.
+	// +optional
 	AuthorLink *string `json:"authorLink,omitempty"`
-
-	AuthorIcon *string `json:"authorIcon,omitempty"`
-
+	// authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.
+	// +optional
+	AuthorIcon *URL `json:"authorIcon,omitempty"`
+	// title defines an optional title displayed below the author information in the attachment.
+	// +optional
 	Title *string `json:"title,omitempty"`
-
-	TitleLink *string `json:"titleLink,omitempty"`
+	// titleLink defines an optional URL used to hyperlink the title.
+	// If no title is specified, this field does nothing.
+	// +optional
+	TitleLink *URL `json:"titleLink,omitempty"`
 	// fields defines a list of Slack fields that are sent with each notification.
 	// +optional
 	Fields []SlackField `json:"fields,omitempty"`
-
+	// thumbURL defines an optional URL to an image file
+	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+	// on the right side of an attachment.
+	// +optional
 	ThumbURL *URL `json:"thumbURL,omitempty"`
-
+	// footer defines an optional line of text that will be displayed at the bottom of the attachment.
+	// +optional
 	Footer *string `json:"footer,omitempty"`
-
+	// footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+	// that is displayed as a 16x16 pixel thumbnail before the footer text.
+	// +optional
+	FooterIcon *URL `json:"footerIcon,omitempty"`
+	// imageURL defines an optional URL to an image file
+	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+	// +optional
 	ImageURL *URL `json:"imageURL,omitempty"`
 }
 
 // MattermostPropsConfig configures notifications via RocketChat.
 // It requires Alertmanager >= 0.30.0.
 type MattermostPropsConfig struct {
-	// card Props card allows for extra information (Markdown-formatted text)
+	// card allows for extra information (Markdown-formatted text)
 	// to be sent to Mattermost that will only be displayed in the RHS panel
 	// after a user selects the info icon displayed alongside the post.
+	// +optional
 	Card *string `json:"card,omitempty"`
 }
 
-// MattermostPriority specifies the priority label of the message.
-// Supported values are:
-//
-//   - `Urgent`, full UTF-8 support, no escaping needed.
-//   - `Important`, legacy-invalid characters are escaped to underscores.
-//   - `Standard`, dot characters are escaped to `_dot_`, underscores to `__`, and
-//
+// MattermostPriority defines the priority label of the message.
+// Supported values are: `Urgent`, `Important` and `Standard`.
 // +kubebuilder:validation:Enum=Urgent;Important;Dots;Standard
 type MattermostPriority string
 
@@ -1392,14 +1425,26 @@ const (
 )
 
 type MattermostPriorityConfig struct {
-	// priority adds label to the message. Possible values are "Urgent", "Important" and "Standard".
+	// priority adds the priority label to the message.
+	// Possible values are `Urgent`, `Important` and `Standard`.
 	// +optional
 	Priority *MattermostPriority `json:"priority,omitempty"`
-	// requestedAck, if set to true, the message will be marked as requiring an acknowledgment from the users by displaying a checkmark icon next to the message. Keep in mind that this requires the message priority to be set to Important or Urgent.
+	// requestedAck defines whether the message requires an acknowledgement from users.
+	//
+	// If set to true, the message will be marked as requiring an acknowledgment
+	// from the users by displaying a checkmark icon next to the message.
+	//
+	// Keep in mind that this requires the message priority to be set to `Important` or `Urgent`.
+	//
 	// Only for enterprise version of Mattermost.
 	// +optional
 	RequestedAck *bool `json:"requestedAck,omitempty"`
-	// persistentNotifications Only for Urgent messages. If set to true recipients will receive a persistent notification every five minutes until they acknowledge the message.
+	// persistentNotification defines whether the message notification will be persisted.
+	//
+	// This can be used only with the `Urgent`` messages.
+	// If set to true recipients will receive a persistent notification
+	// every five minutes until they acknowledge the message.
+	//
 	// Only for enterprise version of Mattermost.
 	// +optional
 	PersistentNotifications *bool `json:"persistentNotifications,omitempty"`
