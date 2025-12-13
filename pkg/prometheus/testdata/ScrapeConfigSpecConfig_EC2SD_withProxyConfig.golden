@@ -16,7 +16,7 @@ scrape_configs:
     region: us-east-1
     refresh_interval: 30s
     follow_redirects: true
-    enable_http2: true
+t     enable_http2: true
   relabel_configs:
   - source_labels:
     - job

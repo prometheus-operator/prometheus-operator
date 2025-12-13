@@ -8106,7 +8106,10 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
-			p.Spec.Version = tc.version
+			p.Spec.Version = "3.5.0"
+			if tc.version != "" {
+				p.Spec.Version = tc.version
+			}
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
@@ -12013,7 +12016,10 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
-			p.Spec.Version = tc.version
+			p.Spec.Version = "3.5.0"
+			if tc.version != "" {
+				p.Spec.Version = tc.version
+			}
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
