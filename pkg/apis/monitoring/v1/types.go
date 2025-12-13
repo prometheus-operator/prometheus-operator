@@ -109,7 +109,7 @@ type ProxyConfig struct {
 	//
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
-	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"` // nolint:kubeapilinter
 	// proxyConnectHeader optionally specifies headers to send to
 	// proxies during CONNECT requests.
 	//
@@ -227,7 +227,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	// Setting this to true enhances security by preventing potential credential theft attacks.
 	//
 	// +optional
-	Deny bool `json:"deny,omitempty"`
+	Deny bool `json:"deny,omitempty"` // nolint:kubeapilinter
 }
 
 // Condition represents the state of the resources associated with the
@@ -358,7 +358,7 @@ type WebHTTPConfig struct {
 	// When TLSConfig is not configured, HTTP/2 will be disabled.
 	// Whenever the value of the field changes, a rolling update will be triggered.
 	// +optional
-	HTTP2 *bool `json:"http2,omitempty"`
+	HTTP2 *bool `json:"http2,omitempty"` // nolint:kubeapilinter
 	// headers defines a list of headers that can be added to HTTP responses.
 	// +optional
 	Headers *WebHTTPHeaders `json:"headers,omitempty"`
@@ -483,7 +483,7 @@ type WebTLSConfig struct {
 	// the order of elements in cipherSuites, is used.
 	//
 	// +optional
-	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
+	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"` // nolint:kubeapilinter
 
 	// curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference
 	// order.
@@ -619,13 +619,13 @@ type Endpoint struct {
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
-	HonorLabels bool `json:"honorLabels,omitempty"`
+	HonorLabels bool `json:"honorLabels,omitempty"` // nolint:kubeapilinter
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	//
 	// +optional
-	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"` // nolint:kubeapilinter
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamp present in scraped data.
@@ -634,7 +634,7 @@ type Endpoint struct {
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
-	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"` // nolint:kubeapilinter
 
 	// basicAuth defines the Basic Authentication credentials to use when
 	// scraping the target.
@@ -678,12 +678,12 @@ type Endpoint struct {
 	// 3xx redirects.
 	//
 	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
 
 	// enableHttp2 can be used to disable HTTP2 when scraping the target.
 	//
 	// +optional
-	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
+	EnableHttp2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
 
 	// filterRunning when true, the pods which are not running (e.g. either in Failed or
 	// Succeeded state) are dropped during the target discovery.
@@ -693,7 +693,7 @@ type Endpoint struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	//
 	// +optional
-	FilterRunning *bool `json:"filterRunning,omitempty"`
+	FilterRunning *bool `json:"filterRunning,omitempty"` // nolint:kubeapilinter
 }
 
 type AttachMetadata struct {
@@ -704,7 +704,7 @@ type AttachMetadata struct {
 	// permissions on the `Nodes` objects.
 	//
 	// +optional
-	Node *bool `json:"node,omitempty"`
+	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
 
 // OAuth2 configures OAuth2 settings.
@@ -859,7 +859,7 @@ type SafeTLSConfig struct {
 
 	// insecureSkipVerify defines how to disable target certificate validation.
 	// +optional
-	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
+	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"` // nolint:kubeapilinter
 
 	// minVersion defines the minimum acceptable TLS version.
 	//
@@ -979,7 +979,7 @@ type NamespaceSelector struct {
 	// any defines the boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
 	// +optional
-	Any bool `json:"any,omitempty"`
+	Any bool `json:"any,omitempty"` // nolint:kubeapilinter
 	// matchNames defines the list of namespace names to select from.
 	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
@@ -1026,7 +1026,7 @@ type NativeHistogramConfig struct {
 	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
 	//
 	// +optional
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"` // nolint:kubeapilinter
 
 	// nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,
 	// buckets will be merged to stay within the limit.
@@ -1046,7 +1046,7 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v3.0.0.
 	//
 	// +optional
-	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"` // nolint:kubeapilinter
 }
 
 // +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
