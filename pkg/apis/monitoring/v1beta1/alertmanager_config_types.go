@@ -1295,13 +1295,13 @@ type RocketChatActionConfig struct {
 	Msg *string `json:"msg,omitempty"`
 }
 
-// MattermostConfig configures notifications via Mattermost.
-// It requires Alertmanager >= 0.30.0.
+// MattermostConfig defines actions for Mattermost messages.
 type MattermostConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// webhookURL defines the Mattermost webhook URL.
+	// +required
 	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
 	// channel overrides the channel the message posts in.
 	// Use the channel’s name and not the display name, e.g. use town-square, not Town Square.
@@ -1315,6 +1315,7 @@ type MattermostConfig struct {
 	// text defines the markdown-formatted message to display in the post.
 	// To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Text string `json:"text"`
 	// iconURL overrides the profile picture the message posts with.
 	// +optional
@@ -1326,10 +1327,10 @@ type MattermostConfig struct {
 	// It is for compatibility with Slack.
 	// +optional
 	Attachments []MattermostAttachmentConfig `json:"attachments,omitempty"`
-	// props
+	// props defines the extra information to be sent to Mattermost.
 	// +optional
 	Props *MattermostPropsConfig `json:"props,omitempty"`
-	// priority
+	// priority defines the priority parameters of the message.
 	// +optional
 	Priority *MattermostPriorityConfig `json:"priority,omitempty"`
 	// httpConfig defines the HTTP client configuration for Mattermost webhook requests.
@@ -1337,10 +1338,9 @@ type MattermostConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// MattermostAttachmentConfig configures notifications via RocketChat.
+// MattermostAttachmentConfig configures attachmeent parameters for the notifications.
 // For more information, please refer to the Mattermost document:
 // https://developers.mattermost.com/integrate/reference/message-attachments/
-// It requires Alertmanager >= 0.30.0.
 type MattermostAttachmentConfig struct {
 	// fallback defines a required plain-text summary of the attachment.
 	// This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
@@ -1398,8 +1398,7 @@ type MattermostAttachmentConfig struct {
 	ImageURL *URL `json:"imageURL,omitempty"`
 }
 
-// MattermostPropsConfig configures notifications via RocketChat.
-// It requires Alertmanager >= 0.30.0.
+// MattermostPropsConfig configures extra information to be sent to Mattermost.
 type MattermostPropsConfig struct {
 	// card allows for extra information (Markdown-formatted text)
 	// to be sent to Mattermost that will only be displayed in the RHS panel
@@ -1419,6 +1418,7 @@ const (
 	MattermostPriorityStandard  MattermostPriority = "Standard"
 )
 
+// MattermostPriorityConfig configures the parameters related to the priority of the message.
 type MattermostPriorityConfig struct {
 	// priority adds the priority label to the message.
 	// Possible values are `Urgent`, `Important` and `Standard`.
