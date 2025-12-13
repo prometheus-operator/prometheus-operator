@@ -1343,6 +1343,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "amcfg1",
 			Namespace: ns,
+			Labels:    map[string]string{},
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
@@ -1380,6 +1381,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "amcfg2",
 			Namespace: ns,
+			Labels:    map[string]string{},
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
