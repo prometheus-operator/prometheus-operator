@@ -201,6 +201,7 @@ type AlertmanagerSpec struct {
 	Paused bool `json:"paused,omitempty"`
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
+	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
