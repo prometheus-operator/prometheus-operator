@@ -8081,6 +8081,18 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			},
 			version: "2.31.0",
 			golden:  "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig_Unsupported_Version.golden",
+		},
+		{
+			name: "ec2_sd_config_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				},
+			},
+			version: "3.8.0",
+			golden:  "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig_Unsupported_Version.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -11729,6 +11741,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
 		golden      string
+		version     string
 		expectedErr bool
 	}{
 		{
@@ -11933,6 +11946,18 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_LightSailSD_with_TLSConfig.golden",
 		},
+		{
+			name: "lightSail_sd_config_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				},
+			},
+			version: "3.8.0",
+			golden:  "ScrapeConfigSpecConfig_LightSailSD_Unsupported_version.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
@@ -11988,6 +12013,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			p.Spec.Version = tc.version
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
