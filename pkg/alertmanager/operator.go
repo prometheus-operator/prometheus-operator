@@ -1108,7 +1108,6 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"alertmanager", am.Name,
 			)
 			eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
-			continue
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
