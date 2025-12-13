@@ -5019,7 +5019,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:   "ec2",
+					Role:   monitoringv1alpha1.AWSRoleEC2,
 					Region: ptr.To("us-west"),
 				},
 			},
@@ -5031,7 +5031,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role: "ec2",
+					Role: monitoringv1alpha1.AWSRoleEC2,
 				},
 			},
 		},
@@ -5042,7 +5042,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:   "ec2",
+					Role:   monitoringv1alpha1.AWSRoleEC2,
 					Region: ptr.To(""),
 				},
 			},
@@ -5054,7 +5054,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:    "ec2",
+					Role:    monitoringv1alpha1.AWSRoleEC2,
 					RoleARN: ptr.To("valid-role"),
 				},
 			},
@@ -5066,7 +5066,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:    "ec2",
+					Role:    monitoringv1alpha1.AWSRoleEC2,
 					RoleARN: ptr.To(""),
 				},
 			},
@@ -5078,7 +5078,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role: "ec2",
+					Role: monitoringv1alpha1.AWSRoleEC2,
 					Port: ptr.To(int32(8080)),
 				},
 			},
@@ -5090,7 +5090,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role: "ec2",
+					Role: monitoringv1alpha1.AWSRoleEC2,
 					Port: ptr.To(int32(80809)),
 				},
 			},
@@ -5102,7 +5102,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:   "ec2",
+					Role:   monitoringv1alpha1.AWSRoleEC2,
 					Region: ptr.To("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -5120,7 +5120,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:   "ec2",
+					Role:   monitoringv1alpha1.AWSRoleEC2,
 					Region: ptr.To("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -5138,7 +5138,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:   "ec2",
+					Role:   monitoringv1alpha1.AWSRoleEC2,
 					Region: ptr.To("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -5156,7 +5156,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role:   "ec2",
+					Role:   monitoringv1alpha1.AWSRoleEC2,
 					Region: ptr.To("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
@@ -5174,7 +5174,7 @@ var AWSSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 				{
-					Role: "none",
+					Role: "None",
 				},
 			},
 		},

@@ -218,11 +218,11 @@
                           "type": "string"
                         },
                         "role": {
-                          "description": "role defines the AWS service to collect metrics from.\nSupport only ec2, lightsail or ecs.",
+                          "description": "role defines the AWS service to collect metrics from.\nSupport only `EC2`, `Lightsail` or `ECS`.",
                           "enum": [
-                            "ec2",
-                            "lightsail",
-                            "ecs"
+                            "EC2",
+                            "Lightsail",
+                            "ECS"
                           ],
                           "type": "string"
                         },

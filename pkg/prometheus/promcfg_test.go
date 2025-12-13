@@ -12411,7 +12411,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role:   "ec2",
+						Role:   monitoringv1alpha1.AWSRoleEC2,
 						Region: ptr.To("us-east-1"),
 						AccessKey: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -12437,7 +12437,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role:            "ec2",
+						Role:            monitoringv1alpha1.AWSRoleEC2,
 						Region:          ptr.To("us-east-1"),
 						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
@@ -12452,7 +12452,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role:            "ec2",
+						Role:            monitoringv1alpha1.AWSRoleEC2,
 						Region:          ptr.To("us-east-1"),
 						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
@@ -12477,7 +12477,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role:   "ec2",
+						Role:   monitoringv1alpha1.AWSRoleEC2,
 						Region: ptr.To("us-east-1"),
 						AccessKey: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -12501,7 +12501,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role:   "ec2",
+						Role:   monitoringv1alpha1.AWSRoleEC2,
 						Region: ptr.To("us-east-1"),
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
@@ -12531,7 +12531,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role:   "ec2",
+						Role:   monitoringv1alpha1.AWSRoleEC2,
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
@@ -12569,7 +12569,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: "ecs",
+						Role: monitoringv1alpha1.AWSRoleECS,
 						Clusters: []string{
 							"cluster-1",
 							"cluster-2",
@@ -12584,7 +12584,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: "lightsail",
+						Role: monitoringv1alpha1.AWSRoleLightsail,
 						Clusters: []string{
 							"cluster-1",
 							"cluster-2",
@@ -12599,7 +12599,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: "ec2",
+						Role: monitoringv1alpha1.AWSRoleEC2,
 					},
 				},
 			},

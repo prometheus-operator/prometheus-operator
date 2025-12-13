@@ -24398,7 +24398,7 @@ More info:
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.AWSSDConfig">AWSSDConfig</a>)
 </p>
 <div>
-<p>Service of the targets to retrieve. Must be <code>ec2</code>, <code>lightsail</code> or <code>ecs</code>.</p>
+<p>Service of the targets to retrieve. Must be <code>EC2</code>, <code>Lightsail</code> or <code>ECS</code>.</p>
 </div>
 <table>
 <thead>
@@ -24407,11 +24407,11 @@ More info:
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;ec2&#34;</p></td>
+<tbody><tr><td><p>&#34;EC2&#34;</p></td>
 <td></td>
-</tr><tr><td><p>&#34;ecs&#34;</p></td>
+</tr><tr><td><p>&#34;ECS&#34;</p></td>
 <td></td>
-</tr><tr><td><p>&#34;lightsail&#34;</p></td>
+</tr><tr><td><p>&#34;Lightsail&#34;</p></td>
 <td></td>
 </tr></tbody>
 </table>
@@ -24443,7 +24443,7 @@ AWSRole
 </td>
 <td>
 <p>role defines the AWS service to collect metrics from.
-Support only ec2, lightsail or ecs.</p>
+Support only <code>EC2</code>, <code>Lightsail</code> or <code>ECS</code>.</p>
 </td>
 </tr>
 <tr>

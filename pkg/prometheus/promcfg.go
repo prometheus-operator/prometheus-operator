@@ -4799,12 +4799,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			switch config.Role {
-			case monitoringv1alpha1.AWSRoleEC2:
-				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "ec2"})
-			case monitoringv1alpha1.AWSRoleLightsail:
-				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "lightsail"})
-			case monitoringv1alpha1.AWSRoleECS:
-				configs[i] = append(configs[i], yaml.MapItem{Key: "role", Value: "ecs"})
+			case monitoringv1alpha1.AWSRoleEC2,
+				monitoringv1alpha1.AWSRoleLightsail,
+				monitoringv1alpha1.AWSRoleECS:
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role",
+					Value: strings.ToLower(string(config.Role)),
+				})
 			default:
 				cg.logger.Warn(fmt.Sprintf("ignoring role not supported by Prometheus: %s", string(config.Role)))
 			}

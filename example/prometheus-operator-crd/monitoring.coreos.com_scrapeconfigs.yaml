@@ -242,11 +242,11 @@ spec:
                     role:
                       description: |-
                         role defines the AWS service to collect metrics from.
-                        Support only ec2, lightsail or ecs.
+                        Support only `EC2`, `Lightsail` or `ECS`.
                       enum:
-                      - ec2
-                      - lightsail
-                      - ecs
+                      - EC2
+                      - Lightsail
+                      - ECS
                       type: string
                     roleARN:
                       description: roleARN defines an alternative to using AWS API
