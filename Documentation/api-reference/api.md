@@ -28969,7 +28969,7 @@ Deprecated: for AlertManager &gt;= v0.22.0, <code>matchType</code> should be use
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
-<p>MattermostAttachmentConfig configures attachmeent parameters for the notifications.
+<p>MattermostAttachmentConfig configures attachment parameters for the notifications.
 For more information, please refer to the Mattermost document:
 <a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a></p>
 </div>
@@ -29421,7 +29421,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>persistentNotification defines whether the message notification will be persisted.</p>
+<p>PersistentNotifications defines whether the message notification will be persisted.</p>
 <p>This can be used only with the <code>Urgent</code>` messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>
@@ -38246,7 +38246,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>persistentNotification defines whether the message notification will be persisted.</p>
+<p>PersistentNotifications defines whether the message notification will be persisted.</p>
 <p>This can be used only with the <code>Urgent</code>` messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>

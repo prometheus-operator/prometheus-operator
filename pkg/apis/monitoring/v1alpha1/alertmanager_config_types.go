@@ -1343,7 +1343,7 @@ type MattermostConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// MattermostAttachmentConfig configures attachmeent parameters for the notifications.
+// MattermostAttachmentConfig configures attachment parameters for the notifications.
 // For more information, please refer to the Mattermost document:
 // https://developers.mattermost.com/integrate/reference/message-attachments/
 type MattermostAttachmentConfig struct {
@@ -1439,7 +1439,7 @@ type MattermostPriorityConfig struct {
 	// Only for enterprise version of Mattermost.
 	// +optional
 	RequestedAck *bool `json:"requestedAck,omitempty"`
-	// persistentNotification defines whether the message notification will be persisted.
+	// PersistentNotifications defines whether the message notification will be persisted.
 	//
 	// This can be used only with the `Urgent`` messages.
 	// If set to true recipients will receive a persistent notification

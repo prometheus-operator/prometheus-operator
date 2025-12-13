@@ -1838,7 +1838,7 @@
                             description: 'priority defines the priority parameters of the message.',
                             properties: {
                               persistentNotifications: {
-                                description: 'persistentNotification defines whether the message notification will be persisted.\n\nThis can be used only with the `Urgent`` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
+                                description: 'PersistentNotifications defines whether the message notification will be persisted.\n\nThis can be used only with the `Urgent`` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
                                 type: 'boolean',
                               },
                               priority: {
