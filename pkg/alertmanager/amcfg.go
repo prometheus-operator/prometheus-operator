@@ -799,6 +799,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		MSTeamsConfigs:    msTeamsConfigs,
 		MSTeamsV2Configs:  msTeamsV2Configs,
 		RocketChatConfigs: rocketchatConfigs,
+		MattermostConfigs: mattermostConfigs,
 	}, nil
 }
 
