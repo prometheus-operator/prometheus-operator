@@ -10,6 +10,4 @@ receivers:
 - name: mynamespace/myamc/test
   mattermost_configs:
   - webhook_url: https://mattermost.example.com
-  msteamsv2_configs:
-  - webhook_url: https://prod-108.westeurope.logic.azure.com:443/workflows/id
 templates: []
