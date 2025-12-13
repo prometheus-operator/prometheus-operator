@@ -242,6 +242,8 @@ type Condition struct {
 	Status ConditionStatus `json:"status"`
 	// lastTransitionTime is the time of the last update to the current status property.
 	// +required
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format=date-time
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// reason for the condition's last transition.
 	// +optional
@@ -625,6 +627,7 @@ type Endpoint struct {
 	// when exposed by the target.
 	//
 	// +optional
+	//nolint:kubeapilinter // allowed legacy field name: HonorTimestamps (v1 API compatibility)
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
@@ -1111,6 +1114,8 @@ type ConfigResourceCondition struct {
 	Status ConditionStatus `json:"status"`
 	// lastTransitionTime defines the time of the last update to the current status property.
 	// +required
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format=date-time
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// reason for the condition's last transition.
 	// +optional

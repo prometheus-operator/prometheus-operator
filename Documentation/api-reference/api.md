@@ -10780,6 +10780,7 @@ bool
 <em>(Optional)</em>
 <p>honorTimestamps defines whether Prometheus preserves the timestamps
 when exposed by the target.</p>
+<p>nolint:kubeapilinter // allowed legacy field name: HonorTimestamps (v1 API compatibility)</p>
 </td>
 </tr>
 <tr>

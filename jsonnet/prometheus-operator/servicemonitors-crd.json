@@ -197,7 +197,7 @@
                           "type": "boolean"
                         },
                         "honorTimestamps": {
-                          "description": "honorTimestamps defines whether Prometheus preserves the timestamps\nwhen exposed by the target.",
+                          "description": "honorTimestamps defines whether Prometheus preserves the timestamps\nwhen exposed by the target.\n\nnolint:kubeapilinter // allowed legacy field name: HonorTimestamps (v1 API compatibility)",
                           "type": "boolean"
                         },
                         "interval": {

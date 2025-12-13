@@ -419,6 +419,8 @@
     "finalizer",
     "selfsigned",
     "FIPS",
-    "FIPSSTS"
+    "FIPSSTS",
+    "nolint",
+    "kubeapilinter"
   ]
 }
