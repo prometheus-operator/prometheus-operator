@@ -1439,7 +1439,7 @@ type MattermostPriorityConfig struct {
 	// Only for enterprise version of Mattermost.
 	// +optional
 	RequestedAck *bool `json:"requestedAck,omitempty"`
-	// PersistentNotifications defines whether the message notification will be persisted.
+	// persistentNotifications defines whether the message notification will be persisted.
 	//
 	// This can be used only with the `Urgent`` messages.
 	// If set to true recipients will receive a persistent notification

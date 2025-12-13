@@ -2155,7 +2155,7 @@ spec:
                             properties:
                               persistentNotifications:
                                 description: |-
-                                  PersistentNotifications defines whether the message notification will be persisted.
+                                  persistentNotifications defines whether the message notification will be persisted.
 
                                   This can be used only with the `Urgent`` messages.
                                   If set to true recipients will receive a persistent notification
@@ -15128,7 +15128,7 @@ spec:
                             properties:
                               persistentNotifications:
                                 description: |-
-                                  PersistentNotifications defines whether the message notification will be persisted.
+                                  persistentNotifications defines whether the message notification will be persisted.
 
                                   This can be used only with the `Urgent`` messages.
                                   If set to true recipients will receive a persistent notification

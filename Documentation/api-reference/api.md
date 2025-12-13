@@ -29421,7 +29421,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>PersistentNotifications defines whether the message notification will be persisted.</p>
+<p>persistentNotifications defines whether the message notification will be persisted.</p>
 <p>This can be used only with the <code>Urgent</code>` messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>
@@ -38246,7 +38246,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>PersistentNotifications defines whether the message notification will be persisted.</p>
+<p>persistentNotifications defines whether the message notification will be persisted.</p>
 <p>This can be used only with the <code>Urgent</code>` messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>

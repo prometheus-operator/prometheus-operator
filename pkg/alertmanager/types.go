@@ -119,7 +119,7 @@ type receiver struct {
 	MSTeamsV2Configs  []*msTeamsV2Config  `yaml:"msteamsv2_configs,omitempty"`
 	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
 	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
-	MattermostConfigs []*mattermostConfig `yaml:"rocketchat_configs,omitempty" json:"mattermost_configs,omitempty"`
+	MattermostConfigs []*mattermostConfig `yaml:"mattermost_configs,omitempty" json:"mattermost_configs,omitempty"`
 }
 
 type webhookConfig struct {
