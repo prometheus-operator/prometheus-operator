@@ -968,21 +968,11 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.Actions = actions
 	}
 
-	if l := len(in.Fields); l > 0 {
-		fields := make([]slackField, l)
-		for i, f := range in.Fields {
-			field := slackField{
-				Title: f.Title,
-				Value: f.Value,
-			}
-
-			if f.Short != nil {
-				field.Short = *f.Short
-			}
-			fields[i] = field
-		}
-		out.Fields = fields
+	fields, err := cb.convertSlackFields(ctx, in.Fields, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.Fields = fields
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
@@ -991,6 +981,29 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	out.HTTPConfig = httpConfig
 
 	return out, nil
+}
+
+func (cb *ConfigBuilder) convertSlackFields(ctx context.Context, in []monitoringv1alpha1.SlackField, crKey types.NamespacedName) ([]slackField, error) {
+	l := len(in)
+
+	if l == 0 {
+		return nil, nil
+	}
+
+	fields := make([]slackField, l)
+	for i, f := range in {
+		field := slackField{
+			Title: f.Title,
+			Value: f.Value,
+		}
+
+		if f.Short != nil {
+			field.Short = *f.Short
+		}
+		fields[i] = field
+	}
+
+	return fields, nil
 }
 
 func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
@@ -1569,21 +1582,11 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			out.Attachments[i].TitleLink = string(*c.TitleLink)
 		}
 
-		if l := len(c.Fields); l > 0 {
-			fields := make([]slackField, l)
-			for i, f := range c.Fields {
-				field := slackField{
-					Title: f.Title,
-					Value: f.Value,
-				}
-
-				if f.Short != nil {
-					field.Short = *f.Short
-				}
-				fields[i] = field
-			}
-			out.Attachments[i].Fields = fields
+		fields, err := cb.convertSlackFields(ctx, c.Fields, crKey)
+		if err != nil {
+			return nil, err
 		}
+		out.Attachments[i].Fields = fields
 
 		if c.ThumbURL != nil {
 			out.Attachments[i].ThumbURL = string(*c.ThumbURL)
