@@ -489,44 +489,44 @@ type rocketChatConfig struct {
 }
 
 type mattermostConfig struct {
-	SendResolved *bool                         `yaml:"send_resolved,omitempty"`
-	WebhookURL   string                        `yaml:"webhook_url"`
-	Channel      string                        `yaml:"channel,omitempty"`
-	Username     string                        `yaml:"username,omitempty"`
-	Text         string                        `yaml:"text"`
-	IconURL      string                        `yaml:"icon_url,omitempty"`
-	IconEmoji    string                        `yaml:"icon_emoji,omitempty"`
-	Attachments  []*mattermostAttachmentConfig `yaml:"attachments,omitempty"`
-	Props        *mattermostPropsConfig        `json:"props,omitempty"`
-	Priority     *mattermostPriorityConfig     `json:"priority,omitempty"`
-	HTTPConfig   *httpClientConfig             `yaml:"http_config,omitempty"`
+	SendResolved *bool                         `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	WebhookURL   string                        `yaml:"webhook_url" json:"webhook_url"`
+	Channel      string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
+	Username     string                        `yaml:"username,omitempty" json:"username,omitempty"`
+	Text         string                        `yaml:"text" json:"text"`
+	IconURL      string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
+	IconEmoji    string                        `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
+	Attachments  []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`
+	Props        *mattermostPropsConfig        `yaml:"props,omitempty" json:"props,omitempty"`
+	Priority     *mattermostPriorityConfig     `yaml:"priority,omitempty" json:"priority,omitempty"`
+	HTTPConfig   *httpClientConfig             `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 }
 
 type mattermostAttachmentConfig struct {
-	Fallback   string       `json:"fallback,omitempty"`
-	Color      string       `json:"color,omitempty"`
-	Pretext    string       `json:"pretext,omitempty"`
-	Text       string       `json:"text,omitempty"`
-	AuthorName string       `json:"author_name,omitempty"`
-	AuthorLink string       `json:"author_link,omitempty"`
-	AuthorIcon string       `json:"author_icon,omitempty"`
-	Title      string       `json:"title,omitempty"`
-	TitleLink  string       `json:"title_link,omitempty"`
-	Fields     []slackField `json:"fields,omitempty"`
-	ThumbURL   string       `json:"thumb_url,omitempty"`
-	Footer     string       `json:"footer,omitempty"`
-	FooterIcon string       `json:"footer_icon,omitempty"`
-	ImageURL   string       `json:"image_url,omitempty"`
+	Fallback   string       `yaml:"fallback,omitempty" json:"fallback,omitempty"`
+	Color      string       `yaml:"color,omitempty" json:"color,omitempty"`
+	Pretext    string       `yaml:"pretext,omitempty" json:"pretext,omitempty"`
+	Text       string       `yaml:"text,omitempty" json:"text,omitempty"`
+	AuthorName string       `yaml:"author_name,omitempty" json:"author_name,omitempty"`
+	AuthorLink string       `yaml:"author_link,omitempty" json:"author_link,omitempty"`
+	AuthorIcon string       `yaml:"author_icon,omitempty" json:"author_icon,omitempty"`
+	Title      string       `yaml:"title,omitempty" json:"title,omitempty"`
+	TitleLink  string       `yaml:"title_link,omitempty" json:"title_link,omitempty"`
+	Fields     []slackField `yaml:"fields,omitempty" json:"fields,omitempty"`
+	ThumbURL   string       `yaml:"thumb_url,omitempty" json:"thumb_url,omitempty"`
+	Footer     string       `yaml:"footer,omitempty" json:"footer,omitempty"`
+	FooterIcon string       `yaml:"footer_icon,omitempty" json:"footer_icon,omitempty"`
+	ImageURL   string       `yaml:"image_url,omitempty" json:"image_url,omitempty"`
 }
 
 type mattermostPropsConfig struct {
-	Card *string `json:"card,omitempty"`
+	Card *string `yaml:"card,omitempty" json:"card,omitempty"`
 }
 
 type mattermostPriorityConfig struct {
-	Priority                string `json:"priority,omitempty"`
-	RequestedAck            *bool  `json:"requested_ack,omitempty"`
-	PersistentNotifications *bool  `json:"persistent_notifications,omitempty"`
+	Priority                string `yaml:"priority,omitempty" json:"priority,omitempty"`
+	RequestedAck            *bool  `yaml:"requested_ack,omitempty" json:"requested_ack,omitempty"`
+	PersistentNotifications *bool  `yaml:"persistent_notifications,omitempty" json:"persistent_notifications,omitempty"`
 }
 
 type timeInterval config.TimeInterval
