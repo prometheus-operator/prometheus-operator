@@ -37794,7 +37794,7 @@ Valid values: &ldquo;=&rdquo; (equality), &ldquo;!=&rdquo; (inequality), &ldquo;
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
-<p>MattermostAttachmentConfig configures attachmeent parameters for the notifications.
+<p>MattermostAttachmentConfig configures attachment parameters for the notifications.
 For more information, please refer to the Mattermost document:
 <a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a></p>
 </div>

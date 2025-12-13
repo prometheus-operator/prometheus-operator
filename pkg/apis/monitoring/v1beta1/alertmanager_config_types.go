@@ -1338,7 +1338,7 @@ type MattermostConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// MattermostAttachmentConfig configures attachmeent parameters for the notifications.
+// MattermostAttachmentConfig configures attachment parameters for the notifications.
 // For more information, please refer to the Mattermost document:
 // https://developers.mattermost.com/integrate/reference/message-attachments/
 type MattermostAttachmentConfig struct {

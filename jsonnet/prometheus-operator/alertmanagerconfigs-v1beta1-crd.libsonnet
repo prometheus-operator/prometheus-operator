@@ -1089,7 +1089,7 @@
                           attachments: {
                             description: 'attachments define the message attachments used for richer formatting options.\nIt is for compatibility with Slack.',
                             items: {
-                              description: 'MattermostAttachmentConfig configures attachmeent parameters for the notifications.\nFor more information, please refer to the Mattermost document:\nhttps://developers.mattermost.com/integrate/reference/message-attachments/',
+                              description: 'MattermostAttachmentConfig configures attachment parameters for the notifications.\nFor more information, please refer to the Mattermost document:\nhttps://developers.mattermost.com/integrate/reference/message-attachments/',
                               properties: {
                                 authorIcon: {
                                   description: "authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.",
