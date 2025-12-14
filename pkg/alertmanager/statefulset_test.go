@@ -1556,3 +1556,21 @@ func TestStatefulSetPodManagementPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(1)
+	a.Spec.Version = operator.DefaultAlertmanagerVersion
+	a.Spec.Replicas = &replicas
+
+	a.Spec.Dispatch = &monitoringv1.AlertmanagerDispatchSpec{
+		StartDelay: ptr.To(monitoringv1.GoDuration("10s")),
+	}
+
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+	require.Contains(t, amArgs, "--dispatch.start-delay=10s", "expected stateful set to contain '--dispatch.start-delay=10s'")
+}

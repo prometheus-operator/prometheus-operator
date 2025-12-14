@@ -881,6 +881,20 @@ AlertmanagerLimitsSpec
 </tr>
 <tr>
 <td>
+<code>dispatch</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerDispatchSpec">
+AlertmanagerDispatchSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>dispatch defines the web command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -6002,6 +6016,42 @@ AlertmanagerGlobalConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerDispatchSpec">AlertmanagerDispatchSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerDispatchSpec defines the dispatch command line flags when starting Alertmanager.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>timeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoDuration">
+GoDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>startDelay defines the delay the aggregation groups&rsquo; first flush,
+until we are confident all alerts are resent by Prometheus instances.
+This corresponds to the Alertmanager&rsquo;s
+<code>--dispatch.start-delay</code> flag.</p>
+<p>It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints
 </h3>
 <p>
@@ -7331,6 +7381,20 @@ AlertmanagerLimitsSpec
 <td>
 <em>(Optional)</em>
 <p>limits defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dispatch</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerDispatchSpec">
+AlertmanagerDispatchSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>dispatch defines the web command line flags when starting Alertmanager.</p>
 </td>
 </tr>
 <tr>
@@ -11399,7 +11463,7 @@ URL
 <h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerDispatchSpec">AlertmanagerDispatchSpec</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
 </p>
 <div>
 <p>GoDuration is a valid time duration that can be parsed by Go&rsquo;s time.ParseDuration() function.

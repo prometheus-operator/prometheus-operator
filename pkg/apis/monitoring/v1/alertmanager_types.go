@@ -346,6 +346,9 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
+	// dispatch defines the web command line flags when starting Alertmanager.
+	// +optional
+	Dispatch *AlertmanagerDispatchSpec `json:"dispatch,omitempty"`
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.
@@ -585,6 +588,19 @@ type AlertmanagerLimitsSpec struct {
 	//
 	// +optional
 	MaxPerSilenceBytes *ByteSize `json:"maxPerSilenceBytes,omitempty"`
+}
+
+// AlertmanagerDispatchSpec defines the dispatch command line flags when starting Alertmanager.
+// +k8s:openapi-gen=true
+type AlertmanagerDispatchSpec struct {
+	// startDelay defines the delay the aggregation groups' first flush,
+	// until we are confident all alerts are resent by Prometheus instances.
+	// This corresponds to the Alertmanager's
+	// `--dispatch.start-delay` flag.
+	//
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	StartDelay *GoDuration `json:"timeout,omitempty"`
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.
