@@ -1767,8 +1767,12 @@ func checkMattermostConfigs(
 
 	for _, config := range configs {
 		if config.WebhookURL != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
+			url, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL)
+			if err != nil {
 				return err
+			}
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("failed to validate Webhook URL: %w", err)
 			}
 		}
 
