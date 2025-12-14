@@ -2482,6 +2482,13 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 			return err
 		}
 	}
+
+	for _, conf := range r.MattermostConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
