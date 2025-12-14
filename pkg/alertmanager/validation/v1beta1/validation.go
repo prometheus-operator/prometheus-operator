@@ -391,14 +391,61 @@ func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error
 
 func validateMattermostConfigs(configs []monitoringv1beta1.MattermostConfig) error {
 	for _, config := range configs {
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
-		}
 
 		if config.IconURL != nil {
 			if _, err := validation.ValidateURL(string(*config.IconURL)); err != nil {
 				return fmt.Errorf("invalid 'iconURL': %w", err)
 			}
+		}
+
+		attachmentValidation := func(att monitoringv1beta1.MattermostAttachmentConfig) error {
+			if att.AuthorIcon != nil {
+				if _, err := validation.ValidateURL(string(*att.AuthorIcon)); err != nil {
+					return fmt.Errorf("invalid 'authorIcon': %w", err)
+				}
+			}
+
+			if att.AuthorLink != nil {
+				if _, err := validation.ValidateURL(string(*att.AuthorLink)); err != nil {
+					return fmt.Errorf("invalid 'authorLink': %w", err)
+				}
+			}
+
+			if att.TitleLink != nil {
+				if _, err := validation.ValidateURL(string(*att.TitleLink)); err != nil {
+					return fmt.Errorf("invalid 'titleLink': %w", err)
+				}
+			}
+
+			if att.ThumbURL != nil {
+				if _, err := validation.ValidateURL(string(*att.ThumbURL)); err != nil {
+					return fmt.Errorf("invalid 'thumbURL': %w", err)
+				}
+			}
+
+			if att.FooterIcon != nil {
+				if _, err := validation.ValidateURL(string(*att.FooterIcon)); err != nil {
+					return fmt.Errorf("invalid 'footerIcon': %w", err)
+				}
+			}
+
+			if att.ImageURL != nil {
+				if _, err := validation.ValidateURL(string(*att.ImageURL)); err != nil {
+					return fmt.Errorf("invalid 'imageURL': %w", err)
+				}
+			}
+
+			return nil
+		}
+
+		for i, att := range config.Attachments {
+			if err := attachmentValidation(att); err != nil {
+				return fmt.Errorf("invalid 'attachments' %d: %w", i, err)
+			}
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
 		}
 	}
 
