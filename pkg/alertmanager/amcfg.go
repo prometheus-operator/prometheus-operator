@@ -776,6 +776,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		for i := range in.RocketChatConfigs {
 			receiver, err := cb.convertMattermostConfig(ctx, in.MattermostConfigs[i], crKey)
 			if err != nil {
+				cb.logger.Error(fmt.Sprintf("%s", err))
 				return nil, fmt.Errorf("MattermostConfig[%d]: %w", i, err)
 			}
 			mattermostConfigs[i] = receiver
