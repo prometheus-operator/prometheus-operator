@@ -2,4 +2,5 @@ receivers:
 - name: ""
   mattermost_configs:
   - webhook_url: www.test.com
+    text: test text
 templates: []

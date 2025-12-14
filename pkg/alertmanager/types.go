@@ -491,8 +491,8 @@ type rocketChatConfig struct {
 
 type mattermostConfig struct {
 	SendResolved   *bool                         `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
-	WebhookURL     string                        `yaml:"webhook_url" json:"webhook_url"`
-	WebhookURLFile string                        `yaml:"webhook_url_file" json:"webhook_url_file"`
+	WebhookURL     string                        `yaml:"webhook_url,omitempty" json:"webhook_url,omitempty"`
+	WebhookURLFile string                        `yaml:"webhook_url_file,omitempty" json:"webhook_url_file,omitempty"`
 	Channel        string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Username       string                        `yaml:"username,omitempty" json:"username,omitempty"`
 	Text           string                        `yaml:"text" json:"text"`

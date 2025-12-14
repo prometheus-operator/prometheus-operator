@@ -3714,7 +3714,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "CR_with_Mattermost_Reeceiver_Unsupported_Version.golden",
+			expectedError: true,
 		},
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
@@ -4692,6 +4692,7 @@ func TestSanitizeConfig(t *testing.T) {
 						MattermostConfigs: []*mattermostConfig{
 							{
 								WebhookURL: "www.test.com",
+								Text:       "test text",
 							},
 						},
 					},
@@ -4708,12 +4709,13 @@ func TestSanitizeConfig(t *testing.T) {
 						MattermostConfigs: []*mattermostConfig{
 							{
 								WebhookURL: "www.test.com",
+								Text:       "test text",
 							},
 						},
 					},
 				},
 			},
-			golden: "test_drop_config_version_mattermost_not_allowed.golden",
+			expectErr: true,
 		},
 		{
 			name:           "Test webhook_url takes precedence in mattermost config",
@@ -4725,6 +4727,7 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								WebhookURL:     "www.test.com",
 								WebhookURLFile: "/test",
+								Text:           "test text",
 							},
 						},
 					},
