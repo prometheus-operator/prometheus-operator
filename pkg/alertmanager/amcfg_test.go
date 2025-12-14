@@ -3652,6 +3652,7 @@ func TestGenerateConfig(t *testing.T) {
 												Name: "mattermost-secret",
 											},
 										},
+										Text: "test text",
 									},
 								},
 							},
@@ -3906,12 +3907,15 @@ func TestGenerateConfig(t *testing.T) {
 			cb.cfg = &tc.baseConfig
 
 			err := cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs)
+			if err != nil {
+				logger.Error(fmt.Sprintf("Error: %s", err))
+			} else {
+				logger.Error("No Error")
+			}
 			if tc.expectedError {
 				require.Error(t, err)
-				logger.Error(fmt.Sprintf("Error: %s", err))
 				return
 			}
-			logger.Error("No Error")
 			require.NoError(t, err)
 
 			cfgBytes, err := cb.MarshalJSON()

@@ -773,7 +773,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 	var mattermostConfigs []*mattermostConfig
 	if l := len(in.MattermostConfigs); l > 0 {
 		mattermostConfigs = make([]*mattermostConfig, l)
-		for i := range in.RocketChatConfigs {
+		for i := range in.MattermostConfigs {
 			receiver, err := cb.convertMattermostConfig(ctx, in.MattermostConfigs[i], crKey)
 			if err != nil {
 				cb.logger.Error(fmt.Sprintf("%s", err))
