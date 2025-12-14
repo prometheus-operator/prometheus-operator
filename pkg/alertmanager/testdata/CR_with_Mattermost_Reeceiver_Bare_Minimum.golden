@@ -10,4 +10,5 @@ receivers:
 - name: mynamespace/myamc/test
   mattermost_configs:
   - webhook_url: https://mattermost.example.com
+    text: test text
 templates: []
