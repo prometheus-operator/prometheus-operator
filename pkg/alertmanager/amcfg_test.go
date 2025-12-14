@@ -2062,6 +2062,9 @@ func TestGenerateConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version30, err := semver.ParseTolerant("v0.30.0")
+	require.NoError(t, err)
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
@@ -3613,7 +3616,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with Mattermost Receiver Bare Minimum",
-			amVersion: &version28,
+			amVersion: &version30,
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3661,6 +3664,57 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Mattermost_Reeceiver_Bare_Minimum.golden",
+		},
+		{
+			name:      "CR with Mattermost Receiver Unsupported Version",
+			amVersion: &version28,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "mattermost-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://mattermost.example.com"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
+									{
+										WebhookURL: &corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "mattermost-secret",
+											},
+										},
+										Text: "test text",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Mattermost_Reeceiver_Unsupported_Version.golden",
 		},
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
@@ -3965,6 +4019,9 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
+
+	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
+	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
 	for _, tc := range []struct {
 		name           string
@@ -4625,6 +4682,55 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
+		},
+		{
+			name:           "Test config version mattermost allowed",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_config_version_mattermost_allowed.golden",
+		},
+		{
+			name:           "Test drop config version mattermost not allowed",
+			againstVersion: versionMattermostConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_drop_config_version_mattermost_not_allowed.golden",
+		},
+		{
+			name:           "Test webhook_url takes precedence in mattermost config",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL:     "www.test.com",
+								WebhookURLFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

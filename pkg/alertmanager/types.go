@@ -490,17 +490,18 @@ type rocketChatConfig struct {
 }
 
 type mattermostConfig struct {
-	SendResolved *bool                         `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
-	WebhookURL   string                        `yaml:"webhook_url" json:"webhook_url"`
-	Channel      string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
-	Username     string                        `yaml:"username,omitempty" json:"username,omitempty"`
-	Text         string                        `yaml:"text" json:"text"`
-	IconURL      string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
-	IconEmoji    string                        `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
-	Attachments  []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`
-	Props        *mattermostPropsConfig        `yaml:"props,omitempty" json:"props,omitempty"`
-	Priority     *mattermostPriorityConfig     `yaml:"priority,omitempty" json:"priority,omitempty"`
-	HTTPConfig   *httpClientConfig             `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	SendResolved   *bool                         `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	WebhookURL     string                        `yaml:"webhook_url" json:"webhook_url"`
+	WebhookURLFile string                        `yaml:"webhook_url_file" json:"webhook_url_file"`
+	Channel        string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
+	Username       string                        `yaml:"username,omitempty" json:"username,omitempty"`
+	Text           string                        `yaml:"text" json:"text"`
+	IconURL        string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
+	IconEmoji      string                        `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
+	Attachments    []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`
+	Props          *mattermostPropsConfig        `yaml:"props,omitempty" json:"props,omitempty"`
+	Priority       *mattermostPriorityConfig     `yaml:"priority,omitempty" json:"priority,omitempty"`
+	HTTPConfig     *httpClientConfig             `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 }
 
 type mattermostAttachmentConfig struct {

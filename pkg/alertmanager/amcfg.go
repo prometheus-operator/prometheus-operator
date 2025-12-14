@@ -2878,6 +2878,25 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	return rc.HTTPConfig.sanitize(amVersion, logger)
 }
 
+func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	mattermostAllowed := amVersion.GTE(semver.MustParse("0.30.0"))
+	if !mattermostAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is available in Alertmanager >= 0.30.0`)
+	}
+
+	if mc.WebhookURL == "" && mc.WebhookURLFile == "" {
+		return fmt.Errorf(`one of 'webhook_url' or 'webhook_url_file' must be configured`)
+	}
+
+	if mc.WebhookURL != "" && mc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for mattermost receiver config - 'webhook_url' has taken precedence"
+		logger.Warn(msg)
+		mc.WebhookURLFile = ""
+	}
+
+	return mc.HTTPConfig.sanitize(amVersion, logger)
+}
+
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 
