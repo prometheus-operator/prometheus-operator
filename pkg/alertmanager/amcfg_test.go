@@ -3905,11 +3905,14 @@ func TestGenerateConfig(t *testing.T) {
 			)
 			cb.cfg = &tc.baseConfig
 
+			err := cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs)
 			if tc.expectedError {
-				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				require.Error(t, err)
+				logger.Error(fmt.Sprintf("Error: %s", err))
 				return
 			}
-			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+			logger.Error("No Error")
+			require.NoError(t, err)
 
 			cfgBytes, err := cb.MarshalJSON()
 			require.NoError(t, err)
