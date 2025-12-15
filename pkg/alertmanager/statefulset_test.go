@@ -1560,7 +1560,7 @@ func TestStatefulSetPodManagementPolicy(t *testing.T) {
 func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
 	replicas := int32(1)
-	a.Spec.Version = operator.DefaultAlertmanagerVersion
+	a.Spec.Version = "v0.30.0"
 	a.Spec.Replicas = &replicas
 
 	a.Spec.Dispatch = &monitoringv1.AlertmanagerDispatchSpec{
