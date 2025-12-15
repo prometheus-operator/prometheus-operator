@@ -600,7 +600,7 @@ type AlertmanagerDispatchSpec struct {
 	//
 	// It requires Alertmanager >= v0.30.0.
 	// +optional
-	StartDelay *GoDuration `json:"timeout,omitempty"`
+	StartDelay *GoDuration `json:"startDelay,omitempty"`
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.

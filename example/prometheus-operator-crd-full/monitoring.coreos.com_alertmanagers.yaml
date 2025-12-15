@@ -4419,7 +4419,7 @@ spec:
                 description: dispatch defines the web command line flags when starting
                   Alertmanager.
                 properties:
-                  timeout:
+                  startDelay:
                     description: |-
                       startDelay defines the delay the aggregation groups' first flush,
                       until we are confident all alerts are resent by Prometheus instances.

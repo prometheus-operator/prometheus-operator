@@ -23,7 +23,7 @@ import (
 // AlertmanagerDispatchSpecApplyConfiguration represents a declarative configuration of the AlertmanagerDispatchSpec type for use
 // with apply.
 type AlertmanagerDispatchSpecApplyConfiguration struct {
-	StartDelay *monitoringv1.GoDuration `json:"timeout,omitempty"`
+	StartDelay *monitoringv1.GoDuration `json:"startDelay,omitempty"`
 }
 
 // AlertmanagerDispatchSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerDispatchSpec type for use with

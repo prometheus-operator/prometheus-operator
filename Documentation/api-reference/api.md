@@ -6034,7 +6034,7 @@ AlertmanagerGlobalConfig
 <tbody>
 <tr>
 <td>
-<code>timeout</code><br/>
+<code>startDelay</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.GoDuration">
 GoDuration
