@@ -114,6 +114,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
+
 	}
 
 	return receiverNames, nil
@@ -379,6 +380,29 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 		}
 	}
 
+	return nil
+}
+
+func validateIncidentioConfigs(configs []monitoringv1alpha1.IncidentioConfig) error {
+	for _, config := range configs {
+		if config.URL != nil {
+			if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
+				return fmt.Errorf("invalid 'url': %w", err)
+			}
+		}
+
+		if config.URL == nil {
+			return fmt.Errorf("url must be configured")
+		}
+
+		if config.HTTPConfig == nil || config.HTTPConfig.Authorization == nil {
+			return fmt.Errorf("httpConfig.authorization must be configured")
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

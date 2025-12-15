@@ -420,6 +420,11 @@
     "selfsigned",
     "FIPS",
     "FIPSSTS",
+<<<<<<< HEAD
     "checkmark"
+=======
+    "Incidentio",
+    "incidentio"
+>>>>>>> 84888629d (feat: add incident.io integration to alertmanager)
   ]
 }
