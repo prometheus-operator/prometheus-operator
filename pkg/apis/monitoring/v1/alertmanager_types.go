@@ -62,6 +62,7 @@ type Alertmanager struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
+	//nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward compatibility.
 	Status AlertmanagerStatus `json:"status,omitempty"`
 }
 
@@ -95,24 +96,34 @@ type AlertmanagerSpec struct {
 	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
 	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// version the cluster should be on.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Version string `json:"version,omitempty"`
 	// tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
 	// Deprecated: use 'image' instead. The image tag can be specified as part of the image URL.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Tag string `json:"tag,omitempty"`
 	// sha of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
 	// Deprecated: use 'image' instead. The image digest can be specified as part of the image URL.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	SHA string `json:"sha,omitempty"`
 	// baseImage that is used to deploy pods, without tag.
 	// Deprecated: use 'image' instead.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BaseImage string `json:"baseImage,omitempty"`
 	// imagePullSecrets An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
@@ -144,14 +155,20 @@ type AlertmanagerSpec struct {
 	// operator provisions a minimal Alertmanager configuration with one empty
 	// receiver (effectively dropping alert notifications).
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ConfigSecret string `json:"configSecret,omitempty"`
 	// logLevel for Alertmanager to be configured with.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogLevel string `json:"logLevel,omitempty"`
 	// logFormat for Alertmanager to be configured with.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogFormat string `json:"logFormat,omitempty"`
 	// replicas defines the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
@@ -162,6 +179,8 @@ type AlertmanagerSpec struct {
 	// and must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).
 	// +kubebuilder:default:="120h"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Retention GoDuration `json:"retention,omitempty"`
 	// storage defines the definition of how storage will be used by the Alertmanager
 	// instances.
@@ -188,22 +207,29 @@ type AlertmanagerSpec struct {
 	// necessary to generate correct URLs. This is necessary if Alertmanager is not
 	// served from root of a DNS name.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ExternalURL string `json:"externalUrl,omitempty"`
 	// routePrefix Alertmanager registers HTTP handlers for. This is useful,
 	// if using ExternalURL and a proxy is rewriting HTTP routes of a request,
 	// and the actual ExternalURL is still true, but the server serves requests
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	// +optional
+	//nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward compatibility.
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// paused if set to true all actions on the underlying managed objects are not
 	// going to be performed, except for delete actions.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Paused bool `json:"paused,omitempty"`
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// affinity defines the pod's scheduling constraints.
 	// +optional
@@ -240,11 +266,15 @@ type AlertmanagerSpec struct {
 	// serviceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 	// listenLocal defines the Alertmanager server listen on loopback, so that it
 	// does not bind against the Pod IP. Note this is only for the Alertmanager
 	// UI, not the gossip communication.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// podManagementPolicy defines the policy for creating/deleting pods when
@@ -283,6 +313,8 @@ type AlertmanagerSpec struct {
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 	// priorityClassName assigned to the Pods
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// additionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
 	// +optional
@@ -291,9 +323,13 @@ type AlertmanagerSpec struct {
 	// Needs to be provided for non RFC1918 [1] (public) addresses.
 	// [1] RFC1918: https://tools.ietf.org/html/rfc1918
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ClusterAdvertiseAddress string `json:"clusterAdvertiseAddress,omitempty"`
 	// clusterGossipInterval defines the interval between gossip attempts.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ClusterGossipInterval GoDuration `json:"clusterGossipInterval,omitempty"`
 	// clusterLabel defines the identifier that uniquely identifies the Alertmanager cluster.
 	// You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.
@@ -301,18 +337,26 @@ type AlertmanagerSpec struct {
 	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// clusterPushpullInterval defines the interval between pushpull attempts.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ClusterPushpullInterval GoDuration `json:"clusterPushpullInterval,omitempty"`
 	// clusterPeerTimeout defines the timeout for cluster peering.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
 	// portName defines the port's name for the pods and governing service.
 	// Defaults to `web`.
 	// +kubebuilder:default:="web"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	PortName string `json:"portName,omitempty"`
 	// forceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
 	// alertmanagerConfigSelector defines the selector to be used for to merge and configure Alertmanager with.
 	// +optional
@@ -325,6 +369,8 @@ type AlertmanagerSpec struct {
 	// alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
 	// process incoming alerts.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 
 	// minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
@@ -418,6 +464,8 @@ type AlertmanagerConfigMatcherStrategy struct {
 	// +kubebuilder:validation:Enum="OnNamespace";"OnNamespaceExceptForAlertmanagerNamespace";"None"
 	// +kubebuilder:default:="OnNamespace"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Type AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
 
@@ -448,6 +496,8 @@ type AlertmanagerConfiguration struct {
 	// The operator will not enforce a `namespace` label for routes and inhibition rules.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Name string `json:"name,omitempty"`
 	// global defines the global parameters of the Alertmanager configuration.
 	// +optional
@@ -468,6 +518,8 @@ type AlertmanagerGlobalConfig struct {
 	// not include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.
 	// This has no impact on alerts from Prometheus, as they always include EndsAt.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ResolveTimeout Duration `json:"resolveTimeout,omitempty"`
 
 	// httpConfig defines the default HTTP configuration.
@@ -523,24 +575,36 @@ type AlertmanagerStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Paused bool `json:"paused"`
 	// replicas defines the total number of non-terminated pods targeted by this Alertmanager
 	// object (their labels match the selector).
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Replicas int32 `json:"replicas"`
 	// updatedReplicas defines the total number of non-terminated pods targeted by this Alertmanager
 	// object that have the desired version spec.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	UpdatedReplicas int32 `json:"updatedReplicas"`
 	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Alertmanager cluster.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// unavailableReplicas defines the total number of unavailable pods targeted by this Alertmanager object.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 	// selector used to match the pods targeted by this Alertmanager object.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Selector string `json:"selector,omitempty"`
 	// conditions defines the current state of the Alertmanager object.
 	// +listType=map

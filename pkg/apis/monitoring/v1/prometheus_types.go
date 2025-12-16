@@ -217,11 +217,15 @@ type CommonPrometheusFields struct {
 	// Prometheus available at the time when the version of the operator was
 	// released.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Version string `json:"version,omitempty"`
 
 	// paused defines when a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Paused bool `json:"paused,omitempty"`
 
 	// image defines the container image name for Prometheus. If specified, it takes precedence
@@ -240,6 +244,8 @@ type CommonPrometheusFields struct {
 	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
 	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// imagePullSecrets defines an optional list of references to Secrets in the same namespace
 	// to use for pulling images from registries.
@@ -302,10 +308,14 @@ type CommonPrometheusFields struct {
 	// logLevel for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogLevel string `json:"logLevel,omitempty"`
 	// logFormat for Log level for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// scrapeInterval defines interval between consecutive scrapes.
@@ -313,10 +323,14 @@ type CommonPrometheusFields struct {
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ScrapeInterval Duration `json:"scrapeInterval,omitempty"`
 	// scrapeTimeout defines the number of seconds to wait until a scrape request times out.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
@@ -350,6 +364,8 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.33.0.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
 
 	// enableOTLPReceiver defines the Prometheus to be used as a receiver for the OTLP Metrics protocol.
@@ -386,6 +402,8 @@ type CommonPrometheusFields struct {
 	// available. This is necessary to generate correct URLs (for instance if
 	// Prometheus is accessible behind an Ingress resource).
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ExternalURL string `json:"externalUrl,omitempty"`
 	// routePrefix defines the route prefix Prometheus registers HTTP handlers for.
 	//
@@ -394,6 +412,8 @@ type CommonPrometheusFields struct {
 	// the server serves requests under a different route prefix. For example
 	// for use with `kubectl proxy`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	RoutePrefix string `json:"routePrefix,omitempty"`
 
 	// storage defines the storage used by Prometheus.
@@ -426,6 +446,8 @@ type CommonPrometheusFields struct {
 
 	// resources defines the resources requests and limits of the 'prometheus' container.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 
 	// nodeSelector defines on which Nodes the Pods are scheduled.
@@ -435,6 +457,8 @@ type CommonPrometheusFields struct {
 	// serviceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
@@ -497,6 +521,8 @@ type CommonPrometheusFields struct {
 	// instead of the Pod IP's address.
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// podManagementPolicy defines the policy for creating/deleting pods when
@@ -575,11 +601,15 @@ type CommonPrometheusFields struct {
 
 	// priorityClassName assigned to the Pods.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// portName used for the pods and governing service.
 	// Default: "web"
 	// +kubebuilder:default:="web"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	PortName string `json:"portName,omitempty"`
 
 	// arbitraryFSAccessThroughSMs when true, ServiceMonitor, PodMonitor and Probe object are forbidden to
@@ -593,6 +623,8 @@ type CommonPrometheusFields struct {
 	// Users should instead provide the credentials using the
 	// `spec.bearerTokenSecret` field.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 
 	// overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
@@ -601,11 +633,15 @@ type CommonPrometheusFields struct {
 	// In practice,`OverrideHonorLabels:true` enforces `honorLabels:false`
 	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 	// overrideHonorTimestamps when true, Prometheus ignores the timestamps for all the targets created
 	// from service and pod monitors.
 	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
 
 	// ignoreNamespaceSelectors when true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
@@ -613,6 +649,8 @@ type CommonPrometheusFields struct {
 	// within the namespace of the PodMonitor, ServiceMonitor and Probe
 	// object.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 
 	// enforcedNamespaceLabel when not empty, a label will be added to:
@@ -628,6 +666,8 @@ type CommonPrometheusFields struct {
 	// The label's value is the namespace of the `ServiceMonitor`,
 	// `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 
 	// enforcedSampleLimit when defined specifies a global limit on the number
@@ -744,6 +784,8 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// nameValidationScheme defines the validation scheme for metric and label names.
@@ -843,6 +885,8 @@ type CommonPrometheusFields struct {
 	// to a different value).
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// podTargetLabels are appended to the `spec.podTargetLabels` field of all
@@ -1115,6 +1159,8 @@ type Prometheus struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Status PrometheusStatus `json:"status,omitempty"`
 }
 
@@ -1150,21 +1196,31 @@ type PrometheusSpec struct {
 
 	// baseImage is deprecated: use 'spec.image' instead.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BaseImage string `json:"baseImage,omitempty"`
 	// tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Tag string `json:"tag,omitempty"`
 	// sha is deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	SHA string `json:"sha,omitempty"`
 
 	// retention defines how long to retain the Prometheus data.
 	//
 	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Retention Duration `json:"retention,omitempty"`
 	// retentionSize defines the maximum number of bytes used by the Prometheus data.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
@@ -1181,10 +1237,14 @@ type PrometheusSpec struct {
 	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
 	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
 	// rules defines the configuration of the Prometheus rules' engine.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Rules Rules `json:"rules,omitempty"`
 	// prometheusRulesExcludedFromEnforce defines the list of PrometheusRule objects to which the namespace label
 	// enforcement doesn't apply.
@@ -1264,6 +1324,8 @@ type PrometheusSpec struct {
 	// `/dev/stdout`, to log query information to the default Prometheus log
 	// stream.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 
 	// allowOverlappingBlocks enables vertical compaction and vertical query
@@ -1271,6 +1333,8 @@ type PrometheusSpec struct {
 	//
 	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 
 	// exemplars related settings that are runtime reloadable.
@@ -1282,6 +1346,8 @@ type PrometheusSpec struct {
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
 	// ruleQueryOffset defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
@@ -1299,6 +1365,8 @@ type PrometheusSpec struct {
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 }
 
@@ -1334,7 +1402,7 @@ type PrometheusTracingConfig struct {
 	// clientType defines the client used to export the traces. Supported values are `http` or `grpc`.
 	// +kubebuilder:validation:Enum=http;grpc
 	// +optional
-	ClientType *string `json:"clientType"`
+	ClientType *string `json:"clientType,omitempty"`
 
 	// endpoint to send the traces to. Should be provided in format <host>:<port>.
 	// +kubebuilder:validation:MinLength:=1
@@ -1343,28 +1411,28 @@ type PrometheusTracingConfig struct {
 
 	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
 	// +optional
-	SamplingFraction *resource.Quantity `json:"samplingFraction"`
+	SamplingFraction *resource.Quantity `json:"samplingFraction,omitempty"`
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	Insecure *bool `json:"insecure"`
+	Insecure *bool `json:"insecure,omitempty"`
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
-	Headers map[string]string `json:"headers"`
+	Headers map[string]string `json:"headers,omitempty"`
 
 	// compression key for supported compression types. The only supported value is `gzip`.
 	// +kubebuilder:validation:Enum=gzip
 	// +optional
-	Compression *string `json:"compression"`
+	Compression *string `json:"compression,omitempty"`
 
 	// timeout defines the maximum time the exporter will wait for each batch export.
 	// +optional
-	Timeout *Duration `json:"timeout"`
+	Timeout *Duration `json:"timeout,omitempty"`
 
 	// tlsConfig to use when sending traces.
 	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig"`
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.
@@ -1375,22 +1443,32 @@ type PrometheusStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	Paused bool `json:"paused"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	Paused bool `json:"paused,omitempty"`
 	// replicas defines the total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
 	// +optional
-	Replicas int32 `json:"replicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	Replicas int32 `json:"replicas,omitempty"`
 	// updatedReplicas defines the total number of non-terminated pods targeted by this Prometheus deployment
 	// that have the desired version spec.
 	// +optional
-	UpdatedReplicas int32 `json:"updatedReplicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Prometheus deployment.
 	// +optional
-	AvailableReplicas int32 `json:"availableReplicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 	// unavailableReplicas defines the total number of unavailable pods targeted by this Prometheus deployment.
 	// +optional
-	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 	// conditions defines the current state of the Prometheus deployment.
 	// +listType=map
 	// +listMapKey=type
@@ -1403,9 +1481,13 @@ type PrometheusStatus struct {
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
 	// shards defines the most recently observed number of shards.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Shards int32 `json:"shards,omitempty"`
 	// selector used to match the pods targeted by this Prometheus resource.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Selector string `json:"selector,omitempty"`
 }
 
@@ -1429,6 +1511,8 @@ type AlertingSpec struct {
 type StorageSpec struct {
 	// disableMountSubPath deprecated: subPath usage will be removed in a future release.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
 	// emptyDir to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
@@ -1445,6 +1529,8 @@ type StorageSpec struct {
 	// The easiest way to use a volume that cannot be automatically provisioned
 	// is to use a label selector alongside manually created PersistentVolumes.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
@@ -1522,6 +1608,8 @@ type ThanosSpec struct {
 
 	// resources defines the resources requests and limits of the Thanos sidecar.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 
 	// objectStorageConfig defines the Thanos sidecar's configuration to upload TSDB blocks to object storage.
@@ -1541,6 +1629,8 @@ type ThanosSpec struct {
 
 	// listenLocal is deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// grpcListenLocal defines when true, the Thanos sidecar listens on the loopback interface instead
@@ -1548,6 +1638,8 @@ type ThanosSpec struct {
 	//
 	// It has no effect if `listenLocal` is true.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	GRPCListenLocal bool `json:"grpcListenLocal,omitempty"`
 
 	// httpListenLocal when true, the Thanos sidecar listens on the loopback interface instead
@@ -1555,6 +1647,8 @@ type ThanosSpec struct {
 	//
 	// It has no effect if `listenLocal` is true.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	HTTPListenLocal bool `json:"httpListenLocal,omitempty"`
 
 	// tracingConfig defines the tracing configuration for the Thanos sidecar.
@@ -1577,6 +1671,8 @@ type ThanosSpec struct {
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
@@ -1589,10 +1685,14 @@ type ThanosSpec struct {
 	// logLevel for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogLevel string `json:"logLevel,omitempty"`
 	// logFormat for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// minTime defines the start of time range limit served by the Thanos sidecar's StoreAPI.
@@ -1600,6 +1700,8 @@ type ThanosSpec struct {
 	// duration relative to current time, such as -1d or 2h45m. Valid duration
 	// units are ms, s, m, h, d, w, y.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	MinTime string `json:"minTime,omitempty"`
 
 	// blockSize controls the size of TSDB blocks produced by Prometheus.
@@ -1613,17 +1715,25 @@ type ThanosSpec struct {
 	//
 	// +kubebuilder:default:="2h"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BlockDuration Duration `json:"blockSize,omitempty"`
 
 	// readyTimeout defines the maximum time that the Thanos sidecar will wait for
 	// Prometheus to start.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ReadyTimeout Duration `json:"readyTimeout,omitempty"`
 	// getConfigInterval defines how often to retrieve the Prometheus configuration.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	GetConfigInterval Duration `json:"getConfigInterval,omitempty"`
 	// getConfigTimeout defines the maximum time to wait when retrieving the Prometheus configuration.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	GetConfigTimeout Duration `json:"getConfigTimeout,omitempty"`
 
 	// volumeMounts allows configuration of additional VolumeMounts for Thanos.
@@ -1727,6 +1837,8 @@ type RemoteWriteSpec struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// authorization section for the URL.
@@ -1761,6 +1873,8 @@ type RemoteWriteSpec struct {
 	// in clear-text. Prefer using `authorization`.*
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// tlsConfig to use for the URL.
@@ -1830,21 +1944,31 @@ type QueueConfig struct {
 	// capacity defines the number of samples to buffer per shard before we start
 	// dropping them.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Capacity int `json:"capacity,omitempty"`
 	// minShards defines the minimum number of shards, i.e. amount of concurrency.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	MinShards int `json:"minShards,omitempty"`
 	// maxShards defines the maximum number of shards, i.e. amount of concurrency.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	MaxShards int `json:"maxShards,omitempty"`
 	// maxSamplesPerSend defines the maximum number of samples per send.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	MaxSamplesPerSend int `json:"maxSamplesPerSend,omitempty"`
 	// batchSendDeadline defines the maximum time a sample will wait in buffer.
 	// +optional
 	BatchSendDeadline *Duration `json:"batchSendDeadline,omitempty"`
 	// maxRetries defines the maximum number of times to retry a batch on recoverable errors.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	MaxRetries int `json:"maxRetries,omitempty"`
 	// minBackoff defines the initial retry delay. Gets doubled for every retry.
 	// +optional
@@ -1857,6 +1981,8 @@ type QueueConfig struct {
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
 	// sampleAgeLimit drops samples older than the limit.
 	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
@@ -1871,6 +1997,8 @@ type QueueConfig struct {
 type Sigv4 struct {
 	// region defines the AWS region. If blank, the region from the default credentials chain used.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Region string `json:"region,omitempty"`
 	// accessKey defines the AWS API key. If not specified, the environment variable
 	// `AWS_ACCESS_KEY_ID` is used.
@@ -1882,9 +2010,13 @@ type Sigv4 struct {
 	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
 	// profile defines the named AWS profile used to authenticate.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Profile string `json:"profile,omitempty"`
 	// roleArn defines the named AWS profile used to authenticate.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	RoleArn string `json:"roleArn,omitempty"`
 	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 	// It requires Prometheus >= v2.54.0.
@@ -1946,7 +2078,7 @@ type ManagedIdentity struct {
 	//
 	// +optional
 	// +kubebuilder:validation:MinLength:=1
-	ClientID *string `json:"clientId"`
+	ClientID *string `json:"clientId,omitempty"`
 }
 
 // AzureSDK is used to store azure SDK config values.
@@ -1972,6 +2104,8 @@ type RemoteReadSpec struct {
 	// It requires Prometheus >= v2.15.0.
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Name string `json:"name,omitempty"`
 
 	// requiredMatchers defines an optional list of equality matchers which have to be present
@@ -1992,6 +2126,8 @@ type RemoteReadSpec struct {
 	// readRecent defines whether reads should be made for queries for time ranges that
 	// the local storage should have complete data for.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ReadRecent bool `json:"readRecent,omitempty"`
 
 	// oauth2 configuration for the URL.
@@ -2012,6 +2148,8 @@ type RemoteReadSpec struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// authorization section for the URL.
 	//
@@ -2027,6 +2165,8 @@ type RemoteReadSpec struct {
 	// in clear-text. Prefer using `authorization`.*
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// tlsConfig to use for the URL.
@@ -2077,16 +2217,22 @@ type RelabelConfig struct {
 	//
 	// Regex capture groups are available.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	TargetLabel string `json:"targetLabel,omitempty"`
 
 	// regex defines the regular expression against which the extracted value is matched.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Regex string `json:"regex,omitempty"`
 
 	// modulus to take of the hash of the source label values.
 	//
 	// Only applicable when the action is `HashMod`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Modulus uint64 `json:"modulus,omitempty"`
 
 	// replacement value against which a Replace action is performed if the
@@ -2107,6 +2253,8 @@ type RelabelConfig struct {
 	// +kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
 	// +kubebuilder:default=replace
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Action string `json:"action,omitempty"`
 }
 
@@ -2135,6 +2283,8 @@ type APIServerConfig struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// tlsConfig to use for the API server.
@@ -2155,6 +2305,8 @@ type APIServerConfig struct {
 	// in clear-text. Prefer using `authorization`.*
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerToken string `json:"bearerToken,omitempty"`
 
 	// Optional ProxyConfig.
@@ -2222,6 +2374,8 @@ type AlertmanagerEndpoints struct {
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// authorization section for Alertmanager.
@@ -2279,6 +2433,8 @@ type Rules struct {
 	//
 	// Any update to these parameters trigger a restart of the pods.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Alert RulesAlert `json:"alert,omitempty"`
 }
 
@@ -2287,6 +2443,8 @@ type RulesAlert struct {
 	// forOutageTolerance defines the max time to tolerate prometheus outage for restoring 'for' state of
 	// alert.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ForOutageTolerance string `json:"forOutageTolerance,omitempty"`
 
 	// forGracePeriod defines the minimum duration between alert and restored 'for' state.
@@ -2294,11 +2452,15 @@ type RulesAlert struct {
 	// This is maintained only for alerts with a configured 'for' time greater
 	// than the grace period.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ForGracePeriod string `json:"forGracePeriod,omitempty"`
 
 	// resendDelay defines the minimum amount of time to wait before resending an alert to
 	// Alertmanager.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ResendDelay string `json:"resendDelay,omitempty"`
 }
 
@@ -2309,11 +2471,15 @@ type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Send bool `json:"send,omitempty"`
 
 	// sendInterval defines how frequently metric metadata is sent to the remote storage.
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	SendInterval Duration `json:"sendInterval,omitempty"`
 
 	// maxSamplesPerSend defines the maximum number of metadata samples per send.
@@ -2385,6 +2551,8 @@ type SafeAuthorization struct {
 	//
 	// Default: "Bearer"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Type string `json:"type,omitempty"`
 
 	// credentials defines a key of a Secret in the namespace that contains the credentials for authentication.
@@ -2415,6 +2583,8 @@ type Authorization struct {
 
 	// credentialsFile defines the file to read a secret from, mutually exclusive with `credentials`.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	CredentialsFile string `json:"credentialsFile,omitempty"`
 }
 

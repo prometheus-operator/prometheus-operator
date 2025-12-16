@@ -131,6 +131,8 @@ type ScrapeConfig struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Status v1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
