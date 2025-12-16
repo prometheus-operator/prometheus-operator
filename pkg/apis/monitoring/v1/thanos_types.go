@@ -57,6 +57,8 @@ type ThanosRuler struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Status ThanosRulerStatus `json:"status,omitempty"`
 }
 
@@ -94,12 +96,16 @@ type ThanosRulerSpec struct {
 
 	// image defines Thanos container image URL.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Image string `json:"image,omitempty"`
 
 	// imagePullPolicy defines for the 'thanos', 'init-config-reloader' and 'config-reloader' containers.
 	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
 	// +kubebuilder:validation:Enum="";Always;Never;IfNotPresent
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
 	// imagePullSecrets defines an optional list of references to secrets in the same namespace
@@ -111,6 +117,8 @@ type ThanosRulerSpec struct {
 	// paused defines when a ThanosRuler deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Paused bool `json:"paused,omitempty"`
 
 	// replicas defines the number of thanos ruler instances to deploy.
@@ -124,6 +132,8 @@ type ThanosRulerSpec struct {
 	// resources defines the resource requirements for single Pods.
 	// If not provided, no requests/limits will be set
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 
 	// affinity defines when specified, the pod's scheduling constraints.
@@ -158,6 +168,8 @@ type ThanosRulerSpec struct {
 
 	// priorityClassName defines the priority class assigned to the Pods
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 
 	// serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
@@ -172,6 +184,8 @@ type ThanosRulerSpec struct {
 	// serviceAccountName defines the name of the ServiceAccount to use to run the
 	// Thanos Ruler Pods.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// storage defines the specification of how storage shall be used.
@@ -210,6 +224,8 @@ type ThanosRulerSpec struct {
 	// listenLocal defines the Thanos ruler listen on loopback, so that it
 	// does not bind against the Pod IP.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
 	// podManagementPolicy defines the policy for creating/deleting pods when
@@ -284,6 +300,8 @@ type ThanosRulerSpec struct {
 	// and metric that is user created. The label value will always be the namespace of the object that is
 	// being created.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 	// excludedFromEnforcement defines the list of references to PrometheusRule objects
 	// to be excluded from enforcing a namespace label of origin.
@@ -300,21 +318,29 @@ type ThanosRulerSpec struct {
 	// logLevel for ThanosRuler to be configured with.
 	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogLevel string `json:"logLevel,omitempty"`
 	// logFormat for ThanosRuler to be configured with.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	LogFormat string `json:"logFormat,omitempty"`
 
 	// portName defines the port name used for the pods and governing service.
 	// Defaults to `web`.
 	// +kubebuilder:default:="web"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	PortName string `json:"portName,omitempty"`
 
 	// evaluationInterval defines the interval between consecutive evaluations.
 	// +kubebuilder:default:="15s"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
 	// resendDelay defines the minimum amount of time to wait before resending an alert to Alertmanager.
@@ -354,6 +380,8 @@ type ThanosRulerSpec struct {
 	//
 	// +kubebuilder:default:="24h"
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Retention Duration `json:"retention,omitempty"`
 
 	// containers allows injecting additional containers or modifying operator generated
@@ -400,6 +428,8 @@ type ThanosRulerSpec struct {
 	// This field takes precedence over `tracingConfig`.
 	//
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 
 	// labels defines the external label pairs of the ThanosRuler resource.
@@ -422,9 +452,13 @@ type ThanosRulerSpec struct {
 	// necessary to generate correct URLs. This is necessary if Thanos Ruler is not
 	// served from root of a DNS name.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	ExternalPrefix string `json:"externalPrefix,omitempty"`
 	// routePrefix defines the route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	RoutePrefix string `json:"routePrefix,omitempty"`
 
 	// grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
@@ -438,6 +472,8 @@ type ThanosRulerSpec struct {
 	// of all alerts.
 	// Maps to the '--alert.query-url' CLI arg.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	AlertQueryURL string `json:"alertQueryUrl,omitempty"`
 
 	// minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
@@ -554,22 +590,32 @@ type ThanosRulerStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	Paused bool `json:"paused"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	Paused bool `json:"paused,omitempty"`
 	// replicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
 	// (their labels match the selector).
 	// +optional
-	Replicas int32 `json:"replicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	Replicas int32 `json:"replicas,omitempty"`
 	// updatedReplicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
 	// that have the desired version spec.
 	// +optional
-	UpdatedReplicas int32 `json:"updatedReplicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
 	// targeted by this ThanosRuler deployment.
 	// +optional
-	AvailableReplicas int32 `json:"availableReplicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 	// unavailableReplicas defines the total number of unavailable pods targeted by this ThanosRuler deployment.
 	// +optional
-	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 	// conditions defines the current state of the ThanosRuler object.
 	// +listType=map
 	// +listMapKey=type
