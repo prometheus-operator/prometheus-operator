@@ -1278,18 +1278,6 @@ func checkPagerDutyConfigs(
 			}
 		}
 
-		if config.URL != nil {
-			if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
-				return fmt.Errorf("failed to validate URL: %w ", err)
-			}
-		}
-
-		if config.ClientURL != nil {
-			if _, err := validation.ValidateURL(string(*config.ClientURL)); err != nil {
-				return fmt.Errorf("failed to validate ClientURL: %w ", err)
-			}
-		}
-
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
