@@ -4558,7 +4558,7 @@ spec:
                             type: string
                           timeout:
                             description: |-
-                              Timeout is the maximum time allowed to invoke the pagerduty
+                              timeout is the maximum time allowed to invoke the pagerduty
                               It requires Alertmanager >= v0.30.0.
                             pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                             type: string
@@ -16551,7 +16551,7 @@ spec:
                             type: string
                           timeout:
                             description: |-
-                              Timeout is the maximum time allowed to invoke the pagerduty
+                              timeout is the maximum time allowed to invoke the pagerduty
                               It requires Alertmanager >= v0.30.0.
                             pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                             type: string

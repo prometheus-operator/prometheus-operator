@@ -30267,7 +30267,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Timeout is the maximum time allowed to invoke the pagerduty
+<p>timeout is the maximum time allowed to invoke the pagerduty
 It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
@@ -37854,7 +37854,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>Timeout is the maximum time allowed to invoke the pagerduty
+<p>timeout is the maximum time allowed to invoke the pagerduty
 It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
