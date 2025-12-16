@@ -1269,6 +1269,8 @@ type TelegramConfig struct {
 	// apiURL defines the Telegram API URL, e.g. https://api.telegram.org.
 	// If not specified, the default Telegram API URL will be used.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	APIURL *URL `json:"apiURL,omitempty"`
 	// botToken defines the Telegram bot token. It is mutually exclusive with `botTokenFile`.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
