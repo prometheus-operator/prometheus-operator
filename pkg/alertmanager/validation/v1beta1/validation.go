@@ -348,10 +348,8 @@ func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) error {
 	validateRocketChatURL := func(u *monitoringv1beta1.URL, urlName string) error {
 		if u != nil {
-			if *u != "" {
-				if _, err := validation.ValidateURL(strings.TrimSpace(string(*u))); err != nil {
-					return fmt.Errorf("failed to validate RocketChat '%s': %w", urlName, err)
-				}
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*u))); err != nil {
+				return fmt.Errorf("failed to validate RocketChat '%s': %w", urlName, err)
 			}
 		}
 
