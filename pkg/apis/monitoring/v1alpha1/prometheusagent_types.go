@@ -61,6 +61,8 @@ type PrometheusAgent struct {
 	metav1.TypeMeta `json:",inline"`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// spec defines the specification of the desired behavior of the Prometheus agent. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
@@ -70,6 +72,8 @@ type PrometheusAgent struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Status monitoringv1.PrometheusStatus `json:"status,omitempty"`
 }
 

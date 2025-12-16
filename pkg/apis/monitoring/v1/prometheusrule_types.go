@@ -50,6 +50,8 @@ type PrometheusRule struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
@@ -124,10 +126,14 @@ type Rule struct {
 	// record defines the name of the time series to output to. Must be a valid metric name.
 	// Only one of `record` and `alert` must be set.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Record string `json:"record,omitempty"`
 	// alert defines the name of the alert. Must be a valid label value.
 	// Only one of `record` and `alert` must be set.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Alert string `json:"alert,omitempty"`
 	// expr defines the PromQL expression to evaluate.
 	// +required
