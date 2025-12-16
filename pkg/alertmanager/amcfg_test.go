@@ -2026,6 +2026,80 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "invalid TracingConfig config is simple with alertmanager version30",
+			amVersion: &version30,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+					TracingConfig: &monitoringv1.TracingConfig{
+						Endpoint: "abc",
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_tracingconfig_simple.golden",
+		},
+		{
+			name:      "invalid TracingConfig config is simple with alertmanager version30",
+			amVersion: &version30,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+					TracingConfig: nil,
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_tracingconfig_nil.golden",
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {

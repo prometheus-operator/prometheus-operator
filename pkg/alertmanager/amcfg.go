@@ -603,10 +603,19 @@ func (cb *ConfigBuilder) convertTracingConfig(_ context.Context, in *monitoringv
 	}
 
 	out := &tracingConfig{
-		ClientType:  *in.ClientType,
-		Endpoint:    in.Endpoint,
-		Insecure:    *in.Insecure,
-		Compression: *in.Compression,
+		Endpoint: in.Endpoint,
+	}
+
+	if in.ClientType != nil {
+		out.ClientType = *in.ClientType
+	}
+
+	if in.Insecure != nil {
+		out.Insecure = *in.Insecure
+	}
+
+	if in.Compression != nil {
+		out.Compression = *in.Compression
 	}
 
 	if in.SamplingFraction != nil {
