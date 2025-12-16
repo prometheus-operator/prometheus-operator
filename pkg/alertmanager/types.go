@@ -458,7 +458,7 @@ type rocketchatAttachmentAction struct {
 	Text               string `yaml:"text,omitempty"`
 	URL                string `yaml:"url,omitempty"`
 	ImageURL           string `yaml:"image_url,omitempty"`
-	IsWebView          bool   `yaml:"is_webview,omitempty"`
+	IsWebView          bool   `yaml:"is_webview"`
 	WebviewHeightRatio string `yaml:"webview_height_ratio,omitempty"`
 	Msg                string `yaml:"msg,omitempty"`
 	MsgInChatWindow    bool   `yaml:"msg_in_chat_window"`
