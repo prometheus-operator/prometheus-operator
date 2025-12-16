@@ -1112,7 +1112,11 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 		return err
 	}
 
-	return checkInhibitRules(amc, amVersion)
+	if err := checkInhibitRules(amc, amVersion); err != nil {
+		return err
+	}
+
+	return checkTracingConfig(ctx, amc.Spec.TracingConfig, amVersion)
 }
 
 func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
@@ -1771,6 +1775,25 @@ func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semve
 				return fmt.Errorf("invalid sourceMatchers[%d] in inhibitRule[%d] in config %s: %w", j, i, amc.Name, err)
 			}
 		}
+	}
+
+	return nil
+}
+
+func checkTracingConfig(_ context.Context, tc *monitoringv1.TracingConfig, amVersion semver.Version) error {
+	if tc == nil {
+		return nil
+	}
+
+	if !amVersion.GTE(semver.MustParse("0.30.0")) {
+		return fmt.Errorf(
+			"'tracingConfig' config set in 'spec' but supported in Alertmanager >= 0.30.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
+	if err := tc.Validate(); err != nil {
+		return err
 	}
 
 	return nil

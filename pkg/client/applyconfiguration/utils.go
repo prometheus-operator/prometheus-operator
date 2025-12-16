@@ -164,8 +164,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.PrometheusSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusStatus"):
 		return &monitoringv1.PrometheusStatusApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("PrometheusTracingConfig"):
-		return &monitoringv1.PrometheusTracingConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusWebSpec"):
 		return &monitoringv1.PrometheusWebSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProxyConfig"):
@@ -226,6 +224,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.TLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TopologySpreadConstraint"):
 		return &monitoringv1.TopologySpreadConstraintApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("TracingConfig"):
+		return &monitoringv1.TracingConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TSDBSpec"):
 		return &monitoringv1.TSDBSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebConfigFileFields"):
