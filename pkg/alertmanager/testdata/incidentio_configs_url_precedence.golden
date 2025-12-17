@@ -1,6 +1,0 @@
-receivers:
-- name: ""
-  incidentio_config:
-  - url: http://example.com
-    alert_source_token: token123
-templates: []

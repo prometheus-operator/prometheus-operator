@@ -1996,11 +1996,13 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	return nil
 }
 
-func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) (*incidentioConfig, error) {
-	out := &incidentioConfig{
-		VSendResolved: in.SendResolved,
-		MaxAlerts:     in.MaxAlerts,
+func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, out *incidentioConfig, in *monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) error {
+	if in == nil {
+		return nil
 	}
+
+	out.VSendResolved = in.SendResolved
+	out.MaxAlerts = in.MaxAlerts
 
 	if in.URL != nil {
 		out.URL = string(*in.URL)
@@ -2008,21 +2010,21 @@ func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitor
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to convert HTTP config: %w", err)
 	}
 	out.HTTPConfig = httpConfig
 
 	timeout, err := convertTimeout(in.Timeout)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to convert timeout: %w", err)
 	}
 	out.Timeout = timeout
 
-	return out, nil
+	return nil
 }
 
 func convertTimeout(in *monitoringv1.Duration) (*model.Duration, error) {
-	if in == nil || *in == "" {
+	if ptr.Deref(in, "") == "" {
 		return nil, nil
 	}
 	timeout, err := model.ParseDuration(string(*in))
@@ -2277,35 +2279,6 @@ func (pc *proxyConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 	return nil
 }
 
-func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
-	incidentioAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
-	if !incidentioAllowed {
-		return fmt.Errorf("invalid syntax in receivers config; incident.io integration is available in Alertmanager >= 0.29.0")
-	}
-
-	if ic.URL == "" && ic.URLFile == "" {
-		return errors.New("one of url or url_file must be configured")
-	}
-
-	if ic.URL != "" && ic.URLFile != "" {
-		return errors.New("at most one of url & url_file must be configured")
-	}
-
-	if ic.AlertSourceToken != "" && ic.AlertSourceTokenFile != "" {
-		return errors.New("at most one of alert_source_token & alert_source_token_file must be configured")
-	}
-
-	if ic.HTTPConfig != nil && ic.HTTPConfig.Authorization != nil && (ic.AlertSourceToken != "" || ic.AlertSourceTokenFile != "") {
-		return errors.New("cannot specify alert_source_token or alert_source_token_file when using http_config.authorization")
-	}
-
-	if ic.AlertSourceToken == "" && ic.AlertSourceTokenFile == "" && (ic.HTTPConfig == nil || ic.HTTPConfig.Authorization == nil) {
-		return errors.New("at least one of alert_source_token, alert_source_token_file or http_config.authorization must be configured")
-	}
-
-	return ic.HTTPConfig.sanitize(amVersion, logger)
-}
-
 func (o *oauth2) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if o == nil {
 		return nil
@@ -2428,6 +2401,7 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	for _, conf := range r.MattermostConfigs {
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
@@ -2445,6 +2419,8 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 
 =======
 >>>>>>> 84888629d (feat: add incident.io integration to alertmanager)
+=======
+>>>>>>> 6f8827709 (fix: doc)
 	return nil
 }
 

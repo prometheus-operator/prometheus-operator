@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "API reference"
 description: "Prometheus operator generated API reference docs"
@@ -41450,3 +41451,5 @@ Days can be specified by name (e.g &lsquo;Sunday&rsquo;) or as an inclusive rang
 <p>YearRange is an inclusive range of years</p>
 </div>
 <hr/>
+=======
+>>>>>>> 6f8827709 (fix: doc)
