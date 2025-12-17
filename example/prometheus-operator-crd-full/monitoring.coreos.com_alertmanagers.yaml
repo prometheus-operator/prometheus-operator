@@ -4415,21 +4415,11 @@ spec:
                   - name
                   type: object
                 type: array
-              dispatch:
+              dispatchStartDelay:
                 description: dispatch defines the web command line flags when starting
                   Alertmanager.
-                properties:
-                  startDelay:
-                    description: |-
-                      startDelay defines the delay the aggregation groups' first flush,
-                      until we are confident all alerts are resent by Prometheus instances.
-                      This corresponds to the Alertmanager's
-                      `--dispatch.start-delay` flag.
-
-                      It requires Alertmanager >= v0.30.0.
-                    pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
-                    type: string
-                type: object
+                pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               dnsConfig:
                 description: dnsConfig defines the DNS configuration for the pods.
                 properties:

@@ -79,7 +79,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
 	Limits                               *AlertmanagerLimitsSpecApplyConfiguration               `json:"limits,omitempty"`
-	Dispatch                             *AlertmanagerDispatchSpecApplyConfiguration             `json:"dispatch,omitempty"`
+	DispatchStartDelay                   *monitoringv1.GoDuration                                `json:"dispatchStartDelay,omitempty"`
 	ClusterTLS                           *ClusterTLSConfigApplyConfiguration                     `json:"clusterTLS,omitempty"`
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
@@ -550,11 +550,11 @@ func (b *AlertmanagerSpecApplyConfiguration) WithLimits(value *AlertmanagerLimit
 	return b
 }
 
-// WithDispatch sets the Dispatch field in the declarative configuration to the given value
+// WithDispatchStartDelay sets the DispatchStartDelay field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Dispatch field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithDispatch(value *AlertmanagerDispatchSpecApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
-	b.Dispatch = value
+// If called multiple times, the DispatchStartDelay field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithDispatchStartDelay(value monitoringv1.GoDuration) *AlertmanagerSpecApplyConfiguration {
+	b.DispatchStartDelay = &value
 	return b
 }
 

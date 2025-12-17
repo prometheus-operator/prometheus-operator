@@ -3907,16 +3907,10 @@
                     },
                     "type": "array"
                   },
-                  "dispatch": {
+                  "dispatchStartDelay": {
                     "description": "dispatch defines the web command line flags when starting Alertmanager.",
-                    "properties": {
-                      "startDelay": {
-                        "description": "startDelay defines the delay the aggregation groups' first flush,\nuntil we are confident all alerts are resent by Prometheus instances.\nThis corresponds to the Alertmanager's\n`--dispatch.start-delay` flag.\n\nIt requires Alertmanager >= v0.30.0.",
-                        "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
-                        "type": "string"
-                      }
-                    },
-                    "type": "object"
+                    "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                    "type": "string"
                   },
                   "dnsConfig": {
                     "description": "dnsConfig defines the DNS configuration for the pods.",

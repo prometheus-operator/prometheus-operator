@@ -1563,9 +1563,7 @@ func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 	a.Spec.Version = "v0.30.0"
 	a.Spec.Replicas = &replicas
 
-	a.Spec.Dispatch = &monitoringv1.AlertmanagerDispatchSpec{
-		StartDelay: ptr.To(monitoringv1.GoDuration("10s")),
-	}
+	a.Spec.DispatchStartDelay = ptr.To(monitoringv1.GoDuration("10s"))
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
