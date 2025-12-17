@@ -1053,6 +1053,16 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.Source = *in.Source
 	}
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
@@ -2411,6 +2421,7 @@ func (ops *opsgenieResponder) sanitize(amVersion semver.Version) error {
 
 func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_25 := amVersion.LT(semver.MustParse("0.25.0"))
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 
 	if pdc.Source != "" && lessThanV0_25 {
 		msg := "'source' supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
@@ -2440,6 +2451,12 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		msg := "'routing_key' and 'routing_key_file' are mutually exclusive for pagerdury receiver config - 'routing_key' has taken precedence"
 		logger.Warn(msg)
 		pdc.RoutingKeyFile = ""
+	}
+
+	if pdc.Timeout != nil && lessThanV0_30 {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		pdc.Timeout = nil
 	}
 
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
