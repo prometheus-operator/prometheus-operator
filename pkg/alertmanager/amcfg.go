@@ -955,11 +955,21 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.Actions = actions
 	}
 
-	fields, err := cb.convertSlackFields(in.Fields)
-	if err != nil {
-		return nil, err
+	if l := len(in.Fields); l > 0 {
+		fields := make([]slackField, l)
+		for i, f := range in.Fields {
+			field := slackField{
+				Title: f.Title,
+				Value: f.Value,
+			}
+
+			if f.Short != nil {
+				field.Short = *f.Short
+			}
+			fields[i] = field
+		}
+		out.Fields = fields
 	}
-	out.Fields = fields
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
@@ -978,29 +988,6 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 
 	return out, nil
-}
-
-func (cb *ConfigBuilder) convertSlackFields(in []monitoringv1alpha1.SlackField) ([]slackField, error) {
-	l := len(in)
-
-	if l == 0 {
-		return nil, nil
-	}
-
-	fields := make([]slackField, l)
-	for i, f := range in {
-		field := slackField{
-			Title: f.Title,
-			Value: f.Value,
-		}
-
-		if f.Short != nil {
-			field.Short = *f.Short
-		}
-		fields[i] = field
-	}
-
-	return fields, nil
 }
 
 func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
