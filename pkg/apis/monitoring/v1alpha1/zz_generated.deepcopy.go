@@ -1652,6 +1652,11 @@ func (in *MattermostConfig) DeepCopyInto(out *MattermostConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Text != nil {
+		in, out := &in.Text, &out.Text
+		*out = new(string)
+		**out = **in
+	}
 	if in.IconURL != nil {
 		in, out := &in.IconURL, &out.IconURL
 		*out = new(URL)

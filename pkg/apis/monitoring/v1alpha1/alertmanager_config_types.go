@@ -1320,8 +1320,8 @@ type MattermostConfig struct {
 	// text defines the markdown-formatted message to display in the post.
 	// To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.
 	// +kubebuilder:validation:MinLength=1
-	// +required
-	Text string `json:"text"`
+	// +optional
+	Text *string `json:"text"`
 	// iconURL overrides the profile picture the message posts with.
 	// +optional
 	IconURL *URL `json:"iconURL,omitempty"`

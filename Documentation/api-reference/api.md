@@ -29252,6 +29252,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>text defines the markdown-formatted message to display in the post.
 To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.</p>
 </td>
@@ -38077,6 +38078,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>text defines the markdown-formatted message to display in the post.
 To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.</p>
 </td>

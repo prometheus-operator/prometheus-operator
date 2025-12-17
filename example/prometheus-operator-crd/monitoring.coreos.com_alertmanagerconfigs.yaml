@@ -2238,7 +2238,6 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         required:
-                        - text
                         - webhookURL
                         type: object
                       type: array

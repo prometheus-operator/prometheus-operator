@@ -1906,7 +1906,6 @@
                           },
                         },
                         required: [
-                          'text',
                           'webhookURL',
                         ],
                         type: 'object',

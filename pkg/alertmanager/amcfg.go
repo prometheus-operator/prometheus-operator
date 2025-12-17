@@ -1520,7 +1520,6 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitoringv1alpha1.MattermostConfig, crKey types.NamespacedName) (*mattermostConfig, error) {
 	out := &mattermostConfig{
 		SendResolved: in.SendResolved,
-		Text:         in.Text,
 	}
 
 	webhookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
@@ -1535,6 +1534,10 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 
 	if in.Username != nil {
 		out.Username = *in.Username
+	}
+
+	if in.Text != nil {
+		out.Text = *in.Text
 	}
 
 	if in.IconURL != nil {
