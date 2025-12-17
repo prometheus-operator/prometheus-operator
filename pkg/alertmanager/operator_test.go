@@ -1393,7 +1393,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
-			amVersion, _ := o.getAlertmanagerVersion(tc.am)
+			amVersion, _ := getAlertmanagerVersion(tc.am)
 
 			amConfigs, _ := o.selectAlertmanagerConfigs(context.Background(), tc.am, store, amVersion)
 

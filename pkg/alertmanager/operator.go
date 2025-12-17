@@ -619,7 +619,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	amVersion, err := c.getAlertmanagerVersion(am)
+	amVersion, err := getAlertmanagerVersion(am)
 	if err != nil {
 		return err
 	}
@@ -910,7 +910,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	return rawAlertmanagerConfig, secret.Data, nil
 }
 
-func (c *Operator) getAlertmanagerVersion(am *monitoringv1.Alertmanager) (semver.Version, error) {
+func getAlertmanagerVersion(am *monitoringv1.Alertmanager) (semver.Version, error) {
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
