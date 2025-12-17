@@ -977,6 +977,16 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
@@ -2527,6 +2537,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
+	}
+
+	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.Timeout = nil
 	}
 
 	if sc.APIURLFile == "" {
