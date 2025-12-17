@@ -346,10 +346,8 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
-	// dispatchStartDelay defines delay duration of the aggregation groups' first flush,
-	// until we are confident all alerts are resent by Prometheus instances.
-	// This corresponds to the Alertmanager's `--web.get-concurrency` flag.
-	// By adding this value to the start time of Alertmanager, we delay the aggregation groups' first flush,
+	// dispatchStartDelay defines the delay duration of the aggregation groups' first flush.
+	// The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.
 	//
 	// It requires Alertmanager >= 0.30.0.
 	// +optional
