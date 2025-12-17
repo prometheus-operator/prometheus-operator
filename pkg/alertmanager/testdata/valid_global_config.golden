@@ -33,3 +33,16 @@ receivers:
 - name: mynamespace/global-config/null
 - name: mynamespace/global-config/myreceiver
 templates: []
+tracing:
+  client_type: grpc
+  endpoint: tracing-service:9090
+  sampling_fraction: 0.56
+  insecure: true
+  tls_config:
+    ca_file: /etc/alertmanager/certs/1_mynamespace_proxy-ca-certificate_certificate
+    insecure_skip_verify: false
+  headers:
+    aa: bb
+    cc: ""
+  compression: gzip
+  timeout: 5s

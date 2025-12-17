@@ -33,6 +33,7 @@ type alertmanagerConfig struct {
 	MuteTimeIntervals []*timeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
 	TimeIntervals     []*timeInterval `yaml:"time_intervals,omitempty" json:"time_intervals,omitempty"`
 	Templates         []string        `yaml:"templates" json:"templates"`
+	TracingConfig     *tracingConfig  `yaml:"tracing,omitempty" json:"tracing,omitempty"`
 }
 
 type globalConfig struct {
@@ -99,6 +100,17 @@ type inhibitRule struct {
 	SourceMatchRE  map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
 	SourceMatchers []string          `yaml:"source_matchers,omitempty" json:"source_matchers,omitempty"`
 	Equal          []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
+}
+
+type tracingConfig struct {
+	ClientType       string            `yaml:"client_type,omitempty" json:"client_type,omitempty"`
+	Endpoint         string            `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
+	SamplingFraction float64           `yaml:"sampling_fraction,omitempty" json:"sampling_fraction,omitempty"`
+	Insecure         bool              `yaml:"insecure,omitempty" json:"insecure,omitempty"`
+	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty" json:"tls_config,omitempty"`
+	Headers          map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
+	Compression      string            `yaml:"compression,omitempty" json:"compression,omitempty"`
+	Timeout          *model.Duration   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 type receiver struct {
