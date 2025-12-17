@@ -936,6 +936,11 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 
 func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.EC2SDConfigs {
+
+		if rs.version.GTE(semver.MustParse("3.8.0")) {
+			return fmt.Errorf("EC2 SD configuration is only supported for Prometheus version < 3.8.0. For Prometheus 3.8.0 onwards, please use AWS SD")
+		}
+
 		if config.AccessKey != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
@@ -1308,6 +1313,10 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	if rs.version.LT(semver.MustParse("2.27.0")) {
 		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
+	}
+
+	if rs.version.GTE(semver.MustParse("3.8.0")) {
+		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version < 3.8.0. For Prometheus 3.8.0 onwards, please use AWS SD")
 	}
 
 	for i, config := range sc.Spec.LightSailSDConfigs {

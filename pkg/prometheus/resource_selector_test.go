@@ -3153,6 +3153,17 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid:       true,
 		},
 		{
+			scenario: "EC2 SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			valid: false,
+		},
+		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
@@ -4558,6 +4569,18 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			valid: false,
+		},
+		{
+			scenario: "LightSail SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       false,
 		},
 		{
 			scenario: "OVHCloud SD config",

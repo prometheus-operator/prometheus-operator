@@ -3717,7 +3717,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = cgForHTTPClientConfig.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 		}
-		cfg = cg.WithMaximumVersion("3.8.0").AppendMapItem(cfg, "ec2_sd_configs", configs)
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ec2_sd_configs",
+			Value: configs,
+		})
 	}
 
 	// AzureSDConfig
@@ -4592,7 +4595,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 		}
-		cfg = cg.WithMaximumVersion("3.8.0").AppendMapItem(cfg, "lightsail_sd_configs", configs)
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "lightsail_sd_configs",
+			Value: configs,
+		})
 	}
 
 	// OVHCloudSDConfigs
