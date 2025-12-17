@@ -890,10 +890,8 @@ GoDuration
 </td>
 <td>
 <em>(Optional)</em>
-<p>dispatchStartDelay defines delay duration of the aggregation groups&rsquo; first flush,
-until we are confident all alerts are resent by Prometheus instances.
-This corresponds to the Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.
-By adding this value to the start time of Alertmanager, we delay the aggregation groups&rsquo; first flush,</p>
+<p>dispatchStartDelay defines the delay duration of the aggregation groups&rsquo; first flush.
+The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.</p>
 <p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
@@ -7362,10 +7360,8 @@ GoDuration
 </td>
 <td>
 <em>(Optional)</em>
-<p>dispatchStartDelay defines delay duration of the aggregation groups&rsquo; first flush,
-until we are confident all alerts are resent by Prometheus instances.
-This corresponds to the Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.
-By adding this value to the start time of Alertmanager, we delay the aggregation groups&rsquo; first flush,</p>
+<p>dispatchStartDelay defines the delay duration of the aggregation groups&rsquo; first flush.
+The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.</p>
 <p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
