@@ -881,6 +881,22 @@ AlertmanagerLimitsSpec
 </tr>
 <tr>
 <td>
+<code>dispatchStartDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoDuration">
+GoDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>dispatchStartDelay defines the delay duration of the aggregation groups&rsquo; first flush.
+The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.</p>
+<p>It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -7331,6 +7347,22 @@ AlertmanagerLimitsSpec
 <td>
 <em>(Optional)</em>
 <p>limits defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dispatchStartDelay</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoDuration">
+GoDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>dispatchStartDelay defines the delay duration of the aggregation groups&rsquo; first flush.
+The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.</p>
+<p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>

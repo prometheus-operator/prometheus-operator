@@ -303,6 +303,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	}
 
+	if version.GTE(semver.MustParse("0.30.0")) && a.Spec.DispatchStartDelay != nil {
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "dispatch.start-delay", Value: string(*a.Spec.DispatchStartDelay)})
+	}
+
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
 		amArgs = append(amArgs, monitoringv1.Argument{Name: "log.level", Value: a.Spec.LogLevel})
 	}
