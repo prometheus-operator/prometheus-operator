@@ -3917,7 +3917,7 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
-  
+
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
@@ -4664,9 +4664,10 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
+		},
+		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",
 			againstVersion: versionTimeoutConfigNotAllowed,
-
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
