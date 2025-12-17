@@ -890,7 +890,10 @@ GoDuration
 </td>
 <td>
 <em>(Optional)</em>
-<p>dispatch defines the web command line flags when starting Alertmanager.</p>
+<p>dispatchStartDelay defines delay duration of the aggregation groups&rsquo; first flush,
+until we are confident all alerts are resent by Prometheus instances.
+This corresponds to the Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.
+By adding this value to the start time of Alertmanager, we delay the aggregation groups&rsquo; first flush,</p>
 </td>
 </tr>
 <tr>
@@ -7358,7 +7361,10 @@ GoDuration
 </td>
 <td>
 <em>(Optional)</em>
-<p>dispatch defines the web command line flags when starting Alertmanager.</p>
+<p>dispatchStartDelay defines delay duration of the aggregation groups&rsquo; first flush,
+until we are confident all alerts are resent by Prometheus instances.
+This corresponds to the Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.
+By adding this value to the start time of Alertmanager, we delay the aggregation groups&rsquo; first flush,</p>
 </td>
 </tr>
 <tr>

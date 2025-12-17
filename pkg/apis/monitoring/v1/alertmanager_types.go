@@ -346,7 +346,10 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
-	// dispatch defines the web command line flags when starting Alertmanager.
+	// dispatchStartDelay defines delay duration of the aggregation groups' first flush,
+	// until we are confident all alerts are resent by Prometheus instances.
+	// This corresponds to the Alertmanager's `--web.get-concurrency` flag.
+	// By adding this value to the start time of Alertmanager, we delay the aggregation groups' first flush,
 	// +optional
 	DispatchStartDelay *GoDuration `json:"dispatchStartDelay,omitempty"`
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.

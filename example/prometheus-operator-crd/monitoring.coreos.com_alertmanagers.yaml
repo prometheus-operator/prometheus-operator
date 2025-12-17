@@ -4417,8 +4417,11 @@ spec:
                   type: object
                 type: array
               dispatchStartDelay:
-                description: dispatch defines the web command line flags when starting
-                  Alertmanager.
+                description: |-
+                  dispatchStartDelay defines delay duration of the aggregation groups' first flush,
+                  until we are confident all alerts are resent by Prometheus instances.
+                  This corresponds to the Alertmanager's `--web.get-concurrency` flag.
+                  By adding this value to the start time of Alertmanager, we delay the aggregation groups' first flush,
                 pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               dnsConfig:
