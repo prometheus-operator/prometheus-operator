@@ -857,15 +857,11 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		out.MaxAlerts = in.MaxAlerts
 	}
 
-	if in.Timeout != nil {
-		if *in.Timeout != "" {
-			timeout, err := model.ParseDuration(string(*in.Timeout))
-			if err != nil {
-				return nil, err
-			}
-			out.Timeout = &timeout
-		}
+	timeout, err := convertTimeout(in.Timeout)
+	if err != nil {
+		return nil, err
 	}
+	out.Timeout = timeout
 
 	return out, nil
 }
@@ -1075,15 +1071,11 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.Source = *in.Source
 	}
 
-	if in.Timeout != nil {
-		if *in.Timeout != "" {
-			timeout, err := model.ParseDuration(string(*in.Timeout))
-			if err != nil {
-				return nil, err
-			}
-			out.Timeout = &timeout
-		}
+	timeout, err := convertTimeout(in.Timeout)
+	if err != nil {
+		return nil, err
 	}
+	out.Timeout = timeout
 
 	return out, nil
 }
@@ -2011,11 +2003,7 @@ func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitor
 	}
 
 	if in.URL != nil {
-		url, err := validation.ValidateURL(string(*in.URL))
-		if err != nil {
-			return nil, err
-		}
-		out.URL = url.String()
+		out.URL = string(*in.URL)
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -2024,17 +2012,24 @@ func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitor
 	}
 	out.HTTPConfig = httpConfig
 
-	if in.Timeout != nil {
-		if *in.Timeout != "" {
-			timeout, err := model.ParseDuration(string(*in.Timeout))
-			if err != nil {
-				return nil, err
-			}
-			out.Timeout = &timeout
-		}
+	timeout, err := convertTimeout(in.Timeout)
+	if err != nil {
+		return nil, err
 	}
+	out.Timeout = timeout
 
 	return out, nil
+}
+
+func convertTimeout(in *monitoringv1.Duration) (*model.Duration, error) {
+	if in == nil || *in == "" {
+		return nil, nil
+	}
+	timeout, err := model.ParseDuration(string(*in))
+	if err != nil {
+		return nil, err
+	}
+	return &timeout, nil
 }
 
 // sanitize the config against a specific Alertmanager version
