@@ -350,6 +350,8 @@ type AlertmanagerSpec struct {
 	// until we are confident all alerts are resent by Prometheus instances.
 	// This corresponds to the Alertmanager's `--web.get-concurrency` flag.
 	// By adding this value to the start time of Alertmanager, we delay the aggregation groups' first flush,
+	//
+	// It requires Alertmanager >= 0.30.0.
 	// +optional
 	DispatchStartDelay *GoDuration `json:"dispatchStartDelay,omitempty"`
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.

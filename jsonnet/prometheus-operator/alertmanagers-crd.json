@@ -3908,7 +3908,7 @@
                     "type": "array"
                   },
                   "dispatchStartDelay": {
-                    "description": "dispatchStartDelay defines delay duration of the aggregation groups' first flush,\nuntil we are confident all alerts are resent by Prometheus instances.\nThis corresponds to the Alertmanager's `--web.get-concurrency` flag.\nBy adding this value to the start time of Alertmanager, we delay the aggregation groups' first flush,",
+                    "description": "dispatchStartDelay defines delay duration of the aggregation groups' first flush,\nuntil we are confident all alerts are resent by Prometheus instances.\nThis corresponds to the Alertmanager's `--web.get-concurrency` flag.\nBy adding this value to the start time of Alertmanager, we delay the aggregation groups' first flush,\n\nIt requires Alertmanager >= 0.30.0.",
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },

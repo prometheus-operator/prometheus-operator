@@ -894,6 +894,7 @@ GoDuration
 until we are confident all alerts are resent by Prometheus instances.
 This corresponds to the Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.
 By adding this value to the start time of Alertmanager, we delay the aggregation groups&rsquo; first flush,</p>
+<p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -7365,6 +7366,7 @@ GoDuration
 until we are confident all alerts are resent by Prometheus instances.
 This corresponds to the Alertmanager&rsquo;s <code>--web.get-concurrency</code> flag.
 By adding this value to the start time of Alertmanager, we delay the aggregation groups&rsquo; first flush,</p>
+<p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>
