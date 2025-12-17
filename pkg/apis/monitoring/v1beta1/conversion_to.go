@@ -323,62 +323,6 @@ func convertRocketchatConfigTo(in RocketChatConfig) v1alpha1.RocketChatConfig {
 	}
 }
 
-func convertMattermostConfigTo(in MattermostConfig) v1alpha1.MattermostConfig {
-	return v1alpha1.MattermostConfig{
-		SendResolved: in.SendResolved,
-		WebhookURL:   in.WebhookURL,
-		Channel:      in.Channel,
-		Text:         in.Text,
-		IconURL:      (*v1alpha1.URL)(in.IconURL),
-		IconEmoji:    in.IconEmoji,
-		Attachments:  convertMattermostAttachmentsTo(in.Attachments),
-		Props:        convertMattermostPropsConfigTo(in.Props),
-		Priority:     convertMattermostPriorityConfigTo(in.Priority),
-		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
-	}
-}
-
-func convertMattermostAttachmentsTo(in []MattermostAttachmentConfig) []v1alpha1.MattermostAttachmentConfig {
-	if in == nil {
-		return nil
-	}
-
-	out := make([]v1alpha1.MattermostAttachmentConfig, len(in))
-	for i, c := range in {
-		out[i] = v1alpha1.MattermostAttachmentConfig{
-			Fallback:   c.Fallback,
-			Color:      c.Color,
-			Pretext:    c.Pretext,
-			Text:       c.Text,
-			AuthorName: c.AuthorName,
-			AuthorLink: (*v1alpha1.URL)(c.AuthorLink),
-			AuthorIcon: (*v1alpha1.URL)(c.AuthorIcon),
-			Title:      c.Title,
-			TitleLink:  (*v1alpha1.URL)(c.TitleLink),
-			Fields:     convertSlackFieldsTo(c.Fields),
-			ThumbURL:   (*v1alpha1.URL)(c.ThumbURL),
-			Footer:     c.Footer,
-			FooterIcon: (*v1alpha1.URL)(c.FooterIcon),
-			ImageURL:   (*v1alpha1.URL)(c.ImageURL),
-		}
-	}
-	return out
-}
-
-func convertMattermostPropsConfigTo(in *MattermostPropsConfig) *v1alpha1.MattermostPropsConfig {
-	return &v1alpha1.MattermostPropsConfig{
-		Card: in.Card,
-	}
-}
-
-func convertMattermostPriorityConfigTo(in *MattermostPriorityConfig) *v1alpha1.MattermostPriorityConfig {
-	return &v1alpha1.MattermostPriorityConfig{
-		Priority:                (*v1alpha1.MattermostPriority)(in.Priority),
-		RequestedAck:            in.RequestedAck,
-		PersistentNotifications: in.PersistentNotifications,
-	}
-}
-
 func convertSlackFieldsTo(in []SlackField) []v1alpha1.SlackField {
 	out := make([]v1alpha1.SlackField, len(in))
 
@@ -702,13 +646,6 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.RocketChatConfigs = append(
 				out.RocketChatConfigs,
 				convertRocketchatConfigTo(in),
-			)
-		}
-
-		for _, in := range in.MattermostConfigs {
-			out.MattermostConfigs = append(
-				out.MattermostConfigs,
-				convertMattermostConfigTo(in),
 			)
 		}
 

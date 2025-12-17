@@ -35,7 +35,6 @@ type ReceiverApplyConfiguration struct {
 	MSTeamsConfigs    []MSTeamsConfigApplyConfiguration    `json:"msteamsConfigs,omitempty"`
 	MSTeamsV2Configs  []MSTeamsV2ConfigApplyConfiguration  `json:"msteamsv2Configs,omitempty"`
 	RocketChatConfigs []RocketChatConfigApplyConfiguration `json:"rocketchatConfigs,omitempty"`
-	MattermostConfigs []MattermostConfigApplyConfiguration `json:"mattermostConfigs,omitempty"`
 }
 
 // ReceiverApplyConfiguration constructs a declarative configuration of the Receiver type for use with
@@ -243,19 +242,6 @@ func (b *ReceiverApplyConfiguration) WithRocketChatConfigs(values ...*RocketChat
 			panic("nil value passed to WithRocketChatConfigs")
 		}
 		b.RocketChatConfigs = append(b.RocketChatConfigs, *values[i])
-	}
-	return b
-}
-
-// WithMattermostConfigs adds the given value to the MattermostConfigs field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the MattermostConfigs field.
-func (b *ReceiverApplyConfiguration) WithMattermostConfigs(values ...*MattermostConfigApplyConfiguration) *ReceiverApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithMattermostConfigs")
-		}
-		b.MattermostConfigs = append(b.MattermostConfigs, *values[i])
 	}
 	return b
 }
