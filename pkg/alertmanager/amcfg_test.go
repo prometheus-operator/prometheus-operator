@@ -3855,17 +3855,11 @@ func TestGenerateConfig(t *testing.T) {
 			)
 			cb.cfg = &tc.baseConfig
 
-			err := cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs)
-			if err != nil {
-				logger.Error(fmt.Sprintf("Error: %s", err))
-			} else {
-				logger.Error("No Error")
-			}
 			if tc.expectedError {
-				require.Error(t, err)
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
 
 			cfgBytes, err := cb.MarshalJSON()
 			require.NoError(t, err)
@@ -4668,6 +4662,7 @@ func TestSanitizeConfig(t *testing.T) {
 		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",
 			againstVersion: versionTimeoutConfigNotAllowed,
+
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
