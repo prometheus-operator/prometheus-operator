@@ -3909,6 +3909,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
 
+	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
+	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
+
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
@@ -4603,6 +4606,58 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
+		},
+		{
+			name:           "Test config version mattermost allowed",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_config_version_mattermost_allowed.golden",
+		},
+		{
+			name:           "Test drop config version mattermost not allowed",
+			againstVersion: versionMattermostConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test webhook_url takes precedence in mattermost config",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL:     "www.test.com",
+								WebhookURLFile: "/test",
+								Text:           "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
 		},
 		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",

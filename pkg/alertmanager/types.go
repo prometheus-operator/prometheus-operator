@@ -119,6 +119,7 @@ type receiver struct {
 	MSTeamsV2Configs  []*msTeamsV2Config  `yaml:"msteamsv2_configs,omitempty"`
 	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
 	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
+	MattermostConfigs []*mattermostConfig `yaml:"mattermost_configs,omitempty" json:"mattermost_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -488,6 +489,54 @@ type rocketChatConfig struct {
 	ThumbURL    string                        `yaml:"thumb_url,omitempty"`
 	LinkNames   bool                          `yaml:"link_names"`
 	Actions     []*rocketchatAttachmentAction `yaml:"actions,omitempty"`
+}
+
+type mattermostConfig struct {
+	SendResolved   *bool                         `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	WebhookURL     string                        `yaml:"webhook_url,omitempty" json:"webhook_url,omitempty"`
+	WebhookURLFile string                        `yaml:"webhook_url_file,omitempty" json:"webhook_url_file,omitempty"`
+	Channel        string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
+	Username       string                        `yaml:"username,omitempty" json:"username,omitempty"`
+	Text           string                        `yaml:"text" json:"text"`
+	IconURL        string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
+	IconEmoji      string                        `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
+	Attachments    []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`
+	Props          *mattermostPropsConfig        `yaml:"props,omitempty" json:"props,omitempty"`
+	Priority       *mattermostPriorityConfig     `yaml:"priority,omitempty" json:"priority,omitempty"`
+	HTTPConfig     *httpClientConfig             `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+}
+
+type mattermostAttachmentConfig struct {
+	Fallback   string            `yaml:"fallback,omitempty" json:"fallback,omitempty"`
+	Color      string            `yaml:"color,omitempty" json:"color,omitempty"`
+	Pretext    string            `yaml:"pretext,omitempty" json:"pretext,omitempty"`
+	Text       string            `yaml:"text,omitempty" json:"text,omitempty"`
+	AuthorName string            `yaml:"author_name,omitempty" json:"author_name,omitempty"`
+	AuthorLink string            `yaml:"author_link,omitempty" json:"author_link,omitempty"`
+	AuthorIcon string            `yaml:"author_icon,omitempty" json:"author_icon,omitempty"`
+	Title      string            `yaml:"title,omitempty" json:"title,omitempty"`
+	TitleLink  string            `yaml:"title_link,omitempty" json:"title_link,omitempty"`
+	Fields     []mattermostField `yaml:"fields,omitempty" json:"fields,omitempty"`
+	ThumbURL   string            `yaml:"thumb_url,omitempty" json:"thumb_url,omitempty"`
+	Footer     string            `yaml:"footer,omitempty" json:"footer,omitempty"`
+	FooterIcon string            `yaml:"footer_icon,omitempty" json:"footer_icon,omitempty"`
+	ImageURL   string            `yaml:"image_url,omitempty" json:"image_url,omitempty"`
+}
+
+type mattermostField struct {
+	Title string `yaml:"title,omitempty" json:"title,omitempty"`
+	Value string `yaml:"value,omitempty" json:"value,omitempty"`
+	Short bool   `yaml:"short,omitempty" json:"short,omitempty"`
+}
+
+type mattermostPropsConfig struct {
+	Card *string `yaml:"card,omitempty" json:"card,omitempty"`
+}
+
+type mattermostPriorityConfig struct {
+	Priority                string `yaml:"priority,omitempty" json:"priority,omitempty"`
+	RequestedAck            *bool  `yaml:"requested_ack,omitempty" json:"requested_ack,omitempty"`
+	PersistentNotifications *bool  `yaml:"persistent_notifications,omitempty" json:"persistent_notifications,omitempty"`
 }
 
 type timeInterval config.TimeInterval
