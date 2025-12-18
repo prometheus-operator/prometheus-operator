@@ -19,9 +19,11 @@ There are different approaches to install Prometheus Operator in your Kubernetes
 
 ### Pre-requisites
 
-For all the approaches listed on this page, you require access to a **Kubernetes cluster!** For this, you can check the official docs of Kubernetes available [here](https://kubernetes.io/docs/tasks/tools/).
+Due to the use of [Common Expression Language](https://kubernetes.io/docs/reference/using-api/cel/) (CEL) in Custom Resource Definitions, version >= v0.84.0 of the Prometheus Operator requires a Kubernetes cluster of version >= v1.25.0 (or >= v1.23.0 with the `CustomResourceValidationExpressions` feature gate enabled).
 
-Version `>=0.39.0` of the Prometheus Operator requires a Kubernetes cluster of version `>=1.16.0`. If you are just starting out with the Prometheus Operator, it is **highly recommended** to use the latest version. If you have an older version of Kubernetes and the Prometheus Operator running, we recommend upgrading Kubernetes first and then the Prometheus Operator.
+Releases before v0.84.0 require Kubernetes >= v1.16.0.
+
+If you are just starting out with the Prometheus Operator, it is **highly recommended** to use the latest version. If you have an older version of Kubernetes and the Prometheus Operator running, we recommend upgrading Kubernetes first and then the Prometheus Operator.
 
 > Check the appropriate versions of each of the components in the [Compatibility]({{<ref "compatibility">}}) page.
 

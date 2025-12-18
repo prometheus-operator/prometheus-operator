@@ -15,7 +15,9 @@ It is recommended to use versions of the components identical or close to the ve
 
 ## Kubernetes
 
-Due to the use of apiextensions.k8s.io/v1 CustomResourceDefinitions, prometheus-operator requires Kubernetes >= v1.16.0.
+Due to the use of [Common Expression Language](https://kubernetes.io/docs/reference/using-api/cel/) (CEL) in Custom Resource Definitions, prometheus-operator >= v0.84.0 requires Kubernetes >= v1.25.0 (or v1.23.0 with the `CustomResourceValidationExpressions` feature gate enabled).
+
+Releases before v0.84.0 require Kubernetes >= v1.16.0.
 
 The Prometheus Operator uses the official [Go client](https://github.com/kubernetes/client-go) for Kubernetes to communicate with the Kubernetes API. The compatibility matrix for client-go and Kubernetes clusters can be found [here](https://github.com/kubernetes/client-go#compatibility-matrix). All additional compatibility is only best effort, or happens to be still/already supported.
 
