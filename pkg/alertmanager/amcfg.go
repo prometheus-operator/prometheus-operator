@@ -2358,11 +2358,13 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
-<<<<<<< HEAD
 	for _, conf := range r.MattermostConfigs {
-=======
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	for _, conf := range r.IncidentioConfigs {
->>>>>>> 32e64f0c6 (feat: add incident.io support to am config)
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
 		}
