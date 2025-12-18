@@ -2995,7 +2995,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with no secret ref provided",
@@ -3006,7 +3007,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with invalid secret ref for secretKey",
@@ -3029,7 +3031,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "EC2 SD config with valid TLS Config",
@@ -3064,7 +3067,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with valid HTTPS Config",
@@ -3123,7 +3127,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "EC2 SD config with valid proxy settings",
@@ -3151,6 +3156,18 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			promVersion: "2.52.0",
 			valid:       true,
+		},
+		{
+			scenario: "EC2 SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       false,
 		},
 		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
@@ -4389,7 +4406,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with invalid TLS config with invalid CA data",
@@ -4409,7 +4427,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "LightSail SD config with valid proxy settings",
@@ -4434,7 +4453,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with invalid proxy settings",
@@ -4458,7 +4478,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref",
@@ -4476,7 +4497,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 
 		{
@@ -4500,7 +4522,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with no secret ref provided",
@@ -4511,7 +4534,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref for accessKey",
@@ -4534,7 +4558,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref for secretKey",
@@ -4557,7 +4582,20 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
+		},
+		{
+			scenario: "LightSail SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       false,
 		},
 		{
 			scenario: "OVHCloud SD config",

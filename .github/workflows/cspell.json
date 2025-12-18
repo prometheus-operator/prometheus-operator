@@ -420,6 +420,7 @@
     "selfsigned",
     "FIPS",
     "FIPSSTS",
-    "AWSSD"
+    "AWSSD",
+    "checkmark"
   ]
 }
