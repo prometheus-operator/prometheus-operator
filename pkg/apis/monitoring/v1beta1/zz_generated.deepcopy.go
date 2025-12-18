@@ -298,11 +298,6 @@ func (in *IncidentioConfig) DeepCopyInto(out *IncidentioConfig) {
 		*out = new(HTTPConfig)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.URL != nil {
-		in, out := &in.URL, &out.URL
-		*out = new(URL)
-		**out = **in
-	}
 	if in.MaxAlerts != nil {
 		in, out := &in.MaxAlerts, &out.MaxAlerts
 		*out = new(int32)

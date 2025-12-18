@@ -1885,6 +1885,9 @@
                                 "type": "string"
                               }
                             },
+                            "required": [
+                              "url"
+                            ],
                             "type": "object"
                           },
                           "type": "array"

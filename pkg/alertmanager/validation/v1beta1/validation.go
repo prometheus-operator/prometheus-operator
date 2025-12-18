@@ -391,13 +391,13 @@ func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error
 
 func validateIncidentioConfigs(configs []monitoringv1beta1.IncidentioConfig) error {
 	for _, config := range configs {
-		if config.URL != nil {
-			if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
+		if config.URL != "" {
+			if _, err := validation.ValidateURL(string(config.URL)); err != nil {
 				return fmt.Errorf("invalid 'url': %w", err)
 			}
 		}
 
-		if config.URL == nil {
+		if config.URL == "" {
 			return fmt.Errorf("url must be configured")
 		}
 

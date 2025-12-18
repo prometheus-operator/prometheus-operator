@@ -1320,8 +1320,8 @@ type IncidentioConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// url to send the incident.io alert.
 	// This would typically be provided by incident.io team when setting up an alert source.
-	// +optional
-	URL *URL `json:"url,omitempty"`
+	// +required
+	URL URL `json:"url,omitempty"`
 	// maxAlerts defines the maximum number of alerts to be sent per webhook message.
 	// When 0, all alerts are included in the webhook payload.
 	// +optional

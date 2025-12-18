@@ -2041,6 +2041,8 @@ spec:
                               This would typically be provided by incident.io team when setting up an alert source.
                             pattern: ^https?://.+$
                             type: string
+                        required:
+                        - url
                         type: object
                       type: array
                     msteamsConfigs:

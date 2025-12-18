@@ -1774,8 +1774,8 @@ func checkIncidentioConfigs(
 			return err
 		}
 
-		if config.URL != nil {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.URL))); err != nil {
+		if config.URL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(config.URL))); err != nil {
 				return fmt.Errorf("failed to validate incident.io URL: %w", err)
 			}
 		}

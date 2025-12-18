@@ -1996,31 +1996,29 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	return nil
 }
 
-func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, out *incidentioConfig, in *monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) error {
-	if in == nil {
-		return nil
+func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) (*incidentioConfig, error) {
+	out := &incidentioConfig{
+		VSendResolved: in.SendResolved,
+		MaxAlerts:     in.MaxAlerts,
 	}
 
-	out.VSendResolved = in.SendResolved
-	out.MaxAlerts = in.MaxAlerts
-
-	if in.URL != nil {
-		out.URL = string(*in.URL)
+	if in.URL != "" {
+		out.URL = string(in.URL)
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
-		return fmt.Errorf("failed to convert HTTP config: %w", err)
+		return nil, err
 	}
 	out.HTTPConfig = httpConfig
 
 	timeout, err := convertTimeout(in.Timeout)
 	if err != nil {
-		return fmt.Errorf("failed to convert timeout: %w", err)
+		return nil, err
 	}
 	out.Timeout = timeout
 
-	return nil
+	return out, nil
 }
 
 func convertTimeout(in *monitoringv1.Duration) (*model.Duration, error) {
