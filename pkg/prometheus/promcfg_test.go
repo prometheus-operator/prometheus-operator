@@ -10038,21 +10038,21 @@ func TestOTLPConfig(t *testing.T) {
 func TestTracingConfig(t *testing.T) {
 	samplingTwo := resource.MustParse("0.5")
 	testCases := []struct {
-		tracingConfig *monitoringv1.PrometheusTracingConfig
+		tracingConfig *monitoringv1.TracingConfig
 		name          string
 		expectedErr   bool
 		golden        string
 	}{
 		{
 			name: "Config only with endpoint",
-			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+			tracingConfig: &monitoringv1.TracingConfig{
 				Endpoint: "https://otel-collector.default.svc.local:3333",
 			},
 			golden:      "TracingConfig_Config_only_with_endpoint.golden",
 			expectedErr: false,
 		},
 		{
-			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+			tracingConfig: &monitoringv1.TracingConfig{
 				ClientType:       ptr.To("grpc"),
 				Endpoint:         "https://otel-collector.default.svc.local:3333",
 				SamplingFraction: &samplingTwo,

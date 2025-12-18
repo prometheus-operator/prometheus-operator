@@ -4906,6 +4906,11 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		return cfg, nil
 	}
 
+	err := tracingConfig.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
 	var tracing yaml.MapSlice
 	tracing = append(tracing, yaml.MapItem{
 		Key:   "endpoint",
@@ -4915,7 +4920,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.ClientType != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "client_type",
-			Value: tracingConfig.ClientType,
+			Value: strings.ToLower(*tracingConfig.ClientType),
 		})
 	}
 
@@ -4951,7 +4956,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.Compression != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "compression",
-			Value: tracingConfig.Compression,
+			Value: strings.ToLower(*tracingConfig.Compression),
 		})
 	}
 
