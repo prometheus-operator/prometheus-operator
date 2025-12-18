@@ -16,6 +16,10 @@
 
 package v1beta1
 
+import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // PagerDutyConfigApplyConfiguration represents a declarative configuration of the PagerDutyConfig type for use
 // with apply.
 type PagerDutyConfigApplyConfiguration struct {
@@ -35,6 +39,7 @@ type PagerDutyConfigApplyConfiguration struct {
 	PagerDutyLinkConfigs  []PagerDutyLinkConfigApplyConfiguration  `json:"pagerDutyLinkConfigs,omitempty"`
 	HTTPConfig            *HTTPConfigApplyConfiguration            `json:"httpConfig,omitempty"`
 	Source                *string                                  `json:"source,omitempty"`
+	Timeout               *v1.Duration                             `json:"timeout,omitempty"`
 }
 
 // PagerDutyConfigApplyConfiguration constructs a declarative configuration of the PagerDutyConfig type for use with
@@ -183,5 +188,13 @@ func (b *PagerDutyConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigAppl
 // If called multiple times, the Source field is set to the value of the last call.
 func (b *PagerDutyConfigApplyConfiguration) WithSource(value string) *PagerDutyConfigApplyConfiguration {
 	b.Source = &value
+	return b
+}
+
+// WithTimeout sets the Timeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Timeout field is set to the value of the last call.
+func (b *PagerDutyConfigApplyConfiguration) WithTimeout(value v1.Duration) *PagerDutyConfigApplyConfiguration {
+	b.Timeout = &value
 	return b
 }

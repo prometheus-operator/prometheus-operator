@@ -515,6 +515,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(AlertmanagerLimitsSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.DispatchStartDelay != nil {
+		in, out := &in.DispatchStartDelay, &out.DispatchStartDelay
+		*out = new(GoDuration)
+		**out = **in
+	}
 	if in.ClusterTLS != nil {
 		in, out := &in.ClusterTLS, &out.ClusterTLS
 		*out = new(ClusterTLSConfig)
