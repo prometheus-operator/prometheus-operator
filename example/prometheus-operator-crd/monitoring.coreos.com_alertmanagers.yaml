@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.87.0
+    operator.prometheus.io/version: 0.87.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -4416,6 +4416,14 @@ spec:
                   - name
                   type: object
                 type: array
+              dispatchStartDelay:
+                description: |-
+                  dispatchStartDelay defines the delay duration of the aggregation groups' first flush.
+                  The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.
+
+                  It requires Alertmanager >= 0.30.0.
+                pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                type: string
               dnsConfig:
                 description: dnsConfig defines the DNS configuration for the pods.
                 properties:
@@ -6182,6 +6190,21 @@ spec:
                       the replica count to be deleted.
                     type: string
                 type: object
+              podManagementPolicy:
+                description: |-
+                  podManagementPolicy defines the policy for creating/deleting pods when
+                  scaling up and down.
+
+                  Unlike the default StatefulSet behavior, the default policy is
+                  `Parallel` to avoid manual intervention in case a pod gets stuck during
+                  a rollout.
+
+                  Note that updating this value implies the recreation of the StatefulSet
+                  which incurs a service outage.
+                enum:
+                - OrderedReady
+                - Parallel
+                type: string
               podMetadata:
                 description: |-
                   podMetadata defines labels and annotations which are propagated to the Alertmanager pods.

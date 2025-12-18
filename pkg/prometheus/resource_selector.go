@@ -468,7 +468,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfig, pm.GetNamespace()); err != nil {
+		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfigWithProxy, pm.GetNamespace()); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
 	}
@@ -482,7 +482,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 func (rs *ResourceSelector) addHTTPConfigToStore(
 	ctx context.Context,
-	httpConfig monitoringv1.HTTPConfig,
+	httpConfig monitoringv1.HTTPConfigWithProxy,
 	namespace string) error {
 	if err := httpConfig.Validate(); err != nil {
 		return err
@@ -546,8 +546,8 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 		return err
 	}
 
-	if probe.Spec.BearerTokenSecret.Name != "" && probe.Spec.BearerTokenSecret.Key != "" {
-		if _, err := rs.store.GetSecretKey(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret); err != nil {
+	if probe.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		if _, err := rs.store.GetSecretKey(ctx, probe.GetNamespace(), *probe.Spec.BearerTokenSecret); err != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			return fmt.Errorf("bearerTokenSecret: %w", err)
 		}
 	}

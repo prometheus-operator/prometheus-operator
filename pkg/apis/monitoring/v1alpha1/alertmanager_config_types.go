@@ -43,6 +43,7 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 // +kubebuilder:storageversion
+// +kubebuilder:subresource:status
 
 // AlertmanagerConfig configures the Prometheus Alertmanager,
 // specifying how alerts should be grouped, inhibited and notified to external systems.
@@ -55,6 +56,14 @@ type AlertmanagerConfig struct {
 	// spec defines the specification of AlertmanagerConfigSpec
 	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ServiceMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
@@ -276,7 +285,11 @@ type PagerDutyConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
 	// +optional
-	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
+	// timeout is the maximum time allowed to invoke the pagerduty
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
@@ -411,6 +424,11 @@ type SlackConfig struct {
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // Validate ensures SlackConfig is valid.
@@ -1009,6 +1027,7 @@ type PushoverConfig struct {
 	Expire string `json:"expire,omitempty"`
 	// html defines whether notification message is HTML or plain text.
 	// When true, the message can include HTML formatting tags.
+	// html and monospace formatting are mutually exclusive.
 	// +optional
 	HTML *bool `json:"html,omitempty"`
 	// monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html

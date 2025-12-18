@@ -1014,6 +1014,12 @@ const (
 // NativeHistogramConfig extends the native histogram configuration settings.
 // +k8s:openapi-gen=true
 type NativeHistogramConfig struct {
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	//
+	// +optional
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
 	//
@@ -1139,4 +1145,19 @@ func (s *Scheme) String() string {
 const (
 	SchemeHTTP  Scheme = "HTTP"
 	SchemeHTTPS Scheme = "HTTPS"
+)
+
+// +kubebuilder:validation:Enum=OrderedReady;Parallel
+type PodManagementPolicyType string
+
+const (
+	// OrderedReadyPodManagement will create pods in strictly increasing order on
+	// scale up and strictly decreasing order on scale down, progressing only when
+	// the previous pod is ready or terminated. At most one pod will be changed
+	// at any time.
+	OrderedReadyPodManagement PodManagementPolicyType = "OrderedReady"
+	// ParallelPodManagement will create and delete pods as soon as the stateful set
+	// replica count is changed, and will not wait for pods to be ready or complete
+	// termination.
+	ParallelPodManagement PodManagementPolicyType = "Parallel"
 )

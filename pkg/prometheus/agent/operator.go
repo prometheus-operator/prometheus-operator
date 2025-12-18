@@ -50,6 +50,8 @@ const (
 	resyncPeriod              = 5 * time.Minute
 	controllerName            = "prometheusagent-controller"
 	applicationNameLabelValue = "prometheus-agent"
+
+	noSelectedResourcesMessage = "No ServiceMonitor, PodMonitor, Probe, and ScrapeConfig have been selected."
 )
 
 // Operator manages life cycle of Prometheus agent deployments and
@@ -934,6 +936,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		if err != nil {
 			return fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
 		}
+	}
+
+	if len(smons)+len(pmons)+len(bmons)+len(scrapeConfigs) == 0 {
+		c.reconciliations.SetReasonAndMessage(operator.KeyForObject(p), operator.NoSelectedResourcesReason, noSelectedResourcesMessage)
 	}
 
 	if err := cg.AddRemoteWriteToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {

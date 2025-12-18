@@ -254,6 +254,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		PagerDutyLinkConfigs:  convertPagerDutyLinkConfigsTo(in.PagerDutyLinkConfigs),
 		HTTPConfig:            convertHTTPConfigTo(in.HTTPConfig),
 		Source:                in.Source,
+		Timeout:               in.Timeout,
 	}
 }
 
@@ -386,6 +387,7 @@ func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsTo(in.Actions),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		Timeout:      in.Timeout,
 	}
 }
 

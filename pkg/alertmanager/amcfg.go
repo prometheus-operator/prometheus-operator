@@ -434,17 +434,17 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		}
 	}
 
-	if in.HTTPConfig != nil {
+	if in.HTTPConfigWithProxy != nil {
 		v1alpha1Config := monitoringv1alpha1.HTTPConfig{
-			Authorization: in.HTTPConfig.Authorization,
-			BasicAuth:     in.HTTPConfig.BasicAuth,
-			OAuth2:        in.HTTPConfig.OAuth2,
+			Authorization: in.HTTPConfigWithProxy.Authorization,
+			BasicAuth:     in.HTTPConfigWithProxy.BasicAuth,
+			OAuth2:        in.HTTPConfigWithProxy.OAuth2,
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
-			TLSConfig:         in.HTTPConfig.TLSConfig,
-			ProxyConfig:       in.HTTPConfig.ProxyConfig,
-			FollowRedirects:   in.HTTPConfig.FollowRedirects,
-			EnableHTTP2:       in.HTTPConfig.EnableHTTP2,
+			BearerTokenSecret: in.HTTPConfigWithProxy.BearerTokenSecret,
+			TLSConfig:         in.HTTPConfigWithProxy.TLSConfig,
+			ProxyConfig:       in.HTTPConfigWithProxy.ProxyConfig,
+			FollowRedirects:   in.HTTPConfigWithProxy.FollowRedirects,
+			EnableHTTP2:       in.HTTPConfigWithProxy.EnableHTTP2,
 		}
 
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
@@ -977,6 +977,16 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
@@ -1057,6 +1067,16 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 
 	if in.Source != nil {
 		out.Source = *in.Source
+	}
+
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
 	}
 
 	return out, nil
@@ -1289,6 +1309,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
+		HTML:          in.HTML,
+		Monospace:     in.Monospace,
 	}
 
 	if in.TTL != nil {
@@ -2415,6 +2437,7 @@ func (ops *opsgenieResponder) sanitize(amVersion semver.Version) error {
 
 func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_25 := amVersion.LT(semver.MustParse("0.25.0"))
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 
 	if pdc.Source != "" && lessThanV0_25 {
 		msg := "'source' supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
@@ -2444,6 +2467,12 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		msg := "'routing_key' and 'routing_key_file' are mutually exclusive for pagerdury receiver config - 'routing_key' has taken precedence"
 		logger.Warn(msg)
 		pdc.RoutingKeyFile = ""
+	}
+
+	if pdc.Timeout != nil && lessThanV0_30 {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		pdc.Timeout = nil
 	}
 
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
@@ -2514,6 +2543,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
+	}
+
+	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.Timeout = nil
 	}
 
 	if sc.APIURLFile == "" {

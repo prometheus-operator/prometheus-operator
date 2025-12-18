@@ -2715,8 +2715,10 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.PodMonitorSpec{
 						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 							{
-								Port:       ptr.To("web"),
-								HTTPConfig: monitoringv1.HTTPConfig{OAuth2: &oauth2},
+								Port: ptr.To("web"),
+								HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+									HTTPConfig: monitoringv1.HTTPConfig{OAuth2: &oauth2},
+								},
 							},
 						},
 					},
@@ -2736,7 +2738,9 @@ func TestEndpointOAuth2(t *testing.T) {
 						},
 					},
 					Spec: monitoringv1.ProbeSpec{
-						OAuth2: &oauth2,
+						HTTPConfig: monitoringv1.HTTPConfig{
+							OAuth2: &oauth2,
+						},
 						Targets: monitoringv1.ProbeTargets{
 							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
 								Targets: []string{"127.0.0.1"},
@@ -5054,6 +5058,35 @@ func TestNativeHistogramConfig(t *testing.T) {
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},
+		{
+			version: "v3.8.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms:         ptr.To(true),
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigWithScrapeNativeHistograms.golden",
+		},
+		{
+			version: "v3.7.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms:         ptr.To(true),
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigMissScrapeNativeHistograms.golden",
+		},
+		{
+			version: "v3.8.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigOnlyScrapeNativeHistograms.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -5344,9 +5377,11 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:       ptr.To("web"),
-							Interval:   "30s",
-							HTTPConfig: monitoringv1.HTTPConfig{FollowRedirects: ptr.To(tc.followRedirects)},
+							Port:     ptr.To("web"),
+							Interval: "30s",
+							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+								HTTPConfig: monitoringv1.HTTPConfig{FollowRedirects: ptr.To(tc.followRedirects)},
+							},
 						},
 					},
 				},
@@ -5525,9 +5560,11 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:       ptr.To("web"),
-							Interval:   "30s",
-							HTTPConfig: monitoringv1.HTTPConfig{EnableHTTP2: ptr.To(tc.enableHTTP2)},
+							Port:     ptr.To("web"),
+							Interval: "30s",
+							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+								HTTPConfig: monitoringv1.HTTPConfig{EnableHTTP2: ptr.To(tc.enableHTTP2)},
+							},
 						},
 					},
 				},
@@ -13883,6 +13920,63 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 			}
 			if tc.ScrapeClassicHistograms != nil {
 				p.Spec.CommonPrometheusFields.ScrapeClassicHistograms = tc.ScrapeClassicHistograms
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
+func TestAppendScrapeNativeHistograms(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		version                string
+		ScrapeNativeHistograms *bool
+		expectedCfg            string
+	}{
+		{
+			name:                   "ScrapeNativeHistograms true with Prometheus Version 3.8",
+			version:                "v3.8.0",
+			ScrapeNativeHistograms: ptr.To(true),
+			expectedCfg:            "ScrapeNativeHistogramsTrueProperPromVersion.golden",
+		},
+		{
+			name:                   "ScrapeNativeHistograms false with Prometheus Version 3.8",
+			version:                "v3.8.0",
+			ScrapeNativeHistograms: ptr.To(false),
+			expectedCfg:            "ScrapeNativeHistogramsFalseProperPromVersion.golden",
+		},
+		{
+			name:                   "ScrapeNativeHistograms true with Lower Prometheus version",
+			version:                "v3.7.0",
+			ScrapeNativeHistograms: ptr.To(true),
+			expectedCfg:            "ScrapeNativeHistogramsTrueWrongPromVersion.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.ScrapeNativeHistograms != nil {
+				p.Spec.CommonPrometheusFields.ScrapeNativeHistograms = tc.ScrapeNativeHistograms
 			}
 
 			cg := mustNewConfigGenerator(t, p)
