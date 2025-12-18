@@ -282,7 +282,11 @@ type PagerDutyConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
 	// +optional
-	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
+	// timeout is the maximum time allowed to invoke the pagerduty
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
@@ -417,6 +421,11 @@ type SlackConfig struct {
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // Validate ensures SlackConfig is valid.
