@@ -17,18 +17,20 @@
 package v1beta1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // IncidentioConfigApplyConfiguration represents a declarative configuration of the IncidentioConfig type for use
 // with apply.
 type IncidentioConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
-	URL          *monitoringv1beta1.URL        `json:"url,omitempty"`
-	MaxAlerts    *int32                        `json:"maxAlerts,omitempty"`
-	Timeout      *v1.Duration                  `json:"timeout,omitempty"`
+	SendResolved     *bool                         `json:"sendResolved,omitempty"`
+	HTTPConfig       *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	URL              *monitoringv1beta1.URL        `json:"url,omitempty"`
+	AlertSourceToken *v1.SecretKeySelector         `json:"alertSourceToken,omitempty"`
+	MaxAlerts        *int32                        `json:"maxAlerts,omitempty"`
+	Timeout          *monitoringv1.Duration        `json:"timeout,omitempty"`
 }
 
 // IncidentioConfigApplyConfiguration constructs a declarative configuration of the IncidentioConfig type for use with
@@ -61,6 +63,14 @@ func (b *IncidentioConfigApplyConfiguration) WithURL(value monitoringv1beta1.URL
 	return b
 }
 
+// WithAlertSourceToken sets the AlertSourceToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AlertSourceToken field is set to the value of the last call.
+func (b *IncidentioConfigApplyConfiguration) WithAlertSourceToken(value v1.SecretKeySelector) *IncidentioConfigApplyConfiguration {
+	b.AlertSourceToken = &value
+	return b
+}
+
 // WithMaxAlerts sets the MaxAlerts field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxAlerts field is set to the value of the last call.
@@ -72,7 +82,7 @@ func (b *IncidentioConfigApplyConfiguration) WithMaxAlerts(value int32) *Inciden
 // WithTimeout sets the Timeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Timeout field is set to the value of the last call.
-func (b *IncidentioConfigApplyConfiguration) WithTimeout(value v1.Duration) *IncidentioConfigApplyConfiguration {
+func (b *IncidentioConfigApplyConfiguration) WithTimeout(value monitoringv1.Duration) *IncidentioConfigApplyConfiguration {
 	b.Timeout = &value
 	return b
 }

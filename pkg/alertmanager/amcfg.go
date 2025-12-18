@@ -2006,6 +2006,14 @@ func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitor
 		out.URL = string(in.URL)
 	}
 
+	if in.AlertSourceToken != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AlertSourceToken)
+		if err != nil {
+			return nil, err
+		}
+		out.AlertSourceToken = token
+	}
+
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
 		return nil, err

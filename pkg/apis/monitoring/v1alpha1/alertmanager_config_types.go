@@ -1311,6 +1311,8 @@ type RocketChatActionConfig struct {
 
 // IncidentioConfig configures notifications via Incident.io.
 // It requires Alertmanager >= 0.29.0.
+// +kubebuilder:validation:XValidation:rule="!(has(self.alertSourceToken) && has(self.httpConfig) && has(self.httpConfig.authorization))",message="cannot use both alertSourceToken and httpConfig.authorization"
+// +kubebuilder:validation:XValidation:rule="has(self.alertSourceToken) || (has(self.httpConfig) && has(self.httpConfig.authorization))",message="must configure either alertSourceToken or httpConfig.authorization"
 type IncidentioConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
@@ -1321,7 +1323,11 @@ type IncidentioConfig struct {
 	// url to send the incident.io alert.
 	// This would typically be provided by incident.io team when setting up an alert source.
 	// +required
-	URL URL `json:"url,omitempty"`
+	URL URL `json:"url"`
+	// alertSourceToken references a secret containing the incident.io alert source token.
+	// Cannot be set at the same time as httpConfig.authorization.
+	// +optional
+	AlertSourceToken *v1.SecretKeySelector `json:"alertSourceToken,omitempty"`
 	// maxAlerts defines the maximum number of alerts to be sent per webhook message.
 	// When 0, all alerts are included in the webhook payload.
 	// +optional

@@ -298,6 +298,11 @@ func (in *IncidentioConfig) DeepCopyInto(out *IncidentioConfig) {
 		*out = new(HTTPConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.AlertSourceToken != nil {
+		in, out := &in.AlertSourceToken, &out.AlertSourceToken
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.MaxAlerts != nil {
 		in, out := &in.MaxAlerts, &out.MaxAlerts
 		*out = new(int32)

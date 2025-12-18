@@ -1086,6 +1086,29 @@
                       items: {
                         description: 'IncidentioConfig configures notifications via Incident.io.\nIt requires Alertmanager >= 0.29.0.',
                         properties: {
+                          alertSourceToken: {
+                            description: 'alertSourceToken references a secret containing the incident.io alert source token.\nCannot be set at the same time as httpConfig.authorization.',
+                            properties: {
+                              key: {
+                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                type: 'string',
+                              },
+                              name: {
+                                default: '',
+                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                type: 'string',
+                              },
+                              optional: {
+                                description: 'Specify whether the Secret or its key must be defined',
+                                type: 'boolean',
+                              },
+                            },
+                            required: [
+                              'key',
+                            ],
+                            type: 'object',
+                            'x-kubernetes-map-type': 'atomic',
+                          },
                           httpConfig: {
                             description: 'httpConfig defines the HTTP client configuration for incident.io API requests.',
                             properties: {
@@ -1745,7 +1768,20 @@
                             type: 'string',
                           },
                         },
+                        required: [
+                          'url',
+                        ],
                         type: 'object',
+                        'x-kubernetes-validations': [
+                          {
+                            message: 'cannot use both alertSourceToken and httpConfig.authorization',
+                            rule: '!(has(self.alertSourceToken) && has(self.httpConfig) && has(self.httpConfig.authorization))',
+                          },
+                          {
+                            message: 'must configure either alertSourceToken or httpConfig.authorization',
+                            rule: 'has(self.alertSourceToken) || (has(self.httpConfig) && has(self.httpConfig.authorization))',
+                          },
+                        ],
                       },
                       type: 'array',
                     },
