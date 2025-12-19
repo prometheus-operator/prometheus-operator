@@ -2357,6 +2357,19 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 			return err
 		}
 	}
+
+	for _, conf := range r.MattermostConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.IncidentioConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2764,6 +2777,60 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	mattermostAllowed := amVersion.GTE(semver.MustParse("0.30.0"))
+	if !mattermostAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is available in Alertmanager >= 0.30.0`)
+	}
+
+	if mc.WebhookURL == "" && mc.WebhookURLFile == "" {
+		return fmt.Errorf(`one of 'webhook_url' or 'webhook_url_file' must be configured`)
+	}
+
+	if mc.WebhookURL != "" && mc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for mattermost receiver config - 'webhook_url' has taken precedence"
+		logger.Warn(msg)
+		mc.WebhookURLFile = ""
+	}
+
+	return mc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	incidentioAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if !incidentioAllowed {
+		return fmt.Errorf("invalid syntax in receivers config; incident.io integration is available in Alertmanager >= 0.29.0")
+	}
+
+	if ic.URL == "" && ic.URLFile == "" {
+		return errors.New("one of url or url_file must be configured")
+	}
+
+	if ic.URL != "" && ic.URLFile != "" {
+		return errors.New("at most one of url & url_file must be configured")
+	}
+
+	if ic.URL != "" {
+		if _, err := validation.ValidateURL(ic.URL); err != nil {
+			return fmt.Errorf("invalid url: %w", err)
+		}
+	}
+
+	if ic.AlertSourceToken != "" && ic.AlertSourceTokenFile != "" {
+		return errors.New("at most one of alert_source_token & alert_source_token_file must be configured")
+	}
+
+	if ic.HTTPConfig != nil && ic.HTTPConfig.Authorization != nil && (ic.AlertSourceToken != "" || ic.AlertSourceTokenFile != "") {
+		return errors.New("cannot specify alert_source_token or alert_source_token_file when using http_config.authorization")
+	}
+
+	if ic.AlertSourceToken == "" && ic.AlertSourceTokenFile == "" && (ic.HTTPConfig == nil || ic.HTTPConfig.Authorization == nil) {
+		return errors.New("at least one of alert_source_token, alert_source_token_file or http_config.authorization must be configured")
+	}
+
+	return ic.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {
