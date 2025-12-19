@@ -3743,7 +3743,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with Rocketchat config valid url",
-			amVersion: &version26,
+			amVersion: &version28,
 			kclient:   fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
@@ -3775,6 +3775,372 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Rocketchat_config_valid_url.golden",
+		},
+		{
+			name:      "CR with Rocketchat config invalid url",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Rocketchat config version not allowed",
+			amVersion: &version27,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Rocketchat config valid iconURL",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL:  ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										IconURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Rocketchat_config_valid_iconURL.golden",
+		},
+		{
+			name:      "CR with Rocketchat config invalid iconURL",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL:  ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										IconURL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Rocketchat config valid imageURL",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL:   ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										ImageURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Rocketchat_config_valid_imageURL.golden",
+		},
+		{
+			name:      "CR with Rocketchat config invalid imageURL",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL:   ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										ImageURL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Rocketchat config valid thumbURL",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL:   ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										ThumbURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Rocketchat_config_valid_thumbURL.golden",
+		},
+		{
+			name:      "CR with Rocketchat config invalid thumbURL",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL:   ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										ThumbURL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Rocketchat config valid action url",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										Actions: []monitoringv1alpha1.RocketChatActionConfig{
+											{
+												URL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Rocketchat_config_valid_action_url.golden",
+		},
+		{
+			name:      "CR with Rocketchat config invalid action url",
+			amVersion: &version28,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										Actions: []monitoringv1alpha1.RocketChatActionConfig{
+											{
+												URL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com/")),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
 		},
 	}
 
