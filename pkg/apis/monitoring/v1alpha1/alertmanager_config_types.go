@@ -1391,7 +1391,8 @@ type MattermostAttachmentConfig struct {
 	// If no title is specified, this field does nothing.
 	// +optional
 	TitleLink *URL `json:"titleLink,omitempty"`
-	// fields defines a list of Slack-compatible fields that are sent with each notification.
+	// fields defines a list of fields that are sent with each notification
+	// to be displayed in a table format inside the attachment.
 	// +optional
 	Fields []MattermostField `json:"fields,omitempty"`
 	// thumbURL defines an optional URL to an image file

@@ -29146,7 +29146,8 @@ If no title is specified, this field does nothing.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>fields defines a list of Slack-compatible fields that are sent with each notification.</p>
+<p>fields defines a list of fields that are sent with each notification
+to be displayed in a table format inside the attachment.</p>
 </td>
 </tr>
 <tr>

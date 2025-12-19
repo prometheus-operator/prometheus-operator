@@ -1251,7 +1251,7 @@
                                       "type": "string"
                                     },
                                     "fields": {
-                                      "description": "fields defines a list of Slack-compatible fields that are sent with each notification.",
+                                      "description": "fields defines a list of fields that are sent with each notification\nto be displayed in a table format inside the attachment.",
                                       "items": {
                                         "description": "MattermostField configures information to be displayed in a table format inside the attachment.",
                                         "properties": {
