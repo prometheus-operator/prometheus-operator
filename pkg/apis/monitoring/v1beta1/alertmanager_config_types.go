@@ -1407,9 +1407,7 @@ type MattermostAttachmentConfig struct {
 	ImageURL *URL `json:"imageURL,omitempty"`
 }
 
-// MattermostField configures a Slack-compatible field that is sent with each notification.
-// Each field must contain a title, value, and optionally, a boolean value to indicate if the field
-// is short enough to be displayed next to other fields designated as short.
+// MattermostField configures information to be displayed in a table format inside the attachment.
 type MattermostField struct {
 	// title defines the label or header text displayed for this field.
 	// This appears as bold text above the field value in the Slack message.
@@ -1417,7 +1415,7 @@ type MattermostField struct {
 	// +required
 	Title string `json:"title"`
 	// value defines the content or data displayed for this field.
-	// This appears below the title and can contain plain text or Slack markdown.
+	// This appears below the title and can contain plain text or markdown.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Value string `json:"value"`

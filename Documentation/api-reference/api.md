@@ -29380,9 +29380,7 @@ HTTPConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
 </p>
 <div>
-<p>MattermostField configures a Slack-compatible field that is sent with each notification.
-Each field must contain a title, value, and optionally, a boolean value to indicate if the field
-is short enough to be displayed next to other fields designated as short.</p>
+<p>MattermostField configures information to be displayed in a table format inside the attachment.</p>
 </div>
 <table>
 <thead>
@@ -29413,7 +29411,7 @@ string
 </td>
 <td>
 <p>value defines the content or data displayed for this field.
-This appears below the title and can contain plain text or Slack markdown.</p>
+This appears below the title and can contain plain text or markdown.</p>
 </td>
 </tr>
 <tr>
@@ -38295,9 +38293,7 @@ HTTPConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
 </p>
 <div>
-<p>MattermostField configures a Slack-compatible field that is sent with each notification.
-Each field must contain a title, value, and optionally, a boolean value to indicate if the field
-is short enough to be displayed next to other fields designated as short.</p>
+<p>MattermostField configures information to be displayed in a table format inside the attachment.</p>
 </div>
 <table>
 <thead>
@@ -38328,7 +38324,7 @@ string
 </td>
 <td>
 <p>value defines the content or data displayed for this field.
-This appears below the title and can contain plain text or Slack markdown.</p>
+This appears below the title and can contain plain text or markdown.</p>
 </td>
 </tr>
 <tr>
