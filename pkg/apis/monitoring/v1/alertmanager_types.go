@@ -62,7 +62,7 @@ type Alertmanager struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	//nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Status AlertmanagerStatus `json:"status,omitempty"`
 }
 
@@ -215,7 +215,7 @@ type AlertmanagerSpec struct {
 	// and the actual ExternalURL is still true, but the server serves requests
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	// +optional
-	//nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// paused if set to true all actions on the underlying managed objects are not
 	// going to be performed, except for delete actions.

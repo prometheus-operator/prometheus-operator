@@ -305,13 +305,11 @@ func (mr MonthRange) Parse() (*ParsedRange, error) {
 type ParsedRange struct {
 	// start defines the beginning of the range
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Start int `json:"start,omitempty"`
 	// end defines the end of the range
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	End int `json:"end,omitempty"`
 }
 

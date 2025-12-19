@@ -174,8 +174,7 @@ type ObjectReference struct {
 	// +optional
 	// +kubebuilder:default:="monitoring.coreos.com"
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Group string `json:"group,omitempty"`
 	// resource of the referent.
 	// +required
@@ -188,8 +187,7 @@ type ObjectReference struct {
 	Namespace string `json:"namespace"`
 	// name of the referent. When not set, all resources in the namespace are matched.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Name string `json:"name,omitempty"`
 }
 
@@ -231,8 +229,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	// Setting this to true enhances security by preventing potential credential theft attacks.
 	//
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Deny bool `json:"deny,omitempty"`
 }
 
@@ -251,13 +248,11 @@ type Condition struct {
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// reason for the condition's last transition.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Reason string `json:"reason,omitempty"`
 	// message defines human-readable message indicating details for the condition's last transition.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// observedGeneration defines the .metadata.generation that the
 	// condition was set based upon. For instance, if `.metadata.generation` is
@@ -265,8 +260,7 @@ type Condition struct {
 	// condition is out of date with respect to the current state of the
 	// instance.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
@@ -319,13 +313,11 @@ type EmbeddedPersistentVolumeClaim struct {
 	// spec defines the specification of the  characteristics of a volume requested by a pod author.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Spec v1.PersistentVolumeClaimSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 	// status is deprecated: this field is never set.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Status v1.PersistentVolumeClaimStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
@@ -339,8 +331,7 @@ type EmbeddedObjectMetadata struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
 
 	// labels define the map of string keys and values that can be used to organize and categorize
@@ -388,31 +379,27 @@ type WebHTTPHeaders struct {
 	// contentSecurityPolicy defines the Content-Security-Policy header to HTTP responses.
 	// Unset if blank.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ContentSecurityPolicy string `json:"contentSecurityPolicy,omitempty"`
 	// xFrameOptions defines the X-Frame-Options header to HTTP responses.
 	// Unset if blank. Accepted values are deny and sameorigin.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
 	// +kubebuilder:validation:Enum="";Deny;SameOrigin
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	XFrameOptions string `json:"xFrameOptions,omitempty"`
 	// xContentTypeOptions defines the X-Content-Type-Options header to HTTP responses.
 	// Unset if blank. Accepted value is nosniff.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
 	// +kubebuilder:validation:Enum="";NoSniff
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	XContentTypeOptions string `json:"xContentTypeOptions,omitempty"`
 	// xXSSProtection defines the X-XSS-Protection header to all responses.
 	// Unset if blank.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	XXSSProtection string `json:"xXSSProtection,omitempty"`
 	// strictTransportSecurity defines the Strict-Transport-Security header to HTTP responses.
 	// Unset if blank.
@@ -421,8 +408,7 @@ type WebHTTPHeaders struct {
 	// domain and subdomains over HTTPS.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	StrictTransportSecurity string `json:"strictTransportSecurity,omitempty"`
 }
 
@@ -436,8 +422,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `certFile`.
 	//
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
 	// certFile defines the path to the TLS certificate file in the container for the web server.
 	//
@@ -455,8 +440,7 @@ type WebTLSConfig struct {
 	// It is mutually exclusive with `keyFile`.
 	//
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	KeySecret v1.SecretKeySelector `json:"keySecret,omitempty"`
 	// keyFile defines the path to the TLS private key file in the container for the web server.
 	//
@@ -583,8 +567,7 @@ type Endpoint struct {
 	//
 	// It takes precedence over `targetPort`.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Port string `json:"port,omitempty"`
 
 	// targetPort defines the name or number of the target port of the `Pod` object behind the
@@ -597,8 +580,7 @@ type Endpoint struct {
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Path string `json:"path,omitempty"`
 
 	// scheme defines the HTTP scheme to use when scraping the metrics.
@@ -614,8 +596,7 @@ type Endpoint struct {
 	//
 	// If empty, Prometheus uses the global scrape interval.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Interval Duration `json:"interval,omitempty"`
 
 	// scrapeTimeout defines the timeout after which Prometheus considers the scrape to be failed.
@@ -624,8 +605,7 @@ type Endpoint struct {
 	// than the target's scrape interval value in which the latter is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// tlsConfig defines the TLS configuration to use when scraping the target.
@@ -637,8 +617,7 @@ type Endpoint struct {
 	//
 	// Deprecated: use `authorization` instead.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
 	// bearerTokenSecret defines a key of a Secret containing the bearer
@@ -661,8 +640,7 @@ type Endpoint struct {
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps
@@ -826,15 +804,13 @@ type BasicAuth struct {
 	// username defines a key of a Secret containing the username for
 	// authentication.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Username v1.SecretKeySelector `json:"username,omitempty"`
 
 	// password defines a key of a Secret containing the password for
 	// authentication.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 
@@ -891,14 +867,12 @@ const (
 type SafeTLSConfig struct {
 	// ca defines the Certificate authority used when verifying server certificates.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
 
 	// cert defines the Client certificate to present when doing client-authentication.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
 
 	// keySecret defines the Secret containing the client key file for the targets.
@@ -966,18 +940,15 @@ type TLSConfig struct {
 	SafeTLSConfig `json:",inline"`
 	// caFile defines the path to the CA cert in the Prometheus container to use for the targets.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	CAFile string `json:"caFile,omitempty"`
 	// certFile defines the path to the client cert file in the Prometheus container for the targets.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	CertFile string `json:"certFile,omitempty"`
 	// keyFile defines the path to the client key file in the Prometheus container for the targets.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	KeyFile string `json:"keyFile,omitempty"`
 }
 
@@ -1037,8 +1008,7 @@ type NamespaceSelector struct {
 	// any defines the boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Any bool `json:"any,omitempty"`
 	// matchNames defines the list of namespace names to select from.
 	// +optional
@@ -1058,8 +1028,7 @@ type Argument struct {
 	Name string `json:"name"`
 	// value defines the argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Value string `json:"value,omitempty"`
 }
 
@@ -1176,21 +1145,18 @@ type ConfigResourceCondition struct {
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 	// reason for the condition's last transition.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Reason string `json:"reason,omitempty"`
 	// message defines the human-readable message indicating details for the condition's last transition.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// observedGeneration defines the .metadata.generation that the
 	// condition was set based upon. For instance, if `.metadata.generation` is
 	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
 	// condition is out of date with respect to the current state of the object.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 

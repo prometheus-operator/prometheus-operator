@@ -63,8 +63,7 @@ type AlertmanagerConfig struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
@@ -108,8 +107,7 @@ type Route struct {
 	// receiver defines the name of the receiver for this route. If not empty, it should be listed in
 	// the `receivers` field.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Receiver string `json:"receiver"`
 	// groupBy defines the list of labels to group by.
 	// Labels must not be repeated (unique list).
@@ -120,22 +118,19 @@ type Route struct {
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "30s"
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	GroupWait string `json:"groupWait,omitempty"`
 	// groupInterval defines how long to wait before sending an updated notification.
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "5m"
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	GroupInterval string `json:"groupInterval,omitempty"`
 	// repeatInterval defines how long to wait before repeating the last notification.
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "4h"
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	RepeatInterval string `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
@@ -147,8 +142,7 @@ type Route struct {
 	// sibling nodes. It will always be overridden to true for the first-level
 	// route by the Prometheus operator.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Continue bool `json:"continue,omitempty"`
 	// routes defines the child routes.
 	// +optional
@@ -261,43 +255,35 @@ type PagerDutyConfig struct {
 	ServiceKey *v1.SecretKeySelector `json:"serviceKey,omitempty"`
 	// url defines the URL to send requests to.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	URL string `json:"url,omitempty"`
 	// client defines the client identification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Client string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ClientURL string `json:"clientURL,omitempty"`
 	// description of the incident.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Description string `json:"description,omitempty"`
 	// severity of the incident.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Severity string `json:"severity,omitempty"`
 	// class defines the class/type of the event.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Class string `json:"class,omitempty"`
 	// group defines a cluster or grouping of sources.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Group string `json:"group,omitempty"`
 	// component defines the part or component of the affected system that is broken.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Component string `json:"component,omitempty"`
 	// details defines the arbitrary key/value pairs that provide further detail about the incident.
 	// +optional
@@ -324,18 +310,15 @@ type PagerDutyConfig struct {
 type PagerDutyImageConfig struct {
 	// src of the image being attached to the incident
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Src string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Href string `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Alt string `json:"alt,omitempty"`
 }
 
@@ -343,13 +326,11 @@ type PagerDutyImageConfig struct {
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Href string `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Text string `json:"alt,omitempty"`
 }
 
@@ -399,39 +380,32 @@ type SlackConfig struct {
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
 	// channel defines the channel or user to send notifications to.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Channel string `json:"channel,omitempty"`
 	// username defines the slack bot user name.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Username string `json:"username,omitempty"`
 	// color defines the color of the left border of the Slack message attachment.
 	// Can be a hex color code (e.g., "#ff0000") or a predefined color name.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Color string `json:"color,omitempty"`
 	// title defines the title text displayed in the Slack message attachment.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Title string `json:"title,omitempty"`
 	// titleLink defines the URL that the title will link to when clicked.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	TitleLink string `json:"titleLink,omitempty"`
 	// pretext defines optional text that appears above the message attachment block.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Pretext string `json:"pretext,omitempty"`
 	// text defines the main text content of the Slack message attachment.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Text string `json:"text,omitempty"`
 	// fields defines a list of Slack fields that are sent with each notification.
 	// +optional
@@ -439,50 +413,41 @@ type SlackConfig struct {
 	// shortFields determines whether fields are displayed in a compact format.
 	// When true, fields are shown side by side when possible.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ShortFields bool `json:"shortFields,omitempty"`
 	// footer defines small text displayed at the bottom of the message attachment.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Footer string `json:"footer,omitempty"`
 	// fallback defines a plain-text summary of the attachment for clients that don't support attachments.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Fallback string `json:"fallback,omitempty"`
 	// callbackId defines an identifier for the message used in interactive components.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	CallbackID string `json:"callbackId,omitempty"`
 	// iconEmoji defines the emoji to use as the bot's avatar (e.g., ":ghost:").
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	IconEmoji string `json:"iconEmoji,omitempty"`
 	// iconURL defines the URL to an image to use as the bot's avatar.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	IconURL string `json:"iconURL,omitempty"`
 	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ImageURL string `json:"imageURL,omitempty"`
 	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
 	// on the right side of the message attachment.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ThumbURL string `json:"thumbURL,omitempty"`
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	LinkNames bool `json:"linkNames,omitempty"`
 	// mrkdwnIn defines which fields should be parsed as Slack markdown.
 	// Valid values include "pretext", "text", and "fields".
@@ -536,26 +501,22 @@ type SlackAction struct {
 	// url defines the URL to open when the action is triggered.
 	// Only applicable for button-type actions. When set, clicking the button opens this URL.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	URL string `json:"url,omitempty"`
 	// style defines the visual appearance of the action element.
 	// Valid values include "default", "primary" (green), and "danger" (red).
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Style string `json:"style,omitempty"`
 	// name defines a unique identifier for the action within the message.
 	// This value is sent back to your application when the action is triggered.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Name string `json:"name,omitempty"`
 	// value defines the payload sent when the action is triggered.
 	// This data is included in the callback sent to your application.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Value string `json:"value,omitempty"`
 	// confirm defines an optional confirmation dialog that appears before the action is executed.
 	// When set, users must confirm their intent before the action proceeds.
@@ -600,20 +561,17 @@ type SlackConfirmationField struct {
 	// title defines the title text displayed at the top of the confirmation dialog.
 	// When not specified, a default title will be used.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Title string `json:"title,omitempty"`
 	// okText defines the label for the confirmation button in the dialog.
 	// When not specified, defaults to "Okay". This button proceeds with the action.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	OkText string `json:"okText,omitempty"`
 	// dismissText defines the label for the cancel button in the dialog.
 	// When not specified, defaults to "Cancel". This button cancels the action.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	DismissText string `json:"dismissText,omitempty"`
 }
 
@@ -683,8 +641,7 @@ type WebhookConfig struct {
 	// When 0, all alerts are included in the webhook payload.
 	// +optional
 	// +kubebuilder:validation:Minimum=0
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	MaxAlerts int32 `json:"maxAlerts,omitempty"`
 	// timeout defines the maximum time to wait for a webhook request to complete,
 	// before failing the request and allowing it to be retried.
@@ -707,44 +664,37 @@ type OpsGenieConfig struct {
 	// apiURL defines the URL to send OpsGenie API requests to.
 	// When not specified, defaults to the standard OpsGenie API endpoint.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	APIURL string `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// description defines the detailed description of the incident.
 	// This provides additional context beyond the message field.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Description string `json:"description,omitempty"`
 	// source defines the backlink to the sender of the notification.
 	// This helps identify where the alert originated from.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Source string `json:"source,omitempty"`
 	// tags defines a comma separated list of tags attached to the notifications.
 	// These help categorize and filter alerts within OpsGenie.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Tags string `json:"tags,omitempty"`
 	// note defines an additional alert note.
 	// This provides supplementary information about the alert.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Note string `json:"note,omitempty"`
 	// priority defines the priority level of alert.
 	// Possible values are P1, P2, P3, P4, and P5, where P1 is highest priority.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Priority string `json:"priority,omitempty"`
 	// updateAlerts defines Whether to update message and description of the alert in OpsGenie if it already exists
 	// By default, the alert is never updated in OpsGenie, the new message only appears in activity log.
@@ -764,14 +714,12 @@ type OpsGenieConfig struct {
 	// entity defines an optional field that can be used to specify which domain alert is related to.
 	// This helps group related alerts together in OpsGenie.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Entity string `json:"entity,omitempty"`
 	// actions defines a comma separated list of actions that will be available for the alert.
 	// These appear as action buttons in the OpsGenie interface.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Actions string `json:"actions,omitempty"`
 }
 
@@ -791,20 +739,17 @@ type OpsGenieConfigResponder struct {
 	// id defines the unique identifier of the responder.
 	// This corresponds to the responder's ID within OpsGenie.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ID string `json:"id,omitempty"`
 	// name defines the display name of the responder.
 	// This is used when the responder is identified by name rather than ID.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Name string `json:"name,omitempty"`
 	// username defines the username of the responder.
 	// This is typically used for user-type responders when identifying by username.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Username string `json:"username,omitempty"`
 	// type defines the type of responder.
 	// Valid values include "user", "team", "schedule", and "escalation".
@@ -923,50 +868,42 @@ type WeChatConfig struct {
 	// apiURL defines the WeChat API URL.
 	// When not specified, defaults to the standard WeChat Work API endpoint.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	APIURL string `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	CorpID string `json:"corpID,omitempty"`
 	// agentID defines the application agent ID within WeChat Work.
 	// This identifies which WeChat Work application will send the notifications.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	AgentID string `json:"agentID,omitempty"`
 	// toUser defines the target user(s) to receive the notification.
 	// Can be a single user ID or multiple user IDs separated by '|'.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ToUser string `json:"toUser,omitempty"`
 	// toParty defines the target department(s) to receive the notification.
 	// Can be a single department ID or multiple department IDs separated by '|'.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ToParty string `json:"toParty,omitempty"`
 	// toTag defines the target tag(s) to receive the notification.
 	// Can be a single tag ID or multiple tag IDs separated by '|'.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ToTag string `json:"toTag,omitempty"`
 	// message defines the API request data as defined by the WeChat API.
 	// This contains the actual notification content to be sent.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// messageType defines the type of message to send.
 	// Valid values include "text", "markdown", and other WeChat Work supported message types.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	MessageType string `json:"messageType,omitempty"`
 	// httpConfig defines the HTTP client configuration for WeChat API requests.
 	// +optional
@@ -981,32 +918,27 @@ type EmailConfig struct {
 	// to defines the email address to send notifications to.
 	// This is the recipient address for alert notifications.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	To string `json:"to,omitempty"`
 	// from defines the sender address for email notifications.
 	// This appears as the "From" field in the email header.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	From string `json:"from,omitempty"`
 	// hello defines the hostname to identify to the SMTP server.
 	// This is used in the SMTP HELO/EHLO command during the connection handshake.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Hello string `json:"hello,omitempty"`
 	// smarthost defines the SMTP host and port through which emails are sent.
 	// Format should be "hostname:port", e.g. "smtp.example.com:587".
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Smarthost string `json:"smarthost,omitempty"`
 	// authUsername defines the username to use for SMTP authentication.
 	// This is used for SMTP AUTH when the server requires authentication.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	AuthUsername string `json:"authUsername,omitempty"`
 	// authPassword defines the secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -1022,8 +954,7 @@ type EmailConfig struct {
 	// authIdentity defines the identity to use for SMTP authentication.
 	// This is typically used with PLAIN authentication mechanism.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	AuthIdentity string `json:"authIdentity,omitempty"`
 	// headers defines additional email header key/value pairs.
 	// These override any headers previously set by the notification implementation.
@@ -1061,38 +992,32 @@ type VictorOpsConfig struct {
 	// apiUrl defines the VictorOps API URL.
 	// When not specified, defaults to the standard VictorOps API endpoint.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	APIURL string `json:"apiUrl,omitempty"`
 	// routingKey defines a key used to map the alert to a team.
 	// This determines which VictorOps team will receive the alert notification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	RoutingKey string `json:"routingKey,omitempty"`
 	// messageType describes the behavior of the alert.
 	// Valid values are "CRITICAL", "WARNING", and "INFO".
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	MessageType string `json:"messageType,omitempty"`
 	// entityDisplayName contains a summary of the alerted problem.
 	// This appears as the main title or identifier for the incident.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	EntityDisplayName string `json:"entityDisplayName,omitempty"`
 	// stateMessage contains a long explanation of the alerted problem.
 	// This provides detailed context about the incident.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	StateMessage string `json:"stateMessage,omitempty"`
 	// monitoringTool defines the monitoring tool the state message is from.
 	// This helps identify the source system that generated the alert.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	MonitoringTool string `json:"monitoringTool,omitempty"`
 	// customFields defines additional custom fields for notification.
 	// These provide extra metadata that will be included with the VictorOps incident.
@@ -1136,26 +1061,22 @@ type PushoverConfig struct {
 	// title defines the notification title displayed in the Pushover message.
 	// This appears as the bold header text in the notification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Title string `json:"title,omitempty"`
 	// message defines the notification message content.
 	// This is the main body text of the Pushover notification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// url defines a supplementary URL shown alongside the message.
 	// This creates a clickable link within the Pushover notification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	URL string `json:"url,omitempty"`
 	// urlTitle defines a title for the supplementary URL.
 	// If not specified, the raw URL is shown instead.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	URLTitle string `json:"urlTitle,omitempty"`
 	// ttl defines the time to live for the alert notification.
 	// This determines how long the notification remains active before expiring.
@@ -1168,28 +1089,24 @@ type PushoverConfig struct {
 	// sound defines the name of one of the sounds supported by device clients.
 	// This overrides the user's default sound choice for this notification.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Sound string `json:"sound,omitempty"`
 	// priority defines the notification priority level.
 	// See https://pushover.net/api#priority for valid values and behavior.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Priority string `json:"priority,omitempty"`
 	// retry defines how often the Pushover servers will send the same notification to the user.
 	// Must be at least 30 seconds. Only applies to priority 2 notifications.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Retry string `json:"retry,omitempty"`
 	// expire defines how long your notification will continue to be retried for,
 	// unless the user acknowledges the notification. Only applies to priority 2 notifications.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Expire string `json:"expire,omitempty"`
 	// html defines whether notification message is HTML or plain text.
 	// When true, the message can include HTML formatting tags.
@@ -1214,8 +1131,7 @@ type SNSConfig struct {
 	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ApiURL string `json:"apiURL,omitempty"`
 	// sigv4 configures AWS's Signature Verification 4 signing process to sign requests.
 	// This includes AWS credentials and region configuration for authentication.
@@ -1224,32 +1140,27 @@ type SNSConfig struct {
 	// topicARN defines the SNS topic ARN, e.g. arn:aws:sns:us-east-2:698519295917:My-Topic.
 	// If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	TopicARN string `json:"topicARN,omitempty"`
 	// subject defines the subject line when the message is delivered to email endpoints.
 	// This field is only used when sending to email subscribers of an SNS topic.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Subject string `json:"subject,omitempty"`
 	// phoneNumber defines the phone number if message is delivered via SMS in E.164 format.
 	// If you don't specify this value, you must specify a value for the TopicARN or TargetARN.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	PhoneNumber string `json:"phoneNumber,omitempty"`
 	// targetARN defines the mobile platform endpoint ARN if message is delivered via mobile notifications.
 	// If you don't specify this value, you must specify a value for the TopicARN or PhoneNumber.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	TargetARN string `json:"targetARN,omitempty"`
 	// message defines the message content of the SNS notification.
 	// This is the actual notification text that will be sent to subscribers.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// attributes defines SNS message attributes as key-value pairs.
 	// These provide additional metadata that can be used for message filtering and routing.
@@ -1269,8 +1180,7 @@ type TelegramConfig struct {
 	// apiURL defines the Telegram API URL, e.g. https://api.telegram.org.
 	// If not specified, the default Telegram API URL will be used.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	APIURL string `json:"apiURL,omitempty"`
 	// botToken defines the Telegram bot token. It is mutually exclusive with `botTokenFile`.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -1296,8 +1206,7 @@ type TelegramConfig struct {
 	// message defines the message template for the Telegram notification.
 	// This is the content that will be sent to the specified chat.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Message string `json:"message,omitempty"`
 	// disableNotifications controls whether Telegram notifications are sent silently.
 	// When true, users will receive the message without notification sounds.
@@ -1308,8 +1217,7 @@ type TelegramConfig struct {
 	// This determines how text formatting is interpreted in the message.
 	//+kubebuilder:validation:Enum=MarkdownV2;Markdown;HTML
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ParseMode string `json:"parseMode,omitempty"`
 	// httpConfig defines the HTTP client configuration for Telegram API requests.
 	// +optional
@@ -1532,22 +1440,19 @@ type Matcher struct {
 	// value defines the label value to match.
 	// This is the expected value for the specified label.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Value string `json:"value"`
 	// matchType defines the match operation available with AlertManager >= v0.22.0.
 	// Takes precedence over Regex (deprecated) if non-empty.
 	// Valid values: "=" (equality), "!=" (inequality), "=~" (regex match), "!~" (regex non-match).
 	// +kubebuilder:validation:Enum=!=;=;=~;!~
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	MatchType MatchType `json:"matchType,omitempty"`
 	// regex defines whether to match on equality (false) or regular-expression (true).
 	// Deprecated: for AlertManager >= v0.22.0, `matchType` should be used instead.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Regex bool `json:"regex,omitempty"`
 }
 
@@ -1660,13 +1565,11 @@ type Time string
 type TimeRange struct {
 	// startTime defines the start time in 24hr format.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	StartTime Time `json:"startTime,omitempty"`
 	// endTime defines the end time in 24hr format.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	EndTime Time `json:"endTime,omitempty"`
 }
 
@@ -1681,15 +1584,13 @@ type DayOfMonthRange struct {
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Start int `json:"start,omitempty"`
 	// end of the inclusive range
 	// +kubebuilder:validation:Minimum=-31
 	// +kubebuilder:validation:Maximum=31
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	End int `json:"end,omitempty"`
 }
 

@@ -56,8 +56,7 @@ type Probe struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
@@ -75,41 +74,35 @@ func (l *Probe) Bindings() []WorkloadBinding {
 type ProbeSpec struct {
 	// jobName assigned to scraped metrics by default.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	JobName string `json:"jobName,omitempty"`
 
 	// prober defines the specification for the prober to use for probing targets.
 	// The prober.URL parameter is required. Targets cannot be probed if left empty.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ProberSpec ProberSpec `json:"prober,omitempty"`
 
 	// module to use for probing specifying how to probe the target.
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Module string `json:"module,omitempty"`
 	// targets defines a set of static or dynamically discovered targets to probe.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Targets ProbeTargets `json:"targets,omitempty"`
 	// interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Interval Duration `json:"interval,omitempty"`
 	// scrapeTimeout defines the timeout for scraping metrics from the Prometheus exporter.
 	// If not specified, the Prometheus global scrape timeout is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// metricRelabelings defines the RelabelConfig to apply to samples before ingestion.
@@ -247,13 +240,11 @@ type ProbeTargetStaticConfig struct {
 type ProbeTargetIngress struct {
 	// selector to select the Ingress objects.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
 	// namespaceSelector defines from which namespaces to select Ingress objects.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 	// relabelingConfigs to apply to the label set of the target before it gets
 	// scraped.
@@ -289,8 +280,7 @@ type ProberSpec struct {
 	//
 	// +kubebuilder:default:="/probe"
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Path string `json:"path,omitempty"`
 
 	// +optional
