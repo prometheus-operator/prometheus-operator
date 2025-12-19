@@ -56,8 +56,7 @@ type PodMonitor struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
@@ -84,8 +83,7 @@ type PodMonitorSpec struct {
 	// If the value of this field is empty, the `job` label of the metrics
 	// defaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	JobLabel string `json:"jobLabel,omitempty"`
 
 	// podTargetLabels defines the labels which are transferred from the
@@ -97,8 +95,7 @@ type PodMonitorSpec struct {
 	// podMetricsEndpoints defines how to scrape metrics from the selected pods.
 	//
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	PodMetricsEndpoints []PodMetricsEndpoint `json:"podMetricsEndpoints"`
 
 	// selector defines the label selector to select the Kubernetes `Pod` objects to scrape metrics from.
@@ -118,8 +115,7 @@ type PodMonitorSpec struct {
 	// namespaceSelector defines in which namespace(s) Prometheus should discover the pods.
 	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// sampleLimit defines a per-scrape limit on the number of scraped samples
@@ -266,8 +262,7 @@ type PodMetricsEndpoint struct {
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Path string `json:"path,omitempty"`
 
 	// scheme defines the HTTP scheme to use for scraping.
@@ -283,8 +278,7 @@ type PodMetricsEndpoint struct {
 	//
 	// If empty, Prometheus uses the global scrape interval.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Interval Duration `json:"interval,omitempty"`
 
 	// scrapeTimeout defines the timeout after which Prometheus considers the scrape to be failed.
@@ -293,15 +287,13 @@ type PodMetricsEndpoint struct {
 	// than the target's scrape interval value in which the latter is used.
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
 	// honorLabels when true preserves the metric's labels when they collide
 	// with the target's labels.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps

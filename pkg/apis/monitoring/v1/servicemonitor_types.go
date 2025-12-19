@@ -55,8 +55,7 @@ type ServiceMonitor struct {
 	// More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	Status ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
@@ -83,8 +82,7 @@ type ServiceMonitorSpec struct {
 	// the given Service, the `job` label of the metrics defaults to the name
 	// of the associated Kubernetes `Service`.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	JobLabel string `json:"jobLabel,omitempty"`
 
 	// targetLabels defines the labels which are transferred from the
@@ -121,8 +119,7 @@ type ServiceMonitorSpec struct {
 	// namespaceSelector defines in which namespace(s) Prometheus should discover the services.
 	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
 	// +optional
-	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
-	// compatibility.
+	//nolint:kubeapilinter // v1 API stability: field should be non-pointer but cannot be changed without breaking backward compatibility.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// sampleLimit defines a per-scrape limit on the number of scraped samples
