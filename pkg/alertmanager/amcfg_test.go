@@ -6145,6 +6145,181 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeIncidentioConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionIncidentioAllowed := semver.Version{Major: 0, Minor: 29}
+	versionIncidentioNotAllowed := semver.Version{Major: 0, Minor: 28}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "incidentio_configs returns error for unsupported versions",
+			againstVersion: versionIncidentioNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								AlertSourceToken: "token123",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "incidentio_configs allows for supported versions",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								AlertSourceToken: "token123",
+							},
+						},
+					},
+				},
+			},
+			golden: "incidentio_configs_for_supported_versions.golden",
+		},
+		{
+			name:           "incidentio_configs both url and url_file set",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								URLFile:          "/var/kubernetes/secrets/url",
+								AlertSourceToken: "token123",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "incidentio_configs both alert_source_token and alert_source_token_file set",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:                  "http://example.com",
+								AlertSourceToken:     "token123",
+								AlertSourceTokenFile: "/var/kubernetes/secrets/token",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "incidentio_configs missing url and url_file",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								AlertSourceToken: "token123",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "incidentio_configs missing authentication",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "incidentio_configs with http_config.authorization and alert_source_token",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								AlertSourceToken: "token123",
+								HTTPConfig: &httpClientConfig{
+									Authorization: &authorization{
+										Type:        "Bearer",
+										Credentials: "creds123",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "incidentio_configs with http_config.authorization only",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL: "http://example.com",
+								HTTPConfig: &httpClientConfig{
+									Authorization: &authorization{
+										Type:        "Bearer",
+										Credentials: "creds123",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "incidentio_configs_with_http_authorization.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
 func TestSanitizeRoute(t *testing.T) {
 	logger := newNopLogger(t)
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
