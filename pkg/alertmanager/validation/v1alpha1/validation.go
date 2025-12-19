@@ -129,6 +129,7 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 				}
 			}
 		}
+
 		if conf.ClientURL != nil {
 			if *conf.ClientURL != "" {
 				if _, err := validation.ValidateURL(string(*conf.ClientURL)); err != nil {
@@ -136,6 +137,7 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 				}
 			}
 		}
+
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
 		}
