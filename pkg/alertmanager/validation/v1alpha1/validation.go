@@ -198,9 +198,12 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 		if config.URL == nil && config.URLSecret == nil {
 			return errors.New("one of 'url' or 'urlSecret' must be specified")
 		}
+
 		if config.URL != nil {
-			if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
-				return fmt.Errorf("invalid 'url': %w", err)
+			if *config.URL == "" {
+				if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
+					return fmt.Errorf("invalid 'url': %w", err)
+				}
 			}
 		}
 
