@@ -25,13 +25,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -297,7 +294,7 @@ func NewResourceReconciler(
 func (rr *ResourceReconciler) DeletionInProgress(o metav1.Object) bool {
 	if o.GetDeletionTimestamp() != nil {
 		rr.logger.Debug("object deletion in progress",
-			"object", fmt.Sprintf("%s/%s", o.GetNamespace(), o.GetName()),
+			"object", KeyForObject(o),
 		)
 		return true
 	}
@@ -310,7 +307,7 @@ func (rr *ResourceReconciler) hasObjectChanged(old, cur metav1.Object) bool {
 		rr.logger.Debug("different resource versions",
 			"current", cur.GetResourceVersion(),
 			"old", old.GetResourceVersion(),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+			"object", KeyForObject(cur),
 		)
 		return true
 	}
@@ -327,7 +324,7 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 		rr.logger.Debug("different generations",
 			"current", cur.GetGeneration(),
 			"old", old.GetGeneration(),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+			"object", KeyForObject(cur),
 		)
 		return true
 	}
@@ -336,7 +333,7 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 		rr.logger.Debug("different labels",
 			"current", fmt.Sprintf("%v", cur.GetLabels()),
 			"old", fmt.Sprintf("%v", old.GetLabels()),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+			"object", KeyForObject(cur),
 		)
 		return true
 
@@ -345,7 +342,7 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 		rr.logger.Debug("different annotations",
 			"current", fmt.Sprintf("%v", cur.GetAnnotations()),
 			"old", fmt.Sprintf("%v", old.GetAnnotations()),
-			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
+			"object", KeyForObject(cur),
 		)
 		return true
 	}
@@ -375,7 +372,7 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 			continue
 		}
 
-		owner, err := rr.getter.Get(types.NamespacedName{Namespace: obj.GetNamespace(), Name: or.Name}.String())
+		owner, err := rr.getter.Get(KeyForObject(&metav1.ObjectMeta{Name: or.Name, Namespace: obj.GetNamespace()}))
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				rr.logger.Error("failed to resolve controller owner", "err", err, "namespace", obj.GetNamespace(), "name", obj.GetName(), "kind", rr.resourceKind)
@@ -615,7 +612,7 @@ func (rr *ResourceReconciler) EnqueueForReconciliation(obj metav1.Object) {
 		return
 	}
 
-	rr.reconcileQ.Add(obj.GetNamespace() + "/" + obj.GetName())
+	rr.reconcileQ.Add(KeyForObject(obj))
 }
 
 // EnqueueForStatus asks for updating the status of the object.
@@ -624,7 +621,7 @@ func (rr *ResourceReconciler) EnqueueForStatus(obj metav1.Object) {
 		return
 	}
 
-	rr.statusQ.Add(obj.GetNamespace() + "/" + obj.GetName())
+	rr.statusQ.Add(KeyForObject(obj))
 }
 
 // Run the goroutines responsible for processing the reconciliation and status
@@ -705,19 +702,6 @@ func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
 	return true
 }
 
-// ListMatchingNamespaces lists all the namespaces that match the provided
-// selector.
-func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInformer) ([]string, error) {
-	var ns []string
-	err := cache.ListAll(nsInf.GetStore(), selector, func(obj any) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list namespaces: %w", err)
-	}
-	return ns, nil
-}
-
 // isManagedByController returns true if the controller is the "owner" of the object.
 // Whether it's owner is determined by the value of 'controllerID'
 // annotation. If the value matches the controllerID then it owns it.
@@ -729,9 +713,20 @@ func (rr *ResourceReconciler) isManagedByController(obj metav1.Object) bool {
 	}
 
 	if controllerID != rr.controllerID {
-		rr.logger.Debug("skipping object not managed by the controller", "object", fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()), "object_id", controllerID, "controller_id", rr.controllerID)
+		rr.logger.Debug("skipping object not managed by the controller", "object", KeyForObject(obj), "object_id", controllerID, "controller_id", rr.controllerID)
 		return false
 	}
 
 	return true
+}
+
+// KeyForObject returns a string key identifying the given object.
+// For cluster-scoped resources, the key is `<name>`.
+// For namespace-scoped resources, the key is `<namespace>/<name>`.
+func KeyForObject(o metav1.Object) string {
+	if o.GetNamespace() == "" {
+		return o.GetName()
+	}
+
+	return o.GetNamespace() + "/" + o.GetName()
 }

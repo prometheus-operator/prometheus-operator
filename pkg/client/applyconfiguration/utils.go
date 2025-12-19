@@ -112,6 +112,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.HostPortApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1.HTTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("HTTPConfigWithProxy"):
+		return &monitoringv1.HTTPConfigWithProxyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ManagedIdentity"):
 		return &monitoringv1.ManagedIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):

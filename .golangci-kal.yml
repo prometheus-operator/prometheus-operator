@@ -6,7 +6,7 @@
 # https://github.com/kubernetes-sigs/kube-api-linter/blob/main/docs/linters.md
 version: "2"
 run:
-  go: "1.24"
+  go: "1.25"
   allow-parallel-runners: true
 linters:
   default: none
@@ -32,6 +32,9 @@ linters:
               - "uniquemarkers"
               - "jsontags"
               - "statusoptional"
+              - "nophase"
+              - "nonullable"
+              - "forbiddenmarkers"
             disable:
               - "*"
           lintersConfig:
@@ -42,7 +45,14 @@ linters:
                   - ["default", "kubebuilder:default"]
                   - ["required", "kubebuilder:validation:Required", "k8s:required"]
                 description: "A field with a default value cannot be required"
-
+            forbiddenmarkers:
+              markers:
+                - identifier: "+kubebuilder:pruning:PreserveUnknownFields"
+                - identifier: "+kubebuilder:validation:XPreserveUnknownFields"
+                - identifier: "+kubebuilder:validation:items:XPreserveUnknownFields"
+                - identifier: "+kubebuilder:validation:EmbeddedResource"
+                - identifier: "+kubebuilder:validation:XEmbeddedResource"
+                - identifier: "+kubebuilder:validation:items:XEmbeddedResource"
   exclusions:
     generated: strict
     paths:

@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.87.1"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -994,8 +994,7 @@
                                   "sourceLabels": {
                                     "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                     "items": {
-                                      "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                      "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                       "type": "string"
                                     },
                                     "type": "array"
@@ -1128,6 +1127,7 @@
                             },
                             "pathPrefix": {
                               "description": "pathPrefix defines the prefix for the HTTP path alerts are pushed to.",
+                              "minLength": 1,
                               "type": "string"
                             },
                             "port": {
@@ -1236,8 +1236,7 @@
                                   "sourceLabels": {
                                     "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                     "items": {
-                                      "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                      "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                       "type": "string"
                                     },
                                     "type": "array"
@@ -1252,7 +1251,13 @@
                               "type": "array"
                             },
                             "scheme": {
-                              "description": "scheme to use when firing alerts.",
+                              "description": "scheme defines the HTTP scheme to use when sending alerts.",
+                              "enum": [
+                                "http",
+                                "https",
+                                "HTTP",
+                                "HTTPS"
+                              ],
                               "type": "string"
                             },
                             "sigv4": {
@@ -1315,6 +1320,10 @@
                                   ],
                                   "type": "object",
                                   "x-kubernetes-map-type": "atomic"
+                                },
+                                "useFIPSSTSEndpoint": {
+                                  "description": "useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.",
+                                  "type": "boolean"
                                 }
                               },
                               "type": "object"
@@ -4981,6 +4990,14 @@
                     },
                     "type": "object"
                   },
+                  "podManagementPolicy": {
+                    "description": "podManagementPolicy defines the policy for creating/deleting pods when\nscaling up and down.\n\nUnlike the default StatefulSet behavior, the default policy is\n`Parallel` to avoid manual intervention in case a pod gets stuck during\na rollout.\n\nNote that updating this value implies the recreation of the StatefulSet\nwhich incurs a service outage.",
+                    "enum": [
+                      "OrderedReady",
+                      "Parallel"
+                    ],
+                    "type": "string"
+                  },
                   "podMetadata": {
                     "description": "podMetadata defines labels and annotations which are propagated to the Prometheus pods.\n\nThe following items are reserved and cannot be overridden:\n* \"prometheus\" label, set to the name of the Prometheus object.\n* \"app.kubernetes.io/instance\" label, set to the name of the Prometheus object.\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/name\" label, set to \"prometheus\".\n* \"app.kubernetes.io/version\" label, set to the Prometheus version.\n* \"operator.prometheus.io/name\" label, set to the name of the Prometheus object.\n* \"operator.prometheus.io/shard\" label, set to the shard number of the Prometheus object.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"prometheus\".",
                     "properties": {
@@ -5999,13 +6016,11 @@
                               "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
-                                  "description": "clientId defines defines the Azure User-assigned Managed identity.",
+                                  "description": "clientId defines the Azure User-assigned Managed identity.\n\nFor Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.",
+                                  "minLength": 1,
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "clientId"
-                              ],
                               "type": "object"
                             },
                             "oauth": {
@@ -6151,7 +6166,7 @@
                           "type": "string"
                         },
                         "metadataConfig": {
-                          "description": "metadataConfig defines how to send a series metadata to the remote storage.",
+                          "description": "metadataConfig defines how to send a series metadata to the remote storage.\n\nWhen the field is empty, **no metadata** is sent. But when the field is\nnull, metadata is sent.",
                           "properties": {
                             "maxSamplesPerSend": {
                               "description": "maxSamplesPerSend defines the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
@@ -6656,6 +6671,10 @@
                               ],
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
+                            },
+                            "useFIPSSTSEndpoint": {
+                              "description": "useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.",
+                              "type": "boolean"
                             }
                           },
                           "type": "object"
@@ -6892,8 +6911,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -7270,8 +7288,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -7344,8 +7361,7 @@
                               "sourceLabels": {
                                 "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                 "items": {
-                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                   "type": "string"
                                 },
                                 "type": "array"
@@ -7648,6 +7664,10 @@
                     "description": "scrapeInterval defines interval between consecutive scrapes.\n\nDefault: \"30s\"",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
+                  },
+                  "scrapeNativeHistograms": {
+                    "description": "scrapeNativeHistograms defines whether to enable scraping of native histograms.\nIt requires Prometheus >= v3.8.0.",
+                    "type": "boolean"
                   },
                   "scrapeProtocols": {
                     "description": "scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.\n\n`PrometheusText1.0.0` requires Prometheus >= v3.0.0.",

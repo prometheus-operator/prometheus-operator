@@ -62,7 +62,7 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 	}
 }
 
-func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGenerator {
+func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus, opts ...ConfigGeneratorOption) *ConfigGenerator {
 	t.Helper()
 
 	if p == nil {
@@ -72,7 +72,6 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 		Level: slog.LevelWarn,
 	}))
 
-	opts := []ConfigGeneratorOption{}
 	if p.Spec.ServiceDiscoveryRole != nil && *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
 		opts = append(opts, WithEndpointSliceSupport())
 	}
@@ -543,7 +542,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -600,7 +599,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -647,7 +646,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -692,7 +691,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -751,7 +750,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -809,7 +808,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
@@ -1641,22 +1640,51 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	golden.Assert(t, string(cfg), "NoEnforcedNamespaceLabelServiceMonitor_Expected.golden")
 }
 
-func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
-	p := defaultPrometheus()
-	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
-	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
+func TestServiceMonitorWithServiceDiscoveryRole(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		promRole *monitoringv1.ServiceDiscoveryRole
+		smonRole *monitoringv1.ServiceDiscoveryRole
+		golden   string
+	}{
+		{
+			name:   "Default",
+			golden: "TestServiceMonitorWithDefaultServiceDiscoveryRole.golden",
+		},
+		{
+			name:     "Prometheus with endpoints",
+			promRole: ptr.To(monitoringv1.EndpointsRole),
+			golden:   "TestServiceMonitorWithDefaultServiceDiscoveryRole.golden",
+		},
+		{
+			name:     "Prometheus with endpointslice",
+			promRole: ptr.To(monitoringv1.EndpointSliceRole),
+			golden:   "TestServiceMonitorWithEndpointSliceEnable_Expected.golden",
+		},
+		{
+			name:     "Prometheus with endpointslice and ServiceMonitor with endpoints",
+			promRole: ptr.To(monitoringv1.EndpointSliceRole),
+			smonRole: ptr.To(monitoringv1.EndpointsRole),
+			golden:   "TestServiceMonitorWithEndpointsAndPrometheusEndpointSlice.golden",
+		},
+		{
+			name:     "Prometheus with endpoints and ServiceMonitor with endpointslice",
+			promRole: ptr.To(monitoringv1.EndpointsRole),
+			smonRole: ptr.To(monitoringv1.EndpointSliceRole),
+			golden:   "TestServiceMonitorWithEndpointSliceAndPrometheusEndpoints.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = tc.promRole
 
-	cg := mustNewConfigGenerator(t, p)
-
-	cfg, err := cg.GenerateServerConfiguration(
-		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
+			smon := &monitoringv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					ServiceDiscoveryRole: ptr.To(monitoringv1.EndpointsRole),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1673,38 +1701,31 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "drop",
-									Regex:        "my-job-pod-.+",
-									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "ns-key",
-								},
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.*)",
-									Replacement:  ptr.To("$1"),
-									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
-								},
-							},
 						},
 					},
 				},
-			},
-		},
-		nil,
-		nil,
-		nil,
-		&assets.StoreBuilder{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "TestServiceMonitorWithEndpointSliceEnable_Expected.golden")
+			}
+			smon.Spec.ServiceDiscoveryRole = tc.smonRole
+
+			cg := mustNewConfigGenerator(t, p, WithEndpointSliceSupport())
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"test": smon,
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
 }
 
 func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
@@ -2694,8 +2715,10 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.PodMonitorSpec{
 						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 							{
-								Port:   ptr.To("web"),
-								OAuth2: &oauth2,
+								Port: ptr.To("web"),
+								HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+									HTTPConfig: monitoringv1.HTTPConfig{OAuth2: &oauth2},
+								},
 							},
 						},
 					},
@@ -2715,7 +2738,9 @@ func TestEndpointOAuth2(t *testing.T) {
 						},
 					},
 					Spec: monitoringv1.ProbeSpec{
-						OAuth2: &oauth2,
+						HTTPConfig: monitoringv1.HTTPConfig{
+							OAuth2: &oauth2,
+						},
 						Targets: monitoringv1.ProbeTargets{
 							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
 								Targets: []string{"127.0.0.1"},
@@ -4002,7 +4027,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 				},
 			},
@@ -4073,6 +4098,19 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfigAzureADSDK_v2.51.0.golden",
+		},
+		{
+			version: "v3.5.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To(""),
+					},
+				},
+			},
+			golden: "RemoteWriteConfig_AzureADManagedIdentity_v3.5.0.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -4342,6 +4380,92 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfig_v2.29.0_MaxSamplesPerSendMetadataConfig.golden",
+		},
+		{
+			version: "v2.53.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile: "profilename",
+					RoleArn: "arn:aws:iam::123456789012:instance-profile/prometheus",
+					AccessKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region:             "us-central-0",
+					UseFIPSSTSEndpoint: ptr.To(true),
+				},
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			golden: "RemoteWriteConfig_v2.53.0.golden",
+		},
+		{
+			version: "v2.54.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile: "profilename",
+					RoleArn: "arn:aws:iam::123456789012:instance-profile/prometheus",
+					AccessKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region:             "us-central-0",
+					UseFIPSSTSEndpoint: ptr.To(true),
+				},
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			golden: "RemoteWriteConfig_v2.54.0.golden",
+		},
+		{
+			// Empty metadataConfig defaults to no metadata being sent.
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MetadataConfig: &monitoringv1.MetadataConfig{},
+			},
+			golden: "RemoteWriteConfigWithEmptyMetadataConfig.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
@@ -4734,7 +4858,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 						ProxyConfig: monitoringv1.ProxyConfig{
@@ -4933,6 +5057,35 @@ func TestNativeHistogramConfig(t *testing.T) {
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
+		},
+		{
+			version: "v3.8.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms:         ptr.To(true),
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigWithScrapeNativeHistograms.golden",
+		},
+		{
+			version: "v3.7.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms:         ptr.To(true),
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigMissScrapeNativeHistograms.golden",
+		},
+		{
+			version: "v3.8.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigOnlyScrapeNativeHistograms.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
@@ -5224,9 +5377,11 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:            ptr.To("web"),
-							Interval:        "30s",
-							FollowRedirects: ptr.To(tc.followRedirects),
+							Port:     ptr.To("web"),
+							Interval: "30s",
+							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+								HTTPConfig: monitoringv1.HTTPConfig{FollowRedirects: ptr.To(tc.followRedirects)},
+							},
 						},
 					},
 				},
@@ -5405,9 +5560,11 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:        ptr.To("web"),
-							Interval:    "30s",
-							EnableHttp2: ptr.To(tc.enableHTTP2),
+							Port:     ptr.To("web"),
+							Interval: "30s",
+							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+								HTTPConfig: monitoringv1.HTTPConfig{EnableHTTP2: ptr.To(tc.enableHTTP2)},
+							},
 						},
 					},
 				},
@@ -5666,7 +5823,7 @@ func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
 			golden: "PrometheusAgent_no_scrapeFailureLogFile.golden",
 		},
 		{
-			name:                 "PrometheusAgent verison < v2.55.0",
+			name:                 "PrometheusAgent version < v2.55.0",
 			version:              "v2.54.0",
 			scrapeFailureLogFile: ptr.To("file.log"),
 			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
@@ -5828,7 +5985,7 @@ func TestProbeSpecConfig(t *testing.T) {
 			golden: "ProbeSpecConfig_prober_spec.golden",
 			pbSpec: monitoringv1.ProbeSpec{
 				ProberSpec: monitoringv1.ProberSpec{
-					Scheme: "http",
+					Scheme: ptr.To(monitoringv1.SchemeHTTP),
 					URL:    "example.com",
 					Path:   "/probe",
 					ProxyConfig: monitoringv1.ProxyConfig{
@@ -6334,7 +6491,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "scheme",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				Scheme: ptr.To("HTTPS"),
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 			},
 			golden: "ScrapeConfigSpecConfig_Scheme.golden",
 		},
@@ -7392,7 +7549,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						Datacenter:   ptr.To("we1"),
 						Namespace:    ptr.To("observability"),
 						Partition:    ptr.To("1"),
-						Scheme:       ptr.To("https"),
+						Scheme:       ptr.To(monitoringv1.SchemeHTTPS),
 						Services:     []string{"prometheus", "alertmanager"},
 						Tags:         []string{"tag1"},
 						TagSeparator: ptr.To(";"),
@@ -8883,7 +9040,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DockerSD_with_MatchFirstNetwork.golden",
 		},
 		{
-			name:    "docker_sd_config_match_first_network_with_old_verison",
+			name:    "docker_sd_config_match_first_network_with_old_version",
 			version: "v2.53.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
@@ -10202,7 +10359,7 @@ func defaultProbe() *monitoringv1.Probe {
 		},
 		Spec: monitoringv1.ProbeSpec{
 			ProberSpec: monitoringv1.ProberSpec{
-				Scheme: "http",
+				Scheme: ptr.To(monitoringv1.SchemeHTTP),
 				URL:    "blackbox.exporter.io",
 				Path:   "/probe",
 			},
@@ -13763,6 +13920,63 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 			}
 			if tc.ScrapeClassicHistograms != nil {
 				p.Spec.CommonPrometheusFields.ScrapeClassicHistograms = tc.ScrapeClassicHistograms
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
+func TestAppendScrapeNativeHistograms(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		version                string
+		ScrapeNativeHistograms *bool
+		expectedCfg            string
+	}{
+		{
+			name:                   "ScrapeNativeHistograms true with Prometheus Version 3.8",
+			version:                "v3.8.0",
+			ScrapeNativeHistograms: ptr.To(true),
+			expectedCfg:            "ScrapeNativeHistogramsTrueProperPromVersion.golden",
+		},
+		{
+			name:                   "ScrapeNativeHistograms false with Prometheus Version 3.8",
+			version:                "v3.8.0",
+			ScrapeNativeHistograms: ptr.To(false),
+			expectedCfg:            "ScrapeNativeHistogramsFalseProperPromVersion.golden",
+		},
+		{
+			name:                   "ScrapeNativeHistograms true with Lower Prometheus version",
+			version:                "v3.7.0",
+			ScrapeNativeHistograms: ptr.To(true),
+			expectedCfg:            "ScrapeNativeHistogramsTrueWrongPromVersion.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.ScrapeNativeHistograms != nil {
+				p.Spec.CommonPrometheusFields.ScrapeNativeHistograms = tc.ScrapeNativeHistograms
 			}
 
 			cg := mustNewConfigGenerator(t, p)

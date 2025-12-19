@@ -76,6 +76,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
 	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
@@ -98,6 +99,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	NameValidationScheme                 *monitoringv1.NameValidationSchemeOptions               `json:"nameValidationScheme,omitempty"`
 	NameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions                 `json:"nameEscapingScheme,omitempty"`
 	ConvertClassicHistogramsToNHCB       *bool                                                   `json:"convertClassicHistogramsToNHCB,omitempty"`
+	ScrapeNativeHistograms               *bool                                                   `json:"scrapeNativeHistograms,omitempty"`
 	ScrapeClassicHistograms              *bool                                                   `json:"scrapeClassicHistograms,omitempty"`
 	MinReadySeconds                      *int32                                                  `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
@@ -572,6 +574,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithListenLocal(value bool) *
 	return b
 }
 
+// WithPodManagementPolicy sets the PodManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PodManagementPolicy field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *CommonPrometheusFieldsApplyConfiguration {
+	b.PodManagementPolicy = &value
+	return b
+}
+
 // WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnableServiceLinks field is set to the value of the last call.
@@ -749,6 +759,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithNameEscapingScheme(value 
 // If called multiple times, the ConvertClassicHistogramsToNHCB field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithConvertClassicHistogramsToNHCB(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.ConvertClassicHistogramsToNHCB = &value
+	return b
+}
+
+// WithScrapeNativeHistograms sets the ScrapeNativeHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeNativeHistograms field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeNativeHistograms(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeNativeHistograms = &value
 	return b
 }
 

@@ -498,6 +498,14 @@ func (b *PrometheusSpecApplyConfiguration) WithListenLocal(value bool) *Promethe
 	return b
 }
 
+// WithPodManagementPolicy sets the PodManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PodManagementPolicy field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.PodManagementPolicy = &value
+	return b
+}
+
 // WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnableServiceLinks field is set to the value of the last call.
@@ -675,6 +683,14 @@ func (b *PrometheusSpecApplyConfiguration) WithNameEscapingScheme(value monitori
 // If called multiple times, the ConvertClassicHistogramsToNHCB field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithConvertClassicHistogramsToNHCB(value bool) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ConvertClassicHistogramsToNHCB = &value
+	return b
+}
+
+// WithScrapeNativeHistograms sets the ScrapeNativeHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeNativeHistograms field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithScrapeNativeHistograms(value bool) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.ScrapeNativeHistograms = &value
 	return b
 }
 

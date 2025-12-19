@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
@@ -59,6 +58,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		name      string
 		spec      monitoringv1.RemoteWriteSpec
 		expectErr bool
+		version   string
 	}{
 		{
 			name: "with_OAuth2",
@@ -118,7 +118,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -141,7 +141,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: "client-id",
+						ClientID: ptr.To("client-id"),
 					},
 					SDK: &monitoringv1.AzureSDK{
 						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
@@ -149,6 +149,33 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name: "with_azure_managed_identity_empty_client_id",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To(""),
+					},
+				},
+			},
+			version:   "3.4.0",
+			expectErr: true,
+		},
+		{
+			name: "with_azure_managed_identity_empty_client_id_v3.5.0",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To(""),
+					},
+				},
+			},
+			version: "3.5.0",
 		},
 		{
 			name: "with_azure_sdk_and_azure_oAuth",
@@ -194,199 +221,28 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			expectErr: true,
 		},
 	}
-	for _, c := range cases {
-		test := c
-		t.Run(test.name, func(t *testing.T) {
-			err := validateRemoteWriteSpec(test.spec)
-			if test.expectErr {
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+					},
+				},
+			}
+			cg := mustNewConfigGenerator(t, p)
+
+			err := cg.validateRemoteWriteSpec(tc.spec)
+			if tc.expectErr {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
-		})
-	}
-}
-
-func TestConfigResStatusConditionsEqual(t *testing.T) {
-	now := metav1.NewTime(time.Now())
-	earlier := metav1.NewTime(time.Now().Add(-1 * time.Hour))
-
-	tests := []struct {
-		name     string
-		a        []monitoringv1.ConfigResourceCondition
-		b        []monitoringv1.ConfigResourceCondition
-		expected bool
-	}{
-		{
-			name: "equal conditions different order",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "True",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-					LastTransitionTime: now,
-				},
-				{
-					Type:               "Ready",
-					Status:             "False",
-					Reason:             "Init",
-					Message:            "initializing",
-					ObservedGeneration: 1,
-					LastTransitionTime: earlier,
-				},
-			},
-			b: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Ready",
-					Status:             "False",
-					Reason:             "Init",
-					Message:            "initializing",
-					ObservedGeneration: 1,
-					LastTransitionTime: earlier,
-				},
-				{
-					Type:               "Accepted",
-					Status:             "True",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-					LastTransitionTime: now,
-				},
-			},
-			expected: true,
-		},
-		{
-			name: "different status",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "True",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			b: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False", // different
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "different message",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			b: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "Issue detected", // different
-					ObservedGeneration: 1,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "different observed generation",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			b: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 2, // different
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "different reason",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			b: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "Issue", // different
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "different type",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			b: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Ready", // different
-					Status:             "False",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "different lengths",
-			a: []monitoringv1.ConfigResourceCondition{
-				{
-					Type:               "Accepted",
-					Status:             "True",
-					Reason:             "OK",
-					Message:            "all good",
-					ObservedGeneration: 1,
-				},
-			},
-			b:        []monitoringv1.ConfigResourceCondition{},
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := equalConfigResourceConditions(tt.a, tt.b)
-			require.Equal(t, tt.expected, result)
 		})
 	}
 }

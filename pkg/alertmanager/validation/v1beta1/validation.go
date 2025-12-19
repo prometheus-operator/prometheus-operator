@@ -108,7 +108,7 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		}
 
 		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - reciever %s: %w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - receiver %s: %w", receiver.Name, err)
 		}
 
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
@@ -280,6 +280,10 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 
 		if config.Token == nil && config.TokenFile == nil {
 			return fmt.Errorf("one of token or tokenFile must be configured")
+		}
+
+		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
+			return fmt.Errorf("html and monospace options are mutually exclusive")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

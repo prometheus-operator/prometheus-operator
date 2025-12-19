@@ -40,6 +40,7 @@ type PushoverConfigApplyConfiguration struct {
 	Retry        *string                       `json:"retry,omitempty"`
 	Expire       *string                       `json:"expire,omitempty"`
 	HTML         *bool                         `json:"html,omitempty"`
+	Monospace    *bool                         `json:"monospace,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
@@ -174,6 +175,14 @@ func (b *PushoverConfigApplyConfiguration) WithExpire(value string) *PushoverCon
 // If called multiple times, the HTML field is set to the value of the last call.
 func (b *PushoverConfigApplyConfiguration) WithHTML(value bool) *PushoverConfigApplyConfiguration {
 	b.HTML = &value
+	return b
+}
+
+// WithMonospace sets the Monospace field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Monospace field is set to the value of the last call.
+func (b *PushoverConfigApplyConfiguration) WithMonospace(value bool) *PushoverConfigApplyConfiguration {
+	b.Monospace = &value
 	return b
 }
 

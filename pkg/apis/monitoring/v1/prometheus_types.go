@@ -499,6 +499,19 @@ type CommonPrometheusFields struct {
 	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
 
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
@@ -756,6 +769,12 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	//
+	// +optional
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
 
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	//
@@ -1764,6 +1783,10 @@ type RemoteWriteSpec struct {
 	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
 
 	// metadataConfig defines how to send a series metadata to the remote storage.
+	//
+	// When the field is empty, **no metadata** is sent. But when the field is
+	// null, metadata is sent.
+	//
 	// +optional
 	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 
@@ -1863,6 +1886,11 @@ type Sigv4 struct {
 	// roleArn defines the named AWS profile used to authenticate.
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
+	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +optional
+	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"`
 }
 
 // AzureAD defines the configuration for remote write's azuread parameters.
@@ -1912,9 +1940,13 @@ type AzureOAuth struct {
 // ManagedIdentity defines the Azure User-assigned Managed identity.
 // +k8s:openapi-gen=true
 type ManagedIdentity struct {
-	// clientId defines defines the Azure User-assigned Managed identity.
-	// +required
-	ClientID string `json:"clientId"`
+	// clientId defines the Azure User-assigned Managed identity.
+	//
+	// For Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.
+	//
+	// +optional
+	// +kubebuilder:validation:MinLength:=1
+	ClientID *string `json:"clientId"`
 }
 
 // AzureSDK is used to store azure SDK config values.
@@ -2161,13 +2193,16 @@ type AlertmanagerEndpoints struct {
 	// +required
 	Port intstr.IntOrString `json:"port"`
 
-	// scheme to use when firing alerts.
+	// scheme defines the HTTP scheme to use when sending alerts.
+	//
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// pathPrefix defines the prefix for the HTTP path alerts are pushed to.
+	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	PathPrefix string `json:"pathPrefix,omitempty"`
+	PathPrefix *string `json:"pathPrefix,omitempty"`
 
 	// tlsConfig to use for Alertmanager.
 	//
@@ -2272,10 +2307,12 @@ type RulesAlert struct {
 // +k8s:openapi-gen=true
 type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
+	//
 	// +optional
 	Send bool `json:"send,omitempty"`
 
 	// sendInterval defines how frequently metric metadata is sent to the remote storage.
+	//
 	// +optional
 	SendInterval Duration `json:"sendInterval,omitempty"`
 

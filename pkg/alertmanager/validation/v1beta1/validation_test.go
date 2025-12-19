@@ -347,6 +347,36 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "Test fail to validate PushoverConfigs - html and monospace both true",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
+									Token: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "token",
+									},
+									HTML:      ptr.To(true),
+									Monospace: ptr.To(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test fail to validate routes - parent route has no receiver",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{

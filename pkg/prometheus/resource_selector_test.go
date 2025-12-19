@@ -176,11 +176,11 @@ func TestValidateRelabelConfig(t *testing.T) {
 		},
 		// Test valid labelmap relabel config with replacement specified
 		{
-			scenario: "valid labelmap config",
+			scenario: "valid labelmap config with replacement",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_service_label_(.+)",
-				Replacement: ptr.To("${2}"),
+				Replacement: ptr.To("abc"),
 			},
 			prometheus: defaultPrometheusSpec,
 		},
@@ -438,6 +438,7 @@ func TestSelectProbes(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1.ProbeSpec)
+		promVersion string
 		valid       bool
 		scrapeClass *string
 	}{
@@ -639,7 +640,7 @@ func TestSelectProbes(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario: "utf-8 metric relabeling config with prom2",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -649,6 +650,22 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 metric relabeling config with prom3",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid static relabeling config",
@@ -664,7 +681,7 @@ func TestSelectProbes(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid static relabeling config",
+			scenario: "utf-8 static relabeling config with prom2",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -674,7 +691,22 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 static relabeling config with prom3",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid ingress relabeling config",
@@ -693,7 +725,7 @@ func TestSelectProbes(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid ingress relabeling config",
+			scenario: "utf-8 ingress relabeling config with prom2",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -705,7 +737,24 @@ func TestSelectProbes(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 ingress relabeling config with prom3",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario:    "inexistent scrape class",
@@ -758,6 +807,7 @@ func TestSelectProbes(t *testing.T) {
 			p := &monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.promVersion,
 						ScrapeClasses: []monitoringv1.ScrapeClass{
 							{
 								Name: "existent",
@@ -915,6 +965,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1.ServiceMonitorSpec)
+		promVersion string
 		valid       bool
 		scrapeClass *string
 	}{
@@ -934,7 +985,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario: "utf-8 metric relabeling config with prom2",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -946,7 +997,24 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 metric relabeling config with prom3",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid relabeling config",
@@ -964,7 +1032,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid relabeling config",
+			scenario: "utf-8 relabeling config with prom2",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -976,7 +1044,24 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 relabeling config with prom3",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid TLS config with CA, cert and key",
@@ -1291,7 +1376,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "Mixed Endpoints",
+			scenario: "utf-8 mixed endpoints with prom2",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1312,7 +1397,33 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 mixed endpoints with prom3",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
@@ -1345,6 +1456,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			p := &monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.promVersion,
 						ScrapeClasses: []monitoringv1.ScrapeClass{
 							{
 								Name: "existent",
@@ -1399,6 +1511,7 @@ func TestSelectPodMonitors(t *testing.T) {
 	for _, tc := range []struct {
 		scenario    string
 		updateSpec  func(*monitoringv1.PodMonitorSpec)
+		promVersion string
 		valid       bool
 		scrapeClass *string
 	}{
@@ -1418,7 +1531,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario: "utf-8 metric relabeling config with prom2",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1430,7 +1543,24 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 metric relabeling config with prom3",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid relabeling config",
@@ -1448,7 +1578,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid relabeling config",
+			scenario: "utf-8 relabeling config with prom2",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1460,23 +1590,42 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 relabeling config with prom3",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid proxy config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1489,17 +1638,19 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config with invalid secret key",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "invalid_key",
 									},
-									Key: "invalid_key",
 								},
 							},
 						},
@@ -1512,17 +1663,19 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config due to invalid proxy url",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1535,16 +1688,18 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1557,16 +1712,18 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1579,14 +1736,16 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid proxy config only with proxy connect header defined",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1610,7 +1769,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "Mixed Endpoints",
+			scenario: "utf-8 mixed Endpoints with prom2",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1631,7 +1790,33 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 mixed Endpoints with prom3",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
@@ -1650,6 +1835,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			p := &monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.promVersion,
 						ScrapeClasses: []monitoringv1.ScrapeClass{
 							{
 								Name: "existent",
@@ -1729,7 +1915,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid relabeling config",
+			scenario: "utf-8 relabeling config with prom2",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -1739,7 +1925,22 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 relabeling config with prom3",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.RelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid metric relabeling config",
@@ -1755,7 +1956,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "invalid metric relabeling config",
+			scenario: "utf-8 metric relabeling config with prom2",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
@@ -1765,7 +1966,22 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario: "utf-8 metric relabeling config with prom3",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						TargetLabel:  " invalid label name",
+						SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "valid proxy config",
@@ -1948,11 +2164,23 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: true,
 		},
 		{
-			scenario: "staticConfig with invalid Labels",
+			scenario:    "staticConfig with utf-8 label",
+			promVersion: "3.0.0",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
 					{
-						Labels: map[string]string{"1owner": "prometheus"},
+						Labels: map[string]string{"测试服务": "prometheus"},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "staticConfig with invalid utf-8 label",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+					{
+						Labels: map[string]string{"\xff": "prometheus"},
 					},
 				}
 			},
@@ -2767,7 +2995,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with no secret ref provided",
@@ -2778,7 +3007,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with invalid secret ref for secretKey",
@@ -2801,7 +3031,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "EC2 SD config with valid TLS Config",
@@ -2836,7 +3067,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "EC2 SD config with valid HTTPS Config",
@@ -2895,7 +3127,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "EC2 SD config with valid proxy settings",
@@ -2923,6 +3156,18 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			promVersion: "2.52.0",
 			valid:       true,
+		},
+		{
+			scenario: "EC2 SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       false,
 		},
 		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
@@ -4161,7 +4406,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with invalid TLS config with invalid CA data",
@@ -4181,7 +4427,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "LightSail SD config with valid proxy settings",
@@ -4206,7 +4453,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with invalid proxy settings",
@@ -4230,7 +4478,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref",
@@ -4248,7 +4497,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 
 		{
@@ -4272,7 +4522,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with no secret ref provided",
@@ -4283,7 +4534,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: true,
+			promVersion: "3.7.0",
+			valid:       true,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref for accessKey",
@@ -4306,7 +4558,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
 		},
 		{
 			scenario: "LightSail SD config with invalid secret ref for secretKey",
@@ -4329,7 +4582,20 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid: false,
+			promVersion: "3.7.0",
+			valid:       false,
+		},
+		{
+			scenario: "LightSail SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       false,
 		},
 		{
 			scenario: "OVHCloud SD config",
@@ -4672,6 +4938,150 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			} else {
 				require.Empty(t, valid)
 			}
+		})
+	}
+}
+
+func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
+	storeBuilder := assets.NewTestStoreBuilder(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"secret": []byte("xxx"),
+			},
+		},
+	)
+	secretKey := v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "foo",
+		},
+		Key: "secret",
+	}
+
+	for _, tc := range []struct {
+		name       string
+		updateFunc func(pe *monitoringv1.PodMetricsEndpoint)
+	}{
+		{
+			name: "duplicate bearerTokenSecret and authorization",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BearerTokenSecret = &secretKey
+				pe.Authorization = &monitoringv1.SafeAuthorization{
+					Credentials: &secretKey,
+				}
+			},
+		},
+		{
+			name: "duplicate bearerTokenSecret and basicAuth",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BearerTokenSecret = &secretKey
+				pe.BasicAuth = &monitoringv1.BasicAuth{
+					Username: secretKey,
+					Password: secretKey,
+				}
+			},
+		},
+		{
+			name: "duplicate bearerTokenSecret and oauth2",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BearerTokenSecret = &secretKey
+				pe.OAuth2 = &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						Secret: &secretKey,
+					},
+					ClientSecret: secretKey,
+					TokenURL:     "http://example.com",
+				}
+			},
+		},
+		{
+			name: "duplicate authorization and basicAuth",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.Authorization = &monitoringv1.SafeAuthorization{
+					Credentials: &secretKey,
+				}
+				pe.BasicAuth = &monitoringv1.BasicAuth{
+					Username: secretKey,
+					Password: secretKey,
+				}
+			},
+		},
+		{
+			name: "duplicate authorization and oauth2",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.Authorization = &monitoringv1.SafeAuthorization{
+					Credentials: &secretKey,
+				}
+				pe.OAuth2 = &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						Secret: &secretKey,
+					},
+					ClientSecret: secretKey,
+					TokenURL:     "http://example.com",
+				}
+			},
+		},
+		{
+			name: "duplicate basicAuth and oauth2",
+			updateFunc: func(pe *monitoringv1.PodMetricsEndpoint) {
+				pe.BasicAuth = &monitoringv1.BasicAuth{
+					Username: secretKey,
+					Password: secretKey,
+				}
+				pe.OAuth2 = &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						Secret: &secretKey,
+					},
+					ClientSecret: secretKey,
+					TokenURL:     "http://example.com",
+				}
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+
+			pme := monitoringv1.PodMetricsEndpoint{
+				Port:     ptr.To("web"),
+				Interval: "30s",
+			}
+			tc.updateFunc(&pme)
+			pm := &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{pme},
+				},
+			}
+
+			rs, err := NewResourceSelector(
+				newLogger(),
+				p,
+				storeBuilder,
+				nil,
+				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				operator.NewFakeRecorder(1, p),
+			)
+			require.NoError(t, err)
+
+			pms, err := rs.SelectPodMonitors(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
+				appendFn(pm)
+				return nil
+			})
+
+			require.NoError(t, err)
+			require.Len(t, pms, 1)
+
+			valid := pms.ValidResources()
+			require.Empty(t, valid)
 		})
 	}
 }

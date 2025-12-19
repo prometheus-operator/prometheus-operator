@@ -15,14 +15,16 @@ It is recommended to use versions of the components identical or close to the ve
 
 ## Kubernetes
 
-Due to the use of apiextensions.k8s.io/v1 CustomResourceDefinitions, prometheus-operator requires Kubernetes >= v1.16.0.
+Due to the use of [Common Expression Language](https://kubernetes.io/docs/reference/using-api/cel/) (CEL) in Custom Resource Definitions, prometheus-operator >= v0.84.0 requires Kubernetes >= v1.25.0 (or v1.23.0 with the `CustomResourceValidationExpressions` feature gate enabled).
+
+Releases before v0.84.0 require Kubernetes >= v1.16.0.
 
 The Prometheus Operator uses the official [Go client](https://github.com/kubernetes/client-go) for Kubernetes to communicate with the Kubernetes API. The compatibility matrix for client-go and Kubernetes clusters can be found [here](https://github.com/kubernetes/client-go#compatibility-matrix). All additional compatibility is only best effort, or happens to be still/already supported.
 
 The current version of the Prometheus operator uses the following Go client version:
 
 ```$ mdox-exec="go list -m  -f '{{ .Version }}' k8s.io/client-go"
-v0.34.1
+v0.34.2
 ```
 
 ## Prometheus
@@ -65,12 +67,18 @@ Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's e
 * v3.4.2
 * v3.5.0
 * v3.6.0
+* v3.7.0
+* v3.7.1
+* v3.7.2
+* v3.7.3
+* v3.8.0
+* v3.8.1
 ```
 
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultPrometheusVersion"
-* v3.6.0
+* v3.8.1
 ```
 
 ## Alertmanager
@@ -80,7 +88,7 @@ The Prometheus Operator is compatible with Alertmanager v0.15 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultAlertmanagerVersion"
-* v0.28.1
+* v0.30.0
 ```
 
 ## Thanos
@@ -90,5 +98,5 @@ The Prometheus Operator is compatible with Thanos v0.10 and above.
 The end-to-end tests are mostly tested against
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility defaultThanosVersion"
-* v0.39.2
+* v0.40.1
 ```

@@ -36,6 +36,7 @@ import (
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	validationv1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -281,6 +282,10 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
+	if err := validationv1.ValidateAlertmanagerGlobalConfig(globalConfig); err != nil {
+		return err
+	}
+
 	global, err := cb.convertGlobalConfig(ctx, globalConfig, crKey)
 	if err != nil {
 		return err
@@ -429,22 +434,28 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		}
 	}
 
-	if in.HTTPConfig != nil {
+	if in.HTTPConfigWithProxy != nil {
 		v1alpha1Config := monitoringv1alpha1.HTTPConfig{
-			Authorization: in.HTTPConfig.Authorization,
-			BasicAuth:     in.HTTPConfig.BasicAuth,
-			OAuth2:        in.HTTPConfig.OAuth2,
+			Authorization: in.HTTPConfigWithProxy.Authorization,
+			BasicAuth:     in.HTTPConfigWithProxy.BasicAuth,
+			OAuth2:        in.HTTPConfigWithProxy.OAuth2,
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
-			TLSConfig:         in.HTTPConfig.TLSConfig,
-			ProxyConfig:       in.HTTPConfig.ProxyConfig,
-			FollowRedirects:   in.HTTPConfig.FollowRedirects,
-			EnableHTTP2:       in.HTTPConfig.EnableHTTP2,
+			BearerTokenSecret: in.HTTPConfigWithProxy.BearerTokenSecret,
+			TLSConfig:         in.HTTPConfigWithProxy.TLSConfig,
+			ProxyConfig:       in.HTTPConfigWithProxy.ProxyConfig,
+			FollowRedirects:   in.HTTPConfigWithProxy.FollowRedirects,
+			EnableHTTP2:       in.HTTPConfigWithProxy.EnableHTTP2,
 		}
+
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid global httpConfig: %w", err)
 		}
+
+		if err := configureHTTPConfigInStore(ctx, &v1alpha1Config, crKey.Namespace, cb.store); err != nil {
+			return nil, err
+		}
+
 		out.HTTPConfig = httpConfig
 	}
 
@@ -979,6 +990,16 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
@@ -1053,6 +1074,16 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 
 	if in.Source != nil {
 		out.Source = *in.Source
+	}
+
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
 	}
 
 	return out, nil
@@ -1286,6 +1317,7 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
 		HTML:          in.HTML,
+		Monospace:     in.Monospace,
 	}
 
 	if in.TTL != nil {
@@ -2394,6 +2426,13 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 			return err
 		}
 	}
+
+	for _, conf := range r.MattermostConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2468,6 +2507,7 @@ func (ops *opsgenieResponder) sanitize(amVersion semver.Version) error {
 
 func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_25 := amVersion.LT(semver.MustParse("0.25.0"))
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 
 	if pdc.Source != "" && lessThanV0_25 {
 		msg := "'source' supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
@@ -2499,12 +2539,19 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		pdc.RoutingKeyFile = ""
 	}
 
+	if pdc.Timeout != nil && lessThanV0_30 {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		pdc.Timeout = nil
+	}
+
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
 	lessThanV0_27 := amVersion.LT(semver.MustParse("0.27.0"))
+	lessThanV0_29 := amVersion.LT(semver.MustParse("0.29.0"))
 
 	if poc.UserKeyFile != "" && lessThanV0_26 {
 		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
@@ -2550,12 +2597,28 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		poc.Device = ""
 	}
 
+	if poc.Monospace != nil && *poc.Monospace && lessThanV0_29 {
+		msg := "'monospace' supported in Alertmanager >= 0.29.0 only - dropping field from pushover receiver config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		*poc.Monospace = false
+	}
+
+	if poc.HTML != nil && *poc.HTML && poc.Monospace != nil && *poc.Monospace {
+		return errors.New("either monospace or html must be configured")
+	}
+
 	return poc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
+	}
+
+	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.Timeout = nil
 	}
 
 	if sc.APIURLFile == "" {
@@ -2782,6 +2845,25 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	mattermostAllowed := amVersion.GTE(semver.MustParse("0.30.0"))
+	if !mattermostAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is available in Alertmanager >= 0.30.0`)
+	}
+
+	if mc.WebhookURL == "" && mc.WebhookURLFile == "" {
+		return fmt.Errorf(`one of 'webhook_url' or 'webhook_url_file' must be configured`)
+	}
+
+	if mc.WebhookURL != "" && mc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for mattermost receiver config - 'webhook_url' has taken precedence"
+		logger.Warn(msg)
+		mc.WebhookURLFile = ""
+	}
+
+	return mc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {

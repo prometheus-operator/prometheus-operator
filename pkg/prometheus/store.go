@@ -22,40 +22,33 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
-// AddRemoteWritesToStore loads all secret/configmap references from remote-write configs into the store.
-func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
-	for i, remote := range rws {
-		if err := validateRemoteWriteSpec(remote); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+func addRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rw monitoringv1.RemoteWriteSpec) error {
+	if err := store.AddBasicAuth(ctx, namespace, rw.BasicAuth); err != nil {
+		return err
+	}
 
-		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+	if err := store.AddOAuth2(ctx, namespace, rw.OAuth2); err != nil {
+		return err
+	}
 
-		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+	if err := store.AddTLSConfig(ctx, namespace, rw.TLSConfig); err != nil {
+		return err
+	}
 
-		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+	if err := store.AddAuthorizationCredentials(ctx, namespace, rw.Authorization); err != nil {
+		return err
+	}
 
-		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+	if err := store.AddSigV4(ctx, namespace, rw.Sigv4); err != nil {
+		return err
+	}
 
-		if err := store.AddSigV4(ctx, namespace, remote.Sigv4); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+	if err := store.AddAzureOAuth(ctx, namespace, rw.AzureAD); err != nil {
+		return err
+	}
 
-		if err := store.AddAzureOAuth(ctx, namespace, remote.AzureAD); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
-
-		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
+	if err := store.AddProxyConfig(ctx, namespace, rw.ProxyConfig); err != nil {
+		return err
 	}
 
 	return nil
@@ -65,27 +58,27 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rrs []monitoringv1.RemoteReadSpec) error {
 	for i, remote := range rrs {
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 
 		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 
 		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 
 		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 
 		if err := remote.Validate(); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 	}
 

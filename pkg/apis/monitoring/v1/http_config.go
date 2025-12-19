@@ -14,7 +14,31 @@
 
 package v1
 
-import v1 "k8s.io/api/core/v1"
+import (
+	"errors"
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+)
+
+// HTTPConfigWithProxy defines the configuration for the HTTP client with proxy configuration.
+type HTTPConfigWithProxy struct {
+	HTTPConfig  `json:",inline"`
+	ProxyConfig `json:",inline"`
+}
+
+// Validate semantically validates the given HTTPConfigWithProxy.
+func (hc *HTTPConfigWithProxy) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	if err := hc.HTTPConfig.Validate(); err != nil {
+		return err
+	}
+
+	return hc.ProxyConfig.Validate()
+}
 
 // HTTPConfig defines the configuration for the HTTP client.
 type HTTPConfig struct {
@@ -60,8 +84,6 @@ type HTTPConfig struct {
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 
-	ProxyConfig `json:",inline"`
-
 	// followRedirects defines whether the client should follow HTTP 3xx
 	// redirects.
 	//
@@ -72,4 +94,50 @@ type HTTPConfig struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
+}
+
+// Validate semantically validates the given HTTPConfig.
+func (hc *HTTPConfig) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	// Check duplicate authentication methods.
+	switch {
+	case hc.Authorization != nil:
+		switch {
+		case hc.BasicAuth != nil:
+			return errors.New("authorization and basicAuth cannot be configured at the same time")
+		case hc.BearerTokenSecret != nil:
+			return errors.New("authorization and bearerTokenSecret cannot be configured at the same time")
+		case hc.OAuth2 != nil:
+			return errors.New("authorization and oauth2 cannot be configured at the same time")
+		}
+	case hc.BasicAuth != nil:
+		switch {
+		case hc.BearerTokenSecret != nil:
+			return errors.New("basicAuth and bearerTokenSecret cannot be configured at the same time")
+		case hc.OAuth2 != nil:
+			return errors.New("basicAuth and oauth2 cannot be configured at the same time")
+		}
+	case hc.BearerTokenSecret != nil:
+		switch {
+		case hc.OAuth2 != nil:
+			return errors.New("bearerTokenSecret and oauth2 cannot be configured at the same time")
+		}
+	}
+
+	if err := hc.Authorization.Validate(); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := hc.OAuth2.Validate(); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := hc.TLSConfig.Validate(); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	return nil
 }

@@ -537,10 +537,9 @@ func (c *WebTLSConfig) Validate() error {
 	return nil
 }
 
-// LabelName is a valid Prometheus label name which may only contain ASCII
-// letters, numbers, as well as underscores.
-//
-// +kubebuilder:validation:Pattern:="^[a-zA-Z_][a-zA-Z0-9_]*$"
+// LabelName is a valid Prometheus label name.
+// For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+// For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
 type LabelName string
 
 // Endpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -566,16 +565,10 @@ type Endpoint struct {
 	// +optional
 	Path string `json:"path,omitempty"`
 
-	// scheme defines the HTTP scheme to use for scraping.
+	// scheme defines the HTTP scheme to use when scraping the metrics.
 	//
-	// `http` and `https` are the expected values unless you rewrite the
-	// `__scheme__` label via relabeling.
-	//
-	// If empty, Prometheus uses the default value `http`.
-	//
-	// +kubebuilder:validation:Enum=http;https
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
 	// +optional
@@ -759,6 +752,10 @@ type OAuth2 struct {
 }
 
 func (o *OAuth2) Validate() error {
+	if o == nil {
+		return nil
+	}
+
 	if o.TokenURL == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
@@ -1017,6 +1014,12 @@ const (
 // NativeHistogramConfig extends the native histogram configuration settings.
 // +k8s:openapi-gen=true
 type NativeHistogramConfig struct {
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	//
+	// +optional
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
 	//
@@ -1122,3 +1125,39 @@ type ConfigResourceCondition struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+// Supported values are `HTTP` and `HTTPS`. You can also rewrite the
+// `__scheme__` label via relabeling configuration.
+//
+// If empty, the value defaults to `HTTP`.
+//
+// +kubebuilder:validation:Enum=http;https;HTTP;HTTPS
+type Scheme string
+
+func (s *Scheme) String() string {
+	if s == nil {
+		return ""
+	}
+
+	return strings.ToLower(string(*s))
+}
+
+const (
+	SchemeHTTP  Scheme = "HTTP"
+	SchemeHTTPS Scheme = "HTTPS"
+)
+
+// +kubebuilder:validation:Enum=OrderedReady;Parallel
+type PodManagementPolicyType string
+
+const (
+	// OrderedReadyPodManagement will create pods in strictly increasing order on
+	// scale up and strictly decreasing order on scale down, progressing only when
+	// the previous pod is ready or terminated. At most one pod will be changed
+	// at any time.
+	OrderedReadyPodManagement PodManagementPolicyType = "OrderedReady"
+	// ParallelPodManagement will create and delete pods as soon as the stateful set
+	// replica count is changed, and will not wait for pods to be ready or complete
+	// termination.
+	ParallelPodManagement PodManagementPolicyType = "Parallel"
+)

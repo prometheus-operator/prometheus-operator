@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -58,12 +59,14 @@ var (
 )
 
 type ReconciliationStatus struct {
-	err error
+	err     error
+	reason  string
+	message string
 }
 
 func (rs ReconciliationStatus) Reason() string {
 	if rs.Ok() {
-		return ""
+		return rs.reason
 	}
 
 	return "ReconciliationFailed"
@@ -71,7 +74,7 @@ func (rs ReconciliationStatus) Reason() string {
 
 func (rs ReconciliationStatus) Message() string {
 	if rs.Ok() {
-		return ""
+		return rs.message
 	}
 
 	return rs.err.Error()
@@ -130,13 +133,37 @@ func (rt *ReconciliationTracker) UpdateReferenceTracker(key string, refTracker R
 	rt.refTracker[key] = refTracker
 }
 
+// ResetStatus resets the reconciliation status for the object identified by key.
+func (rt *ReconciliationTracker) ResetStatus(key string) {
+	rt.init()
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rt.statusByObject[key] = ReconciliationStatus{}
+}
+
 // SetStatus updates the last reconciliation status for the object identified by key.
 func (rt *ReconciliationTracker) SetStatus(key string, err error) {
 	rt.init()
 	rt.mtx.Lock()
 	defer rt.mtx.Unlock()
 
-	rt.statusByObject[key] = ReconciliationStatus{err: err}
+	rs := rt.statusByObject[key]
+	rs.err = err
+	rt.statusByObject[key] = rs
+}
+
+// SetReasonAndMessage updates the reason and message for the object identified by key.
+// The reason and message are only used when the reconciliation returned no error.
+func (rt *ReconciliationTracker) SetReasonAndMessage(key string, reason, message string) {
+	rt.init()
+	rt.mtx.Lock()
+	defer rt.mtx.Unlock()
+
+	rs := rt.statusByObject[key]
+	rs.reason = reason
+	rs.message = message
+	rt.statusByObject[key] = rs
 }
 
 // GetStatus returns the last reconciliation status for the given object.
@@ -325,7 +352,7 @@ func NewFakeRecorder(bufferSize int, related runtime.Object) *EventRecorder {
 }
 
 // Eventf records a Kubernetes event.
-func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
+func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, action, note string, args ...any) {
 	er.er.Eventf(
 		regarding,
 		er.related,
@@ -333,7 +360,7 @@ func (er *EventRecorder) Eventf(regarding runtime.Object, eventtype, reason, act
 		reason,
 		action,
 		note,
-		args,
+		args...,
 	)
 }
 
@@ -543,4 +570,28 @@ func ConfigMapGVK() schema.GroupVersionKind {
 // SecretGVK returns the GroupVersionKind representing Secret objects.
 func SecretGVK() schema.GroupVersionKind {
 	return v1.SchemeGroupVersion.WithKind("Secret")
+}
+
+// SelectNamespacesFromCache returns the selected namespaces from the informer's cache.
+func SelectNamespacesFromCache(obj metav1.Object, sel *metav1.LabelSelector, nsInfs cache.SharedIndexInformer) ([]string, error) {
+	// If the selector is nil, return the object's namespace.
+	if sel == nil {
+		return []string{obj.GetNamespace()}, nil
+	}
+
+	labelSelector, err := metav1.LabelSelectorAsSelector(sel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert namespace label selector to selector: %w", err)
+	}
+
+	var ns []string
+	err = cache.ListAll(nsInfs.GetStore(), labelSelector, func(obj any) {
+		ns = append(ns, obj.(*v1.Namespace).Name)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list namespaces: %w", err)
+	}
+	slices.Sort(ns)
+
+	return ns, nil
 }

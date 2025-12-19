@@ -418,6 +418,9 @@
     "authzed",
     "resolv",
     "finalizer",
-    "selfsigned"
+    "selfsigned",
+    "FIPS",
+    "FIPSSTS",
+    "checkmark"
   ]
 }
