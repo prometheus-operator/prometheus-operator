@@ -1,5 +1,6 @@
 ## Unreleased
 
+* [FEATURE] Add `workloadIdentity` field to the remote-write configuration in Prometheus and PrometheusAgent CRDs. #8118
 * [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
 
 ## 0.87.1 / 2025-12-10
