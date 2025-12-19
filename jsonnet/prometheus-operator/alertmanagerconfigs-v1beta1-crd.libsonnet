@@ -1114,7 +1114,7 @@
                                   type: 'string',
                                 },
                                 fields: {
-                                  description: 'fields defines a list of Slack-compatible fields that are sent with each notification.',
+                                  description: 'fields defines a list of fields that are sent with each notification\nto be displayed in a table format inside the attachment.',
                                   items: {
                                     description: 'MattermostField configures information to be displayed in a table format inside the attachment.',
                                     properties: {
@@ -1838,7 +1838,7 @@
                             description: 'priority defines the priority parameters of the message.',
                             properties: {
                               persistentNotifications: {
-                                description: 'persistentNotifications defines whether the message notification will be persisted.\n\nThis can be used only with the `Urgent`` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
+                                description: 'persistentNotifications defines whether the message notification will be persisted.\n\nThis can be used only with the `Urgent` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
                                 type: 'boolean',
                               },
                               priority: {

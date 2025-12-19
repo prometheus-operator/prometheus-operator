@@ -2156,7 +2156,7 @@ spec:
                                 description: |-
                                   persistentNotifications defines whether the message notification will be persisted.
 
-                                  This can be used only with the `Urgent`` messages.
+                                  This can be used only with the `Urgent` messages.
                                   If set to true recipients will receive a persistent notification
                                   every five minutes until they acknowledge the message.
 
@@ -14340,8 +14340,9 @@ spec:
                                     This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
                                   type: string
                                 fields:
-                                  description: fields defines a list of Slack-compatible
-                                    fields that are sent with each notification.
+                                  description: |-
+                                    fields defines a list of fields that are sent with each notification
+                                    to be displayed in a table format inside the attachment.
                                   items:
                                     description: MattermostField configures information
                                       to be displayed in a table format inside the
@@ -15139,7 +15140,7 @@ spec:
                                 description: |-
                                   persistentNotifications defines whether the message notification will be persisted.
 
-                                  This can be used only with the `Urgent`` messages.
+                                  This can be used only with the `Urgent` messages.
                                   If set to true recipients will receive a persistent notification
                                   every five minutes until they acknowledge the message.
 

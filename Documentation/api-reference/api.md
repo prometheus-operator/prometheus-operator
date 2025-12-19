@@ -29512,7 +29512,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>persistentNotifications defines whether the message notification will be persisted.</p>
-<p>This can be used only with the <code>Urgent</code>` messages.
+<p>This can be used only with the <code>Urgent</code> messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>
 <p>Only for enterprise version of Mattermost.</p>
@@ -38060,7 +38060,8 @@ If no title is specified, this field does nothing.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>fields defines a list of Slack-compatible fields that are sent with each notification.</p>
+<p>fields defines a list of fields that are sent with each notification
+to be displayed in a table format inside the attachment.</p>
 </td>
 </tr>
 <tr>
@@ -38425,7 +38426,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>persistentNotifications defines whether the message notification will be persisted.</p>
-<p>This can be used only with the <code>Urgent</code>` messages.
+<p>This can be used only with the <code>Urgent</code> messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>
 <p>Only for enterprise version of Mattermost.</p>

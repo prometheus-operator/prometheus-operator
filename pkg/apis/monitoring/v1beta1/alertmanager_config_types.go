@@ -1386,7 +1386,8 @@ type MattermostAttachmentConfig struct {
 	// If no title is specified, this field does nothing.
 	// +optional
 	TitleLink *URL `json:"titleLink,omitempty"`
-	// fields defines a list of Slack-compatible fields that are sent with each notification.
+	// fields defines a list of fields that are sent with each notification
+	// to be displayed in a table format inside the attachment.
 	// +optional
 	Fields []MattermostField `json:"fields,omitempty"`
 	// thumbURL defines an optional URL to an image file
@@ -1464,7 +1465,7 @@ type MattermostPriorityConfig struct {
 	RequestedAck *bool `json:"requestedAck,omitempty"`
 	// persistentNotifications defines whether the message notification will be persisted.
 	//
-	// This can be used only with the `Urgent`` messages.
+	// This can be used only with the `Urgent` messages.
 	// If set to true recipients will receive a persistent notification
 	// every five minutes until they acknowledge the message.
 	//

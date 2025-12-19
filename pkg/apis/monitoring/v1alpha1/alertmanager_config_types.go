@@ -1470,7 +1470,7 @@ type MattermostPriorityConfig struct {
 	RequestedAck *bool `json:"requestedAck,omitempty"`
 	// persistentNotifications defines whether the message notification will be persisted.
 	//
-	// This can be used only with the `Urgent`` messages.
+	// This can be used only with the `Urgent` messages.
 	// If set to true recipients will receive a persistent notification
 	// every five minutes until they acknowledge the message.
 	//
