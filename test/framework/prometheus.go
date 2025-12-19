@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -122,8 +122,8 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 	}
 
 	var (
-		secrets    = map[string]*v1.Secret{}
-		configMaps = map[string]*v1.ConfigMap{}
+		secrets    = map[string]*corev1.Secret{}
+		configMaps = map[string]*corev1.ConfigMap{}
 	)
 
 	secrets[ScrapingTLSSecret] = MakeSecretWithCert(namespace, ScrapingTLSSecret, []string{PrivateKey, CertKey, CAKey}, [][]byte{scrapingKey, scrapingCert, serverCert})
@@ -203,9 +203,9 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 					},
 				},
 				ServiceAccountName: "prometheus",
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("400Mi"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
 			},
@@ -239,8 +239,8 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 	}
 
 	if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {
-		p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: prwtc.ClientKey.SecretName,
 			},
 			Key: PrivateKey,
@@ -248,15 +248,15 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		p.Spec.RemoteWrite[0].TLSConfig.Cert = monitoringv1.SecretOrConfigMap{}
 
 		if prwtc.ClientCert.ResourceType == SECRET {
-			p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.ClientCert.ResourceName,
 				},
 				Key: CertKey,
 			}
 		} else { //certType == CONFIGMAP
-			p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &v1.ConfigMapKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &corev1.ConfigMapKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.ClientCert.ResourceName,
 				},
 				Key: CertKey,
@@ -269,15 +269,15 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		p.Spec.RemoteWrite[0].TLSConfig.CA = monitoringv1.SecretOrConfigMap{}
 		switch prwtc.CA.ResourceType {
 		case SECRET:
-			p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.CA.ResourceName,
 				},
 				Key: CAKey,
 			}
 		case CONFIGMAP:
-			p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &v1.ConfigMapKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &corev1.ConfigMapKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.CA.ResourceName,
 				},
 				Key: CAKey,
@@ -295,23 +295,23 @@ func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus)
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
 				ClientCA: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: ServerCASecret,
 						},
 						Key: CAKey,
 					},
 				},
 				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: ServerTLSSecret,
 						},
 						Key: CertKey,
 					},
 				},
-				KeySecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				KeySecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: ServerTLSSecret,
 					},
 					Key: PrivateKey,
@@ -353,7 +353,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 				{
 					Port:              "web",
 					Interval:          "30s",
-					BearerTokenSecret: &v1.SecretKeySelector{},
+					BearerTokenSecret: &corev1.SecretKeySelector{},
 				},
 			},
 		},
@@ -384,17 +384,17 @@ func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
 	}
 }
 
-func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakePrometheusService(name, group string, serviceType corev1.ServiceType) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Type: serviceType,
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9090,
@@ -409,13 +409,13 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 	return service
 }
 
-func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakeThanosQuerierService(name string) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       10902,

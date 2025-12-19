@@ -20,7 +20,7 @@ import (
 	"path"
 	"strconv"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 )
@@ -50,7 +50,7 @@ type ConfigReloader struct {
 	webConfigFile      string
 	configFile         string
 	configEnvsubstFile string
-	imagePullPolicy    v1.PullPolicy
+	imagePullPolicy    corev1.PullPolicy
 	listenLocal        bool
 	localHost          string
 	logFormat          string
@@ -59,7 +59,7 @@ type ConfigReloader struct {
 	runtimeInfoURL     url.URL
 	initContainer      bool
 	shard              *int32
-	volumeMounts       []v1.VolumeMount
+	volumeMounts       []corev1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
 	withNodeNameEnv    bool
@@ -159,7 +159,7 @@ func LogLevel(logLevel string) ReloaderOption {
 }
 
 // VolumeMounts sets the volumeMounts option for the config-reloader container.
-func VolumeMounts(mounts []v1.VolumeMount) ReloaderOption {
+func VolumeMounts(mounts []corev1.VolumeMount) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.volumeMounts = mounts
 	}
@@ -173,7 +173,7 @@ func Shard(shard int32) ReloaderOption {
 }
 
 // ImagePullPolicy sets the imagePullPolicy option for the config-reloader container.
-func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
+func ImagePullPolicy(imagePullPolicy corev1.PullPolicy) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.imagePullPolicy = imagePullPolicy
 	}
@@ -191,7 +191,7 @@ func WithDaemonSetMode() ReloaderOption {
 
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
-func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
+func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Container {
 	configReloader := ConfigReloader{name: name}
 	portName := "reloader-web"
 
@@ -201,22 +201,22 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 	var (
 		args    = make([]string, 0)
-		envVars = []v1.EnvVar{
+		envVars = []corev1.EnvVar{
 			{
 				Name: PodNameEnvVar,
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
 				},
 			},
 		}
-		ports []v1.ContainerPort
+		ports []corev1.ContainerPort
 	)
 
 	if configReloader.withNodeNameEnv {
-		envVars = append(envVars, v1.EnvVar{
+		envVars = append(envVars, corev1.EnvVar{
 			Name: NodeNameEnvVar,
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 			},
 		})
 	}
@@ -240,10 +240,10 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 
 		ports = append(
 			ports,
-			v1.ContainerPort{
+			corev1.ContainerPort{
 				Name:          portName,
 				ContainerPort: int32(port),
-				Protocol:      v1.ProtocolTCP,
+				Protocol:      corev1.ProtocolTCP,
 			},
 		)
 
@@ -289,28 +289,28 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	}
 
 	if configReloader.shard != nil {
-		envVars = append(envVars, v1.EnvVar{
+		envVars = append(envVars, corev1.EnvVar{
 			Name:  ShardEnvVar,
 			Value: strconv.Itoa(int(*configReloader.shard)),
 		})
 	}
 
-	c := v1.Container{
+	c := corev1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
 		ImagePullPolicy:          configReloader.imagePullPolicy,
-		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 		Env:                      envVars,
 		Command:                  []string{"/bin/prometheus-config-reloader"},
 		Args:                     args,
 		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
-		SecurityContext: &v1.SecurityContext{
+		SecurityContext: &corev1.SecurityContext{
 			AllowPrivilegeEscalation: ptr.To(false),
 			ReadOnlyRootFilesystem:   ptr.To(true),
-			Capabilities: &v1.Capabilities{
-				Drop: []v1.Capability{"ALL"},
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
 			},
 		},
 	}
@@ -322,9 +322,9 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	return c
 }
 
-func (cr *ConfigReloader) addProbes(c v1.Container) v1.Container {
+func (cr *ConfigReloader) addProbes(c corev1.Container) corev1.Container {
 	probePath := path.Clean("/healthz")
-	handler := v1.ProbeHandler{}
+	handler := corev1.ProbeHandler{}
 	if cr.listenLocal {
 		probeURL := url.URL{
 			Scheme: "http",
@@ -333,15 +333,15 @@ func (cr *ConfigReloader) addProbes(c v1.Container) v1.Container {
 		}
 		handler.Exec = ExecAction(probeURL.String())
 	} else {
-		handler.HTTPGet = &v1.HTTPGetAction{
+		handler.HTTPGet = &corev1.HTTPGetAction{
 			Path: probePath,
 			Port: intstr.FromInt(configReloaderPort),
 		}
 	}
 
-	c.LivenessProbe = &v1.Probe{ProbeHandler: handler}
-	c.ReadinessProbe = &v1.Probe{ProbeHandler: handler}
-	c.StartupProbe = &v1.Probe{ProbeHandler: handler}
+	c.LivenessProbe = &corev1.Probe{ProbeHandler: handler}
+	c.ReadinessProbe = &corev1.Probe{ProbeHandler: handler}
+	c.StartupProbe = &corev1.Probe{ProbeHandler: handler}
 
 	return c
 }

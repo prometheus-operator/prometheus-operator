@@ -25,7 +25,7 @@ import (
 	"github.com/alecthomas/units"
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -101,10 +101,10 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 		am.Spec.Retention = defaultRetention
 	}
 	if am.Spec.Resources.Requests == nil {
-		am.Spec.Resources.Requests = v1.ResourceList{}
+		am.Spec.Resources.Requests = corev1.ResourceList{}
 	}
-	if _, ok := am.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
-		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
+	if _, ok := am.Spec.Resources.Requests[corev1.ResourceMemory]; !ok {
+		am.Spec.Resources.Requests[corev1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
 	spec, err := makeStatefulSetSpec(logger, am, config, tlsSecrets)
@@ -133,25 +133,25 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 	storageSpec := am.Spec.Storage
 	switch {
 	case storageSpec == nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: volumeName(am.Name),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		})
 
 	case storageSpec.EmptyDir != nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: volumeName(am.Name),
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				EmptyDir: storageSpec.EmptyDir,
 			},
 		})
 
 	case storageSpec.Ephemeral != nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, corev1.Volume{
 			Name: volumeName(am.Name),
-			VolumeSource: v1.VolumeSource{
+			VolumeSource: corev1.VolumeSource{
 				Ephemeral: storageSpec.Ephemeral,
 			},
 		})
@@ -162,7 +162,7 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 			pvcTemplate.Name = volumeName(am.Name)
 		}
 		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+			pvcTemplate.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 		} else {
 			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
 		}
@@ -180,33 +180,33 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 	return statefulset, nil
 }
 
-func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Service {
+func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *corev1.Service {
 	if a.Spec.PortName == "" {
 		a.Spec.PortName = defaultPortName
 	}
 
-	svc := &v1.Service{
-		Spec: v1.ServiceSpec{
-			ClusterIP:                v1.ClusterIPNone,
+	svc := &corev1.Service{
+		Spec: corev1.ServiceSpec{
+			ClusterIP:                corev1.ClusterIPNone,
 			PublishNotReadyAddresses: true,
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       a.Spec.PortName,
 					Port:       alertmanagerWebPort,
 					TargetPort: intstr.FromString(a.Spec.PortName),
-					Protocol:   v1.ProtocolTCP,
+					Protocol:   corev1.ProtocolTCP,
 				},
 				{
 					Name:       "tcp-mesh",
 					Port:       alertmanagerMeshPort,
 					TargetPort: intstr.FromString(alertmanagerMeshTCPPortName),
-					Protocol:   v1.ProtocolTCP,
+					Protocol:   corev1.ProtocolTCP,
 				},
 				{
 					Name:       "udp-mesh",
 					Port:       alertmanagerMeshPort,
 					TargetPort: intstr.FromString(alertmanagerMeshUDPPortName),
-					Protocol:   v1.ProtocolUDP,
+					Protocol:   corev1.ProtocolUDP,
 				},
 			},
 			Selector: map[string]string{
@@ -348,30 +348,30 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	isHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.22.0"))
 
-	livenessProbeHandler := v1.ProbeHandler{
-		HTTPGet: &v1.HTTPGetAction{
+	livenessProbeHandler := corev1.ProbeHandler{
+		HTTPGet: &corev1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
 			Port: intstr.FromString(a.Spec.PortName),
 		},
 	}
 
-	readinessProbeHandler := v1.ProbeHandler{
-		HTTPGet: &v1.HTTPGetAction{
+	readinessProbeHandler := corev1.ProbeHandler{
+		HTTPGet: &corev1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/ready"),
 			Port: intstr.FromString(a.Spec.PortName),
 		},
 	}
 
-	var livenessProbe *v1.Probe
-	var readinessProbe *v1.Probe
+	var livenessProbe *corev1.Probe
+	var readinessProbe *corev1.Probe
 	if !a.Spec.ListenLocal {
-		livenessProbe = &v1.Probe{
+		livenessProbe = &corev1.Probe{
 			ProbeHandler:     livenessProbeHandler,
 			TimeoutSeconds:   probeTimeoutSeconds,
 			FailureThreshold: 10,
 		}
 
-		readinessProbe = &v1.Probe{
+		readinessProbe = &corev1.Probe{
 			ProbeHandler:        readinessProbeHandler,
 			InitialDelaySeconds: 3,
 			TimeoutSeconds:      3,
@@ -380,8 +380,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		}
 
 		if isHTTPS {
-			livenessProbe.HTTPGet.Scheme = v1.URISchemeHTTPS
-			readinessProbe.HTTPGet.Scheme = v1.URISchemeHTTPS
+			livenessProbe.HTTPGet.Scheme = corev1.URISchemeHTTPS
+			readinessProbe.HTTPGet.Scheme = corev1.URISchemeHTTPS
 		}
 	}
 
@@ -402,7 +402,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	podAnnotations[operator.DefaultContainerAnnotationKey] = "alertmanager"
 
-	var operatorInitContainers []v1.Container
+	var operatorInitContainers []corev1.Container
 
 	var clusterPeerDomain string
 	if config.ClusterDomain != "" {
@@ -422,24 +422,24 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer", Value: peer})
 	}
 
-	ports := []v1.ContainerPort{
+	ports := []corev1.ContainerPort{
 		{
 			Name:          alertmanagerMeshTCPPortName,
 			ContainerPort: alertmanagerMeshPort,
-			Protocol:      v1.ProtocolTCP,
+			Protocol:      corev1.ProtocolTCP,
 		},
 		{
 			Name:          alertmanagerMeshUDPPortName,
 			ContainerPort: alertmanagerMeshPort,
-			Protocol:      v1.ProtocolUDP,
+			Protocol:      corev1.ProtocolUDP,
 		},
 	}
 	if !a.Spec.ListenLocal {
-		ports = append([]v1.ContainerPort{
+		ports = append([]corev1.ContainerPort{
 			{
 				Name:          a.Spec.PortName,
 				ContainerPort: alertmanagerWebPort,
-				Protocol:      v1.ProtocolTCP,
+				Protocol:      corev1.ProtocolTCP,
 			},
 		}, ports...)
 	}
@@ -449,11 +449,11 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	// regular rolling update.
 	amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.reconnect-timeout", Value: "5m"})
 
-	volumes := []v1.Volume{
+	volumes := []corev1.Volume{
 		{
 			Name: alertmanagerConfigVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
 					SecretName: generatedConfigSecretName(a.Name),
 				},
 			},
@@ -461,10 +461,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		tlsSecrets.Volume(tlsAssetsVolumeName),
 		{
 			Name: alertmanagerConfigOutVolumeName,
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{
 					// tmpfs is used here to avoid writing sensitive data into disk.
-					Medium: v1.StorageMediumMemory,
+					Medium: corev1.StorageMediumMemory,
 				},
 			},
 		},
@@ -477,7 +477,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		}
 	}
 
-	amVolumeMounts := []v1.VolumeMount{
+	amVolumeMounts := []corev1.VolumeMount{
 		{
 			Name:      alertmanagerConfigVolumeName,
 			MountPath: alertmanagerConfigDir,
@@ -502,7 +502,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	var configReloaderWebConfigFile string
 
 	watchedDirectories := []string{alertmanagerConfigDir}
-	configReloaderVolumeMounts := []v1.VolumeMount{
+	configReloaderVolumeMounts := []corev1.VolumeMount{
 		{
 			Name:      alertmanagerConfigVolumeName,
 			MountPath: alertmanagerConfigDir,
@@ -516,7 +516,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	amCfg := a.Spec.AlertmanagerConfiguration
 	if amCfg != nil && len(amCfg.Templates) > 0 {
-		sources := []v1.VolumeProjection{}
+		sources := []corev1.VolumeProjection{}
 		keys := sets.Set[string]{}
 		for _, v := range amCfg.Templates {
 			if v.ConfigMap != nil {
@@ -524,12 +524,12 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 					logger.Debug(fmt.Sprintf("skipping %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
 					continue
 				}
-				sources = append(sources, v1.VolumeProjection{
-					ConfigMap: &v1.ConfigMapProjection{
-						LocalObjectReference: v1.LocalObjectReference{
+				sources = append(sources, corev1.VolumeProjection{
+					ConfigMap: &corev1.ConfigMapProjection{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: v.ConfigMap.Name,
 						},
-						Items: []v1.KeyToPath{{
+						Items: []corev1.KeyToPath{{
 							Key:  v.ConfigMap.Key,
 							Path: v.ConfigMap.Key,
 						}},
@@ -542,12 +542,12 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 					logger.Debug(fmt.Sprintf("skipping %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
 					continue
 				}
-				sources = append(sources, v1.VolumeProjection{
-					Secret: &v1.SecretProjection{
-						LocalObjectReference: v1.LocalObjectReference{
+				sources = append(sources, corev1.VolumeProjection{
+					Secret: &corev1.SecretProjection{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: v.Secret.Name,
 						},
-						Items: []v1.KeyToPath{{
+						Items: []corev1.KeyToPath{{
 							Key:  v.Secret.Key,
 							Path: v.Secret.Key,
 						}},
@@ -556,20 +556,20 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				keys.Insert(v.Secret.Key)
 			}
 		}
-		volumes = append(volumes, v1.Volume{
+		volumes = append(volumes, corev1.Volume{
 			Name: "notification-templates",
-			VolumeSource: v1.VolumeSource{
-				Projected: &v1.ProjectedVolumeSource{
+			VolumeSource: corev1.VolumeSource{
+				Projected: &corev1.ProjectedVolumeSource{
 					Sources: sources,
 				},
 			},
 		})
-		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+		amVolumeMounts = append(amVolumeMounts, corev1.VolumeMount{
 			Name:      alertmanagerTemplatesVolumeName,
 			ReadOnly:  true,
 			MountPath: alertmanagerTemplatesDir,
 		})
-		configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, corev1.VolumeMount{
 			Name:      alertmanagerTemplatesVolumeName,
 			ReadOnly:  true,
 			MountPath: alertmanagerTemplatesDir,
@@ -584,16 +584,16 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			return nil, err
 		}
 
-		volumes = append(volumes, v1.Volume{
+		volumes = append(volumes, corev1.Volume{
 			Name: name,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
 					SecretName: s,
 				},
 			},
 		})
 		mountPath := path.Join(secretsDir, s)
-		mount := v1.VolumeMount{
+		mount := corev1.VolumeMount{
 			Name:      name,
 			ReadOnly:  true,
 			MountPath: mountPath,
@@ -610,18 +610,18 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			return nil, err
 		}
 
-		volumes = append(volumes, v1.Volume{
+		volumes = append(volumes, corev1.Volume{
 			Name: name,
-			VolumeSource: v1.VolumeSource{
-				ConfigMap: &v1.ConfigMapVolumeSource{
-					LocalObjectReference: v1.LocalObjectReference{
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: c,
 					},
 				},
 			},
 		})
 		mountPath := path.Join(configmapsDir, c)
-		mount := v1.VolumeMount{
+		mount := corev1.VolumeMount{
 			Name:      name,
 			ReadOnly:  true,
 			MountPath: mountPath,
@@ -692,7 +692,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		return nil, err
 	}
 
-	defaultContainers := []v1.Container{
+	defaultContainers := []corev1.Container{
 		{
 			Args:            containerArgs,
 			Name:            "alertmanager",
@@ -703,25 +703,25 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			LivenessProbe:   livenessProbe,
 			ReadinessProbe:  readinessProbe,
 			Resources:       a.Spec.Resources,
-			SecurityContext: &v1.SecurityContext{
+			SecurityContext: &corev1.SecurityContext{
 				AllowPrivilegeEscalation: ptr.To(false),
 				ReadOnlyRootFilesystem:   ptr.To(true),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
 				},
 			},
-			Env: []v1.EnvVar{
+			Env: []corev1.EnvVar{
 				{
 					// Necessary for '--cluster.listen-address' flag
 					Name: "POD_IP",
-					ValueFrom: &v1.EnvVarSource{
-						FieldRef: &v1.ObjectFieldSelector{
+					ValueFrom: &corev1.EnvVarSource{
+						FieldRef: &corev1.ObjectFieldSelector{
 							FieldPath: "status.podIP",
 						},
 					},
 				},
 			},
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
@@ -788,12 +788,12 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
-		Template: v1.PodTemplateSpec{
+		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
-			Spec: v1.PodSpec{
+			Spec: corev1.PodSpec{
 				AutomountServiceAccountToken:  a.Spec.AutomountServiceAccountToken,
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,

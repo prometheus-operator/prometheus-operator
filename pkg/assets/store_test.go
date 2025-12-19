@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -66,7 +66,7 @@ hvBlhCknnq89u57O41ID6Mqxz3bRxNxpkqhfMyVWcVU=
 
 func TestGetSecretKey(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -120,8 +120,8 @@ func TestGetSecretKey(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
-			sel := v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			sel := corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: tc.selectedName,
 				},
 				Key: tc.selectedKey,
@@ -143,7 +143,7 @@ func TestGetSecretKey(t *testing.T) {
 
 func TestAddBasicAuth(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -231,14 +231,14 @@ func TestAddBasicAuth(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			basicAuth := &monitoringv1.BasicAuth{
-				Username: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				Username: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: tc.selectedUserName,
 					},
 					Key: tc.selectedUserKey,
 				},
-				Password: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				Password: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: tc.selectedPasswordName,
 					},
 					Key: tc.selectedPasswordKey,
@@ -269,7 +269,7 @@ func TestAddBasicAuth(t *testing.T) {
 
 func TestProxyCongfig(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -327,10 +327,10 @@ func TestProxyCongfig(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			proxyConfig := monitoringv1.ProxyConfig{
-				ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+				ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 					"header": {
 						{
-							LocalObjectReference: v1.LocalObjectReference{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: tc.selectedName,
 							},
 							Key: tc.selectedKey,
@@ -358,7 +358,7 @@ func TestProxyCongfig(t *testing.T) {
 
 func TestAddTLSConfig(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm",
 				Namespace: "ns1",
@@ -369,7 +369,7 @@ func TestAddTLSConfig(t *testing.T) {
 				"cmKey":  keyPEM,
 			},
 		},
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -400,23 +400,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -434,23 +434,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -468,23 +468,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -502,23 +502,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -534,23 +534,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -566,23 +566,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -598,23 +598,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "secretCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -630,23 +630,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConfigMap: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "cm",
 							},
 							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "cmCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -662,23 +662,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "cmKey",
@@ -694,16 +694,16 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCert",
@@ -720,15 +720,15 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCA",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -744,23 +744,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "wrongKey",
@@ -776,23 +776,23 @@ func TestAddTLSConfig(t *testing.T) {
 			tlsConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "invalidCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "secretCert",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "secretKey",
@@ -835,7 +835,7 @@ func TestAddTLSConfig(t *testing.T) {
 
 func TestAddAuthorization(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -894,8 +894,8 @@ func TestAddAuthorization(t *testing.T) {
 			sel := &monitoringv1.Authorization{
 				SafeAuthorization: monitoringv1.SafeAuthorization{
 					Type: tc.authType,
-					Credentials: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Credentials: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: tc.selectedName},
 						Key: tc.selectedKey,
 					},
@@ -926,7 +926,7 @@ func TestAddAuthorization(t *testing.T) {
 
 func TestAddAuthorizationNoCredentials(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -958,7 +958,7 @@ func TestAddSigV4(t *testing.T) {
 		secretKey = "secretKey"
 	)
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -1044,16 +1044,16 @@ func TestAddSigV4(t *testing.T) {
 
 			sigV4 := monitoringv1.Sigv4{}
 			if tc.accessKey != "" {
-				sigV4.AccessKey = &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				sigV4.AccessKey = &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: tc.selectedName,
 					},
 					Key: tc.accessKey,
 				}
 			}
 			if tc.secretKey != "" {
-				sigV4.SecretKey = &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				sigV4.SecretKey = &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: tc.selectedName,
 					},
 					Key: tc.secretKey,
@@ -1088,7 +1088,7 @@ func TestAddAzureOAuth(t *testing.T) {
 		clientSecret = "clientSecretKey"
 	)
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -1147,8 +1147,8 @@ func TestAddAzureOAuth(t *testing.T) {
 			azureAD := monitoringv1.AzureAD{}
 			azureOAuth := monitoringv1.AzureOAuth{}
 			if tc.secretKey != "" {
-				azureOAuth.ClientSecret = v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				azureOAuth.ClientSecret = corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: tc.selectedName,
 					},
 					Key: tc.secretKey,
@@ -1173,7 +1173,7 @@ func TestAddAzureOAuth(t *testing.T) {
 
 func TestUpdateObject(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -1186,8 +1186,8 @@ func TestUpdateObject(t *testing.T) {
 	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 	// Add the secret to the store by fetching it
-	sel := v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	sel := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "secret",
 		},
 		Key: "key1",
@@ -1197,7 +1197,7 @@ func TestUpdateObject(t *testing.T) {
 	require.Equal(t, "val1", val)
 
 	// Update the secret object
-	updatedSecret := &v1.Secret{
+	updatedSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "secret",
 			Namespace: "ns1",
@@ -1221,7 +1221,7 @@ func TestUpdateObject(t *testing.T) {
 
 func TestDeleteObject(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -1230,7 +1230,7 @@ func TestDeleteObject(t *testing.T) {
 				"key1": []byte("val1"),
 			},
 		},
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm",
 				Namespace: "ns1",
@@ -1243,8 +1243,8 @@ func TestDeleteObject(t *testing.T) {
 	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 	// Add secret and configmap to the store by fetching them
-	secretSel := v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	secretSel := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "secret",
 		},
 		Key: "key1",
@@ -1253,8 +1253,8 @@ func TestDeleteObject(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "val1", val)
 
-	cmSel := v1.ConfigMapKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	cmSel := corev1.ConfigMapKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "cm",
 		},
 		Key: "cmKey",
@@ -1263,7 +1263,7 @@ func TestDeleteObject(t *testing.T) {
 	require.NoError(t, err)
 
 	// Try deleting the secret object
-	secretObj := &v1.Secret{
+	secretObj := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "secret",
 			Namespace: "ns1",
@@ -1281,7 +1281,7 @@ func TestDeleteObject(t *testing.T) {
 	require.Error(t, err)
 
 	// Try deleting the configmap object (should not error even if it doesn't exist in the client)
-	cmObj := &v1.ConfigMap{
+	cmObj := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm",
 			Namespace: "ns1",
@@ -1304,7 +1304,7 @@ func TestDeleteObject(t *testing.T) {
 
 func TestGetObject(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -1313,7 +1313,7 @@ func TestGetObject(t *testing.T) {
 				"key1": []byte("val1"),
 			},
 		},
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm",
 				Namespace: "ns1",
@@ -1326,8 +1326,8 @@ func TestGetObject(t *testing.T) {
 	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 	// Add secret and configmap to the store by fetching them
-	secretSel := v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	secretSel := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "secret",
 		},
 		Key: "key1",
@@ -1335,8 +1335,8 @@ func TestGetObject(t *testing.T) {
 	_, err := store.GetSecretKey(context.Background(), "ns1", secretSel)
 	require.NoError(t, err)
 
-	cmSel := v1.ConfigMapKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	cmSel := corev1.ConfigMapKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "cm",
 		},
 		Key: "cmKey",
@@ -1345,7 +1345,7 @@ func TestGetObject(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test getting existing secret
-	secretObj := &v1.Secret{
+	secretObj := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "secret",
 			Namespace: "ns1",
@@ -1355,14 +1355,14 @@ func TestGetObject(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.NotNil(t, obj)
-	secret, ok := obj.(*v1.Secret)
+	secret, ok := obj.(*corev1.Secret)
 	require.True(t, ok)
 	require.Equal(t, "secret", secret.Name)
 	require.Equal(t, "ns1", secret.Namespace)
 	require.Equal(t, []byte("val1"), secret.Data["key1"])
 
 	// Test getting existing configmap
-	cmObj := &v1.ConfigMap{
+	cmObj := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm",
 			Namespace: "ns1",
@@ -1372,14 +1372,14 @@ func TestGetObject(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.NotNil(t, obj)
-	cm, ok := obj.(*v1.ConfigMap)
+	cm, ok := obj.(*corev1.ConfigMap)
 	require.True(t, ok)
 	require.Equal(t, "cm", cm.Name)
 	require.Equal(t, "ns1", cm.Namespace)
 	require.Equal(t, "cmVal", cm.Data["cmKey"])
 
 	// Test getting non-existing object
-	nonExistingSecret := &v1.Secret{
+	nonExistingSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "notfound",
 			Namespace: "ns1",
@@ -1399,7 +1399,7 @@ func TestGetObject(t *testing.T) {
 
 func TestAddObject(t *testing.T) {
 	c := fake.NewSimpleClientset(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
 				Namespace: "ns1",
@@ -1408,7 +1408,7 @@ func TestAddObject(t *testing.T) {
 				"key1": []byte("val1"),
 			},
 		},
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm",
 				Namespace: "ns1",
@@ -1421,7 +1421,7 @@ func TestAddObject(t *testing.T) {
 	store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 	// Add a secret object
-	secretObj := &v1.Secret{
+	secretObj := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "secret2",
 			Namespace: "ns1",
@@ -1438,14 +1438,14 @@ func TestAddObject(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.NotNil(t, obj)
-	secret, ok := obj.(*v1.Secret)
+	secret, ok := obj.(*corev1.Secret)
 	require.True(t, ok)
 	require.Equal(t, "secret2", secret.Name)
 	require.Equal(t, "ns1", secret.Namespace)
 	require.Equal(t, []byte("val2"), secret.Data["key2"])
 
 	// Add a configmap object
-	cmObj := &v1.ConfigMap{
+	cmObj := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cm2",
 			Namespace: "ns1",
@@ -1462,7 +1462,7 @@ func TestAddObject(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.NotNil(t, obj)
-	cm, ok := obj.(*v1.ConfigMap)
+	cm, ok := obj.(*corev1.ConfigMap)
 	require.True(t, ok)
 	require.Equal(t, "cm2", cm.Name)
 	require.Equal(t, "ns1", cm.Namespace)

@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -62,7 +62,7 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(context.Background(), "prometheus-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
+	if !apierrors.IsNotFound(err) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 }
@@ -136,7 +136,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakeEchoService("denied", "monitored", v1.ServiceTypeClusterIP)
+		svc := framework.MakeEchoService("denied", "monitored", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), deniedNs, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -181,7 +181,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService("instance", "monitored", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -192,7 +192,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(deniedNs).Get(context.Background(), "prometheus-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
+	if !apierrors.IsNotFound(err) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 
@@ -284,7 +284,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService("instance", "monitored", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -308,7 +308,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
+		svc := framework.MakeEchoService("allowed", "monitored", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -339,7 +339,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(context.Background(), "prometheus-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
+	if !apierrors.IsNotFound(err) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 
@@ -434,7 +434,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService("instance", "monitored", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {
@@ -453,7 +453,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
+		svc := framework.MakeEchoService("allowed", "monitored", corev1.ServiceTypeClusterIP)
 		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
 			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
 		} else {

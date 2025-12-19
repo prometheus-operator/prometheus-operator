@@ -25,7 +25,7 @@ import (
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -338,7 +338,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			resyncPeriod,
 			nil,
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
@@ -356,7 +356,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				options.LabelSelector = c.SecretListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceSecrets)),
 		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
@@ -396,7 +396,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
-			&v1.Namespace{}, resyncPeriod, cache.Indexers{},
+			&corev1.Namespace{}, resyncPeriod, cache.Indexers{},
 		), nil
 	}
 
@@ -660,7 +660,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 		return
 	}
-	ns := nsObject.(*v1.Namespace)
+	ns := nsObject.(*corev1.Namespace)
 
 	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus instances in the namespace.
@@ -757,8 +757,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
-	old := oldo.(*v1.Namespace)
-	cur := curo.(*v1.Namespace)
+	old := oldo.(*corev1.Namespace)
+	cur := curo.(*corev1.Namespace)
 
 	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -927,7 +927,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		)
 
 		if p.Spec.Thanos != nil {
-			svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
 				Name:       "grpc",
 				Port:       10901,
 				TargetPort: intstr.FromString("grpc"),
@@ -1487,7 +1487,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	s := &v1.Secret{}
+	s := &corev1.Secret{}
 	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),

@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -26,7 +26,7 @@ import (
 func TestMakeHostAliases(t *testing.T) {
 	cases := []struct {
 		input    []monitoringv1.HostAlias
-		expected []v1.HostAlias
+		expected []corev1.HostAlias
 	}{
 		{
 			input:    nil,
@@ -43,7 +43,7 @@ func TestMakeHostAliases(t *testing.T) {
 					Hostnames: []string{"foo.com"},
 				},
 			},
-			expected: []v1.HostAlias{
+			expected: []corev1.HostAlias{
 				{
 					IP:        "1.1.1.1",
 					Hostnames: []string{"foo.com"},

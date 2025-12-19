@@ -24,7 +24,7 @@ import (
 
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -66,8 +66,8 @@ func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name 
 	return fmt.Sprintf("%s-%s-shard-%d", Prefix(p), name, shard)
 }
 
-func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Secret {
-	s := &v1.Secret{
+func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *corev1.Secret {
+	s := &corev1.Secret{
 		Data: map[string][]byte{},
 	}
 

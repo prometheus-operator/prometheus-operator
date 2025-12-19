@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -177,7 +177,7 @@ func newDenylistWatch(l *slog.Logger, denylist map[string]struct{}, next watch.I
 // If the object is itself a namespace, it returns the object's
 // name.
 func getNamespace(obj metav1.Object) string {
-	if _, ok := obj.(*v1.Namespace); ok {
+	if _, ok := obj.(*corev1.Namespace); ok {
 		return obj.GetName()
 	}
 	return obj.GetNamespace()

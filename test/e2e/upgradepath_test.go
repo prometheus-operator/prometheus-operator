@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -42,16 +42,16 @@ func testOperatorUpgrade(t *testing.T) {
 	name := "operator-upgrade"
 
 	// Create Alertmanager, Prometheus, Thanosruler services with selector labels promised by Prometheus Operator
-	alertmanagerService := v1.Service{
+	alertmanagerService := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", name),
 			Labels: map[string]string{
 				"group": name,
 			},
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeClusterIP,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9093,
@@ -67,16 +67,16 @@ func testOperatorUpgrade(t *testing.T) {
 		},
 	}
 
-	prometheusService := v1.Service{
+	prometheusService := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": name,
 			},
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeClusterIP,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9090,
@@ -94,16 +94,16 @@ func testOperatorUpgrade(t *testing.T) {
 		},
 	}
 
-	thanosRulerService := v1.Service{
+	thanosRulerService := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("thanos-ruler-%s", name),
 			Labels: map[string]string{
 				"group": name,
 			},
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeClusterIP,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9090,

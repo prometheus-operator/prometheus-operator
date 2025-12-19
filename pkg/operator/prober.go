@@ -17,12 +17,12 @@ package operator
 import (
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // ExecAction returns an ExecAction probing the given URL.
-func ExecAction(u string) *v1.ExecAction {
-	return &v1.ExecAction{
+func ExecAction(u string) *corev1.ExecAction {
+	return &corev1.ExecAction{
 		Command: []string{
 			"sh",
 			"-c",

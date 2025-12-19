@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -101,18 +101,18 @@ func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
 
 func TestCreateInitConfigReloader(t *testing.T) {
 	initContainerName := "init-config-reloader"
-	expectedImagePullPolicy := v1.PullAlways
+	expectedImagePullPolicy := corev1.PullAlways
 	var container = CreateConfigReloader(
 		initContainerName,
 		ReloaderConfig(reloaderConfig),
 		InitContainer(),
-		ImagePullPolicy(v1.PullAlways),
+		ImagePullPolicy(corev1.PullAlways),
 	)
 
-	assert.NotContains(t, container.Env, v1.EnvVar{
+	assert.NotContains(t, container.Env, corev1.EnvVar{
 		Name: NodeNameEnvVar,
-		ValueFrom: &v1.EnvVarSource{
-			FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 		},
 	})
 
@@ -158,7 +158,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	configEnvsubstFile := "configEnvsubstFile"
 	watchedDirectories := []string{"directory1", "directory2"}
 	shard := int32(1)
-	expectedImagePullPolicy := v1.PullAlways
+	expectedImagePullPolicy := corev1.PullAlways
 	var container = CreateConfigReloader(
 		containerName,
 		ReloaderConfig(reloaderConfig),
@@ -242,14 +242,14 @@ func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 		WithDaemonSetMode(),
 	)
 
-	assert.Contains(t, container.Env, v1.EnvVar{
+	assert.Contains(t, container.Env, corev1.EnvVar{
 		Name: NodeNameEnvVar,
-		ValueFrom: &v1.EnvVarSource{
-			FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 		},
 	})
 
-	assert.Contains(t, container.Env, v1.EnvVar{
+	assert.Contains(t, container.Env, corev1.EnvVar{
 		Name:  ShardEnvVar,
 		Value: strconv.Itoa(0),
 	})

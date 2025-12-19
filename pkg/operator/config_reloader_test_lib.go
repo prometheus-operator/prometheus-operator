@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -40,7 +40,7 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 	for _, tc := range []struct {
 		name              string
 		reloaderConfig    ContainerConfig
-		expectedResources v1.ResourceRequirements
+		expectedResources corev1.ResourceRequirements
 	}{
 		{
 			name: "no_resources",
@@ -51,9 +51,9 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("0")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits:   v1.ResourceList{},
-				Requests: v1.ResourceList{},
+			expectedResources: corev1.ResourceRequirements{
+				Limits:   corev1.ResourceList{},
+				Requests: corev1.ResourceList{},
 			},
 		},
 		{
@@ -65,12 +65,12 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("100m"),
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
-				Requests: v1.ResourceList{},
+				Requests: corev1.ResourceList{},
 			},
 		},
 		{
@@ -82,11 +82,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("0")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{},
-				Requests: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("100m"),
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{},
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
 			},
 		},
@@ -99,12 +99,12 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
 			},
 		},
@@ -117,13 +117,13 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("100m"),
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
 			},
 		},
@@ -136,13 +136,13 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
-				Requests: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("100m"),
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
 			},
 		},
@@ -155,12 +155,12 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("0")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU: resource.MustParse("100m"),
 				},
-				Requests: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU: resource.MustParse("100m"),
 				},
 			},
 		},
@@ -173,13 +173,13 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("100m"),
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
-				Requests: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU: resource.MustParse("100m"),
 				},
 			},
 		},
@@ -192,13 +192,13 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 				MemoryLimits:   Quantity{q: resource.MustParse("0")},
 				Image:          DefaultReloaderTestConfig.ReloaderConfig.Image,
 			},
-			expectedResources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU: resource.MustParse("100m"),
+			expectedResources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU: resource.MustParse("100m"),
 				},
-				Requests: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("100m"),
-					v1.ResourceMemory: resource.MustParse("50Mi"),
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("100m"),
+					corev1.ResourceMemory: resource.MustParse("50Mi"),
 				},
 			},
 		},

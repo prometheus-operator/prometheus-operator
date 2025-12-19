@@ -25,14 +25,14 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
-	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
@@ -61,8 +61,8 @@ func NewNamespaceListWatchFromClient(
 	ctx context.Context,
 	l *slog.Logger,
 	k8sVersion semver.Version,
-	corev1Client corev1.CoreV1Interface,
-	ssarClient authv1.SelfSubjectAccessReviewInterface,
+	corev1Client typedcorev1.CoreV1Interface,
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
 ) (cache.ListerWatcher, bool, error) {
 	if l == nil {
@@ -169,7 +169,7 @@ func NewNamespaceListWatchFromClient(
 // IsAllNamespaces checks if the given map of namespaces
 // contains only v1.NamespaceAll.
 func IsAllNamespaces(namespaces map[string]struct{}) bool {
-	_, ok := namespaces[v1.NamespaceAll]
+	_, ok := namespaces[corev1.NamespaceAll]
 	return ok && len(namespaces) == 1
 }
 
@@ -241,7 +241,7 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 }
 
 type pollBasedListerWatcher struct {
-	corev1Client corev1.CoreV1Interface
+	corev1Client typedcorev1.CoreV1Interface
 	ch           chan watch.Event
 
 	ctx context.Context
@@ -252,13 +252,13 @@ type pollBasedListerWatcher struct {
 
 type cacheEntry struct {
 	present bool
-	ns      *v1.Namespace
+	ns      *corev1.Namespace
 }
 
 var _ = watch.Interface(&pollBasedListerWatcher{})
 var _ = cache.ListerWatcher(&pollBasedListerWatcher{})
 
-func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client corev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
+func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client typedcorev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
 	if l == nil {
 		l = slog.New(slog.DiscardHandler)
 	}
@@ -279,7 +279,7 @@ func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client
 }
 
 func (pblw *pollBasedListerWatcher) List(_ metav1.ListOptions) (runtime.Object, error) {
-	list := &v1.NamespaceList{}
+	list := &corev1.NamespaceList{}
 
 	for ns := range pblw.cache {
 		result, err := pblw.corev1Client.Namespaces().Get(pblw.ctx, ns, metav1.GetOptions{})
@@ -325,7 +325,7 @@ func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
 
 func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 	var (
-		updated []*v1.Namespace
+		updated []*corev1.Namespace
 		deleted []string
 	)
 

@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestMap(t *testing.T) {
@@ -243,13 +243,13 @@ func TestMergeAllowLists(t *testing.T) {
 	}{
 		{
 			a: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 			b: StringSet{
 				"foo": struct{}{},
 			},
 			exp: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 		},
 		{
@@ -257,10 +257,10 @@ func TestMergeAllowLists(t *testing.T) {
 				"foo": struct{}{},
 			},
 			b: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 			exp: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 		},
 		{

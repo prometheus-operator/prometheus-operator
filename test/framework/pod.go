@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"strings"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -53,7 +53,7 @@ func (f *Framework) WritePodLogs(ctx context.Context, w io.Writer, ns, pod strin
 		containers = append(containers, c.Name)
 	}
 
-	plo := v1.PodLogOptions{}
+	plo := corev1.PodLogOptions{}
 	if opts.TailLines > 0 {
 		plo.TailLines = &opts.TailLines
 	}
@@ -122,7 +122,7 @@ func (f *Framework) ExecWithOptions(ctx context.Context, options ExecOptions) (s
 		Namespace(options.Namespace).
 		SubResource("exec").
 		Param("container", options.ContainerName)
-	req.VersionedParams(&v1.PodExecOptions{
+	req.VersionedParams(&corev1.PodExecOptions{
 		Container: options.ContainerName,
 		Command:   options.Command,
 		Stdin:     options.Stdin != nil,

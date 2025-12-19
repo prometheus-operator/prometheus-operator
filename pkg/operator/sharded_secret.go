@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -31,18 +31,18 @@ import (
 // MaxSecretDataSizeBytes is the maximum data size that a single secret shard
 // may use. This is lower than v1.MaxSecretSize in order to reserve space for
 // metadata and the rest of the secret k8s object.
-const MaxSecretDataSizeBytes = v1.MaxSecretSize - 50_000
+const MaxSecretDataSizeBytes = corev1.MaxSecretSize - 50_000
 
 // ShardedSecret can shard Secret data across multiple k8s Secrets.
 // This is used to circumvent the size limitation of k8s Secrets.
 type ShardedSecret struct {
-	template     *v1.Secret
+	template     *corev1.Secret
 	data         map[string][]byte
-	secretShards []*v1.Secret
+	secretShards []*corev1.Secret
 }
 
 // updateSecrets updates the concrete Secrets from the stored data.
-func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.SecretInterface) error {
+func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient typedcorev1.SecretInterface) error {
 	secrets := s.shard()
 
 	for _, secret := range secrets {
@@ -56,8 +56,8 @@ func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.Secret
 }
 
 // shard does the in-memory sharding of the secret data.
-func (s *ShardedSecret) shard() []*v1.Secret {
-	s.secretShards = []*v1.Secret{}
+func (s *ShardedSecret) shard() []*corev1.Secret {
+	s.secretShards = []*corev1.Secret{}
 
 	currentIndex := 0
 	secretSize := 0
@@ -82,7 +82,7 @@ func (s *ShardedSecret) shard() []*v1.Secret {
 }
 
 // newSecretAt creates a new Kubernetes object at the given shard index.
-func (s *ShardedSecret) newSecretAt(index int) *v1.Secret {
+func (s *ShardedSecret) newSecretAt(index int) *corev1.Secret {
 	newShardSecret := s.template.DeepCopy()
 	newShardSecret.Name = s.secretNameAt(index)
 	newShardSecret.Data = make(map[string][]byte)
@@ -93,7 +93,7 @@ func (s *ShardedSecret) newSecretAt(index int) *v1.Secret {
 // cleanupExcessSecretShards removes excess secret shards that are no longer in use.
 // It also tries to remove a non-sharded secret that exactly matches the name
 // prefix in order to make sure that operator version upgrades run smoothly.
-func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient corev1.SecretInterface, lastSecretIndex int) error {
+func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient typedcorev1.SecretInterface, lastSecretIndex int) error {
 	for i := lastSecretIndex + 1; ; i++ {
 		secretName := s.secretNameAt(i)
 		err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{})
@@ -121,21 +121,21 @@ func (s *ShardedSecret) Hash() (uint64, error) {
 
 // Volume returns a v1.Volume object with all TLS assets ready to be mounted in a container.
 // It must be called after UpdateSecrets().
-func (s *ShardedSecret) Volume(name string) v1.Volume {
-	volume := v1.Volume{
+func (s *ShardedSecret) Volume(name string) corev1.Volume {
+	volume := corev1.Volume{
 		Name: name,
-		VolumeSource: v1.VolumeSource{
-			Projected: &v1.ProjectedVolumeSource{
-				Sources: []v1.VolumeProjection{},
+		VolumeSource: corev1.VolumeSource{
+			Projected: &corev1.ProjectedVolumeSource{
+				Sources: []corev1.VolumeProjection{},
 			},
 		},
 	}
 
 	for i := 0; i < len(s.secretShards); i++ {
 		volume.Projected.Sources = append(volume.Projected.Sources,
-			v1.VolumeProjection{
-				Secret: &v1.SecretProjection{
-					LocalObjectReference: v1.LocalObjectReference{Name: s.secretNameAt(i)},
+			corev1.VolumeProjection{
+				Secret: &corev1.SecretProjection{
+					LocalObjectReference: corev1.LocalObjectReference{Name: s.secretNameAt(i)},
 				},
 			})
 	}
@@ -143,7 +143,7 @@ func (s *ShardedSecret) Volume(name string) v1.Volume {
 	return volume
 }
 
-func ReconcileShardedSecret(ctx context.Context, data map[string][]byte, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {
+func ReconcileShardedSecret(ctx context.Context, data map[string][]byte, client kubernetes.Interface, template *corev1.Secret) (*ShardedSecret, error) {
 	shardedSecret := &ShardedSecret{
 		template: template,
 		data:     data,
