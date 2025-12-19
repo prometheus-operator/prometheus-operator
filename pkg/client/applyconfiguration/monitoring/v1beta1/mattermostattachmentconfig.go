@@ -23,20 +23,20 @@ import (
 // MattermostAttachmentConfigApplyConfiguration represents a declarative configuration of the MattermostAttachmentConfig type for use
 // with apply.
 type MattermostAttachmentConfigApplyConfiguration struct {
-	Fallback   *string                        `json:"fallback,omitempty"`
-	Color      *string                        `json:"color,omitempty"`
-	Pretext    *string                        `json:"pretext,omitempty"`
-	Text       *string                        `json:"text,omitempty"`
-	AuthorName *string                        `json:"authorName,omitempty"`
-	AuthorLink *monitoringv1beta1.URL         `json:"authorLink,omitempty"`
-	AuthorIcon *monitoringv1beta1.URL         `json:"authorIcon,omitempty"`
-	Title      *string                        `json:"title,omitempty"`
-	TitleLink  *monitoringv1beta1.URL         `json:"titleLink,omitempty"`
-	Fields     []SlackFieldApplyConfiguration `json:"fields,omitempty"`
-	ThumbURL   *monitoringv1beta1.URL         `json:"thumbURL,omitempty"`
-	Footer     *string                        `json:"footer,omitempty"`
-	FooterIcon *monitoringv1beta1.URL         `json:"footerIcon,omitempty"`
-	ImageURL   *monitoringv1beta1.URL         `json:"imageURL,omitempty"`
+	Fallback   *string                             `json:"fallback,omitempty"`
+	Color      *string                             `json:"color,omitempty"`
+	Pretext    *string                             `json:"pretext,omitempty"`
+	Text       *string                             `json:"text,omitempty"`
+	AuthorName *string                             `json:"authorName,omitempty"`
+	AuthorLink *monitoringv1beta1.URL              `json:"authorLink,omitempty"`
+	AuthorIcon *monitoringv1beta1.URL              `json:"authorIcon,omitempty"`
+	Title      *string                             `json:"title,omitempty"`
+	TitleLink  *monitoringv1beta1.URL              `json:"titleLink,omitempty"`
+	Fields     []MattermostFieldApplyConfiguration `json:"fields,omitempty"`
+	ThumbURL   *monitoringv1beta1.URL              `json:"thumbURL,omitempty"`
+	Footer     *string                             `json:"footer,omitempty"`
+	FooterIcon *monitoringv1beta1.URL              `json:"footerIcon,omitempty"`
+	ImageURL   *monitoringv1beta1.URL              `json:"imageURL,omitempty"`
 }
 
 // MattermostAttachmentConfigApplyConfiguration constructs a declarative configuration of the MattermostAttachmentConfig type for use with
@@ -120,7 +120,7 @@ func (b *MattermostAttachmentConfigApplyConfiguration) WithTitleLink(value monit
 // WithFields adds the given value to the Fields field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Fields field.
-func (b *MattermostAttachmentConfigApplyConfiguration) WithFields(values ...*SlackFieldApplyConfiguration) *MattermostAttachmentConfigApplyConfiguration {
+func (b *MattermostAttachmentConfigApplyConfiguration) WithFields(values ...*MattermostFieldApplyConfiguration) *MattermostAttachmentConfigApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithFields")

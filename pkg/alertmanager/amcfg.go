@@ -1593,9 +1593,9 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			out.Attachments[i].TitleLink = string(*c.TitleLink)
 		}
 
-		if l := len(in.Fields); l > 0 {
+		if l := len(in.Attachments[i].Fields); l > 0 {
 			fields := make([]mattermostField, l)
-			for i, f := range in.Fields {
+			for i, f := range in.Attachments[i].Fields {
 				field := mattermostField{
 					Title: f.Title,
 					Value: f.Value,
@@ -1606,10 +1606,8 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 				}
 				fields[i] = field
 			}
-			out.Fields = fields
+			out.Attachments[i].Fields = fields
 		}
-
-		out.Attachments[i].Fields = fields
 
 		if c.ThumbURL != nil {
 			out.Attachments[i].ThumbURL = string(*c.ThumbURL)

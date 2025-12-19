@@ -1349,14 +1349,13 @@ spec:
                                     This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
                                   type: string
                                 fields:
-                                  description: fields defines a list of Slack fields
-                                    that are sent with each notification.
+                                  description: fields defines a list of Slack-compatible
+                                    fields that are sent with each notification.
                                   items:
                                     description: |-
-                                      SlackField configures a single Slack field that is sent with each notification.
+                                      MattermostField configures a Slack-compatible field that is sent with each notification.
                                       Each field must contain a title, value, and optionally, a boolean value to indicate if the field
                                       is short enough to be displayed next to other fields designated as short.
-                                      See https://api.slack.com/docs/message-attachments#fields for more information.
                                     properties:
                                       short:
                                         description: |-
@@ -14341,14 +14340,13 @@ spec:
                                     This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
                                   type: string
                                 fields:
-                                  description: fields defines a list of Slack fields
-                                    that are sent with each notification.
+                                  description: fields defines a list of Slack-compatible
+                                    fields that are sent with each notification.
                                   items:
                                     description: |-
-                                      SlackField configures a single Slack field that is sent with each notification.
+                                      MattermostField configures a Slack-compatible field that is sent with each notification.
                                       Each field must contain a title, value, and optionally, a boolean value to indicate if the field
                                       is short enough to be displayed next to other fields designated as short.
-                                      See https://api.slack.com/docs/message-attachments#fields for more information.
                                     properties:
                                       short:
                                         description: |-

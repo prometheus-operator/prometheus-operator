@@ -1114,9 +1114,9 @@
                                   type: 'string',
                                 },
                                 fields: {
-                                  description: 'fields defines a list of Slack fields that are sent with each notification.',
+                                  description: 'fields defines a list of Slack-compatible fields that are sent with each notification.',
                                   items: {
-                                    description: 'SlackField configures a single Slack field that is sent with each notification.\nEach field must contain a title, value, and optionally, a boolean value to indicate if the field\nis short enough to be displayed next to other fields designated as short.\nSee https://api.slack.com/docs/message-attachments#fields for more information.',
+                                    description: 'MattermostField configures a Slack-compatible field that is sent with each notification.\nEach field must contain a title, value, and optionally, a boolean value to indicate if the field\nis short enough to be displayed next to other fields designated as short.',
                                     properties: {
                                       short: {
                                         description: 'short determines whether this field can be displayed alongside other short fields.\nWhen true, Slack may display this field side by side with other short fields.\nWhen false or not specified, the field takes the full width of the message.',

@@ -29139,14 +29139,14 @@ If no title is specified, this field does nothing.</p>
 <td>
 <code>fields</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.SlackField">
-[]SlackField
+<a href="#monitoring.coreos.com/v1alpha1.MattermostField">
+[]MattermostField
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>fields defines a list of Slack fields that are sent with each notification.</p>
+<p>fields defines a list of Slack-compatible fields that are sent with each notification.</p>
 </td>
 </tr>
 <tr>
@@ -29370,6 +29370,64 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>httpConfig defines the HTTP client configuration for Mattermost webhook requests.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MattermostField">MattermostField
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
+</p>
+<div>
+<p>MattermostField configures a Slack-compatible field that is sent with each notification.
+Each field must contain a title, value, and optionally, a boolean value to indicate if the field
+is short enough to be displayed next to other fields designated as short.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>title defines the label or header text displayed for this field.
+This appears as bold text above the field value in the Slack message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>value defines the content or data displayed for this field.
+This appears below the title and can contain plain text or Slack markdown.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>short</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>short determines whether this field can be displayed alongside other short fields.
+When true, Slack may display this field side by side with other short fields.
+When false or not specified, the field takes the full width of the message.</p>
 </td>
 </tr>
 </tbody>
@@ -35718,7 +35776,7 @@ When not specified, defaults to &ldquo;Cancel&rdquo;. This button cancels the ac
 <h3 id="monitoring.coreos.com/v1alpha1.SlackField">SlackField
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>)
 </p>
 <div>
 <p>SlackField configures a single Slack field that is sent with each notification.
@@ -37996,14 +38054,14 @@ If no title is specified, this field does nothing.</p>
 <td>
 <code>fields</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.SlackField">
-[]SlackField
+<a href="#monitoring.coreos.com/v1beta1.MattermostField">
+[]MattermostField
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>fields defines a list of Slack fields that are sent with each notification.</p>
+<p>fields defines a list of Slack-compatible fields that are sent with each notification.</p>
 </td>
 </tr>
 <tr>
@@ -38227,6 +38285,64 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>httpConfig defines the HTTP client configuration for Mattermost webhook requests.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MattermostField">MattermostField
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
+</p>
+<div>
+<p>MattermostField configures a Slack-compatible field that is sent with each notification.
+Each field must contain a title, value, and optionally, a boolean value to indicate if the field
+is short enough to be displayed next to other fields designated as short.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>title defines the label or header text displayed for this field.
+This appears as bold text above the field value in the Slack message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>value defines the content or data displayed for this field.
+This appears below the title and can contain plain text or Slack markdown.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>short</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>short determines whether this field can be displayed alongside other short fields.
+When true, Slack may display this field side by side with other short fields.
+When false or not specified, the field takes the full width of the message.</p>
 </td>
 </tr>
 </tbody>
@@ -40815,7 +40931,7 @@ When not specified, defaults to &ldquo;Cancel&rdquo;. This button cancels the ac
 <h3 id="monitoring.coreos.com/v1beta1.SlackField">SlackField
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>)
 </p>
 <div>
 <p>SlackField configures a single Slack field that is sent with each notification.

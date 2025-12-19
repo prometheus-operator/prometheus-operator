@@ -302,6 +302,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.MattermostAttachmentConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MattermostConfig"):
 		return &monitoringv1alpha1.MattermostConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MattermostField"):
+		return &monitoringv1alpha1.MattermostFieldApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MattermostPriorityConfig"):
 		return &monitoringv1alpha1.MattermostPriorityConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MattermostPropsConfig"):
@@ -404,6 +406,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.MattermostAttachmentConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MattermostConfig"):
 		return &monitoringv1beta1.MattermostConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MattermostField"):
+		return &monitoringv1beta1.MattermostFieldApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MattermostPriorityConfig"):
 		return &monitoringv1beta1.MattermostPriorityConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MattermostPropsConfig"):
