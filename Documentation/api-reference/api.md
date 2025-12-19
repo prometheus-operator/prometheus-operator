@@ -24454,7 +24454,8 @@ More info:
 </p>
 <div>
 <p>AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
-See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config</a></p>
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config</a>
+TODO: Need to document that we will not be supporting the <code>_file</code> fields.</p>
 </div>
 <table>
 <thead>
@@ -24572,8 +24573,7 @@ Filters
 <p>filters can be used optionally to filter the instance list by other criteria.
 Available filter criteria can be found here:
 <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
-Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a>
-It requires Prometheus &gt;= v2.3.0</p>
+Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a></p>
 </td>
 </tr>
 <tr>
@@ -24643,8 +24643,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.
-It requires Prometheus &gt;= v2.41.0</p>
+<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
 </td>
 </tr>
 <tr>
@@ -24656,8 +24655,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
-It requires Prometheus &gt;= v2.41.0</p>
+<p>followRedirects defines whether HTTP requests follow HTTP 3xx redirects.</p>
 </td>
 </tr>
 <tr>
@@ -24669,8 +24667,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>enableHTTP2 defines whether to enable HTTP2.
-It requires Prometheus &gt;= v2.41.0</p>
+<p>enableHTTP2 defines whether to enable HTTP2.</p>
 </td>
 </tr>
 <tr>

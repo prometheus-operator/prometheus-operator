@@ -1541,6 +1541,8 @@ const (
 
 // AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
+// +k8s:openapi-gen=true
+// TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfig struct {
 	// role defines the AWS service to collect metrics from.
 	// Support only `EC2`, `Lightsail` or `ECS`.
@@ -1574,20 +1576,16 @@ type AWSSDConfig struct {
 	// Available filter criteria can be found here:
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
-	// It requires Prometheus >= v2.3.0
 	// +optional
 	Filters        Filters `json:"filters,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
-	// It requires Prometheus >= v2.41.0
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
-	// It requires Prometheus >= v2.41.0
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
-	// It requires Prometheus >= v2.41.0
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// profile defines Named AWS profile used to authenticate.

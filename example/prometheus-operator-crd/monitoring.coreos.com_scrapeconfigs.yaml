@@ -127,9 +127,7 @@ spec:
                         type: string
                       type: array
                     enableHTTP2:
-                      description: |-
-                        enableHTTP2 defines whether to enable HTTP2.
-                        It requires Prometheus >= v2.41.0
+                      description: enableHTTP2 defines whether to enable HTTP2.
                       type: boolean
                     filters:
                       description: |-
@@ -137,7 +135,6 @@ spec:
                         Available filter criteria can be found here:
                         https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
                         Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
-                        It requires Prometheus >= v2.3.0
                       items:
                         description: Filter name and value pairs to limit the discovery
                           process to a subset of available resources.
@@ -162,9 +159,8 @@ spec:
                       - name
                       x-kubernetes-list-type: map
                     followRedirects:
-                      description: |-
-                        followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
-                        It requires Prometheus >= v2.41.0
+                      description: followRedirects defines whether HTTP requests follow
+                        HTTP 3xx redirects.
                       type: boolean
                     noProxy:
                       description: |-
@@ -278,9 +274,8 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                     tlsConfig:
-                      description: |-
-                        tlsConfig defines the TLS configuration to connect to the Consul API.
-                        It requires Prometheus >= v2.41.0
+                      description: tlsConfig defines the TLS configuration to connect
+                        to the Consul API.
                       properties:
                         ca:
                           description: ca defines the Certificate authority used when

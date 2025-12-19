@@ -113,11 +113,11 @@
                           "type": "array"
                         },
                         "enableHTTP2": {
-                          "description": "enableHTTP2 defines whether to enable HTTP2.\nIt requires Prometheus >= v2.41.0",
+                          "description": "enableHTTP2 defines whether to enable HTTP2.",
                           "type": "boolean"
                         },
                         "filters": {
-                          "description": "filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html\nIt requires Prometheus >= v2.3.0",
+                          "description": "filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
                           "items": {
                             "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
@@ -149,7 +149,7 @@
                           "x-kubernetes-list-type": "map"
                         },
                         "followRedirects": {
-                          "description": "followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nIt requires Prometheus >= v2.41.0",
+                          "description": "followRedirects defines whether HTTP requests follow HTTP 3xx redirects.",
                           "type": "boolean"
                         },
                         "noProxy": {
@@ -255,7 +255,7 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "tlsConfig": {
-                          "description": "tlsConfig defines the TLS configuration to connect to the Consul API.\nIt requires Prometheus >= v2.41.0",
+                          "description": "tlsConfig defines the TLS configuration to connect to the Consul API.",
                           "properties": {
                             "ca": {
                               "description": "ca defines the Certificate authority used when verifying server certificates.",
