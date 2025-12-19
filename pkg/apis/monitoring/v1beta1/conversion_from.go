@@ -360,13 +360,27 @@ func convertMattermostAttachmentsFrom(in []v1alpha1.MattermostAttachmentConfig) 
 			AuthorIcon: (*URL)(c.AuthorIcon),
 			Title:      c.Title,
 			TitleLink:  (*URL)(c.TitleLink),
-			Fields:     convertSlackFieldsFrom(c.Fields),
+			Fields:     convertMattermostFieldsFrom(c.Fields),
 			ThumbURL:   (*URL)(c.ThumbURL),
 			Footer:     c.Footer,
 			FooterIcon: (*URL)(c.FooterIcon),
 			ImageURL:   (*URL)(c.ImageURL),
 		}
 	}
+	return out
+}
+
+func convertMattermostFieldsFrom(in []v1alpha1.MattermostField) []MattermostField {
+	out := make([]MattermostField, len(in))
+
+	for i := range in {
+		out[i] = MattermostField{
+			Title: in[i].Title,
+			Value: in[i].Value,
+			Short: in[i].Short,
+		}
+	}
+
 	return out
 }
 

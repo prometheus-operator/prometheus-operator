@@ -1391,9 +1391,9 @@ type MattermostAttachmentConfig struct {
 	// If no title is specified, this field does nothing.
 	// +optional
 	TitleLink *URL `json:"titleLink,omitempty"`
-	// fields defines a list of Slack fields that are sent with each notification.
+	// fields defines a list of Slack-compatible fields that are sent with each notification.
 	// +optional
-	Fields []SlackField `json:"fields,omitempty"`
+	Fields []MattermostField `json:"fields,omitempty"`
 	// thumbURL defines an optional URL to an image file
 	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
 	// on the right side of an attachment.
@@ -1410,6 +1410,27 @@ type MattermostAttachmentConfig struct {
 	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
 	// +optional
 	ImageURL *URL `json:"imageURL,omitempty"`
+}
+
+// MattermostField configures a Slack-compatible field that is sent with each notification.
+// Each field must contain a title, value, and optionally, a boolean value to indicate if the field
+// is short enough to be displayed next to other fields designated as short.
+type MattermostField struct {
+	// title defines the label or header text displayed for this field.
+	// This appears as bold text above the field value in the Slack message.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Title string `json:"title"`
+	// value defines the content or data displayed for this field.
+	// This appears below the title and can contain plain text or Slack markdown.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Value string `json:"value"`
+	// short determines whether this field can be displayed alongside other short fields.
+	// When true, Slack may display this field side by side with other short fields.
+	// When false or not specified, the field takes the full width of the message.
+	// +optional
+	Short *bool `json:"short,omitempty"`
 }
 
 // MattermostPropsConfig configures extra information to be sent to Mattermost.
