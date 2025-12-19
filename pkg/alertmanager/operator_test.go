@@ -565,7 +565,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
 								CorpID: "testingCorpID",
-								APIURL: "http://::invalid-url",
+								APIURL: ptr.To(monitoringv1alpha1.URL("http://::invalid-url")),
 							},
 						},
 					}},
