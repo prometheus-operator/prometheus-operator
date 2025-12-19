@@ -2406,27 +2406,18 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 	for _, conf := range r.MattermostConfigs {
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
 		}
 	}
 
-=======
->>>>>>> 84888629d (feat: add incident.io integration to alertmanager)
 	for _, conf := range r.IncidentioConfigs {
 		if err := conf.sanitize(amVersion, withLogger); err != nil {
 			return err
 		}
 	}
-<<<<<<< HEAD
 
-=======
->>>>>>> 84888629d (feat: add incident.io integration to alertmanager)
-=======
->>>>>>> 6f8827709 (fix: doc)
 	return nil
 }
 
