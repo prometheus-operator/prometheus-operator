@@ -115,6 +115,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
 
+		if err := validateIncidentioConfigs(receiver.IncidentioConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'incidentioConfig' - receiver %s: %w", receiver.Name, err)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -395,12 +399,10 @@ func validateIncidentioConfigs(configs []monitoringv1alpha1.IncidentioConfig) er
 			return fmt.Errorf("url must be configured")
 		}
 
-		if config.HTTPConfig == nil || config.HTTPConfig.Authorization == nil {
-			return fmt.Errorf("httpConfig.authorization must be configured")
-		}
-
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+		if config.HTTPConfig != nil {
+			if err := config.HTTPConfig.Validate(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

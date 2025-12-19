@@ -401,12 +401,10 @@ func validateIncidentioConfigs(configs []monitoringv1beta1.IncidentioConfig) err
 			return fmt.Errorf("url must be configured")
 		}
 
-		if config.HTTPConfig == nil || config.HTTPConfig.Authorization == nil {
-			return fmt.Errorf("httpConfig.authorization must be configured")
-		}
-
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+		if config.HTTPConfig != nil {
+			if err := config.HTTPConfig.Validate(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
