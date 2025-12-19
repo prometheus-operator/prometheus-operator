@@ -3741,6 +3741,41 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "CR_with_WebhookConfig_with_Timeout_Setup_Older_Version.golden",
 		},
+		{
+			name:      "CR with Rocketchat config valid url",
+			amVersion: &version26,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
+									{
+										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Rocketchat_config_valid_url.golden",
+		},
 	}
 
 	logger := newNopLogger(t)
