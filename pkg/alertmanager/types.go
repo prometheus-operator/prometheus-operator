@@ -120,7 +120,7 @@ type receiver struct {
 	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
 	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
 	MattermostConfigs []*mattermostConfig `yaml:"mattermost_configs,omitempty"`
-	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_config,omitempty"`
+	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_configs,omitempty"`
 }
 
 type webhookConfig struct {
