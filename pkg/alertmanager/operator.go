@@ -1372,12 +1372,6 @@ func checkRocketChatConfigs(
 			return err
 		}
 
-		if config.APIURL != nil {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.APIURL))); err != nil {
-				return fmt.Errorf("failed to validate RocketChat API URL: %w", err)
-			}
-		}
-
 		if config.Token != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.Token); err != nil {
 				return fmt.Errorf("failed to retrieve RocketChat token: %w", err)
@@ -1387,24 +1381,6 @@ func checkRocketChatConfigs(
 		if config.TokenID != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.TokenID); err != nil {
 				return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
-			}
-		}
-
-		if config.IconURL != nil {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.IconURL))); err != nil {
-				return fmt.Errorf("failed to validate RocketChat icon URL: %w", err)
-			}
-		}
-
-		if config.ImageURL != nil {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.ImageURL))); err != nil {
-				return fmt.Errorf("failed to validate RocketChat image URL: %w", err)
-			}
-		}
-
-		if config.ThumbURL != nil {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.ThumbURL))); err != nil {
-				return fmt.Errorf("failed to validate RocketChat thumb URL: %w", err)
 			}
 		}
 	}

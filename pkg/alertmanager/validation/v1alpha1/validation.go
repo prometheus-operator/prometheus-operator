@@ -193,6 +193,38 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
+		if config.IconURL != nil && *config.IconURL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.IconURL))); err != nil {
+				return fmt.Errorf("invalid 'iconURL': %w", err)
+			}
+		}
+
+		if config.ImageURL != nil && *config.ImageURL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.ImageURL))); err != nil {
+				return fmt.Errorf("invalid 'imageURL': %w", err)
+			}
+		}
+
+		if config.ThumbURL != nil && *config.ThumbURL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.ThumbURL))); err != nil {
+				return fmt.Errorf("invalid 'thumbURL': %w", err)
+			}
+		}
+
+		if l := len(config.Actions); l > 0 {
+			for _, a := range config.Actions {
+				if a.URL != nil && *a.URL != "" {
+					if _, err := validation.ValidateURL(strings.TrimSpace(string(*a.URL))); err != nil {
+						if a.Msg != nil {
+							return fmt.Errorf("invalid 'url' for '%s': %w", *a.Msg, err)
+						}
+
+						return fmt.Errorf("invalid 'url': %w", err)
+					}
+				}
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
