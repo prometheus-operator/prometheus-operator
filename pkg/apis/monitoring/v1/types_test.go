@@ -138,41 +138,51 @@ func TestValidateTLSConfig(t *testing.T) {
 		{
 			name: "caFile, certFile and keyFile",
 			config: &TLSConfig{
-				CAFile:   "cafile",
-				CertFile: "certfile",
-				KeyFile:  "keyfile",
+				TLSFilesConfig: TLSFilesConfig{
+					CAFile:   "cafile",
+					CertFile: "certfile",
+					KeyFile:  "keyfile",
+				},
 			},
 			err: false,
 		},
 		{
 			name: "certFile and keyFile",
 			config: &TLSConfig{
-				CertFile: "certfile",
-				KeyFile:  "keyfile",
+				TLSFilesConfig: TLSFilesConfig{
+					CertFile: "certfile",
+					KeyFile:  "keyfile",
+				},
 			},
 			err: false,
 		},
 		{
 			name: "caFile and keyFile",
 			config: &TLSConfig{
-				CAFile:  "cafile",
-				KeyFile: "keyfile",
+				TLSFilesConfig: TLSFilesConfig{
+					CAFile:  "cafile",
+					KeyFile: "keyfile",
+				},
 			},
 			err: true,
 		},
 		{
 			name: "caFile and certFile",
 			config: &TLSConfig{
-				CAFile:   "cafile",
-				CertFile: "certfile",
+				TLSFilesConfig: TLSFilesConfig{
+					CAFile:   "cafile",
+					CertFile: "certfile",
+				},
 			},
 			err: true,
 		},
 		{
 			name: "caFile, cert and keyFile",
 			config: &TLSConfig{
-				CAFile:  "cafile",
-				KeyFile: "keyfile",
+				TLSFilesConfig: TLSFilesConfig{
+					CAFile:  "cafile",
+					KeyFile: "keyfile",
+				},
 				SafeTLSConfig: SafeTLSConfig{
 					Cert: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				},
@@ -182,8 +192,10 @@ func TestValidateTLSConfig(t *testing.T) {
 		{
 			name: "caFile, certFile and keySecret",
 			config: &TLSConfig{
-				CAFile:   "cafile",
-				CertFile: "certfile",
+				TLSFilesConfig: TLSFilesConfig{
+					CAFile:   "cafile",
+					CertFile: "certfile",
+				},
 				SafeTLSConfig: SafeTLSConfig{
 					KeySecret: &v1.SecretKeySelector{},
 				},
