@@ -21460,7 +21460,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>clientType defines the client used to export the traces. Supported values are <code>http</code>, <code>grpc</code>, <code>HTTP</code> and <code>GRPC</code>.</p>
+<p>clientType defines the client used to export the traces. Supported values are <code>HTTP</code> and <code>GRPC</code>.</p>
 </td>
 </tr>
 <tr>
@@ -21521,7 +21521,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>compression key for supported compression types. The only supported value is <code>gzip</code> or <code>Gzip</code>.</p>
+<p>compression key for supported compression types. The only supported value is <code>Gzip</code>.</p>
 </td>
 </tr>
 <tr>

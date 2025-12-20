@@ -971,10 +971,10 @@ const (
 )
 
 type TracingConfig struct {
-	// clientType defines the client used to export the traces. Supported values are `http`, `grpc`, `HTTP` and `GRPC`.
+	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
 	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC
 	// +optional
-	ClientType *string `json:"clientType"`
+	ClientType *string `json:"clientType",omitempty`
 
 	// endpoint to send the traces to. Should be provided in format <host>:<port>.
 	// +kubebuilder:validation:MinLength:=1
@@ -983,28 +983,28 @@ type TracingConfig struct {
 
 	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
 	// +optional
-	SamplingFraction *resource.Quantity `json:"samplingFraction"`
+	SamplingFraction *resource.Quantity `json:"samplingFraction",omitempty`
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	Insecure *bool `json:"insecure"`
+	Insecure *bool `json:"insecure",omitempty`
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
 	Headers map[string]string `json:"headers"`
 
-	// compression key for supported compression types. The only supported value is `gzip` or `Gzip`.
+	// compression key for supported compression types. The only supported value is `Gzip`.
 	// +kubebuilder:validation:Enum=gzip;Gzip
 	// +optional
-	Compression *string `json:"compression"`
+	Compression *string `json:"compression",omitempty`
 
 	// timeout defines the maximum time the exporter will wait for each batch export.
 	// +optional
-	Timeout *Duration `json:"timeout"`
+	Timeout *Duration `json:"timeout",omitempty`
 
 	// tlsConfig to use when sending traces.
 	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig"`
+	TLSConfig *TLSConfig `json:"tlsConfig",omitempty`
 }
 
 // Validate semantically validates the given TracingConfig.
@@ -1022,7 +1022,7 @@ func (tc *TracingConfig) Validate() error {
 		max, _ := resource.ParseQuantity("1")
 
 		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
-			return fmt.Errorf("`samplingFraction` must be a float from 0 through 1")
+			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
 		}
 	}
 

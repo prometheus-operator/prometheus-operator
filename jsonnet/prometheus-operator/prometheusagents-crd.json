@@ -7125,7 +7125,7 @@
                     "description": "tracingConfig defines tracing in Prometheus.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                     "properties": {
                       "clientType": {
-                        "description": "clientType defines the client used to export the traces. Supported values are `http`, `grpc`, `HTTP` and `GRPC`.",
+                        "description": "clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.",
                         "enum": [
                           "http",
                           "grpc",
@@ -7135,7 +7135,7 @@
                         "type": "string"
                       },
                       "compression": {
-                        "description": "compression key for supported compression types. The only supported value is `gzip` or `Gzip`.",
+                        "description": "compression key for supported compression types. The only supported value is `Gzip`.",
                         "enum": [
                           "gzip",
                           "Gzip"
