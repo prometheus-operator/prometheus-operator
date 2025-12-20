@@ -3244,6 +3244,7 @@
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
@@ -4018,6 +4019,7 @@
                           },
                           url: {
                             description: 'url defines the URL to send requests to.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                         },
