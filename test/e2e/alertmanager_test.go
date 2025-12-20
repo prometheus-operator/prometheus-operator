@@ -1194,7 +1194,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-					APIURL: "https://telegram.api.url",
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://telegram.api.url")),
 					BotToken: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: telegramTestingSecret,
