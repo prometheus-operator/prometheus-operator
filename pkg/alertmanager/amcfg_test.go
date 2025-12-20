@@ -3744,7 +3744,17 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with Rocketchat config valid url",
 			amVersion: &version28,
-			kclient:   fake.NewSimpleClientset(),
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "rocketchat-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("abc123"),
+					},
+				},
+			),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3767,6 +3777,12 @@ func TestGenerateConfig(t *testing.T) {
 								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
 									{
 										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										Token: corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "rocketchat-secret",
+											},
+											Key: "token",
+										},
 									},
 								},
 							},
@@ -3779,7 +3795,17 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with Rocketchat config invalid url",
 			amVersion: &version28,
-			kclient:   fake.NewSimpleClientset(),
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "rocketchat-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("abc123"),
+					},
+				},
+			),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3802,6 +3828,12 @@ func TestGenerateConfig(t *testing.T) {
 								RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{
 									{
 										APIURL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com/")),
+										Token: corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "rocketchat-secret",
+											},
+											Key: "token",
+										},
 									},
 								},
 							},
