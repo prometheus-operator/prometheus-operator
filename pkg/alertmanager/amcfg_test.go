@@ -3694,7 +3694,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
 									{
-										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com")),
+										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 									},
 								},
 							},

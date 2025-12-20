@@ -8,6 +8,6 @@ route:
 receivers:
 - name: "null"
 - name: mynamespace/myamc/test
-  victoropps_configs:
+  victorops_configs:
   - api_url: https://example.com/
 templates: []
