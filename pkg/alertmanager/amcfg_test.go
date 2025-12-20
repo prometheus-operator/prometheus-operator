@@ -2992,7 +2992,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-								APIURL: "https://api.telegram.org",
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
 								BotToken: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "am-telegram-test-receiver",
