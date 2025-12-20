@@ -3751,7 +3751,8 @@ func TestGenerateConfig(t *testing.T) {
 						Namespace: "mynamespace",
 					},
 					Data: map[string][]byte{
-						"token": []byte("abc123"),
+						"token":    []byte("abc123"),
+						"token_id": []byte("123abc"),
 					},
 				},
 			),
@@ -3782,6 +3783,12 @@ func TestGenerateConfig(t *testing.T) {
 												Name: "rocketchat-secret",
 											},
 											Key: "token",
+										},
+										TokenID: corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "rocketchat-secret",
+											},
+											Key: "token_id",
 										},
 									},
 								},
