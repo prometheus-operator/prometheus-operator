@@ -1076,6 +1076,7 @@ type SNSConfig struct {
 	// attributes defines SNS message attributes as key-value pairs.
 	// These provide additional metadata that can be used for message filtering and routing.
 	// +optional
+	//nolint:kubeapilinter
 	Attributes map[string]string `json:"attributes,omitempty"`
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	// +optional
