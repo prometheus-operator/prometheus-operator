@@ -21,7 +21,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -857,7 +856,7 @@ type CommonPrometheusFields struct {
 	// in a breaking way.
 	//
 	// +optional
-	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
+	TracingConfig *TracingConfig `json:"tracingConfig,omitempty"`
 	// bodySizeLimit defines per-scrape on response body size.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -1328,43 +1327,6 @@ type ShardRetentionPolicy struct {
 	// This field is ineffective as of now.
 	// +optional
 	Retain *RetainConfig `json:"retain,omitempty"`
-}
-
-type PrometheusTracingConfig struct {
-	// clientType defines the client used to export the traces. Supported values are `http` or `grpc`.
-	// +kubebuilder:validation:Enum=http;grpc
-	// +optional
-	ClientType *string `json:"clientType"`
-
-	// endpoint to send the traces to. Should be provided in format <host>:<port>.
-	// +kubebuilder:validation:MinLength:=1
-	// +required
-	Endpoint string `json:"endpoint"`
-
-	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
-	// +optional
-	SamplingFraction *resource.Quantity `json:"samplingFraction"`
-
-	// insecure if disabled, the client will use a secure connection.
-	// +optional
-	Insecure *bool `json:"insecure"`
-
-	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
-	// +optional
-	Headers map[string]string `json:"headers"`
-
-	// compression key for supported compression types. The only supported value is `gzip`.
-	// +kubebuilder:validation:Enum=gzip
-	// +optional
-	Compression *string `json:"compression"`
-
-	// timeout defines the maximum time the exporter will wait for each batch export.
-	// +optional
-	Timeout *Duration `json:"timeout"`
-
-	// tlsConfig to use when sending traces.
-	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.

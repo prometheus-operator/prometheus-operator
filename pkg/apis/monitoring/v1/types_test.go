@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestValidateSecretOrConfigMap(t *testing.T) {
@@ -527,5 +528,70 @@ func TestDurationPointer(t *testing.T) {
 	got := DurationPointer("1m")
 	if !reflect.DeepEqual(got, &oneMinuteDuration) {
 		t.Fatalf("wanted %v, but got %v", &oneMinuteDuration, got)
+	}
+}
+
+func TestValidateTracingConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		config *TracingConfig
+		err    bool
+	}{
+		{
+			name: "TLSConfig nil",
+			config: &TracingConfig{
+				TLSConfig: nil,
+			},
+			err: false,
+		},
+		{
+			name: "SamplingFraction simple value",
+			config: &TracingConfig{
+				SamplingFraction: func(v resource.Quantity) *resource.Quantity { return &v }(resource.MustParse("0.56")),
+			},
+			err: false,
+		},
+		{
+			name: "SamplingFraction > 1",
+			config: &TracingConfig{
+				SamplingFraction: resource.NewQuantity(10, resource.DecimalSI),
+			},
+			err: true,
+		},
+		{
+			name: "SamplingFraction < 0",
+			config: &TracingConfig{
+				SamplingFraction: resource.NewQuantity(-1, resource.DecimalSI),
+			},
+			err: true,
+		},
+		{
+			name: "SamplingFraction == 0",
+			config: &TracingConfig{
+				SamplingFraction: resource.NewQuantity(0, resource.DecimalSI),
+			},
+			err: false,
+		},
+		{
+			name: "SamplingFraction == 1",
+			config: &TracingConfig{
+				SamplingFraction: resource.NewQuantity(1, resource.DecimalSI),
+			},
+			err: false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if tc.err {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %s", err)
+			}
+		})
 	}
 }
