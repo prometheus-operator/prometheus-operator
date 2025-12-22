@@ -849,9 +849,16 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.</p>
+<p>minReadySeconds defines the minimum number of seconds for which a newly
+created pod should be ready without any of its container crashing for it
+to be considered available.</p>
 <p>If unset, pods will be considered available as soon as they are ready.</p>
+<p>When the Alertmanager version is greater than or equal to v0.30.0, the
+duration is also used to delay the first flush of the aggregation
+groups. This delay helps ensuring that all alerts have been resent by
+the Prometheus instances to Alertmanager after a roll-out. It is
+possible to override this behavior passing a custom value via
+<code>.spec.additionalArgs</code>.</p>
 </td>
 </tr>
 <tr>
@@ -894,22 +901,6 @@ AlertmanagerLimitsSpec
 <td>
 <em>(Optional)</em>
 <p>limits defines the limits command line flags when starting Alertmanager.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dispatchStartDelay</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>dispatchStartDelay defines the delay duration of the aggregation groups&rsquo; first flush.
-The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.</p>
-<p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -7370,9 +7361,16 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
-without any of its container crashing for it to be considered available.</p>
+<p>minReadySeconds defines the minimum number of seconds for which a newly
+created pod should be ready without any of its container crashing for it
+to be considered available.</p>
 <p>If unset, pods will be considered available as soon as they are ready.</p>
+<p>When the Alertmanager version is greater than or equal to v0.30.0, the
+duration is also used to delay the first flush of the aggregation
+groups. This delay helps ensuring that all alerts have been resent by
+the Prometheus instances to Alertmanager after a roll-out. It is
+possible to override this behavior passing a custom value via
+<code>.spec.additionalArgs</code>.</p>
 </td>
 </tr>
 <tr>
@@ -7415,22 +7413,6 @@ AlertmanagerLimitsSpec
 <td>
 <em>(Optional)</em>
 <p>limits defines the limits command line flags when starting Alertmanager.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dispatchStartDelay</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>dispatchStartDelay defines the delay duration of the aggregation groups&rsquo; first flush.
-The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.</p>
-<p>It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>
