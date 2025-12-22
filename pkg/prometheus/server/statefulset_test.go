@@ -2480,7 +2480,7 @@ func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
 }
 
 func TestPrometheusAdditionalNoPrefixArgsDuplicate(t *testing.T) {
-	expectedErrorMsg := "can't set arguments which are already managed by the operator: no-storage.tsdb.wal-compression"
+	expectedErrorMsg := "can't set arguments which are already managed by the operator: storage.tsdb.wal-compression"
 	walCompression := new(bool)
 	*walCompression = true
 
