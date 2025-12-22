@@ -92,10 +92,14 @@ func (c *TLSConfig) Validate() error {
 type SafeTLSConfig struct {
 	// ca defines the Certificate authority used when verifying server certificates.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
 
 	// cert defines the Client certificate to present when doing client-authentication.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
 
 	// keySecret defines the Secret containing the client key file for the targets.
@@ -161,12 +165,18 @@ func (c *SafeTLSConfig) Validate() error {
 type TLSFilesConfig struct {
 	// caFile defines the path to the CA cert in the Prometheus container to use for the targets.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	CAFile string `json:"caFile,omitempty"`
 	// certFile defines the path to the client cert file in the Prometheus container for the targets.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	CertFile string `json:"certFile,omitempty"`
 	// keyFile defines the path to the client key file in the Prometheus container for the targets.
 	// +optional
+	// nolint:kubeapilinter // v1 API stability: this violates kubeapilinter rules but is frozen for backward
+	// compatibility.
 	KeyFile string `json:"keyFile,omitempty"`
 }
 
