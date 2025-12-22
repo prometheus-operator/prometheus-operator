@@ -5614,6 +5614,10 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                         },
+                        required: [
+                          'token',
+                          'tokenID',
+                        ],
                         type: 'object',
                       },
                       type: 'array',

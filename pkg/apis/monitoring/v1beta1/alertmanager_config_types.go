@@ -1182,14 +1182,14 @@ type RocketChatConfig struct {
 	// This is the personal access token or bot token used to authenticate API requests.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// +optional
-	Token *v1.SecretKeySelector `json:"token,omitempty"`
+	// +required
+	Token v1.SecretKeySelector `json:"token,omitempty"`
 	// tokenID defines the sender token ID for RocketChat authentication.
 	// This is the user ID associated with the token used for API requests.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// +optional
-	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
+	// +required
+	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// color defines the message color displayed in RocketChat.
 	// This appears as a colored bar alongside the message.
 	// +kubebuilder:validation:MinLength=1

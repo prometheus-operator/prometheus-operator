@@ -2486,16 +2486,8 @@ func (in *RocketChatConfig) DeepCopyInto(out *RocketChatConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Token != nil {
-		in, out := &in.Token, &out.Token
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.TokenID != nil {
-		in, out := &in.TokenID, &out.TokenID
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
-	}
+	in.Token.DeepCopyInto(&out.Token)
+	in.TokenID.DeepCopyInto(&out.TokenID)
 	if in.Color != nil {
 		in, out := &in.Color, &out.Color
 		*out = new(string)

@@ -6678,7 +6678,7 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 						RocketChatConfigs: []*rocketChatConfig{
 							{
 								APIURL:    "http://example.com",
-								Token:     "aaaa-bbbb-cccc-dddd",
+								Token:     ptr.To("aaaa-bbbb-cccc-dddd"),
 								TokenFile: "/var/kubernetes/secrets/token",
 							},
 						},
@@ -6696,7 +6696,7 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 						RocketChatConfigs: []*rocketChatConfig{
 							{
 								APIURL:      "http://example.com",
-								TokenID:     "t123456",
+								TokenID:     ptr.To("t123456"),
 								TokenIDFile: "/var/kubernetes/secrets/token-id",
 							},
 						},

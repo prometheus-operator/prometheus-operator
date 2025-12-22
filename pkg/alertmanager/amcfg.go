@@ -806,21 +806,17 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		out.APIURL = (string)(*in.APIURL)
 	}
 
-	if in.Token != nil {
-		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
-		}
-		out.Token = token
+	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
 	}
+	out.Token = &token
 
-	if in.TokenID != nil {
-		tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.TokenID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
-		}
-		out.TokenID = tokenID
+	tokenID, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.TokenID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
 	}
+	out.TokenID = &tokenID
 
 	if in.Channel != nil && *in.Channel != "" {
 		out.Channel = *in.Channel
@@ -3037,10 +3033,10 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		return fmt.Errorf(`invalid syntax in receivers config; rocketchat integration is available in Alertmanager >= 0.28.0`)
 	}
 
-	if len(rc.Token) > 0 && len(rc.TokenFile) > 0 {
+	if rc.Token != nil && len(rc.TokenFile) > 0 {
 		return fmt.Errorf("at most one of token & token_file must be configured")
 	}
-	if len(rc.TokenID) > 0 && len(rc.TokenIDFile) > 0 {
+	if rc.TokenID != nil && len(rc.TokenIDFile) > 0 {
 		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
 	}
 
