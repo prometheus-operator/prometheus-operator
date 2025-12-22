@@ -1367,11 +1367,14 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitoringv1alpha1.TelegramConfig, crKey types.NamespacedName) (*telegramConfig, error) {
 	out := &telegramConfig{
 		VSendResolved:        in.SendResolved,
-		APIUrl:               in.APIURL,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
 		DisableNotifications: false,
 		ParseMode:            in.ParseMode,
+	}
+
+	if in.APIURL != nil {
+		out.APIUrl = string(*in.APIURL)
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

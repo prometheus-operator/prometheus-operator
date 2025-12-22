@@ -7187,6 +7187,7 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the Telegram API URL, e.g. https://api.telegram.org.\nIf not specified, the default Telegram API URL will be used.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           botToken: {
