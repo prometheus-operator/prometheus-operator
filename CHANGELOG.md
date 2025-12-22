@@ -1,6 +1,7 @@
 ## Unreleased
 
 * [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
+* [ENHANCEMENT] Update operator instrumentation to expose native histograms. #8194
 
 ## 0.87.1 / 2025-12-10
 
