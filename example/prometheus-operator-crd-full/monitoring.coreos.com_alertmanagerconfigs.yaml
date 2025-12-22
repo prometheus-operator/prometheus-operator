@@ -6322,6 +6322,9 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                        required:
+                        - token
+                        - tokenID
                         type: object
                       type: array
                     slackConfigs:
@@ -18295,6 +18298,9 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                        required:
+                        - token
+                        - tokenID
                         type: object
                       type: array
                     slackConfigs:
