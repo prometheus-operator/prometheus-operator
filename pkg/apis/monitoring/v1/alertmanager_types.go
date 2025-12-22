@@ -260,6 +260,15 @@ type AlertmanagerSpec struct {
 	// +optional
 	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
+	// updateStrategy indicates the strategy that will be employed to update
+	// Pods in the StatefulSet when a revision is made to statefulset's Pod
+	// Template.
+	//
+	// The default strategy is RollingUpdate.
+	//
+	// +optional
+	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+
 	// containers allows injecting additional containers. This is meant to
 	// allow adding an authentication proxy to an Alertmanager pod.
 	// Containers described here modify an operator generated container if they

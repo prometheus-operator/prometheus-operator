@@ -782,9 +782,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		Replicas:            a.Spec.Replicas,
 		MinReadySeconds:     ptr.Deref(a.Spec.MinReadySeconds, 0),
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
+		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(a.Spec.UpdateStrategy),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
