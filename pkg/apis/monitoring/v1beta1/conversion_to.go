@@ -676,6 +676,8 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 		)
 	}
 
+	dst.Spec.TracingConfig = src.Spec.TracingConfig
+
 	r, err := convertRouteTo(src.Spec.Route)
 	if err != nil {
 		return err

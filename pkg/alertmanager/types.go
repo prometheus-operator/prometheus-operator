@@ -33,6 +33,7 @@ type alertmanagerConfig struct {
 	MuteTimeIntervals []*timeInterval `yaml:"mute_time_intervals,omitempty"`
 	TimeIntervals     []*timeInterval `yaml:"time_intervals,omitempty"`
 	Templates         []string        `yaml:"templates"`
+	TracingConfig     *tracingConfig  `yaml:"tracing,omitempty"`
 }
 
 type globalConfig struct {
@@ -99,6 +100,17 @@ type inhibitRule struct {
 	SourceMatchRE  map[string]string `yaml:"source_match_re,omitempty"`
 	SourceMatchers []string          `yaml:"source_matchers,omitempty"`
 	Equal          []string          `yaml:"equal,omitempty"`
+}
+
+type tracingConfig struct {
+	ClientType       string            `yaml:"client_type,omitempty"`
+	Endpoint         string            `yaml:"endpoint,omitempty"`
+	SamplingFraction float64           `yaml:"sampling_fraction,omitempty"`
+	Insecure         bool              `yaml:"insecure,omitempty"`
+	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty"`
+	Headers          map[string]string `yaml:"headers,omitempty"`
+	Compression      string            `yaml:"compression,omitempty"`
+	Timeout          *model.Duration   `yaml:"timeout,omitempty"`
 }
 
 type receiver struct {
