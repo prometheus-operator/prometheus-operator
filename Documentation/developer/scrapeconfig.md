@@ -3,8 +3,8 @@ weight: 253
 toc: true
 title: ScrapeConfig CRD
 menu:
-  docs:
-    parent: user-guides
+    docs:
+        parent: user-guides
 lead: ""
 images: []
 draft: false
