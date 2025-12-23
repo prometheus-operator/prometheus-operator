@@ -588,34 +588,6 @@ type Endpoint struct {
 	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
-	// tlsConfig defines the TLS configuration to use when scraping the target.
-	//
-	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-
-	// bearerTokenFile defines the file to read bearer token for scraping the target.
-	//
-	// Deprecated: use `authorization` instead.
-	// +optional
-	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-
-	// bearerTokenSecret defines a key of a Secret containing the bearer
-	// token for scraping targets. The secret needs to be in the same namespace
-	// as the ServiceMonitor object and readable by the Prometheus Operator.
-	//
-	// +optional
-	//
-	// Deprecated: use `authorization` instead.
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-
-	// authorization configures the Authorization header credentials to use when
-	// scraping the target.
-	//
-	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
-	//
-	// +optional
-	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
@@ -636,23 +608,6 @@ type Endpoint struct {
 	// +optional
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 
-	// basicAuth defines the Basic Authentication credentials to use when
-	// scraping the target.
-	//
-	// Cannot be set at the same time as `authorization`, or `oauth2`.
-	//
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-
-	// oauth2 defines the OAuth2 settings to use when scraping the target.
-	//
-	// It requires Prometheus >= 2.27.0.
-	//
-	// Cannot be set at the same time as `authorization`, or `basicAuth`.
-	//
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
-
 	// metricRelabelings defines the relabeling rules to apply to the
 	// samples before ingestion.
 	//
@@ -671,20 +626,6 @@ type Endpoint struct {
 	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
-	// +optional
-	ProxyConfig `json:",inline"`
-
-	// followRedirects defines whether the scrape requests should follow HTTP
-	// 3xx redirects.
-	//
-	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
-
-	// enableHttp2 can be used to disable HTTP2 when scraping the target.
-	//
-	// +optional
-	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
-
 	// filterRunning when true, the pods which are not running (e.g. either in Failed or
 	// Succeeded state) are dropped during the target discovery.
 	//
@@ -694,6 +635,14 @@ type Endpoint struct {
 	//
 	// +optional
 	FilterRunning *bool `json:"filterRunning,omitempty"`
+
+	// bearerTokenFile defines the file to read bearer token for scraping the target.
+	//
+	// Deprecated: use `authorization` instead.
+	// +optional
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+
+	HTTPConfigWithProxyAndTLSFiles `json:",inline"`
 }
 
 type AttachMetadata struct {
@@ -826,147 +775,6 @@ func (c *SecretOrConfigMap) String() string {
 	}
 
 	return "<empty>"
-}
-
-// +kubebuilder:validation:Enum=TLS10;TLS11;TLS12;TLS13
-type TLSVersion string
-
-const (
-	TLSVersion10 TLSVersion = "TLS10"
-	TLSVersion11 TLSVersion = "TLS11"
-	TLSVersion12 TLSVersion = "TLS12"
-	TLSVersion13 TLSVersion = "TLS13"
-)
-
-// SafeTLSConfig specifies safe TLS configuration parameters.
-// +k8s:openapi-gen=true
-type SafeTLSConfig struct {
-	// ca defines the Certificate authority used when verifying server certificates.
-	// +optional
-	CA SecretOrConfigMap `json:"ca,omitempty"`
-
-	// cert defines the Client certificate to present when doing client-authentication.
-	// +optional
-	Cert SecretOrConfigMap `json:"cert,omitempty"`
-
-	// keySecret defines the Secret containing the client key file for the targets.
-	// +optional
-	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
-
-	// serverName is used to verify the hostname for the targets.
-	// +optional
-	ServerName *string `json:"serverName,omitempty"`
-
-	// insecureSkipVerify defines how to disable target certificate validation.
-	// +optional
-	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
-
-	// minVersion defines the minimum acceptable TLS version.
-	//
-	// It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
-	// +optional
-	MinVersion *TLSVersion `json:"minVersion,omitempty"`
-
-	// maxVersion defines the maximum acceptable TLS version.
-	//
-	// It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
-	// +optional
-	MaxVersion *TLSVersion `json:"maxVersion,omitempty"`
-}
-
-// Validate semantically validates the given SafeTLSConfig.
-func (c *SafeTLSConfig) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if c.CA != (SecretOrConfigMap{}) {
-		if err := c.CA.Validate(); err != nil {
-			return fmt.Errorf("ca %s: %w", c.CA.String(), err)
-		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) {
-		if err := c.Cert.Validate(); err != nil {
-			return fmt.Errorf("cert %s: %w", c.Cert.String(), err)
-		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) && c.KeySecret == nil {
-		return fmt.Errorf("client cert specified without client key")
-	}
-
-	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
-		return fmt.Errorf("client key specified without client cert")
-	}
-
-	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
-		return fmt.Errorf("maxVersion must more than or equal to minVersion")
-	}
-
-	return nil
-}
-
-// TLSConfig extends the safe TLS configuration with file parameters.
-// +k8s:openapi-gen=true
-type TLSConfig struct {
-	// +optional
-	SafeTLSConfig `json:",inline"`
-	// caFile defines the path to the CA cert in the Prometheus container to use for the targets.
-	// +optional
-	CAFile string `json:"caFile,omitempty"`
-	// certFile defines the path to the client cert file in the Prometheus container for the targets.
-	// +optional
-	CertFile string `json:"certFile,omitempty"`
-	// keyFile defines the path to the client key file in the Prometheus container for the targets.
-	// +optional
-	KeyFile string `json:"keyFile,omitempty"`
-}
-
-// Validate semantically validates the given TLSConfig.
-func (c *TLSConfig) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if c.CA != (SecretOrConfigMap{}) {
-		if c.CAFile != "" {
-			return fmt.Errorf("cannot specify both caFile and ca")
-		}
-		if err := c.CA.Validate(); err != nil {
-			return fmt.Errorf("SecretOrConfigMap ca: %w", err)
-		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) {
-		if c.CertFile != "" {
-			return fmt.Errorf("cannot specify both certFile and cert")
-		}
-		if err := c.Cert.Validate(); err != nil {
-			return fmt.Errorf("SecretOrConfigMap cert: %w", err)
-		}
-	}
-
-	if c.KeyFile != "" && c.KeySecret != nil {
-		return fmt.Errorf("cannot specify both keyFile and keySecret")
-	}
-
-	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
-	hasKey := c.KeyFile != "" || c.KeySecret != nil
-
-	if hasCert && !hasKey {
-		return fmt.Errorf("cannot specify client cert without client key")
-	}
-
-	if hasKey && !hasCert {
-		return fmt.Errorf("cannot specify client key without client cert")
-	}
-
-	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
-		return fmt.Errorf("maxVersion must more than or equal to minVersion")
-	}
-
-	return nil
 }
 
 // NamespaceSelector is a selector for selecting either all namespaces or a
@@ -1161,3 +969,62 @@ const (
 	// termination.
 	ParallelPodManagement PodManagementPolicyType = "Parallel"
 )
+
+type TracingConfig struct {
+	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
+	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC
+	// +optional
+	ClientType *string `json:"clientType",omitempty`
+
+	// endpoint to send the traces to. Should be provided in format <host>:<port>.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Endpoint string `json:"endpoint"`
+
+	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
+	// +optional
+	SamplingFraction *resource.Quantity `json:"samplingFraction",omitempty`
+
+	// insecure if disabled, the client will use a secure connection.
+	// +optional
+	Insecure *bool `json:"insecure",omitempty`
+
+	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
+	// +optional
+	Headers map[string]string `json:"headers"`
+
+	// compression key for supported compression types. The only supported value is `Gzip`.
+	// +kubebuilder:validation:Enum=gzip;Gzip
+	// +optional
+	Compression *string `json:"compression",omitempty`
+
+	// timeout defines the maximum time the exporter will wait for each batch export.
+	// +optional
+	Timeout *Duration `json:"timeout",omitempty`
+
+	// tlsConfig to use when sending traces.
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig",omitempty`
+}
+
+// Validate semantically validates the given TracingConfig.
+func (tc *TracingConfig) Validate() error {
+	if tc == nil {
+		return nil
+	}
+
+	if err := tc.TLSConfig.Validate(); err != nil {
+		return err
+	}
+
+	if tc.SamplingFraction != nil {
+		min, _ := resource.ParseQuantity("0")
+		max, _ := resource.ParseQuantity("1")
+
+		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
+			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
+		}
+	}
+
+	return nil
+}

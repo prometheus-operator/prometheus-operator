@@ -1370,11 +1370,14 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitoringv1alpha1.TelegramConfig, crKey types.NamespacedName) (*telegramConfig, error) {
 	out := &telegramConfig{
 		VSendResolved:        in.SendResolved,
-		APIUrl:               in.APIURL,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
 		DisableNotifications: false,
 		ParseMode:            in.ParseMode,
+	}
+
+	if in.APIURL != nil {
+		out.APIUrl = string(*in.APIURL)
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -2367,6 +2370,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.IncidentioConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2793,6 +2802,41 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	return mc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	incidentioAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if !incidentioAllowed {
+		return fmt.Errorf("invalid syntax in receivers config; incident.io integration is available in Alertmanager >= 0.29.0")
+	}
+
+	if ic.URL == "" && ic.URLFile == "" {
+		return errors.New("one of url or url_file must be configured")
+	}
+
+	if ic.URL != "" && ic.URLFile != "" {
+		return errors.New("at most one of url & url_file must be configured")
+	}
+
+	if ic.URL != "" {
+		if _, err := validation.ValidateURL(ic.URL); err != nil {
+			return fmt.Errorf("invalid url: %w", err)
+		}
+	}
+
+	if ic.AlertSourceToken != "" && ic.AlertSourceTokenFile != "" {
+		return errors.New("at most one of alert_source_token & alert_source_token_file must be configured")
+	}
+
+	if ic.HTTPConfig != nil && ic.HTTPConfig.Authorization != nil && (ic.AlertSourceToken != "" || ic.AlertSourceTokenFile != "") {
+		return errors.New("cannot specify alert_source_token or alert_source_token_file when using http_config.authorization")
+	}
+
+	if ic.AlertSourceToken == "" && ic.AlertSourceTokenFile == "" && (ic.HTTPConfig == nil || ic.HTTPConfig.Authorization == nil) {
+		return errors.New("at least one of alert_source_token, alert_source_token_file or http_config.authorization must be configured")
+	}
+
+	return ic.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {

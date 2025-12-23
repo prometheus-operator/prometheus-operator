@@ -108,7 +108,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ExcludedFromEnforcement              []ObjectReferenceApplyConfiguration                     `json:"excludedFromEnforcement,omitempty"`
 	HostNetwork                          *bool                                                   `json:"hostNetwork,omitempty"`
 	PodTargetLabels                      []string                                                `json:"podTargetLabels,omitempty"`
-	TracingConfig                        *PrometheusTracingConfigApplyConfiguration              `json:"tracingConfig,omitempty"`
+	TracingConfig                        *TracingConfigApplyConfiguration                        `json:"tracingConfig,omitempty"`
 	BodySizeLimit                        *monitoringv1.ByteSize                                  `json:"bodySizeLimit,omitempty"`
 	SampleLimit                          *uint64                                                 `json:"sampleLimit,omitempty"`
 	TargetLimit                          *uint64                                                 `json:"targetLimit,omitempty"`
@@ -854,7 +854,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithPodTargetLabels(values ..
 // WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TracingConfig field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithTracingConfig(value *PrometheusTracingConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTracingConfig(value *TracingConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.TracingConfig = value
 	return b
 }
