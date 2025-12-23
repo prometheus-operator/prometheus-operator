@@ -230,6 +230,7 @@ func (one *otherNamespaceEnforcer) processRoute(crKey types.NamespacedName, r *r
 type ConfigBuilder struct {
 	cfg       *alertmanagerConfig
 	logger    *slog.Logger
+	am        *monitoringv1.Alertmanager
 	amVersion semver.Version
 	store     *assets.StoreBuilder
 	enforcer  enforcer
@@ -240,6 +241,7 @@ func NewConfigBuilder(logger *slog.Logger, amVersion semver.Version, store *asse
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
+		am:        am,
 		enforcer:  getEnforcer(am.Spec.AlertmanagerConfigMatcherStrategy, amVersion, am.Namespace),
 	}
 	return cg
@@ -332,7 +334,11 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
-	tc, err := cb.convertTracingConfig(ctx, amConfig.Spec.TracingConfig, crKey)
+	if err := checkTracingConfig(cb.am.Spec.TracingConfig, cb.amVersion); err != nil {
+		return err
+	}
+
+	tc, err := cb.convertTracingConfig(ctx, cb.am.Spec.TracingConfig, crKey)
 	if err != nil {
 		return err
 	}

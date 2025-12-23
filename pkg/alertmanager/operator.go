@@ -456,6 +456,19 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			return
 		}
 
+		version, err := GetAlertmanagerVersion(am)
+		if err != nil {
+			return
+		}
+
+		err = checkTracingConfig(am.Spec.TracingConfig, version)
+		if err != nil {
+			c.logger.Error(
+				"check Alertmanager TracingConfig failed",
+				"err", err,
+			)
+		}
+
 		// Check for Alertmanager instances selecting AlertmanagerConfigs in
 		// the namespace.
 		acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
@@ -879,15 +892,23 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	return rawAlertmanagerConfig, secret.Data, nil
 }
 
-func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
+func GetAlertmanagerVersion(am *monitoringv1.Alertmanager) (semver.Version, error) {
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
-		return fmt.Errorf("failed to parse alertmanager version: %w", err)
+		return version, fmt.Errorf("failed to parse alertmanager version: %w", err)
 	}
 
 	if version.LT(semver.MustParse("0.15.0")) || version.Major > 0 {
-		return fmt.Errorf("unsupported Alertmanager version %q", amVersion)
+		return version, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
+	}
+	return version, nil
+}
+
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
+	version, err := GetAlertmanagerVersion(am)
+	if err != nil {
+		return err
 	}
 
 	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
@@ -1112,11 +1133,7 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 		return err
 	}
 
-	if err := checkInhibitRules(amc, amVersion); err != nil {
-		return err
-	}
-
-	return checkTracingConfig(ctx, amc.Spec.TracingConfig, amVersion)
+	return checkInhibitRules(amc, amVersion)
 }
 
 func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
@@ -1780,7 +1797,7 @@ func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semve
 	return nil
 }
 
-func checkTracingConfig(_ context.Context, tc *monitoringv1.TracingConfig, amVersion semver.Version) error {
+func checkTracingConfig(tc *monitoringv1.TracingConfig, amVersion semver.Version) error {
 	if tc == nil {
 		return nil
 	}

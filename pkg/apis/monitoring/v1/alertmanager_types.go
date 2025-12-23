@@ -406,6 +406,11 @@ type AlertmanagerSpec struct {
 	//
 	// +optional
 	HostUsers *bool `json:"hostUsers,omitempty"`
+
+	// tracingConfig defines tracing in alertmanager.
+	// It requires Alertmanager >= 0.30.0.
+	// +optional
+	TracingConfig *TracingConfig `json:"tracingConfig,omitempty"`
 }
 
 type AlertmanagerConfigMatcherStrategy struct {

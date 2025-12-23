@@ -16,18 +16,13 @@
 
 package v1beta1
 
-import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
-)
-
 // AlertmanagerConfigSpecApplyConfiguration represents a declarative configuration of the AlertmanagerConfigSpec type for use
 // with apply.
 type AlertmanagerConfigSpecApplyConfiguration struct {
-	Route         *RouteApplyConfiguration            `json:"route,omitempty"`
-	Receivers     []ReceiverApplyConfiguration        `json:"receivers,omitempty"`
-	InhibitRules  []InhibitRuleApplyConfiguration     `json:"inhibitRules,omitempty"`
-	TimeIntervals []TimeIntervalApplyConfiguration    `json:"timeIntervals,omitempty"`
-	TracingConfig *v1.TracingConfigApplyConfiguration `json:"tracingConfig,omitempty"`
+	Route         *RouteApplyConfiguration         `json:"route,omitempty"`
+	Receivers     []ReceiverApplyConfiguration     `json:"receivers,omitempty"`
+	InhibitRules  []InhibitRuleApplyConfiguration  `json:"inhibitRules,omitempty"`
+	TimeIntervals []TimeIntervalApplyConfiguration `json:"timeIntervals,omitempty"`
 }
 
 // AlertmanagerConfigSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerConfigSpec type for use with
@@ -80,13 +75,5 @@ func (b *AlertmanagerConfigSpecApplyConfiguration) WithTimeIntervals(values ...*
 		}
 		b.TimeIntervals = append(b.TimeIntervals, *values[i])
 	}
-	return b
-}
-
-// WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TracingConfig field is set to the value of the last call.
-func (b *AlertmanagerConfigSpecApplyConfiguration) WithTracingConfig(value *v1.TracingConfigApplyConfiguration) *AlertmanagerConfigSpecApplyConfiguration {
-	b.TracingConfig = value
 	return b
 }

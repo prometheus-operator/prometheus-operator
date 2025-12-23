@@ -1004,6 +1004,21 @@ bool
 Starting Kubernetes 1.33, the feature is enabled by default.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TracingConfig">
+TracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tracingConfig defines tracing in alertmanager.
+It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -7472,6 +7487,21 @@ bool
 <p>More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/">https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/</a></p>
 <p>The feature requires at least Kubernetes 1.28 with the <code>UserNamespacesSupport</code> feature gate enabled.
 Starting Kubernetes 1.33, the feature is enabled by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TracingConfig">
+TracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tracingConfig defines tracing in alertmanager.
+It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 </tbody>
@@ -21439,7 +21469,7 @@ AdditionalLabelSelectors
 <h3 id="monitoring.coreos.com/v1.TracingConfig">TracingConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.AlertmanagerConfigSpec">AlertmanagerConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.AlertmanagerConfigSpec">AlertmanagerConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
 </div>
@@ -22178,21 +22208,6 @@ the resource&rsquo;s namespace.</p>
 <td>
 <em>(Optional)</em>
 <p>muteTimeIntervals defines the list of MuteTimeInterval specifying when the routes should be muted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tracingConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TracingConfig">
-TracingConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tracingConfig defines tracing in alertmanager.
-It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 </table>
@@ -24977,21 +24992,6 @@ the resource&rsquo;s namespace.</p>
 <td>
 <em>(Optional)</em>
 <p>muteTimeIntervals defines the list of MuteTimeInterval specifying when the routes should be muted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tracingConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TracingConfig">
-TracingConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tracingConfig defines tracing in alertmanager.
-It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 </tbody>
@@ -36801,21 +36801,6 @@ the resource&rsquo;s namespace.</p>
 <p>timeIntervals defines the list of timeIntervals specifying when the routes should be muted.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>tracingConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TracingConfig">
-TracingConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tracingConfig defines tracing in alertmanager.
-It requires Alertmanager &gt;= 0.30.0.</p>
-</td>
-</tr>
 </table>
 </td>
 </tr>
@@ -36914,21 +36899,6 @@ the resource&rsquo;s namespace.</p>
 <td>
 <em>(Optional)</em>
 <p>timeIntervals defines the list of timeIntervals specifying when the routes should be muted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tracingConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TracingConfig">
-TracingConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tracingConfig defines tracing in alertmanager.
-It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 </tbody>

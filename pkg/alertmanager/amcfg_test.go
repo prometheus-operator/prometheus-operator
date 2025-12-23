@@ -111,6 +111,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
+		amSpec          *monitoringv1.AlertmanagerSpec
 		globalConfig    *monitoringv1.AlertmanagerGlobalConfig
 		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
@@ -179,6 +180,29 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					ClientType:       ptr.To("grpc"),
+					Endpoint:         "tracing-service:9090",
+					SamplingFraction: ptr.To(resource.MustParse("0.56")),
+					Insecure:         ptr.To(true),
+					Headers:          map[string]string{"aa": "bb", "cc": ""},
+					Compression:      ptr.To("gzip"),
+					Timeout:          ptr.To(monitoringv1.Duration("5s")),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
+								},
+							},
+						},
+					},
+				},
+			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -198,27 +222,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
-							},
-						},
-					},
-					TracingConfig: &monitoringv1.TracingConfig{
-						ClientType:       ptr.To("grpc"),
-						Endpoint:         "tracing-service:9090",
-						SamplingFraction: ptr.To(resource.MustParse("0.56")),
-						Insecure:         ptr.To(true),
-						Headers:          map[string]string{"aa": "bb", "cc": ""},
-						Compression:      ptr.To("gzip"),
-						Timeout:          ptr.To(monitoringv1.Duration("5s")),
-						TLSConfig: &monitoringv1.TLSConfig{
-							SafeTLSConfig: monitoringv1.SafeTLSConfig{
-								CA: monitoringv1.SecretOrConfigMap{
-									ConfigMap: &corev1.ConfigMapKeySelector{
-										LocalObjectReference: corev1.LocalObjectReference{
-											Name: "proxy-ca-certificate",
-										},
-										Key: "certificate",
-									},
-								},
 							},
 						},
 					},
@@ -1936,6 +1939,29 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				ResolveTimeout: "30s",
 			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					ClientType:       ptr.To("grpc"),
+					Endpoint:         "tracing-service:9090",
+					SamplingFraction: ptr.To(resource.MustParse("2")),
+					Insecure:         ptr.To(true),
+					Headers:          map[string]string{"aa": "bb", "cc": ""},
+					Compression:      ptr.To("gzip"),
+					Timeout:          ptr.To(monitoringv1.Duration("5s")),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
+								},
+							},
+						},
+					},
+				},
+			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -1955,27 +1981,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
-							},
-						},
-					},
-					TracingConfig: &monitoringv1.TracingConfig{
-						ClientType:       ptr.To("grpc"),
-						Endpoint:         "tracing-service:9090",
-						SamplingFraction: ptr.To(resource.MustParse("2")),
-						Insecure:         ptr.To(true),
-						Headers:          map[string]string{"aa": "bb", "cc": ""},
-						Compression:      ptr.To("gzip"),
-						Timeout:          ptr.To(monitoringv1.Duration("5s")),
-						TLSConfig: &monitoringv1.TLSConfig{
-							SafeTLSConfig: monitoringv1.SafeTLSConfig{
-								CA: monitoringv1.SecretOrConfigMap{
-									ConfigMap: &corev1.ConfigMapKeySelector{
-										LocalObjectReference: corev1.LocalObjectReference{
-											Name: "proxy-ca-certificate",
-										},
-										Key: "certificate",
-									},
-								},
 							},
 						},
 					},
@@ -1992,6 +1997,29 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				ResolveTimeout: "30s",
 			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					ClientType:       ptr.To("grpc"),
+					Endpoint:         "tracing-service:9090",
+					SamplingFraction: ptr.To(resource.MustParse("0.999999")),
+					Insecure:         ptr.To(true),
+					Headers:          map[string]string{"aa": "bb", "cc": ""},
+					Compression:      ptr.To("gzip"),
+					Timeout:          ptr.To(monitoringv1.Duration("5s")),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
+								},
+							},
+						},
+					},
+				},
+			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -2011,27 +2039,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						Routes: []apiextensionsv1.JSON{
 							{
 								Raw: myrouteJSON,
-							},
-						},
-					},
-					TracingConfig: &monitoringv1.TracingConfig{
-						ClientType:       ptr.To("grpc"),
-						Endpoint:         "tracing-service:9090",
-						SamplingFraction: ptr.To(resource.MustParse("0.999999")),
-						Insecure:         ptr.To(true),
-						Headers:          map[string]string{"aa": "bb", "cc": ""},
-						Compression:      ptr.To("gzip"),
-						Timeout:          ptr.To(monitoringv1.Duration("5s")),
-						TLSConfig: &monitoringv1.TLSConfig{
-							SafeTLSConfig: monitoringv1.SafeTLSConfig{
-								CA: monitoringv1.SecretOrConfigMap{
-									ConfigMap: &corev1.ConfigMapKeySelector{
-										LocalObjectReference: corev1.LocalObjectReference{
-											Name: "proxy-ca-certificate",
-										},
-										Key: "certificate",
-									},
-								},
 							},
 						},
 					},
@@ -2048,6 +2055,11 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				ResolveTimeout: "30s",
 			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					Endpoint: "abc",
+				},
+			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -2069,9 +2081,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 								Raw: myrouteJSON,
 							},
 						},
-					},
-					TracingConfig: &monitoringv1.TracingConfig{
-						Endpoint: "abc",
 					},
 				},
 			},
@@ -2086,6 +2095,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				ResolveTimeout: "30s",
 			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: nil,
+			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "global-config",
@@ -2108,7 +2120,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							},
 						},
 					},
-					TracingConfig: nil,
 				},
 			},
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
@@ -2241,19 +2252,26 @@ Z8Ja2z8jw1xUKxfurno8wsAgFAQLuUZ0sTpwHBtwzFEdIeaAHBbNkkuGq7leIw/u
 				},
 			},
 		)
+
+		amSpec := monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tt.matcherStrategy}
+		if tt.amSpec != nil {
+			amSpec = *tt.amSpec
+			amSpec.AlertmanagerConfigMatcherStrategy = tt.matcherStrategy
+		}
+
 		cb := NewConfigBuilder(
 			newNopLogger(t),
 			*tt.amVersion,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			&monitoringv1.Alertmanager{
 				ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
-				Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tt.matcherStrategy},
+				Spec:       amSpec,
 			},
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
 			if tt.wantErr {
-				t.Logf("err: %s", err)
+				t.Logf("err: %s", err.Error())
 				require.Error(t, err)
 				return
 			}

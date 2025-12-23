@@ -99,10 +99,6 @@ type AlertmanagerConfigSpec struct {
 	// muteTimeIntervals defines the list of MuteTimeInterval specifying when the routes should be muted.
 	// +optional
 	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeIntervals,omitempty"`
-	// tracingConfig defines tracing in alertmanager.
-	// It requires Alertmanager >= 0.30.0.
-	// +optional
-	TracingConfig *monitoringv1.TracingConfig `json:"tracingConfig,omitempty"`
 }
 
 // Route defines a node in the routing tree.
