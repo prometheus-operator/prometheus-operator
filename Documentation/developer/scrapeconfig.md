@@ -3,8 +3,8 @@ weight: 253
 toc: true
 title: ScrapeConfig CRD
 menu:
-    docs:
-        parent: user-guides
+  docs:
+    parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -17,8 +17,8 @@ Kubernetes cluster or create scrape configurations that are not possible with th
 
 ## Prerequisites
 
-* `prometheus-operator` `>v0.65.1`
-* `ScrapeConfig` CRD installed in the cluster. Make sure to (re)start the operator after the CRD has been created/updated.
+- `prometheus-operator` `>v0.65.1`
+- `ScrapeConfig` CRD installed in the cluster. Make sure to (re)start the operator after the CRD has been created/updated.
 
 ## Configure Prometheus or PrometheusAgent to select ScrapeConfigs
 
@@ -35,14 +35,47 @@ spec:
 With this example, all `ScrapeConfig` having the `prometheus` label set to `system-monitoring-prometheus` will be used
 to generate scrape configurations.
 
+> **Note:** Since `scrapeConfigNamespaceSelector` is not specified, this example only selects `ScrapeConfigs` from the same namespace as the Prometheus resource.
+
+## Namespace Selection
+
+To select `ScrapeConfigs` based on the namespace, `scrapeConfigNamespaceSelector` field can be used.
+
+### Select ScrapeConfigs from all namespaces
+
+Set it to `{}` to match `ScrapeConfigs` from all namespaces:
+
+```yaml
+spec:
+  scrapeConfigSelector:
+    matchLabels:
+      prometheus: system-monitoring-prometheus
+  scrapeConfigNamespaceSelector: {}
+```
+
+### Select ScrapeConfigs from namespaces with specific labels
+
+To select `ScrapeConfigs` only from namespaces with specific labels:
+
+```yaml
+spec:
+  scrapeConfigSelector:
+    matchLabels:
+      prometheus: system-monitoring-prometheus
+  scrapeConfigNamespaceSelector:
+    matchLabels:
+      environment: production
+```
+
 ## Use ScrapeConfig to scrape an external target
 
 `ScrapeConfig` currently supports a limited set of service discoveries:
-* `static_config`
-* `file_sd`
-* `http_sd`
-* `kubernetes_sd`
-* `consul_sd`
+
+- `static_config`
+- `file_sd`
+- `http_sd`
+- `kubernetes_sd`
+- `consul_sd`
 
 The following examples are basic and don't cover all the supported service discovery mechanisms. The CRD is constantly evolving, adding new features and support for new Service Discoveries. Check the [API documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1alpha1.ScrapeConfig) to see all supported fields.
 
