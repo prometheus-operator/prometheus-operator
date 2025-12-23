@@ -28,6 +28,7 @@ type TimePeriodApplyConfiguration struct {
 	DaysOfMonth []DayOfMonthRangeApplyConfiguration `json:"daysOfMonth,omitempty"`
 	Months      []monitoringv1beta1.MonthRange      `json:"months,omitempty"`
 	Years       []monitoringv1beta1.YearRange       `json:"years,omitempty"`
+	Location    *string                             `json:"location,omitempty"`
 }
 
 // TimePeriodApplyConfiguration constructs a declarative configuration of the TimePeriod type for use with
@@ -89,5 +90,13 @@ func (b *TimePeriodApplyConfiguration) WithYears(values ...monitoringv1beta1.Yea
 	for i := range values {
 		b.Years = append(b.Years, values[i])
 	}
+	return b
+}
+
+// WithLocation sets the Location field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Location field is set to the value of the last call.
+func (b *TimePeriodApplyConfiguration) WithLocation(value string) *TimePeriodApplyConfiguration {
+	b.Location = &value
 	return b
 }
