@@ -24,10 +24,8 @@ import (
 // TLSConfigApplyConfiguration represents a declarative configuration of the TLSConfig type for use
 // with apply.
 type TLSConfigApplyConfiguration struct {
-	SafeTLSConfigApplyConfiguration `json:",inline"`
-	CAFile                          *string `json:"caFile,omitempty"`
-	CertFile                        *string `json:"certFile,omitempty"`
-	KeyFile                         *string `json:"keyFile,omitempty"`
+	SafeTLSConfigApplyConfiguration  `json:",inline"`
+	TLSFilesConfigApplyConfiguration `json:",inline"`
 }
 
 // TLSConfigApplyConfiguration constructs a declarative configuration of the TLSConfig type for use with
@@ -96,7 +94,7 @@ func (b *TLSConfigApplyConfiguration) WithMaxVersion(value monitoringv1.TLSVersi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CAFile field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithCAFile(value string) *TLSConfigApplyConfiguration {
-	b.CAFile = &value
+	b.TLSFilesConfigApplyConfiguration.CAFile = &value
 	return b
 }
 
@@ -104,7 +102,7 @@ func (b *TLSConfigApplyConfiguration) WithCAFile(value string) *TLSConfigApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the CertFile field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithCertFile(value string) *TLSConfigApplyConfiguration {
-	b.CertFile = &value
+	b.TLSFilesConfigApplyConfiguration.CertFile = &value
 	return b
 }
 
@@ -112,6 +110,6 @@ func (b *TLSConfigApplyConfiguration) WithCertFile(value string) *TLSConfigApply
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeyFile field is set to the value of the last call.
 func (b *TLSConfigApplyConfiguration) WithKeyFile(value string) *TLSConfigApplyConfiguration {
-	b.KeyFile = &value
+	b.TLSFilesConfigApplyConfiguration.KeyFile = &value
 	return b
 }

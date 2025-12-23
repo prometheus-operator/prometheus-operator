@@ -253,7 +253,7 @@ func (b *ProbeSpecApplyConfiguration) WithParams(values ...*ProbeParamApplyConfi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BasicAuth field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfiguration) *ProbeSpecApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.BasicAuth = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.BasicAuth = value
 	return b
 }
 
@@ -261,7 +261,7 @@ func (b *ProbeSpecApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfigu
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OAuth2 field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *ProbeSpecApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.OAuth2 = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.OAuth2 = value
 	return b
 }
 
@@ -269,7 +269,23 @@ func (b *ProbeSpecApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BearerTokenSecret field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithBearerTokenSecret(value corev1.SecretKeySelector) *ProbeSpecApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.BearerTokenSecret = &value
+	b.HTTPConfigWithoutTLSApplyConfiguration.BearerTokenSecret = &value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithFollowRedirects(value bool) *ProbeSpecApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithEnableHTTP2(value bool) *ProbeSpecApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.EnableHTTP2 = &value
 	return b
 }
 
@@ -278,21 +294,5 @@ func (b *ProbeSpecApplyConfiguration) WithBearerTokenSecret(value corev1.SecretK
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *ProbeSpecApplyConfiguration {
 	b.HTTPConfigApplyConfiguration.TLSConfig = value
-	return b
-}
-
-// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FollowRedirects field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithFollowRedirects(value bool) *ProbeSpecApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.FollowRedirects = &value
-	return b
-}
-
-// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithEnableHTTP2(value bool) *ProbeSpecApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.EnableHTTP2 = &value
 	return b
 }

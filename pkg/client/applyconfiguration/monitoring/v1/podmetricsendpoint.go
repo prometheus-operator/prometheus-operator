@@ -180,7 +180,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithFilterRunning(value bool) *Po
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithAuthorization(value *SafeAuthorizationApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.Authorization = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.Authorization = value
 	return b
 }
 
@@ -188,7 +188,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithAuthorization(value *SafeAuth
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BasicAuth field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.BasicAuth = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.BasicAuth = value
 	return b
 }
 
@@ -196,7 +196,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithBasicAuth(value *BasicAuthApp
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OAuth2 field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.OAuth2 = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.OAuth2 = value
 	return b
 }
 
@@ -204,7 +204,23 @@ func (b *PodMetricsEndpointApplyConfiguration) WithOAuth2(value *OAuth2ApplyConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BearerTokenSecret field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithBearerTokenSecret(value corev1.SecretKeySelector) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.BearerTokenSecret = &value
+	b.HTTPConfigWithoutTLSApplyConfiguration.BearerTokenSecret = &value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithFollowRedirects(value bool) *PodMetricsEndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *PodMetricsEndpointApplyConfiguration) WithEnableHTTP2(value bool) *PodMetricsEndpointApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.EnableHTTP2 = &value
 	return b
 }
 
@@ -213,22 +229,6 @@ func (b *PodMetricsEndpointApplyConfiguration) WithBearerTokenSecret(value corev
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
 	b.HTTPConfigApplyConfiguration.TLSConfig = value
-	return b
-}
-
-// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FollowRedirects field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithFollowRedirects(value bool) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.FollowRedirects = &value
-	return b
-}
-
-// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithEnableHTTP2(value bool) *PodMetricsEndpointApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.EnableHTTP2 = &value
 	return b
 }
 

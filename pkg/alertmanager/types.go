@@ -119,7 +119,8 @@ type receiver struct {
 	MSTeamsV2Configs  []*msTeamsV2Config  `yaml:"msteamsv2_configs,omitempty"`
 	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
 	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
-	MattermostConfigs []*mattermostConfig `yaml:"mattermost_configs,omitempty" json:"mattermost_configs,omitempty"`
+	MattermostConfigs []*mattermostConfig `yaml:"mattermost_configs,omitempty"`
+	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_config,omitempty"`
 }
 
 type webhookConfig struct {
@@ -537,6 +538,17 @@ type mattermostPriorityConfig struct {
 	Priority                string `yaml:"priority,omitempty" json:"priority,omitempty"`
 	RequestedAck            *bool  `yaml:"requested_ack,omitempty" json:"requested_ack,omitempty"`
 	PersistentNotifications *bool  `yaml:"persistent_notifications,omitempty" json:"persistent_notifications,omitempty"`
+}
+
+type incidentioConfig struct {
+	VSendResolved        *bool             `yaml:"send_resolved,omitempty"`
+	HTTPConfig           *httpClientConfig `yaml:"http_config,omitempty"`
+	URL                  string            `yaml:"url,omitempty"`
+	URLFile              string            `yaml:"url_file,omitempty"`
+	AlertSourceToken     string            `yaml:"alert_source_token,omitempty"`
+	AlertSourceTokenFile string            `yaml:"alert_source_token_file,omitempty"`
+	MaxAlerts            *int32            `yaml:"max_alerts,omitempty"`
+	Timeout              *model.Duration   `yaml:"timeout,omitempty"`
 }
 
 type timeInterval config.TimeInterval
