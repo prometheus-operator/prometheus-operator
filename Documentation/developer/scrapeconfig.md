@@ -3,8 +3,8 @@ weight: 253
 toc: true
 title: ScrapeConfig CRD
 menu:
-    docs:
-        parent: user-guides
+  docs:
+    parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -33,6 +33,50 @@ spec:
 
 With this example, all `ScrapeConfig` having the `prometheus` label set to `system-monitoring-prometheus` will be used
 to generate scrape configurations.
+
+## Namespace Selection
+
+To select `ScrapeConfigs` based on the namespace, `scrapeConfigNamespaceSelector` field can be used.
+
+### Select ScrapeConfigs from all namespaces
+
+Set it to `{}` to match `ScrapeConfigs` from all namespaces:
+
+```yaml
+spec:
+  scrapeConfigSelector:
+    matchLabels:
+      prometheus: system-monitoring-prometheus
+  scrapeConfigNamespaceSelector: {}
+```
+
+### Select ScrapeConfigs from namespaces with specific labels
+
+To select `ScrapeConfigs` only from namespaces with specific labels:
+
+```yaml
+spec:
+  scrapeConfigSelector:
+    matchLabels:
+      prometheus: system-monitoring-prometheus
+  scrapeConfigNamespaceSelector:
+    matchLabels:
+      environment: production
+```
+
+### Select ScrapeConfigs from the current namespace only
+
+If `scrapeConfigNamespaceSelector` is not specified (null), only `ScrapeConfigs` from the same namespace as the Prometheus resource will be selected:
+
+```yaml
+spec:
+  scrapeConfigSelector:
+    matchLabels:
+      prometheus: system-monitoring-prometheus
+  # scrapeConfigNamespaceSelector is not set, so only the current namespace is matched
+```
+
+> **Note:** An empty selector (`{}`) matches all objects/namespaces. A null selector (field not specified) matches no objects for `scrapeConfigSelector`, or only the current namespace for `scrapeConfigNamespaceSelector`.
 
 # Use ScrapeConfig to scrape an external target
 
