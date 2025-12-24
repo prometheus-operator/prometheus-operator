@@ -407,8 +407,9 @@ type ThanosRulerSpec struct {
 	//
 	// A default replica label `thanos_ruler_replica` will be always added as a
 	// label with the value of the pod's name.
-	//nolint:kubeapilinter
+	//
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// alertDropLabels defines the label names which should be dropped in Thanos Ruler
