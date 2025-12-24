@@ -21,8 +21,6 @@ import (
 	"regexp"
 	"strings"
 
-	"k8s.io/utils/ptr"
-
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
@@ -140,21 +138,20 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 }
 
 func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if err := config.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if ptr.Deref[monitoringv1beta1.URL](config.APIURL, "") != "" {
-			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-				return fmt.Errorf("invalid 'apiURL': %w", err)
-			}
+		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -172,38 +169,34 @@ func validateSlackConfigs(configs []monitoringv1beta1.SlackConfig) error {
 }
 
 func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if config.URL == nil && config.URLSecret == nil {
-			return errors.New("one of 'url' or 'urlSecret' must be specified")
+			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
 		}
 
-		if ptr.Deref[monitoringv1beta1.URL](config.URL, "") != "" {
-			if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
-				return fmt.Errorf("invalid 'url': %w", err)
-			}
+		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
-	for _, config := range configs {
-		if config.APIURL != nil {
-			if *config.APIURL != "" {
-				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-					return fmt.Errorf("invalid 'apiURL': %w", err)
-				}
-			}
+	for i, config := range configs {
+		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -310,26 +303,21 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 }
 
 func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
-	for _, config := range configs {
-
+	for i, config := range configs {
 		if config.BotToken == nil && config.BotTokenFile == nil {
-			return fmt.Errorf("mandatory field botToken or botTokenfile is empty")
+			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
 		}
 
 		if config.ChatID == 0 {
-			return fmt.Errorf("mandatory field %q is empty", "chatID")
+			return fmt.Errorf("[%d]: mandatory field %q is empty", i, "chatID")
 		}
 
-		if config.APIURL != nil {
-			if *config.APIURL != "" {
-				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-					return fmt.Errorf("invalid 'apiURL': %w", err)
-				}
-			}
+		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 
@@ -337,15 +325,13 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 }
 
 func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
-	for _, config := range configs {
-		if config.APIURL != nil && *config.APIURL != "" {
-			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-				return fmt.Errorf("invalid 'apiURL': %w", err)
-			}
+	for i, config := range configs {
+		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 
@@ -363,15 +349,13 @@ func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 }
 
 func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) error {
-	for _, config := range configs {
-		if config.APIURL != nil && *config.APIURL != "" {
-			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-				return fmt.Errorf("invalid 'apiURL': %w", err)
-			}
+	for i, config := range configs {
+		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 
