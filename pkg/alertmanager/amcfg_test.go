@@ -3803,7 +3803,8 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
 									{
-										APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										APIURL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										RoutingKey: "abcd",
 									},
 								},
 							},
@@ -3838,7 +3839,8 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
 									{
-										APIURL: ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com")),
+										APIURL:     ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com")),
+										RoutingKey: "abcd",
 									},
 								},
 							},
