@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.86.1
+    app.kubernetes.io/version: 0.87.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -103,7 +103,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - ""
+  - events.k8s.io
   resources:
   - events
   verbs:

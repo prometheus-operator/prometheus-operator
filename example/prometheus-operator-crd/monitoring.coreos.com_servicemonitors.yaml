@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.86.1
+    operator.prometheus.io/version: 0.87.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -95,10 +95,10 @@ spec:
                   properties:
                     authorization:
                       description: |-
-                        authorization configures the Authorization header credentials to use when
-                        scraping the target.
+                        authorization configures the Authorization header credentials used by
+                        the client.
 
-                        Cannot be set at the same time as `basicAuth`, or `oauth2`.
+                        Cannot be set at the same time as `basicAuth`, `bearerTokenSecret` or `oauth2`.
                       properties:
                         credentials:
                           description: credentials defines a key of a Secret in the
@@ -136,10 +136,10 @@ spec:
                       type: object
                     basicAuth:
                       description: |-
-                        basicAuth defines the Basic Authentication credentials to use when
-                        scraping the target.
+                        basicAuth defines the Basic Authentication credentials used by the
+                        client.
 
-                        Cannot be set at the same time as `authorization`, or `oauth2`.
+                        Cannot be set at the same time as `authorization`, `bearerTokenSecret` or `oauth2`.
                       properties:
                         password:
                           description: |-
@@ -202,9 +202,12 @@ spec:
                       type: string
                     bearerTokenSecret:
                       description: |-
-                        bearerTokenSecret defines a key of a Secret containing the bearer
-                        token for scraping targets. The secret needs to be in the same namespace
-                        as the ServiceMonitor object and readable by the Prometheus Operator.
+                        bearerTokenSecret defines a key of a Secret containing the bearer token
+                        used by the client for authentication. The secret needs to be in the
+                        same namespace as the custom resource and readable by the Prometheus
+                        Operator.
+
+                        Cannot be set at the same time as `authorization`, `basicAuth` or `oauth2`.
 
                         Deprecated: use `authorization` instead.
                       properties:
@@ -230,8 +233,7 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                     enableHttp2:
-                      description: enableHttp2 can be used to disable HTTP2 when scraping
-                        the target.
+                      description: enableHttp2 can be used to disable HTTP2.
                       type: boolean
                     filterRunning:
                       description: |-
@@ -244,8 +246,8 @@ spec:
                       type: boolean
                     followRedirects:
                       description: |-
-                        followRedirects defines whether the scrape requests should follow HTTP
-                        3xx redirects.
+                        followRedirects defines whether the client should follow HTTP 3xx
+                        redirects.
                       type: boolean
                     honorLabels:
                       description: |-
@@ -363,11 +365,11 @@ spec:
                       type: string
                     oauth2:
                       description: |-
-                        oauth2 defines the OAuth2 settings to use when scraping the target.
+                        oauth2 defines the OAuth2 settings used by the client.
 
                         It requires Prometheus >= 2.27.0.
 
-                        Cannot be set at the same time as `authorization`, or `basicAuth`.
+                        Cannot be set at the same time as `authorization`, `basicAuth` or `bearerTokenSecret`.
                       properties:
                         clientId:
                           description: |-
@@ -879,8 +881,8 @@ spec:
                         Service. The port must be specified with the container's port property.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
-                      description: tlsConfig defines the TLS configuration to use
-                        when scraping the target.
+                      description: tlsConfig defines TLS configuration used by the
+                        client.
                       properties:
                         ca:
                           description: ca defines the Certificate authority used when
@@ -1179,6 +1181,11 @@ spec:
                   It requires Prometheus >= v2.45.0.
 
                   Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+                type: boolean
+              scrapeNativeHistograms:
+                description: |-
+                  scrapeNativeHistograms defines whether to enable scraping of native histograms.
+                  It requires Prometheus >= v3.8.0.
                 type: boolean
               scrapeProtocols:
                 description: |-

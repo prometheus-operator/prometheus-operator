@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.86.1"
+      "operator.prometheus.io/version": "0.87.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -4047,6 +4047,14 @@
                     "description": "paused defines when a ThanosRuler deployment is paused, no actions except for deletion\nwill be performed on the underlying objects.",
                     "type": "boolean"
                   },
+                  "podManagementPolicy": {
+                    "description": "podManagementPolicy defines the policy for creating/deleting pods when\nscaling up and down.\n\nUnlike the default StatefulSet behavior, the default policy is\n`Parallel` to avoid manual intervention in case a pod gets stuck during\na rollout.\n\nNote that updating this value implies the recreation of the StatefulSet\nwhich incurs a service outage.",
+                    "enum": [
+                      "OrderedReady",
+                      "Parallel"
+                    ],
+                    "type": "string"
+                  },
                   "podMetadata": {
                     "description": "podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.\n\nThe following items are reserved and cannot be overridden:\n* \"app.kubernetes.io/name\" label, set to \"thanos-ruler\".\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/instance\" label, set to the name of the ThanosRuler instance.\n* \"thanos-ruler\" label, set to the name of the ThanosRuler instance.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"thanos-ruler\".",
                     "properties": {
@@ -4190,13 +4198,11 @@
                               "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
-                                  "description": "clientId defines defines the Azure User-assigned Managed identity.",
+                                  "description": "clientId defines the Azure User-assigned Managed identity.\n\nFor Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.",
+                                  "minLength": 1,
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "clientId"
-                              ],
                               "type": "object"
                             },
                             "oauth": {

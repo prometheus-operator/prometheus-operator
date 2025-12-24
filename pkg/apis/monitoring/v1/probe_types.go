@@ -17,7 +17,6 @@ package v1
 import (
 	"errors"
 
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -75,10 +74,12 @@ type ProbeSpec struct {
 	// jobName assigned to scraped metrics by default.
 	// +optional
 	JobName string `json:"jobName,omitempty"`
+
 	// prober defines the specification for the prober to use for probing targets.
 	// The prober.URL parameter is required. Targets cannot be probed if left empty.
 	// +optional
 	ProberSpec ProberSpec `json:"prober,omitempty"`
+
 	// module to use for probing specifying how to probe the target.
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
@@ -96,21 +97,7 @@ type ProbeSpec struct {
 	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
-	// tlsConfig defines the TLS configuration to use when scraping the endpoint.
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// bearerTokenSecret defines the secret to mount to read bearer token for scraping targets. The secret
-	// needs to be in the same namespace as the probe and accessible by
-	// the Prometheus Operator.
-	// +optional
-	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	// basicAuth allow an endpoint to authenticate over basic authentication.
-	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// oauth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+
 	// metricRelabelings defines the RelabelConfig to apply to samples before ingestion.
 	// +optional
 	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
@@ -133,19 +120,23 @@ type ProbeSpec struct {
 	// +listType=set
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
@@ -153,6 +144,7 @@ type ProbeSpec struct {
 
 	// +optional
 	NativeHistogramConfig `json:",inline"`
+
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -174,6 +166,8 @@ type ProbeSpec struct {
 	// +listType=map
 	// +listMapKey=name
 	Params []ProbeParam `json:"params,omitempty"`
+
+	HTTPConfig `json:",inline"`
 }
 
 // ProbeParam defines specification of extra parameters for a Probe.
@@ -225,6 +219,7 @@ type ProbeTargetStaticConfig struct {
 	Targets []string `json:"static,omitempty"`
 	// labels defines all labels assigned to all metrics scraped from the targets.
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 	// relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
 	// scraped.

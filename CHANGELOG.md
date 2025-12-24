@@ -1,3 +1,23 @@
+## Unreleased
+
+* [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
+
+## 0.87.1 / 2025-12-10
+
+* [BUGFIX] Fix the generated Alertmanager configuration for `html` and `monospace` fields of `pushoverConfig` receiver in AlertmanagerConfig CRD. #8153
+
+## 0.87.0 / 2025-11-20
+
+* [FEATURE] Add status subresource for `PrometheusRule` custom resources (requires the `StatusForConfigurationResources` feature gate). #8069 #8086 #8024 #8005
+* [ENHANCEMENT] Avoid statefulset's rollout due to changes in the number of rule configmaps for `Prometheus` and `ThanosRuler`. #8010
+* [ENHANCEMENT] Support Azure system-assigned managed identities for remote-write configuration. #7815
+* [ENHANCEMENT] Add `monospace` field to to `pushoverConfig` receiver in AlertmanagerConfig CRD. #8018
+* [BUGFIX] Propagate Certificate Authority updates for HTTP configuration in Alertmanager's global configuration. #8089
+
+## 0.86.2 / 2025-11-07
+
+* [CHANGE/BUGFIX] Fix operator's permissions to emit Kubernetes events. #8077
+
 ## 0.86.1 / 2025-10-13
 
 * [BUGFIX] Fix formatting of Kubernetes events. #8015

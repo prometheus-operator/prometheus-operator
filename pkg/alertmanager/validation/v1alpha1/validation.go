@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
@@ -114,7 +116,6 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
-
 	}
 
 	return receiverNames, nil
@@ -213,9 +214,11 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 
 func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 	for _, config := range configs {
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return fmt.Errorf("invalid 'apiURL': %w", err)
+		if config.APIURL != nil {
+			if *config.APIURL != "" {
+				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+					return fmt.Errorf("invalid 'apiURL': %w", err)
+				}
 			}
 		}
 
@@ -280,11 +283,9 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 			return errors.New("missing 'routingKey' key")
 		}
 
-		if apiURL := config.APIURL; apiURL != nil {
-			if *apiURL != "" {
-				if _, err := validation.ValidateURL(string(*apiURL)); err != nil {
-					return fmt.Errorf("'apiURL' %s invalid: %w", string(*apiURL), err)
-				}
+		if ptr.Deref[monitoringv1alpha1.URL](config.APIURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return fmt.Errorf("'apiURL' %s invalid: %w", string(*config.APIURL), err)
 			}
 		}
 
@@ -303,6 +304,10 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 
 		if config.Token == nil && config.TokenFile == nil {
 			return fmt.Errorf("one of token or tokenFile must be configured")
+		}
+
+		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
+			return fmt.Errorf("html and monospace options are mutually exclusive")
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -335,6 +340,14 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 
 		if config.ChatID == 0 {
 			return fmt.Errorf("mandatory field %q is empty", "chatID")
+		}
+
+		if config.APIURL != nil {
+			if *config.APIURL != "" {
+				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+					return fmt.Errorf("invalid 'apiURL': %w", err)
+				}
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

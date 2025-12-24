@@ -254,6 +254,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		PagerDutyLinkConfigs:  convertPagerDutyLinkConfigsTo(in.PagerDutyLinkConfigs),
 		HTTPConfig:            convertHTTPConfigTo(in.HTTPConfig),
 		Source:                in.Source,
+		Timeout:               in.Timeout,
 	}
 }
 
@@ -386,6 +387,7 @@ func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsTo(in.Actions),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		Timeout:      in.Timeout,
 	}
 }
 
@@ -414,7 +416,7 @@ func convertWeChatConfigTo(in WeChatConfig) v1alpha1.WeChatConfig {
 	return v1alpha1.WeChatConfig{
 		SendResolved: in.SendResolved,
 		APISecret:    convertSecretKeySelectorTo(in.APISecret),
-		APIURL:       in.APIURL,
+		APIURL:       (*v1alpha1.URL)(in.APIURL),
 		CorpID:       in.CorpID,
 		AgentID:      in.AgentID,
 		ToUser:       in.ToUser,
@@ -477,6 +479,7 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 		Retry:        in.Retry,
 		Expire:       in.Expire,
 		HTML:         in.HTML,
+		Monospace:    in.Monospace,
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 	}
 }
@@ -499,7 +502,7 @@ func convertSNSConfigTo(in SNSConfig) v1alpha1.SNSConfig {
 func convertTelegramConfigTo(in TelegramConfig) v1alpha1.TelegramConfig {
 	return v1alpha1.TelegramConfig{
 		SendResolved:         in.SendResolved,
-		APIURL:               in.APIURL,
+		APIURL:               (*v1alpha1.URL)(in.APIURL),
 		BotToken:             convertSecretKeySelectorTo(in.BotToken),
 		BotTokenFile:         in.BotTokenFile,
 		ChatID:               in.ChatID,

@@ -21,7 +21,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -337,6 +336,7 @@ type CommonPrometheusFields struct {
 	// Labels defined by `spec.replicaExternalLabelName` and
 	// `spec.prometheusExternalLabelName` take precedence over this list.
 	// +optional
+	//nolint:kubeapilinter
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
 
 	// enableRemoteWriteReceiver defines the Prometheus to be used as a receiver for the Prometheus remote
@@ -430,6 +430,7 @@ type CommonPrometheusFields struct {
 
 	// nodeSelector defines on which Nodes the Pods are scheduled.
 	// +optional
+	//nolint:kubeapilinter
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// serviceAccountName is the name of the ServiceAccount to use to run the
@@ -498,6 +499,19 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
+
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
@@ -757,6 +771,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	//
+	// +optional
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	//
 	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
@@ -838,7 +858,7 @@ type CommonPrometheusFields struct {
 	// in a breaking way.
 	//
 	// +optional
-	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
+	TracingConfig *TracingConfig `json:"tracingConfig,omitempty"`
 	// bodySizeLimit defines per-scrape on response body size.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -1311,43 +1331,6 @@ type ShardRetentionPolicy struct {
 	Retain *RetainConfig `json:"retain,omitempty"`
 }
 
-type PrometheusTracingConfig struct {
-	// clientType defines the client used to export the traces. Supported values are `http` or `grpc`.
-	// +kubebuilder:validation:Enum=http;grpc
-	// +optional
-	ClientType *string `json:"clientType"`
-
-	// endpoint to send the traces to. Should be provided in format <host>:<port>.
-	// +kubebuilder:validation:MinLength:=1
-	// +required
-	Endpoint string `json:"endpoint"`
-
-	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
-	// +optional
-	SamplingFraction *resource.Quantity `json:"samplingFraction"`
-
-	// insecure if disabled, the client will use a secure connection.
-	// +optional
-	Insecure *bool `json:"insecure"`
-
-	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
-	// +optional
-	Headers map[string]string `json:"headers"`
-
-	// compression key for supported compression types. The only supported value is `gzip`.
-	// +kubebuilder:validation:Enum=gzip
-	// +optional
-	Compression *string `json:"compression"`
-
-	// timeout defines the maximum time the exporter will wait for each batch export.
-	// +optional
-	Timeout *Duration `json:"timeout"`
-
-	// tlsConfig to use when sending traces.
-	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig"`
-}
-
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.
 // More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
@@ -1683,6 +1666,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// writeRelabelConfigs defines the list of remote write relabel configurations.
@@ -1921,9 +1905,13 @@ type AzureOAuth struct {
 // ManagedIdentity defines the Azure User-assigned Managed identity.
 // +k8s:openapi-gen=true
 type ManagedIdentity struct {
-	// clientId defines defines the Azure User-assigned Managed identity.
-	// +required
-	ClientID string `json:"clientId"`
+	// clientId defines the Azure User-assigned Managed identity.
+	//
+	// For Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.
+	//
+	// +optional
+	// +kubebuilder:validation:MinLength:=1
+	ClientID *string `json:"clientId"`
 }
 
 // AzureSDK is used to store azure SDK config values.
@@ -1954,6 +1942,7 @@ type RemoteReadSpec struct {
 	// requiredMatchers defines an optional list of equality matchers which have to be present
 	// in a selector to query the remote read endpoint.
 	// +optional
+	//nolint:kubeapilinter
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 
 	// remoteTimeout defines the timeout for requests to the remote read endpoint.
@@ -1964,6 +1953,7 @@ type RemoteReadSpec struct {
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	// Only valid in Prometheus versions 2.26.0 and newer.
 	// +optional
+	//nolint:kubeapilinter
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// readRecent defines whether reads should be made for queries for time ranges that

@@ -60,6 +60,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
+	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
 	PriorityClassName                    *string                                                 `json:"priorityClassName,omitempty"`
@@ -78,6 +79,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
 	Limits                               *AlertmanagerLimitsSpecApplyConfiguration               `json:"limits,omitempty"`
+	DispatchStartDelay                   *monitoringv1.GoDuration                                `json:"dispatchStartDelay,omitempty"`
 	ClusterTLS                           *ClusterTLSConfigApplyConfiguration                     `json:"clusterTLS,omitempty"`
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
@@ -385,6 +387,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithListenLocal(value bool) *Alertm
 	return b
 }
 
+// WithPodManagementPolicy sets the PodManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PodManagementPolicy field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *AlertmanagerSpecApplyConfiguration {
+	b.PodManagementPolicy = &value
+	return b
+}
+
 // WithContainers adds the given value to the Containers field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Containers field.
@@ -537,6 +547,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithWeb(value *AlertmanagerWebSpecA
 // If called multiple times, the Limits field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithLimits(value *AlertmanagerLimitsSpecApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
 	b.Limits = value
+	return b
+}
+
+// WithDispatchStartDelay sets the DispatchStartDelay field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DispatchStartDelay field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithDispatchStartDelay(value monitoringv1.GoDuration) *AlertmanagerSpecApplyConfiguration {
+	b.DispatchStartDelay = &value
 	return b
 }
 

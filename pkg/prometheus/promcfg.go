@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -472,6 +473,10 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monitoringv1.NativeHistogramConfig) yaml.MapSlice {
 	if reflect.ValueOf(nhc).IsZero() {
 		return cfg
+	}
+
+	if nhc.ScrapeNativeHistograms != nil {
+		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", nhc.ScrapeNativeHistograms)
 	}
 
 	if nhc.NativeHistogramBucketLimit != nil {
@@ -1803,8 +1808,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
-	if m.Spec.BearerTokenSecret.Name != "" {
-		b, err := s.GetSecretKey(m.Spec.BearerTokenSecret)
+	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		b, err := s.GetSecretKey(*m.Spec.BearerTokenSecret) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if err != nil {
 			cg.logger.Error("invalid bearer token reference", "err", err)
 		} else {
@@ -1886,8 +1891,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
-	if ep.EnableHttp2 != nil {
-		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
+	if ep.EnableHTTP2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHTTP2)
 	}
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
@@ -2653,6 +2658,22 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	return "prometheus.WriteRequest"
 }
 
+// AddRemoteWriteToStore validates the remote-write configurations and loads
+// all secret/configmap references into the store.
+func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	for i, rw := range rws {
+		if err := cg.validateRemoteWriteSpec(rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+
+		if err := addRemoteWritesToStore(ctx, store, namespace, rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapItem {
 	var cfgs []yaml.MapSlice
 
@@ -2752,11 +2773,11 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			azureAd := yaml.MapSlice{}
 
 			if spec.AzureAD.ManagedIdentity != nil {
-				azureAd = append(azureAd,
-					yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
-						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-					}},
-				)
+				managedIdentity := yaml.MapSlice{}
+				if clientID := ptr.Deref(spec.AzureAD.ManagedIdentity.ClientID, ""); clientID != "" {
+					managedIdentity = append(managedIdentity, yaml.MapItem{Key: "client_id", Value: clientID})
+				}
+				azureAd = append(azureAd, yaml.MapItem{Key: "managed_identity", Value: managedIdentity})
 			}
 
 			if spec.AzureAD.OAuth != nil {
@@ -4885,6 +4906,11 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		return cfg, nil
 	}
 
+	err := tracingConfig.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
 	var tracing yaml.MapSlice
 	tracing = append(tracing, yaml.MapItem{
 		Key:   "endpoint",
@@ -4894,7 +4920,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.ClientType != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "client_type",
-			Value: tracingConfig.ClientType,
+			Value: strings.ToLower(*tracingConfig.ClientType),
 		})
 	}
 
@@ -4930,7 +4956,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.Compression != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "compression",
-			Value: tracingConfig.Compression,
+			Value: strings.ToLower(*tracingConfig.Compression),
 		})
 	}
 
@@ -5000,6 +5026,16 @@ func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlic
 	}
 
 	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
+func (cg *ConfigGenerator) appendScrapeNativeHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeNativeHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", *cpf.ScrapeNativeHistograms)
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
@@ -5079,6 +5115,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
+	cfg = cg.appendScrapeNativeHistograms(cfg)
 
 	return cfg
 }

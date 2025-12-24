@@ -1194,7 +1194,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-					APIURL: "https://telegram.api.url",
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://telegram.api.url")),
 					BotToken: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: telegramTestingSecret,
@@ -1783,29 +1783,33 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				RequireTLS: ptr.To(true),
 			},
 			ResolveTimeout: "30s",
-			HTTPConfig: &monitoringv1.HTTPConfig{
-				OAuth2: &monitoringv1.OAuth2{
-					ClientID: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "webhook-client-id",
+			HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+				HTTPConfig: monitoringv1.HTTPConfig{
+					HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
 							},
-							Key: "test",
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "webhook-client-secret",
+								},
+								Key: "test",
+							},
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
+							},
 						},
-					},
-					ClientSecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "webhook-client-secret",
-						},
-						Key: "test",
-					},
-					TokenURL: "https://test.com",
-					Scopes:   []string{"any"},
-					EndpointParams: map[string]string{
-						"some": "value",
+						FollowRedirects: ptr.To(true),
 					},
 				},
-				FollowRedirects: ptr.To(true),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{

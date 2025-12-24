@@ -209,6 +209,10 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 			}
 		}
 
+		if err := endpoint.Validate(); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
 			if _, err := rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
@@ -468,7 +472,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
-		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfig, pm.GetNamespace()); err != nil {
+		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfigWithProxy, pm.GetNamespace()); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
 	}
@@ -482,7 +486,7 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 func (rs *ResourceSelector) addHTTPConfigToStore(
 	ctx context.Context,
-	httpConfig monitoringv1.HTTPConfig,
+	httpConfig monitoringv1.HTTPConfigWithProxy,
 	namespace string) error {
 	if err := httpConfig.Validate(); err != nil {
 		return err
@@ -546,8 +550,8 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 		return err
 	}
 
-	if probe.Spec.BearerTokenSecret.Name != "" && probe.Spec.BearerTokenSecret.Key != "" {
-		if _, err := rs.store.GetSecretKey(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret); err != nil {
+	if probe.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		if _, err := rs.store.GetSecretKey(ctx, probe.GetNamespace(), *probe.Spec.BearerTokenSecret); err != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			return fmt.Errorf("bearerTokenSecret: %w", err)
 		}
 	}
@@ -935,7 +939,15 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 }
 
 func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+
+	if len(sc.Spec.EC2SDConfigs) > 0 {
+		if rs.version.GTE(semver.MustParse("3.8.0")) {
+			return fmt.Errorf("EC2 SD configuration is only supported for Prometheus version < 3.8.0. For Prometheus 3.8.0 onwards, please use AWS SD")
+		}
+	}
+
 	for i, config := range sc.Spec.EC2SDConfigs {
+
 		if config.AccessKey != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
@@ -1306,8 +1318,14 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.27.0")) {
-		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
+	if len(sc.Spec.LightSailSDConfigs) > 0 {
+		if rs.version.LT(semver.MustParse("2.27.0")) {
+			return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
+		}
+
+		if rs.version.GTE(semver.MustParse("3.8.0")) {
+			return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version < 3.8.0. For Prometheus 3.8.0 onwards, please use AWS SD")
+		}
 	}
 
 	for i, config := range sc.Spec.LightSailSDConfigs {

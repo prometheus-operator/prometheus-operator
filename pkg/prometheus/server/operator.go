@@ -54,11 +54,13 @@ const (
 	controllerName            = "prometheus-controller"
 	applicationNameLabelValue = "prometheus"
 
-	unmanagedConfigurationReason         = "ConfigurationUnmanaged"
-	unmanagedConfigurationMessage string = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead."
+	noSelectedResourcesMessage = "No ServiceMonitor, PodMonitor, Probe, ScrapeConfig, and PrometheusRule have been selected."
+
+	unmanagedConfigurationReason  = "ConfigurationUnmanaged"
+	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead."
 )
 
-// Operator manages life cycle of Prometheus deployments and
+// Operator manages the life cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
@@ -112,6 +114,14 @@ type selectedConfigResources struct {
 	bMons         operator.TypedResourcesSelection[*monitoringv1.Probe]
 	scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	rules         operator.PrometheusRuleSelection
+}
+
+func (s *selectedConfigResources) Len() int {
+	return len(s.sMons) +
+		len(s.pMons) +
+		len(s.bMons) +
+		len(s.scrapeConfigs) +
+		s.rules.SelectedLen()
 }
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
@@ -801,6 +811,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
+	c.reconciliations.ResetStatus(key)
 	err := c.sync(ctx, key)
 	c.reconciliations.SetStatus(key, err)
 
@@ -868,6 +879,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
 		return err
+	}
+
+	if resources.Len() == 0 {
+		c.reconciliations.SetReasonAndMessage(key, operator.NoSelectedResourcesReason, noSelectedResourcesMessage)
 	}
 
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules, logger)
@@ -1098,7 +1113,7 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	}
 
 	// Update the status of selected prometheusRules.
-	for key, configResource := range resources.rules.Selected(c.accessor) {
+	for key, configResource := range resources.rules.Selected() {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PrometheusRule %s status: %w", key, err)
 		}
@@ -1127,10 +1142,16 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	if err := operator.CleanupBindings(ctx, c.probeInfs.ListAll, resources.bMons, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for probes: %w", err)
 	}
+
+	// Remove bindings from prometheusRules which reference the
+	// workload but aren't selected anymore.
+	if err := operator.CleanupBindings(ctx, c.ruleInfs.ListAll, resources.rules.Selected(), configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for prometheusRules: %w", err)
+	}
 	return nil
 }
 
-// configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
+// configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig, PrometheusRule and PodMonitor).
 func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.Prometheus) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1156,6 +1177,11 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	// Remove bindings from all probes which reference the workload.
 	if err := operator.CleanupBindings(ctx, c.probeInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.Probe]{}, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for probes: %w", err)
+	}
+
+	// Remove bindings from all prometheusRules which reference the workload.
+	if err := operator.CleanupBindings(ctx, c.ruleInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PrometheusRule]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for prometheusRule: %w", err)
 	}
 	return nil
 }
@@ -1194,16 +1220,6 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	pStatus, err := c.statusReporter.Process(ctx, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus status: %w", err)
-	}
-
-	if c.unmanagedPrometheusConfiguration(p) {
-		for i, condition := range pStatus.Conditions {
-			if condition.Type == monitoringv1.Reconciled && condition.Status == monitoringv1.ConditionTrue {
-				condition.Reason = unmanagedConfigurationReason
-				condition.Message = unmanagedConfigurationMessage
-				pStatus.Conditions[i] = condition
-			}
-		}
 	}
 
 	p.Status = *pStatus
@@ -1364,6 +1380,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
 	if c.unmanagedPrometheusConfiguration(p) {
+		c.reconciliations.SetReasonAndMessage(operator.KeyForObject(p), unmanagedConfigurationReason, unmanagedConfigurationMessage)
+
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {
 			return fmt.Errorf("failed to generate empty configuration secret: %w", err)
@@ -1387,7 +1405,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return err
 	}
 
-	if err := prompkg.AddRemoteWritesToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
+	if err := cg.AddRemoteWriteToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
 		return err
 	}
 

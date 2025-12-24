@@ -1602,6 +1602,10 @@ func checkPushoverConfigs(
 			return err
 		}
 
+		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
+			return errors.New("html and monospace options are mutually exclusive")
+		}
+
 		if config.Expire != "" {
 			if _, err := model.ParseDuration(config.Expire); err != nil {
 				return err

@@ -25,7 +25,7 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return nil
 	}
 
-	if err := gc.HTTPConfig.Validate(); err != nil {
+	if err := gc.HTTPConfigWithProxy.Validate(); err != nil {
 		return fmt.Errorf("httpConfig: %w", err)
 	}
 
