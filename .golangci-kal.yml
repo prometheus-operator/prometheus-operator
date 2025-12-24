@@ -35,6 +35,7 @@ linters:
               - "nophase"
               - "nonullable"
               - "forbiddenmarkers"
+              - "nomaps"
             disable:
               - "*"
           lintersConfig:

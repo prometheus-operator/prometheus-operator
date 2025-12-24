@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -25,7 +26,7 @@ import (
 type WeChatConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
 	APISecret    *v1.SecretKeySelector         `json:"apiSecret,omitempty"`
-	APIURL       *string                       `json:"apiURL,omitempty"`
+	APIURL       *monitoringv1alpha1.URL       `json:"apiURL,omitempty"`
 	CorpID       *string                       `json:"corpID,omitempty"`
 	AgentID      *string                       `json:"agentID,omitempty"`
 	ToUser       *string                       `json:"toUser,omitempty"`
@@ -61,7 +62,7 @@ func (b *WeChatConfigApplyConfiguration) WithAPISecret(value v1.SecretKeySelecto
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *WeChatConfigApplyConfiguration) WithAPIURL(value string) *WeChatConfigApplyConfiguration {
+func (b *WeChatConfigApplyConfiguration) WithAPIURL(value monitoringv1alpha1.URL) *WeChatConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }

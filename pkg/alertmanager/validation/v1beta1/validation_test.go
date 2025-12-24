@@ -132,7 +132,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
-									APIURL: "http://%><invalid.com",
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
 								},
 							},
 						},
@@ -496,7 +496,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
-									APIURL: "https://test.com",
+									APIURL: ptr.To(monitoringv1beta1.URL("https://test.com")),
 								},
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
