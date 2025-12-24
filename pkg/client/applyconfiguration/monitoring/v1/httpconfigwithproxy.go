@@ -37,7 +37,7 @@ func HTTPConfigWithProxy() *HTTPConfigWithProxyApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *HTTPConfigWithProxyApplyConfiguration) WithAuthorization(value *SafeAuthorizationApplyConfiguration) *HTTPConfigWithProxyApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.Authorization = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.Authorization = value
 	return b
 }
 
@@ -45,7 +45,7 @@ func (b *HTTPConfigWithProxyApplyConfiguration) WithAuthorization(value *SafeAut
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BasicAuth field is set to the value of the last call.
 func (b *HTTPConfigWithProxyApplyConfiguration) WithBasicAuth(value *BasicAuthApplyConfiguration) *HTTPConfigWithProxyApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.BasicAuth = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.BasicAuth = value
 	return b
 }
 
@@ -53,7 +53,7 @@ func (b *HTTPConfigWithProxyApplyConfiguration) WithBasicAuth(value *BasicAuthAp
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OAuth2 field is set to the value of the last call.
 func (b *HTTPConfigWithProxyApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration) *HTTPConfigWithProxyApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.OAuth2 = value
+	b.HTTPConfigWithoutTLSApplyConfiguration.OAuth2 = value
 	return b
 }
 
@@ -61,7 +61,23 @@ func (b *HTTPConfigWithProxyApplyConfiguration) WithOAuth2(value *OAuth2ApplyCon
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BearerTokenSecret field is set to the value of the last call.
 func (b *HTTPConfigWithProxyApplyConfiguration) WithBearerTokenSecret(value corev1.SecretKeySelector) *HTTPConfigWithProxyApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.BearerTokenSecret = &value
+	b.HTTPConfigWithoutTLSApplyConfiguration.BearerTokenSecret = &value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *HTTPConfigWithProxyApplyConfiguration) WithFollowRedirects(value bool) *HTTPConfigWithProxyApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *HTTPConfigWithProxyApplyConfiguration) WithEnableHTTP2(value bool) *HTTPConfigWithProxyApplyConfiguration {
+	b.HTTPConfigWithoutTLSApplyConfiguration.EnableHTTP2 = &value
 	return b
 }
 
@@ -70,22 +86,6 @@ func (b *HTTPConfigWithProxyApplyConfiguration) WithBearerTokenSecret(value core
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *HTTPConfigWithProxyApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *HTTPConfigWithProxyApplyConfiguration {
 	b.HTTPConfigApplyConfiguration.TLSConfig = value
-	return b
-}
-
-// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FollowRedirects field is set to the value of the last call.
-func (b *HTTPConfigWithProxyApplyConfiguration) WithFollowRedirects(value bool) *HTTPConfigWithProxyApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.FollowRedirects = &value
-	return b
-}
-
-// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
-func (b *HTTPConfigWithProxyApplyConfiguration) WithEnableHTTP2(value bool) *HTTPConfigWithProxyApplyConfiguration {
-	b.HTTPConfigApplyConfiguration.EnableHTTP2 = &value
 	return b
 }
 

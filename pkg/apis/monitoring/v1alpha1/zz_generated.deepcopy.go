@@ -3169,6 +3169,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.BotToken != nil {
 		in, out := &in.BotToken, &out.BotToken
 		*out = new(corev1.SecretKeySelector)

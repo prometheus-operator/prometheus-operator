@@ -778,7 +778,7 @@ func (b *PrometheusSpecApplyConfiguration) WithPodTargetLabels(values ...string)
 // WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TracingConfig field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithTracingConfig(value *PrometheusTracingConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithTracingConfig(value *TracingConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.TracingConfig = value
 	return b
 }

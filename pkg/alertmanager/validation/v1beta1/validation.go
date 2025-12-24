@@ -318,6 +318,14 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 			return fmt.Errorf("mandatory field %q is empty", "chatID")
 		}
 
+		if config.APIURL != nil {
+			if *config.APIURL != "" {
+				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+					return fmt.Errorf("invalid 'apiURL': %w", err)
+				}
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}

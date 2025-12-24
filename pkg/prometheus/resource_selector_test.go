@@ -1067,28 +1067,32 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "valid TLS config with CA, cert and key",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									CA: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "ca",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
 									},
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									Cert: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "cert",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
 									},
-								},
-							},
-							KeySecret: &v1.SecretKeySelector{
-								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									KeySecret: &v1.SecretKeySelector{
+										Key: "key",
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+									},
 								},
 							},
 						},
@@ -1101,15 +1105,21 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid TLS config with both CA and CAFile",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile: "/etc/secrets/tls/ca.crt",
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									CA: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "ca",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
 									},
+								},
+								TLSFilesConfig: monitoringv1.TLSFilesConfig{
+									CAFile: "/etc/secrets/tls/ca.crt",
 								},
 							},
 						},
@@ -1122,19 +1132,23 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid TLS config with both CA Secret and Configmap",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
-									},
-								},
-								ConfigMap: &v1.ConfigMapKeySelector{
-									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "configmap",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									CA: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "ca",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
+										ConfigMap: &v1.ConfigMapKeySelector{
+											Key: "ca",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "configmap",
+											},
+										},
 									},
 								},
 							},
@@ -1148,13 +1162,17 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid TLS config with invalid CA data",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									CA: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "invalid_ca",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
 									},
 								},
 							},
@@ -1168,13 +1186,17 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid TLS config with cert and missing key",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									Cert: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "cert",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
 									},
 								},
 							},
@@ -1188,12 +1210,16 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid TLS config with key and missing cert",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							KeySecret: &v1.SecretKeySelector{
-								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									KeySecret: &v1.SecretKeySelector{
+										Key: "key",
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+									},
 								},
 							},
 						},
@@ -1206,20 +1232,24 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid TLS config with key and invalid cert",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					TLSConfig: &monitoringv1.TLSConfig{
-						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									Cert: monitoringv1.SecretOrConfigMap{
+										Secret: &v1.SecretKeySelector{
+											Key: "invalid_ca",
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
+											},
+										},
 									},
-								},
-							},
-							KeySecret: &v1.SecretKeySelector{
-								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									KeySecret: &v1.SecretKeySelector{
+										Key: "key",
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+									},
 								},
 							},
 						},
@@ -1232,17 +1262,19 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "valid proxy config",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1255,17 +1287,19 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid proxy config with invalid secret key",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "invalid_key",
 									},
-									Key: "invalid_key",
 								},
 							},
 						},
@@ -1278,17 +1312,19 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid proxy config due to invalid proxy url",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1301,16 +1337,18 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid proxy config with noProxy defined but proxy from environment set to true",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1323,16 +1361,18 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid proxy config with proxy url defined but proxy from environment set to true",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
@@ -1345,14 +1385,16 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid proxy config only with proxy connect header defined",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"header": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
