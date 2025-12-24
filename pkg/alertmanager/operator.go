@@ -1081,6 +1081,11 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				return
 			}
 
+			if err := k8sutil.AddTypeInformationToObject(amConfig); err != nil {
+				c.logger.Error("skipping alertmanagerconfig due to missing type information", "alertmanagerconfig", k, "namespace", am.Namespace, "alertmanager", am.Name, "err", err)
+				return
+			}
+
 			amConfigs[k] = amConfig
 		})
 		if err != nil {
