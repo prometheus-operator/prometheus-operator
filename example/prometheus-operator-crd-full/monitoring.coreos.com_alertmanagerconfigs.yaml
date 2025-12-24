@@ -62,7 +62,7 @@ spec:
                       items:
                         type: string
                       type: array
-                      x-kubernetes-list-type: set
+                      x-kubernetes-list-type: atomic
                     sourceMatch:
                       description: |-
                         sourceMatch defines matchers for which one or more alerts have to exist for the inhibition
@@ -7245,7 +7245,7 @@ spec:
                             items:
                               type: string
                             type: array
-                            x-kubernetes-list-type: set
+                            x-kubernetes-list-type: atomic
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -12010,7 +12010,9 @@ spec:
                   - name
                   type: object
                 type: array
-                x-kubernetes-list-type: atomic
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               route:
                 description: |-
                   route defines the Alertmanager route definition for alerts matching the resource's
@@ -12023,7 +12025,7 @@ spec:
                     items:
                       type: string
                     type: array
-                    x-kubernetes-list-type: set
+                    x-kubernetes-list-type: atomic
                   continue:
                     description: |-
                       continue defines the boolean indicating whether an alert should continue matching subsequent
@@ -12038,7 +12040,7 @@ spec:
                     items:
                       type: string
                     type: array
-                    x-kubernetes-list-type: set
+                    x-kubernetes-list-type: atomic
                   groupInterval:
                     description: |-
                       groupInterval defines how long to wait before sending an updated notification.
@@ -12098,7 +12100,7 @@ spec:
                     items:
                       type: string
                     type: array
-                    x-kubernetes-list-type: set
+                    x-kubernetes-list-type: atomic
                   receiver:
                     description: |-
                       receiver defines the name of the receiver for this route. If not empty, it should be listed in

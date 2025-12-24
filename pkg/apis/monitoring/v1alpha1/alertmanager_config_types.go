@@ -90,7 +90,8 @@ type AlertmanagerConfigSpec struct {
 	// +optional
 	Route *Route `json:"route"`
 	// receivers defines the list of receivers.
-	// +listType=atomic
+	// +listType=map
+	// +listMapKey=name
 	// +optional
 	Receivers []Receiver `json:"receivers"`
 	// inhibitRules defines the list of inhibition rules. The rules will only apply to alerts matching
@@ -113,7 +114,7 @@ type Route struct {
 	// groupBy defines the list of labels to group by.
 	// Labels must not be repeated (unique list).
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
-	// +listType=set
+	// +listType=atomic
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
@@ -156,11 +157,11 @@ type Route struct {
 	// JSON representation.
 
 	// muteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
-	// +listType=set
+	// +listType=atomic
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 	// activeTimeIntervals is a list of MuteTimeInterval names when this route should be active.
-	// +listType=set
+	// +listType=atomic
 	// +optional
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
@@ -443,7 +444,7 @@ type SlackConfig struct {
 	LinkNames bool `json:"linkNames,omitempty"`
 	// mrkdwnIn defines which fields should be parsed as Slack markdown.
 	// Valid values include "pretext", "text", and "fields".
-	// +listType=set
+	// +listType=atomic
 	// +optional
 	MrkdwnIn []string `json:"mrkdwnIn,omitempty"`
 	// actions defines a list of Slack actions that are sent with each notification.
@@ -1358,7 +1359,7 @@ type InhibitRule struct {
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	// equal defines labels that must have an equal value in the source and target alert
 	// for the inhibition to take effect. This ensures related alerts are properly grouped.
-	// +listType=set
+	// +listType=atomic
 	// +optional
 	Equal []string `json:"equal,omitempty"`
 }

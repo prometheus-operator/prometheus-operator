@@ -55,7 +55,7 @@
                             "type": "string"
                           },
                           "type": "array",
-                          "x-kubernetes-list-type": "set"
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "sourceMatch": {
                           "description": "sourceMatch defines matchers for which one or more alerts have to exist for the inhibition\nto take effect. The operator enforces that the alert matches the resource's namespace.\nThese are the \"trigger\" alerts that cause other alerts to be inhibited.",
@@ -6595,7 +6595,7 @@
                                   "type": "string"
                                 },
                                 "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "x-kubernetes-list-type": "atomic"
                               },
                               "pretext": {
                                 "description": "pretext defines optional text that appears above the message attachment block.",
@@ -10924,7 +10924,10 @@
                       "type": "object"
                     },
                     "type": "array",
-                    "x-kubernetes-list-type": "atomic"
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
                   },
                   "route": {
                     "description": "route defines the Alertmanager route definition for alerts matching the resource's\nnamespace. If present, it will be added to the generated Alertmanager\nconfiguration as a first-level route.",
@@ -10935,7 +10938,7 @@
                           "type": "string"
                         },
                         "type": "array",
-                        "x-kubernetes-list-type": "set"
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "continue": {
                         "description": "continue defines the boolean indicating whether an alert should continue matching subsequent\nsibling nodes. It will always be overridden to true for the first-level\nroute by the Prometheus operator.",
@@ -10947,7 +10950,7 @@
                           "type": "string"
                         },
                         "type": "array",
-                        "x-kubernetes-list-type": "set"
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "groupInterval": {
                         "description": "groupInterval defines how long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: \"5m\"",
@@ -11000,7 +11003,7 @@
                           "type": "string"
                         },
                         "type": "array",
-                        "x-kubernetes-list-type": "set"
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "receiver": {
                         "description": "receiver defines the name of the receiver for this route. If not empty, it should be listed in\nthe `receivers` field.",
