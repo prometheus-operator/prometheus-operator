@@ -813,7 +813,7 @@ type WeChatConfig struct {
 	// apiURL defines the WeChat API URL.
 	// When not specified, defaults to the standard WeChat Work API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
 	// +optional
