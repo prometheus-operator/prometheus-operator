@@ -62,6 +62,7 @@ spec:
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: atomic
                     sourceMatch:
                       description: |-
                         sourceMatch defines matchers for which one or more alerts have to exist for the inhibition
@@ -101,6 +102,7 @@ spec:
                         - name
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     targetMatch:
                       description: |-
                         targetMatch defines matchers that have to be fulfilled in the alerts to be muted.
@@ -140,8 +142,10 @@ spec:
                         - name
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               muteTimeIntervals:
                 description: muteTimeIntervals defines the list of MuteTimeInterval
                   specifying when the routes should be muted.
@@ -175,6 +179,7 @@ spec:
                                   type: integer
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           months:
                             description: months defines a list of MonthRange
                             items:
@@ -184,6 +189,7 @@ spec:
                               pattern: ^((?i)january|february|march|april|may|june|july|august|september|october|november|december|1[0-2]|[1-9])(?:((:((?i)january|february|march|april|may|june|july|august|september|october|november|december|1[0-2]|[1-9]))$)|$)
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           times:
                             description: times defines a list of TimeRange
                             items:
@@ -202,6 +208,7 @@ spec:
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           weekdays:
                             description: weekdays defines a list of WeekdayRange
                             items:
@@ -211,6 +218,7 @@ spec:
                               pattern: ^((?i)sun|mon|tues|wednes|thurs|fri|satur)day(?:((:(sun|mon|tues|wednes|thurs|fri|satur)day)$)|$)
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           years:
                             description: years defines a list of YearRange
                             items:
@@ -218,12 +226,15 @@ spec:
                               pattern: ^2\d{3}(?::2\d{3}|$)
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                   required:
                   - name
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               receivers:
                 description: receivers defines the list of receivers.
                 items:
@@ -999,6 +1010,7 @@ spec:
                         - apiURL
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     emailConfigs:
                       description: emailConfigs defines the list of Email configurations.
                       items:
@@ -1097,6 +1109,7 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           hello:
                             description: |-
                               hello defines the hostname to identify to the SMTP server.
@@ -1302,6 +1315,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     msteamsConfigs:
                       description: |-
                         msteamsConfigs defines the list of MSTeams configurations.
@@ -2067,6 +2081,7 @@ spec:
                         - webhookUrl
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     msteamsv2Configs:
                       description: |-
                         msteamsv2Configs defines the list of MSTeamsV2 configurations.
@@ -2827,6 +2842,7 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     name:
                       description: name defines the name of the receiver. Must be
                         unique across all items from the list.
@@ -2904,6 +2920,7 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           entity:
                             description: |-
                               entity defines an optional field that can be used to specify which domain alert is related to.
@@ -3671,6 +3688,7 @@ spec:
                               - type
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -3692,6 +3710,7 @@ spec:
                             type: boolean
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     pagerdutyConfigs:
                       description: pagerdutyConfigs defines the List of PagerDuty
                         configurations.
@@ -3739,6 +3758,7 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           group:
                             description: group defines a cluster or grouping of sources.
                             type: string
@@ -4469,6 +4489,7 @@ spec:
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           pagerDutyLinkConfigs:
                             description: pagerDutyLinkConfigs defines a list of link
                               details to attach that provide further detail about
@@ -4488,6 +4509,7 @@ spec:
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           routingKey:
                             description: |-
                               routingKey defines the secret's key that contains the PagerDuty integration key (when using
@@ -4567,6 +4589,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     pushoverConfigs:
                       description: pushoverConfigs defines the list of Pushover configurations.
                       items:
@@ -5420,6 +5443,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     rocketchatConfigs:
                       description: |-
                         rocketchatConfigs defines the list of RocketChat configurations.
@@ -5458,6 +5482,7 @@ spec:
                               type: object
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: atomic
                           apiURL:
                             description: |-
                               apiURL defines the API URL for RocketChat.
@@ -5510,6 +5535,7 @@ spec:
                               type: object
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: atomic
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration
                               for RocketChat API requests.
@@ -6323,6 +6349,7 @@ spec:
                         - tokenID
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     slackConfigs:
                       description: slackConfigs defines the list of Slack configurations.
                       items:
@@ -6406,6 +6433,7 @@ spec:
                               - type
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           apiURL:
                             description: |-
                               apiURL defines the secret's key that contains the Slack webhook URL.
@@ -6483,6 +6511,7 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           footer:
                             description: footer defines small text displayed at the
                               bottom of the message attachment.
@@ -7216,6 +7245,7 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -7258,6 +7288,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     snsConfigs:
                       description: snsConfigs defines the list of SNS configurations
                       items:
@@ -8089,6 +8120,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     telegramConfigs:
                       description: telegramConfigs defines the list of Telegram configurations.
                       items:
@@ -8884,6 +8916,7 @@ spec:
                         - chatID
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     victoropsConfigs:
                       description: victoropsConfigs defines the list of VictorOps
                         configurations.
@@ -8947,6 +8980,7 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           entityDisplayName:
                             description: |-
                               entityDisplayName contains a summary of the alerted problem.
@@ -9684,6 +9718,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     webexConfigs:
                       description: webexConfigs defines the list of Webex configurations.
                       items:
@@ -10417,6 +10452,7 @@ spec:
                         - roomID
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     webhookConfigs:
                       description: webhookConfigs defines the List of webhook configurations.
                       items:
@@ -11183,6 +11219,7 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     wechatConfigs:
                       description: wechatConfigs defines the list of WeChat configurations.
                       items:
@@ -11970,10 +12007,14 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                   required:
                   - name
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               route:
                 description: |-
                   route defines the Alertmanager route definition for alerts matching the resource's
@@ -11986,6 +12027,7 @@ spec:
                     items:
                       type: string
                     type: array
+                    x-kubernetes-list-type: set
                   continue:
                     description: |-
                       continue defines the boolean indicating whether an alert should continue matching subsequent
@@ -12000,6 +12042,7 @@ spec:
                     items:
                       type: string
                     type: array
+                    x-kubernetes-list-type: set
                   groupInterval:
                     description: |-
                       groupInterval defines how long to wait before sending an updated notification.
@@ -12052,12 +12095,14 @@ spec:
                       - name
                       type: object
                     type: array
+                    x-kubernetes-list-type: atomic
                   muteTimeIntervals:
                     description: muteTimeIntervals is a list of MuteTimeInterval names
                       that will mute this route when matched,
                     items:
                       type: string
                     type: array
+                    x-kubernetes-list-type: set
                   receiver:
                     description: |-
                       receiver defines the name of the receiver for this route. If not empty, it should be listed in
@@ -12074,6 +12119,7 @@ spec:
                     items:
                       x-kubernetes-preserve-unknown-fields: true
                     type: array
+                    x-kubernetes-list-type: atomic
                 type: object
             type: object
           status:
