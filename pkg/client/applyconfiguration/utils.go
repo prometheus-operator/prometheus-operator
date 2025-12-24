@@ -186,6 +186,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RemoteWriteSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RetainConfig"):
 		return &monitoringv1.RetainConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RollingUpdateStatefulSetStrategy"):
+		return &monitoringv1.RollingUpdateStatefulSetStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Rule"):
 		return &monitoringv1.RuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RuleGroup"):
@@ -214,6 +216,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ShardStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Sigv4"):
 		return &monitoringv1.Sigv4ApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("StatefulSetUpdateStrategy"):
+		return &monitoringv1.StatefulSetUpdateStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("StorageSpec"):
 		return &monitoringv1.StorageSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ThanosRuler"):

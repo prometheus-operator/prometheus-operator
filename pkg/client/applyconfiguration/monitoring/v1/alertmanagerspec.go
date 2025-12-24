@@ -61,6 +61,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
 	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
+	UpdateStrategy                       *StatefulSetUpdateStrategyApplyConfiguration            `json:"updateStrategy,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
 	PriorityClassName                    *string                                                 `json:"priorityClassName,omitempty"`
@@ -392,6 +393,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithListenLocal(value bool) *Alertm
 // If called multiple times, the PodManagementPolicy field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *AlertmanagerSpecApplyConfiguration {
 	b.PodManagementPolicy = &value
+	return b
+}
+
+// WithUpdateStrategy sets the UpdateStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UpdateStrategy field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithUpdateStrategy(value *StatefulSetUpdateStrategyApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.UpdateStrategy = value
 	return b
 }
 

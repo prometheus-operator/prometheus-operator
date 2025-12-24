@@ -9356,6 +9356,47 @@
                     },
                     "type": "object"
                   },
+                  "updateStrategy": {
+                    "description": "updateStrategy indicates the strategy that will be employed to update\nPods in the StatefulSet when a revision is made to statefulset's Pod\nTemplate.\n\nThe default strategy is RollingUpdate.",
+                    "properties": {
+                      "rollingUpdate": {
+                        "description": "rollingUpdate is used to communicate parameters when type is RollingUpdate.",
+                        "properties": {
+                          "maxUnavailable": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "description": "maxUnavailable is the maximum number of pods that can be unavailable\nduring the update. The value can be an absolute number (ex: 5) or a\npercentage of desired pods (ex: 10%). Absolute number is calculated from\npercentage by rounding up. This can not be 0.  Defaults to 1. This field\nis alpha-level and is only honored by servers that enable the\nMaxUnavailableStatefulSet feature. The field applies to all pods in the\nrange 0 to Replicas-1.  That means if there is any unavailable pod in\nthe range 0 to Replicas-1, it will be counted towards MaxUnavailable.",
+                            "x-kubernetes-int-or-string": true
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": {
+                        "description": "type indicates the type of the StatefulSetUpdateStrategy.\n\nDefault is RollingUpdate.",
+                        "enum": [
+                          "OnDelete",
+                          "RollingUpdate"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "rollingUpdate requires type to be RollingUpdate",
+                        "rule": "!(self.type != 'RollingUpdate' && has(self.rollingUpdate))"
+                      }
+                    ]
+                  },
                   "version": {
                     "description": "version of Prometheus being deployed. The operator uses this information\nto generate the Prometheus StatefulSet + configuration files.\n\nIf not specified, the operator assumes the latest upstream version of\nPrometheus available at the time when the version of the operator was\nreleased.",
                     "type": "string"
