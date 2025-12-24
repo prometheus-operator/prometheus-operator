@@ -194,7 +194,7 @@ func convertOpsGenieConfigTo(in OpsGenieConfig) v1alpha1.OpsGenieConfig {
 	return v1alpha1.OpsGenieConfig{
 		SendResolved: in.SendResolved,
 		APIKey:       convertSecretKeySelectorTo(in.APIKey),
-		APIURL:       in.APIURL,
+		APIURL:       (*v1alpha1.URL)(in.APIURL),
 		Message:      in.Message,
 		Description:  in.Description,
 		Source:       in.Source,

@@ -2024,6 +2024,11 @@ func (in *OpsGenieConfig) DeepCopyInto(out *OpsGenieConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.UpdateAlerts != nil {
 		in, out := &in.UpdateAlerts, &out.UpdateAlerts
 		*out = new(bool)

@@ -1093,7 +1093,6 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
-		APIURL:        in.APIURL,
 		Message:       in.Message,
 		Description:   in.Description,
 		Source:        in.Source,
@@ -1103,6 +1102,10 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		Actions:       in.Actions,
 		Entity:        in.Entity,
 		UpdateAlerts:  in.UpdateAlerts,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
 	}
 
 	if in.APIKey != nil {

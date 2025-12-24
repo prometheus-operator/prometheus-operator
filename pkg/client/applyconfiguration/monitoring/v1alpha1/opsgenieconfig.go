@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -25,7 +26,7 @@ import (
 type OpsGenieConfigApplyConfiguration struct {
 	SendResolved *bool                                       `json:"sendResolved,omitempty"`
 	APIKey       *v1.SecretKeySelector                       `json:"apiKey,omitempty"`
-	APIURL       *string                                     `json:"apiURL,omitempty"`
+	APIURL       *monitoringv1alpha1.URL                     `json:"apiURL,omitempty"`
 	Message      *string                                     `json:"message,omitempty"`
 	Description  *string                                     `json:"description,omitempty"`
 	Source       *string                                     `json:"source,omitempty"`
@@ -65,7 +66,7 @@ func (b *OpsGenieConfigApplyConfiguration) WithAPIKey(value v1.SecretKeySelector
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *OpsGenieConfigApplyConfiguration) WithAPIURL(value string) *OpsGenieConfigApplyConfiguration {
+func (b *OpsGenieConfigApplyConfiguration) WithAPIURL(value monitoringv1alpha1.URL) *OpsGenieConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }

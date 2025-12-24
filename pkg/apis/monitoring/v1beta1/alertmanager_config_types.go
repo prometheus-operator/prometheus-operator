@@ -622,7 +622,7 @@ type OpsGenieConfig struct {
 	// apiURL defines the URL to send OpsGenie API requests to.
 	// When not specified, defaults to the standard OpsGenie API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
 	// +optional
