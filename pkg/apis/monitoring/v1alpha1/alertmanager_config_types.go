@@ -114,7 +114,7 @@ type Route struct {
 	// groupBy defines the list of labels to group by.
 	// Labels must not be repeated (unique list).
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
-	// +listType=atomic
+	// +listType=set
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
@@ -157,11 +157,11 @@ type Route struct {
 	// JSON representation.
 
 	// muteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
-	// +listType=atomic
+	// +listType=set
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 	// activeTimeIntervals is a list of MuteTimeInterval names when this route should be active.
-	// +listType=atomic
+	// +listType=set
 	// +optional
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }

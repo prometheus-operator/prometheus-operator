@@ -10938,7 +10938,7 @@
                           "type": "string"
                         },
                         "type": "array",
-                        "x-kubernetes-list-type": "atomic"
+                        "x-kubernetes-list-type": "set"
                       },
                       "continue": {
                         "description": "continue defines the boolean indicating whether an alert should continue matching subsequent\nsibling nodes. It will always be overridden to true for the first-level\nroute by the Prometheus operator.",
@@ -10950,7 +10950,7 @@
                           "type": "string"
                         },
                         "type": "array",
-                        "x-kubernetes-list-type": "atomic"
+                        "x-kubernetes-list-type": "set"
                       },
                       "groupInterval": {
                         "description": "groupInterval defines how long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: \"5m\"",
@@ -11003,7 +11003,7 @@
                           "type": "string"
                         },
                         "type": "array",
-                        "x-kubernetes-list-type": "atomic"
+                        "x-kubernetes-list-type": "set"
                       },
                       "receiver": {
                         "description": "receiver defines the name of the receiver for this route. If not empty, it should be listed in\nthe `receivers` field.",

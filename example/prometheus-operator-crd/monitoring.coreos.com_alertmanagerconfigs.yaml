@@ -12026,7 +12026,7 @@ spec:
                     items:
                       type: string
                     type: array
-                    x-kubernetes-list-type: atomic
+                    x-kubernetes-list-type: set
                   continue:
                     description: |-
                       continue defines the boolean indicating whether an alert should continue matching subsequent
@@ -12041,7 +12041,7 @@ spec:
                     items:
                       type: string
                     type: array
-                    x-kubernetes-list-type: atomic
+                    x-kubernetes-list-type: set
                   groupInterval:
                     description: |-
                       groupInterval defines how long to wait before sending an updated notification.
@@ -12101,7 +12101,7 @@ spec:
                     items:
                       type: string
                     type: array
-                    x-kubernetes-list-type: atomic
+                    x-kubernetes-list-type: set
                   receiver:
                     description: |-
                       receiver defines the name of the receiver for this route. If not empty, it should be listed in
