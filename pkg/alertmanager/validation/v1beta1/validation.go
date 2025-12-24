@@ -23,6 +23,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	"k8s.io/utils/ptr"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
@@ -143,11 +144,9 @@ func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
 			return err
 		}
 
-		if config.APIURL != nil {
-			if *config.APIURL != "" {
-				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-					return fmt.Errorf("invalid 'apiURL': %w", err)
-				}
+		if ptr.Deref[monitoringv1beta1.URL](config.APIURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}
 
