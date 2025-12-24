@@ -475,6 +475,10 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 		return cfg
 	}
 
+	if nhc.ScrapeNativeHistograms != nil {
+		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", nhc.ScrapeNativeHistograms)
+	}
+
 	if nhc.NativeHistogramBucketLimit != nil {
 		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "native_histogram_bucket_limit", nhc.NativeHistogramBucketLimit)
 	}
@@ -1887,8 +1891,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
-	if ep.EnableHttp2 != nil {
-		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
+	if ep.EnableHTTP2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHTTP2)
 	}
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
@@ -4902,6 +4906,11 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		return cfg, nil
 	}
 
+	err := tracingConfig.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
 	var tracing yaml.MapSlice
 	tracing = append(tracing, yaml.MapItem{
 		Key:   "endpoint",
@@ -4911,7 +4920,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.ClientType != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "client_type",
-			Value: tracingConfig.ClientType,
+			Value: strings.ToLower(*tracingConfig.ClientType),
 		})
 	}
 
@@ -4947,7 +4956,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.Compression != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "compression",
-			Value: tracingConfig.Compression,
+			Value: strings.ToLower(*tracingConfig.Compression),
 		})
 	}
 
@@ -5017,6 +5026,16 @@ func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlic
 	}
 
 	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
+func (cg *ConfigGenerator) appendScrapeNativeHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeNativeHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", *cpf.ScrapeNativeHistograms)
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
@@ -5096,6 +5115,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
+	cfg = cg.appendScrapeNativeHistograms(cfg)
 
 	return cfg
 }

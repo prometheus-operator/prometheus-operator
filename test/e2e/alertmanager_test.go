@@ -1192,7 +1192,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-					APIURL: "https://telegram.api.url",
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://telegram.api.url")),
 					BotToken: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: telegramTestingSecret,
@@ -1779,28 +1779,30 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			ResolveTimeout: "30s",
 			HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
 				HTTPConfig: monitoringv1.HTTPConfig{
-					OAuth2: &monitoringv1.OAuth2{
-						ClientID: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
+					HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "webhook-client-id",
+									Name: "webhook-client-secret",
 								},
 								Key: "test",
 							},
-						},
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "webhook-client-secret",
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
 							},
-							Key: "test",
 						},
-						TokenURL: "https://test.com",
-						Scopes:   []string{"any"},
-						EndpointParams: map[string]string{
-							"some": "value",
-						},
+						FollowRedirects: ptr.To(true),
 					},
-					FollowRedirects: ptr.To(true),
 				},
 			},
 		},

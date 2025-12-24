@@ -119,6 +119,7 @@ type ThanosRulerSpec struct {
 
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
+	//nolint:kubeapilinter
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// resources defines the resource requirements for single Pods.
@@ -211,6 +212,19 @@ type ThanosRulerSpec struct {
 	// does not bind against the Pod IP.
 	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
+
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
 	// queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.
 	//
@@ -395,6 +409,7 @@ type ThanosRulerSpec struct {
 	// label with the value of the pod's name.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// alertDropLabels defines the label names which should be dropped in Thanos Ruler

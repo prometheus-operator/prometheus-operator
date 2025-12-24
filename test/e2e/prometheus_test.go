@@ -139,30 +139,35 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 			Port:     "mtls",
 			Interval: "1s",
 			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
-			TLSConfig: &monitoringv1.TLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					ServerName: ptr.To("caandserver.com"),
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: testFramework.ScrapingTLSSecret,
+			HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+				HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							ServerName: ptr.To("caandserver.com"),
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: testFramework.ScrapingTLSSecret,
+									},
+									Key: testFramework.CAKey,
+								},
 							},
-							Key: testFramework.CAKey,
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: testFramework.ScrapingTLSSecret,
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: testFramework.ScrapingTLSSecret,
+									},
+									Key: testFramework.CertKey,
+								},
 							},
-							Key: testFramework.CertKey,
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: testFramework.ScrapingTLSSecret,
+								},
+								Key: testFramework.PrivateKey,
+							},
 						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: testFramework.ScrapingTLSSecret,
-						},
-						Key: testFramework.PrivateKey,
 					},
 				},
 			},
@@ -1124,6 +1129,10 @@ func testPromStorageUpdate(t *testing.T) {
 	}
 }
 
+// testPromReloadConfig checks that the Prometheus configuration gets reloaded
+// when users provision the configuration only via additionalScrapeConfigs.
+// The test also ensures that the Reconciled condition highlights that no
+// resources have been selected.
 func testPromReloadConfig(t *testing.T) {
 	for _, tc := range []struct {
 		reloadStrategy monitoringv1.ReloadStrategyType
@@ -1172,23 +1181,25 @@ func testPromReloadConfig(t *testing.T) {
 			}
 
 			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
-			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
-				t.Fatal(err)
-			}
+			p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			require.NoError(t, err)
 
-			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-				t.Fatal(err)
-			} else {
-				testCtx.AddFinalizerFn(finalizerFn)
+			var found bool
+			for _, cond := range p.Status.Conditions {
+				if cond.Type == monitoringv1.Reconciled {
+					require.Equal(t, operator.NoSelectedResourcesReason, cond.Reason)
+					found = true
+				}
 			}
+			require.True(t, found)
 
-			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1); err != nil {
-				t.Fatal(err)
-			}
+			_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
+			require.NoError(t, err)
+
+			err = framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1)
+			require.NoError(t, err)
 
 			cfg.Data["config.yaml"] = []byte(`
 - job_name: testReloadConfig
@@ -1198,13 +1209,11 @@ func testPromReloadConfig(t *testing.T) {
       - 111.111.111.111:9090
       - 111.111.111.112:9090
 `)
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-				t.Fatal(err)
-			}
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+			require.NoError(t, err)
 
-			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2); err != nil {
-				t.Fatal(err)
-			}
+			err = framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2)
+			require.NoError(t, err)
 		})
 	}
 }
@@ -2976,11 +2985,17 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				BearerTokenSecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: name,
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BearerTokenSecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "bearer-token",
+							},
+						},
 					},
-					Key: "bearer-token",
 				},
 			},
 			expectTargets: true,
@@ -2995,10 +3010,16 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/cert.pem",
-					CertFile: "/etc/ca-certificates/cert.pem",
-					KeyFile:  "/etc/ca-certificates/key.pem",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							TLSFilesConfig: monitoringv1.TLSFilesConfig{
+								CAFile:   "/etc/ca-certificates/cert.pem",
+								CertFile: "/etc/ca-certificates/cert.pem",
+								KeyFile:  "/etc/ca-certificates/key.pem",
+							},
+						},
+					},
 				},
 			},
 			expectTargets: true,
@@ -3010,10 +3031,16 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/cert.pem",
-					CertFile: "/etc/ca-certificates/cert.pem",
-					KeyFile:  "/etc/ca-certificates/key.pem",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							TLSFilesConfig: monitoringv1.TLSFilesConfig{
+								CAFile:   "/etc/ca-certificates/cert.pem",
+								CertFile: "/etc/ca-certificates/cert.pem",
+								KeyFile:  "/etc/ca-certificates/key.pem",
+							},
+						},
+					},
 				},
 			},
 			expectTargets: false,
@@ -3025,30 +3052,34 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							SafeTLSConfig: monitoringv1.SafeTLSConfig{
+								InsecureSkipVerify: ptr.To(true),
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+								Cert: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
+								KeySecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "key.pem",
+								},
 							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -3062,30 +3093,34 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							SafeTLSConfig: monitoringv1.SafeTLSConfig{
+								InsecureSkipVerify: ptr.To(true),
+								CA: monitoringv1.SecretOrConfigMap{
+									ConfigMap: &v1.ConfigMapKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+								Cert: monitoringv1.SecretOrConfigMap{
+									ConfigMap: &v1.ConfigMapKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
+								KeySecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "key.pem",
+								},
 							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -3318,22 +3353,26 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 			Port:     "mtls",
 			Interval: "30s",
 			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
-			TLSConfig: &monitoringv1.TLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: ptr.To(true),
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: tlsCertsSecret.Name,
+			HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+				HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: tlsCertsSecret.Name,
+									},
+									Key: "cert.pem",
+								},
 							},
-							Key: "cert.pem",
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: tlsCertsSecret.Name,
+								},
+								Key: "key.pem",
+							},
 						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: tlsCertsSecret.Name,
-						},
-						Key: "key.pem",
 					},
 				},
 			},
@@ -3481,18 +3520,20 @@ func testPromSecurePodMonitor(t *testing.T) {
 				Port: ptr.To("web"),
 				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 					HTTPConfig: monitoringv1.HTTPConfig{
-						BasicAuth: &monitoringv1.BasicAuth{
-							Username: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BasicAuth: &monitoringv1.BasicAuth{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "user",
 								},
-								Key: "user",
-							},
-							Password: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "password",
 								},
-								Key: "password",
 							},
 						},
 					},
@@ -3508,11 +3549,13 @@ func testPromSecurePodMonitor(t *testing.T) {
 				Port: ptr.To("web"),
 				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 					HTTPConfig: monitoringv1.HTTPConfig{
-						BearerTokenSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BearerTokenSecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "bearer-token",
 							},
-							Key: "bearer-token",
 						},
 					},
 				},
@@ -5566,14 +5609,20 @@ func testPrometheusUTF8MetricsSupport(t *testing.T) {
 			Endpoints: []monitoringv1.Endpoint{{
 				Port:     "web",
 				Interval: "30s",
-				BasicAuth: &monitoringv1.BasicAuth{
-					Username: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "username",
-					},
-					Password: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "password",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BasicAuth: &monitoringv1.BasicAuth{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "username",
+								},
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "password",
+								},
+							},
+						},
 					},
 				},
 			}},
@@ -5797,14 +5846,20 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 					TargetLabel:  "service_clustér_label",
 					Action:       "replace",
 				}},
-				BasicAuth: &monitoringv1.BasicAuth{
-					Username: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "username",
-					},
-					Password: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "password",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BasicAuth: &monitoringv1.BasicAuth{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "username",
+								},
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "password",
+								},
+							},
+						},
 					},
 				},
 			}},

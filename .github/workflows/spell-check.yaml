@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Run cSpell
-        uses: streetsidesoftware/cspell-action@3294df585d3d639e30f3bc019cb11940b9866e95
+        uses: streetsidesoftware/cspell-action@e5a858a18b7e0b56e0342b1dcad796308b7341a2
         with:
           incremental_files_only: false
           files:  "**/*.{md,yaml,yml}"

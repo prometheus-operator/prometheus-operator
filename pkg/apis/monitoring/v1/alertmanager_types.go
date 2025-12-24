@@ -201,6 +201,7 @@ type AlertmanagerSpec struct {
 	Paused bool `json:"paused,omitempty"`
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
+	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
@@ -246,6 +247,20 @@ type AlertmanagerSpec struct {
 	// UI, not the gossip communication.
 	// +optional
 	ListenLocal bool `json:"listenLocal,omitempty"`
+
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+
 	// containers allows injecting additional containers. This is meant to
 	// allow adding an authentication proxy to an Alertmanager pod.
 	// Containers described here modify an operator generated container if they
@@ -332,6 +347,12 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
+	// dispatchStartDelay defines the delay duration of the aggregation groups' first flush.
+	// The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.
+	//
+	// It requires Alertmanager >= 0.30.0.
+	// +optional
+	DispatchStartDelay *GoDuration `json:"dispatchStartDelay,omitempty"`
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.

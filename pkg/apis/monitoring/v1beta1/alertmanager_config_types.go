@@ -42,6 +42,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
+// +kubebuilder:subresource:status
 
 // The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
 //
@@ -55,6 +56,14 @@ type AlertmanagerConfig struct {
 	// spec defines the specification of AlertmanagerConfigSpec
 	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ServiceMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
@@ -273,7 +282,11 @@ type PagerDutyConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
 	// +optional
-	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
+	// timeout is the maximum time allowed to invoke the pagerduty
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
@@ -408,6 +421,11 @@ type SlackConfig struct {
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // Validate ensures SlackConfig is valid.
@@ -600,7 +618,7 @@ type OpsGenieConfig struct {
 	// apiURL defines the URL to send OpsGenie API requests to.
 	// When not specified, defaults to the standard OpsGenie API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
 	// +optional
@@ -790,7 +808,7 @@ type WeChatConfig struct {
 	// apiURL defines the WeChat API URL.
 	// When not specified, defaults to the standard WeChat Work API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
 	// +optional
@@ -1053,6 +1071,7 @@ type SNSConfig struct {
 	// attributes defines SNS message attributes as key-value pairs.
 	// These provide additional metadata that can be used for message filtering and routing.
 	// +optional
+	//nolint:kubeapilinter
 	Attributes map[string]string `json:"attributes,omitempty"`
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	// +optional
@@ -1068,7 +1087,7 @@ type TelegramConfig struct {
 	// apiURL defines the Telegram API URL, e.g. https://api.telegram.org.
 	// If not specified, the default Telegram API URL will be used.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// botToken defines the Telegram bot token. It is mutually exclusive with `botTokenFile`.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.

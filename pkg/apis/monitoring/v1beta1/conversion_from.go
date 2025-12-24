@@ -198,7 +198,7 @@ func convertOpsGenieConfigFrom(in v1alpha1.OpsGenieConfig) OpsGenieConfig {
 	return OpsGenieConfig{
 		SendResolved: in.SendResolved,
 		APIKey:       convertSecretKeySelectorFrom(in.APIKey),
-		APIURL:       in.APIURL,
+		APIURL:       (*URL)(in.APIURL),
 		Message:      in.Message,
 		Description:  in.Description,
 		Source:       in.Source,
@@ -258,6 +258,7 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 		PagerDutyLinkConfigs:  convertPagerDutyLinkConfigsFrom(in.PagerDutyLinkConfigs),
 		HTTPConfig:            convertHTTPConfigFrom(in.HTTPConfig),
 		Source:                in.Source,
+		Timeout:               in.Timeout,
 	}
 }
 
@@ -390,6 +391,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+		Timeout:      in.Timeout,
 	}
 }
 
@@ -418,7 +420,7 @@ func convertWeChatConfigFrom(in v1alpha1.WeChatConfig) WeChatConfig {
 	return WeChatConfig{
 		SendResolved: in.SendResolved,
 		APISecret:    convertSecretKeySelectorFrom(in.APISecret),
-		APIURL:       in.APIURL,
+		APIURL:       (*URL)(in.APIURL),
 		CorpID:       in.CorpID,
 		AgentID:      in.AgentID,
 		ToUser:       in.ToUser,
@@ -504,7 +506,7 @@ func convertSNSConfigFrom(in v1alpha1.SNSConfig) SNSConfig {
 func convertTelegramConfigFrom(in v1alpha1.TelegramConfig) TelegramConfig {
 	return TelegramConfig{
 		SendResolved:         in.SendResolved,
-		APIURL:               in.APIURL,
+		APIURL:               (*URL)(in.APIURL),
 		BotToken:             convertSecretKeySelectorFrom(in.BotToken),
 		BotTokenFile:         in.BotTokenFile,
 		ChatID:               in.ChatID,

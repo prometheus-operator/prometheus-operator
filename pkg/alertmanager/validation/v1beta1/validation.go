@@ -21,9 +21,10 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-	"k8s.io/utils/ptr"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
@@ -115,7 +116,6 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
-
 	}
 
 	return receiverNames, nil
@@ -144,8 +144,9 @@ func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
 		if err := config.Validate(); err != nil {
 			return err
 		}
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
+
+		if ptr.Deref[monitoringv1beta1.URL](config.APIURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
 				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}
@@ -191,9 +192,11 @@ func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
 
 func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 	for _, config := range configs {
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return fmt.Errorf("invalid 'apiURL': %w", err)
+		if config.APIURL != nil {
+			if *config.APIURL != "" {
+				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+					return fmt.Errorf("invalid 'apiURL': %w", err)
+				}
 			}
 		}
 
@@ -315,6 +318,14 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 
 		if config.ChatID == 0 {
 			return fmt.Errorf("mandatory field %q is empty", "chatID")
+		}
+
+		if config.APIURL != nil {
+			if *config.APIURL != "" {
+				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+					return fmt.Errorf("invalid 'apiURL': %w", err)
+				}
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

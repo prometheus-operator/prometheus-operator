@@ -34,6 +34,8 @@ linters:
               - "statusoptional"
               - "nophase"
               - "nonullable"
+              - "forbiddenmarkers"
+              - "nomaps"
             disable:
               - "*"
           lintersConfig:
@@ -44,7 +46,14 @@ linters:
                   - ["default", "kubebuilder:default"]
                   - ["required", "kubebuilder:validation:Required", "k8s:required"]
                 description: "A field with a default value cannot be required"
-
+            forbiddenmarkers:
+              markers:
+                - identifier: "+kubebuilder:pruning:PreserveUnknownFields"
+                - identifier: "+kubebuilder:validation:XPreserveUnknownFields"
+                - identifier: "+kubebuilder:validation:items:XPreserveUnknownFields"
+                - identifier: "+kubebuilder:validation:EmbeddedResource"
+                - identifier: "+kubebuilder:validation:XEmbeddedResource"
+                - identifier: "+kubebuilder:validation:items:XEmbeddedResource"
   exclusions:
     generated: strict
     paths:
