@@ -23,6 +23,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"k8s.io/utils/ptr"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
@@ -199,11 +200,9 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 			return errors.New("one of 'url' or 'urlSecret' must be specified")
 		}
 
-		if config.URL != nil {
-			if *config.URL == "" {
-				if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
-					return fmt.Errorf("invalid 'url': %w", err)
-				}
+		if ptr.Deref[monitoringv1alpha1.URL](config.URL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.URL)); err != nil {
+				return fmt.Errorf("invalid 'url': %w", err)
 			}
 		}
 
