@@ -227,8 +227,9 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 	version := "v0.24.0"
 	ctx := context.Background()
 	for _, tc := range []struct {
-		name string
-		spec monitoringv1.PrometheusSpec
+		name         string
+		spec         monitoringv1.PrometheusSpec
+		thanosConfig string
 	}{
 		{
 			name: "prometheus with thanos sidecar",
@@ -237,6 +238,34 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 					Version: &version,
 				},
 			},
+			thanosConfig: "tls_config:\n  insecure_skip_verify: true\n",
+		},
+		{
+			name: "prometheus configured basic auth with thanos sidecar",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					Version: &version,
+				},
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					ServiceAccountName: "prometheus",
+					Web: &monitoringv1.PrometheusWebSpec{
+						WebConfigFileFields: monitoringv1.WebConfigFileFields{
+							BasicAuthUsers: &monitoringv1.BasicAuthUsers{
+								SecretRef: monitoringv1.SecretReference{
+									Name: "test-basic-auth-secret",
+								},
+								ServiceAccountPasswordRef: monitoringv1.SecretKeySelector{
+									SecretReference: monitoringv1.SecretReference{
+										Name: "test-basic-auth-password-secret",
+									},
+									Key: "password",
+								},
+							},
+						},
+					},
+				},
+			},
+			thanosConfig: "tls_config:\n  insecure_skip_verify: true\nbasic_auth:\n  username: prometheus\n  password: prometheus-password\n",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -247,13 +276,40 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 				},
 				Spec: tc.spec,
 			}
+
+			testBasicAuthSecret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-basic-auth-secret",
+					Namespace: "test"},
+				StringData: map[string]string{
+					"foo":        "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay",
+					"bar":        "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay",
+					"prometheus": "$2a$12$6H/IeGCSIqdl2Bg1Mk3D5ebqbc6qESkmIwBXiJLLg/nDN3OVQBF76",
+				},
+			}
+			testBasicAuthPodCredentialsSecret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-basic-auth-password-secret",
+					Namespace: "test",
+				},
+				Data: map[string][]byte{
+					"password": []byte("prometheus-password"),
+				},
+			}
+
 			o := Operator{kclient: fake.NewClientset()}
-			err := o.createOrUpdateThanosConfigSecret(ctx, p)
+
+			_, err := o.kclient.CoreV1().Secrets("test").Create(context.Background(), testBasicAuthSecret, metav1.CreateOptions{})
+			require.NoError(t, err)
+			_, err = o.kclient.CoreV1().Secrets("test").Create(context.Background(), testBasicAuthPodCredentialsSecret, metav1.CreateOptions{})
+			require.NoError(t, err)
+
+			err = o.createOrUpdateThanosConfigSecret(ctx, p)
 			require.NoError(t, err)
 
 			get, err := o.kclient.CoreV1().Secrets("test").Get(ctx, thanosPrometheusHTTPClientConfigSecretName(p), metav1.GetOptions{})
 			require.NoError(t, err)
-			require.Equal(t, "tls_config:\n  insecure_skip_verify: true\n", string(get.Data[thanosPrometheusHTTPClientConfigFileName]))
+			require.Equal(t, tc.thanosConfig, string(get.Data[thanosPrometheusHTTPClientConfigFileName]))
 		})
 	}
 }

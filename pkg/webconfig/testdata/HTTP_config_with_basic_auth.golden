@@ -1,0 +1,2 @@
+basic_auth_users:
+  prometheus: $2a$12$6H/IeGCSIqdl2Bg1Mk3D5ebqbc6qESkmIwBXiJLLg/nDN3OVQBF76

@@ -50,13 +50,13 @@ const (
 	DefaultPortName        = "web"
 	DefaultLogFileVolume   = "log-file"
 	DefaultLogDirectory    = "/var/log/prometheus"
-
 	// DefaultTerminationGracePeriodSeconds defines how long Kubernetes should
 	// wait before killing Prometheus on pod termination.
 	// Prometheus may take a significant time to shut down due to data
 	// checkpointing. By default, the operator allows up to 10 minutes for
 	// clean termination.
 	DefaultTerminationGracePeriodSeconds = int64(600)
+	ConfigReloaderSecretsDir             = "/etc/config-reloader/secrets"
 )
 
 var (
@@ -392,7 +392,9 @@ func BuildConfigReloader(
 			}),
 		)
 	}
-
+	if cpf.Web != nil && cpf.Web.BasicAuthUsers != nil {
+		reloaderOptions = append(reloaderOptions, operator.BasicAuthUserInfo(cpf.ServiceAccountName, fmt.Sprintf("%s/%s", ConfigReloaderSecretsDir, "basic-auth-password")))
+	}
 	return operator.CreateConfigReloader(name, reloaderOptions...)
 }
 

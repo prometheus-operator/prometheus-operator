@@ -45,24 +45,26 @@ const (
 // ConfigReloader contains the options to configure
 // a config-reloader container.
 type ConfigReloader struct {
-	name               string
-	config             ContainerConfig
-	webConfigFile      string
-	configFile         string
-	configEnvsubstFile string
-	imagePullPolicy    v1.PullPolicy
-	listenLocal        bool
-	localHost          string
-	logFormat          string
-	logLevel           string
-	reloadURL          url.URL
-	runtimeInfoURL     url.URL
-	initContainer      bool
-	shard              *int32
-	volumeMounts       []v1.VolumeMount
-	watchedDirectories []string
-	useSignal          bool
-	withNodeNameEnv    bool
+	name                  string
+	config                ContainerConfig
+	webConfigFile         string
+	configFile            string
+	configEnvsubstFile    string
+	imagePullPolicy       v1.PullPolicy
+	listenLocal           bool
+	localHost             string
+	logFormat             string
+	logLevel              string
+	reloadURL             url.URL
+	runtimeInfoURL        url.URL
+	initContainer         bool
+	shard                 *int32
+	volumeMounts          []v1.VolumeMount
+	watchedDirectories    []string
+	useSignal             bool
+	withNodeNameEnv       bool
+	basicAuthUsername     *string
+	basicAuthPasswordFile *string
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -189,6 +191,13 @@ func WithDaemonSetMode() ReloaderOption {
 	}
 }
 
+func BasicAuthUserInfo(basicAuthUserName, basicAuthUserPasswordFile string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.basicAuthUsername = &basicAuthUserName
+		c.basicAuthPasswordFile = &basicAuthUserPasswordFile
+	}
+}
+
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
@@ -293,6 +302,11 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 			Name:  ShardEnvVar,
 			Value: strconv.Itoa(int(*configReloader.shard)),
 		})
+	}
+
+	if configReloader.basicAuthUsername != nil && configReloader.basicAuthPasswordFile != nil {
+		args = append(args, fmt.Sprintf("--basic-auth-username=%s", *configReloader.basicAuthUsername))
+		args = append(args, fmt.Sprintf("--basic-auth-password-file=%s", *configReloader.basicAuthPasswordFile))
 	}
 
 	c := v1.Container{

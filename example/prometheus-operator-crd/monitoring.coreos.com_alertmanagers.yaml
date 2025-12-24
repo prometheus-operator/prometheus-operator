@@ -9505,6 +9505,50 @@ spec:
                 description: web defines the web command line flags when starting
                   Alertmanager.
                 properties:
+                  basicAuthUsers:
+                    description: basicAuthUsers defines the basic auth users for server.
+                    properties:
+                      secretRef:
+                        description: |-
+                          secretRef defines the secret containing the list of users (keys) with their hashed passwords (values).
+                          the secret must contain a key for the service account.
+                        properties:
+                          name:
+                            description: name of the secret in the resource's namespace.
+                            minLength: 1
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      serviceAccountPasswordRef:
+                        description: |-
+                          serviceAccountPasswordRef defines the secret's key holding the password used by the service account to query the web server.
+                          the service account must exist in the users secret.
+                        properties:
+                          key:
+                            description: key of the secret to select from.
+                            minLength: 1
+                            type: string
+                          secretRef:
+                            description: secretRef defines the secret containing the
+                              key to select from.
+                            properties:
+                              name:
+                                description: name of the secret in the resource's
+                                  namespace.
+                                minLength: 1
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - key
+                        - secretRef
+                        type: object
+                    required:
+                    - secretRef
+                    - serviceAccountPasswordRef
+                    type: object
                   getConcurrency:
                     description: |-
                       getConcurrency defines the maximum number of GET requests processed concurrently. This corresponds to the

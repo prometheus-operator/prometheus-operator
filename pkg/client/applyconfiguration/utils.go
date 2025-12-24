@@ -72,6 +72,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureSDKApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("BasicAuthUsers"):
+		return &monitoringv1.BasicAuthUsersApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfig"):
 		return &monitoringv1.ClusterTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
@@ -202,8 +204,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.SafeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ScrapeClass"):
 		return &monitoringv1.ScrapeClassApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("SecretKeySelector"):
+		return &monitoringv1.SecretKeySelectorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SecretOrConfigMap"):
 		return &monitoringv1.SecretOrConfigMapApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("SecretReference"):
+		return &monitoringv1.SecretReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitor"):
 		return &monitoringv1.ServiceMonitorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitorSpec"):
