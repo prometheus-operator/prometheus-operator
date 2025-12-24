@@ -144,8 +144,9 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 		if err := config.Validate(); err != nil {
 			return err
 		}
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
+
+		if ptr.Deref[monitoringv1alpha1.URL](config.APIURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
 				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}

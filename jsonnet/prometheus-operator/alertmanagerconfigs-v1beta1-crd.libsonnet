@@ -2492,6 +2492,7 @@
                           },
                           apiURL: {
                             description: 'apiURL defines the URL to send OpsGenie API requests to.\nWhen not specified, defaults to the standard OpsGenie API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           description: {
