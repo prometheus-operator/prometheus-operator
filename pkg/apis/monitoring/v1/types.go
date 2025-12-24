@@ -116,7 +116,7 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	// +mapType:=atomic
-	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"` //nolint:kubeapilinter
 }
 
 // Validate semantically validates the given ProxyConfig.
@@ -330,6 +330,7 @@ type EmbeddedObjectMetadata struct {
 	// and services.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
 
 	// annotations defines an unstructured key value map stored with a resource that may be
@@ -337,6 +338,7 @@ type EmbeddedObjectMetadata struct {
 	// queryable and should be preserved when modifying objects.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	// +optional
+	//nolint:kubeapilinter
 	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
 }
 
@@ -572,6 +574,7 @@ type Endpoint struct {
 
 	// params define optional HTTP URL parameters.
 	// +optional
+	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
 
 	// interval at which Prometheus scrapes the metrics from the target.
@@ -685,6 +688,7 @@ type OAuth2 struct {
 	// URL.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 
 	// tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
