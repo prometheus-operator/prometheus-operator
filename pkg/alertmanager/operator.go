@@ -34,6 +34,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
@@ -150,6 +151,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	// All the metrics exposed by the controller get the controller="alertmanager" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "alertmanager"}, r)
 
@@ -157,6 +163,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		kclient:    client,
 		mdClient:   mdClient,
 		mclient:    mclient,
+		dclient:    dclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
 		logger:   logger,
@@ -1069,20 +1076,22 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj any) {
-			k, ok := c.accessor.MetaNamespaceKey(obj)
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(o any) {
+			k, ok := c.accessor.MetaNamespaceKey(o)
 			if !ok {
+				return
+			}
+
+			obj := o.(runtime.Object)
+			obj = obj.DeepCopyObject()
+			if err := k8sutil.AddTypeInformationToObject(obj); err != nil {
+				c.logger.Error("skipping alertmanagerconfig due to missing type information", "alertmanagerconfig", k, "namespace", am.Namespace, "alertmanager", am.Name, "err", err)
 				return
 			}
 
 			amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
 			if am.Spec.AlertmanagerConfiguration != nil && amConfig.Namespace == am.Namespace && amConfig.Name == am.Spec.AlertmanagerConfiguration.Name {
 				// Skip the global AlertmanagerConfig object.
-				return
-			}
-
-			if err := k8sutil.AddTypeInformationToObject(amConfig); err != nil {
-				c.logger.Error("skipping alertmanagerconfig due to missing type information", "alertmanagerconfig", k, "namespace", am.Namespace, "alertmanager", am.Name, "err", err)
 				return
 			}
 
