@@ -88,7 +88,7 @@ type RuleGroup struct {
 	// It requires Prometheus >= 3.0.0.
 	// The field is ignored for Thanos Ruler.
 	// +optional
-	////nolint:kubeapilinter
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 	// interval defines how often rules in the group are evaluated.
 	// +optional
