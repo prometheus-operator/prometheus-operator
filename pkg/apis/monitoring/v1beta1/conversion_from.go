@@ -198,7 +198,7 @@ func convertOpsGenieConfigFrom(in v1alpha1.OpsGenieConfig) OpsGenieConfig {
 	return OpsGenieConfig{
 		SendResolved: in.SendResolved,
 		APIKey:       convertSecretKeySelectorFrom(in.APIKey),
-		APIURL:       in.APIURL,
+		APIURL:       (*URL)(in.APIURL),
 		Message:      in.Message,
 		Description:  in.Description,
 		Source:       in.Source,
