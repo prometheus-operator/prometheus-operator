@@ -87,6 +87,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
 	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
 	HostUsers                            *bool                                                   `json:"hostUsers,omitempty"`
+	TracingConfig                        *TracingConfigApplyConfiguration                        `json:"tracingConfig,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
@@ -618,5 +619,13 @@ func (b *AlertmanagerSpecApplyConfiguration) WithTerminationGracePeriodSeconds(v
 // If called multiple times, the HostUsers field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithHostUsers(value bool) *AlertmanagerSpecApplyConfiguration {
 	b.HostUsers = &value
+	return b
+}
+
+// WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TracingConfig field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithTracingConfig(value *TracingConfigApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.TracingConfig = value
 	return b
 }

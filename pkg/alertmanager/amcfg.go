@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net"
 	"net/url"
 	"path"
@@ -229,6 +230,7 @@ func (one *otherNamespaceEnforcer) processRoute(crKey types.NamespacedName, r *r
 type ConfigBuilder struct {
 	cfg       *alertmanagerConfig
 	logger    *slog.Logger
+	am        *monitoringv1.Alertmanager
 	amVersion semver.Version
 	store     *assets.StoreBuilder
 	enforcer  enforcer
@@ -239,6 +241,7 @@ func NewConfigBuilder(logger *slog.Logger, amVersion semver.Version, store *asse
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
+		am:        am,
 		enforcer:  getEnforcer(am.Spec.AlertmanagerConfigMatcherStrategy, amVersion, am.Namespace),
 	}
 	return cg
@@ -330,6 +333,17 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 	if err := checkAlertmanagerConfigRootRoute(globalAlertmanagerConfig.Route); err != nil {
 		return err
 	}
+
+	if err := checkTracingConfig(cb.am.Spec.TracingConfig, cb.amVersion); err != nil {
+		return err
+	}
+
+	tc, err := cb.convertTracingConfig(ctx, cb.am.Spec.TracingConfig, crKey)
+	if err != nil {
+		return err
+	}
+
+	globalAlertmanagerConfig.TracingConfig = tc
 
 	cb.cfg = globalAlertmanagerConfig
 	return nil
@@ -586,6 +600,55 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		MuteTimeIntervals:   prefixedMuteTimeIntervals,
 		ActiveTimeIntervals: prefixedActiveTimeIntervals,
 	}
+}
+
+// convertTracingConfig converts a monitoringv1.TracingConfig to an alertmanager.tracingconfig.
+func (cb *ConfigBuilder) convertTracingConfig(_ context.Context, in *monitoringv1.TracingConfig, crKey types.NamespacedName) (*tracingConfig, error) {
+	if in == nil {
+		return nil, nil
+	}
+
+	out := &tracingConfig{
+		Endpoint: in.Endpoint,
+	}
+
+	if in.ClientType != nil {
+		out.ClientType = *in.ClientType
+	}
+
+	if in.Insecure != nil {
+		out.Insecure = *in.Insecure
+	}
+
+	if in.Compression != nil {
+		out.Compression = *in.Compression
+	}
+
+	if in.SamplingFraction != nil {
+		out.SamplingFraction = in.SamplingFraction.AsFloat64Slow()
+	}
+
+	if l := len(in.Headers); l > 0 {
+		headers := make(map[string]string, l)
+		maps.Copy(headers, in.Headers)
+		out.Headers = headers
+	}
+
+	if in.TLSConfig != nil {
+		out.TLSConfig = cb.convertTLSConfig(&in.TLSConfig.SafeTLSConfig, crKey)
+	}
+
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
+	return out, nil
 }
 
 // convertReceiver converts a monitoringv1alpha1.Receiver to an alertmanager.receiver.
@@ -2048,6 +2111,12 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger *slog.Log
 		if err := ti.sanitize(amVersion, logger); err != nil {
 			return fmt.Errorf("time_intervals[%s]: %w", ti.Name, err)
 		}
+	}
+
+	if c.TracingConfig != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		// tracingConfig are unsupported < 0.30.0, and we already log the situation
+		// when handling the routes so just set to nil
+		c.TracingConfig = nil
 	}
 
 	return c.Route.sanitize(amVersion, logger)

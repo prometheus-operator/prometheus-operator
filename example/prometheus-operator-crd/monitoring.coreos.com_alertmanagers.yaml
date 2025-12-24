@@ -7544,6 +7544,237 @@ spec:
                   - whenUnsatisfiable
                   type: object
                 type: array
+              tracingConfig:
+                description: |-
+                  tracingConfig defines tracing in alertmanager.
+                  It requires Alertmanager >= 0.30.0.
+                properties:
+                  clientType:
+                    description: clientType defines the client used to export the
+                      traces. Supported values are `HTTP` and `GRPC`.
+                    enum:
+                    - http
+                    - grpc
+                    - HTTP
+                    - GRPC
+                    type: string
+                  compression:
+                    description: compression key for supported compression types.
+                      The only supported value is `Gzip`.
+                    enum:
+                    - gzip
+                    - Gzip
+                    type: string
+                  endpoint:
+                    description: endpoint to send the traces to. Should be provided
+                      in format <host>:<port>.
+                    minLength: 1
+                    type: string
+                  headers:
+                    additionalProperties:
+                      type: string
+                    description: headers defines the key-value pairs to be used as
+                      headers associated with gRPC or HTTP requests.
+                    type: object
+                  insecure:
+                    description: insecure if disabled, the client will use a secure
+                      connection.
+                    type: boolean
+                  samplingFraction:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: samplingFraction defines the probability a given
+                      trace will be sampled. Must be a float from 0 through 1.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  timeout:
+                    description: timeout defines the maximum time the exporter will
+                      wait for each batch export.
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
+                  tlsConfig:
+                    description: tlsConfig to use when sending traces.
+                    properties:
+                      ca:
+                        description: ca defines the Certificate authority used when
+                          verifying server certificates.
+                        properties:
+                          configMap:
+                            description: configMap defines the ConfigMap containing
+                              data to use for the targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: secret defines the Secret containing data
+                              to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      caFile:
+                        description: caFile defines the path to the CA cert in the
+                          Prometheus container to use for the targets.
+                        type: string
+                      cert:
+                        description: cert defines the Client certificate to present
+                          when doing client-authentication.
+                        properties:
+                          configMap:
+                            description: configMap defines the ConfigMap containing
+                              data to use for the targets.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          secret:
+                            description: secret defines the Secret containing data
+                              to use for the targets.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        type: object
+                      certFile:
+                        description: certFile defines the path to the client cert
+                          file in the Prometheus container for the targets.
+                        type: string
+                      insecureSkipVerify:
+                        description: insecureSkipVerify defines how to disable target
+                          certificate validation.
+                        type: boolean
+                      keyFile:
+                        description: keyFile defines the path to the client key file
+                          in the Prometheus container for the targets.
+                        type: string
+                      keySecret:
+                        description: keySecret defines the Secret containing the client
+                          key file for the targets.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      maxVersion:
+                        description: |-
+                          maxVersion defines the maximum acceptable TLS version.
+
+                          It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
+                        enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                        type: string
+                      minVersion:
+                        description: |-
+                          minVersion defines the minimum acceptable TLS version.
+
+                          It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
+                        enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                        type: string
+                      serverName:
+                        description: serverName is used to verify the hostname for
+                          the targets.
+                        type: string
+                    type: object
+                required:
+                - endpoint
+                type: object
               version:
                 description: version the cluster should be on.
                 type: string

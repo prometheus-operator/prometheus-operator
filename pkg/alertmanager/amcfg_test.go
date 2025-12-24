@@ -32,6 +32,7 @@ import (
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -82,6 +83,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version30, err := semver.ParseTolerant("v0.30.0")
+	require.NoError(t, err)
+
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
@@ -107,6 +111,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
+		amSpec          *monitoringv1.AlertmanagerSpec
 		globalConfig    *monitoringv1.AlertmanagerGlobalConfig
 		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
@@ -115,7 +120,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	}{
 		{
 			name:      "valid global config",
-			amVersion: &version28,
+			amVersion: &version30,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
 					From: ptr.To("from"),
@@ -171,6 +176,29 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 								},
 							},
 							FollowRedirects: ptr.To(true),
+						},
+					},
+				},
+			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					ClientType:       ptr.To("grpc"),
+					Endpoint:         "tracing-service:9090",
+					SamplingFraction: ptr.To(resource.MustParse("0.56")),
+					Insecure:         ptr.To(true),
+					Headers:          map[string]string{"aa": "bb", "cc": ""},
+					Compression:      ptr.To("gzip"),
+					Timeout:          ptr.To(monitoringv1.Duration("5s")),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
+								},
+							},
 						},
 					},
 				},
@@ -1905,6 +1933,200 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:      "invalid TracingConfig config with alertmanager version30",
+			amVersion: &version30,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					ClientType:       ptr.To("grpc"),
+					Endpoint:         "tracing-service:9090",
+					SamplingFraction: ptr.To(resource.MustParse("2")),
+					Insecure:         ptr.To(true),
+					Headers:          map[string]string{"aa": "bb", "cc": ""},
+					Compression:      ptr.To("gzip"),
+					Timeout:          ptr.To(monitoringv1.Duration("5s")),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
+								},
+							},
+						},
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid TracingConfig config with alertmanager version28",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					ClientType:       ptr.To("grpc"),
+					Endpoint:         "tracing-service:9090",
+					SamplingFraction: ptr.To(resource.MustParse("0.999999")),
+					Insecure:         ptr.To(true),
+					Headers:          map[string]string{"aa": "bb", "cc": ""},
+					Compression:      ptr.To("gzip"),
+					Timeout:          ptr.To(monitoringv1.Duration("5s")),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "proxy-ca-certificate",
+									},
+									Key: "certificate",
+								},
+							},
+						},
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid TracingConfig config is simple with alertmanager version30",
+			amVersion: &version30,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: &monitoringv1.TracingConfig{
+					Endpoint: "abc",
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_tracingconfig_simple.golden",
+		},
+		{
+			name:      "invalid TracingConfig config is simple with alertmanager version30",
+			amVersion: &version30,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				ResolveTimeout: "30s",
+			},
+			amSpec: &monitoringv1.AlertmanagerSpec{
+				TracingConfig: nil,
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_tracingconfig_nil.golden",
+		},
 	}
 	for _, tt := range tests {
 		if tt.amVersion == nil {
@@ -2030,19 +2252,26 @@ Z8Ja2z8jw1xUKxfurno8wsAgFAQLuUZ0sTpwHBtwzFEdIeaAHBbNkkuGq7leIw/u
 				},
 			},
 		)
+
+		amSpec := monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tt.matcherStrategy}
+		if tt.amSpec != nil {
+			amSpec = *tt.amSpec
+			amSpec.AlertmanagerConfigMatcherStrategy = tt.matcherStrategy
+		}
+
 		cb := NewConfigBuilder(
 			newNopLogger(t),
 			*tt.amVersion,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			&monitoringv1.Alertmanager{
 				ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
-				Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tt.matcherStrategy},
+				Spec:       amSpec,
 			},
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
 			if tt.wantErr {
-				t.Logf("err: %s", err)
+				t.Logf("err: %s", err.Error())
 				require.Error(t, err)
 				return
 			}
