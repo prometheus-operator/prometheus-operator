@@ -336,6 +336,7 @@ type CommonPrometheusFields struct {
 	// Labels defined by `spec.replicaExternalLabelName` and
 	// `spec.prometheusExternalLabelName` take precedence over this list.
 	// +optional
+	//nolint:kubeapilinter
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
 
 	// enableRemoteWriteReceiver defines the Prometheus to be used as a receiver for the Prometheus remote
@@ -429,6 +430,7 @@ type CommonPrometheusFields struct {
 
 	// nodeSelector defines on which Nodes the Pods are scheduled.
 	// +optional
+	//nolint:kubeapilinter
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// serviceAccountName is the name of the ServiceAccount to use to run the
@@ -1664,6 +1666,7 @@ type RemoteWriteSpec struct {
 	// It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// writeRelabelConfigs defines the list of remote write relabel configurations.
@@ -1939,6 +1942,7 @@ type RemoteReadSpec struct {
 	// requiredMatchers defines an optional list of equality matchers which have to be present
 	// in a selector to query the remote read endpoint.
 	// +optional
+	//nolint:kubeapilinter
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 
 	// remoteTimeout defines the timeout for requests to the remote read endpoint.
@@ -1949,6 +1953,7 @@ type RemoteReadSpec struct {
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	// Only valid in Prometheus versions 2.26.0 and newer.
 	// +optional
+	//nolint:kubeapilinter
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// readRecent defines whether reads should be made for queries for time ranges that

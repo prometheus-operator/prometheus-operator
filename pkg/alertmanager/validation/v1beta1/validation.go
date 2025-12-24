@@ -193,9 +193,11 @@ func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
 
 func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 	for _, config := range configs {
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return fmt.Errorf("invalid 'apiURL': %w", err)
+		if config.APIURL != nil {
+			if *config.APIURL != "" {
+				if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+					return fmt.Errorf("invalid 'apiURL': %w", err)
+				}
 			}
 		}
 

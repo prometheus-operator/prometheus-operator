@@ -10828,6 +10828,7 @@
                           },
                           apiURL: {
                             description: 'apiURL defines the WeChat API URL.\nWhen not specified, defaults to the standard WeChat Work API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           corpID: {
