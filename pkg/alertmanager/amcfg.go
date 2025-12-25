@@ -841,7 +841,7 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(*in.URL)
+		url, err := validation.ValidateURL(string(*in.URL))
 		if err != nil {
 			return nil, err
 		}
@@ -1092,7 +1092,6 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
-		APIURL:        in.APIURL,
 		Message:       in.Message,
 		Description:   in.Description,
 		Source:        in.Source,
@@ -1102,6 +1101,10 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		Actions:       in.Actions,
 		Entity:        in.Entity,
 		UpdateAlerts:  in.UpdateAlerts,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
 	}
 
 	if in.APIKey != nil {
@@ -1148,7 +1151,6 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
-		APIURL:        in.APIURL,
 		CorpID:        in.CorpID,
 		AgentID:       in.AgentID,
 		ToUser:        in.ToUser,
@@ -1156,6 +1158,10 @@ func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv
 		ToTag:         in.ToTag,
 		Message:       in.Message,
 		MessageType:   in.MessageType,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
 	}
 
 	if in.APISecret != nil {

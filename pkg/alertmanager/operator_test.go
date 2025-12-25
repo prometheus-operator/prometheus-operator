@@ -479,7 +479,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("http://test.local"),
+								URL: ptr.To(monitoringv1alpha1.URL("http://test.local")),
 							},
 						},
 					}},
@@ -574,7 +574,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
 								CorpID: "testingCorpID",
-								APIURL: "http://::invalid-url",
+								APIURL: ptr.To(monitoringv1alpha1.URL("http://::invalid-url")),
 							},
 						},
 					}},

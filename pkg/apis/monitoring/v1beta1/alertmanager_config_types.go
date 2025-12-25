@@ -586,7 +586,7 @@ type WebhookConfig struct {
 	// url defines the URL to send HTTP POST requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// +optional
-	URL *string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -622,7 +622,7 @@ type OpsGenieConfig struct {
 	// apiURL defines the URL to send OpsGenie API requests to.
 	// When not specified, defaults to the standard OpsGenie API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
 	// +optional
@@ -812,7 +812,7 @@ type WeChatConfig struct {
 	// apiURL defines the WeChat API URL.
 	// When not specified, defaults to the standard WeChat Work API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
 	// +optional
@@ -1075,6 +1075,7 @@ type SNSConfig struct {
 	// attributes defines SNS message attributes as key-value pairs.
 	// These provide additional metadata that can be used for message filtering and routing.
 	// +optional
+	//nolint:kubeapilinter
 	Attributes map[string]string `json:"attributes,omitempty"`
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	// +optional

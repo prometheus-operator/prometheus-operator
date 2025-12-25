@@ -2757,7 +2757,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: ptr.To("http://test.url"),
+								URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 									OAuth2: &monitoringv1.OAuth2{
 										ClientID: monitoringv1.SecretOrConfigMap{
@@ -2882,6 +2882,52 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Opsgenie_Team_Responder.golden",
+		},
+		{
+			name: "CR with Opsgenie Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Opsgenie_Receiver_Valid_APIURL.golden",
 		},
 		{
 			name: "CR with WeChat Receiver",
@@ -3836,7 +3882,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 									{
-										URL:     ptr.To("https://example.com/"),
+										URL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 										Timeout: ptr.To(monitoringv1.Duration("5s")),
 									},
 								},
@@ -3872,7 +3918,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 									{
-										URL:     ptr.To("https://example.com/"),
+										URL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 										Timeout: ptr.To(monitoringv1.Duration("5s")),
 									},
 								},

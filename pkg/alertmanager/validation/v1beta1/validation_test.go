@@ -133,7 +133,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
-									APIURL: "http://%><invalid.com",
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
 								},
 							},
 						},
@@ -488,7 +488,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: ptr.To("https://www.test.com"),
+									URL: ptr.To(monitoringv1beta1.URL("https://www.test.com")),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",
@@ -497,7 +497,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
-									APIURL: "https://test.com",
+									APIURL: ptr.To(monitoringv1beta1.URL("https://test.com")),
 								},
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
