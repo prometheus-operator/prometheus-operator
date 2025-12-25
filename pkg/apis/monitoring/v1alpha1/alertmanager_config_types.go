@@ -1367,7 +1367,7 @@ type MattermostConfig struct {
 	// To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text *string `json:"text,omiteempty"`
+	Text *string `json:"text,omitempty"`
 	// iconURL overrides the profile picture the message posts with.
 	// +optional
 	IconURL *URL `json:"iconURL,omitempty"`
