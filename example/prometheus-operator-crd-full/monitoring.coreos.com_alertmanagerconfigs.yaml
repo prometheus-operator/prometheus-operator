@@ -2191,7 +2191,6 @@ spec:
                                 enum:
                                 - Urgent
                                 - Important
-                                - Dots
                                 - Standard
                                 type: string
                               requestedAck:
@@ -15218,7 +15217,6 @@ spec:
                                 enum:
                                 - Urgent
                                 - Important
-                                - Dots
                                 - Standard
                                 type: string
                               requestedAck:

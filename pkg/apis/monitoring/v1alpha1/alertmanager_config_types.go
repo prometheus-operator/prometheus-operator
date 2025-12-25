@@ -1488,7 +1488,7 @@ type MattermostPropsConfig struct {
 
 // MattermostPriority defines the priority label of the message.
 // Supported values are: `Urgent`, `Important` and `Standard`.
-// +kubebuilder:validation:Enum=Urgent;Important;Dots;Standard
+// +kubebuilder:validation:Enum=Urgent;Important;Standard
 type MattermostPriority string
 
 const (

@@ -1854,7 +1854,6 @@
                                 enum: [
                                   'Urgent',
                                   'Important',
-                                  'Dots',
                                   'Standard',
                                 ],
                                 type: 'string',
