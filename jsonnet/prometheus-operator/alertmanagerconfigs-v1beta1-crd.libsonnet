@@ -1144,6 +1144,7 @@
                                   },
                                   minItems: 1,
                                   type: 'array',
+                                  'x-kubernetes-list-type': 'atomic',
                                 },
                                 footer: {
                                   description: 'footer defines an optional line of text that will be displayed at the bottom of the attachment.',

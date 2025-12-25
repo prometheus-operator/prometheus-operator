@@ -1399,6 +1399,7 @@ type MattermostAttachmentConfig struct {
 	// fields defines a list of fields that are sent with each notification
 	// to be displayed in a table format inside the attachment.
 	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
 	// +optional
 	Fields []MattermostField `json:"fields,omitempty"`
 	// thumbURL defines an optional URL to an image file

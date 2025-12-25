@@ -1076,6 +1076,18 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	mattermostWebhookURL := "https://mattermost.example.com"
+	mattermostWebhookURLSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "mattermost-webhook-url",
+		},
+		Data: map[string][]byte{
+			"webhook-url": []byte(mattermostWebhookURL),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), mattermostWebhookURLSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1242,6 +1254,34 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 								Key: "api-token",
 							},
 						},
+					},
+				}},
+				MattermostConfigs: []monitoringv1alpha1.MattermostConfig{{
+					WebhookURL: &v1.SecretKeySelector{
+						Key: "webhook-url",
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "mattermost-webhook-url",
+						},
+					},
+					Channel:  ptr.To("town-square"),
+					Username: ptr.To("user1"),
+					Text:     ptr.To("alert!"),
+					Attachments: []monitoringv1alpha1.MattermostAttachmentConfig{
+						{
+							Text:  ptr.To("attachment 1"),
+							Title: ptr.To("attachment 1"),
+							Fields: []monitoringv1alpha1.MattermostField{
+								{
+									Title: "foo",
+									Value: "bar",
+								},
+							},
+						},
+					},
+					Priority: &monitoringv1alpha1.MattermostPriorityConfig{
+						Priority:                ptr.To(monitoringv1alpha1.MattermostPriorityUrgent),
+						RequestedAck:            ptr.To(true),
+						PersistentNotifications: ptr.To(true),
 					},
 				}},
 			}},
