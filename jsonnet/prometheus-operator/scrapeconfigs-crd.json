@@ -108,8 +108,10 @@
                         "clusters": {
                           "description": "clusters define the list of ECS cluster ARNs to discover.\nIf empty, all clusters in the region are discovered.\nThis can significantly improve performance when you only need to monitor specific clusters.",
                           "items": {
+                            "minLength": 1,
                             "type": "string"
                           },
+                          "minItems": 1,
                           "type": "array"
                         },
                         "enableHTTP2": {
@@ -165,6 +167,7 @@
                         },
                         "profile": {
                           "description": "profile defines Named AWS profile used to authenticate.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "proxyConnectHeader": {
@@ -419,7 +422,13 @@
                       "required": [
                         "role"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "clusters can only be set when role is ECS",
+                          "rule": "self.role == 'ECS' && has(self.clusters)"
+                        }
+                      ]
                     },
                     "type": "array"
                   },

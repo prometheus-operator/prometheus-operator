@@ -1542,6 +1542,7 @@ const (
 // AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="self.role == 'ECS' && has(self.clusters)",message="clusters can only be set when role is ECS"
 // TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfig struct {
 	// role defines the AWS service to collect metrics from.
@@ -1589,11 +1590,14 @@ type AWSSDConfig struct {
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// profile defines Named AWS profile used to authenticate.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Profile *string `json:"profile,omitempty"`
 	// clusters define the list of ECS cluster ARNs to discover.
 	// If empty, all clusters in the region are discovered.
 	// This can significantly improve performance when you only need to monitor specific clusters.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
 	// +optional
 	Clusters []string `json:"clusters,omitempty"`
 }

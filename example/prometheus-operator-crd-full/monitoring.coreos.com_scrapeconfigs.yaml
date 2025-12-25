@@ -123,7 +123,9 @@ spec:
                         If empty, all clusters in the region are discovered.
                         This can significantly improve performance when you only need to monitor specific clusters.
                       items:
+                        minLength: 1
                         type: string
+                      minItems: 1
                       type: array
                     enableHTTP2:
                       description: enableHTTP2 defines whether to enable HTTP2.
@@ -179,6 +181,7 @@ spec:
                       type: integer
                     profile:
                       description: profile defines Named AWS profile used to authenticate.
+                      minLength: 1
                       type: string
                     proxyConnectHeader:
                       additionalProperties:
@@ -443,6 +446,9 @@ spec:
                   required:
                   - role
                   type: object
+                  x-kubernetes-validations:
+                  - message: clusters can only be set when role is ECS
+                    rule: self.role == 'ECS' && has(self.clusters)
                 type: array
               azureSDConfigs:
                 description: azureSDConfigs defines a list of Azure service discovery
