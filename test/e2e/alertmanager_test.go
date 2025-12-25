@@ -1169,6 +1169,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					HTML: ptr.To(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 					APIKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
