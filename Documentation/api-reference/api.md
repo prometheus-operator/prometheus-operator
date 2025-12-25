@@ -24374,8 +24374,8 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </td>
 <td>
 <em>(Optional)</em>
-<p>awsSDConfigs defines a list of AWS service discovery configurations.</p>
-<p>It requires Prometheus &gt;= 3.8.0.</p>
+<p>awsSDConfigs defines a list of AWS service discovery configurations.
+It requires Prometheus &gt;= 3.8.0.</p>
 </td>
 </tr>
 <tr>
@@ -34976,8 +34976,8 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </td>
 <td>
 <em>(Optional)</em>
-<p>awsSDConfigs defines a list of AWS service discovery configurations.</p>
-<p>It requires Prometheus &gt;= 3.8.0.</p>
+<p>awsSDConfigs defines a list of AWS service discovery configurations.
+It requires Prometheus &gt;= 3.8.0.</p>
 </td>
 </tr>
 <tr>

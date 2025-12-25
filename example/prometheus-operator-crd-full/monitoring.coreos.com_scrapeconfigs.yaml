@@ -86,7 +86,6 @@ spec:
               awsSDConfigs:
                 description: |-
                   awsSDConfigs defines a list of AWS service discovery configurations.
-
                   It requires Prometheus >= 3.8.0.
                 items:
                   description: |-
@@ -448,7 +447,8 @@ spec:
                   type: object
                   x-kubernetes-validations:
                   - message: clusters can only be set when role is ECS
-                    rule: '!(self.role != ''ECS'' && self.clusters.size() != 0)'
+                    rule: '!(self.role != ''ECS'' && (has(self.clusters) && self.clusters.size()
+                      != 0))'
                 type: array
               azureSDConfigs:
                 description: azureSDConfigs defines a list of Azure service discovery
