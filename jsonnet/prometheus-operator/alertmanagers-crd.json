@@ -3907,11 +3907,6 @@
                     },
                     "type": "array"
                   },
-                  "dispatchStartDelay": {
-                    "description": "dispatchStartDelay defines the delay duration of the aggregation groups' first flush.\nThe delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.\n\nIt requires Alertmanager >= 0.30.0.",
-                    "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
-                    "type": "string"
-                  },
                   "dnsConfig": {
                     "description": "dnsConfig defines the DNS configuration for the pods.",
                     "properties": {
@@ -5434,7 +5429,7 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
+                    "description": "minReadySeconds defines the minimum number of seconds for which a newly\ncreated pod should be ready without any of its container crashing for it\nto be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.\n\nWhen the Alertmanager version is greater than or equal to v0.30.0, the\nduration is also used to delay the first flush of the aggregation\ngroups. This delay helps ensuring that all alerts have been resent by\nthe Prometheus instances to Alertmanager after a roll-out. It is\npossible to override this behavior passing a custom value via\n`.spec.additionalArgs`.",
                     "format": "int32",
                     "minimum": 0,
                     "type": "integer"

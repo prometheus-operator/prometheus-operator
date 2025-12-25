@@ -1,6 +1,7 @@
 ## Unreleased
 
-* [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #xxxx
+* [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8119
+* [ENHANCEMENT] Use `.spec.minReadySeconds` to delay the first flush of aggregation groups in Alertmanager. #8201
 
 ## 0.87.1 / 2025-12-10
 
