@@ -194,7 +194,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 								{
 									Project:           "projectA",
 									SendResolved:      ptr.To(true),
-									APIURL:            ptr.To("https://test.com"),
+									APIURL:            ptr.To(monitoringv1alpha1.URL("https://test.com")),
 									Summary:           ptr.To("summary"),
 									Description:       ptr.To("description"),
 									Priority:          ptr.To("priority"),
