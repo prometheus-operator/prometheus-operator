@@ -9,6 +9,7 @@ receivers:
 - name: "null"
 - name: mynamespace/myamc/test
   victorops_configs:
-  - api_url: https://example.com/
+  - api_key: abc123
+    api_url: https://example.com/
     routing_key: abcd
 templates: []
