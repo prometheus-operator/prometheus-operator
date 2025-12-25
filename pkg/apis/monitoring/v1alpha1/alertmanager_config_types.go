@@ -1353,7 +1353,7 @@ type MattermostConfig struct {
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// webhookURL defines the Mattermost webhook URL.
 	// +required
-	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL"`
 	// channel overrides the channel the message posts in.
 	// Use the channel’s name and not the display name, e.g. use town-square, not Town Square.
 	// +kubebuilder:validation:MinLength=1
@@ -1367,7 +1367,7 @@ type MattermostConfig struct {
 	// To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text *string `json:"text"`
+	Text *string `json:"text,omiteempty"`
 	// iconURL overrides the profile picture the message posts with.
 	// +optional
 	IconURL *URL `json:"iconURL,omitempty"`
@@ -1498,6 +1498,8 @@ const (
 )
 
 // MattermostPriorityConfig configures the parameters related to the priority of the message.
+// +kubebuilder:validation:XValidation:rule="(has(self.priority) && self.priority == 'Urgent') && (has(self.persistentNotifications) && self.persistentNotifications == true)",message="persistentNotifications can only be set to true when priority is Urgent"
+// +kubebuilder:validation:XValidation:rule="(has(self.priority) && (self.priority == 'Important' || self.priority == 'Urgent')) && (has(self.requestedAck) && self.requestedAck == true)",message="requestedAck can only be set to true when priority is Urgent or Important"
 type MattermostPriorityConfig struct {
 	// priority adds the priority label to the message.
 	// Possible values are `Urgent`, `Important` and `Standard`.

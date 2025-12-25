@@ -29754,7 +29754,7 @@ Defaults to the username set during webhook creation; if no username was set dur
 </tr>
 <tr>
 <td>
-<code>text</code><br/>
+<code>text,omiteempty</code><br/>
 <em>
 string
 </em>
@@ -38674,7 +38674,7 @@ Defaults to the username set during webhook creation; if no username was set dur
 </tr>
 <tr>
 <td>
-<code>text</code><br/>
+<code>text,omiteempty</code><br/>
 <em>
 string
 </em>
