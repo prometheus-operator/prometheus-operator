@@ -1872,10 +1872,6 @@
                                 message: 'persistentNotifications can only be set to true when priority is Urgent',
                                 rule: "!(self.priority != 'Urgent' && self.persistentNotifications == true)",
                               },
-                              {
-                                message: 'requestedAck can only be set to true when priority is Urgent or Important',
-                                rule: "!((self.priority != 'Important' || self.priority != 'Urgent') && self.requestedAck == true)",
-                              },
                             ],
                           },
                           props: {

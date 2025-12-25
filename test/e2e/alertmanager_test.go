@@ -1271,10 +1271,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 							Text:  ptr.To("attachment 1"),
 							Title: ptr.To("attachment 1"),
 							Fields: []monitoringv1alpha1.MattermostField{
-								{
-									Title: "foo",
-									Value: "bar",
-								},
+								{Title: "foo", Value: "bar"},
 							},
 						},
 					},
