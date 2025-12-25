@@ -1501,8 +1501,8 @@ const (
 )
 
 // MattermostPriorityConfig configures the parameters related to the priority of the message.
-// +kubebuilder:validation:XValidation:rule="(has(self.priority) && self.priority == 'Urgent') && (has(self.persistentNotifications) && self.persistentNotifications == true)",message="persistentNotifications can only be set to true when priority is Urgent"
-// +kubebuilder:validation:XValidation:rule="(has(self.priority) && (self.priority == 'Important' || self.priority == 'Urgent')) && (has(self.requestedAck) && self.requestedAck == true)",message="requestedAck can only be set to true when priority is Urgent or Important"
+// +kubebuilder:validation:XValidation:rule="!(self.priority != 'Urgent' && self.persistentNotifications == true)",message="persistentNotifications can only be set to true when priority is Urgent"
+// +kubebuilder:validation:XValidation:rule="!((self.priority != 'Important' || self.priority != 'Urgent') && self.requestedAck == true)",message="requestedAck can only be set to true when priority is Urgent or Important"
 type MattermostPriorityConfig struct {
 	// priority adds the priority label to the message.
 	// Possible values are `Urgent`, `Important` and `Standard`.
