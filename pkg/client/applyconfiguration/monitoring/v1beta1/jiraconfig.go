@@ -18,26 +18,27 @@ package v1beta1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // JiraConfigApplyConfiguration represents a declarative configuration of the JiraConfig type for use
 // with apply.
 type JiraConfigApplyConfiguration struct {
-	SendResolved      *bool                         `json:"sendResolved,omitempty"`
-	APIURL            *string                       `json:"apiURL,omitempty"`
-	Project           *string                       `json:"project,omitempty"`
-	Summary           *string                       `json:"summary,omitempty"`
-	Description       *string                       `json:"description,omitempty"`
-	Labels            []string                      `json:"labels,omitempty"`
-	Priority          *string                       `json:"priority,omitempty"`
-	IssueType         *string                       `json:"issueType,omitempty"`
-	ResolveTransition *string                       `json:"resolveTransition,omitempty"`
-	ReopenTransition  *string                       `json:"reopenTransition,omitempty"`
-	WontFixResolution *string                       `json:"wontFixResolution,omitempty"`
-	ReopenDuration    *v1.Duration                  `json:"reopenDuration,omitempty"`
-	Fields            []JiraFieldApplyConfiguration `json:"fields,omitempty"`
-	APIType           *string                       `json:"apiType,omitempty"`
-	HTTPConfig        *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	SendResolved      *bool                          `json:"sendResolved,omitempty"`
+	APIURL            *monitoringv1beta1.URL         `json:"apiURL,omitempty"`
+	Project           *string                        `json:"project,omitempty"`
+	Summary           *string                        `json:"summary,omitempty"`
+	Description       *string                        `json:"description,omitempty"`
+	Labels            []string                       `json:"labels,omitempty"`
+	Priority          *string                        `json:"priority,omitempty"`
+	IssueType         *string                        `json:"issueType,omitempty"`
+	ResolveTransition *string                        `json:"resolveTransition,omitempty"`
+	ReopenTransition  *string                        `json:"reopenTransition,omitempty"`
+	WontFixResolution *string                        `json:"wontFixResolution,omitempty"`
+	ReopenDuration    *v1.Duration                   `json:"reopenDuration,omitempty"`
+	Fields            []JiraFieldApplyConfiguration  `json:"fields,omitempty"`
+	APIType           *monitoringv1beta1.JiraAPIType `json:"apiType,omitempty"`
+	HTTPConfig        *HTTPConfigApplyConfiguration  `json:"httpConfig,omitempty"`
 }
 
 // JiraConfigApplyConfiguration constructs a declarative configuration of the JiraConfig type for use with
@@ -57,7 +58,7 @@ func (b *JiraConfigApplyConfiguration) WithSendResolved(value bool) *JiraConfigA
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *JiraConfigApplyConfiguration) WithAPIURL(value string) *JiraConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithAPIURL(value monitoringv1beta1.URL) *JiraConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
@@ -160,7 +161,7 @@ func (b *JiraConfigApplyConfiguration) WithFields(values ...*JiraFieldApplyConfi
 // WithAPIType sets the APIType field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIType field is set to the value of the last call.
-func (b *JiraConfigApplyConfiguration) WithAPIType(value string) *JiraConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithAPIType(value monitoringv1beta1.JiraAPIType) *JiraConfigApplyConfiguration {
 	b.APIType = &value
 	return b
 }

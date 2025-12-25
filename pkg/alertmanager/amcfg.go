@@ -1509,11 +1509,10 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 		ResolveTransition: in.ResolveTransition,
 		ReopenTransition:  in.ReopenTransition,
 		WontFixResolution: in.WontFixResolution,
-		APIType:           in.APIType,
 	}
 
 	if in.APIURL != nil {
-		out.APIURL = in.APIURL
+		out.APIURL = (*string)(in.APIURL)
 	} else if cb.cfg.Global != nil && cb.cfg.Global.JiraAPIURL != nil {
 		out.APIURL = ptr.To(cb.cfg.Global.JiraAPIURL.RequestURI())
 	}
@@ -1551,6 +1550,15 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 		return nil, err
 	}
 	out.HTTPConfig = httpConfig
+
+	if in.APIType != nil {
+		switch *in.APIType {
+		case monitoringv1alpha1.JiraAPITypeCloud, monitoringv1alpha1.JiraAPITypeDatacenter, monitoringv1alpha1.JiraAPITypeAuto:
+			out.APIType = ptr.To(strings.ToLower(string(*in.APIType)))
+		default:
+			return nil, fmt.Errorf("unsupported api type")
+		}
+	}
 
 	return out, nil
 }

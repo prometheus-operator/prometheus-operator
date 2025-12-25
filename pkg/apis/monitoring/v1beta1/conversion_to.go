@@ -538,7 +538,7 @@ func convertMSTeamsConfigTo(in MSTeamsConfig) v1alpha1.MSTeamsConfig {
 func convertJiraConfigTo(in JiraConfig) v1alpha1.JiraConfig {
 	return v1alpha1.JiraConfig{
 		SendResolved:      in.SendResolved,
-		APIURL:            in.APIURL,
+		APIURL:            (*v1alpha1.URL)(in.APIType),
 		Project:           in.Project,
 		Summary:           in.Summary,
 		Description:       in.Description,
@@ -550,7 +550,7 @@ func convertJiraConfigTo(in JiraConfig) v1alpha1.JiraConfig {
 		WontFixResolution: in.WontFixResolution,
 		ReopenDuration:    in.ReopenDuration,
 		Fields:            convertJiraFieldTo(in.Fields),
-		APIType:           in.APIType,
+		APIType:           (*v1alpha1.JiraAPIType)(in.APIType),
 		HTTPConfig:        convertHTTPConfigTo(in.HTTPConfig),
 	}
 }

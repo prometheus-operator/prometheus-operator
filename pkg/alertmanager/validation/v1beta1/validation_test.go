@@ -595,7 +595,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							JiraConfigs: []monitoringv1beta1.JiraConfig{
 								{
 									Project:   "projectA",
-									APIURL:    ptr.To("http://test.com"),
+									APIURL:    ptr.To(monitoringv1beta1.URL("http://test.com")),
 									IssueType: "bug",
 								},
 							},

@@ -240,14 +240,15 @@ type Receiver struct {
 	// +listType=atomic
 	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
-	// jiraConfigs defines the list of Jira configurations
-	// +optional
+	// jiraConfigs defines the list of Jira configurations.
 	// It requires Alertmanager >= 0.28.0.
 	// +listType=atomic
+	// +optional
 	JiraConfigs []JiraConfig `json:"jiraConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
-	// +optional
 	// It requires Alertmanager >= 0.28.0.
+	// +optional
+	// +listType=atomic
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 	// rocketchatConfigs defines the list of RocketChat configurations.
 	// It requires Alertmanager >= 0.28.0.
@@ -1231,96 +1232,83 @@ func (jf *JiraField) Validate() error {
 // It requires Alertmanager >= 0.28.0.
 type JiraConfig struct {
 	// sendResolved defines whether to notify about resolved alerts.
-	//
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
-
 	// apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
 	// The full API path must be included.
 	// If not specified, default API URL will be used.
-	//
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +optional
-	APIURL *string `json:"apiURL,omitempty"`
-
+	APIURL *URL `json:"apiURL,omitempty"`
 	// project defines the project key where issues are created.
-	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Project string `json:"project"`
-
 	// summary defines the issue summary template.
-	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Summary *string `json:"summary,omitempty"`
-
 	// description defines the issue description template.
-	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Description *string `json:"description,omitempty"`
-
 	// labels defines labels to be added to the issue.
-	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Labels []string `json:"labels,omitempty"`
-
 	// priority defines the priority of the issue.
-	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Priority *string `json:"priority,omitempty"`
-
 	// issueType defines a type of the issue (e.g. Bug).
-	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	IssueType string `json:"issueType"`
-
 	// resolveTransition defines name of the workflow transition to resolve an issue.
 	// The target status must have the category "done".
 	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
-	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ResolveTransition *string `json:"resolveTransition,omitempty"`
-
 	// reopenTransition defines name of the workflow transition to reopen an issue.
 	// The target status should not have the category "done".
 	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
-	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ReopenTransition *string `json:"reopenTransition,omitempty"`
-
 	// wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.
-	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	WontFixResolution *string `json:"wontFixResolution,omitempty"`
-
 	// reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
 	// The 'resolutiondate' field in Jira is used to determine the age of the issue.
-	//
 	// +optional
 	ReopenDuration *monitoringv1.Duration `json:"reopenDuration,omitempty"`
-
 	// fields defines other issue and custom fields.
-	//
 	// +listType=map
 	// +listMapKey=key
 	// +optional
 	Fields []JiraField `json:"fields,omitempty"`
-
-	// apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+	// apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.
 	// It requires Alertmanager >= 0.29.0.
-	//
-	// +kubebuilder:validation:Enum=cloud;datacenter;auto
 	// +optional
-	APIType *string `json:"apiType,omitempty"`
-
+	APIType *JiraAPIType `json:"apiType,omitempty"`
 	// httpConfig defines HTTP client configuration for Jira connection.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
+
+// JiraAPIType defines the type of Jira API.
+// The acceptable value should be either Cloud, Datacenter or Auto.
+// +kubebuilder:validation:Enum=Cloud;Datacenter;Auto
+type JiraAPIType string
+
+const (
+	JiraAPITypeCloud      JiraAPIType = "Cloud"
+	JiraAPITypeDatacenter JiraAPIType = "Datacenter"
+	JiraAPITypeAuto       JiraAPIType = "Auto"
+)
 
 // Validate ensures JiraConfig is valid.
 func (jc *JiraConfig) Validate() error {

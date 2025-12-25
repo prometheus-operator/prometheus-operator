@@ -1084,24 +1084,25 @@
                     jiraConfigs: {
                       description: 'jiraConfigs defines the list of Jira configurations.\nIt requires Alertmanager >= 0.28.0.',
                       items: {
-                        description: 'JiraConfig configures notifications via Jira.\nSee https://prometheus.io/docs/alerting/latest/configuration/#Jira_config\nIt requires Alertmanager >= 0.28.0.',
+                        description: 'See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config\nIt requires Alertmanager >= 0.28.0.',
                         properties: {
                           apiType: {
-                            description: 'apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.\nIt requires Alertmanager >= 0.29.0.',
+                            description: 'apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.\nIt requires Alertmanager >= 0.29.0.',
                             enum: [
-                              'cloud',
-                              'datacenter',
-                              'auto',
+                              'Cloud',
+                              'Datacenter',
+                              'Auto',
                             ],
                             type: 'string',
                           },
                           apiURL: {
                             description: 'apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/\nThe full API path must be included.\nIf not specified, default API URL will be used.',
-                            pattern: '^http(s)?://.+$',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           description: {
                             description: 'description defines the issue description template.',
+                            minLength: 1,
                             type: 'string',
                           },
                           fields: {
@@ -1786,6 +1787,7 @@
                           },
                           priority: {
                             description: 'priority defines the priority of the issue.',
+                            minLength: 1,
                             type: 'string',
                           },
                           project: {
@@ -1800,10 +1802,12 @@
                           },
                           reopenTransition: {
                             description: 'reopenTransition defines name of the workflow transition to reopen an issue.\nThe target status should not have the category "done".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.',
+                            minLength: 1,
                             type: 'string',
                           },
                           resolveTransition: {
                             description: 'resolveTransition defines name of the workflow transition to resolve an issue.\nThe target status must have the category "done".\nNOTE: The name of the transition can be localized and depends on the language setting of the service account.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -1812,10 +1816,12 @@
                           },
                           summary: {
                             description: 'summary defines the issue summary template.',
+                            minLength: 1,
                             type: 'string',
                           },
                           wontFixResolution: {
                             description: 'wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
@@ -1826,6 +1832,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     msteamsConfigs: {
                       description: 'msteamsConfigs defines the list of MSTeams configurations.\nIt requires Alertmanager >= 0.26.0.',
@@ -3201,6 +3208,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     name: {
                       description: 'name defines the name of the receiver. Must be unique across all items from the list.',

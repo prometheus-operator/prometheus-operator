@@ -325,7 +325,7 @@ func (in *JiraConfig) DeepCopyInto(out *JiraConfig) {
 	}
 	if in.APIURL != nil {
 		in, out := &in.APIURL, &out.APIURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Summary != nil {
@@ -377,7 +377,7 @@ func (in *JiraConfig) DeepCopyInto(out *JiraConfig) {
 	}
 	if in.APIType != nil {
 		in, out := &in.APIType, &out.APIType
-		*out = new(string)
+		*out = new(JiraAPIType)
 		**out = **in
 	}
 	if in.HTTPConfig != nil {

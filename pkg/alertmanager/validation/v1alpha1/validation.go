@@ -407,7 +407,7 @@ func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
 		}
 
 		if config.APIURL != nil {
-			if _, err := validation.ValidateURL(*config.APIURL); err != nil {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
 				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}

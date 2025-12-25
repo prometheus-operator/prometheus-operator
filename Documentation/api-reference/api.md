@@ -28171,6 +28171,30 @@ OAuth2
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.JiraAPIType">JiraAPIType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>)
+</p>
+<div>
+<p>JiraAPIType defines the type of Jira API.
+The acceptable value should be either Cloud, Datacenter or Auto.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Auto&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Cloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Datacenter&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig
 </h3>
 <p>
@@ -28205,7 +28229,9 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -28358,12 +28384,14 @@ The &lsquo;resolutiondate&rsquo; field in Jira is used to determine the age of t
 <td>
 <code>apiType</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.JiraAPIType">
+JiraAPIType
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+<p>apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.
 It requires Alertmanager &gt;= 0.29.0.</p>
 </td>
 </tr>
@@ -33603,7 +33631,7 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>jiraConfigs defines the list of Jira configurations
+<p>jiraConfigs defines the list of Jira configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
@@ -36362,7 +36390,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -37778,14 +37806,37 @@ for the inhibition to take effect. This ensures related alerts are properly grou
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1beta1.JiraAPIType">JiraAPIType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>)
+</p>
+<div>
+<p>JiraAPIType defines the type of Jira API.
+The acceptable value should be either Cloud, Datacenter or Auto.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Auto&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Cloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Datacenter&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
 </p>
 <div>
-<p>JiraConfig configures notifications via Jira.
-See <a href="https://prometheus.io/docs/alerting/latest/configuration/#Jira_config">https://prometheus.io/docs/alerting/latest/configuration/#Jira_config</a>
+<p>See <a href="https://prometheus.io/docs/alerting/latest/configuration/#Jira_config">https://prometheus.io/docs/alerting/latest/configuration/#Jira_config</a>
 It requires Alertmanager &gt;= 0.28.0.</p>
 </div>
 <table>
@@ -37812,7 +37863,9 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -37965,12 +38018,14 @@ The &lsquo;resolutiondate&rsquo; field in Jira is used to determine the age of t
 <td>
 <code>apiType</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.JiraAPIType">
+JiraAPIType
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>apiType defines type of Jira API. The acceptable value should be either cloud, datacenter or auto.
+<p>apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.
 It requires Alertmanager &gt;= 0.29.0.</p>
 </td>
 </tr>
@@ -41212,7 +41267,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
