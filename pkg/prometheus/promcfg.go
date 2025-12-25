@@ -44,6 +44,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
 )
 
 const (
@@ -198,7 +199,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	)
 
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		lcv, err := NewLabelConfigValidator(p)
+		lcv, err := validation.NewLabelConfigValidator(p)
 		if err != nil {
 			return nil, "", err
 		}

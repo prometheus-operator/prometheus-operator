@@ -470,7 +470,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("http://test.local"),
+								URL: ptr.To(monitoringv1alpha1.URL("http://test.local")),
 							},
 						},
 					}},
