@@ -1320,6 +1320,7 @@ type MattermostConfig struct {
 	Channel *string `json:"channel,omitempty"`
 	// username overrides the username the message posts as.
 	// Defaults to the username set during webhook creation; if no username was set during creation, webhook is used.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Username *string `json:"username,omitempty"`
 	// text defines the markdown-formatted message to display in the post.
@@ -1336,6 +1337,7 @@ type MattermostConfig struct {
 	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// attachments define the message attachments used for richer formatting options.
 	// It is for compatibility with Slack.
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Attachments []MattermostAttachmentConfig `json:"attachments,omitempty"`
 	// props defines the extra information to be sent to Mattermost.
@@ -1396,6 +1398,7 @@ type MattermostAttachmentConfig struct {
 	TitleLink *URL `json:"titleLink,omitempty"`
 	// fields defines a list of fields that are sent with each notification
 	// to be displayed in a table format inside the attachment.
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Fields []MattermostField `json:"fields,omitempty"`
 	// thumbURL defines an optional URL to an image file

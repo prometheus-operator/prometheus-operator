@@ -1397,6 +1397,7 @@ spec:
                                     - title
                                     - value
                                     type: object
+                                  minItems: 1
                                   type: array
                                 footer:
                                   description: footer defines an optional line of
@@ -1448,6 +1449,7 @@ spec:
                                   pattern: ^https?://.+$
                                   type: string
                               type: object
+                            minItems: 1
                             type: array
                           channel:
                             description: |-
@@ -2242,6 +2244,7 @@ spec:
                             description: |-
                               username overrides the username the message posts as.
                               Defaults to the username set during webhook creation; if no username was set during creation, webhook is used.
+                            minLength: 1
                             type: string
                           webhookURL:
                             description: webhookURL defines the Mattermost webhook

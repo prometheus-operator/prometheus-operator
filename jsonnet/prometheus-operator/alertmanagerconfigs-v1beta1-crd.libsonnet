@@ -1142,6 +1142,7 @@
                                     ],
                                     type: 'object',
                                   },
+                                  minItems: 1,
                                   type: 'array',
                                 },
                                 footer: {
@@ -1187,6 +1188,7 @@
                               },
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
                           },
                           channel: {
@@ -1886,6 +1888,7 @@
                           },
                           username: {
                             description: 'username overrides the username the message posts as.\nDefaults to the username set during webhook creation; if no username was set during creation, webhook is used.',
+                            minLength: 1,
                             type: 'string',
                           },
                           webhookURL: {
