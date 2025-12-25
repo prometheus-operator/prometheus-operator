@@ -3827,7 +3827,17 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with VictorOps config valid api url",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "victorops-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"api-key": []byte("abc123"),
+					},
+				},
+			),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3851,6 +3861,12 @@ func TestGenerateConfig(t *testing.T) {
 									{
 										APIURL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 										RoutingKey: "abcd",
+										APIKey: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "victorops-secret",
+											},
+											Key: "api-key",
+										},
 									},
 								},
 							},
@@ -3887,6 +3903,12 @@ func TestGenerateConfig(t *testing.T) {
 									{
 										APIURL:     ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com")),
 										RoutingKey: "abcd",
+										APIKey: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "victorops-secret",
+											},
+											Key: "api-key",
+										},
 									},
 								},
 							},
