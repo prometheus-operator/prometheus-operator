@@ -1103,14 +1103,17 @@
                                 },
                                 authorName: {
                                   description: 'authorName defines an optional name used to identify the author.\nIt will be included in a small section at the top of the attachment.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 color: {
                                   description: 'color defines a hex color code that will be used as\nthe left border color for the attachment.\nIf not specified, it will default to match the channel sidebar header background color.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 fallback: {
                                   description: 'fallback defines a required plain-text summary of the attachment.\nThis is used in notifications, and in clients that don’t support formatted text (e.g. IRC).',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 fields: {
@@ -1143,6 +1146,7 @@
                                 },
                                 footer: {
                                   description: 'footer defines an optional line of text that will be displayed at the bottom of the attachment.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 footerIcon: {
@@ -1157,10 +1161,12 @@
                                 },
                                 pretext: {
                                   description: 'pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 text: {
                                   description: 'text defines the text to be included in the attachment.\nIt can be formatted using Markdown.\nFor long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 thumbURL: {
@@ -1170,6 +1176,7 @@
                                 },
                                 title: {
                                   description: 'title defines an optional title displayed below the author information in the attachment.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 titleLink: {
@@ -1827,6 +1834,7 @@
                           },
                           iconEmoji: {
                             description: 'iconEmoji overrides the profile picture and icon_url parameter.',
+                            minLength: 1,
                             type: 'string',
                           },
                           iconURL: {

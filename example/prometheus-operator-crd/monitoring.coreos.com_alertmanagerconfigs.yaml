@@ -1351,17 +1351,20 @@ spec:
                                   description: |-
                                     authorName defines an optional name used to identify the author.
                                     It will be included in a small section at the top of the attachment.
+                                  minLength: 1
                                   type: string
                                 color:
                                   description: |-
                                     color defines a hex color code that will be used as
                                     the left border color for the attachment.
                                     If not specified, it will default to match the channel sidebar header background color.
+                                  minLength: 1
                                   type: string
                                 fallback:
                                   description: |-
                                     fallback defines a required plain-text summary of the attachment.
                                     This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
+                                  minLength: 1
                                   type: string
                                 fields:
                                   description: |-
@@ -1399,6 +1402,7 @@ spec:
                                   description: footer defines an optional line of
                                     text that will be displayed at the bottom of the
                                     attachment.
+                                  minLength: 1
                                   type: string
                                 footerIcon:
                                   description: |-
@@ -1416,12 +1420,14 @@ spec:
                                   description: pretext defines an optional line of
                                     text that will be shown above the attachment.
                                     Supports @mentions.
+                                  minLength: 1
                                   type: string
                                 text:
                                   description: |-
                                     text defines the text to be included in the attachment.
                                     It can be formatted using Markdown.
                                     For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.
+                                  minLength: 1
                                   type: string
                                 thumbURL:
                                   description: |-
@@ -1433,6 +1439,7 @@ spec:
                                 title:
                                   description: title defines an optional title displayed
                                     below the author information in the attachment.
+                                  minLength: 1
                                   type: string
                                 titleLink:
                                   description: |-
@@ -2157,6 +2164,7 @@ spec:
                           iconEmoji:
                             description: iconEmoji overrides the profile picture and
                               icon_url parameter.
+                            minLength: 1
                             type: string
                           iconURL:
                             description: iconURL overrides the profile picture the

@@ -1331,6 +1331,7 @@ type MattermostConfig struct {
 	// +optional
 	IconURL *URL `json:"iconURL,omitempty"`
 	// iconEmoji overrides the profile picture and icon_url parameter.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// attachments define the message attachments used for richer formatting options.
@@ -1354,23 +1355,28 @@ type MattermostConfig struct {
 type MattermostAttachmentConfig struct {
 	// fallback defines a required plain-text summary of the attachment.
 	// This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Fallback *string `json:"fallback,omitempty"`
 	// color defines a hex color code that will be used as
 	// the left border color for the attachment.
 	// If not specified, it will default to match the channel sidebar header background color.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Color *string `json:"color,omitempty"`
 	// pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Pretext *string `json:"pretext,omitempty"`
 	// text defines the text to be included in the attachment.
 	// It can be formatted using Markdown.
 	// For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// authorName defines an optional name used to identify the author.
 	// It will be included in a small section at the top of the attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	AuthorName *string `json:"authorName,omitempty"`
 	// authorLink defines optional URL used to hyperlink the author_name.
@@ -1381,6 +1387,7 @@ type MattermostAttachmentConfig struct {
 	// +optional
 	AuthorIcon *URL `json:"authorIcon,omitempty"`
 	// title defines an optional title displayed below the author information in the attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Title *string `json:"title,omitempty"`
 	// titleLink defines an optional URL used to hyperlink the title.
@@ -1397,6 +1404,7 @@ type MattermostAttachmentConfig struct {
 	// +optional
 	ThumbURL *URL `json:"thumbURL,omitempty"`
 	// footer defines an optional line of text that will be displayed at the bottom of the attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Footer *string `json:"footer,omitempty"`
 	// footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
