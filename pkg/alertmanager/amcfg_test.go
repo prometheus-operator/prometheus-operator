@@ -2724,7 +2724,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: ptr.To("http://test.url"),
+								URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 									OAuth2: &monitoringv1.OAuth2{
 										ClientID: monitoringv1.SecretOrConfigMap{
@@ -3943,7 +3943,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 									{
-										URL:     ptr.To("https://example.com/"),
+										URL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 										Timeout: ptr.To(monitoringv1.Duration("5s")),
 									},
 								},
@@ -3979,7 +3979,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 									{
-										URL:     ptr.To("https://example.com/"),
+										URL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
 										Timeout: ptr.To(monitoringv1.Duration("5s")),
 									},
 								},

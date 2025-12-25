@@ -828,7 +828,7 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(*in.URL)
+		url, err := validation.ValidateURL(string(*in.URL))
 		if err != nil {
 			return nil, err
 		}

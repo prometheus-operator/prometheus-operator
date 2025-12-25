@@ -46,6 +46,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
@@ -1551,7 +1552,7 @@ func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.A
 		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
-	lcv, err := prompkg.NewLabelConfigValidator(p)
+	lcv, err := validation.NewLabelConfigValidator(p)
 	if err != nil {
 		return err
 	}
