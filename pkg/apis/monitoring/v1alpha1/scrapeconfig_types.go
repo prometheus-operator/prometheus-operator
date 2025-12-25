@@ -1542,7 +1542,7 @@ const (
 // AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="self.role == 'ECS' && has(self.clusters)",message="clusters can only be set when role is ECS"
+// +kubebuilder:validation:XValidation:rule="!(self.role != 'ECS' && self.clusters.size() != 0)",message="clusters can only be set when role is ECS"
 // TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfig struct {
 	// role defines the AWS service to collect metrics from.

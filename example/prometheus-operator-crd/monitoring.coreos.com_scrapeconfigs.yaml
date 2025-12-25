@@ -449,7 +449,7 @@ spec:
                   type: object
                   x-kubernetes-validations:
                   - message: clusters can only be set when role is ECS
-                    rule: self.role == 'ECS' && has(self.clusters)
+                    rule: '!(self.role != ''ECS'' && self.clusters.size() != 0)'
                 type: array
               azureSDConfigs:
                 description: azureSDConfigs defines a list of Azure service discovery

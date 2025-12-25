@@ -426,7 +426,7 @@
                       "x-kubernetes-validations": [
                         {
                           "message": "clusters can only be set when role is ECS",
-                          "rule": "self.role == 'ECS' && has(self.clusters)"
+                          "rule": "!(self.role != 'ECS' && self.clusters.size() != 0)"
                         }
                       ]
                     },
