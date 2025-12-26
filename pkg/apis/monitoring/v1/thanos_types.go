@@ -226,6 +226,10 @@ type ThanosRulerSpec struct {
 	// +optional
 	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
+	// updateStrategy defines the strategy for the statefulset update.
+	// +optional
+	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+
 	// queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.
 	//
 	// For Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.

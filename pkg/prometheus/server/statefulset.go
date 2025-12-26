@@ -331,14 +331,24 @@ func makeStatefulSetSpec(
 	// https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	podManagementPolicy := ptr.Deref(cpf.PodManagementPolicy, monitoringv1.ParallelPodManagement)
 
+	updateStrategy := appsv1.StatefulSetUpdateStrategy{
+		Type: appsv1.RollingUpdateStatefulSetStrategyType,
+	}
+	if cpf.UpdateStrategy != nil {
+		if cpf.UpdateStrategy.Type != "" {
+			updateStrategy.Type = cpf.UpdateStrategy.Type
+		}
+		if cpf.UpdateStrategy.RollingUpdate != nil {
+			updateStrategy.RollingUpdate = cpf.UpdateStrategy.RollingUpdate
+		}
+	}
+
 	spec := appsv1.StatefulSetSpec{
 		ServiceName:         ptr.Deref(cpf.ServiceName, governingServiceName),
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
-		MinReadySeconds: ptr.Deref(p.Spec.MinReadySeconds, 0),
+		UpdateStrategy:      updateStrategy,
+		MinReadySeconds:     ptr.Deref(p.Spec.MinReadySeconds, 0),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},

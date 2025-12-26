@@ -777,14 +777,24 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	// https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	podManagementPolicy := ptr.Deref(a.Spec.PodManagementPolicy, monitoringv1.ParallelPodManagement)
 
+	updateStrategy := appsv1.StatefulSetUpdateStrategy{
+		Type: appsv1.RollingUpdateStatefulSetStrategyType,
+	}
+	if a.Spec.UpdateStrategy != nil {
+		if a.Spec.UpdateStrategy.Type != "" {
+			updateStrategy.Type = a.Spec.UpdateStrategy.Type
+		}
+		if a.Spec.UpdateStrategy.RollingUpdate != nil {
+			updateStrategy.RollingUpdate = a.Spec.UpdateStrategy.RollingUpdate
+		}
+	}
+
 	spec := appsv1.StatefulSetSpec{
 		ServiceName:         getServiceName(a),
 		Replicas:            a.Spec.Replicas,
 		MinReadySeconds:     ptr.Deref(a.Spec.MinReadySeconds, 0),
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
+		UpdateStrategy:      updateStrategy,
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
