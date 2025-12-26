@@ -22,10 +22,18 @@ import (
 
 // K8SSelectorConfigApplyConfiguration represents a declarative configuration of the K8SSelectorConfig type for use
 // with apply.
+//
+// K8SSelectorConfig is Kubernetes Selector Config
 type K8SSelectorConfigApplyConfiguration struct {
-	Role  *monitoringv1alpha1.KubernetesRole `json:"role,omitempty"`
-	Label *string                            `json:"label,omitempty"`
-	Field *string                            `json:"field,omitempty"`
+	// role defines the type of Kubernetes resource to limit the service discovery to.
+	// Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.
+	Role *monitoringv1alpha1.KubernetesRole `json:"role,omitempty"`
+	// label defines an optional label selector to limit the service discovery to resources with specific labels and label values.
+	// e.g: `node.kubernetes.io/instance-type=master`
+	Label *string `json:"label,omitempty"`
+	// field defines an optional field selector to limit the service discovery to resources which have fields with specific values.
+	// e.g: `metadata.name=foobar`
+	Field *string `json:"field,omitempty"`
 }
 
 // K8SSelectorConfigApplyConfiguration constructs a declarative configuration of the K8SSelectorConfig type for use with

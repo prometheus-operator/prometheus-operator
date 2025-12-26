@@ -18,11 +18,18 @@ package v1
 
 // ObjectReferenceApplyConfiguration represents a declarative configuration of the ObjectReference type for use
 // with apply.
+//
+// ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
 type ObjectReferenceApplyConfiguration struct {
-	Group     *string `json:"group,omitempty"`
-	Resource  *string `json:"resource,omitempty"`
+	// group of the referent. When not specified, it defaults to `monitoring.coreos.com`
+	Group *string `json:"group,omitempty"`
+	// resource of the referent.
+	Resource *string `json:"resource,omitempty"`
+	// namespace of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 	Namespace *string `json:"namespace,omitempty"`
-	Name      *string `json:"name,omitempty"`
+	// name of the referent. When not set, all resources in the namespace are matched.
+	Name *string `json:"name,omitempty"`
 }
 
 // ObjectReferenceApplyConfiguration constructs a declarative configuration of the ObjectReference type for use with

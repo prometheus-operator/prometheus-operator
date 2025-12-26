@@ -25,68 +25,256 @@ import (
 
 // AlertmanagerSpecApplyConfiguration represents a declarative configuration of the AlertmanagerSpec type for use
 // with apply.
+//
+// AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info:
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type AlertmanagerSpecApplyConfiguration struct {
-	PodMetadata                          *EmbeddedObjectMetadataApplyConfiguration               `json:"podMetadata,omitempty"`
-	Image                                *string                                                 `json:"image,omitempty"`
-	ImagePullPolicy                      *corev1.PullPolicy                                      `json:"imagePullPolicy,omitempty"`
-	Version                              *string                                                 `json:"version,omitempty"`
-	Tag                                  *string                                                 `json:"tag,omitempty"`
-	SHA                                  *string                                                 `json:"sha,omitempty"`
-	BaseImage                            *string                                                 `json:"baseImage,omitempty"`
-	ImagePullSecrets                     []corev1.LocalObjectReference                           `json:"imagePullSecrets,omitempty"`
-	Secrets                              []string                                                `json:"secrets,omitempty"`
-	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
-	ConfigSecret                         *string                                                 `json:"configSecret,omitempty"`
-	LogLevel                             *string                                                 `json:"logLevel,omitempty"`
-	LogFormat                            *string                                                 `json:"logFormat,omitempty"`
-	Replicas                             *int32                                                  `json:"replicas,omitempty"`
-	Retention                            *monitoringv1.GoDuration                                `json:"retention,omitempty"`
-	Storage                              *StorageSpecApplyConfiguration                          `json:"storage,omitempty"`
-	Volumes                              []corev1.Volume                                         `json:"volumes,omitempty"`
-	VolumeMounts                         []corev1.VolumeMount                                    `json:"volumeMounts,omitempty"`
+	// podMetadata defines labels and annotations which are propagated to the Alertmanager pods.
+	//
+	// The following items are reserved and cannot be overridden:
+	// * "alertmanager" label, set to the name of the Alertmanager instance.
+	// * "app.kubernetes.io/instance" label, set to the name of the Alertmanager instance.
+	// * "app.kubernetes.io/managed-by" label, set to "prometheus-operator".
+	// * "app.kubernetes.io/name" label, set to "alertmanager".
+	// * "app.kubernetes.io/version" label, set to the Alertmanager version.
+	// * "kubectl.kubernetes.io/default-container" annotation, set to "alertmanager".
+	PodMetadata *EmbeddedObjectMetadataApplyConfiguration `json:"podMetadata,omitempty"`
+	// image if specified has precedence over baseImage, tag and sha
+	// combinations. Specifying the version is still necessary to ensure the
+	// Prometheus Operator knows what version of Alertmanager is being
+	// configured.
+	Image *string `json:"image,omitempty"`
+	// imagePullPolicy for the 'alertmanager', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	ImagePullPolicy *corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	// version the cluster should be on.
+	Version *string `json:"version,omitempty"`
+	// tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
+	// Version is ignored if Tag is set.
+	// Deprecated: use 'image' instead. The image tag can be specified as part of the image URL.
+	Tag *string `json:"tag,omitempty"`
+	// sha of Alertmanager container image to be deployed. Defaults to the value of `version`.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
+	// Version and Tag are ignored if SHA is set.
+	// Deprecated: use 'image' instead. The image digest can be specified as part of the image URL.
+	SHA *string `json:"sha,omitempty"`
+	// baseImage that is used to deploy pods, without tag.
+	// Deprecated: use 'image' instead.
+	BaseImage *string `json:"baseImage,omitempty"`
+	// imagePullSecrets An optional list of references to secrets in the same namespace
+	// to use for pulling prometheus and alertmanager images from registries
+	// see https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	// secrets is a list of Secrets in the same namespace as the Alertmanager
+	// object, which shall be mounted into the Alertmanager Pods.
+	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
+	// The Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.
+	Secrets []string `json:"secrets,omitempty"`
+	// configMaps defines a list of ConfigMaps in the same namespace as the Alertmanager
+	// object, which shall be mounted into the Alertmanager Pods.
+	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
+	// The ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.
+	ConfigMaps []string `json:"configMaps,omitempty"`
+	// configSecret defines the name of a Kubernetes Secret in the same namespace as the
+	// Alertmanager object, which contains the configuration for this Alertmanager
+	// instance. If empty, it defaults to `alertmanager-<alertmanager-name>`.
+	//
+	// The Alertmanager configuration should be available under the
+	// `alertmanager.yaml` key. Additional keys from the original secret are
+	// copied to the generated secret and mounted into the
+	// `/etc/alertmanager/config` directory in the `alertmanager` container.
+	//
+	// If either the secret or the `alertmanager.yaml` key is missing, the
+	// operator provisions a minimal Alertmanager configuration with one empty
+	// receiver (effectively dropping alert notifications).
+	ConfigSecret *string `json:"configSecret,omitempty"`
+	// logLevel for Alertmanager to be configured with.
+	LogLevel *string `json:"logLevel,omitempty"`
+	// logFormat for Alertmanager to be configured with.
+	LogFormat *string `json:"logFormat,omitempty"`
+	// replicas defines the expected size of the alertmanager cluster. The controller will
+	// eventually make the size of the running cluster equal to the expected
+	// size.
+	Replicas *int32 `json:"replicas,omitempty"`
+	// retention defines the time duration Alertmanager shall retain data for. Default is '120h',
+	// and must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).
+	Retention *monitoringv1.GoDuration `json:"retention,omitempty"`
+	// storage defines the definition of how storage will be used by the Alertmanager
+	// instances.
+	Storage *StorageSpecApplyConfiguration `json:"storage,omitempty"`
+	// volumes allows configuration of additional volumes on the output StatefulSet definition.
+	// Volumes specified will be appended to other volumes that are generated as a result of
+	// StorageSpec objects.
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
+	// volumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+	// VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,
+	// that are generated as a result of StorageSpec objects.
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+	// persistentVolumeClaimRetentionPolicy controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+	// The default behavior is all PVCs are retained.
+	// This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+	// It requires enabling the StatefulSetAutoDeletePVC feature gate.
 	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
-	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
-	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
-	Paused                               *bool                                                   `json:"paused,omitempty"`
-	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
-	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
-	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
-	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
-	TopologySpreadConstraints            []corev1.TopologySpreadConstraint                       `json:"topologySpreadConstraints,omitempty"`
-	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
-	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
-	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
-	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
-	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
-	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
-	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
-	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
-	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
-	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
-	PriorityClassName                    *string                                                 `json:"priorityClassName,omitempty"`
-	AdditionalPeers                      []string                                                `json:"additionalPeers,omitempty"`
-	ClusterAdvertiseAddress              *string                                                 `json:"clusterAdvertiseAddress,omitempty"`
-	ClusterGossipInterval                *monitoringv1.GoDuration                                `json:"clusterGossipInterval,omitempty"`
-	ClusterLabel                         *string                                                 `json:"clusterLabel,omitempty"`
-	ClusterPushpullInterval              *monitoringv1.GoDuration                                `json:"clusterPushpullInterval,omitempty"`
-	ClusterPeerTimeout                   *monitoringv1.GoDuration                                `json:"clusterPeerTimeout,omitempty"`
-	PortName                             *string                                                 `json:"portName,omitempty"`
-	ForceEnableClusterMode               *bool                                                   `json:"forceEnableClusterMode,omitempty"`
-	AlertmanagerConfigSelector           *metav1.LabelSelectorApplyConfiguration                 `json:"alertmanagerConfigSelector,omitempty"`
-	AlertmanagerConfigNamespaceSelector  *metav1.LabelSelectorApplyConfiguration                 `json:"alertmanagerConfigNamespaceSelector,omitempty"`
-	AlertmanagerConfigMatcherStrategy    *AlertmanagerConfigMatcherStrategyApplyConfiguration    `json:"alertmanagerConfigMatcherStrategy,omitempty"`
-	MinReadySeconds                      *int32                                                  `json:"minReadySeconds,omitempty"`
-	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
-	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
-	Limits                               *AlertmanagerLimitsSpecApplyConfiguration               `json:"limits,omitempty"`
-	DispatchStartDelay                   *monitoringv1.GoDuration                                `json:"dispatchStartDelay,omitempty"`
-	ClusterTLS                           *ClusterTLSConfigApplyConfiguration                     `json:"clusterTLS,omitempty"`
-	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
-	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
-	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
-	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
-	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
-	HostUsers                            *bool                                                   `json:"hostUsers,omitempty"`
+	// externalUrl defines the URL used to access the Alertmanager web service. This is
+	// necessary to generate correct URLs. This is necessary if Alertmanager is not
+	// served from root of a DNS name.
+	ExternalURL *string `json:"externalUrl,omitempty"`
+	// routePrefix Alertmanager registers HTTP handlers for. This is useful,
+	// if using ExternalURL and a proxy is rewriting HTTP routes of a request,
+	// and the actual ExternalURL is still true, but the server serves requests
+	// under a different route prefix. For example for use with `kubectl proxy`.
+	RoutePrefix *string `json:"routePrefix,omitempty"`
+	// paused if set to true all actions on the underlying managed objects are not
+	// going to be performed, except for delete actions.
+	Paused *bool `json:"paused,omitempty"`
+	// nodeSelector defines which Nodes the Pods are scheduled on.
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// resources defines the resource requests and limits of the Pods.
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+	// affinity defines the pod's scheduling constraints.
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+	// tolerations defines the pod's tolerations.
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// topologySpreadConstraints defines the Pod's topology spread constraints.
+	TopologySpreadConstraints []corev1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+	// securityContext holds pod-level security attributes and common container settings.
+	// This defaults to the default PodSecurityContext.
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
+	// dnsPolicy defines the DNS policy for the pods.
+	DNSPolicy *monitoringv1.DNSPolicy `json:"dnsPolicy,omitempty"`
+	// dnsConfig defines the DNS configuration for the pods.
+	DNSConfig *PodDNSConfigApplyConfiguration `json:"dnsConfig,omitempty"`
+	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	// serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alertmanager resources.
+	// When deploying multiple Alertmanager resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	ServiceName *string `json:"serviceName,omitempty"`
+	// serviceAccountName is the name of the ServiceAccount to use to run the
+	// Prometheus Pods.
+	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+	// listenLocal defines the Alertmanager server listen on loopback, so that it
+	// does not bind against the Pod IP. Note this is only for the Alertmanager
+	// UI, not the gossip communication.
+	ListenLocal *bool `json:"listenLocal,omitempty"`
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	PodManagementPolicy *monitoringv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+	// containers allows injecting additional containers. This is meant to
+	// allow adding an authentication proxy to an Alertmanager pod.
+	// Containers described here modify an operator generated container if they
+	// share the same name and modifications are done via a strategic merge
+	// patch. The current container names are: `alertmanager` and
+	// `config-reloader`. Overriding containers is entirely outside the scope
+	// of what the maintainers will support and by doing so, you accept that
+	// this behaviour may break at any time without notice.
+	Containers []corev1.Container `json:"containers,omitempty"`
+	// initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
+	// fetch secrets for injection into the Alertmanager configuration from external sources. Any
+	// errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	// InitContainers described here modify an operator
+	// generated init containers if they share the same name and modifications are
+	// done via a strategic merge patch. The current init container name is:
+	// `init-config-reloader`. Overriding init containers is entirely outside the
+	// scope of what the maintainers will support and by doing so, you accept that
+	// this behaviour may break at any time without notice.
+	InitContainers []corev1.Container `json:"initContainers,omitempty"`
+	// priorityClassName assigned to the Pods
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// additionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
+	AdditionalPeers []string `json:"additionalPeers,omitempty"`
+	// clusterAdvertiseAddress defines the explicit address to advertise in cluster.
+	// Needs to be provided for non RFC1918 [1] (public) addresses.
+	// [1] RFC1918: https://tools.ietf.org/html/rfc1918
+	ClusterAdvertiseAddress *string `json:"clusterAdvertiseAddress,omitempty"`
+	// clusterGossipInterval defines the interval between gossip attempts.
+	ClusterGossipInterval *monitoringv1.GoDuration `json:"clusterGossipInterval,omitempty"`
+	// clusterLabel defines the identifier that uniquely identifies the Alertmanager cluster.
+	// You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.
+	ClusterLabel *string `json:"clusterLabel,omitempty"`
+	// clusterPushpullInterval defines the interval between pushpull attempts.
+	ClusterPushpullInterval *monitoringv1.GoDuration `json:"clusterPushpullInterval,omitempty"`
+	// clusterPeerTimeout defines the timeout for cluster peering.
+	ClusterPeerTimeout *monitoringv1.GoDuration `json:"clusterPeerTimeout,omitempty"`
+	// portName defines the port's name for the pods and governing service.
+	// Defaults to `web`.
+	PortName *string `json:"portName,omitempty"`
+	// forceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
+	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
+	ForceEnableClusterMode *bool `json:"forceEnableClusterMode,omitempty"`
+	// alertmanagerConfigSelector defines the selector to be used for to merge and configure Alertmanager with.
+	AlertmanagerConfigSelector *metav1.LabelSelectorApplyConfiguration `json:"alertmanagerConfigSelector,omitempty"`
+	// alertmanagerConfigNamespaceSelector defines the namespaces to be selected for AlertmanagerConfig discovery. If nil, only
+	// check own namespace.
+	AlertmanagerConfigNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"alertmanagerConfigNamespaceSelector,omitempty"`
+	// alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+	// process incoming alerts.
+	AlertmanagerConfigMatcherStrategy *AlertmanagerConfigMatcherStrategyApplyConfiguration `json:"alertmanagerConfigMatcherStrategy,omitempty"`
+	// minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
+	// without any of its container crashing for it to be considered available.
+	//
+	// If unset, pods will be considered available as soon as they are ready.
+	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
+	// hostAliases Pods configuration
+	HostAliases []HostAliasApplyConfiguration `json:"hostAliases,omitempty"`
+	// web defines the web command line flags when starting Alertmanager.
+	Web *AlertmanagerWebSpecApplyConfiguration `json:"web,omitempty"`
+	// limits defines the limits command line flags when starting Alertmanager.
+	Limits *AlertmanagerLimitsSpecApplyConfiguration `json:"limits,omitempty"`
+	// dispatchStartDelay defines the delay duration of the aggregation groups' first flush.
+	// The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.
+	//
+	// It requires Alertmanager >= 0.30.0.
+	DispatchStartDelay *monitoringv1.GoDuration `json:"dispatchStartDelay,omitempty"`
+	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+	//
+	// It requires Alertmanager >= 0.24.0.
+	ClusterTLS *ClusterTLSConfigApplyConfiguration `json:"clusterTLS,omitempty"`
+	// alertmanagerConfiguration defines the configuration of Alertmanager.
+	//
+	// If defined, it takes precedence over the `configSecret` field.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	AlertmanagerConfiguration *AlertmanagerConfigurationApplyConfiguration `json:"alertmanagerConfiguration,omitempty"`
+	// automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
+	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.
+	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
+	// enableFeatures defines the Alertmanager's feature flags. By default, no features are enabled.
+	// Enabling features which are disabled by default is entirely outside the
+	// scope of what the maintainers will support and by doing so, you accept
+	// that this behaviour may break at any time without notice.
+	//
+	// It requires Alertmanager >= 0.27.0.
+	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	// additionalArgs allows setting additional arguments for the 'Alertmanager' container.
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet. The arguments are passed as-is to the
+	// Alertmanager container which may cause issues if they are invalid or not supported
+	// by the given Alertmanager version.
+	AdditionalArgs []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
+	// terminationGracePeriodSeconds defines the Optional duration in seconds the pod needs to terminate gracefully.
+	// Value must be non-negative integer. The value zero indicates stop immediately via
+	// the kill signal (no opportunity to shut down) which may lead to data corruption.
+	//
+	// Defaults to 120 seconds.
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// hostUsers supports the user space in Kubernetes.
+	//
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	//
+	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+	// Starting Kubernetes 1.33, the feature is enabled by default.
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with

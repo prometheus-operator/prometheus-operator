@@ -24,20 +24,43 @@ import (
 
 // NomadSDConfigApplyConfiguration represents a declarative configuration of the NomadSDConfig type for use
 // with apply.
+//
+// NomadSDConfig configurations allow retrieving scrape targets from Nomad's Service API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#nomad_sd_config
 type NomadSDConfigApplyConfiguration struct {
-	AllowStale                                 *bool                                             `json:"allowStale,omitempty"`
-	Namespace                                  *string                                           `json:"namespace,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Region                                     *string                                           `json:"region,omitempty"`
-	Server                                     *string                                           `json:"server,omitempty"`
-	TagSeparator                               *string                                           `json:"tagSeparator,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	// allowStale defines the information to access the Nomad API. It is to be defined
+	// as the Nomad documentation requires.
+	AllowStale *bool `json:"allowStale,omitempty"`
+	// namespace defines the Nomad namespace to query for service discovery.
+	// When specified, only resources within this namespace will be discovered.
+	Namespace *string `json:"namespace,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// region defines the Nomad region to query for service discovery.
+	// When specified, only resources within this region will be discovered.
+	Region *string `json:"region,omitempty"`
+	// server defines the Nomad server address to connect to for service discovery.
+	// This should be the full URL including protocol (e.g., "https://nomad.example.com:4646").
+	Server *string `json:"server,omitempty"`
+	// tagSeparator defines the separator used to join multiple tags.
+	// This determines how Nomad service tags are concatenated into Prometheus labels.
+	TagSeparator *string `json:"tagSeparator,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	BasicAuth *monitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                            *bool `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool `json:"enableHTTP2,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // NomadSDConfigApplyConfiguration constructs a declarative configuration of the NomadSDConfig type for use with

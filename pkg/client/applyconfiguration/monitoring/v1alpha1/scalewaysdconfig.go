@@ -25,21 +25,39 @@ import (
 
 // ScalewaySDConfigApplyConfiguration represents a declarative configuration of the ScalewaySDConfig type for use
 // with apply.
+//
+// ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
+// TODO: Need to document that we will not be supporting the `_file` fields.
 type ScalewaySDConfigApplyConfiguration struct {
-	AccessKey                                                    *string                          `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector            `json:"secretKey,omitempty"`
-	ProjectID                                                    *string                          `json:"projectID,omitempty"`
-	Role                                                         *monitoringv1alpha1.ScalewayRole `json:"role,omitempty"`
-	Port                                                         *int32                           `json:"port,omitempty"`
-	ApiURL                                                       *string                          `json:"apiURL,omitempty"`
-	Zone                                                         *string                          `json:"zone,omitempty"`
-	NameFilter                                                   *string                          `json:"nameFilter,omitempty"`
-	TagsFilter                                                   []string                         `json:"tagsFilter,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration           `json:"refreshInterval,omitempty"`
+	// accessKey defines the access key to use. https://console.scaleway.com/project/credentials
+	AccessKey *string `json:"accessKey,omitempty"`
+	// secretKey defines the secret key to use when listing targets.
+	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
+	// projectID defines the Project ID of the targets.
+	ProjectID *string `json:"projectID,omitempty"`
+	// role defines the service of the targets to retrieve. Must be `Instance` or `Baremetal`.
+	Role *monitoringv1alpha1.ScalewayRole `json:"role,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// apiURL defines the API URL to use when doing the server listing requests.
+	ApiURL *string `json:"apiURL,omitempty"`
+	// zone defines the availability zone of your targets (e.g. fr-par-1).
+	Zone *string `json:"zone,omitempty"`
+	// nameFilter defines a name filter (works as a LIKE) to apply on the server listing request.
+	NameFilter *string `json:"nameFilter,omitempty"`
+	// tagsFilter defines a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.
+	TagsFilter []string `json:"tagsFilter,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval                                              *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // ScalewaySDConfigApplyConfiguration constructs a declarative configuration of the ScalewaySDConfig type for use with

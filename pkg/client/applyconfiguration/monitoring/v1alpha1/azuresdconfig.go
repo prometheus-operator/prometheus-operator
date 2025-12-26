@@ -25,23 +25,51 @@ import (
 
 // AzureSDConfigApplyConfiguration represents a declarative configuration of the AzureSDConfig type for use
 // with apply.
+//
+// AzureSDConfig allow retrieving scrape targets from Azure VMs.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
 type AzureSDConfigApplyConfiguration struct {
-	Environment                                                  *string                                                             `json:"environment,omitempty"`
-	AuthenticationMethod                                         *monitoringv1alpha1.AuthenticationMethodType                        `json:"authenticationMethod,omitempty"`
-	SubscriptionID                                               *string                                                             `json:"subscriptionID,omitempty"`
-	TenantID                                                     *string                                                             `json:"tenantID,omitempty"`
-	ClientID                                                     *string                                                             `json:"clientID,omitempty"`
-	ClientSecret                                                 *v1.SecretKeySelector                                               `json:"clientSecret,omitempty"`
-	ResourceGroup                                                *string                                                             `json:"resourceGroup,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
-	Port                                                         *int32                                                              `json:"port,omitempty"`
-	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// environment defines the Azure environment.
+	Environment *string `json:"environment,omitempty"`
+	// authenticationMethod defines the authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
+	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+	// SDK authentication method uses environment variables by default.
+	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+	AuthenticationMethod *monitoringv1alpha1.AuthenticationMethodType `json:"authenticationMethod,omitempty"`
+	// subscriptionID defines subscription ID. Always required.
+	SubscriptionID *string `json:"subscriptionID,omitempty"`
+	// tenantID defines tenant ID. Only required with the OAuth authentication method.
+	TenantID *string `json:"tenantID,omitempty"`
+	// clientID defines client ID. Only required with the OAuth authentication method.
+	ClientID *string `json:"clientID,omitempty"`
+	// clientSecret defines client secret. Only required with the OAuth authentication method.
+	ClientSecret *v1.SecretKeySelector `json:"clientSecret,omitempty"`
+	// resourceGroup defines resource group name. Limits discovery to this resource group.
+	// Requires  Prometheus v2.35.0 and above
+	ResourceGroup *string `json:"resourceGroup,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	Port *int32 `json:"port,omitempty"`
+	// basicAuth defines the information to authenticate against the target HTTP endpoint.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oAuth2`.
+	BasicAuth *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the authorization header configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `oAuth2`, or `basicAuth`.
+	Authorization *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// tlsConfig defies the TLS configuration applying to the target HTTP endpoint.
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // AzureSDConfigApplyConfiguration constructs a declarative configuration of the AzureSDConfig type for use with

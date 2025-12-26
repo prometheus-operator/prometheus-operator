@@ -22,12 +22,28 @@ import (
 
 // NativeHistogramConfigApplyConfiguration represents a declarative configuration of the NativeHistogramConfig type for use
 // with apply.
+//
+// NativeHistogramConfig extends the native histogram configuration settings.
 type NativeHistogramConfigApplyConfiguration struct {
-	ScrapeNativeHistograms         *bool              `json:"scrapeNativeHistograms,omitempty"`
-	ScrapeClassicHistograms        *bool              `json:"scrapeClassicHistograms,omitempty"`
-	NativeHistogramBucketLimit     *uint64            `json:"nativeHistogramBucketLimit,omitempty"`
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
+	// It requires Prometheus >= v2.45.0.
+	//
+	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	// nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,
+	// buckets will be merged to stay within the limit.
+	// It requires Prometheus >= v2.45.0.
+	NativeHistogramBucketLimit *uint64 `json:"nativeHistogramBucketLimit,omitempty"`
+	// nativeHistogramMinBucketFactor defines if the growth factor of one bucket to the next is smaller than this,
+	// buckets will be merged to increase the factor sufficiently.
+	// It requires Prometheus >= v2.50.0.
 	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
-	ConvertClassicHistogramsToNHCB *bool              `json:"convertClassicHistogramsToNHCB,omitempty"`
+	// convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.
+	// It requires Prometheus >= v3.0.0.
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
 }
 
 // NativeHistogramConfigApplyConfiguration constructs a declarative configuration of the NativeHistogramConfig type for use with

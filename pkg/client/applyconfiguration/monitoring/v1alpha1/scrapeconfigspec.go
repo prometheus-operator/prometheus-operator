@@ -25,60 +25,148 @@ import (
 
 // ScrapeConfigSpecApplyConfiguration represents a declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
+//
+// ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 type ScrapeConfigSpecApplyConfiguration struct {
-	JobName                                    *string                                  `json:"jobName,omitempty"`
-	StaticConfigs                              []StaticConfigApplyConfiguration         `json:"staticConfigs,omitempty"`
-	FileSDConfigs                              []FileSDConfigApplyConfiguration         `json:"fileSDConfigs,omitempty"`
-	HTTPSDConfigs                              []HTTPSDConfigApplyConfiguration         `json:"httpSDConfigs,omitempty"`
-	KubernetesSDConfigs                        []KubernetesSDConfigApplyConfiguration   `json:"kubernetesSDConfigs,omitempty"`
-	ConsulSDConfigs                            []ConsulSDConfigApplyConfiguration       `json:"consulSDConfigs,omitempty"`
-	DNSSDConfigs                               []DNSSDConfigApplyConfiguration          `json:"dnsSDConfigs,omitempty"`
-	EC2SDConfigs                               []EC2SDConfigApplyConfiguration          `json:"ec2SDConfigs,omitempty"`
-	AzureSDConfigs                             []AzureSDConfigApplyConfiguration        `json:"azureSDConfigs,omitempty"`
-	GCESDConfigs                               []GCESDConfigApplyConfiguration          `json:"gceSDConfigs,omitempty"`
-	OpenStackSDConfigs                         []OpenStackSDConfigApplyConfiguration    `json:"openstackSDConfigs,omitempty"`
-	DigitalOceanSDConfigs                      []DigitalOceanSDConfigApplyConfiguration `json:"digitalOceanSDConfigs,omitempty"`
-	KumaSDConfigs                              []KumaSDConfigApplyConfiguration         `json:"kumaSDConfigs,omitempty"`
-	EurekaSDConfigs                            []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
-	DockerSDConfigs                            []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
-	LinodeSDConfigs                            []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
-	HetznerSDConfigs                           []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
-	NomadSDConfigs                             []NomadSDConfigApplyConfiguration        `json:"nomadSDConfigs,omitempty"`
-	DockerSwarmSDConfigs                       []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
-	PuppetDBSDConfigs                          []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
-	LightSailSDConfigs                         []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
-	OVHCloudSDConfigs                          []OVHCloudSDConfigApplyConfiguration     `json:"ovhcloudSDConfigs,omitempty"`
-	ScalewaySDConfigs                          []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfigs,omitempty"`
-	IonosSDConfigs                             []IonosSDConfigApplyConfiguration        `json:"ionosSDConfigs,omitempty"`
-	RelabelConfigs                             []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
-	MetricsPath                                *string                                  `json:"metricsPath,omitempty"`
-	ScrapeInterval                             *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
-	ScrapeTimeout                              *monitoringv1.Duration                   `json:"scrapeTimeout,omitempty"`
-	ScrapeProtocols                            []monitoringv1.ScrapeProtocol            `json:"scrapeProtocols,omitempty"`
-	FallbackScrapeProtocol                     *monitoringv1.ScrapeProtocol             `json:"fallbackScrapeProtocol,omitempty"`
-	HonorTimestamps                            *bool                                    `json:"honorTimestamps,omitempty"`
-	TrackTimestampsStaleness                   *bool                                    `json:"trackTimestampsStaleness,omitempty"`
-	HonorLabels                                *bool                                    `json:"honorLabels,omitempty"`
-	Params                                     map[string][]string                      `json:"params,omitempty"`
-	Scheme                                     *monitoringv1.Scheme                     `json:"scheme,omitempty"`
-	EnableCompression                          *bool                                    `json:"enableCompression,omitempty"`
-	EnableHTTP2                                *bool                                    `json:"enableHTTP2,omitempty"`
-	BasicAuth                                  *v1.BasicAuthApplyConfiguration          `json:"basicAuth,omitempty"`
-	Authorization                              *v1.SafeAuthorizationApplyConfiguration  `json:"authorization,omitempty"`
-	OAuth2                                     *v1.OAuth2ApplyConfiguration             `json:"oauth2,omitempty"`
-	TLSConfig                                  *v1.SafeTLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	SampleLimit                                *uint64                                  `json:"sampleLimit,omitempty"`
-	TargetLimit                                *uint64                                  `json:"targetLimit,omitempty"`
-	LabelLimit                                 *uint64                                  `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                       *uint64                                  `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                      *uint64                                  `json:"labelValueLengthLimit,omitempty"`
+	// jobName defines the value of the `job` label assigned to the scraped metrics by default.
+	//
+	// The `job_name` field in the rendered scrape configuration is always controlled by the
+	// operator to prevent duplicate job names, which Prometheus does not allow. Instead the
+	// `job` label is set by means of relabeling configs.
+	JobName *string `json:"jobName,omitempty"`
+	// staticConfigs defines a list of static targets with a common label set.
+	StaticConfigs []StaticConfigApplyConfiguration `json:"staticConfigs,omitempty"`
+	// fileSDConfigs defines a list of file service discovery configurations.
+	FileSDConfigs []FileSDConfigApplyConfiguration `json:"fileSDConfigs,omitempty"`
+	// httpSDConfigs defines a list of HTTP service discovery configurations.
+	HTTPSDConfigs []HTTPSDConfigApplyConfiguration `json:"httpSDConfigs,omitempty"`
+	// kubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
+	KubernetesSDConfigs []KubernetesSDConfigApplyConfiguration `json:"kubernetesSDConfigs,omitempty"`
+	// consulSDConfigs defines a list of Consul service discovery configurations.
+	ConsulSDConfigs []ConsulSDConfigApplyConfiguration `json:"consulSDConfigs,omitempty"`
+	// dnsSDConfigs defines a list of DNS service discovery configurations.
+	DNSSDConfigs []DNSSDConfigApplyConfiguration `json:"dnsSDConfigs,omitempty"`
+	// ec2SDConfigs defines a list of EC2 service discovery configurations.
+	EC2SDConfigs []EC2SDConfigApplyConfiguration `json:"ec2SDConfigs,omitempty"`
+	// azureSDConfigs defines a list of Azure service discovery configurations.
+	AzureSDConfigs []AzureSDConfigApplyConfiguration `json:"azureSDConfigs,omitempty"`
+	// gceSDConfigs defines a list of GCE service discovery configurations.
+	GCESDConfigs []GCESDConfigApplyConfiguration `json:"gceSDConfigs,omitempty"`
+	// openstackSDConfigs defines a list of OpenStack service discovery configurations.
+	OpenStackSDConfigs []OpenStackSDConfigApplyConfiguration `json:"openstackSDConfigs,omitempty"`
+	// digitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
+	DigitalOceanSDConfigs []DigitalOceanSDConfigApplyConfiguration `json:"digitalOceanSDConfigs,omitempty"`
+	// kumaSDConfigs defines a list of Kuma service discovery configurations.
+	KumaSDConfigs []KumaSDConfigApplyConfiguration `json:"kumaSDConfigs,omitempty"`
+	// eurekaSDConfigs defines a list of Eureka service discovery configurations.
+	EurekaSDConfigs []EurekaSDConfigApplyConfiguration `json:"eurekaSDConfigs,omitempty"`
+	// dockerSDConfigs defines a list of Docker service discovery configurations.
+	DockerSDConfigs []DockerSDConfigApplyConfiguration `json:"dockerSDConfigs,omitempty"`
+	// linodeSDConfigs defines a list of Linode service discovery configurations.
+	LinodeSDConfigs []LinodeSDConfigApplyConfiguration `json:"linodeSDConfigs,omitempty"`
+	// hetznerSDConfigs defines a list of Hetzner service discovery configurations.
+	HetznerSDConfigs []HetznerSDConfigApplyConfiguration `json:"hetznerSDConfigs,omitempty"`
+	// nomadSDConfigs defines a list of Nomad service discovery configurations.
+	NomadSDConfigs []NomadSDConfigApplyConfiguration `json:"nomadSDConfigs,omitempty"`
+	// dockerSwarmSDConfigs defines a list of Dockerswarm service discovery configurations.
+	DockerSwarmSDConfigs []DockerSwarmSDConfigApplyConfiguration `json:"dockerSwarmSDConfigs,omitempty"`
+	// puppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
+	PuppetDBSDConfigs []PuppetDBSDConfigApplyConfiguration `json:"puppetDBSDConfigs,omitempty"`
+	// lightSailSDConfigs defines a list of Lightsail service discovery configurations.
+	LightSailSDConfigs []LightSailSDConfigApplyConfiguration `json:"lightSailSDConfigs,omitempty"`
+	// ovhcloudSDConfigs defines a list of OVHcloud service discovery configurations.
+	OVHCloudSDConfigs []OVHCloudSDConfigApplyConfiguration `json:"ovhcloudSDConfigs,omitempty"`
+	// scalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
+	ScalewaySDConfigs []ScalewaySDConfigApplyConfiguration `json:"scalewaySDConfigs,omitempty"`
+	// ionosSDConfigs defines a list of IONOS service discovery configurations.
+	IonosSDConfigs []IonosSDConfigApplyConfiguration `json:"ionosSDConfigs,omitempty"`
+	// relabelings defines how to rewrite the target's labels before scraping.
+	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
+	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	RelabelConfigs []v1.RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	// metricsPath defines the HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
+	MetricsPath *string `json:"metricsPath,omitempty"`
+	// scrapeInterval defines the interval between consecutive scrapes.
+	ScrapeInterval *monitoringv1.Duration `json:"scrapeInterval,omitempty"`
+	// scrapeTimeout defines the number of seconds to wait until a scrape request times out.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	ScrapeTimeout *monitoringv1.Duration `json:"scrapeTimeout,omitempty"`
+	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// honorTimestamps defines whether Prometheus preserves the timestamps
+	// when exposed by the target.
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
+	// the metrics that have an explicit timestamp present in scraped data.
+	// Has no effect if `honorTimestamps` is false.
+	// It requires Prometheus >= v2.48.0.
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
+	// honorLabels defines when true the metric's labels when they collide
+	// with the target's labels.
+	HonorLabels *bool `json:"honorLabels,omitempty"`
+	// params defines optional HTTP URL parameters
+	Params map[string][]string `json:"params,omitempty"`
+	// scheme defines the protocol scheme used for requests.
+	Scheme *monitoringv1.Scheme `json:"scheme,omitempty"`
+	// enableCompression when false, Prometheus will request uncompressed response from the scraped target.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// If unset, Prometheus uses true by default.
+	EnableCompression *bool `json:"enableCompression,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the header to use on every scrape request.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// tlsConfig defines the TLS configuration to use on every scrape request
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	// targetLimit defines a limit on the number of scraped targets that will be accepted.
+	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.27.0 and newer.
+	LabelValueLengthLimit                      *uint64 `json:"labelValueLengthLimit,omitempty"`
 	v1.NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
-	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
-	v1.ProxyConfigApplyConfiguration           `json:",inline"`
-	NameValidationScheme                       *monitoringv1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
-	NameEscapingScheme                         *monitoringv1.NameEscapingSchemeOptions   `json:"nameEscapingScheme,omitempty"`
-	ScrapeClassName                            *string                                   `json:"scrapeClass,omitempty"`
+	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
+	MetricRelabelConfigs []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	// nameValidationScheme defines the validation scheme for metric and label names.
+	//
+	// It requires Prometheus >= v3.0.0.
+	NameValidationScheme *monitoringv1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+	// nameEscapingScheme defines the metric name escaping mode to request through content negotiation.
+	//
+	// It requires Prometheus >= v3.4.0.
+	NameEscapingScheme *monitoringv1.NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
+	// scrapeClass defines the scrape class to apply.
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs a declarative configuration of the ScrapeConfigSpec type for use with

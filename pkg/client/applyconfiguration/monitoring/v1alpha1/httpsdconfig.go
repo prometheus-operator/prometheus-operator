@@ -24,16 +24,32 @@ import (
 
 // HTTPSDConfigApplyConfiguration represents a declarative configuration of the HTTPSDConfig type for use
 // with apply.
+//
+// HTTPSDConfig defines a prometheus HTTP service discovery configuration
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
 type HTTPSDConfigApplyConfiguration struct {
-	URL                                        *string                                           `json:"url,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// url defines the URL from which the targets are fetched.
+	URL *string `json:"url,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oAuth2`.
+	BasicAuth *monitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the authorization header configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `oAuth2`, or `basicAuth`.
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // HTTPSDConfigApplyConfiguration constructs a declarative configuration of the HTTPSDConfig type for use with

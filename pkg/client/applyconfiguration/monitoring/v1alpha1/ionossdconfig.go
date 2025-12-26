@@ -24,16 +24,29 @@ import (
 
 // IonosSDConfigApplyConfiguration represents a declarative configuration of the IonosSDConfig type for use
 // with apply.
+//
+// IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config
 type IonosSDConfigApplyConfiguration struct {
-	DataCenterID                               *string                                           `json:"datacenterID,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	// datacenterID defines the unique ID of the IONOS data center.
+	DataCenterID *string `json:"datacenterID,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// authorization defines the  header configuration to authenticate against the IONOS.
+	// Cannot be set at the same time as `oauth2`.
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 }
 
 // IonosSDConfigApplyConfiguration constructs a declarative configuration of the IonosSDConfig type for use with

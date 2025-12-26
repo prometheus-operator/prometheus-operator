@@ -22,17 +22,39 @@ import (
 
 // VictorOpsConfigApplyConfiguration represents a declarative configuration of the VictorOpsConfig type for use
 // with apply.
+//
+// VictorOpsConfig configures notifications via VictorOps.
+// See https://prometheus.io/docs/alerting/latest/configuration/#victorops_config
 type VictorOpsConfigApplyConfiguration struct {
-	SendResolved      *bool                         `json:"sendResolved,omitempty"`
-	APIKey            *v1.SecretKeySelector         `json:"apiKey,omitempty"`
-	APIURL            *string                       `json:"apiUrl,omitempty"`
-	RoutingKey        *string                       `json:"routingKey,omitempty"`
-	MessageType       *string                       `json:"messageType,omitempty"`
-	EntityDisplayName *string                       `json:"entityDisplayName,omitempty"`
-	StateMessage      *string                       `json:"stateMessage,omitempty"`
-	MonitoringTool    *string                       `json:"monitoringTool,omitempty"`
-	CustomFields      []KeyValueApplyConfiguration  `json:"customFields,omitempty"`
-	HTTPConfig        *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiKey defines the secret's key that contains the API key to use when talking to the VictorOps API.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
+	// apiUrl defines the VictorOps API URL.
+	// When not specified, defaults to the standard VictorOps API endpoint.
+	APIURL *string `json:"apiUrl,omitempty"`
+	// routingKey defines a key used to map the alert to a team.
+	// This determines which VictorOps team will receive the alert notification.
+	RoutingKey *string `json:"routingKey,omitempty"`
+	// messageType describes the behavior of the alert.
+	// Valid values are "CRITICAL", "WARNING", and "INFO".
+	MessageType *string `json:"messageType,omitempty"`
+	// entityDisplayName contains a summary of the alerted problem.
+	// This appears as the main title or identifier for the incident.
+	EntityDisplayName *string `json:"entityDisplayName,omitempty"`
+	// stateMessage contains a long explanation of the alerted problem.
+	// This provides detailed context about the incident.
+	StateMessage *string `json:"stateMessage,omitempty"`
+	// monitoringTool defines the monitoring tool the state message is from.
+	// This helps identify the source system that generated the alert.
+	MonitoringTool *string `json:"monitoringTool,omitempty"`
+	// customFields defines additional custom fields for notification.
+	// These provide extra metadata that will be included with the VictorOps incident.
+	CustomFields []KeyValueApplyConfiguration `json:"customFields,omitempty"`
+	// httpConfig defines the HTTP client's configuration for VictorOps API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // VictorOpsConfigApplyConfiguration constructs a declarative configuration of the VictorOpsConfig type for use with

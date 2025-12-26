@@ -23,29 +23,118 @@ import (
 
 // RemoteWriteSpecApplyConfiguration represents a declarative configuration of the RemoteWriteSpec type for use
 // with apply.
+//
+// RemoteWriteSpec defines the configuration to write samples from Prometheus
+// to a remote endpoint.
 type RemoteWriteSpecApplyConfiguration struct {
-	URL                           *string                                 `json:"url,omitempty"`
-	Name                          *string                                 `json:"name,omitempty"`
-	MessageVersion                *monitoringv1.RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
-	SendExemplars                 *bool                                   `json:"sendExemplars,omitempty"`
-	SendNativeHistograms          *bool                                   `json:"sendNativeHistograms,omitempty"`
-	RemoteTimeout                 *monitoringv1.Duration                  `json:"remoteTimeout,omitempty"`
-	Headers                       map[string]string                       `json:"headers,omitempty"`
-	WriteRelabelConfigs           []RelabelConfigApplyConfiguration       `json:"writeRelabelConfigs,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration               `json:"oauth2,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration            `json:"basicAuth,omitempty"`
-	BearerTokenFile               *string                                 `json:"bearerTokenFile,omitempty"`
-	Authorization                 *AuthorizationApplyConfiguration        `json:"authorization,omitempty"`
-	Sigv4                         *Sigv4ApplyConfiguration                `json:"sigv4,omitempty"`
-	AzureAD                       *AzureADApplyConfiguration              `json:"azureAd,omitempty"`
-	BearerToken                   *string                                 `json:"bearerToken,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration            `json:"tlsConfig,omitempty"`
+	// url defines the URL of the endpoint to send samples to.
+	URL *string `json:"url,omitempty"`
+	// name of the remote write queue, it must be unique if specified. The
+	// name is used in metrics and logging in order to differentiate queues.
+	//
+	// It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
+	Name *string `json:"name,omitempty"`
+	// messageVersion defines the Remote Write message's version to use when writing to the endpoint.
+	//
+	// `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.
+	// `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.
+	//
+	// When `Version2.0` is selected, Prometheus will automatically be
+	// configured to append the metadata of scraped metrics to the WAL.
+	//
+	// Before setting this field, consult with your remote storage provider
+	// what message version it supports.
+	//
+	// It requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.
+	MessageVersion *monitoringv1.RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
+	// sendExemplars enables sending of exemplars over remote write. Note that
+	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
+	// option for exemplars to be scraped in the first place.
+	//
+	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
+	SendExemplars *bool `json:"sendExemplars,omitempty"`
+	// sendNativeHistograms enables sending of native histograms, also known as sparse histograms
+	// over remote write.
+	//
+	// It requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.
+	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
+	// remoteTimeout defines the timeout for requests to the remote write endpoint.
+	RemoteTimeout *monitoringv1.Duration `json:"remoteTimeout,omitempty"`
+	// headers defines the custom HTTP headers to be sent along with each remote write request.
+	// Be aware that headers that are set by Prometheus itself can't be overwritten.
+	//
+	// It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
+	Headers map[string]string `json:"headers,omitempty"`
+	// writeRelabelConfigs defines the list of remote write relabel configurations.
+	WriteRelabelConfigs []RelabelConfigApplyConfiguration `json:"writeRelabelConfigs,omitempty"`
+	// oauth2 configuration for the URL.
+	//
+	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
+	//
+	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
+	OAuth2 *OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// basicAuth configuration for the URL.
+	//
+	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
+	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// bearerTokenFile defines the file from which to read bearer token for the URL.
+	//
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	BearerTokenFile *string `json:"bearerTokenFile,omitempty"`
+	// authorization section for the URL.
+	//
+	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
+	//
+	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
+	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// sigv4 defines the AWS's Signature Verification 4 for the URL.
+	//
+	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
+	//
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
+	Sigv4 *Sigv4ApplyConfiguration `json:"sigv4,omitempty"`
+	// azureAd for the URL.
+	//
+	// It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
+	//
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
+	AzureAD *AzureADApplyConfiguration `json:"azureAd,omitempty"`
+	// bearerToken is deprecated: this will be removed in a future release.
+	// *Warning: this field shouldn't be used because the token value appears
+	// in clear-text. Prefer using `authorization`.*
+	BearerToken *string `json:"bearerToken,omitempty"`
+	// tlsConfig to use for the URL.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// Optional ProxyConfig.
 	ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects               *bool                             `json:"followRedirects,omitempty"`
-	QueueConfig                   *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
-	MetadataConfig                *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
-	EnableHttp2                   *bool                             `json:"enableHTTP2,omitempty"`
-	RoundRobinDNS                 *bool                             `json:"roundRobinDNS,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	//
+	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// queueConfig allows tuning of the remote write queue parameters.
+	QueueConfig *QueueConfigApplyConfiguration `json:"queueConfig,omitempty"`
+	// metadataConfig defines how to send a series metadata to the remote storage.
+	//
+	// When the field is empty, **no metadata** is sent. But when the field is
+	// null, metadata is sent.
+	MetadataConfig *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+	// roundRobinDNS controls the DNS resolution behavior for remote-write connections.
+	// When enabled:
+	// - The remote-write mechanism will resolve the hostname via DNS.
+	// - It will randomly select one of the resolved IP addresses and connect to it.
+	//
+	// When disabled (default behavior):
+	// - The Go standard library will handle hostname resolution.
+	// - It will attempt connections to each resolved IP address sequentially.
+	//
+	// Note: The connection timeout applies to the entire resolution and connection process.
+	//
+	// If disabled, the timeout is distributed across all connection attempts.
+	//
+	// It requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.
+	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
 }
 
 // RemoteWriteSpecApplyConfiguration constructs a declarative configuration of the RemoteWriteSpec type for use with

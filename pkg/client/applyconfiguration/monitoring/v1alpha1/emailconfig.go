@@ -23,21 +23,53 @@ import (
 
 // EmailConfigApplyConfiguration represents a declarative configuration of the EmailConfig type for use
 // with apply.
+//
+// EmailConfig configures notifications via Email.
 type EmailConfigApplyConfiguration struct {
-	SendResolved *bool                                         `json:"sendResolved,omitempty"`
-	To           *string                                       `json:"to,omitempty"`
-	From         *string                                       `json:"from,omitempty"`
-	Hello        *string                                       `json:"hello,omitempty"`
-	Smarthost    *string                                       `json:"smarthost,omitempty"`
-	AuthUsername *string                                       `json:"authUsername,omitempty"`
-	AuthPassword *v1.SecretKeySelector                         `json:"authPassword,omitempty"`
-	AuthSecret   *v1.SecretKeySelector                         `json:"authSecret,omitempty"`
-	AuthIdentity *string                                       `json:"authIdentity,omitempty"`
-	Headers      []KeyValueApplyConfiguration                  `json:"headers,omitempty"`
-	HTML         *string                                       `json:"html,omitempty"`
-	Text         *string                                       `json:"text,omitempty"`
-	RequireTLS   *bool                                         `json:"requireTLS,omitempty"`
-	TLSConfig    *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// to defines the email address to send notifications to.
+	// This is the recipient address for alert notifications.
+	To *string `json:"to,omitempty"`
+	// from defines the sender address for email notifications.
+	// This appears as the "From" field in the email header.
+	From *string `json:"from,omitempty"`
+	// hello defines the hostname to identify to the SMTP server.
+	// This is used in the SMTP HELO/EHLO command during the connection handshake.
+	Hello *string `json:"hello,omitempty"`
+	// smarthost defines the SMTP host and port through which emails are sent.
+	// Format should be "hostname:port", e.g. "smtp.example.com:587".
+	Smarthost *string `json:"smarthost,omitempty"`
+	// authUsername defines the username to use for SMTP authentication.
+	// This is used for SMTP AUTH when the server requires authentication.
+	AuthUsername *string `json:"authUsername,omitempty"`
+	// authPassword defines the secret's key that contains the password to use for authentication.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	AuthPassword *v1.SecretKeySelector `json:"authPassword,omitempty"`
+	// authSecret defines the secret's key that contains the CRAM-MD5 secret.
+	// This is used for CRAM-MD5 authentication mechanism.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
+	// authIdentity defines the identity to use for SMTP authentication.
+	// This is typically used with PLAIN authentication mechanism.
+	AuthIdentity *string `json:"authIdentity,omitempty"`
+	// headers defines additional email header key/value pairs.
+	// These override any headers previously set by the notification implementation.
+	Headers []KeyValueApplyConfiguration `json:"headers,omitempty"`
+	// html defines the HTML body of the email notification.
+	// This allows for rich formatting in the email content.
+	HTML *string `json:"html,omitempty"`
+	// text defines the plain text body of the email notification.
+	// This provides a fallback for email clients that don't support HTML.
+	Text *string `json:"text,omitempty"`
+	// requireTLS defines the SMTP TLS requirement.
+	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
+	RequireTLS *bool `json:"requireTLS,omitempty"`
+	// tlsConfig defines the TLS configuration for SMTP connections.
+	// This includes settings for certificates, CA validation, and TLS protocol options.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // EmailConfigApplyConfiguration constructs a declarative configuration of the EmailConfig type for use with

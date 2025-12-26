@@ -24,17 +24,32 @@ import (
 
 // LinodeSDConfigApplyConfiguration represents a declarative configuration of the LinodeSDConfig type for use
 // with apply.
+//
+// LinodeSDConfig configurations allow retrieving scrape targets from Linode's Linode APIv4.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config
 type LinodeSDConfigApplyConfiguration struct {
-	Region                                     *string                                           `json:"region,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	TagSeparator                               *string                                           `json:"tagSeparator,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// region defines the region to filter on.
+	Region *string `json:"region,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// tagSeparator defines the string by which Linode Instance tags are joined into the tag label.el.
+	TagSeparator *string `json:"tagSeparator,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // LinodeSDConfigApplyConfiguration constructs a declarative configuration of the LinodeSDConfig type for use with

@@ -23,13 +23,29 @@ import (
 
 // WebhookConfigApplyConfiguration represents a declarative configuration of the WebhookConfig type for use
 // with apply.
+//
+// WebhookConfig configures notifications via a generic receiver supporting the webhook payload.
+// See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
 type WebhookConfigApplyConfiguration struct {
-	SendResolved *bool                                `json:"sendResolved,omitempty"`
-	URL          *monitoringv1beta1.URL               `json:"url,omitempty"`
-	URLSecret    *SecretKeySelectorApplyConfiguration `json:"urlSecret,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
-	MaxAlerts    *int32                               `json:"maxAlerts,omitempty"`
-	Timeout      *v1.Duration                         `json:"timeout,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// url defines the URL to send HTTP POST requests to.
+	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
+	URL *monitoringv1beta1.URL `json:"url,omitempty"`
+	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
+	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	URLSecret *SecretKeySelectorApplyConfiguration `json:"urlSecret,omitempty"`
+	// httpConfig defines the HTTP client configuration for webhook requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// maxAlerts defines the maximum number of alerts to be sent per webhook message.
+	// When 0, all alerts are included in the webhook payload.
+	MaxAlerts *int32 `json:"maxAlerts,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.28.0.
+	Timeout *v1.Duration `json:"timeout,omitempty"`
 }
 
 // WebhookConfigApplyConfiguration constructs a declarative configuration of the WebhookConfig type for use with

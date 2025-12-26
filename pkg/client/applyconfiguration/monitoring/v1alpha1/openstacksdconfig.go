@@ -25,25 +25,64 @@ import (
 
 // OpenStackSDConfigApplyConfiguration represents a declarative configuration of the OpenStackSDConfig type for use
 // with apply.
+//
+// OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config
 type OpenStackSDConfigApplyConfiguration struct {
-	Role                        *monitoringv1alpha1.OpenStackRole                               `json:"role,omitempty"`
-	Region                      *string                                                         `json:"region,omitempty"`
-	IdentityEndpoint            *string                                                         `json:"identityEndpoint,omitempty"`
-	Username                    *string                                                         `json:"username,omitempty"`
-	UserID                      *string                                                         `json:"userid,omitempty"`
-	Password                    *v1.SecretKeySelector                                           `json:"password,omitempty"`
-	DomainName                  *string                                                         `json:"domainName,omitempty"`
-	DomainID                    *string                                                         `json:"domainID,omitempty"`
-	ProjectName                 *string                                                         `json:"projectName,omitempty"`
-	ProjectID                   *string                                                         `json:"projectID,omitempty"`
-	ApplicationCredentialName   *string                                                         `json:"applicationCredentialName,omitempty"`
-	ApplicationCredentialID     *string                                                         `json:"applicationCredentialId,omitempty"`
-	ApplicationCredentialSecret *v1.SecretKeySelector                                           `json:"applicationCredentialSecret,omitempty"`
-	AllTenants                  *bool                                                           `json:"allTenants,omitempty"`
-	RefreshInterval             *monitoringv1.Duration                                          `json:"refreshInterval,omitempty"`
-	Port                        *int32                                                          `json:"port,omitempty"`
-	Availability                *string                                                         `json:"availability,omitempty"`
-	TLSConfig                   *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// role defines the OpenStack role of entities that should be discovered.
+	//
+	// Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
+	Role *monitoringv1alpha1.OpenStackRole `json:"role,omitempty"`
+	// region defines the OpenStack Region.
+	Region *string `json:"region,omitempty"`
+	// identityEndpoint defines the HTTP endpoint that is required to work with
+	// the Identity API of the appropriate version.
+	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
+	// username defines the username required if using Identity V2 API. Consult with your provider's
+	// control panel to discover your account's username.
+	// In Identity V3, either userid or a combination of username
+	// and domainId or domainName are needed
+	Username *string `json:"username,omitempty"`
+	// userid defines the OpenStack userid.
+	UserID *string `json:"userid,omitempty"`
+	// password defines the password for the Identity V2 and V3 APIs. Consult with your provider's
+	// control panel to discover your account's preferred method of authentication.
+	Password *v1.SecretKeySelector `json:"password,omitempty"`
+	// domainName defines at most one of domainId and domainName that must be provided if using username
+	// with Identity V3. Otherwise, either are optional.
+	DomainName *string `json:"domainName,omitempty"`
+	// domainID defines The OpenStack domainID.
+	DomainID *string `json:"domainID,omitempty"`
+	// projectName defines an optional field for the Identity V2 API.
+	// Some providers allow you to specify a ProjectName instead of the ProjectId.
+	// Some require both. Your provider's authentication policies will determine
+	// how these fields influence authentication.
+	ProjectName *string `json:"projectName,omitempty"`
+	// projectID defines the OpenStack projectID.
+	ProjectID *string `json:"projectID,omitempty"`
+	// applicationCredentialName defines the ApplicationCredentialID or ApplicationCredentialName fields are
+	// required if using an application credential to authenticate. Some providers
+	// allow you to create an application credential to authenticate rather than a
+	// password.
+	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
+	// applicationCredentialId defines the OpenStack applicationCredentialId.
+	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
+	// applicationCredentialSecret defines the required field if using an application
+	// credential to authenticate.
+	ApplicationCredentialSecret *v1.SecretKeySelector `json:"applicationCredentialSecret,omitempty"`
+	// allTenants defines whether the service discovery should list all instances for all projects.
+	// It is only relevant for the 'instance' role and usually requires admin permissions.
+	AllTenants *bool `json:"allTenants,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	Port *int32 `json:"port,omitempty"`
+	// availability defines the availability of the endpoint to connect to.
+	Availability *string `json:"availability,omitempty"`
+	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // OpenStackSDConfigApplyConfiguration constructs a declarative configuration of the OpenStackSDConfig type for use with

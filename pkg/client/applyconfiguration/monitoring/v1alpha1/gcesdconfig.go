@@ -22,13 +22,37 @@ import (
 
 // GCESDConfigApplyConfiguration represents a declarative configuration of the GCESDConfig type for use
 // with apply.
+//
+// GCESDConfig configures scrape targets from GCP GCE instances.
+// The private IP address is used by default, but may be changed to
+// the public IP address with relabeling.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config
+//
+// The GCE service discovery will load the Google Cloud credentials
+// from the file specified by the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+// See https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
+//
+// A pre-requisite for using GCESDConfig is that a Secret containing valid
+// Google Cloud credentials is mounted into the Prometheus or PrometheusAgent
+// pod via the `.spec.secrets` field and that the GOOGLE_APPLICATION_CREDENTIALS
+// environment variable is set to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>.
 type GCESDConfigApplyConfiguration struct {
-	Project         *string      `json:"project,omitempty"`
-	Zone            *string      `json:"zone,omitempty"`
-	Filter          *string      `json:"filter,omitempty"`
+	// project defines the Google Cloud Project ID
+	Project *string `json:"project,omitempty"`
+	// zone defines the zone of the scrape targets. If you need multiple zones use multiple GCESDConfigs.
+	Zone *string `json:"zone,omitempty"`
+	// filter defines the filter that can be used optionally to filter the instance list by other criteria
+	// Syntax of this filter is described in the filter query parameter section:
+	// https://cloud.google.com/compute/docs/reference/latest/instances/list
+	Filter *string `json:"filter,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	Port            *int32       `json:"port,omitempty"`
-	TagSeparator    *string      `json:"tagSeparator,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	Port *int32 `json:"port,omitempty"`
+	// tagSeparator defines the tag separator is used to separate the tags on concatenation
+	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
 
 // GCESDConfigApplyConfiguration constructs a declarative configuration of the GCESDConfig type for use with

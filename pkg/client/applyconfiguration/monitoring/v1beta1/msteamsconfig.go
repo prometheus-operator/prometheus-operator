@@ -22,13 +22,27 @@ import (
 
 // MSTeamsConfigApplyConfiguration represents a declarative configuration of the MSTeamsConfig type for use
 // with apply.
+//
+// MSTeamsConfig configures notifications via Microsoft Teams.
+// It requires Alertmanager >= 0.26.0.
 type MSTeamsConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	WebhookURL   *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
-	Title        *string                       `json:"title,omitempty"`
-	Summary      *string                       `json:"summary,omitempty"`
-	Text         *string                       `json:"text,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// webhookUrl defines the MSTeams webhook URL for sending notifications.
+	// This is the incoming webhook URL configured in your Teams channel.
+	WebhookURL *v1.SecretKeySelector `json:"webhookUrl,omitempty"`
+	// title defines the message title template for Teams notifications.
+	// This appears as the main heading of the Teams message card.
+	Title *string `json:"title,omitempty"`
+	// summary defines the message summary template for Teams notifications.
+	// This provides a brief overview that appears in Teams notification previews.
+	// It requires Alertmanager >= 0.27.0.
+	Summary *string `json:"summary,omitempty"`
+	// text defines the message body template for Teams notifications.
+	// This contains the detailed content of the Teams message.
+	Text *string `json:"text,omitempty"`
+	// httpConfig defines the HTTP client configuration for Teams webhook requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // MSTeamsConfigApplyConfiguration constructs a declarative configuration of the MSTeamsConfig type for use with

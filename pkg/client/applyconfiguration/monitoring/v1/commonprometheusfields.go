@@ -25,107 +25,657 @@ import (
 
 // CommonPrometheusFieldsApplyConfiguration represents a declarative configuration of the CommonPrometheusFields type for use
 // with apply.
+//
+// CommonPrometheusFields are the options available to both the Prometheus server and agent.
 type CommonPrometheusFieldsApplyConfiguration struct {
-	PodMetadata                          *EmbeddedObjectMetadataApplyConfiguration               `json:"podMetadata,omitempty"`
-	ServiceMonitorSelector               *metav1.LabelSelectorApplyConfiguration                 `json:"serviceMonitorSelector,omitempty"`
-	ServiceMonitorNamespaceSelector      *metav1.LabelSelectorApplyConfiguration                 `json:"serviceMonitorNamespaceSelector,omitempty"`
-	PodMonitorSelector                   *metav1.LabelSelectorApplyConfiguration                 `json:"podMonitorSelector,omitempty"`
-	PodMonitorNamespaceSelector          *metav1.LabelSelectorApplyConfiguration                 `json:"podMonitorNamespaceSelector,omitempty"`
-	ProbeSelector                        *metav1.LabelSelectorApplyConfiguration                 `json:"probeSelector,omitempty"`
-	ProbeNamespaceSelector               *metav1.LabelSelectorApplyConfiguration                 `json:"probeNamespaceSelector,omitempty"`
-	ScrapeConfigSelector                 *metav1.LabelSelectorApplyConfiguration                 `json:"scrapeConfigSelector,omitempty"`
-	ScrapeConfigNamespaceSelector        *metav1.LabelSelectorApplyConfiguration                 `json:"scrapeConfigNamespaceSelector,omitempty"`
-	Version                              *string                                                 `json:"version,omitempty"`
-	Paused                               *bool                                                   `json:"paused,omitempty"`
-	Image                                *string                                                 `json:"image,omitempty"`
-	ImagePullPolicy                      *corev1.PullPolicy                                      `json:"imagePullPolicy,omitempty"`
-	ImagePullSecrets                     []corev1.LocalObjectReference                           `json:"imagePullSecrets,omitempty"`
-	Replicas                             *int32                                                  `json:"replicas,omitempty"`
-	Shards                               *int32                                                  `json:"shards,omitempty"`
-	ReplicaExternalLabelName             *string                                                 `json:"replicaExternalLabelName,omitempty"`
-	PrometheusExternalLabelName          *string                                                 `json:"prometheusExternalLabelName,omitempty"`
-	LogLevel                             *string                                                 `json:"logLevel,omitempty"`
-	LogFormat                            *string                                                 `json:"logFormat,omitempty"`
-	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
-	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
-	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
-	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
-	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
-	EnableOTLPReceiver                   *bool                                                   `json:"enableOTLPReceiver,omitempty"`
-	RemoteWriteReceiverMessageVersions   []monitoringv1.RemoteWriteMessageVersion                `json:"remoteWriteReceiverMessageVersions,omitempty"`
-	EnableFeatures                       []monitoringv1.EnableFeature                            `json:"enableFeatures,omitempty"`
-	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
-	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
-	Storage                              *StorageSpecApplyConfiguration                          `json:"storage,omitempty"`
-	Volumes                              []corev1.Volume                                         `json:"volumes,omitempty"`
-	VolumeMounts                         []corev1.VolumeMount                                    `json:"volumeMounts,omitempty"`
+	// podMetadata defines labels and annotations which are propagated to the Prometheus pods.
+	//
+	// The following items are reserved and cannot be overridden:
+	// * "prometheus" label, set to the name of the Prometheus object.
+	// * "app.kubernetes.io/instance" label, set to the name of the Prometheus object.
+	// * "app.kubernetes.io/managed-by" label, set to "prometheus-operator".
+	// * "app.kubernetes.io/name" label, set to "prometheus".
+	// * "app.kubernetes.io/version" label, set to the Prometheus version.
+	// * "operator.prometheus.io/name" label, set to the name of the Prometheus object.
+	// * "operator.prometheus.io/shard" label, set to the shard number of the Prometheus object.
+	// * "kubectl.kubernetes.io/default-container" annotation, set to "prometheus".
+	PodMetadata *EmbeddedObjectMetadataApplyConfiguration `json:"podMetadata,omitempty"`
+	// serviceMonitorSelector defines the serviceMonitors to be selected for target discovery. An empty label
+	// selector matches all objects. A null label selector matches no objects.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is *deprecated* and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	ServiceMonitorSelector *metav1.LabelSelectorApplyConfiguration `json:"serviceMonitorSelector,omitempty"`
+	// serviceMonitorNamespaceSelector defines the namespaces to match for ServicedMonitors discovery. An empty label selector
+	// matches all namespaces. A null label selector (default value) matches the current
+	// namespace only.
+	ServiceMonitorNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"serviceMonitorNamespaceSelector,omitempty"`
+	// podMonitorSelector defines the podMonitors to be selected for target discovery. An empty label selector
+	// matches all objects. A null label selector matches no objects.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is *deprecated* and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	PodMonitorSelector *metav1.LabelSelectorApplyConfiguration `json:"podMonitorSelector,omitempty"`
+	// podMonitorNamespaceSelector defines the namespaces to match for PodMonitors discovery. An empty label selector
+	// matches all namespaces. A null label selector (default value) matches the current
+	// namespace only.
+	PodMonitorNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"podMonitorNamespaceSelector,omitempty"`
+	// probeSelector defines the probes to be selected for target discovery. An empty label selector
+	// matches all objects. A null label selector matches no objects.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is *deprecated* and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	ProbeSelector *metav1.LabelSelectorApplyConfiguration `json:"probeSelector,omitempty"`
+	// probeNamespaceSelector defines the namespaces to match for Probe discovery. An empty label
+	// selector matches all namespaces. A null label selector matches the
+	// current namespace only.
+	ProbeNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"probeNamespaceSelector,omitempty"`
+	// scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label
+	// selector matches all objects. A null label selector matches no objects.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is *deprecated* and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	//
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	ScrapeConfigSelector *metav1.LabelSelectorApplyConfiguration `json:"scrapeConfigSelector,omitempty"`
+	// scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
+	// matches all namespaces. A null label selector matches the current
+	// namespace only.
+	//
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	ScrapeConfigNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"scrapeConfigNamespaceSelector,omitempty"`
+	// version of Prometheus being deployed. The operator uses this information
+	// to generate the Prometheus StatefulSet + configuration files.
+	//
+	// If not specified, the operator assumes the latest upstream version of
+	// Prometheus available at the time when the version of the operator was
+	// released.
+	Version *string `json:"version,omitempty"`
+	// paused defines when a Prometheus deployment is paused, no actions except for deletion
+	// will be performed on the underlying objects.
+	Paused *bool `json:"paused,omitempty"`
+	// image defines the container image name for Prometheus. If specified, it takes precedence
+	// over the `spec.baseImage`, `spec.tag` and `spec.sha` fields.
+	//
+	// Specifying `spec.version` is still necessary to ensure the Prometheus
+	// Operator knows which version of Prometheus is being configured.
+	//
+	// If neither `spec.image` nor `spec.baseImage` are defined, the operator
+	// will use the latest upstream version of Prometheus available at the time
+	// when the operator was released.
+	Image *string `json:"image,omitempty"`
+	// imagePullPolicy defines the image pull policy for the 'prometheus', 'init-config-reloader' and 'config-reloader' containers.
+	// See https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy for more details.
+	ImagePullPolicy *corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	// imagePullSecrets defines an optional list of references to Secrets in the same namespace
+	// to use for pulling images from registries.
+	// See http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	// replicas defines the number of replicas of each shard to deploy for a Prometheus deployment.
+	// `spec.replicas` multiplied by `spec.shards` is the total number of Pods
+	// created.
+	//
+	// Default: 1
+	Replicas *int32 `json:"replicas,omitempty"`
+	// shards defines the number of shards to distribute the scraped targets onto.
+	//
+	// `spec.replicas` multiplied by `spec.shards` is the total number of Pods
+	// being created.
+	//
+	// When not defined, the operator assumes only one shard.
+	//
+	// Note that scaling down shards will not reshard data onto the remaining
+	// instances, it must be manually moved. Increasing shards will not reshard
+	// data either but it will continue to be available from the same
+	// instances. To query globally, use either
+	// * Thanos sidecar + querier for query federation and Thanos Ruler for rules.
+	// * Remote-write to send metrics to a central location.
+	//
+	// By default, the sharding of targets is performed on:
+	// * The `__address__` target's metadata label for PodMonitor,
+	// ServiceMonitor and ScrapeConfig resources.
+	// * The `__param_target__` label for Probe resources.
+	//
+	// Users can define their own sharding implementation by setting the
+	// `__tmp_hash` label during the target discovery with relabeling
+	// configuration (either in the monitoring resources or via scrape class).
+	//
+	// You can also disable sharding on a specific target by setting the
+	// `__tmp_disable_sharding` label with relabeling configuration. When
+	// the label value isn't empty, all Prometheus shards will scrape the target.
+	Shards *int32 `json:"shards,omitempty"`
+	// replicaExternalLabelName defines the name of Prometheus external label used to denote the replica name.
+	// The external label will _not_ be added when the field is set to the
+	// empty string (`""`).
+	//
+	// Default: "prometheus_replica"
+	ReplicaExternalLabelName *string `json:"replicaExternalLabelName,omitempty"`
+	// prometheusExternalLabelName defines the name of Prometheus external label used to denote the Prometheus instance
+	// name. The external label will _not_ be added when the field is set to
+	// the empty string (`""`).
+	//
+	// Default: "prometheus"
+	PrometheusExternalLabelName *string `json:"prometheusExternalLabelName,omitempty"`
+	// logLevel for Prometheus and the config-reloader sidecar.
+	LogLevel *string `json:"logLevel,omitempty"`
+	// logFormat for Log level for Prometheus and the config-reloader sidecar.
+	LogFormat *string `json:"logFormat,omitempty"`
+	// scrapeInterval defines interval between consecutive scrapes.
+	//
+	// Default: "30s"
+	ScrapeInterval *monitoringv1.Duration `json:"scrapeInterval,omitempty"`
+	// scrapeTimeout defines the number of seconds to wait until a scrape request times out.
+	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
+	ScrapeTimeout *monitoringv1.Duration `json:"scrapeTimeout,omitempty"`
+	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// `PrometheusText1.0.0` requires Prometheus >= v3.0.0.
+	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// externalLabels defines the labels to add to any time series or alerts when communicating with
+	// external systems (federation, remote storage, Alertmanager).
+	// Labels defined by `spec.replicaExternalLabelName` and
+	// `spec.prometheusExternalLabelName` take precedence over this list.
+	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
+	// enableRemoteWriteReceiver defines the Prometheus to be used as a receiver for the Prometheus remote
+	// write protocol.
+	//
+	// WARNING: This is not considered an efficient way of ingesting samples.
+	// Use it with caution for specific low-volume use cases.
+	// It is not suitable for replacing the ingestion via scraping and turning
+	// Prometheus into a push-based metrics collection system.
+	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver
+	//
+	// It requires Prometheus >= v2.33.0.
+	EnableRemoteWriteReceiver *bool `json:"enableRemoteWriteReceiver,omitempty"`
+	// enableOTLPReceiver defines the Prometheus to be used as a receiver for the OTLP Metrics protocol.
+	//
+	// Note that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.
+	//
+	// It requires Prometheus >= v2.47.0.
+	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
+	// remoteWriteReceiverMessageVersions list of the protobuf message versions to accept when receiving the
+	// remote writes.
+	//
+	// It requires Prometheus >= v2.54.0.
+	RemoteWriteReceiverMessageVersions []monitoringv1.RemoteWriteMessageVersion `json:"remoteWriteReceiverMessageVersions,omitempty"`
+	// enableFeatures enables access to Prometheus feature flags. By default, no features are enabled.
+	//
+	// Enabling features which are disabled by default is entirely outside the
+	// scope of what the maintainers will support and by doing so, you accept
+	// that this behaviour may break at any time without notice.
+	//
+	// For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/
+	EnableFeatures []monitoringv1.EnableFeature `json:"enableFeatures,omitempty"`
+	// externalUrl defines the external URL under which the Prometheus service is externally
+	// available. This is necessary to generate correct URLs (for instance if
+	// Prometheus is accessible behind an Ingress resource).
+	ExternalURL *string `json:"externalUrl,omitempty"`
+	// routePrefix defines the route prefix Prometheus registers HTTP handlers for.
+	//
+	// This is useful when using `spec.externalURL`, and a proxy is rewriting
+	// HTTP routes of a request, and the actual ExternalURL is still true, but
+	// the server serves requests under a different route prefix. For example
+	// for use with `kubectl proxy`.
+	RoutePrefix *string `json:"routePrefix,omitempty"`
+	// storage defines the storage used by Prometheus.
+	Storage *StorageSpecApplyConfiguration `json:"storage,omitempty"`
+	// volumes allows the configuration of additional volumes on the output
+	// StatefulSet definition. Volumes specified will be appended to other
+	// volumes that are generated as a result of StorageSpec objects.
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
+	// volumeMounts allows the configuration of additional VolumeMounts.
+	//
+	// VolumeMounts will be appended to other VolumeMounts in the 'prometheus'
+	// container, that are generated as a result of StorageSpec objects.
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+	// persistentVolumeClaimRetentionPolicy defines the field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+	// The default behavior is all PVCs are retained.
+	// This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+	// It requires enabling the StatefulSetAutoDeletePVC feature gate.
 	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
-	Web                                  *PrometheusWebSpecApplyConfiguration                    `json:"web,omitempty"`
-	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
-	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
-	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
-	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
-	Secrets                              []string                                                `json:"secrets,omitempty"`
-	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
-	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
-	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
-	TopologySpreadConstraints            []TopologySpreadConstraintApplyConfiguration            `json:"topologySpreadConstraints,omitempty"`
-	RemoteWrite                          []RemoteWriteSpecApplyConfiguration                     `json:"remoteWrite,omitempty"`
-	OTLP                                 *OTLPConfigApplyConfiguration                           `json:"otlp,omitempty"`
-	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
-	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
-	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
-	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
-	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
-	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
-	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
-	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
-	AdditionalScrapeConfigs              *corev1.SecretKeySelector                               `json:"additionalScrapeConfigs,omitempty"`
-	APIServerConfig                      *APIServerConfigApplyConfiguration                      `json:"apiserverConfig,omitempty"`
-	PriorityClassName                    *string                                                 `json:"priorityClassName,omitempty"`
-	PortName                             *string                                                 `json:"portName,omitempty"`
-	ArbitraryFSAccessThroughSMs          *ArbitraryFSAccessThroughSMsConfigApplyConfiguration    `json:"arbitraryFSAccessThroughSMs,omitempty"`
-	OverrideHonorLabels                  *bool                                                   `json:"overrideHonorLabels,omitempty"`
-	OverrideHonorTimestamps              *bool                                                   `json:"overrideHonorTimestamps,omitempty"`
-	IgnoreNamespaceSelectors             *bool                                                   `json:"ignoreNamespaceSelectors,omitempty"`
-	EnforcedNamespaceLabel               *string                                                 `json:"enforcedNamespaceLabel,omitempty"`
-	EnforcedSampleLimit                  *uint64                                                 `json:"enforcedSampleLimit,omitempty"`
-	EnforcedTargetLimit                  *uint64                                                 `json:"enforcedTargetLimit,omitempty"`
-	EnforcedLabelLimit                   *uint64                                                 `json:"enforcedLabelLimit,omitempty"`
-	EnforcedLabelNameLengthLimit         *uint64                                                 `json:"enforcedLabelNameLengthLimit,omitempty"`
-	EnforcedLabelValueLengthLimit        *uint64                                                 `json:"enforcedLabelValueLengthLimit,omitempty"`
-	EnforcedKeepDroppedTargets           *uint64                                                 `json:"enforcedKeepDroppedTargets,omitempty"`
-	EnforcedBodySizeLimit                *monitoringv1.ByteSize                                  `json:"enforcedBodySizeLimit,omitempty"`
-	NameValidationScheme                 *monitoringv1.NameValidationSchemeOptions               `json:"nameValidationScheme,omitempty"`
-	NameEscapingScheme                   *monitoringv1.NameEscapingSchemeOptions                 `json:"nameEscapingScheme,omitempty"`
-	ConvertClassicHistogramsToNHCB       *bool                                                   `json:"convertClassicHistogramsToNHCB,omitempty"`
-	ScrapeNativeHistograms               *bool                                                   `json:"scrapeNativeHistograms,omitempty"`
-	ScrapeClassicHistograms              *bool                                                   `json:"scrapeClassicHistograms,omitempty"`
-	MinReadySeconds                      *int32                                                  `json:"minReadySeconds,omitempty"`
-	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
-	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
-	WALCompression                       *bool                                                   `json:"walCompression,omitempty"`
-	ExcludedFromEnforcement              []ObjectReferenceApplyConfiguration                     `json:"excludedFromEnforcement,omitempty"`
-	HostNetwork                          *bool                                                   `json:"hostNetwork,omitempty"`
-	PodTargetLabels                      []string                                                `json:"podTargetLabels,omitempty"`
-	TracingConfig                        *TracingConfigApplyConfiguration                        `json:"tracingConfig,omitempty"`
-	BodySizeLimit                        *monitoringv1.ByteSize                                  `json:"bodySizeLimit,omitempty"`
-	SampleLimit                          *uint64                                                 `json:"sampleLimit,omitempty"`
-	TargetLimit                          *uint64                                                 `json:"targetLimit,omitempty"`
-	LabelLimit                           *uint64                                                 `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                 *uint64                                                 `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                *uint64                                                 `json:"labelValueLengthLimit,omitempty"`
-	KeepDroppedTargets                   *uint64                                                 `json:"keepDroppedTargets,omitempty"`
-	ReloadStrategy                       *monitoringv1.ReloadStrategyType                        `json:"reloadStrategy,omitempty"`
-	MaximumStartupDurationSeconds        *int32                                                  `json:"maximumStartupDurationSeconds,omitempty"`
-	ScrapeClasses                        []ScrapeClassApplyConfiguration                         `json:"scrapeClasses,omitempty"`
-	ServiceDiscoveryRole                 *monitoringv1.ServiceDiscoveryRole                      `json:"serviceDiscoveryRole,omitempty"`
-	TSDB                                 *TSDBSpecApplyConfiguration                             `json:"tsdb,omitempty"`
-	ScrapeFailureLogFile                 *string                                                 `json:"scrapeFailureLogFile,omitempty"`
-	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
-	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
-	TerminationGracePeriodSeconds        *int64                                                  `json:"terminationGracePeriodSeconds,omitempty"`
-	HostUsers                            *bool                                                   `json:"hostUsers,omitempty"`
+	// web defines the configuration of the Prometheus web server.
+	Web *PrometheusWebSpecApplyConfiguration `json:"web,omitempty"`
+	// resources defines the resources requests and limits of the 'prometheus' container.
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+	// nodeSelector defines on which Nodes the Pods are scheduled.
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// serviceAccountName is the name of the ServiceAccount to use to run the
+	// Prometheus Pods.
+	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+	// automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
+	// If the field isn't set, the operator mounts the service account token by default.
+	//
+	// **Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+	// It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
+	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
+	// secrets defines a list of Secrets in the same namespace as the Prometheus
+	// object, which shall be mounted into the Prometheus Pods.
+	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
+	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
+	Secrets []string `json:"secrets,omitempty"`
+	// configMaps defines a list of ConfigMaps in the same namespace as the Prometheus
+	// object, which shall be mounted into the Prometheus Pods.
+	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
+	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
+	ConfigMaps []string `json:"configMaps,omitempty"`
+	// affinity defines the Pods' affinity scheduling rules if specified.
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+	// tolerations defines the Pods' tolerations if specified.
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// topologySpreadConstraints defines the pod's topology spread constraints if specified.
+	TopologySpreadConstraints []TopologySpreadConstraintApplyConfiguration `json:"topologySpreadConstraints,omitempty"`
+	// remoteWrite defines the list of remote write configurations.
+	RemoteWrite []RemoteWriteSpecApplyConfiguration `json:"remoteWrite,omitempty"`
+	// otlp defines the settings related to the OTLP receiver feature.
+	// It requires Prometheus >= v2.55.0.
+	OTLP *OTLPConfigApplyConfiguration `json:"otlp,omitempty"`
+	// securityContext holds pod-level security attributes and common container settings.
+	// This defaults to the default PodSecurityContext.
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
+	// dnsPolicy defines the DNS policy for the pods.
+	DNSPolicy *monitoringv1.DNSPolicy `json:"dnsPolicy,omitempty"`
+	// dnsConfig defines the DNS configuration for the pods.
+	DNSConfig *PodDNSConfigApplyConfiguration `json:"dnsConfig,omitempty"`
+	// listenLocal when true, the Prometheus server listens on the loopback address
+	// instead of the Pod IP's address.
+	ListenLocal *bool `json:"listenLocal,omitempty"`
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	PodManagementPolicy *monitoringv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	// containers allows injecting additional containers or modifying operator
+	// generated containers. This can be used to allow adding an authentication
+	// proxy to the Pods or to change the behavior of an operator generated
+	// container. Containers described here modify an operator generated
+	// container if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of containers managed by the operator are:
+	// * `prometheus`
+	// * `config-reloader`
+	// * `thanos-sidecar`
+	//
+	// Overriding containers is entirely outside the scope of what the
+	// maintainers will support and by doing so, you accept that this behaviour
+	// may break at any time without notice.
+	Containers []corev1.Container `json:"containers,omitempty"`
+	// initContainers allows injecting initContainers to the Pod definition. Those
+	// can be used to e.g.  fetch secrets for injection into the Prometheus
+	// configuration from external sources. Any errors during the execution of
+	// an initContainer will lead to a restart of the Pod. More info:
+	// https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	// InitContainers described here modify an operator generated init
+	// containers if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of init container name managed by the operator are:
+	// * `init-config-reloader`.
+	//
+	// Overriding init containers is entirely outside the scope of what the
+	// maintainers will support and by doing so, you accept that this behaviour
+	// may break at any time without notice.
+	InitContainers []corev1.Container `json:"initContainers,omitempty"`
+	// additionalScrapeConfigs allows specifying a key of a Secret containing
+	// additional Prometheus scrape configurations. Scrape configurations
+	// specified are appended to the configurations generated by the Prometheus
+	// Operator. Job configurations specified must have the form as specified
+	// in the official Prometheus documentation:
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config.
+	// As scrape configs are appended, the user is responsible to make sure it
+	// is valid. Note that using this feature may expose the possibility to
+	// break upgrades of Prometheus. It is advised to review Prometheus release
+	// notes to ensure that no incompatible scrape configs are going to break
+	// Prometheus after the upgrade.
+	AdditionalScrapeConfigs *corev1.SecretKeySelector `json:"additionalScrapeConfigs,omitempty"`
+	// apiserverConfig allows specifying a host and auth methods to access the
+	// Kuberntees API server.
+	// If null, Prometheus is assumed to run inside of the cluster: it will
+	// discover the API servers automatically and use the Pod's CA certificate
+	// and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
+	APIServerConfig *APIServerConfigApplyConfiguration `json:"apiserverConfig,omitempty"`
+	// priorityClassName assigned to the Pods.
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// portName used for the pods and governing service.
+	// Default: "web"
+	PortName *string `json:"portName,omitempty"`
+	// arbitraryFSAccessThroughSMs when true, ServiceMonitor, PodMonitor and Probe object are forbidden to
+	// reference arbitrary files on the file system of the 'prometheus'
+	// container.
+	// When a ServiceMonitor's endpoint specifies a `bearerTokenFile` value
+	// (e.g.  '/var/run/secrets/kubernetes.io/serviceaccount/token'), a
+	// malicious target can get access to the Prometheus service account's
+	// token in the Prometheus' scrape request. Setting
+	// `spec.arbitraryFSAccessThroughSM` to 'true' would prevent the attack.
+	// Users should instead provide the credentials using the
+	// `spec.bearerTokenSecret` field.
+	ArbitraryFSAccessThroughSMs *ArbitraryFSAccessThroughSMsConfigApplyConfiguration `json:"arbitraryFSAccessThroughSMs,omitempty"`
+	// overrideHonorLabels when true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+	// to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+	// In practice,`OverrideHonorLabels:true` enforces `honorLabels:false`
+	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
+	OverrideHonorLabels *bool `json:"overrideHonorLabels,omitempty"`
+	// overrideHonorTimestamps when true, Prometheus ignores the timestamps for all the targets created
+	// from service and pod monitors.
+	// Otherwise the HonorTimestamps field of the service or pod monitor applies.
+	OverrideHonorTimestamps *bool `json:"overrideHonorTimestamps,omitempty"`
+	// ignoreNamespaceSelectors when true, `spec.namespaceSelector` from all PodMonitor, ServiceMonitor
+	// and Probe objects will be ignored. They will only discover targets
+	// within the namespace of the PodMonitor, ServiceMonitor and Probe
+	// object.
+	IgnoreNamespaceSelectors *bool `json:"ignoreNamespaceSelectors,omitempty"`
+	// enforcedNamespaceLabel when not empty, a label will be added to:
+	//
+	// 1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.
+	// 2. All metrics generated from recording rules defined in `PrometheusRule` objects.
+	// 3. All alerts generated from alerting rules defined in `PrometheusRule` objects.
+	// 4. All vector selectors of PromQL expressions defined in `PrometheusRule` objects.
+	//
+	// The label will not added for objects referenced in `spec.excludedFromEnforcement`.
+	//
+	// The label's name is this field's value.
+	// The label's value is the namespace of the `ServiceMonitor`,
+	// `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
+	EnforcedNamespaceLabel *string `json:"enforcedNamespaceLabel,omitempty"`
+	// enforcedSampleLimit when defined specifies a global limit on the number
+	// of scraped samples that will be accepted. This overrides any
+	// `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects
+	// unless `spec.sampleLimit` is greater than zero and less than
+	// `spec.enforcedSampleLimit`.
+	//
+	// It is meant to be used by admins to keep the overall number of
+	// samples/series under a desired limit.
+	//
+	// When both `enforcedSampleLimit` and `sampleLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus >= 2.45.0) or the enforcedSampleLimit value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedSampleLimit` is greater than the `sampleLimit`, the `sampleLimit` will be set to `enforcedSampleLimit`.
+	// * Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+	// * Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
+	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
+	// enforcedTargetLimit when defined specifies a global limit on the number
+	// of scraped targets. The value overrides any `spec.targetLimit` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.targetLimit` is
+	// greater than zero and less than `spec.enforcedTargetLimit`.
+	//
+	// It is meant to be used by admins to to keep the overall number of
+	// targets under a desired limit.
+	//
+	// When both `enforcedTargetLimit` and `targetLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus >= 2.45.0) or the enforcedTargetLimit value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedTargetLimit` is greater than the `targetLimit`, the `targetLimit` will be set to `enforcedTargetLimit`.
+	// * Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+	// * Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
+	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
+	// enforcedLabelLimit when defined specifies a global limit on the number
+	// of labels per sample. The value overrides any `spec.labelLimit` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelLimit` is
+	// greater than zero and less than `spec.enforcedLabelLimit`.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
+	// When both `enforcedLabelLimit` and `labelLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus >= 2.45.0) or the enforcedLabelLimit value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedLabelLimit` is greater than the `labelLimit`, the `labelLimit` will be set to `enforcedLabelLimit`.
+	// * Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+	// * Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
+	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
+	// enforcedLabelNameLengthLimit when defined specifies a global limit on the length
+	// of labels name per sample. The value overrides any `spec.labelNameLengthLimit` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelNameLengthLimit` is
+	// greater than zero and less than `spec.enforcedLabelNameLengthLimit`.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
+	// When both `enforcedLabelNameLengthLimit` and `labelNameLengthLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus >= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedLabelNameLengthLimit` is greater than the `labelNameLengthLimit`, the `labelNameLengthLimit` will be set to `enforcedLabelNameLengthLimit`.
+	// * Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+	// * Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
+	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
+	// enforcedLabelValueLengthLimit when not null defines a global limit on the length
+	// of labels value per sample. The value overrides any `spec.labelValueLengthLimit` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelValueLengthLimit` is
+	// greater than zero and less than `spec.enforcedLabelValueLengthLimit`.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
+	// When both `enforcedLabelValueLengthLimit` and `labelValueLengthLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus >= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedLabelValueLengthLimit` is greater than the `labelValueLengthLimit`, the `labelValueLengthLimit` will be set to `enforcedLabelValueLengthLimit`.
+	// * Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+	// * Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
+	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	// enforcedKeepDroppedTargets when defined specifies a global limit on the number of targets
+	// dropped by relabeling that will be kept in memory. The value overrides
+	// any `spec.keepDroppedTargets` set by
+	// ServiceMonitor, PodMonitor, Probe objects unless `spec.keepDroppedTargets` is
+	// greater than zero and less than `spec.enforcedKeepDroppedTargets`.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// When both `enforcedKeepDroppedTargets` and `keepDroppedTargets` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus >= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedKeepDroppedTargets` is greater than the `keepDroppedTargets`, the `keepDroppedTargets` will be set to `enforcedKeepDroppedTargets`.
+	// * Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+	// * Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
+	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
+	// enforcedBodySizeLimit when defined specifies a global limit on the size
+	// of uncompressed response body that will be accepted by Prometheus.
+	// Targets responding with a body larger than this many bytes will cause
+	// the scrape to fail.
+	//
+	// It requires Prometheus >= v2.28.0.
+	//
+	// When both `enforcedBodySizeLimit` and `bodySizeLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus >= 2.45.0) or the enforcedBodySizeLimit value (Prometheus < v2.45.0).
+	// If Prometheus version is >= 2.45.0 and the `enforcedBodySizeLimit` is greater than the `bodySizeLimit`, the `bodySizeLimit` will be set to `enforcedBodySizeLimit`.
+	// * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+	// * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
+	EnforcedBodySizeLimit *monitoringv1.ByteSize `json:"enforcedBodySizeLimit,omitempty"`
+	// nameValidationScheme defines the validation scheme for metric and label names.
+	//
+	// It requires Prometheus >= v2.55.0.
+	NameValidationScheme *monitoringv1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+	// nameEscapingScheme defines the character escaping scheme that will be requested when scraping
+	// for metric and label names that do not conform to the legacy Prometheus
+	// character set.
+	//
+	// It requires Prometheus >= v3.4.0.
+	NameEscapingScheme *monitoringv1.NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
+	// convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native
+	// histogram with custom buckets.
+	//
+	// It requires Prometheus >= v3.4.0.
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
+	//
+	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+	//
+	// It requires Prometheus >= v3.5.0.
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	// minReadySeconds defines the minimum number of seconds for which a newly created Pod should be ready
+	// without any of its container crashing for it to be considered available.
+	//
+	// If unset, pods will be considered available as soon as they are ready.
+	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
+	// hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's
+	// hosts file if specified.
+	HostAliases []HostAliasApplyConfiguration `json:"hostAliases,omitempty"`
+	// additionalArgs allows setting additional arguments for the 'prometheus' container.
+	//
+	// It is intended for e.g. activating hidden flags which are not supported by
+	// the dedicated configuration options yet. The arguments are passed as-is to the
+	// Prometheus container which may cause issues if they are invalid or not supported
+	// by the given Prometheus version.
+	//
+	// In case of an argument conflict (e.g. an argument which is already set by the
+	// operator itself) or when providing an invalid argument, the reconciliation will
+	// fail and an error will be logged.
+	AdditionalArgs []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
+	// walCompression defines the compression of the write-ahead log (WAL) using Snappy.
+	//
+	// WAL compression is enabled by default for Prometheus >= 2.20.0
+	//
+	// Requires Prometheus v2.11.0 and above.
+	WALCompression *bool `json:"walCompression,omitempty"`
+	// excludedFromEnforcement defines the list of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects
+	// to be excluded from enforcing a namespace label of origin.
+	//
+	// It is only applicable if `spec.enforcedNamespaceLabel` set to true.
+	ExcludedFromEnforcement []ObjectReferenceApplyConfiguration `json:"excludedFromEnforcement,omitempty"`
+	// hostNetwork defines the host's network namespace if true.
+	//
+	// Make sure to understand the security implications if you want to enable
+	// it (https://kubernetes.io/docs/concepts/configuration/overview/ ).
+	//
+	// When hostNetwork is enabled, this will set the DNS policy to
+	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
+	// to a different value).
+	HostNetwork *bool `json:"hostNetwork,omitempty"`
+	// podTargetLabels are appended to the `spec.podTargetLabels` field of all
+	// PodMonitor and ServiceMonitor objects.
+	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// tracingConfig defines tracing in Prometheus.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	TracingConfig *TracingConfigApplyConfiguration `json:"tracingConfig,omitempty"`
+	// bodySizeLimit defines per-scrape on response body size.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.
+	BodySizeLimit *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
+	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	// targetLimit defines a limit on the number of scraped targets that will be accepted.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
+	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	// labelLimit defines per-scrape limit on number of labels that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
+	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
+	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
+	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	// reloadStrategy defines the strategy used to reload the Prometheus configuration.
+	// If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.
+	ReloadStrategy *monitoringv1.ReloadStrategyType `json:"reloadStrategy,omitempty"`
+	// maximumStartupDurationSeconds defines the maximum time that the `prometheus` container's startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
+	// If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 900 seconds (15 minutes).
+	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
+	// scrapeClasses defines the list of scrape classes to expose to scraping objects such as
+	// PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	ScrapeClasses []ScrapeClassApplyConfiguration `json:"scrapeClasses,omitempty"`
+	// serviceDiscoveryRole defines the service discovery role used to discover targets from
+	// `ServiceMonitor` objects and Alertmanager endpoints.
+	//
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// If unset, the operator assumes the "Endpoints" role.
+	ServiceDiscoveryRole *monitoringv1.ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
+	// tsdb defines the runtime reloadable configuration of the timeseries database(TSDB).
+	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
+	TSDB *TSDBSpecApplyConfiguration `json:"tsdb,omitempty"`
+	// scrapeFailureLogFile defines the file to which scrape failures are logged.
+	// Reloading the configuration will reopen the file.
+	//
+	// If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
+	// will mount the file into an emptyDir volume at `/var/log/prometheus`.
+	// If a full path is provided, e.g. '/var/log/prometheus/file.log', you
+	// must mount a volume in the specified directory and it must be writable.
+	// It requires Prometheus >= v2.55.0.
+	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
+	// serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
+	// If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+	// If empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,
+	// or `prometheus-agent-operated` for PrometheusAgent resources.
+	// When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	ServiceName *string `json:"serviceName,omitempty"`
+	// runtime defines the values for the Prometheus process behavior
+	Runtime *RuntimeConfigApplyConfiguration `json:"runtime,omitempty"`
+	// terminationGracePeriodSeconds defines the optional duration in seconds the pod needs to terminate gracefully.
+	// Value must be non-negative integer. The value zero indicates stop immediately via
+	// the kill signal (no opportunity to shut down) which may lead to data corruption.
+	//
+	// Defaults to 600 seconds.
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// hostUsers supports the user space in Kubernetes.
+	//
+	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/
+	//
+	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
+	// Starting Kubernetes 1.33, the feature is enabled by default.
+	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs a declarative configuration of the CommonPrometheusFields type for use with

@@ -22,17 +22,35 @@ import (
 
 // QueueConfigApplyConfiguration represents a declarative configuration of the QueueConfig type for use
 // with apply.
+//
+// QueueConfig allows the tuning of remote write's queue_config parameters.
+// This object is referenced in the RemoteWriteSpec object.
 type QueueConfigApplyConfiguration struct {
-	Capacity          *int                   `json:"capacity,omitempty"`
-	MinShards         *int                   `json:"minShards,omitempty"`
-	MaxShards         *int                   `json:"maxShards,omitempty"`
-	MaxSamplesPerSend *int                   `json:"maxSamplesPerSend,omitempty"`
+	// capacity defines the number of samples to buffer per shard before we start
+	// dropping them.
+	Capacity *int `json:"capacity,omitempty"`
+	// minShards defines the minimum number of shards, i.e. amount of concurrency.
+	MinShards *int `json:"minShards,omitempty"`
+	// maxShards defines the maximum number of shards, i.e. amount of concurrency.
+	MaxShards *int `json:"maxShards,omitempty"`
+	// maxSamplesPerSend defines the maximum number of samples per send.
+	MaxSamplesPerSend *int `json:"maxSamplesPerSend,omitempty"`
+	// batchSendDeadline defines the maximum time a sample will wait in buffer.
 	BatchSendDeadline *monitoringv1.Duration `json:"batchSendDeadline,omitempty"`
-	MaxRetries        *int                   `json:"maxRetries,omitempty"`
-	MinBackoff        *monitoringv1.Duration `json:"minBackoff,omitempty"`
-	MaxBackoff        *monitoringv1.Duration `json:"maxBackoff,omitempty"`
-	RetryOnRateLimit  *bool                  `json:"retryOnRateLimit,omitempty"`
-	SampleAgeLimit    *monitoringv1.Duration `json:"sampleAgeLimit,omitempty"`
+	// maxRetries defines the maximum number of times to retry a batch on recoverable errors.
+	MaxRetries *int `json:"maxRetries,omitempty"`
+	// minBackoff defines the initial retry delay. Gets doubled for every retry.
+	MinBackoff *monitoringv1.Duration `json:"minBackoff,omitempty"`
+	// maxBackoff defines the maximum retry delay.
+	MaxBackoff *monitoringv1.Duration `json:"maxBackoff,omitempty"`
+	// retryOnRateLimit defines the retry upon receiving a 429 status code from the remote-write storage.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	RetryOnRateLimit *bool `json:"retryOnRateLimit,omitempty"`
+	// sampleAgeLimit drops samples older than the limit.
+	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
+	SampleAgeLimit *monitoringv1.Duration `json:"sampleAgeLimit,omitempty"`
 }
 
 // QueueConfigApplyConfiguration constructs a declarative configuration of the QueueConfig type for use with

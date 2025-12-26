@@ -18,22 +18,43 @@ package v1beta1
 
 // ReceiverApplyConfiguration represents a declarative configuration of the Receiver type for use
 // with apply.
+//
+// Receiver defines one or more notification integrations.
 type ReceiverApplyConfiguration struct {
-	Name              *string                              `json:"name,omitempty"`
-	OpsGenieConfigs   []OpsGenieConfigApplyConfiguration   `json:"opsgenieConfigs,omitempty"`
-	PagerDutyConfigs  []PagerDutyConfigApplyConfiguration  `json:"pagerdutyConfigs,omitempty"`
-	DiscordConfigs    []DiscordConfigApplyConfiguration    `json:"discordConfigs,omitempty"`
-	SlackConfigs      []SlackConfigApplyConfiguration      `json:"slackConfigs,omitempty"`
-	WebhookConfigs    []WebhookConfigApplyConfiguration    `json:"webhookConfigs,omitempty"`
-	WeChatConfigs     []WeChatConfigApplyConfiguration     `json:"wechatConfigs,omitempty"`
-	EmailConfigs      []EmailConfigApplyConfiguration      `json:"emailConfigs,omitempty"`
-	VictorOpsConfigs  []VictorOpsConfigApplyConfiguration  `json:"victoropsConfigs,omitempty"`
-	PushoverConfigs   []PushoverConfigApplyConfiguration   `json:"pushoverConfigs,omitempty"`
-	SNSConfigs        []SNSConfigApplyConfiguration        `json:"snsConfigs,omitempty"`
-	TelegramConfigs   []TelegramConfigApplyConfiguration   `json:"telegramConfigs,omitempty"`
-	WebexConfigs      []WebexConfigApplyConfiguration      `json:"webexConfigs,omitempty"`
-	MSTeamsConfigs    []MSTeamsConfigApplyConfiguration    `json:"msteamsConfigs,omitempty"`
-	MSTeamsV2Configs  []MSTeamsV2ConfigApplyConfiguration  `json:"msteamsv2Configs,omitempty"`
+	// name defines the name of the receiver. Must be unique across all items from the list.
+	Name *string `json:"name,omitempty"`
+	// opsgenieConfigs defines the list of OpsGenie configurations.
+	OpsGenieConfigs []OpsGenieConfigApplyConfiguration `json:"opsgenieConfigs,omitempty"`
+	// pagerdutyConfigs defines the List of PagerDuty configurations.
+	PagerDutyConfigs []PagerDutyConfigApplyConfiguration `json:"pagerdutyConfigs,omitempty"`
+	// discordConfigs defines the list of Slack configurations.
+	DiscordConfigs []DiscordConfigApplyConfiguration `json:"discordConfigs,omitempty"`
+	// slackConfigs defines the list of Slack configurations.
+	SlackConfigs []SlackConfigApplyConfiguration `json:"slackConfigs,omitempty"`
+	// webhookConfigs defines the List of webhook configurations.
+	WebhookConfigs []WebhookConfigApplyConfiguration `json:"webhookConfigs,omitempty"`
+	// wechatConfigs defines the list of WeChat configurations.
+	WeChatConfigs []WeChatConfigApplyConfiguration `json:"wechatConfigs,omitempty"`
+	// emailConfigs defines the list of Email configurations.
+	EmailConfigs []EmailConfigApplyConfiguration `json:"emailConfigs,omitempty"`
+	// victoropsConfigs defines the list of VictorOps configurations.
+	VictorOpsConfigs []VictorOpsConfigApplyConfiguration `json:"victoropsConfigs,omitempty"`
+	// pushoverConfigs defines the list of Pushover configurations.
+	PushoverConfigs []PushoverConfigApplyConfiguration `json:"pushoverConfigs,omitempty"`
+	// snsConfigs defines the list of SNS configurations
+	SNSConfigs []SNSConfigApplyConfiguration `json:"snsConfigs,omitempty"`
+	// telegramConfigs defines the list of Telegram configurations.
+	TelegramConfigs []TelegramConfigApplyConfiguration `json:"telegramConfigs,omitempty"`
+	// webexConfigs defines the list of Webex configurations.
+	WebexConfigs []WebexConfigApplyConfiguration `json:"webexConfigs,omitempty"`
+	// msteamsConfigs defines the list of MSTeams configurations.
+	// It requires Alertmanager >= 0.26.0.
+	MSTeamsConfigs []MSTeamsConfigApplyConfiguration `json:"msteamsConfigs,omitempty"`
+	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
+	// It requires Alertmanager >= 0.28.0.
+	MSTeamsV2Configs []MSTeamsV2ConfigApplyConfiguration `json:"msteamsv2Configs,omitempty"`
+	// rocketchatConfigs defines the list of RocketChat configurations.
+	// It requires Alertmanager >= 0.28.0.
 	RocketChatConfigs []RocketChatConfigApplyConfiguration `json:"rocketchatConfigs,omitempty"`
 }
 

@@ -18,8 +18,12 @@ package v1
 
 // WebConfigFileFieldsApplyConfiguration represents a declarative configuration of the WebConfigFileFields type for use
 // with apply.
+//
+// WebConfigFileFields defines the file content for --web.config.file flag.
 type WebConfigFileFieldsApplyConfiguration struct {
-	TLSConfig  *WebTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
+	// tlsConfig defines the TLS parameters for HTTPS.
+	TLSConfig *WebTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// httpConfig defines HTTP parameters for web server.
 	HTTPConfig *WebHTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 

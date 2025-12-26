@@ -18,10 +18,21 @@ package v1beta1
 
 // AlertmanagerConfigSpecApplyConfiguration represents a declarative configuration of the AlertmanagerConfigSpec type for use
 // with apply.
+//
+// AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
+// By definition, the Alertmanager configuration only applies to alerts for which
+// the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpecApplyConfiguration struct {
-	Route         *RouteApplyConfiguration         `json:"route,omitempty"`
-	Receivers     []ReceiverApplyConfiguration     `json:"receivers,omitempty"`
-	InhibitRules  []InhibitRuleApplyConfiguration  `json:"inhibitRules,omitempty"`
+	// route defines the Alertmanager route definition for alerts matching the resource's
+	// namespace. If present, it will be added to the generated Alertmanager
+	// configuration as a first-level route.
+	Route *RouteApplyConfiguration `json:"route,omitempty"`
+	// receivers defines the list of receivers.
+	Receivers []ReceiverApplyConfiguration `json:"receivers,omitempty"`
+	// inhibitRules defines the list of inhibition rules. The rules will only apply to alerts matching
+	// the resource's namespace.
+	InhibitRules []InhibitRuleApplyConfiguration `json:"inhibitRules,omitempty"`
+	// timeIntervals defines the list of timeIntervals specifying when the routes should be muted.
 	TimeIntervals []TimeIntervalApplyConfiguration `json:"timeIntervals,omitempty"`
 }
 

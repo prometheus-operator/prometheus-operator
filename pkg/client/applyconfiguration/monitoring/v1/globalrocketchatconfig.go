@@ -23,9 +23,20 @@ import (
 
 // GlobalRocketChatConfigApplyConfiguration represents a declarative configuration of the GlobalRocketChatConfig type for use
 // with apply.
+//
+// GlobalRocketChatConfig configures global Rocket Chat parameters.
 type GlobalRocketChatConfigApplyConfiguration struct {
-	APIURL  *monitoringv1.URL         `json:"apiURL,omitempty"`
-	Token   *corev1.SecretKeySelector `json:"token,omitempty"`
+	// apiURL defines the default Rocket Chat API URL.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
+	// token defines the default Rocket Chat token.
+	//
+	// It requires Alertmanager >= v0.28.0.
+	Token *corev1.SecretKeySelector `json:"token,omitempty"`
+	// tokenID defines the default Rocket Chat Token ID.
+	//
+	// It requires Alertmanager >= v0.28.0.
 	TokenID *corev1.SecretKeySelector `json:"tokenID,omitempty"`
 }
 

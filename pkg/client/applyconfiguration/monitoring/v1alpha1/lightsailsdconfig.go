@@ -24,21 +24,42 @@ import (
 
 // LightSailSDConfigApplyConfiguration represents a declarative configuration of the LightSailSDConfig type for use
 // with apply.
+//
+// LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
+// TODO: Need to document that we will not be supporting the `_file` fields.
 type LightSailSDConfigApplyConfiguration struct {
-	Region                                                       *string                                                             `json:"region,omitempty"`
-	AccessKey                                                    *v1.SecretKeySelector                                               `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector                                               `json:"secretKey,omitempty"`
-	RoleARN                                                      *string                                                             `json:"roleARN,omitempty"`
-	Endpoint                                                     *string                                                             `json:"endpoint,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
-	Port                                                         *int32                                                              `json:"port,omitempty"`
-	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// region defines the AWS region.
+	Region *string `json:"region,omitempty"`
+	// accessKey defines the AWS API key.
+	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
+	// secretKey defines the AWS API secret.
+	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
+	// roleARN defines the AWS Role ARN, an alternative to using AWS API keys.
+	RoleARN *string `json:"roleARN,omitempty"`
+	// endpoint defines the custom endpoint to be used.
+	Endpoint *string `json:"endpoint,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	BasicAuth *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // LightSailSDConfigApplyConfiguration constructs a declarative configuration of the LightSailSDConfig type for use with

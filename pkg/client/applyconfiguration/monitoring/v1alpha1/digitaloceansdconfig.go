@@ -24,15 +24,29 @@ import (
 
 // DigitalOceanSDConfigApplyConfiguration represents a declarative configuration of the DigitalOceanSDConfig type for use
 // with apply.
+//
+// DigitalOceanSDConfig allow retrieving scrape targets from DigitalOcean's Droplets API.
+// This service discovery uses the public IPv4 address by default, by that can be changed with relabeling
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
 type DigitalOceanSDConfigApplyConfiguration struct {
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int32                              `json:"port,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // DigitalOceanSDConfigApplyConfiguration constructs a declarative configuration of the DigitalOceanSDConfig type for use with

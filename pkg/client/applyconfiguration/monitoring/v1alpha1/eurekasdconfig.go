@@ -24,16 +24,31 @@ import (
 
 // EurekaSDConfigApplyConfiguration represents a declarative configuration of the EurekaSDConfig type for use
 // with apply.
+//
+// Eureka SD configurations allow retrieving scrape targets using the Eureka REST API.
+// Prometheus will periodically check the REST endpoint and create a target for every app instance.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config
 type EurekaSDConfigApplyConfiguration struct {
-	Server                           *string                                 `json:"server,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	// server defines the URL to connect to the Eureka server.
+	Server *string `json:"server,omitempty"`
+	// basicAuth defines the BasicAuth information to use on every scrape request.
+	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                  `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                  `json:"enableHTTP2,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // EurekaSDConfigApplyConfiguration constructs a declarative configuration of the EurekaSDConfig type for use with

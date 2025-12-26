@@ -23,30 +23,65 @@ import (
 
 // SlackConfigApplyConfiguration represents a declarative configuration of the SlackConfig type for use
 // with apply.
+//
+// SlackConfig configures notifications via Slack.
+// See https://prometheus.io/docs/alerting/latest/configuration/#slack_config
 type SlackConfigApplyConfiguration struct {
-	SendResolved *bool                           `json:"sendResolved,omitempty"`
-	APIURL       *v1.SecretKeySelector           `json:"apiURL,omitempty"`
-	Channel      *string                         `json:"channel,omitempty"`
-	Username     *string                         `json:"username,omitempty"`
-	Color        *string                         `json:"color,omitempty"`
-	Title        *string                         `json:"title,omitempty"`
-	TitleLink    *string                         `json:"titleLink,omitempty"`
-	Pretext      *string                         `json:"pretext,omitempty"`
-	Text         *string                         `json:"text,omitempty"`
-	Fields       []SlackFieldApplyConfiguration  `json:"fields,omitempty"`
-	ShortFields  *bool                           `json:"shortFields,omitempty"`
-	Footer       *string                         `json:"footer,omitempty"`
-	Fallback     *string                         `json:"fallback,omitempty"`
-	CallbackID   *string                         `json:"callbackId,omitempty"`
-	IconEmoji    *string                         `json:"iconEmoji,omitempty"`
-	IconURL      *string                         `json:"iconURL,omitempty"`
-	ImageURL     *string                         `json:"imageURL,omitempty"`
-	ThumbURL     *string                         `json:"thumbURL,omitempty"`
-	LinkNames    *bool                           `json:"linkNames,omitempty"`
-	MrkdwnIn     []string                        `json:"mrkdwnIn,omitempty"`
-	Actions      []SlackActionApplyConfiguration `json:"actions,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration   `json:"httpConfig,omitempty"`
-	Timeout      *monitoringv1.Duration          `json:"timeout,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the secret's key that contains the Slack webhook URL.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// channel defines the channel or user to send notifications to.
+	Channel *string `json:"channel,omitempty"`
+	// username defines the slack bot user name.
+	Username *string `json:"username,omitempty"`
+	// color defines the color of the left border of the Slack message attachment.
+	// Can be a hex color code (e.g., "#ff0000") or a predefined color name.
+	Color *string `json:"color,omitempty"`
+	// title defines the title text displayed in the Slack message attachment.
+	Title *string `json:"title,omitempty"`
+	// titleLink defines the URL that the title will link to when clicked.
+	TitleLink *string `json:"titleLink,omitempty"`
+	// pretext defines optional text that appears above the message attachment block.
+	Pretext *string `json:"pretext,omitempty"`
+	// text defines the main text content of the Slack message attachment.
+	Text *string `json:"text,omitempty"`
+	// fields defines a list of Slack fields that are sent with each notification.
+	Fields []SlackFieldApplyConfiguration `json:"fields,omitempty"`
+	// shortFields determines whether fields are displayed in a compact format.
+	// When true, fields are shown side by side when possible.
+	ShortFields *bool `json:"shortFields,omitempty"`
+	// footer defines small text displayed at the bottom of the message attachment.
+	Footer *string `json:"footer,omitempty"`
+	// fallback defines a plain-text summary of the attachment for clients that don't support attachments.
+	Fallback *string `json:"fallback,omitempty"`
+	// callbackId defines an identifier for the message used in interactive components.
+	CallbackID *string `json:"callbackId,omitempty"`
+	// iconEmoji defines the emoji to use as the bot's avatar (e.g., ":ghost:").
+	IconEmoji *string `json:"iconEmoji,omitempty"`
+	// iconURL defines the URL to an image to use as the bot's avatar.
+	IconURL *string `json:"iconURL,omitempty"`
+	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
+	ImageURL *string `json:"imageURL,omitempty"`
+	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
+	// on the right side of the message attachment.
+	ThumbURL *string `json:"thumbURL,omitempty"`
+	// linkNames enables automatic linking of channel names and usernames in the message.
+	// When true, @channel and @username will be converted to clickable links.
+	LinkNames *bool `json:"linkNames,omitempty"`
+	// mrkdwnIn defines which fields should be parsed as Slack markdown.
+	// Valid values include "pretext", "text", and "fields".
+	MrkdwnIn []string `json:"mrkdwnIn,omitempty"`
+	// actions defines a list of Slack actions that are sent with each notification.
+	Actions []SlackActionApplyConfiguration `json:"actions,omitempty"`
+	// httpConfig defines the HTTP client configuration.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.30.0.
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // SlackConfigApplyConfiguration constructs a declarative configuration of the SlackConfig type for use with

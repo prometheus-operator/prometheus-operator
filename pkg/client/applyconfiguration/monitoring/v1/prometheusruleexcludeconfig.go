@@ -18,9 +18,15 @@ package v1
 
 // PrometheusRuleExcludeConfigApplyConfiguration represents a declarative configuration of the PrometheusRuleExcludeConfig type for use
 // with apply.
+//
+// PrometheusRuleExcludeConfig enables users to configure excluded
+// PrometheusRule names and their namespaces to be ignored while enforcing
+// namespace label for alerts and metrics.
 type PrometheusRuleExcludeConfigApplyConfiguration struct {
+	// ruleNamespace defines the namespace of the excluded PrometheusRule object.
 	RuleNamespace *string `json:"ruleNamespace,omitempty"`
-	RuleName      *string `json:"ruleName,omitempty"`
+	// ruleName defines the name of the excluded PrometheusRule object.
+	RuleName *string `json:"ruleName,omitempty"`
 }
 
 // PrometheusRuleExcludeConfigApplyConfiguration constructs a declarative configuration of the PrometheusRuleExcludeConfig type for use with

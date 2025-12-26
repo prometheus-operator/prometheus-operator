@@ -23,6 +23,16 @@ import (
 // TSDBSpecApplyConfiguration represents a declarative configuration of the TSDBSpec type for use
 // with apply.
 type TSDBSpecApplyConfiguration struct {
+	// outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with
+	// respect to the TSDB max time.
+	//
+	// An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
+	// the timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
+	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	OutOfOrderTimeWindow *monitoringv1.Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 

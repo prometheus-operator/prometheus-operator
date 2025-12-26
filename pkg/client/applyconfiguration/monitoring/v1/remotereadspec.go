@@ -23,22 +23,66 @@ import (
 
 // RemoteReadSpecApplyConfiguration represents a declarative configuration of the RemoteReadSpec type for use
 // with apply.
+//
+// RemoteReadSpec defines the configuration for Prometheus to read back samples
+// from a remote endpoint.
 type RemoteReadSpecApplyConfiguration struct {
-	URL                           *string                          `json:"url,omitempty"`
-	Name                          *string                          `json:"name,omitempty"`
-	RequiredMatchers              map[string]string                `json:"requiredMatchers,omitempty"`
-	RemoteTimeout                 *monitoringv1.Duration           `json:"remoteTimeout,omitempty"`
-	Headers                       map[string]string                `json:"headers,omitempty"`
-	ReadRecent                    *bool                            `json:"readRecent,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration     `json:"basicAuth,omitempty"`
-	BearerTokenFile               *string                          `json:"bearerTokenFile,omitempty"`
-	Authorization                 *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	BearerToken                   *string                          `json:"bearerToken,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	// url defines the URL of the endpoint to query from.
+	URL *string `json:"url,omitempty"`
+	// name of the remote read queue, it must be unique if specified. The
+	// name is used in metrics and logging in order to differentiate read
+	// configurations.
+	//
+	// It requires Prometheus >= v2.15.0.
+	Name *string `json:"name,omitempty"`
+	// requiredMatchers defines an optional list of equality matchers which have to be present
+	// in a selector to query the remote read endpoint.
+	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
+	// remoteTimeout defines the timeout for requests to the remote read endpoint.
+	RemoteTimeout *monitoringv1.Duration `json:"remoteTimeout,omitempty"`
+	// headers defines the custom HTTP headers to be sent along with each remote read request.
+	// Be aware that headers that are set by Prometheus itself can't be overwritten.
+	// Only valid in Prometheus versions 2.26.0 and newer.
+	Headers map[string]string `json:"headers,omitempty"`
+	// readRecent defines whether reads should be made for queries for time ranges that
+	// the local storage should have complete data for.
+	ReadRecent *bool `json:"readRecent,omitempty"`
+	// oauth2 configuration for the URL.
+	//
+	// It requires Prometheus >= v2.27.0.
+	//
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2 *OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// basicAuth configuration for the URL.
+	//
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// bearerTokenFile defines the file from which to read the bearer token for the URL.
+	//
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	BearerTokenFile *string `json:"bearerTokenFile,omitempty"`
+	// authorization section for the URL.
+	//
+	// It requires Prometheus >= v2.26.0.
+	//
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// bearerToken is deprecated: this will be removed in a future release.
+	// *Warning: this field shouldn't be used because the token value appears
+	// in clear-text. Prefer using `authorization`.*
+	BearerToken *string `json:"bearerToken,omitempty"`
+	// tlsConfig to use for the URL.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// Optional ProxyConfig.
 	ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects               *bool `json:"followRedirects,omitempty"`
-	FilterExternalLabels          *bool `json:"filterExternalLabels,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	//
+	// It requires Prometheus >= v2.26.0.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// filterExternalLabels defines whether to use the external labels as selectors for the remote read endpoint.
+	//
+	// It requires Prometheus >= v2.34.0.
+	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`
 }
 
 // RemoteReadSpecApplyConfiguration constructs a declarative configuration of the RemoteReadSpec type for use with
