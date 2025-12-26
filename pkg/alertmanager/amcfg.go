@@ -576,8 +576,8 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
 		GroupWait:           in.GroupWait,
-		GroupInterval:       in.GroupInterval,
-		RepeatInterval:      in.RepeatInterval,
+		GroupInterval:       durationToString(in.GroupInterval),
+		RepeatInterval:      durationToString(in.RepeatInterval),
 		Continue:            in.Continue,
 		Match:               match,
 		MatchRE:             matchRE,
@@ -2922,6 +2922,17 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		r.ActiveTimeIntervals = nil
 	}
 
+	if r.GroupInterval != "" {
+		if d, err := model.ParseDuration(r.GroupInterval); err == nil && d == 0 {
+			r.GroupInterval = ""
+		}
+	}
+	if r.RepeatInterval != "" {
+		if d, err := model.ParseDuration(r.RepeatInterval); err == nil && d == 0 {
+			r.RepeatInterval = ""
+		}
+	}
+
 	for i, child := range r.Routes {
 		if err := child.sanitize(amVersion, logger); err != nil {
 			return fmt.Errorf("route[%d]: %w", i, err)
@@ -2964,6 +2975,13 @@ func convertSliceToNilIfEmpty(in []string) []string {
 		return in
 	}
 	return nil
+}
+
+func durationToString(d *monitoringv1.Duration) string {
+	if d == nil {
+		return ""
+	}
+	return string(*d)
 }
 
 // contains will return true if any slice value with all whitespace removed
