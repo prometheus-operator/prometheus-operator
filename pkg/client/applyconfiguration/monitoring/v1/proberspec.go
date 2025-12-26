@@ -23,10 +23,20 @@ import (
 
 // ProberSpecApplyConfiguration represents a declarative configuration of the ProberSpec type for use
 // with apply.
+//
+// ProberSpec contains specification parameters for the Prober used for probing.
 type ProberSpecApplyConfiguration struct {
-	URL                           *string              `json:"url,omitempty"`
-	Scheme                        *monitoringv1.Scheme `json:"scheme,omitempty"`
-	Path                          *string              `json:"path,omitempty"`
+	// url defines the address of the prober.
+	//
+	// Unlike what the name indicates, the value should be in the form of
+	// `address:port` without any scheme which should be specified in the
+	// `scheme` field.
+	URL *string `json:"url,omitempty"`
+	// scheme defines the HTTP scheme to use when scraping the prober.
+	Scheme *monitoringv1.Scheme `json:"scheme,omitempty"`
+	// path to collect metrics from.
+	// Defaults to `/probe`.
+	Path                          *string `json:"path,omitempty"`
 	ProxyConfigApplyConfiguration `json:",inline"`
 }
 

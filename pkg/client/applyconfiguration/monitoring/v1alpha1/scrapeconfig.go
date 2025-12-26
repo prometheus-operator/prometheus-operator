@@ -25,11 +25,23 @@ import (
 
 // ScrapeConfigApplyConfiguration represents a declarative configuration of the ScrapeConfig type for use
 // with apply.
+//
+// ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across
+// multiple namespaces into the Prometheus configuration.
 type ScrapeConfigApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	v1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *ScrapeConfigSpecApplyConfiguration                  `json:"spec,omitempty"`
-	Status                           *monitoringv1.ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of ScrapeConfigSpec.
+	Spec *ScrapeConfigSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ScrapeConfig. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *monitoringv1.ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // ScrapeConfig constructs a declarative configuration of the ScrapeConfig type for use with
@@ -42,6 +54,7 @@ func ScrapeConfig(name, namespace string) *ScrapeConfigApplyConfiguration {
 	b.WithAPIVersion("monitoring.coreos.com/v1alpha1")
 	return b
 }
+
 func (b ScrapeConfigApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

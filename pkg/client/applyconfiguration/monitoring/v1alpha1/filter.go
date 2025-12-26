@@ -18,8 +18,12 @@ package v1alpha1
 
 // FilterApplyConfiguration represents a declarative configuration of the Filter type for use
 // with apply.
+//
+// Filter name and value pairs to limit the discovery process to a subset of available resources.
 type FilterApplyConfiguration struct {
-	Name   *string  `json:"name,omitempty"`
+	// name of the Filter.
+	Name *string `json:"name,omitempty"`
+	// values defines values to filter on.
 	Values []string `json:"values,omitempty"`
 }
 

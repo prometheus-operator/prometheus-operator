@@ -25,31 +25,123 @@ import (
 
 // PrometheusSpecApplyConfiguration represents a declarative configuration of the PrometheusSpec type for use
 // with apply.
+//
+// PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type PrometheusSpecApplyConfiguration struct {
 	CommonPrometheusFieldsApplyConfiguration `json:",inline"`
-	BaseImage                                *string                                         `json:"baseImage,omitempty"`
-	Tag                                      *string                                         `json:"tag,omitempty"`
-	SHA                                      *string                                         `json:"sha,omitempty"`
-	Retention                                *monitoringv1.Duration                          `json:"retention,omitempty"`
-	RetentionSize                            *monitoringv1.ByteSize                          `json:"retentionSize,omitempty"`
-	ShardRetentionPolicy                     *ShardRetentionPolicyApplyConfiguration         `json:"shardRetentionPolicy,omitempty"`
-	DisableCompaction                        *bool                                           `json:"disableCompaction,omitempty"`
-	Rules                                    *RulesApplyConfiguration                        `json:"rules,omitempty"`
-	PrometheusRulesExcludedFromEnforce       []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
-	RuleSelector                             *metav1.LabelSelectorApplyConfiguration         `json:"ruleSelector,omitempty"`
-	RuleNamespaceSelector                    *metav1.LabelSelectorApplyConfiguration         `json:"ruleNamespaceSelector,omitempty"`
-	Query                                    *QuerySpecApplyConfiguration                    `json:"query,omitempty"`
-	Alerting                                 *AlertingSpecApplyConfiguration                 `json:"alerting,omitempty"`
-	AdditionalAlertRelabelConfigs            *corev1.SecretKeySelector                       `json:"additionalAlertRelabelConfigs,omitempty"`
-	AdditionalAlertManagerConfigs            *corev1.SecretKeySelector                       `json:"additionalAlertManagerConfigs,omitempty"`
-	RemoteRead                               []RemoteReadSpecApplyConfiguration              `json:"remoteRead,omitempty"`
-	Thanos                                   *ThanosSpecApplyConfiguration                   `json:"thanos,omitempty"`
-	QueryLogFile                             *string                                         `json:"queryLogFile,omitempty"`
-	AllowOverlappingBlocks                   *bool                                           `json:"allowOverlappingBlocks,omitempty"`
-	Exemplars                                *ExemplarsApplyConfiguration                    `json:"exemplars,omitempty"`
-	EvaluationInterval                       *monitoringv1.Duration                          `json:"evaluationInterval,omitempty"`
-	RuleQueryOffset                          *monitoringv1.Duration                          `json:"ruleQueryOffset,omitempty"`
-	EnableAdminAPI                           *bool                                           `json:"enableAdminAPI,omitempty"`
+	// baseImage is deprecated: use 'spec.image' instead.
+	BaseImage *string `json:"baseImage,omitempty"`
+	// tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
+	Tag *string `json:"tag,omitempty"`
+	// sha is deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
+	SHA *string `json:"sha,omitempty"`
+	// retention defines how long to retain the Prometheus data.
+	//
+	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
+	Retention *monitoringv1.Duration `json:"retention,omitempty"`
+	// retentionSize defines the maximum number of bytes used by the Prometheus data.
+	RetentionSize *monitoringv1.ByteSize `json:"retentionSize,omitempty"`
+	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
+	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+	//
+	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+	// however, the feature is not yet fully implemented in this PR. The limitation being:
+	// * Retention duration is not settable, for now, shards are retained forever.
+	ShardRetentionPolicy *ShardRetentionPolicyApplyConfiguration `json:"shardRetentionPolicy,omitempty"`
+	// disableCompaction when true, the Prometheus compaction is disabled.
+	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
+	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
+	DisableCompaction *bool `json:"disableCompaction,omitempty"`
+	// rules defines the configuration of the Prometheus rules' engine.
+	Rules *RulesApplyConfiguration `json:"rules,omitempty"`
+	// prometheusRulesExcludedFromEnforce defines the list of PrometheusRule objects to which the namespace label
+	// enforcement doesn't apply.
+	// This is only relevant when `spec.enforcedNamespaceLabel` is set to true.
+	// Deprecated: use `spec.excludedFromEnforcement` instead.
+	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
+	// ruleSelector defines the prometheusRule objects to be selected for rule evaluation. An empty
+	// label selector matches all objects. A null label selector matches no
+	// objects.
+	RuleSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleSelector,omitempty"`
+	// ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
+	// matches all namespaces. A null label selector matches the current
+	// namespace only.
+	RuleNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleNamespaceSelector,omitempty"`
+	// query defines the configuration of the Prometheus query service.
+	Query *QuerySpecApplyConfiguration `json:"query,omitempty"`
+	// alerting defines the settings related to Alertmanager.
+	Alerting *AlertingSpecApplyConfiguration `json:"alerting,omitempty"`
+	// additionalAlertRelabelConfigs defines a key of a Secret containing
+	// additional Prometheus alert relabel configurations. The alert relabel
+	// configurations are appended to the configuration generated by the
+	// Prometheus Operator. They must be formatted according to the official
+	// Prometheus documentation:
+	//
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs
+	//
+	// # The user is responsible for making sure that the configurations are valid
+	//
+	// Note that using this feature may expose the possibility to break
+	// upgrades of Prometheus. It is advised to review Prometheus release notes
+	// to ensure that no incompatible alert relabel configs are going to break
+	// Prometheus after the upgrade.
+	AdditionalAlertRelabelConfigs *corev1.SecretKeySelector `json:"additionalAlertRelabelConfigs,omitempty"`
+	// additionalAlertManagerConfigs defines a key of a Secret containing
+	// additional Prometheus Alertmanager configurations. The Alertmanager
+	// configurations are appended to the configuration generated by the
+	// Prometheus Operator. They must be formatted according to the official
+	// Prometheus documentation:
+	//
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config
+	//
+	// # The user is responsible for making sure that the configurations are valid
+	//
+	// Note that using this feature may expose the possibility to break
+	// upgrades of Prometheus. It is advised to review Prometheus release notes
+	// to ensure that no incompatible AlertManager configs are going to break
+	// Prometheus after the upgrade.
+	AdditionalAlertManagerConfigs *corev1.SecretKeySelector `json:"additionalAlertManagerConfigs,omitempty"`
+	// remoteRead defines the list of remote read configurations.
+	RemoteRead []RemoteReadSpecApplyConfiguration `json:"remoteRead,omitempty"`
+	// thanos defines the configuration of the optional Thanos sidecar.
+	Thanos *ThanosSpecApplyConfiguration `json:"thanos,omitempty"`
+	// queryLogFile specifies where the file to which PromQL queries are logged.
+	//
+	// If the filename has an empty path, e.g. 'query.log', The Prometheus Pods
+	// will mount the file into an emptyDir volume at `/var/log/prometheus`.
+	// If a full path is provided, e.g. '/var/log/prometheus/query.log', you
+	// must mount a volume in the specified directory and it must be writable.
+	// This is because the prometheus container runs with a read-only root
+	// filesystem for security reasons.
+	// Alternatively, the location can be set to a standard I/O stream, e.g.
+	// `/dev/stdout`, to log query information to the default Prometheus log
+	// stream.
+	QueryLogFile *string `json:"queryLogFile,omitempty"`
+	// allowOverlappingBlocks enables vertical compaction and vertical query
+	// merge in Prometheus.
+	//
+	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
+	AllowOverlappingBlocks *bool `json:"allowOverlappingBlocks,omitempty"`
+	// exemplars related settings that are runtime reloadable.
+	// It requires to enable the `exemplar-storage` feature flag to be effective.
+	Exemplars *ExemplarsApplyConfiguration `json:"exemplars,omitempty"`
+	// evaluationInterval defines the interval between rule evaluations.
+	// Default: "30s"
+	EvaluationInterval *monitoringv1.Duration `json:"evaluationInterval,omitempty"`
+	// ruleQueryOffset defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+	// It requires Prometheus >= v2.53.0.
+	RuleQueryOffset *monitoringv1.Duration `json:"ruleQueryOffset,omitempty"`
+	// enableAdminAPI defines access to the Prometheus web admin API.
+	//
+	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+	// shutdown Prometheus, and more. Enabling this should be done with care and the
+	// user is advised to add additional authentication authorization via a proxy to
+	// ensure only clients authorized to perform these actions can do so.
+	//
+	// For more information:
+	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+	EnableAdminAPI *bool `json:"enableAdminAPI,omitempty"`
 }
 
 // PrometheusSpecApplyConfiguration constructs a declarative configuration of the PrometheusSpec type for use with

@@ -24,13 +24,28 @@ import (
 
 // OVHCloudSDConfigApplyConfiguration represents a declarative configuration of the OVHCloudSDConfig type for use
 // with apply.
+//
+// OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ovhcloud_sd_config
 type OVHCloudSDConfigApplyConfiguration struct {
-	ApplicationKey    *string                        `json:"applicationKey,omitempty"`
-	ApplicationSecret *v1.SecretKeySelector          `json:"applicationSecret,omitempty"`
-	ConsumerKey       *v1.SecretKeySelector          `json:"consumerKey,omitempty"`
-	Service           *monitoringv1alpha1.OVHService `json:"service,omitempty"`
-	Endpoint          *string                        `json:"endpoint,omitempty"`
-	RefreshInterval   *monitoringv1.Duration         `json:"refreshInterval,omitempty"`
+	// applicationKey defines the access key to use for OVHCloud API authentication.
+	// This is obtained from the OVHCloud API credentials at https://api.ovh.com.
+	ApplicationKey *string `json:"applicationKey,omitempty"`
+	// applicationSecret defines the secret key for OVHCloud API authentication.
+	// This contains the application secret obtained during OVHCloud API credential creation.
+	ApplicationSecret *v1.SecretKeySelector `json:"applicationSecret,omitempty"`
+	// consumerKey defines the consumer key for OVHCloud API authentication.
+	// This is the third component of OVHCloud's three-key authentication system.
+	ConsumerKey *v1.SecretKeySelector `json:"consumerKey,omitempty"`
+	// service defines the service type of the targets to retrieve.
+	// Must be either `VPS` or `DedicatedServer` to specify which OVHCloud resources to discover.
+	Service *monitoringv1alpha1.OVHService `json:"service,omitempty"`
+	// endpoint defines a custom API endpoint to be used.
+	// When not specified, defaults to the standard OVHCloud API endpoint for the region.
+	Endpoint *string `json:"endpoint,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // OVHCloudSDConfigApplyConfiguration constructs a declarative configuration of the OVHCloudSDConfig type for use with

@@ -25,19 +25,42 @@ import (
 
 // DockerSwarmSDConfigApplyConfiguration represents a declarative configuration of the DockerSwarmSDConfig type for use
 // with apply.
+//
+// DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
 type DockerSwarmSDConfigApplyConfiguration struct {
-	Host                                       *string                                           `json:"host,omitempty"`
-	Role                                       *string                                           `json:"role,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	Filters                                    *monitoringv1alpha1.Filters                       `json:"filters,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// host defines the address of the Docker daemon
+	Host *string `json:"host,omitempty"`
+	// role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
+	Role *string `json:"role,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// tasks and services that don't have published ports.
+	Port *int32 `json:"port,omitempty"`
+	// filters defines the filters to limit the discovery process to a subset of available
+	// resources.
+	// The available filters are listed in the upstream documentation:
+	// Services: https://docs.docker.com/engine/api/v1.40/#operation/ServiceList
+	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
+	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
+	Filters *monitoringv1alpha1.Filters `json:"filters,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	BasicAuth *monitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // DockerSwarmSDConfigApplyConfiguration constructs a declarative configuration of the DockerSwarmSDConfig type for use with

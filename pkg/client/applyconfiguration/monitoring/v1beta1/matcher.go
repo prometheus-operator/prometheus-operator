@@ -22,9 +22,18 @@ import (
 
 // MatcherApplyConfiguration represents a declarative configuration of the Matcher type for use
 // with apply.
+//
+// Matcher defines how to match on alert's labels.
 type MatcherApplyConfiguration struct {
-	Name      *string                      `json:"name,omitempty"`
-	Value     *string                      `json:"value,omitempty"`
+	// name defines the label to match.
+	// This specifies which alert label should be evaluated.
+	Name *string `json:"name,omitempty"`
+	// value defines the label value to match.
+	// This is the expected value for the specified label.
+	Value *string `json:"value,omitempty"`
+	// matchType defines the match operation available with AlertManager >= v0.22.0.
+	// Takes precedence over Regex (deprecated) if non-empty.
+	// Valid values: "=" (equality), "!=" (inequality), "=~" (regex match), "!~" (regex non-match).
 	MatchType *monitoringv1beta1.MatchType `json:"matchType,omitempty"`
 }
 

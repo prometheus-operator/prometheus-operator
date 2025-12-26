@@ -25,20 +25,42 @@ import (
 
 // DockerSDConfigApplyConfiguration represents a declarative configuration of the DockerSDConfig type for use
 // with apply.
+//
+// Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
+// This SD discovers "containers" and will create a target for each network IP and
+// port the container is configured to expose.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config
 type DockerSDConfigApplyConfiguration struct {
-	Host                             *string `json:"host,omitempty"`
+	// host defines the address of the docker daemon
+	Host *string `json:"host,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	Port                             *int32                                  `json:"port,omitempty"`
-	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
-	MatchFirstNetwork                *bool                                   `json:"matchFirstNetwork,omitempty"`
-	Filters                          *monitoringv1alpha1.Filters             `json:"filters,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	FollowRedirects                  *bool                                   `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                                   `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// hostNetworkingHost defines the host to use if the container is in host networking mode.
+	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
+	// matchFirstNetwork defines whether to match the first network if the container has multiple networks defined.
+	// If unset, Prometheus uses true by default.
+	// It requires Prometheus >= v2.54.1.
+	MatchFirstNetwork *bool `json:"matchFirstNetwork,omitempty"`
+	// filters defines filters to limit the discovery process to a subset of the available resources.
+	Filters *monitoringv1alpha1.Filters `json:"filters,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // DockerSDConfigApplyConfiguration constructs a declarative configuration of the DockerSDConfig type for use with

@@ -23,6 +23,8 @@ import (
 
 // TLSConfigApplyConfiguration represents a declarative configuration of the TLSConfig type for use
 // with apply.
+//
+// TLSConfig defines full TLS configuration.
 type TLSConfigApplyConfiguration struct {
 	SafeTLSConfigApplyConfiguration  `json:",inline"`
 	TLSFilesConfigApplyConfiguration `json:",inline"`

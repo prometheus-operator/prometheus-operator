@@ -23,25 +23,62 @@ import (
 
 // RocketChatConfigApplyConfiguration represents a declarative configuration of the RocketChatConfig type for use
 // with apply.
+//
+// RocketChatConfig configures notifications via RocketChat.
+// It requires Alertmanager >= 0.28.0.
 type RocketChatConfigApplyConfiguration struct {
-	SendResolved *bool                                      `json:"sendResolved,omitempty"`
-	APIURL       *monitoringv1beta1.URL                     `json:"apiURL,omitempty"`
-	Channel      *string                                    `json:"channel,omitempty"`
-	Token        *v1.SecretKeySelector                      `json:"token,omitempty"`
-	TokenID      *v1.SecretKeySelector                      `json:"tokenID,omitempty"`
-	Color        *string                                    `json:"color,omitempty"`
-	Emoji        *string                                    `json:"emoji,omitempty"`
-	IconURL      *monitoringv1beta1.URL                     `json:"iconURL,omitempty"`
-	Text         *string                                    `json:"text,omitempty"`
-	Title        *string                                    `json:"title,omitempty"`
-	TitleLink    *string                                    `json:"titleLink,omitempty"`
-	Fields       []RocketChatFieldConfigApplyConfiguration  `json:"fields,omitempty"`
-	ShortFields  *bool                                      `json:"shortFields,omitempty"`
-	ImageURL     *monitoringv1beta1.URL                     `json:"imageURL,omitempty"`
-	ThumbURL     *monitoringv1beta1.URL                     `json:"thumbURL,omitempty"`
-	LinkNames    *bool                                      `json:"linkNames,omitempty"`
-	Actions      []RocketChatActionConfigApplyConfiguration `json:"actions,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration              `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the API URL for RocketChat.
+	// Defaults to https://open.rocket.chat/ if not specified.
+	APIURL *monitoringv1beta1.URL `json:"apiURL,omitempty"`
+	// channel defines the channel to send alerts to.
+	// This can be a channel name (e.g., "#alerts") or a direct message recipient.
+	Channel *string `json:"channel,omitempty"`
+	// token defines the sender token for RocketChat authentication.
+	// This is the personal access token or bot token used to authenticate API requests.
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+	// tokenID defines the sender token ID for RocketChat authentication.
+	// This is the user ID associated with the token used for API requests.
+	TokenID *v1.SecretKeySelector `json:"tokenID,omitempty"`
+	// color defines the message color displayed in RocketChat.
+	// This appears as a colored bar alongside the message.
+	Color *string `json:"color,omitempty"`
+	// emoji defines the emoji to be displayed as an avatar.
+	// If provided, this emoji will be used instead of the default avatar or iconURL.
+	Emoji *string `json:"emoji,omitempty"`
+	// iconURL defines the icon URL for the message avatar.
+	// This displays a custom image as the message sender's avatar.
+	IconURL *monitoringv1beta1.URL `json:"iconURL,omitempty"`
+	// text defines the message text to send.
+	// This is optional because attachments can be used instead of or alongside text.
+	Text *string `json:"text,omitempty"`
+	// title defines the message title displayed prominently in the message.
+	// This appears as bold text at the top of the message attachment.
+	Title *string `json:"title,omitempty"`
+	// titleLink defines the URL that the title will link to when clicked.
+	// This makes the message title clickable in the RocketChat interface.
+	TitleLink *string `json:"titleLink,omitempty"`
+	// fields defines additional fields for the message attachment.
+	// These appear as structured key-value pairs within the message.
+	Fields []RocketChatFieldConfigApplyConfiguration `json:"fields,omitempty"`
+	// shortFields defines whether to use short fields in the message layout.
+	// When true, fields may be displayed side by side to save space.
+	ShortFields *bool `json:"shortFields,omitempty"`
+	// imageURL defines the image URL to display within the message.
+	// This embeds an image directly in the message attachment.
+	ImageURL *monitoringv1beta1.URL `json:"imageURL,omitempty"`
+	// thumbURL defines the thumbnail URL for the message.
+	// This displays a small thumbnail image alongside the message content.
+	ThumbURL *monitoringv1beta1.URL `json:"thumbURL,omitempty"`
+	// linkNames defines whether to enable automatic linking of usernames and channels.
+	// When true, @username and #channel references become clickable links.
+	LinkNames *bool `json:"linkNames,omitempty"`
+	// actions defines interactive actions to include in the message.
+	// These appear as buttons that users can click to trigger responses.
+	Actions []RocketChatActionConfigApplyConfiguration `json:"actions,omitempty"`
+	// httpConfig defines the HTTP client configuration for RocketChat API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // RocketChatConfigApplyConfiguration constructs a declarative configuration of the RocketChatConfig type for use with

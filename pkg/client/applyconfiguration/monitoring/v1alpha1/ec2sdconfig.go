@@ -25,18 +25,45 @@ import (
 
 // EC2SDConfigApplyConfiguration represents a declarative configuration of the EC2SDConfig type for use
 // with apply.
+//
+// EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.
+// The private IP address is used by default, but may be changed to the public IP address with relabeling.
+// The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+//
+// The EC2 service discovery requires AWS API keys or role ARN for authentication.
+// BasicAuth, Authorization and OAuth2 fields are not present on purpose.
 type EC2SDConfigApplyConfiguration struct {
-	Region                                                       *string                     `json:"region,omitempty"`
-	AccessKey                                                    *v1.SecretKeySelector       `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector       `json:"secretKey,omitempty"`
-	RoleARN                                                      *string                     `json:"roleARN,omitempty"`
-	Port                                                         *int32                      `json:"port,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration      `json:"refreshInterval,omitempty"`
+	// region defines the AWS region.
+	Region *string `json:"region,omitempty"`
+	// accessKey defines the AWS API key.
+	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
+	// secretKey defines the AWS API secret.
+	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
+	// roleARN defines an alternative to using AWS API keys.
+	RoleARN *string `json:"roleARN,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// filters can be used optionally to filter the instance list by other criteria.
+	// Available filter criteria can be found here:
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// It requires Prometheus >= v2.3.0
 	Filters                                                      *monitoringv1alpha1.Filters `json:"filters,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// It requires Prometheus >= v2.41.0
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	// It requires Prometheus >= v2.41.0
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	// It requires Prometheus >= v2.41.0
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // EC2SDConfigApplyConfiguration constructs a declarative configuration of the EC2SDConfig type for use with

@@ -23,30 +23,117 @@ import (
 
 // ThanosSpecApplyConfiguration represents a declarative configuration of the ThanosSpec type for use
 // with apply.
+//
+// ThanosSpec defines the configuration of the Thanos sidecar.
 type ThanosSpecApplyConfiguration struct {
-	Image                   *string                      `json:"image,omitempty"`
-	Version                 *string                      `json:"version,omitempty"`
-	Tag                     *string                      `json:"tag,omitempty"`
-	SHA                     *string                      `json:"sha,omitempty"`
-	BaseImage               *string                      `json:"baseImage,omitempty"`
-	Resources               *corev1.ResourceRequirements `json:"resources,omitempty"`
-	ObjectStorageConfig     *corev1.SecretKeySelector    `json:"objectStorageConfig,omitempty"`
-	ObjectStorageConfigFile *string                      `json:"objectStorageConfigFile,omitempty"`
-	ListenLocal             *bool                        `json:"listenLocal,omitempty"`
-	GRPCListenLocal         *bool                        `json:"grpcListenLocal,omitempty"`
-	HTTPListenLocal         *bool                        `json:"httpListenLocal,omitempty"`
-	TracingConfig           *corev1.SecretKeySelector    `json:"tracingConfig,omitempty"`
-	TracingConfigFile       *string                      `json:"tracingConfigFile,omitempty"`
-	GRPCServerTLSConfig     *TLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
-	LogLevel                *string                      `json:"logLevel,omitempty"`
-	LogFormat               *string                      `json:"logFormat,omitempty"`
-	MinTime                 *string                      `json:"minTime,omitempty"`
-	BlockDuration           *monitoringv1.Duration       `json:"blockSize,omitempty"`
-	ReadyTimeout            *monitoringv1.Duration       `json:"readyTimeout,omitempty"`
-	GetConfigInterval       *monitoringv1.Duration       `json:"getConfigInterval,omitempty"`
-	GetConfigTimeout        *monitoringv1.Duration       `json:"getConfigTimeout,omitempty"`
-	VolumeMounts            []corev1.VolumeMount         `json:"volumeMounts,omitempty"`
-	AdditionalArgs          []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
+	// image defines the container image name for Thanos. If specified, it takes precedence over
+	// the `spec.thanos.baseImage`, `spec.thanos.tag` and `spec.thanos.sha`
+	// fields.
+	//
+	// Specifying `spec.thanos.version` is still necessary to ensure the
+	// Prometheus Operator knows which version of Thanos is being configured.
+	//
+	// If neither `spec.thanos.image` nor `spec.thanos.baseImage` are defined,
+	// the operator will use the latest upstream version of Thanos available at
+	// the time when the operator was released.
+	Image *string `json:"image,omitempty"`
+	// version of Thanos being deployed. The operator uses this information
+	// to generate the Prometheus StatefulSet + configuration files.
+	//
+	// If not specified, the operator assumes the latest upstream release of
+	// Thanos available at the time when the version of the operator was
+	// released.
+	Version *string `json:"version,omitempty"`
+	// tag is deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
+	Tag *string `json:"tag,omitempty"`
+	// sha is deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
+	SHA *string `json:"sha,omitempty"`
+	// baseImage is deprecated: use 'image' instead.
+	BaseImage *string `json:"baseImage,omitempty"`
+	// resources defines the resources requests and limits of the Thanos sidecar.
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
+	// objectStorageConfig defines the Thanos sidecar's configuration to upload TSDB blocks to object storage.
+	//
+	// More info: https://thanos.io/tip/thanos/storage.md/
+	//
+	// objectStorageConfigFile takes precedence over this field.
+	ObjectStorageConfig *corev1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
+	// objectStorageConfigFile defines the Thanos sidecar's configuration file to upload TSDB blocks to object storage.
+	//
+	// More info: https://thanos.io/tip/thanos/storage.md/
+	//
+	// This field takes precedence over objectStorageConfig.
+	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
+	// listenLocal is deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
+	ListenLocal *bool `json:"listenLocal,omitempty"`
+	// grpcListenLocal defines when true, the Thanos sidecar listens on the loopback interface instead
+	// of the Pod IP's address for the gRPC endpoints.
+	//
+	// It has no effect if `listenLocal` is true.
+	GRPCListenLocal *bool `json:"grpcListenLocal,omitempty"`
+	// httpListenLocal when true, the Thanos sidecar listens on the loopback interface instead
+	// of the Pod IP's address for the HTTP endpoints.
+	//
+	// It has no effect if `listenLocal` is true.
+	HTTPListenLocal *bool `json:"httpListenLocal,omitempty"`
+	// tracingConfig defines the tracing configuration for the Thanos sidecar.
+	//
+	// `tracingConfigFile` takes precedence over this field.
+	//
+	// More info: https://thanos.io/tip/thanos/tracing.md/
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	TracingConfig *corev1.SecretKeySelector `json:"tracingConfig,omitempty"`
+	// tracingConfigFile defines the tracing configuration file for the Thanos sidecar.
+	//
+	// This field takes precedence over `tracingConfig`.
+	//
+	// More info: https://thanos.io/tip/thanos/tracing.md/
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	TracingConfigFile *string `json:"tracingConfigFile,omitempty"`
+	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
+	//
+	// Note: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.
+	GRPCServerTLSConfig *TLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
+	// logLevel for the Thanos sidecar.
+	LogLevel *string `json:"logLevel,omitempty"`
+	// logFormat for the Thanos sidecar.
+	LogFormat *string `json:"logFormat,omitempty"`
+	// minTime defines the start of time range limit served by the Thanos sidecar's StoreAPI.
+	// The field's value should be a constant time in RFC3339 format or a time
+	// duration relative to current time, such as -1d or 2h45m. Valid duration
+	// units are ms, s, m, h, d, w, y.
+	MinTime *string `json:"minTime,omitempty"`
+	// blockSize controls the size of TSDB blocks produced by Prometheus.
+	// The default value is 2h to match the upstream Prometheus defaults.
+	//
+	// WARNING: Changing the block duration can impact the performance and
+	// efficiency of the entire Prometheus/Thanos stack due to how it interacts
+	// with memory and Thanos compactors. It is recommended to keep this value
+	// set to a multiple of 120 times your longest scrape or rule interval. For
+	// example, 30s * 120 = 1h.
+	BlockDuration *monitoringv1.Duration `json:"blockSize,omitempty"`
+	// readyTimeout defines the maximum time that the Thanos sidecar will wait for
+	// Prometheus to start.
+	ReadyTimeout *monitoringv1.Duration `json:"readyTimeout,omitempty"`
+	// getConfigInterval defines how often to retrieve the Prometheus configuration.
+	GetConfigInterval *monitoringv1.Duration `json:"getConfigInterval,omitempty"`
+	// getConfigTimeout defines the maximum time to wait when retrieving the Prometheus configuration.
+	GetConfigTimeout *monitoringv1.Duration `json:"getConfigTimeout,omitempty"`
+	// volumeMounts allows configuration of additional VolumeMounts for Thanos.
+	// VolumeMounts specified will be appended to other VolumeMounts in the
+	// 'thanos-sidecar' container.
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+	// additionalArgs allows setting additional arguments for the Thanos container.
+	// The arguments are passed as-is to the Thanos container which may cause issues
+	// if they are invalid or not supported the given Thanos version.
+	// In case of an argument conflict (e.g. an argument which is already set by the
+	// operator itself) or when providing an invalid argument, the reconciliation will
+	// fail and an error will be logged.
+	AdditionalArgs []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
 }
 
 // ThanosSpecApplyConfiguration constructs a declarative configuration of the ThanosSpec type for use with

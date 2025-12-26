@@ -22,16 +22,29 @@ import (
 
 // GlobalSMTPConfigApplyConfiguration represents a declarative configuration of the GlobalSMTPConfig type for use
 // with apply.
+//
+// GlobalSMTPConfig configures global SMTP parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
 type GlobalSMTPConfigApplyConfiguration struct {
-	From         *string                          `json:"from,omitempty"`
-	SmartHost    *HostPortApplyConfiguration      `json:"smartHost,omitempty"`
-	Hello        *string                          `json:"hello,omitempty"`
-	AuthUsername *string                          `json:"authUsername,omitempty"`
-	AuthPassword *corev1.SecretKeySelector        `json:"authPassword,omitempty"`
-	AuthIdentity *string                          `json:"authIdentity,omitempty"`
-	AuthSecret   *corev1.SecretKeySelector        `json:"authSecret,omitempty"`
-	RequireTLS   *bool                            `json:"requireTLS,omitempty"`
-	TLSConfig    *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// from defines the default SMTP From header field.
+	From *string `json:"from,omitempty"`
+	// smartHost defines the default SMTP smarthost used for sending emails.
+	SmartHost *HostPortApplyConfiguration `json:"smartHost,omitempty"`
+	// hello defines the default hostname to identify to the SMTP server.
+	Hello *string `json:"hello,omitempty"`
+	// authUsername represents SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.
+	AuthUsername *string `json:"authUsername,omitempty"`
+	// authPassword represents SMTP Auth using LOGIN and PLAIN.
+	AuthPassword *corev1.SecretKeySelector `json:"authPassword,omitempty"`
+	// authIdentity represents SMTP Auth using PLAIN
+	AuthIdentity *string `json:"authIdentity,omitempty"`
+	// authSecret represents SMTP Auth using CRAM-MD5.
+	AuthSecret *corev1.SecretKeySelector `json:"authSecret,omitempty"`
+	// requireTLS defines the default SMTP TLS requirement.
+	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
+	RequireTLS *bool `json:"requireTLS,omitempty"`
+	// tlsConfig defines the default TLS configuration for SMTP receivers
+	TLSConfig *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // GlobalSMTPConfigApplyConfiguration constructs a declarative configuration of the GlobalSMTPConfig type for use with

@@ -25,18 +25,35 @@ import (
 
 // KumaSDConfigApplyConfiguration represents a declarative configuration of the KumaSDConfig type for use
 // with apply.
+//
+// KumaSDConfig allow retrieving scrape targets from Kuma's control plane.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config
 type KumaSDConfigApplyConfiguration struct {
-	Server                                     *monitoringv1alpha1.URL `json:"server,omitempty"`
-	ClientID                                   *string                 `json:"clientID,omitempty"`
-	RefreshInterval                            *v1.Duration            `json:"refreshInterval,omitempty"`
-	FetchTimeout                               *v1.Duration            `json:"fetchTimeout,omitempty"`
+	// server defines the address of the Kuma Control Plane's MADS xDS server.
+	Server *monitoringv1alpha1.URL `json:"server,omitempty"`
+	// clientID is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
+	// It requires Prometheus >= v2.50.0.
+	ClientID *string `json:"clientID,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// fetchTimeout defines the time after which the monitoring assignments are refreshed.
+	FetchTimeout *v1.Duration `json:"fetchTimeout,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	FollowRedirects                            *bool                                             `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                             `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	BasicAuth *monitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // KumaSDConfigApplyConfiguration constructs a declarative configuration of the KumaSDConfig type for use with

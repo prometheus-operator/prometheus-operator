@@ -24,14 +24,22 @@ import (
 // TracingConfigApplyConfiguration represents a declarative configuration of the TracingConfig type for use
 // with apply.
 type TracingConfigApplyConfiguration struct {
-	ClientType       *string                      `json:"clientType,omitempty"`
-	Endpoint         *string                      `json:"endpoint,omitempty"`
-	SamplingFraction *resource.Quantity           `json:"samplingFraction,omitempty"`
-	Insecure         *bool                        `json:"insecure,omitempty"`
-	Headers          map[string]string            `json:"headers,omitempty"`
-	Compression      *string                      `json:"compression,omitempty"`
-	Timeout          *monitoringv1.Duration       `json:"timeout,omitempty"`
-	TLSConfig        *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
+	ClientType *string `json:"clientType,omitempty"`
+	// endpoint to send the traces to. Should be provided in format <host>:<port>.
+	Endpoint *string `json:"endpoint,omitempty"`
+	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
+	SamplingFraction *resource.Quantity `json:"samplingFraction,omitempty"`
+	// insecure if disabled, the client will use a secure connection.
+	Insecure *bool `json:"insecure,omitempty"`
+	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
+	Headers map[string]string `json:"headers,omitempty"`
+	// compression key for supported compression types. The only supported value is `Gzip`.
+	Compression *string `json:"compression,omitempty"`
+	// timeout defines the maximum time the exporter will wait for each batch export.
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// tlsConfig to use when sending traces.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // TracingConfigApplyConfiguration constructs a declarative configuration of the TracingConfig type for use with

@@ -19,9 +19,17 @@ package v1
 // RulesAlertApplyConfiguration represents a declarative configuration of the RulesAlert type for use
 // with apply.
 type RulesAlertApplyConfiguration struct {
+	// forOutageTolerance defines the max time to tolerate prometheus outage for restoring 'for' state of
+	// alert.
 	ForOutageTolerance *string `json:"forOutageTolerance,omitempty"`
-	ForGracePeriod     *string `json:"forGracePeriod,omitempty"`
-	ResendDelay        *string `json:"resendDelay,omitempty"`
+	// forGracePeriod defines the minimum duration between alert and restored 'for' state.
+	//
+	// This is maintained only for alerts with a configured 'for' time greater
+	// than the grace period.
+	ForGracePeriod *string `json:"forGracePeriod,omitempty"`
+	// resendDelay defines the minimum amount of time to wait before resending an alert to
+	// Alertmanager.
+	ResendDelay *string `json:"resendDelay,omitempty"`
 }
 
 // RulesAlertApplyConfiguration constructs a declarative configuration of the RulesAlert type for use with

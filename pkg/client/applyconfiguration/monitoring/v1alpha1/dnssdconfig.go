@@ -23,11 +23,25 @@ import (
 
 // DNSSDConfigApplyConfiguration represents a declarative configuration of the DNSSDConfig type for use
 // with apply.
+//
+// DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets.
+// The DNS servers to be contacted are read from /etc/resolv.conf.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config
 type DNSSDConfigApplyConfiguration struct {
-	Names           []string                          `json:"names,omitempty"`
-	RefreshInterval *v1.Duration                      `json:"refreshInterval,omitempty"`
-	Type            *monitoringv1alpha1.DNSRecordType `json:"type,omitempty"`
-	Port            *int32                            `json:"port,omitempty"`
+	// names defines a list of DNS domain names to be queried.
+	Names []string `json:"names,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// type defines the type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
+	// If not set, Prometheus uses its default value.
+	//
+	// When set to NS, it requires Prometheus >= v2.49.0.
+	// When set to MX, it requires Prometheus >= v2.38.0
+	Type *monitoringv1alpha1.DNSRecordType `json:"type,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// Ignored for SRV records
+	Port *int32 `json:"port,omitempty"`
 }
 
 // DNSSDConfigApplyConfiguration constructs a declarative configuration of the DNSSDConfig type for use with

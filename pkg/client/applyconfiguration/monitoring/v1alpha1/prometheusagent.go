@@ -25,11 +25,22 @@ import (
 
 // PrometheusAgentApplyConfiguration represents a declarative configuration of the PrometheusAgent type for use
 // with apply.
+//
+// The `PrometheusAgent` custom resource definition (CRD) defines a desired [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) setup to run in a Kubernetes cluster.
+//
+// The CRD is very similar to the `Prometheus` CRD except for features which aren't available in agent mode like rule evaluation, persistent storage and Thanos sidecar.
 type PrometheusAgentApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	v1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *PrometheusAgentSpecApplyConfiguration           `json:"spec,omitempty"`
-	Status                           *monitoringv1.PrometheusStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of the desired behavior of the Prometheus agent. More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Spec *PrometheusAgentSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the most recent observed status of the Prometheus cluster. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *monitoringv1.PrometheusStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // PrometheusAgent constructs a declarative configuration of the PrometheusAgent type for use with
@@ -42,6 +53,7 @@ func PrometheusAgent(name, namespace string) *PrometheusAgentApplyConfiguration 
 	b.WithAPIVersion("monitoring.coreos.com/v1alpha1")
 	return b
 }
+
 func (b PrometheusAgentApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

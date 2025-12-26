@@ -18,7 +18,10 @@ package v1
 
 // AzureSDKApplyConfiguration represents a declarative configuration of the AzureSDK type for use
 // with apply.
+//
+// AzureSDK is used to store azure SDK config values.
 type AzureSDKApplyConfiguration struct {
+	// tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.
 	TenantID *string `json:"tenantId,omitempty"`
 }
 

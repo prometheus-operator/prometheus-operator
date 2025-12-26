@@ -18,9 +18,13 @@ package v1alpha1
 
 // DayOfMonthRangeApplyConfiguration represents a declarative configuration of the DayOfMonthRange type for use
 // with apply.
+//
+// DayOfMonthRange is an inclusive range of days of the month beginning at 1
 type DayOfMonthRangeApplyConfiguration struct {
+	// start of the inclusive range
 	Start *int `json:"start,omitempty"`
-	End   *int `json:"end,omitempty"`
+	// end of the inclusive range
+	End *int `json:"end,omitempty"`
 }
 
 // DayOfMonthRangeApplyConfiguration constructs a declarative configuration of the DayOfMonthRange type for use with

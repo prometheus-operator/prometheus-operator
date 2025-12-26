@@ -24,11 +24,29 @@ import (
 
 // PodMonitorApplyConfiguration represents a declarative configuration of the PodMonitor type for use
 // with apply.
+//
+// The `PodMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of pods.
+// Among other things, it allows to specify:
+// * The pods to scrape via label selectors.
+// * The container ports to scrape.
+// * Authentication credentials to use.
+// * Target and metric relabeling.
+//
+// `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
 type PodMonitorApplyConfiguration struct {
-	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                                 *PodMonitorSpecApplyConfiguration       `json:"spec,omitempty"`
-	Status                               *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of desired Pod selection for target discovery by Prometheus.
+	Spec *PodMonitorSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the PodMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // PodMonitor constructs a declarative configuration of the PodMonitor type for use with
@@ -41,6 +59,7 @@ func PodMonitor(name, namespace string) *PodMonitorApplyConfiguration {
 	b.WithAPIVersion("monitoring.coreos.com/v1")
 	return b
 }
+
 func (b PodMonitorApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

@@ -18,11 +18,25 @@ package v1
 
 // AzureADApplyConfiguration represents a declarative configuration of the AzureAD type for use
 // with apply.
+//
+// AzureAD defines the configuration for remote write's azuread parameters.
 type AzureADApplyConfiguration struct {
-	Cloud           *string                            `json:"cloud,omitempty"`
+	// cloud defines the Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.
+	Cloud *string `json:"cloud,omitempty"`
+	// managedIdentity defines the Azure User-assigned Managed identity.
+	// Cannot be set at the same time as `oauth` or `sdk`.
 	ManagedIdentity *ManagedIdentityApplyConfiguration `json:"managedIdentity,omitempty"`
-	OAuth           *AzureOAuthApplyConfiguration      `json:"oauth,omitempty"`
-	SDK             *AzureSDKApplyConfiguration        `json:"sdk,omitempty"`
+	// oauth defines the oauth config that is being used to authenticate.
+	// Cannot be set at the same time as `managedIdentity` or `sdk`.
+	//
+	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
+	OAuth *AzureOAuthApplyConfiguration `json:"oauth,omitempty"`
+	// sdk defines the Azure SDK config that is being used to authenticate.
+	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+	// Cannot be set at the same time as `oauth` or `managedIdentity`.
+	//
+	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
+	SDK *AzureSDKApplyConfiguration `json:"sdk,omitempty"`
 }
 
 // AzureADApplyConfiguration constructs a declarative configuration of the AzureAD type for use with

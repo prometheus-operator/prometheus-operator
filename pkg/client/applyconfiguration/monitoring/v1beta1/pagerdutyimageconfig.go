@@ -18,10 +18,15 @@ package v1beta1
 
 // PagerDutyImageConfigApplyConfiguration represents a declarative configuration of the PagerDutyImageConfig type for use
 // with apply.
+//
+// PagerDutyImageConfig attaches images to an incident
 type PagerDutyImageConfigApplyConfiguration struct {
-	Src  *string `json:"src,omitempty"`
+	// src of the image being attached to the incident
+	Src *string `json:"src,omitempty"`
+	// href defines the optional URL; makes the image a clickable link.
 	Href *string `json:"href,omitempty"`
-	Alt  *string `json:"alt,omitempty"`
+	// alt is the optional alternative text for the image.
+	Alt *string `json:"alt,omitempty"`
 }
 
 // PagerDutyImageConfigApplyConfiguration constructs a declarative configuration of the PagerDutyImageConfig type for use with

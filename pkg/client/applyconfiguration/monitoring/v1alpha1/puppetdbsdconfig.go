@@ -24,19 +24,40 @@ import (
 
 // PuppetDBSDConfigApplyConfiguration represents a declarative configuration of the PuppetDBSDConfig type for use
 // with apply.
+//
+// PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
 type PuppetDBSDConfigApplyConfiguration struct {
-	URL                                        *string                                           `json:"url,omitempty"`
-	Query                                      *string                                           `json:"query,omitempty"`
-	IncludeParameters                          *bool                                             `json:"includeParameters,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// url defines the URL of the PuppetDB root query endpoint.
+	URL *string `json:"url,omitempty"`
+	// query defines the Puppet Query Language (PQL) query. Only resources are supported.
+	// https://puppet.com/docs/puppetdb/latest/api/query/v4/pql.html
+	Query *string `json:"query,omitempty"`
+	// includeParameters defines whether to include the parameters as meta labels.
+	// Note: Enabling this exposes parameters in the Prometheus UI and API. Make sure
+	// that you don't have secrets exposed as parameters if you enable this.
+	IncludeParameters *bool `json:"includeParameters,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	BasicAuth *monitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // PuppetDBSDConfigApplyConfiguration constructs a declarative configuration of the PuppetDBSDConfig type for use with

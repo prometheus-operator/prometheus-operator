@@ -24,28 +24,66 @@ import (
 
 // ConsulSDConfigApplyConfiguration represents a declarative configuration of the ConsulSDConfig type for use
 // with apply.
+//
+// ConsulSDConfig defines a Consul service discovery configuration
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
 type ConsulSDConfigApplyConfiguration struct {
-	Server                                                       *string                                                             `json:"server,omitempty"`
-	PathPrefix                                                   *string                                                             `json:"pathPrefix,omitempty"`
-	TokenRef                                                     *v1.SecretKeySelector                                               `json:"tokenRef,omitempty"`
-	Datacenter                                                   *string                                                             `json:"datacenter,omitempty"`
-	Namespace                                                    *string                                                             `json:"namespace,omitempty"`
-	Partition                                                    *string                                                             `json:"partition,omitempty"`
-	Scheme                                                       *monitoringv1.Scheme                                                `json:"scheme,omitempty"`
-	Services                                                     []string                                                            `json:"services,omitempty"`
-	Tags                                                         []string                                                            `json:"tags,omitempty"`
-	TagSeparator                                                 *string                                                             `json:"tagSeparator,omitempty"`
-	NodeMeta                                                     map[string]string                                                   `json:"nodeMeta,omitempty"`
-	Filter                                                       *string                                                             `json:"filter,omitempty"`
-	AllowStale                                                   *bool                                                               `json:"allowStale,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
-	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// server defines the consul server address. A valid string consisting of a hostname or IP followed by an optional port number.
+	Server *string `json:"server,omitempty"`
+	// pathPrefix defines the prefix for URIs for when consul is behind an API gateway (reverse proxy).
+	//
+	// It requires Prometheus >= 2.45.0.
+	PathPrefix *string `json:"pathPrefix,omitempty"`
+	// tokenRef defines the consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.
+	TokenRef *v1.SecretKeySelector `json:"tokenRef,omitempty"`
+	// datacenter defines the consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.
+	Datacenter *string `json:"datacenter,omitempty"`
+	// namespace are only supported in Consul Enterprise.
+	//
+	// It requires Prometheus >= 2.28.0.
+	Namespace *string `json:"namespace,omitempty"`
+	// partition defines the admin Partitions are only supported in Consul Enterprise.
+	Partition *string `json:"partition,omitempty"`
+	// scheme defines the HTTP Scheme.
+	Scheme *monitoringv1.Scheme `json:"scheme,omitempty"`
+	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
+	Services []string `json:"services,omitempty"`
+	// tags defines an optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
+	Tags []string `json:"tags,omitempty"`
+	// tagSeparator defines the string by which Consul tags are joined into the tag label.
+	// If unset, Prometheus uses its default value.
+	TagSeparator *string `json:"tagSeparator,omitempty"`
+	// nodeMeta defines the node metadata key/value pairs to filter nodes for a given service.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
+	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
+	// filter defines the filter expression used to filter the catalog results.
+	// See https://www.consul.io/api-docs/catalog#list-services
+	// It requires Prometheus >= 3.0.0.
+	Filter *string `json:"filter,omitempty"`
+	// allowStale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
+	// If unset, Prometheus uses its default value.
+	AllowStale *bool `json:"allowStale,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// basicAuth defines the information to authenticate against the Consul Server.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	BasicAuth *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the header configuration to authenticate against the Consul Server.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	Authorization *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHttp2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // ConsulSDConfigApplyConfiguration constructs a declarative configuration of the ConsulSDConfig type for use with

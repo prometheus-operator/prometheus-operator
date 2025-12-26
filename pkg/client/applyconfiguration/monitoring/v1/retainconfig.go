@@ -23,6 +23,7 @@ import (
 // RetainConfigApplyConfiguration represents a declarative configuration of the RetainConfig type for use
 // with apply.
 type RetainConfigApplyConfiguration struct {
+	// retentionPeriod defines the retentionPeriod for shard retention policy.
 	RetentionPeriod *monitoringv1.Duration `json:"retentionPeriod,omitempty"`
 }
 

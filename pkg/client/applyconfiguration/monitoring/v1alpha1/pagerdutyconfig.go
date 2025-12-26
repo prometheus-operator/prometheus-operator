@@ -23,24 +23,52 @@ import (
 
 // PagerDutyConfigApplyConfiguration represents a declarative configuration of the PagerDutyConfig type for use
 // with apply.
+//
+// PagerDutyConfig configures notifications via PagerDuty.
+// See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
 type PagerDutyConfigApplyConfiguration struct {
-	SendResolved          *bool                                    `json:"sendResolved,omitempty"`
-	RoutingKey            *v1.SecretKeySelector                    `json:"routingKey,omitempty"`
-	ServiceKey            *v1.SecretKeySelector                    `json:"serviceKey,omitempty"`
-	URL                   *string                                  `json:"url,omitempty"`
-	Client                *string                                  `json:"client,omitempty"`
-	ClientURL             *string                                  `json:"clientURL,omitempty"`
-	Description           *string                                  `json:"description,omitempty"`
-	Severity              *string                                  `json:"severity,omitempty"`
-	Class                 *string                                  `json:"class,omitempty"`
-	Group                 *string                                  `json:"group,omitempty"`
-	Component             *string                                  `json:"component,omitempty"`
-	Details               []KeyValueApplyConfiguration             `json:"details,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// routingKey defines the secret's key that contains the PagerDuty integration key (when using
+	// Events API v2). Either this field or `serviceKey` needs to be defined.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	RoutingKey *v1.SecretKeySelector `json:"routingKey,omitempty"`
+	// serviceKey defines the secret's key that contains the PagerDuty service key (when using
+	// integration type "Prometheus"). Either this field or `routingKey` needs to
+	// be defined.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	ServiceKey *v1.SecretKeySelector `json:"serviceKey,omitempty"`
+	// url defines the URL to send requests to.
+	URL *string `json:"url,omitempty"`
+	// client defines the client identification.
+	Client *string `json:"client,omitempty"`
+	// clientURL defines the backlink to the sender of notification.
+	ClientURL *string `json:"clientURL,omitempty"`
+	// description of the incident.
+	Description *string `json:"description,omitempty"`
+	// severity of the incident.
+	Severity *string `json:"severity,omitempty"`
+	// class defines the class/type of the event.
+	Class *string `json:"class,omitempty"`
+	// group defines a cluster or grouping of sources.
+	Group *string `json:"group,omitempty"`
+	// component defines the part or component of the affected system that is broken.
+	Component *string `json:"component,omitempty"`
+	// details defines the arbitrary key/value pairs that provide further detail about the incident.
+	Details []KeyValueApplyConfiguration `json:"details,omitempty"`
+	// pagerDutyImageConfigs defines a list of image details to attach that provide further detail about an incident.
 	PagerDutyImageConfigs []PagerDutyImageConfigApplyConfiguration `json:"pagerDutyImageConfigs,omitempty"`
-	PagerDutyLinkConfigs  []PagerDutyLinkConfigApplyConfiguration  `json:"pagerDutyLinkConfigs,omitempty"`
-	HTTPConfig            *HTTPConfigApplyConfiguration            `json:"httpConfig,omitempty"`
-	Source                *string                                  `json:"source,omitempty"`
-	Timeout               *monitoringv1.Duration                   `json:"timeout,omitempty"`
+	// pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.
+	PagerDutyLinkConfigs []PagerDutyLinkConfigApplyConfiguration `json:"pagerDutyLinkConfigs,omitempty"`
+	// httpConfig defines the HTTP client configuration.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// source defines the unique location of the affected system.
+	Source *string `json:"source,omitempty"`
+	// timeout is the maximum time allowed to invoke the pagerduty
+	// It requires Alertmanager >= v0.30.0.
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // PagerDutyConfigApplyConfiguration constructs a declarative configuration of the PagerDutyConfig type for use with
