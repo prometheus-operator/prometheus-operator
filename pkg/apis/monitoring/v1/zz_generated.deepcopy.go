@@ -3288,6 +3288,11 @@ func (in *SafeTLSConfig) DeepCopyInto(out *SafeTLSConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ServiceName != nil {
+		in, out := &in.ServiceName, &out.ServiceName
+		*out = new(string)
+		**out = **in
+	}
 	if in.InsecureSkipVerify != nil {
 		in, out := &in.InsecureSkipVerify, &out.InsecureSkipVerify
 		*out = new(bool)

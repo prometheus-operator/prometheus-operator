@@ -1782,6 +1782,10 @@ spec:
                               description: serverName is used to verify the hostname
                                 for the targets.
                               type: string
+                            serviceName:
+                              description: serviceName is the service name of the
+                                target.
+                              type: string
                           type: object
                       required:
                       - name
@@ -2159,6 +2163,9 @@ spec:
                       serverName:
                         description: serverName is used to verify the hostname for
                           the targets.
+                        type: string
+                      serviceName:
+                        description: serviceName is the service name of the target.
                         type: string
                     type: object
                 required:
@@ -6769,6 +6776,10 @@ spec:
                               description: serverName is used to verify the hostname
                                 for the targets.
                               type: string
+                            serviceName:
+                              description: serviceName is the service name of the
+                                target.
+                              type: string
                           type: object
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
@@ -7018,6 +7029,9 @@ spec:
                         serverName:
                           description: serverName is used to verify the hostname for
                             the targets.
+                          type: string
+                        serviceName:
+                          description: serviceName is the service name of the target.
                           type: string
                       type: object
                     url:
@@ -7645,6 +7659,10 @@ spec:
                               description: serverName is used to verify the hostname
                                 for the targets.
                               type: string
+                            serviceName:
+                              description: serviceName is the service name of the
+                                target.
+                              type: string
                           type: object
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
@@ -8041,6 +8059,9 @@ spec:
                         serverName:
                           description: serverName is used to verify the hostname for
                             the targets.
+                          type: string
+                        serviceName:
+                          description: serviceName is the service name of the target.
                           type: string
                       type: object
                     url:
@@ -8868,6 +8889,9 @@ spec:
                         serverName:
                           description: serverName is used to verify the hostname for
                             the targets.
+                          type: string
+                        serviceName:
+                          description: serviceName is the service name of the target.
                           type: string
                       type: object
                   required:
@@ -10475,6 +10499,9 @@ spec:
                         description: serverName is used to verify the hostname for
                           the targets.
                         type: string
+                      serviceName:
+                        description: serviceName is the service name of the target.
+                        type: string
                     type: object
                   httpListenLocal:
                     description: |-
@@ -11202,6 +11229,9 @@ spec:
                       serverName:
                         description: serverName is used to verify the hostname for
                           the targets.
+                        type: string
+                      serviceName:
+                        description: serviceName is the service name of the target.
                         type: string
                     type: object
                 required:
