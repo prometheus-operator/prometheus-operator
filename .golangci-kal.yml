@@ -6,7 +6,7 @@
 # https://github.com/kubernetes-sigs/kube-api-linter/blob/main/docs/linters.md
 version: "2"
 run:
-  go: "1.25"
+  go: "1.24"
   allow-parallel-runners: true
 linters:
   default: none

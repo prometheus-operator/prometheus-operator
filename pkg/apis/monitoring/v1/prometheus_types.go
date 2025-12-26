@@ -775,7 +775,7 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v3.8.0.
 	//
 	// +optional
-	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"` // nolint:kubeapilinter
 
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	//

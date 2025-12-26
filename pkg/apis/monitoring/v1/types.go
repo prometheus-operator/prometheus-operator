@@ -637,7 +637,7 @@ type Endpoint struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	//
 	// +optional
-	FilterRunning *bool `json:"filterRunning,omitempty"`
+	FilterRunning *bool `json:"filterRunning,omitempty"` // nolint:kubeapilinter
 
 	// bearerTokenFile defines the file to read bearer token for scraping the target.
 	//
@@ -830,7 +830,7 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v3.8.0.
 	//
 	// +optional
-	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"` // nolint:kubeapilinter
 
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
@@ -991,7 +991,7 @@ type TracingConfig struct {
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	Insecure *bool `json:"insecure",omitempty`
+	Insecure *bool `json:"insecure",omitempty` // nolint:kubeapilinter
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
