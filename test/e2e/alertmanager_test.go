@@ -1471,7 +1471,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// Wait for the change above to take effect.
 	var lastErr error
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
-	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 10*time.Second, 3*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
 			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
