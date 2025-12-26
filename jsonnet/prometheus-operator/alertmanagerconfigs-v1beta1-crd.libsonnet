@@ -10703,7 +10703,8 @@
                     type: 'array',
                   },
                   groupInterval: {
-                    description: 'groupInterval defines how long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "5m"',
+                    description: 'groupInterval defines how long to wait before sending an updated notification.\nMust be greater than 0.\nExample: "5m"',
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   groupWait: {
@@ -10754,7 +10755,8 @@
                     type: 'string',
                   },
                   repeatInterval: {
-                    description: 'repeatInterval defines how long to wait before repeating the last notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "4h"',
+                    description: 'repeatInterval defines how long to wait before repeating the last notification.\nMust be greater than 0.\nExample: "4h"',
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   routes: {

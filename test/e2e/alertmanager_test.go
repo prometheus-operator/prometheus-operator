@@ -1682,35 +1682,35 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			name: "valid-group-interval-seconds",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "30s",
+				GroupInterval: monitoringv1.DurationPointer("30s"),
 			},
 		},
 		{
 			name: "valid-group-interval-minutes",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "8m",
+				GroupInterval: monitoringv1.DurationPointer("8m"),
 			},
 		},
 		{
 			name: "valid-group-interval-complex",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "1h10m15s",
+				GroupInterval: monitoringv1.DurationPointer("1h10m15s"),
 			},
 		},
 		{
 			name: "valid-group-interval-all-units",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "1y2w3d4h5m6s7ms",
+				GroupInterval: monitoringv1.DurationPointer("1y2w3d4h5m6s7ms"),
 			},
 		},
 		{
 			name: "invalid-group-interval-missing-unit",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "500",
+				GroupInterval: monitoringv1.DurationPointer("500"),
 			},
 			expectedError: true,
 		},
@@ -1718,7 +1718,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			name: "invalid-group-interval-wrong-unit",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "30sec",
+				GroupInterval: monitoringv1.DurationPointer("30sec"),
 			},
 			expectedError: true,
 		},
@@ -1726,7 +1726,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			name: "invalid-group-interval-invalid-format",
 			route: &monitoringv1alpha1.Route{
 				Receiver:      "e2e",
-				GroupInterval: "invalid",
+				GroupInterval: monitoringv1.DurationPointer("invalid"),
 			},
 			expectedError: true,
 		},
@@ -1737,21 +1737,21 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			name: "valid-repeat-interval-hours",
 			route: &monitoringv1alpha1.Route{
 				Receiver:       "e2e",
-				RepeatInterval: "4h",
+				RepeatInterval: monitoringv1.DurationPointer("4h"),
 			},
 		},
 		{
 			name: "valid-repeat-interval-complex",
 			route: &monitoringv1alpha1.Route{
 				Receiver:       "e2e",
-				RepeatInterval: "2d12h30m",
+				RepeatInterval: monitoringv1.DurationPointer("2d12h30m"),
 			},
 		},
 		{
 			name: "invalid-repeat-interval-missing-unit",
 			route: &monitoringv1alpha1.Route{
 				Receiver:       "e2e",
-				RepeatInterval: "3600",
+				RepeatInterval: monitoringv1.DurationPointer("3600"),
 			},
 			expectedError: true,
 		},
@@ -1759,7 +1759,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			name: "invalid-repeat-interval-wrong-unit",
 			route: &monitoringv1alpha1.Route{
 				Receiver:       "e2e",
-				RepeatInterval: "4hrs",
+				RepeatInterval: monitoringv1.DurationPointer("4hrs"),
 			},
 			expectedError: true,
 		},
@@ -1770,8 +1770,8 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			name: "valid-both-intervals",
 			route: &monitoringv1alpha1.Route{
 				Receiver:       "e2e",
-				GroupInterval:  "5m",
-				RepeatInterval: "4h",
+				GroupInterval:  monitoringv1.DurationPointer("5m"),
+				RepeatInterval: monitoringv1.DurationPointer("4h"),
 			},
 		},
 		//
@@ -1802,7 +1802,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "e2e",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-							URL: ptr.To("http://test.url"),
+							URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
 						}},
 					}},
 				},
