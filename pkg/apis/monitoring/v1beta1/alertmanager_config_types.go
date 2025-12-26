@@ -66,6 +66,10 @@ type AlertmanagerConfig struct {
 	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
+func (l *AlertmanagerConfig) Bindings() []monitoringv1.WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
 // +k8s:openapi-gen=true
 type AlertmanagerConfigList struct {
