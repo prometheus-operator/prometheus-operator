@@ -1169,7 +1169,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					HTML: ptr.To(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
-					APIURL: ptr.To(monitoringv1alpha1.URL("https://victorops.api.url/")),
+					//APIURL: ptr.To(monitoringv1alpha1.URL("https://victorops.api.url/")),
 					APIKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -1569,7 +1569,6 @@ receivers:
     token: 1234abc
   victorops_configs:
   - api_key: 1234abc
-    api_url: https://victorops.api.url/  
     routing_key: abc
   sns_configs:
   - api_url: https://sns.us-east-2.amazonaws.com
