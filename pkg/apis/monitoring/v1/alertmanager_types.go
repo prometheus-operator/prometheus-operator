@@ -198,7 +198,7 @@ type AlertmanagerSpec struct {
 	// paused if set to true all actions on the underlying managed objects are not
 	// going to be performed, except for delete actions.
 	// +optional
-	Paused bool `json:"paused,omitempty"`
+	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
 	//nolint:kubeapilinter // standard Kubernetes node selector format
@@ -229,7 +229,7 @@ type AlertmanagerSpec struct {
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
-	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"` // nolint:kubeapilinter
 	// serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
 	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alertmanager resources.
@@ -246,7 +246,7 @@ type AlertmanagerSpec struct {
 	// does not bind against the Pod IP. Note this is only for the Alertmanager
 	// UI, not the gossip communication.
 	// +optional
-	ListenLocal bool `json:"listenLocal,omitempty"`
+	ListenLocal bool `json:"listenLocal,omitempty"` // nolint:kubeapilinter
 
 	// podManagementPolicy defines the policy for creating/deleting pods when
 	// scaling up and down.
@@ -314,7 +314,7 @@ type AlertmanagerSpec struct {
 	// forceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
 	// +optional
-	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
+	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"` // nolint:kubeapilinter
 	// alertmanagerConfigSelector defines the selector to be used for to merge and configure Alertmanager with.
 	// +optional
 	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
@@ -370,7 +370,7 @@ type AlertmanagerSpec struct {
 	// automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
 	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.
 	// +optional
-	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
+	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"` // nolint:kubeapilinter
 	// enableFeatures defines the Alertmanager's feature flags. By default, no features are enabled.
 	// Enabling features which are disabled by default is entirely outside the
 	// scope of what the maintainers will support and by doing so, you accept
@@ -406,7 +406,7 @@ type AlertmanagerSpec struct {
 	// Starting Kubernetes 1.33, the feature is enabled by default.
 	//
 	// +optional
-	HostUsers *bool `json:"hostUsers,omitempty"`
+	HostUsers *bool `json:"hostUsers,omitempty"` // nolint:kubeapilinter
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
@@ -524,7 +524,7 @@ type AlertmanagerStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	Paused bool `json:"paused"`
+	Paused bool `json:"paused"` // nolint:kubeapilinter
 	// replicas defines the total number of non-terminated pods targeted by this Alertmanager
 	// object (their labels match the selector).
 	// +optional
@@ -628,7 +628,7 @@ type GlobalSMTPConfig struct {
 	// requireTLS defines the default SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
-	RequireTLS *bool `json:"requireTLS,omitempty"`
+	RequireTLS *bool `json:"requireTLS,omitempty"` // nolint:kubeapilinter
 
 	// tlsConfig defines the default TLS configuration for SMTP receivers
 	// +optional
