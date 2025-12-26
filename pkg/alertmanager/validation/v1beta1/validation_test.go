@@ -19,6 +19,7 @@ import (
 
 	"k8s.io/utils/ptr"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
@@ -453,7 +454,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1beta1.Route{
 						Receiver:      "same",
-						GroupInterval: "0s",
+						GroupInterval: monitoringv1.DurationPointer("0s"),
 					},
 				},
 			},
@@ -470,7 +471,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1beta1.Route{
 						Receiver:       "same",
-						RepeatInterval: "0m",
+						RepeatInterval: monitoringv1.DurationPointer("0m"),
 					},
 				},
 			},
