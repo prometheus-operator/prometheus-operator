@@ -828,7 +828,7 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(*in.URL)
+		url, err := validation.ValidateURL(string(*in.URL))
 		if err != nil {
 			return nil, err
 		}
@@ -977,6 +977,16 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
@@ -1053,13 +1063,22 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.Source = *in.Source
 	}
 
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
+	}
+
 	return out, nil
 }
 
 func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
-		APIURL:        in.APIURL,
 		Message:       in.Message,
 		Description:   in.Description,
 		Source:        in.Source,
@@ -1069,6 +1088,10 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		Actions:       in.Actions,
 		Entity:        in.Entity,
 		UpdateAlerts:  in.UpdateAlerts,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
 	}
 
 	if in.APIKey != nil {
@@ -1115,7 +1138,6 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
-		APIURL:        in.APIURL,
 		CorpID:        in.CorpID,
 		AgentID:       in.AgentID,
 		ToUser:        in.ToUser,
@@ -1123,6 +1145,10 @@ func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv
 		ToTag:         in.ToTag,
 		Message:       in.Message,
 		MessageType:   in.MessageType,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
 	}
 
 	if in.APISecret != nil {
@@ -1283,6 +1309,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
+		HTML:          in.HTML,
+		Monospace:     in.Monospace,
 	}
 
 	if in.TTL != nil {
@@ -1345,11 +1373,14 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitoringv1alpha1.TelegramConfig, crKey types.NamespacedName) (*telegramConfig, error) {
 	out := &telegramConfig{
 		VSendResolved:        in.SendResolved,
-		APIUrl:               in.APIURL,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
 		DisableNotifications: false,
 		ParseMode:            in.ParseMode,
+	}
+
+	if in.APIURL != nil {
+		out.APIUrl = string(*in.APIURL)
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -2335,6 +2366,19 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 			return err
 		}
 	}
+
+	for _, conf := range r.MattermostConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
+	for _, conf := range r.IncidentioConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2409,6 +2453,7 @@ func (ops *opsgenieResponder) sanitize(amVersion semver.Version) error {
 
 func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_25 := amVersion.LT(semver.MustParse("0.25.0"))
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 
 	if pdc.Source != "" && lessThanV0_25 {
 		msg := "'source' supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
@@ -2438,6 +2483,12 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		msg := "'routing_key' and 'routing_key_file' are mutually exclusive for pagerdury receiver config - 'routing_key' has taken precedence"
 		logger.Warn(msg)
 		pdc.RoutingKeyFile = ""
+	}
+
+	if pdc.Timeout != nil && lessThanV0_30 {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		pdc.Timeout = nil
 	}
 
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
@@ -2508,6 +2559,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
+	}
+
+	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.Timeout = nil
 	}
 
 	if sc.APIURLFile == "" {
@@ -2729,6 +2786,60 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	mattermostAllowed := amVersion.GTE(semver.MustParse("0.30.0"))
+	if !mattermostAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is available in Alertmanager >= 0.30.0`)
+	}
+
+	if mc.WebhookURL == "" && mc.WebhookURLFile == "" {
+		return fmt.Errorf(`one of 'webhook_url' or 'webhook_url_file' must be configured`)
+	}
+
+	if mc.WebhookURL != "" && mc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for mattermost receiver config - 'webhook_url' has taken precedence"
+		logger.Warn(msg)
+		mc.WebhookURLFile = ""
+	}
+
+	return mc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	incidentioAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if !incidentioAllowed {
+		return fmt.Errorf("invalid syntax in receivers config; incident.io integration is available in Alertmanager >= 0.29.0")
+	}
+
+	if ic.URL == "" && ic.URLFile == "" {
+		return errors.New("one of url or url_file must be configured")
+	}
+
+	if ic.URL != "" && ic.URLFile != "" {
+		return errors.New("at most one of url & url_file must be configured")
+	}
+
+	if ic.URL != "" {
+		if _, err := validation.ValidateURL(ic.URL); err != nil {
+			return fmt.Errorf("invalid url: %w", err)
+		}
+	}
+
+	if ic.AlertSourceToken != "" && ic.AlertSourceTokenFile != "" {
+		return errors.New("at most one of alert_source_token & alert_source_token_file must be configured")
+	}
+
+	if ic.HTTPConfig != nil && ic.HTTPConfig.Authorization != nil && (ic.AlertSourceToken != "" || ic.AlertSourceTokenFile != "") {
+		return errors.New("cannot specify alert_source_token or alert_source_token_file when using http_config.authorization")
+	}
+
+	if ic.AlertSourceToken == "" && ic.AlertSourceTokenFile == "" && (ic.HTTPConfig == nil || ic.HTTPConfig.Authorization == nil) {
+		return errors.New("at least one of alert_source_token, alert_source_token_file or http_config.authorization must be configured")
+	}
+
+	return ic.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (ir *inhibitRule) sanitize(amVersion semver.Version, logger *slog.Logger) error {

@@ -201,6 +201,7 @@ type AlertmanagerSpec struct {
 	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
+	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
@@ -346,6 +347,12 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
+	// dispatchStartDelay defines the delay duration of the aggregation groups' first flush.
+	// The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.
+	//
+	// It requires Alertmanager >= 0.30.0.
+	// +optional
+	DispatchStartDelay *GoDuration `json:"dispatchStartDelay,omitempty"`
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.

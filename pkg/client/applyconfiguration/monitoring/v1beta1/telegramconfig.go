@@ -16,11 +16,15 @@
 
 package v1beta1
 
+import (
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+)
+
 // TelegramConfigApplyConfiguration represents a declarative configuration of the TelegramConfig type for use
 // with apply.
 type TelegramConfigApplyConfiguration struct {
 	SendResolved         *bool                                `json:"sendResolved,omitempty"`
-	APIURL               *string                              `json:"apiURL,omitempty"`
+	APIURL               *monitoringv1beta1.URL               `json:"apiURL,omitempty"`
 	BotToken             *SecretKeySelectorApplyConfiguration `json:"botToken,omitempty"`
 	BotTokenFile         *string                              `json:"botTokenFile,omitempty"`
 	ChatID               *int64                               `json:"chatID,omitempty"`
@@ -48,7 +52,7 @@ func (b *TelegramConfigApplyConfiguration) WithSendResolved(value bool) *Telegra
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *TelegramConfigApplyConfiguration) WithAPIURL(value string) *TelegramConfigApplyConfiguration {
+func (b *TelegramConfigApplyConfiguration) WithAPIURL(value monitoringv1beta1.URL) *TelegramConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }

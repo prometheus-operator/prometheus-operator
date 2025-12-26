@@ -2692,8 +2692,14 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.ServiceMonitorSpec{
 						Endpoints: []monitoringv1.Endpoint{
 							{
-								Port:   "web",
-								OAuth2: &oauth2,
+								Port: "web",
+								HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+									HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+										HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+											OAuth2: &oauth2,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -2717,7 +2723,11 @@ func TestEndpointOAuth2(t *testing.T) {
 							{
 								Port: ptr.To("web"),
 								HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
-									HTTPConfig: monitoringv1.HTTPConfig{OAuth2: &oauth2},
+									HTTPConfig: monitoringv1.HTTPConfig{
+										HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+											OAuth2: &oauth2,
+										},
+									},
 								},
 							},
 						},
@@ -2739,7 +2749,9 @@ func TestEndpointOAuth2(t *testing.T) {
 					},
 					Spec: monitoringv1.ProbeSpec{
 						HTTPConfig: monitoringv1.HTTPConfig{
-							OAuth2: &oauth2,
+							HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+								OAuth2: &oauth2,
+							},
 						},
 						Targets: monitoringv1.ProbeTargets{
 							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
@@ -5058,6 +5070,35 @@ func TestNativeHistogramConfig(t *testing.T) {
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},
+		{
+			version: "v3.8.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms:         ptr.To(true),
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigWithScrapeNativeHistograms.golden",
+		},
+		{
+			version: "v3.7.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms:         ptr.To(true),
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigMissScrapeNativeHistograms.golden",
+		},
+		{
+			version: "v3.8.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				ScrapeNativeHistograms: ptr.To(true),
+			},
+			golden: "NativeHistogramConfigOnlyScrapeNativeHistograms.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -5277,9 +5318,15 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:            "web",
-							Interval:        "30s",
-							FollowRedirects: ptr.To(tc.followRedirects),
+							Port:     "web",
+							Interval: "30s",
+							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+										FollowRedirects: ptr.To(tc.followRedirects),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -5351,7 +5398,11 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 							Port:     ptr.To("web"),
 							Interval: "30s",
 							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
-								HTTPConfig: monitoringv1.HTTPConfig{FollowRedirects: ptr.To(tc.followRedirects)},
+								HTTPConfig: monitoringv1.HTTPConfig{
+									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+										FollowRedirects: ptr.To(tc.followRedirects),
+									},
+								},
 							},
 						},
 					},
@@ -5422,9 +5473,15 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:        "web",
-							Interval:    "30s",
-							EnableHttp2: ptr.To(tc.enableHTTP2),
+							Port:     "web",
+							Interval: "30s",
+							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+										EnableHTTP2: ptr.To(tc.enableHTTP2),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -5534,7 +5591,11 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 							Port:     ptr.To("web"),
 							Interval: "30s",
 							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
-								HTTPConfig: monitoringv1.HTTPConfig{EnableHTTP2: ptr.To(tc.enableHTTP2)},
+								HTTPConfig: monitoringv1.HTTPConfig{
+									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+										EnableHTTP2: ptr.To(tc.enableHTTP2),
+									},
+								},
 							},
 						},
 					},
@@ -10009,21 +10070,21 @@ func TestOTLPConfig(t *testing.T) {
 func TestTracingConfig(t *testing.T) {
 	samplingTwo := resource.MustParse("0.5")
 	testCases := []struct {
-		tracingConfig *monitoringv1.PrometheusTracingConfig
+		tracingConfig *monitoringv1.TracingConfig
 		name          string
 		expectedErr   bool
 		golden        string
 	}{
 		{
 			name: "Config only with endpoint",
-			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+			tracingConfig: &monitoringv1.TracingConfig{
 				Endpoint: "https://otel-collector.default.svc.local:3333",
 			},
 			golden:      "TracingConfig_Config_only_with_endpoint.golden",
 			expectedErr: false,
 		},
 		{
-			tracingConfig: &monitoringv1.PrometheusTracingConfig{
+			tracingConfig: &monitoringv1.TracingConfig{
 				ClientType:       ptr.To("grpc"),
 				Endpoint:         "https://otel-collector.default.svc.local:3333",
 				SamplingFraction: &samplingTwo,
@@ -10424,9 +10485,11 @@ func TestScrapeClass(t *testing.T) {
 				{
 					Name: "test-tls-scrape-class",
 					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/ca.crt",
-						CertFile: "/etc/prometheus/secrets/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/tls.key",
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/etc/prometheus/secrets/ca.crt",
+							CertFile: "/etc/prometheus/secrets/tls.crt",
+							KeyFile:  "/etc/prometheus/secrets/tls.key",
+						},
 					},
 				},
 			},
@@ -10439,9 +10502,11 @@ func TestScrapeClass(t *testing.T) {
 					Name:    "test-tls-scrape-class",
 					Default: ptr.To(true),
 					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/default/ca.crt",
-						CertFile: "/etc/prometheus/secrets/default/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/default/tls.key",
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/etc/prometheus/secrets/default/ca.crt",
+							CertFile: "/etc/prometheus/secrets/default/tls.crt",
+							KeyFile:  "/etc/prometheus/secrets/default/tls.key",
+						},
 					},
 				},
 			},
@@ -10500,9 +10565,11 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 				{
 					Name: "test-tls-scrape-class",
 					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/ca.crt",
-						CertFile: "/etc/prometheus/secrets/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/tls.key",
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/etc/prometheus/secrets/ca.crt",
+							CertFile: "/etc/prometheus/secrets/tls.crt",
+							KeyFile:  "/etc/prometheus/secrets/tls.key",
+						},
 					},
 				},
 			},
@@ -10540,9 +10607,11 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 				{
 					Name: "test-tls-scrape-class",
 					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/ca.crt",
-						CertFile: "/etc/prometheus/secrets/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/tls.key",
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/etc/prometheus/secrets/ca.crt",
+							CertFile: "/etc/prometheus/secrets/tls.crt",
+							KeyFile:  "/etc/prometheus/secrets/tls.key",
+						},
 					},
 				},
 			},
@@ -10612,9 +10681,11 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 				{
 					Name: "test-tls-scrape-class",
 					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/ca.crt",
-						CertFile: "/etc/prometheus/secrets/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/tls.key",
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/etc/prometheus/secrets/ca.crt",
+							CertFile: "/etc/prometheus/secrets/tls.crt",
+							KeyFile:  "/etc/prometheus/secrets/tls.key",
+						},
 					},
 				},
 			},
@@ -10650,9 +10721,11 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 				{
 					Name: "test-tls-scrape-class",
 					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/ca.crt",
-						CertFile: "/etc/prometheus/secrets/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/tls.key",
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/etc/prometheus/secrets/ca.crt",
+							CertFile: "/etc/prometheus/secrets/tls.crt",
+							KeyFile:  "/etc/prometheus/secrets/tls.key",
+						},
 					},
 				},
 			},
@@ -10777,18 +10850,22 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			Name:    "test-default-scrape-class",
 			Default: ptr.To(true),
 			TLSConfig: &monitoringv1.TLSConfig{
-				CAFile:   "/etc/prometheus/secrets/ca.crt",
-				CertFile: "/etc/prometheus/secrets/tls.crt",
-				KeyFile:  "/etc/prometheus/secrets/tls.key",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "/etc/prometheus/secrets/ca.crt",
+					CertFile: "/etc/prometheus/secrets/tls.crt",
+					KeyFile:  "/etc/prometheus/secrets/tls.key",
+				},
 			},
 		},
 		{
 			Name:    "test-default-scrape-class-2",
 			Default: ptr.To(true),
 			TLSConfig: &monitoringv1.TLSConfig{
-				CAFile:   "/etc/prometheus/secrets/ca.crt",
-				CertFile: "/etc/prometheus/secrets/tls.crt",
-				KeyFile:  "/etc/prometheus/secrets/tls.key",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "/etc/prometheus/secrets/ca.crt",
+					CertFile: "/etc/prometheus/secrets/tls.crt",
+					KeyFile:  "/etc/prometheus/secrets/tls.key",
+				},
 			},
 		},
 	}
@@ -10809,16 +10886,20 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 			name: "nil TLSConfig and ScrapeClass",
 			scrapeClass: monitoringv1.ScrapeClass{
 				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "defaultCAFile",
-					CertFile: "defaultCertFile",
-					KeyFile:  "defaultKeyFile",
+					TLSFilesConfig: monitoringv1.TLSFilesConfig{
+						CAFile:   "defaultCAFile",
+						CertFile: "defaultCertFile",
+						KeyFile:  "defaultKeyFile",
+					},
 				},
 			},
 
 			expectedConfig: &monitoringv1.TLSConfig{
-				CAFile:   "defaultCAFile",
-				CertFile: "defaultCertFile",
-				KeyFile:  "defaultKeyFile",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "defaultCAFile",
+					CertFile: "defaultCertFile",
+					KeyFile:  "defaultKeyFile",
+				},
 			},
 		},
 		{
@@ -10827,37 +10908,47 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 		{
 			name: "non-nil TLSConfig and empty ScrapeClass",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CAFile:   "caFile",
-				CertFile: "certFile",
-				KeyFile:  "keyFile",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "caFile",
+					CertFile: "certFile",
+					KeyFile:  "keyFile",
+				},
 			},
 			scrapeClass: monitoringv1.ScrapeClass{},
 
 			expectedConfig: &monitoringv1.TLSConfig{
-				CAFile:   "caFile",
-				CertFile: "certFile",
-				KeyFile:  "keyFile",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "caFile",
+					CertFile: "certFile",
+					KeyFile:  "keyFile",
+				},
 			},
 		},
 		{
 			name: "non-nil TLSConfig and ScrapeClass",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CAFile:   "caFile",
-				CertFile: "certFile",
-				KeyFile:  "keyFile",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "caFile",
+					CertFile: "certFile",
+					KeyFile:  "keyFile",
+				},
 			},
 			scrapeClass: monitoringv1.ScrapeClass{
 				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "defaultCAFile",
-					CertFile: "defaultCertFile",
-					KeyFile:  "defaultKeyFile",
+					TLSFilesConfig: monitoringv1.TLSFilesConfig{
+						CAFile:   "defaultCAFile",
+						CertFile: "defaultCertFile",
+						KeyFile:  "defaultKeyFile",
+					},
 				},
 			},
 
 			expectedConfig: &monitoringv1.TLSConfig{
-				CAFile:   "caFile",
-				CertFile: "certFile",
-				KeyFile:  "keyFile",
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "caFile",
+					CertFile: "certFile",
+					KeyFile:  "keyFile",
+				},
 			},
 		},
 	}
@@ -13891,6 +13982,63 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 			}
 			if tc.ScrapeClassicHistograms != nil {
 				p.Spec.CommonPrometheusFields.ScrapeClassicHistograms = tc.ScrapeClassicHistograms
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
+func TestAppendScrapeNativeHistograms(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		version                string
+		ScrapeNativeHistograms *bool
+		expectedCfg            string
+	}{
+		{
+			name:                   "ScrapeNativeHistograms true with Prometheus Version 3.8",
+			version:                "v3.8.0",
+			ScrapeNativeHistograms: ptr.To(true),
+			expectedCfg:            "ScrapeNativeHistogramsTrueProperPromVersion.golden",
+		},
+		{
+			name:                   "ScrapeNativeHistograms false with Prometheus Version 3.8",
+			version:                "v3.8.0",
+			ScrapeNativeHistograms: ptr.To(false),
+			expectedCfg:            "ScrapeNativeHistogramsFalseProperPromVersion.golden",
+		},
+		{
+			name:                   "ScrapeNativeHistograms true with Lower Prometheus version",
+			version:                "v3.7.0",
+			ScrapeNativeHistograms: ptr.To(true),
+			expectedCfg:            "ScrapeNativeHistogramsTrueWrongPromVersion.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.ScrapeNativeHistograms != nil {
+				p.Spec.CommonPrometheusFields.ScrapeNativeHistograms = tc.ScrapeNativeHistograms
 			}
 
 			cg := mustNewConfigGenerator(t, p)

@@ -351,9 +351,8 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:              "web",
-					Interval:          "30s",
-					BearerTokenSecret: &v1.SecretKeySelector{},
+					Port:     "web",
+					Interval: "30s",
 				},
 			},
 		},

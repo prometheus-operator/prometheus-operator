@@ -119,6 +119,7 @@ type ThanosRulerSpec struct {
 
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
+	//nolint:kubeapilinter
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
 	// resources defines the resource requirements for single Pods.
@@ -408,6 +409,7 @@ type ThanosRulerSpec struct {
 	// label with the value of the pod's name.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// alertDropLabels defines the label names which should be dropped in Thanos Ruler
