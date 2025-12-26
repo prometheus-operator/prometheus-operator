@@ -1,0 +1,39 @@
+name: promtool
+on:
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+    tags:
+      - 'v*'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  changed-files:
+    uses: ./.github/workflows/changed-files.yaml
+  promtool-check:
+    name: Promtool golden file validation
+    runs-on: ubuntu-latest
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
+    steps:
+    - uses: actions/checkout@v6
+    - name: Import environment variables from file
+      run: cat ".github/env" >> "$GITHUB_ENV"
+    - uses: actions/setup-go@v6
+      with:
+        go-version: '${{ env.golang-version }}'
+        check-latest: true
+    - name: Install promtool
+      run: |
+        PROMETHEUS_VERSION="3.0.0"
+        wget -q https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
+        tar -xzf prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
+        sudo mv prometheus-${PROMETHEUS_VERSION}.linux-amd64/promtool /usr/local/bin/
+        rm -rf prometheus-${PROMETHEUS_VERSION}*
+        promtool --version
+    - name: Run promtool validation
+      run: go test -v -tags=promtool ./pkg/prometheus/ -run TestPromtoolGoldenFiles
