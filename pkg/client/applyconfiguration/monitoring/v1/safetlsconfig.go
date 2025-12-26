@@ -28,6 +28,7 @@ type SafeTLSConfigApplyConfiguration struct {
 	Cert               *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
 	KeySecret          *corev1.SecretKeySelector            `json:"keySecret,omitempty"`
 	ServerName         *string                              `json:"serverName,omitempty"`
+	ServiceName        *string                              `json:"serviceName,omitempty"`
 	InsecureSkipVerify *bool                                `json:"insecureSkipVerify,omitempty"`
 	MinVersion         *monitoringv1.TLSVersion             `json:"minVersion,omitempty"`
 	MaxVersion         *monitoringv1.TLSVersion             `json:"maxVersion,omitempty"`
@@ -68,6 +69,14 @@ func (b *SafeTLSConfigApplyConfiguration) WithKeySecret(value corev1.SecretKeySe
 // If called multiple times, the ServerName field is set to the value of the last call.
 func (b *SafeTLSConfigApplyConfiguration) WithServerName(value string) *SafeTLSConfigApplyConfiguration {
 	b.ServerName = &value
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *SafeTLSConfigApplyConfiguration) WithServiceName(value string) *SafeTLSConfigApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }
 
