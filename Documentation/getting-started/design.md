@@ -84,3 +84,11 @@ The `AlertmanagerConfig` CRD allows us to configure `Alertmanager` instances in 
 ![Prometheus Rule](../img/prometheus-rule.png)
 
 The `PrometheusRule` CRD allows the definition of alerting and recording rules to be consumed by Prometheus or Thanos Ruler instances. Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring a restart of Prometheus or Thanos Ruler.
+
+### Resource Selectors
+
+Instance-based resources use selector fields to discover and associate config-based resources. The `Prometheus` and `PrometheusAgent` CRDs have `serviceMonitorSelector`, `podMonitorSelector`, `probeSelector`, `scrapeConfigSelector`, and `ruleSelector` fields to select which configuration resources should be included. Similarly, the `Alertmanager` CRD has `alertmanagerConfigSelector` and `ThanosRuler` has `ruleSelector` for selecting their respective config resources. Each selector also has a corresponding namespace selector field (e.g., `serviceMonitorNamespaceSelector`, `scrapeConfigNamespaceSelector`) to control which namespaces are searched for config resources.
+
+The selector fields follow standard Kubernetes label selector semantics: an empty selector (`{}`) matches all objects, a null selector (field not specified) matches no objects for resource selectors or only the current namespace for namespace selectors, and a label selector matches objects with the specified labels.
+
+You can check the examples mentioned [here](../developer/scrapeconfig.md).
