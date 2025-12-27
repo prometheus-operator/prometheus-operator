@@ -3825,6 +3825,100 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_EmailConfig_Receiver_Global_Defaults_Conf.golden",
 		},
 		{
+			name:      "CR with VictorOps config valid api url",
+			amVersion: &version26,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "victorops-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"api-key": []byte("abc123"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
+									{
+										APIURL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										RoutingKey: "abcd",
+										APIKey: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "victorops-secret",
+											},
+											Key: "api-key",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_VictorOps_config_valid_api_url.golden",
+		},
+		{
+			name:      "CR with VictorOps config invalid api url",
+			amVersion: &version26,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{
+									{
+										APIURL:     ptr.To(monitoringv1alpha1.URL("https:://invalid.example.com")),
+										RoutingKey: "abcd",
+										APIKey: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "victorops-secret",
+											},
+											Key: "api-key",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
 			name:      "CR with WebhookConfig with Timeout Setup",
 			amVersion: &version28,
 			kclient:   fake.NewSimpleClientset(),

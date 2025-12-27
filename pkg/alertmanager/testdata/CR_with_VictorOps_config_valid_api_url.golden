@@ -1,0 +1,15 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  victorops_configs:
+  - api_key: abc123
+    api_url: https://example.com/
+    routing_key: abcd
+templates: []
