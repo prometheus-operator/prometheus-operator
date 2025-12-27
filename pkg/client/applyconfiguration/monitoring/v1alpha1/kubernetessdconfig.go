@@ -28,7 +28,7 @@ type KubernetesSDConfigApplyConfiguration struct {
 	APIServer                        *string                                 `json:"apiServer,omitempty"`
 	Role                             *monitoringv1alpha1.KubernetesRole      `json:"role,omitempty"`
 	Namespaces                       *NamespaceDiscoveryApplyConfiguration   `json:"namespaces,omitempty"`
-	AttachMetadata                   *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
+	AttachMetadata                   *v1.AttachMetadataApplyConfiguration    `json:"attachMetadata,omitempty"`
 	Selectors                        []K8SSelectorConfigApplyConfiguration   `json:"selectors,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -72,7 +72,7 @@ func (b *KubernetesSDConfigApplyConfiguration) WithNamespaces(value *NamespaceDi
 // WithAttachMetadata sets the AttachMetadata field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AttachMetadata field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithAttachMetadata(value *AttachMetadataApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
+func (b *KubernetesSDConfigApplyConfiguration) WithAttachMetadata(value *v1.AttachMetadataApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
 	b.AttachMetadata = value
 	return b
 }

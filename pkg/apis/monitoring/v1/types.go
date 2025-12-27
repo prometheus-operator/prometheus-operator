@@ -657,6 +657,19 @@ type AttachMetadata struct {
 	//
 	// +optional
 	Node *bool `json:"node,omitempty"`
+
+	// namespace when set to true, Prometheus attaches namespace metadata to the discovered
+	// targets.
+	//
+	// The Prometheus service account must have the `list` and `watch`
+	// permissions on the `Namespaces` objects.
+	//
+	// Only valid for pod, endpoints, endpointslice, service, ingress.
+	//
+	// It requires Prometheus >= v3.6.0.
+	//
+	// +optional
+	Namespace *bool `json:"namespace,omitempty"`
 }
 
 // OAuth2 configures OAuth2 settings.
