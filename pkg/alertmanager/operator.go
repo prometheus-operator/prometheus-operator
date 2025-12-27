@@ -1111,7 +1111,8 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		var reason string
-		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
+		err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store)
+		if err != nil {
 			rejected++
 			reason = operator.InvalidConfiguration
 			c.logger.Warn(
