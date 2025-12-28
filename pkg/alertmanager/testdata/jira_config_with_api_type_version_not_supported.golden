@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  jira_configs:
+  - api_url: http://issues.example.com
+templates: []
