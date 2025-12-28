@@ -1625,6 +1625,8 @@ receivers:
     api_url: https://webex.api.url
     message: testingMessage
     room_id: testingRoomID
+  mattermost_configs:
+  - webhook_url: https://mattermost.example.com
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
