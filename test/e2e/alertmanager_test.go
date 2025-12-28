@@ -1076,18 +1076,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	mattermostWebhookURL := "https://mattermost.example.com"
-	mattermostWebhookURLSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "mattermost-webhook-url",
-		},
-		Data: map[string][]byte{
-			"webhook-url": []byte(mattermostWebhookURL),
-		},
-	}
-	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), mattermostWebhookURLSecret, metav1.CreateOptions{})
-	require.NoError(t, err)
-
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1625,8 +1613,6 @@ receivers:
     api_url: https://webex.api.url
     message: testingMessage
     room_id: testingRoomID
-  mattermost_configs:
-  - webhook_url: https://mattermost.example.com
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
