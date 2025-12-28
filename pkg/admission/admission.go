@@ -24,12 +24,14 @@ import (
 
 	"github.com/prometheus/common/model"
 	v1 "k8s.io/api/admission/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	validationv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -55,7 +57,11 @@ const (
 	prometheusRuleValidatePath     = "/admission-prometheusrules/validate"
 	prometheusRuleMutatePath       = "/admission-prometheusrules/mutate"
 	alertmanagerConfigValidatePath = "/admission-alertmanagerconfigs/validate"
+	alertmanagerSecretValidatePath = "/admission-alertmanager-secrets/validate"
 	convertPath                    = "/convert"
+
+	// alertmanagerConfigKey is the key in the Secret that contains the Alertmanager configuration.
+	alertmanagerConfigKey = "alertmanager.yaml"
 )
 
 var (
@@ -96,6 +102,7 @@ func (a *Admission) Register(mux *http.ServeMux) {
 	mux.HandleFunc(prometheusRuleValidatePath, a.servePrometheusRulesValidate)
 	mux.HandleFunc(prometheusRuleMutatePath, a.servePrometheusRulesMutate)
 	mux.HandleFunc(alertmanagerConfigValidatePath, a.serveAlertmanagerConfigValidate)
+	mux.HandleFunc(alertmanagerSecretValidatePath, a.serveAlertmanagerSecretValidate)
 	mux.HandleFunc(convertPath, a.serveConvert)
 }
 
@@ -111,6 +118,10 @@ func (a *Admission) servePrometheusRulesValidate(w http.ResponseWriter, r *http.
 
 func (a *Admission) serveAlertmanagerConfigValidate(w http.ResponseWriter, r *http.Request) {
 	a.serveAdmission(w, r, a.validateAlertmanagerConfig)
+}
+
+func (a *Admission) serveAlertmanagerSecretValidate(w http.ResponseWriter, r *http.Request) {
+	a.serveAdmission(w, r, a.validateAlertmanagerSecret)
 }
 
 func (a *Admission) serveConvert(w http.ResponseWriter, r *http.Request) {
@@ -295,5 +306,52 @@ func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.Admiss
 		a.logger.Info(msg, "err", err)
 		return toAdmissionResponseFailure("AlertmanagerConfig is invalid", alertManagerConfigResource, []error{err})
 	}
+	return &v1.AdmissionResponse{Allowed: true}
+}
+
+// validateAlertmanagerSecret validates Secrets containing Alertmanager configurations.
+// This allows catching configuration errors early when users create/update Secrets
+// that are referenced by Alertmanager resources via spec.configSecret.
+func (a *Admission) validateAlertmanagerSecret(ar v1.AdmissionReview) *v1.AdmissionResponse {
+	a.logger.Debug("Validating alertmanager secret")
+
+	// Verify this is a Secret resource
+	if ar.Request.Resource.Resource != "secrets" {
+		a.logger.Debug("Skipping non-secret resource", "resource", ar.Request.Resource.Resource)
+		return &v1.AdmissionResponse{Allowed: true}
+	}
+
+	// Unmarshal the Secret
+	secret := &corev1.Secret{}
+	if err := json.Unmarshal(ar.Request.Object.Raw, secret); err != nil {
+		a.logger.Info("Cannot unmarshal secret", "err", err)
+		return toAdmissionResponseFailure("Cannot unmarshal secret", "secrets", []error{err})
+	}
+
+	// Check if the Secret contains alertmanager.yaml key
+	// First check in Data (base64 decoded bytes)
+	configData, exists := secret.Data[alertmanagerConfigKey]
+	if !exists {
+		// Also check in StringData (raw strings, used during creation)
+		configStr, existsStr := secret.StringData[alertmanagerConfigKey]
+		if !existsStr {
+			// This Secret doesn't contain an Alertmanager config, skip validation
+			a.logger.Debug("Secret does not contain alertmanager.yaml key, skipping validation",
+				"namespace", secret.Namespace, "name", secret.Name)
+			return &v1.AdmissionResponse{Allowed: true}
+		}
+		configData = []byte(configStr)
+	}
+
+	// Validate the Alertmanager configuration
+	if err := alertmanager.ValidateConfigSecret(configData); err != nil {
+		msg := "Invalid Alertmanager configuration"
+		a.logger.Debug(msg, "namespace", secret.Namespace, "name", secret.Name)
+		a.logger.Info(msg, "err", err)
+		return toAdmissionResponseFailure(msg, "secrets", []error{err})
+	}
+
+	a.logger.Debug("Alertmanager secret validation successful",
+		"namespace", secret.Namespace, "name", secret.Name)
 	return &v1.AdmissionResponse{Allowed: true}
 }

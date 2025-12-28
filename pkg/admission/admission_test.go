@@ -529,3 +529,149 @@ func TestValidationSchemeComparison(t *testing.T) {
 		})
 	}
 }
+
+// TestAlertmanagerSecretValidation tests the admission controller
+// validation of Secrets containing Alertmanager configurations.
+func TestAlertmanagerSecretValidation(t *testing.T) {
+	ts := server(api().serveAlertmanagerSecretValidate)
+	t.Cleanup(ts.Close)
+
+	testCases := []struct {
+		name           string
+		secretData     map[string]string
+		expectAllowed  bool
+		expectContains string // expected substring in error message
+	}{
+		{
+			name: "valid alertmanager config",
+			secretData: map[string]string{
+				"alertmanager.yaml": `
+route:
+  receiver: 'webhook'
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://example.com/'
+`,
+			},
+			expectAllowed: true,
+		},
+		{
+			name: "invalid config - missing receiver definition",
+			secretData: map[string]string{
+				"alertmanager.yaml": `
+route:
+  receiver: 'missing-receiver'
+`,
+			},
+			expectAllowed:  false,
+			expectContains: "receiver",
+		},
+		{
+			name: "invalid config - malformed YAML",
+			secretData: map[string]string{
+				"alertmanager.yaml": `
+route:
+  receiver: [this is not valid yaml
+`,
+			},
+			expectAllowed:  false,
+			expectContains: "yaml",
+		},
+		{
+			name: "secret without alertmanager.yaml key - should be skipped",
+			secretData: map[string]string{
+				"some-other-key": "some value",
+			},
+			expectAllowed: true, // Should be allowed since it's not an alertmanager config
+		},
+		{
+			name: "empty alertmanager.yaml",
+			secretData: map[string]string{
+				"alertmanager.yaml": "",
+			},
+			expectAllowed:  false,
+			expectContains: "route", // Empty config fails because root route must exist
+		},
+		{
+			name: "invalid config - route without receiver",
+			secretData: map[string]string{
+				"alertmanager.yaml": `
+route:
+  group_by: ['job']
+receivers:
+- name: 'null'
+`,
+			},
+			expectAllowed:  false,
+			expectContains: "receiver",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := sendAdmissionReview(t, ts, buildSecretAdmissionReview(t, tc.secretData))
+
+			if resp.Response.Allowed != tc.expectAllowed {
+				t.Errorf("Expected admission allowed=%v but got allowed=%v (message: %v)",
+					tc.expectAllowed, resp.Response.Allowed, resp.Response.Result)
+			}
+
+			if !tc.expectAllowed && tc.expectContains != "" {
+				if resp.Response.Result == nil || resp.Response.Result.Message == "" {
+					t.Errorf("Expected error message containing %q but got no message", tc.expectContains)
+				} else if !strings.Contains(strings.ToLower(resp.Response.Result.Message), strings.ToLower(tc.expectContains)) &&
+					(resp.Response.Result.Details == nil || len(resp.Response.Result.Details.Causes) == 0 ||
+						!strings.Contains(strings.ToLower(resp.Response.Result.Details.Causes[0].Message), strings.ToLower(tc.expectContains))) {
+					t.Errorf("Expected error message to contain %q but got %q", tc.expectContains, resp.Response.Result.Message)
+				}
+			}
+		})
+	}
+}
+
+// buildSecretAdmissionReview creates an AdmissionReview request for a Secret.
+func buildSecretAdmissionReview(t *testing.T, data map[string]string) []byte {
+	t.Helper()
+
+	// Build the stringData as JSON
+	stringDataJSON, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	tmpl := fmt.Sprintf(`{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1",
+  "request": {
+    "uid": "test-uid-12345",
+    "kind": {
+      "group": "",
+      "version": "v1",
+      "kind": "Secret"
+    },
+    "resource": {
+      "group": "",
+      "version": "v1",
+      "resource": "secrets"
+    },
+    "namespace": "default",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "test-user",
+      "groups": ["system:authenticated"]
+    },
+    "object": {
+      "apiVersion": "v1",
+      "kind": "Secret",
+      "metadata": {
+        "name": "alertmanager-test",
+        "namespace": "default"
+      },
+      "stringData": %s
+    },
+    "oldObject": null,
+    "dryRun": false
+  }
+}`, string(stringDataJSON))
+
+	return []byte(tmpl)
+}
