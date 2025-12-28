@@ -1244,31 +1244,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
-				//MattermostConfigs: []monitoringv1alpha1.MattermostConfig{{
-				//	WebhookURL: &v1.SecretKeySelector{
-				//		Key: "webhook-url",
-				//		LocalObjectReference: v1.LocalObjectReference{
-				//			Name: "mattermost-webhook-url",
-				//		},
-				//	},
-				//	Channel:  ptr.To("town-square"),
-				//	Username: ptr.To("user1"),
-				//	Text:     ptr.To("alert"),
-				//	Attachments: []monitoringv1alpha1.MattermostAttachmentConfig{
-				//		{
-				//			Text:  ptr.To("attachment 1"),
-				//			Title: ptr.To("attachment 1"),
-				//			Fields: []monitoringv1alpha1.MattermostField{
-				//				{Title: "foo", Value: "bar"},
-				//			},
-				//		},
-				//	},
-				//	Priority: &monitoringv1alpha1.MattermostPriorityConfig{
-				//		Priority:                ptr.To(monitoringv1alpha1.MattermostPriorityUrgent),
-				//		RequestedAck:            ptr.To(true),
-				//		PersistentNotifications: ptr.To(true),
-				//	},
-				//}},
 			}},
 		},
 	}
