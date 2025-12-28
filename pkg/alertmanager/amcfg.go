@@ -69,6 +69,15 @@ func alertmanagerConfigFromBytes(b []byte) (*alertmanagerConfig, error) {
 	return cfg, nil
 }
 
+// ValidateConfigSecret validates raw Alertmanager configuration bytes.
+// It is used by the admission webhook to validate Secrets containing
+// Alertmanager configurations (referenced via am.Spec.ConfigSecret).
+// It returns an error if the configuration is invalid.
+func ValidateConfigSecret(configData []byte) error {
+	_, err := alertmanagerConfigFromBytes(configData)
+	return err
+}
+
 func checkAlertmanagerConfigRootRoute(rootRoute *route) error {
 	if rootRoute == nil {
 		return errors.New("root route must exist")
