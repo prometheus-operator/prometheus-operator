@@ -2769,6 +2769,13 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 		return errors.New("missing issue_type in jira_config")
 	}
 
+	apiTypeAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if jc.APIType != "" && !apiTypeAllowed {
+		msg := "'api_type' supported in Alertmanager >= 0.29.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		jc.APIType = ""
+	}
+
 	return jc.HTTPConfig.sanitize(amVersion, logger)
 }
 
