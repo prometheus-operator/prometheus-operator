@@ -5933,8 +5933,10 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:  "http://issues.example.com",
-								APIType: "datacenter",
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
 							},
 						},
 					},
@@ -5950,8 +5952,10 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:  "http://issues.example.com",
-								APIType: "datacenter",
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
 							},
 						},
 					},
