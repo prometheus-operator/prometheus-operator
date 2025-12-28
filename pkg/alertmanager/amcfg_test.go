@@ -3256,6 +3256,53 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
 		},
 		{
+			name: "CR with SNS Receiver Invalid API URL",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: ptr.To(monitoringv1alpha1.URL("https:://sns.us-east-2.amazonaws.com")),
+									Sigv4: &monitoringv1.Sigv4{
+										Region:  "us-east-2",
+										RoleArn: "test-roleARN",
+									},
+									TopicARN: ptr.To("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
 			name:    "CR with Mute Time Intervals",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
