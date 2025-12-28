@@ -44,6 +44,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
 )
 
 const (
@@ -198,7 +199,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	)
 
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		lcv, err := NewLabelConfigValidator(p)
+		lcv, err := validation.NewLabelConfigValidator(p)
 		if err != nil {
 			return nil, "", err
 		}
@@ -1891,8 +1892,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
-	if ep.EnableHttp2 != nil {
-		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
+	if ep.EnableHTTP2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHTTP2)
 	}
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
@@ -4906,6 +4907,11 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		return cfg, nil
 	}
 
+	err := tracingConfig.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
 	var tracing yaml.MapSlice
 	tracing = append(tracing, yaml.MapItem{
 		Key:   "endpoint",
@@ -4915,7 +4921,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.ClientType != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "client_type",
-			Value: tracingConfig.ClientType,
+			Value: strings.ToLower(*tracingConfig.ClientType),
 		})
 	}
 
@@ -4951,7 +4957,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.Compression != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "compression",
-			Value: tracingConfig.Compression,
+			Value: strings.ToLower(*tracingConfig.Compression),
 		})
 	}
 

@@ -439,6 +439,11 @@ func (in *OpsGenieConfig) DeepCopyInto(out *OpsGenieConfig) {
 		*out = new(SecretKeySelector)
 		**out = **in
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.Details != nil {
 		in, out := &in.Details, &out.Details
 		*out = make([]KeyValue, len(*in))
@@ -1138,6 +1143,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.BotToken != nil {
 		in, out := &in.BotToken, &out.BotToken
 		*out = new(SecretKeySelector)
@@ -1300,6 +1310,11 @@ func (in *WeChatConfig) DeepCopyInto(out *WeChatConfig) {
 		*out = new(SecretKeySelector)
 		**out = **in
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)
@@ -1362,7 +1377,7 @@ func (in *WebhookConfig) DeepCopyInto(out *WebhookConfig) {
 	}
 	if in.URL != nil {
 		in, out := &in.URL, &out.URL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.URLSecret != nil {

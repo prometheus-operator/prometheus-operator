@@ -194,7 +194,7 @@ func convertOpsGenieConfigTo(in OpsGenieConfig) v1alpha1.OpsGenieConfig {
 	return v1alpha1.OpsGenieConfig{
 		SendResolved: in.SendResolved,
 		APIKey:       convertSecretKeySelectorTo(in.APIKey),
-		APIURL:       in.APIURL,
+		APIURL:       (*v1alpha1.URL)(in.APIURL),
 		Message:      in.Message,
 		Description:  in.Description,
 		Source:       in.Source,
@@ -404,7 +404,7 @@ func convertWebexConfigTo(in WebexConfig) v1alpha1.WebexConfig {
 func convertWebhookConfigTo(in WebhookConfig) v1alpha1.WebhookConfig {
 	return v1alpha1.WebhookConfig{
 		SendResolved: in.SendResolved,
-		URL:          in.URL,
+		URL:          (*v1alpha1.URL)(in.URL),
 		URLSecret:    convertSecretKeySelectorTo(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
@@ -416,7 +416,7 @@ func convertWeChatConfigTo(in WeChatConfig) v1alpha1.WeChatConfig {
 	return v1alpha1.WeChatConfig{
 		SendResolved: in.SendResolved,
 		APISecret:    convertSecretKeySelectorTo(in.APISecret),
-		APIURL:       in.APIURL,
+		APIURL:       (*v1alpha1.URL)(in.APIURL),
 		CorpID:       in.CorpID,
 		AgentID:      in.AgentID,
 		ToUser:       in.ToUser,
@@ -502,7 +502,7 @@ func convertSNSConfigTo(in SNSConfig) v1alpha1.SNSConfig {
 func convertTelegramConfigTo(in TelegramConfig) v1alpha1.TelegramConfig {
 	return v1alpha1.TelegramConfig{
 		SendResolved:         in.SendResolved,
-		APIURL:               in.APIURL,
+		APIURL:               (*v1alpha1.URL)(in.APIURL),
 		BotToken:             convertSecretKeySelectorTo(in.BotToken),
 		BotTokenFile:         in.BotTokenFile,
 		ChatID:               in.ChatID,
