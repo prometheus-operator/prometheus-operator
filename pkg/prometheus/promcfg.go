@@ -269,7 +269,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 
 	if cg.version.LT(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                     cg.logger.With("minimum_version", version),
+			logger:                     cg.logger.With("minimumVersion", version),
 			version:                    cg.version,
 			notCompatible:              true,
 			prom:                       cg.prom,
