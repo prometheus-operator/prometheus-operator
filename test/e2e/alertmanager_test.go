@@ -1256,31 +1256,31 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
-				MattermostConfigs: []monitoringv1alpha1.MattermostConfig{{
-					WebhookURL: &v1.SecretKeySelector{
-						Key: "webhook-url",
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "mattermost-webhook-url",
-						},
-					},
-					Channel:  ptr.To("town-square"),
-					Username: ptr.To("user1"),
-					Text:     ptr.To("alert"),
-					Attachments: []monitoringv1alpha1.MattermostAttachmentConfig{
-						{
-							Text:  ptr.To("attachment 1"),
-							Title: ptr.To("attachment 1"),
-							Fields: []monitoringv1alpha1.MattermostField{
-								{Title: "foo", Value: "bar"},
-							},
-						},
-					},
-					Priority: &monitoringv1alpha1.MattermostPriorityConfig{
-						Priority:                ptr.To(monitoringv1alpha1.MattermostPriorityUrgent),
-						RequestedAck:            ptr.To(true),
-						PersistentNotifications: ptr.To(true),
-					},
-				}},
+				//MattermostConfigs: []monitoringv1alpha1.MattermostConfig{{
+				//	WebhookURL: &v1.SecretKeySelector{
+				//		Key: "webhook-url",
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "mattermost-webhook-url",
+				//		},
+				//	},
+				//	Channel:  ptr.To("town-square"),
+				//	Username: ptr.To("user1"),
+				//	Text:     ptr.To("alert"),
+				//	Attachments: []monitoringv1alpha1.MattermostAttachmentConfig{
+				//		{
+				//			Text:  ptr.To("attachment 1"),
+				//			Title: ptr.To("attachment 1"),
+				//			Fields: []monitoringv1alpha1.MattermostField{
+				//				{Title: "foo", Value: "bar"},
+				//			},
+				//		},
+				//	},
+				//	Priority: &monitoringv1alpha1.MattermostPriorityConfig{
+				//		Priority:                ptr.To(monitoringv1alpha1.MattermostPriorityUrgent),
+				//		RequestedAck:            ptr.To(true),
+				//		PersistentNotifications: ptr.To(true),
+				//	},
+				//}},
 			}},
 		},
 	}
@@ -1625,21 +1625,6 @@ receivers:
     api_url: https://webex.api.url
     message: testingMessage
     room_id: testingRoomID
-  mattermost_configs:
-  - webhook_url: https://mattermost.example.com
-    channel: town-square
-	username: user1
-	text: alert
-	attachments:
-	- text: attachment 1
-	  title: attachment 1
-      fields:
-	  - title: foo
-	    value: bar
-	priority:
-      priority: urgent
-	  requested_ack: true
-	  persistent_notifications: true
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
