@@ -1117,6 +1117,30 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 			ok: false,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "sns-with-invalid-api-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SNSConfigs: []monitoringv1alpha1.SNSConfig{
+							{
+								ApiURL: ptr.To(monitoringv1alpha1.URL("https:://sns.us-east-2.amazonaws.com")),
+								Sigv4: &monitoringv1.Sigv4{
+									Region:  "us-east-2",
+									RoleArn: "test-roleARN",
+								},
+								TopicARN: ptr.To("test-topicARN"),
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())

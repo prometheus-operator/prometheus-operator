@@ -1203,7 +1203,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
-						ApiURL: "https://sns.us-east-2.amazonaws.com",
+						ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
 						Sigv4: &monitoringv1.Sigv4{
 							Region: "us-east-2",
 							AccessKey: &v1.SecretKeySelector{
@@ -1219,7 +1219,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 								Key: testingSecretKey,
 							},
 						},
-						TopicARN: "test-topicARN",
+						TopicARN: ptr.To("test-topicARN"),
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
