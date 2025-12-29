@@ -1316,9 +1316,7 @@ spec:
                             type: string
                         type: object
                       type: array
-<<<<<<< HEAD
                       x-kubernetes-list-type: atomic
-=======
                     incidentioConfigs:
                       description: |-
                         incidentioConfigs defines the list of Incident.io configurations.
@@ -2094,7 +2092,6 @@ spec:
                           rule: has(self.alertSourceToken) || (has(self.httpConfig)
                             && has(self.httpConfig.authorization))
                       type: array
->>>>>>> 81bdef820 (feat: add incident.io to am)
                     msteamsConfigs:
                       description: |-
                         msteamsConfigs defines the list of MSTeams configurations.
