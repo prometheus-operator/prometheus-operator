@@ -287,7 +287,7 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 
 		if ptr.Deref(config.APIURL, "") != "" {
 			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
-				return fmt.Errorf("'apiURL' %s invalid: %w", config.APIURL, err)
+				return fmt.Errorf("'apiURL' %s invalid: %w", *config.APIURL, err)
 			}
 		}
 
