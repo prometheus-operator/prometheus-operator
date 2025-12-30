@@ -3306,6 +3306,67 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		}
 	}
 
+	if mc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(mc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
+	}
+
+	if mc.IconURL != "" {
+		if err := validation.ValidateTemplateURL(mc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	for name, value := range map[string]string{
+		"author_link": mc.AuthorLink,
+		"author_icon": mc.AuthorIcon,
+		"title_link":  mc.TitleLink,
+		"thumb_url":   mc.ThumbURL,
+		"footer_icon": mc.FooterIcon,
+		"image_url":   mc.ImageURL,
+	} {
+		if value == "" {
+			continue
+		}
+		if err := validation.ValidateTemplateURL(value); err != nil {
+			return fmt.Errorf("invalid '%s': %w", name, err)
+		}
+	}
+
+	for i, attachment := range mc.Attachments {
+		if attachment.AuthorLink != "" {
+			if err := validation.ValidateTemplateURL(attachment.AuthorLink); err != nil {
+				return fmt.Errorf("invalid 'author_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.AuthorIcon != "" {
+			if err := validation.ValidateTemplateURL(attachment.AuthorIcon); err != nil {
+				return fmt.Errorf("invalid 'author_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.TitleLink != "" {
+			if err := validation.ValidateTemplateURL(attachment.TitleLink); err != nil {
+				return fmt.Errorf("invalid 'title_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ThumbURL != "" {
+			if err := validation.ValidateTemplateURL(attachment.ThumbURL); err != nil {
+				return fmt.Errorf("invalid 'thumb_url' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.FooterIcon != "" {
+			if err := validation.ValidateTemplateURL(attachment.FooterIcon); err != nil {
+				return fmt.Errorf("invalid 'footer_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ImageURL != "" {
+			if err := validation.ValidateTemplateURL(attachment.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in attachments[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return mc.HTTPConfig.sanitize(amVersion, logger)
 }
 
