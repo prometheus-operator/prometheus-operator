@@ -4680,7 +4680,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Text:       "test text",
 							},
 						},
@@ -4697,7 +4697,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Text:       "test text",
 							},
 						},
@@ -4714,7 +4714,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL:     "www.test.com",
+								WebhookURL:     "http://www.test.com",
 								WebhookURLFile: "/test",
 								Text:           "test text",
 							},
@@ -6486,6 +6486,264 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeMattermostConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionMattermostAllowed := semver.Version{Major: 0, Minor: 30}
+	versionMattermostNotAllowed := semver.Version{Major: 0, Minor: 29}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "mattermost_configs returns error for unsupported versions",
+			againstVersion: versionMattermostNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs allows for supported versions",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_configs_for_supported_versions.golden",
+		},
+		{
+			name:           "mattermost_configs invalid webhook_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid icon_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment author_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment author_icon returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorIcon: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment title_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										TitleLink: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment thumb_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										ThumbURL: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment footer_icon returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										FooterIcon: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment image_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										ImageURL: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs valid urls pass validation",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    "https://example.com/icon.png",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: "https://example.com/author",
+										AuthorIcon: "https://example.com/author-icon.png",
+										TitleLink:  "https://example.com/title",
+										ThumbURL:   "https://example.com/thumb.png",
+										FooterIcon: "https://example.com/footer-icon.png",
+										ImageURL:   "https://example.com/image.png",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_valid_urls_pass_validation.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

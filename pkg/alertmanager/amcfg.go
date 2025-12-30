@@ -2952,6 +2952,51 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		mc.WebhookURLFile = ""
 	}
 
+	if mc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(mc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
+	}
+
+	if mc.IconURL != "" {
+		if _, err := validation.ValidateURL(mc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	for i, attachment := range mc.Attachments {
+		if attachment.AuthorLink != "" {
+			if _, err := validation.ValidateURL(attachment.AuthorLink); err != nil {
+				return fmt.Errorf("invalid 'author_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.AuthorIcon != "" {
+			if _, err := validation.ValidateURL(attachment.AuthorIcon); err != nil {
+				return fmt.Errorf("invalid 'author_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.TitleLink != "" {
+			if _, err := validation.ValidateURL(attachment.TitleLink); err != nil {
+				return fmt.Errorf("invalid 'title_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ThumbURL != "" {
+			if _, err := validation.ValidateURL(attachment.ThumbURL); err != nil {
+				return fmt.Errorf("invalid 'thumb_url' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.FooterIcon != "" {
+			if _, err := validation.ValidateURL(attachment.FooterIcon); err != nil {
+				return fmt.Errorf("invalid 'footer_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ImageURL != "" {
+			if _, err := validation.ValidateURL(attachment.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in attachments[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return mc.HTTPConfig.sanitize(amVersion, logger)
 }
 
