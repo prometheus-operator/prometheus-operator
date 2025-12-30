@@ -6262,6 +6262,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test Username field is dropped in discord config for unsupported versions",
@@ -6329,7 +6330,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 						Name: "discord",
 						DiscordConfigs: []*discordConfig{
 							{
-								AvatarURL:  "content",
+								AvatarURL:  "http://example.com/avatar.png",
 								WebhookURL: "http://example.com",
 								Message:    "test message",
 							},
@@ -6377,9 +6378,66 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 			},
 			golden: "Discord_content_add_in_supported_versions_config.golden",
 		},
+		{
+			name:           "Test invalid webhook_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid avatar_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+								AvatarURL:  "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "discord",
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "https://discord.com/api/webhooks/123/abc",
+								AvatarURL:  "https://example.com/avatar.png",
+							},
+						},
+					},
+				},
+			},
+			golden: "Discord_valid_urls_pass_validation.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
