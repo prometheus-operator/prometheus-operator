@@ -6237,6 +6237,23 @@ func TestSanitizeIncidentioConfig(t *testing.T) {
 			golden: "incidentio_configs_for_supported_versions.golden",
 		},
 		{
+			name:           "incidentio_configs invalid url returns error",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "not-a-valid-url",
+								AlertSourceToken: "token123",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "incidentio_configs both url and url_file set",
 			againstVersion: versionIncidentioAllowed,
 			in: &alertmanagerConfig{
