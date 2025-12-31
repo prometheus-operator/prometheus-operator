@@ -619,6 +619,20 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -2838,6 +2852,20 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -5031,6 +5059,20 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>queryEndpoints</code><br/>
 <em>
 []string
@@ -7089,6 +7131,20 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -8931,6 +8987,20 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
 </td>
 </tr>
 <tr>
@@ -15442,6 +15512,20 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -17961,6 +18045,31 @@ When enabled:
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.RepairPolicy">RepairPolicy
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;DeleteNotReadyPods&#34;</p></td>
+<td><p>DeleteNotReadyPodsRepairPolicy deletes pods that are not ready and where the revision doesn&rsquo;t match the StatefulSet revision.</p>
+</td>
+</tr><tr><td><p>&#34;EvictNotReadyPods&#34;</p></td>
+<td><p>EvictNotReadyPodsRepairPolicy evicts pods that are not ready and where the revision doesn&rsquo;t match the StatefulSet revision.</p>
+</td>
+</tr><tr><td><p>&#34;None&#34;</p></td>
+<td><p>NoneRepairPolicy does nothing.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.RetainConfig">RetainConfig
 </h3>
 <p>
@@ -19372,6 +19481,66 @@ It requires Prometheus &gt;= v2.54.0.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetupdatestrategytype-v1-apps">
+Kubernetes apps/v1.StatefulSetUpdateStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>type indicates the type of the StatefulSetUpdateStrategy.
+Default is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rollingUpdate</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#rollingupdatestatefulsetstrategy-v1-apps">
+Kubernetes apps/v1.RollingUpdateStatefulSetStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>rollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>repairPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RepairPolicy">
+RepairPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>repairPolicy defines the policy to repair stuck rollouts.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.StorageSpec">StorageSpec
 </h3>
 <p>
@@ -20110,6 +20279,20 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
 </td>
 </tr>
 <tr>
@@ -23105,6 +23288,20 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
 </td>
 </tr>
 <tr>
@@ -31796,6 +31993,20 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy defines the strategy for the statefulset update.</p>
 </td>
 </tr>
 <tr>

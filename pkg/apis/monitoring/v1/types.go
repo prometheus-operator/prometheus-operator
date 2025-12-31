@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 const (
@@ -1031,4 +1032,31 @@ func (tc *TracingConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// +kubebuilder:validation:Enum=EvictNotReadyPods;DeleteNotReadyPods;None
+type RepairPolicy string
+
+const (
+	// EvictNotReadyPodsRepairPolicy evicts pods that are not ready and where the revision doesn't match the StatefulSet revision.
+	EvictNotReadyPodsRepairPolicy RepairPolicy = "EvictNotReadyPods"
+	// DeleteNotReadyPodsRepairPolicy deletes pods that are not ready and where the revision doesn't match the StatefulSet revision.
+	DeleteNotReadyPodsRepairPolicy RepairPolicy = "DeleteNotReadyPods"
+	// NoneRepairPolicy does nothing.
+	NoneRepairPolicy RepairPolicy = "None"
+)
+
+type StatefulSetUpdateStrategy struct {
+	// type indicates the type of the StatefulSetUpdateStrategy.
+	// Default is RollingUpdate.
+	// +optional
+	Type appsv1.StatefulSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetStrategyType"`
+
+	// rollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.
+	// +optional
+	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty" protobuf:"bytes,2,opt,name=rollingUpdate"`
+
+	// repairPolicy defines the policy to repair stuck rollouts.
+	// +optional
+	RepairPolicy *RepairPolicy `json:"repairPolicy,omitempty"`
 }

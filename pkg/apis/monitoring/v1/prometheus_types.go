@@ -513,6 +513,10 @@ type CommonPrometheusFields struct {
 	// +optional
 	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
+	// updateStrategy defines the strategy for the statefulset update.
+	// +optional
+	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`

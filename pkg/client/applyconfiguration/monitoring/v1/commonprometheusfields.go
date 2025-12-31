@@ -77,6 +77,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
 	PodManagementPolicy                  *monitoringv1.PodManagementPolicyType                   `json:"podManagementPolicy,omitempty"`
+	UpdateStrategy                       *StatefulSetUpdateStrategyApplyConfiguration            `json:"updateStrategy,omitempty"`
 	EnableServiceLinks                   *bool                                                   `json:"enableServiceLinks,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
@@ -579,6 +580,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithListenLocal(value bool) *
 // If called multiple times, the PodManagementPolicy field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *CommonPrometheusFieldsApplyConfiguration {
 	b.PodManagementPolicy = &value
+	return b
+}
+
+// WithUpdateStrategy sets the UpdateStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UpdateStrategy field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithUpdateStrategy(value *StatefulSetUpdateStrategyApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.UpdateStrategy = value
 	return b
 }
 

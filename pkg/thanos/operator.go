@@ -610,6 +610,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	if err := o.resolveStuckStatefulSet(ctx, logger, tr, existingStatefulSet); err != nil {
+		logger.Error("failed to resolve stuck statefulset", "err", err)
+	}
+
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
 		return nil

@@ -494,6 +494,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithPodManagementPolicy(value mo
 	return b
 }
 
+// WithUpdateStrategy sets the UpdateStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UpdateStrategy field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithUpdateStrategy(value *v1.StatefulSetUpdateStrategyApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.UpdateStrategy = value
+	return b
+}
+
 // WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnableServiceLinks field is set to the value of the last call.
