@@ -455,7 +455,7 @@ func convertVictorOpsConfigFrom(in v1alpha1.VictorOpsConfig) VictorOpsConfig {
 	return VictorOpsConfig{
 		SendResolved:      in.SendResolved,
 		APIKey:            convertSecretKeySelectorFrom(in.APIKey),
-		APIURL:            in.APIURL,
+		APIURL:            (*URL)(in.APIURL),
 		RoutingKey:        in.RoutingKey,
 		MessageType:       in.MessageType,
 		EntityDisplayName: in.EntityDisplayName,

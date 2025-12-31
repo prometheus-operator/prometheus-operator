@@ -261,9 +261,9 @@ func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error
 			return errors.New("missing 'routingKey' key")
 		}
 
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return fmt.Errorf("'apiURL' %s invalid: %w", config.APIURL, err)
+		if ptr.Deref(config.APIURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
+				return fmt.Errorf("'apiURL' %s invalid: %w", *config.APIURL, err)
 			}
 		}
 
