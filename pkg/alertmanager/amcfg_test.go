@@ -7615,6 +7615,167 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeMSTeamsV2Config(t *testing.T) {
+	logger := newNopLogger(t)
+	versionMSTeamsV2Allowed := semver.Version{Major: 0, Minor: 28}
+	versionMSTeamsV2NotAllowed := semver.Version{Major: 0, Minor: 27}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "msteamsv2_configs returns error for unsupported versions",
+			againstVersion: versionMSTeamsV2NotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://msteams.example.com/hooks/xxx",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_configs valid url passes",
+			againstVersion: versionMSTeamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://msteams.example.com/hooks/xxx",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			golden:    "msteamsv2_valid_url_passes.golden",
+			expectErr: false,
+		},
+		{
+			name:           "msteamsv2_configs invalid webhook_url returns error",
+			againstVersion: versionMSTeamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config for supported versions",
+			againstVersion: versionMSTeamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteamsv2_config_for_supported_versions.golden",
+		},
+		{
+			name:           "msteamsv2_config returns error for unsupported versions",
+			againstVersion: versionMSTeamsV2NotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config no webhook url or webhook url file set",
+			againstVersion: versionMSTeamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config both webhook url and webhook url file set",
+			againstVersion: versionMSTeamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteamsv2_config with webhook url file set",
+			againstVersion: versionMSTeamsV2Allowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsV2Configs: []*msTeamsV2Config{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteamsv2_config_with_webhook_config_file_set.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			if tc.golden != "" {
+				amConfigs, err := yaml.Marshal(tc.in)
+				require.NoError(t, err)
+
+				golden.Assert(t, string(amConfigs), tc.golden)
+			}
+		})
+	}
+}
+
 func newNopLogger(t *testing.T) *slog.Logger {
 	t.Helper()
 	return slog.New(slog.DiscardHandler)
