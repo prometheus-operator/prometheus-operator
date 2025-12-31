@@ -1104,6 +1104,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
+					URL: ptr.To(monitoringv1alpha1.URL("https://pagerduty.example.com")),
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
 					APIURL: &v1.SecretKeySelector{
@@ -1536,6 +1537,7 @@ receivers:
   - api_key: 1234abc
   pagerduty_configs:
   - routing_key: 1234abc
+    url: https://pagerduty.example.com
   slack_configs:
   - api_url: http://slack.example.com
     fields:
