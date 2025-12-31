@@ -5636,6 +5636,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test pushover_user_key_file is dropped in pushover config for unsupported versions",
@@ -5709,9 +5710,49 @@ func TestSanitizePushoverConfig(t *testing.T) {
 			},
 			golden: "test_token_takes_precedence_in_pushover_config.golden",
 		},
+		{
+			name:           "Test invalid url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_valid_url_passes.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
