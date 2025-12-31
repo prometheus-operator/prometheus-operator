@@ -166,6 +166,48 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			equal: false,
 		},
+		{
+			name: "different ClusterTLS",
+			a: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					ClusterTLS: &monitoringv1.ClusterTLSConfig{
+						ServerTLS: monitoringv1.WebTLSConfig{
+							KeySecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{Name: "server-tls-secret"},
+								Key:                  "tls.key",
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "server-tls-secret"},
+									Key:                  "tls.crt",
+								},
+							},
+						},
+						ClientTLS: monitoringv1.SafeTLSConfig{
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{Name: "client-tls-secret"},
+								Key:                  "tls.key",
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "client-tls-secret"},
+									Key:                  "tls.crt",
+								},
+							},
+						},
+					},
+				},
+			},
+			b: monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version: "v0.0.1",
+					// No ClusterTLS - should produce different hash!
+				},
+			},
+
+			equal: false,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a1Hash, err := createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})

@@ -631,9 +631,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
-	// TODO(simonpasquier): the operator should take into account changes to
-	// the cluster TLS configuration to trigger a rollout of the pods (this
-	// configuration doesn't support live reload).
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
 		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
 	}
@@ -819,6 +816,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
+		ClusterTLS              *monitoringv1.ClusterTLSConfig
 	}{
 		AlertmanagerLabels:      a.Labels,
 		AlertmanagerAnnotations: a.Annotations,
@@ -827,6 +825,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
+		ClusterTLS:              a.Spec.ClusterTLS,
 	},
 		nil,
 	)
