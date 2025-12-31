@@ -1253,14 +1253,12 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 
 func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
 	out := &victorOpsConfig{
-		VSendResolved:     ptr.Deref(in.SendResolved, ""),
-		RoutingKey:        ptr.Deref(in.RoutingKey, ""),
+		VSendResolved:     in.SendResolved,
+		RoutingKey:        in.RoutingKey,
 		MessageType:       ptr.Deref(in.MessageType, ""),
 		EntityDisplayName: ptr.Deref(in.EntityDisplayName, ""),
 		StateMessage:      ptr.Deref(in.StateMessage, ""),
 		MonitoringTool:    ptr.Deref(in.MonitoringTool, ""),
-		VSendResolved:     in.SendResolved,
-		RoutingKey:        in.RoutingKey,
 	}
 
 	if in.APIKey != nil {
