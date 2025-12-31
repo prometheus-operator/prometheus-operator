@@ -616,6 +616,8 @@ func (c *Operator) Run(ctx context.Context) error {
 	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
 	go operator.StatusPoller(ctx, c)
 
+	go c.pruneOrphanedBindings(ctx)
+
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
@@ -1574,4 +1576,86 @@ func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBui
 	}
 
 	return nil
+}
+
+func (c *Operator) pruneOrphanedBindings(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	workloadGVR := monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName)
+	workloadChecker := c.workloadChecker
+	configResourceSyncerFactory := func(workload operator.RuntimeObject) operator.BindingRemover {
+		return operator.NewConfigResourceSyncer(workload, c.dclient, c.accessor)
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// prune from servicemonitors, podmonitors, probes, scrapeconfigs, rules
+			if err := operator.PruneOrphanedBindings[*monitoringv1.ServiceMonitor](
+				ctx,
+				c.smonInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("failed to prune orphaned bindings from ServiceMonitors", "err", err)
+			}
+
+			if err := operator.PruneOrphanedBindings[*monitoringv1.PodMonitor](
+				ctx,
+				c.pmonInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("failed to prune orphaned bindings from PodMonitors", "err", err)
+			}
+
+			if err := operator.PruneOrphanedBindings[*monitoringv1.Probe](
+				ctx,
+				c.probeInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("failed to prune orphaned bindings from Probes", "err", err)
+			}
+
+			if c.sconInfs != nil {
+				if err := operator.PruneOrphanedBindings[*monitoringv1alpha1.ScrapeConfig](
+					ctx,
+					c.sconInfs.ListAll,
+					workloadGVR,
+					workloadChecker,
+					configResourceSyncerFactory,
+				); err != nil {
+					c.logger.Error("failed to orphaned bindings from ScrapeConfigs", "err", err)
+				}
+			}
+
+			if err := operator.PruneOrphanedBindings[*monitoringv1.PrometheusRule](
+				ctx,
+				c.ruleInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("faild to prune orphaned bindings from PrometheusRules", "err", err)
+			}
+		}
+	}
+}
+
+func (c *Operator) workloadChecker(ns, name string) (bool, error) {
+	_, err := c.promInfs.Get(ns + "/" + name)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
