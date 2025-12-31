@@ -1253,8 +1253,14 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 
 func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
 	out := &victorOpsConfig{
-		VSendResolved: in.SendResolved,
-		RoutingKey:    in.RoutingKey,
+		VSendResolved:     ptr.Deref(in.SendResolved, ""),
+		RoutingKey:        ptr.Deref(in.RoutingKey, ""),
+		MessageType:       ptr.Deref(in.MessageType, ""),
+		EntityDisplayName: ptr.Deref(in.EntityDisplayName, ""),
+		StateMessage:      ptr.Deref(in.StateMessage, ""),
+		MonitoringTool:    ptr.Deref(in.MonitoringTool, ""),
+		VSendResolved:     in.SendResolved,
+		RoutingKey:        in.RoutingKey,
 	}
 
 	if in.APIKey != nil {
@@ -1267,22 +1273,6 @@ func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitori
 
 	if in.APIURL != nil {
 		out.APIURL = string(*in.APIURL)
-	}
-
-	if in.MessageType != nil {
-		out.MessageType = *in.MessageType
-	}
-
-	if in.EntityDisplayName != nil {
-		out.EntityDisplayName = *in.EntityDisplayName
-	}
-
-	if in.StateMessage != nil {
-		out.StateMessage = *in.StateMessage
-	}
-
-	if in.MonitoringTool != nil {
-		out.MonitoringTool = *in.MonitoringTool
 	}
 
 	var customFields map[string]string
