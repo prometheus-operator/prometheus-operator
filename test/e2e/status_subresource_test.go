@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1354,7 +1353,9 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 					Name: "default",
 					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 						{
-							URL: ptr.To("http://example.com/webhook"),
+							URL: func(s string) *string {
+								return &s
+							}("http://test.url"),
 						},
 					},
 				},
@@ -1392,7 +1393,9 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 					Name: "default",
 					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 						{
-							URL: ptr.To("http://example.com/webhook"),
+							URL: func(s string) *string {
+								return &s
+							}("http://test.url"),
 						},
 					},
 				},
@@ -1414,7 +1417,9 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// Update the second AlertmanagerConfig to have an invalid rule expression.
-	alc2.Spec.Receivers[0].WebhookConfigs[0].URL = ptr.To("://invalid-url")
+	alc2.Spec.Receivers[0].WebhookConfigs[0].URL = func(s string) *string {
+		return &s
+	}("//invalid-url")
 	alc2, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Update(ctx, alc2, v1.UpdateOptions{})
 	require.NoError(t, err)
 

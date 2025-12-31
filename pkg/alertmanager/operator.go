@@ -746,9 +746,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitori
 		return nil
 	}
 
+	fmt.Println("update status ke andar")
 	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
 
 	for key, configResource := range amConfigs {
+		fmt.Println("observed generation: ", configResource.Resource().GetGeneration())
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
 		}
