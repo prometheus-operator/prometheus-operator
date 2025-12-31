@@ -214,6 +214,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ShardStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Sigv4"):
 		return &monitoringv1.Sigv4ApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("StatefulSetUpdateStrategy"):
+		return &monitoringv1.StatefulSetUpdateStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("StorageSpec"):
 		return &monitoringv1.StorageSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ThanosRuler"):

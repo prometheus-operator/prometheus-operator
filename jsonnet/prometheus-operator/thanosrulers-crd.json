@@ -6161,6 +6161,48 @@
                     "description": "tracingConfigFile defines the path of the tracing configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `tracingConfig`.",
                     "type": "string"
                   },
+                  "updateStrategy": {
+                    "description": "updateStrategy defines the strategy for the statefulset update.",
+                    "properties": {
+                      "repairPolicy": {
+                        "description": "repairPolicy defines the policy to repair stuck rollouts.",
+                        "enum": [
+                          "EvictNotReadyPods",
+                          "DeleteNotReadyPods",
+                          "None"
+                        ],
+                        "type": "string"
+                      },
+                      "rollingUpdate": {
+                        "description": "rollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.",
+                        "properties": {
+                          "maxUnavailable": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "description": "The maximum number of pods that can be unavailable during the update.\nValue can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).\nAbsolute number is calculated from percentage by rounding up. This can not be 0.\nDefaults to 1. This field is alpha-level and is only honored by servers that enable the\nMaxUnavailableStatefulSet feature. The field applies to all pods in the range 0 to\nReplicas-1. That means if there is any unavailable pod in the range 0 to Replicas-1, it\nwill be counted towards MaxUnavailable.",
+                            "x-kubernetes-int-or-string": true
+                          },
+                          "partition": {
+                            "description": "Partition indicates the ordinal at which the StatefulSet should be partitioned\nfor updates. During a rolling update, all pods from ordinal Replicas-1 to\nPartition are updated. All pods from ordinal Partition-1 to 0 remain untouched.\nThis is helpful in being able to do a canary based deployment. The default value is 0.",
+                            "format": "int32",
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": {
+                        "description": "type indicates the type of the StatefulSetUpdateStrategy.\nDefault is RollingUpdate.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "version": {
                     "description": "version of Thanos to be deployed.",
                     "type": "string"
