@@ -2769,6 +2769,12 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 		return errors.New("missing issue_type in jira_config")
 	}
 
+	if jc.APIURL != "" {
+		if _, err := validation.ValidateURL(jc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return jc.HTTPConfig.sanitize(amVersion, logger)
 }
 
