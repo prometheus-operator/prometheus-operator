@@ -1,5 +1,5 @@
 receivers:
 - name: ""
   webhook_configs:
-  - url: http://example.com/foo
+  - url: http://example.com/webhook
 templates: []
