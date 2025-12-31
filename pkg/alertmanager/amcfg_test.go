@@ -6070,6 +6070,24 @@ func TestSanitizeJiraConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:           "jira_configs invalid api_url returns error",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "not-a-valid-url",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "jira_configs allows for supported versions",
 			againstVersion: versionJiraAllowed,
 			in: &alertmanagerConfig{
