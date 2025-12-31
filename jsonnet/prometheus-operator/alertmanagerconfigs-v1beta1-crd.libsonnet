@@ -3237,10 +3237,12 @@
                         properties: {
                           class: {
                             description: 'class defines the class/type of the event.',
+                            minLength: 1,
                             type: 'string',
                           },
                           client: {
                             description: 'client defines the client identification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           clientURL: {
@@ -3250,10 +3252,12 @@
                           },
                           component: {
                             description: 'component defines the part or component of the affected system that is broken.',
+                            minLength: 1,
                             type: 'string',
                           },
                           description: {
                             description: 'description of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           details: {
@@ -3278,9 +3282,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           group: {
                             description: 'group defines a cluster or grouping of sources.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -3928,20 +3934,24 @@
                               properties: {
                                 alt: {
                                   description: 'alt is the optional alternative text for the image.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 src: {
                                   description: 'src of the image being attached to the incident',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           pagerDutyLinkConfigs: {
                             description: 'pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.',
@@ -3950,16 +3960,19 @@
                               properties: {
                                 alt: {
                                   description: "alt defines the text that describes the purpose of the link, and can be used as the link's text.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           routingKey: {
                             description: "routingKey defines the secret's key that contains the PagerDuty integration key (when using\nEvents API v2). Either this field or `serviceKey` needs to be defined.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
@@ -4007,10 +4020,12 @@
                           },
                           severity: {
                             description: 'severity of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           source: {
                             description: 'source defines the unique location of the affected system.',
+                            minLength: 1,
                             type: 'string',
                           },
                           timeout: {

@@ -275,26 +275,32 @@ type PagerDutyConfig struct {
 	// +optional
 	URL *URL `json:"url,omitempty"`
 	// client defines the client identification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Client string `json:"client,omitempty"`
+	Client *string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
 	ClientURL *URL `json:"clientURL,omitempty"`
 	// description of the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// severity of the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Severity string `json:"severity,omitempty"`
+	Severity *string `json:"severity,omitempty"`
 	// class defines the class/type of the event.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Class string `json:"class,omitempty"`
+	Class *string `json:"class,omitempty"`
 	// group defines a cluster or grouping of sources.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Group string `json:"group,omitempty"`
+	Group *string `json:"group,omitempty"`
 	// component defines the part or component of the affected system that is broken.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Component string `json:"component,omitempty"`
+	Component *string `json:"component,omitempty"`
 	// details defines the arbitrary key/value pairs that provide further detail about the incident.
 	// +listType=atomic
 	// +optional
@@ -311,6 +317,7 @@ type PagerDutyConfig struct {
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Source *string `json:"source,omitempty"`
 	// timeout is the maximum time allowed to invoke the pagerduty
@@ -322,24 +329,29 @@ type PagerDutyConfig struct {
 // PagerDutyImageConfig attaches images to an incident
 type PagerDutyImageConfig struct {
 	// src of the image being attached to the incident
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Src string `json:"src,omitempty"`
+	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Href string `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Alt string `json:"alt,omitempty"`
+	Alt *string `json:"alt,omitempty"`
 }
 
 // PagerDutyLinkConfig attaches text links to an incident
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Href string `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text string `json:"alt,omitempty"`
+	Text *string `json:"alt,omitempty"`
 }
 
 // DiscordConfig configures notifications via Discord.

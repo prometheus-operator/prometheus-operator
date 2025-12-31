@@ -993,12 +993,12 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
 	out := &pagerdutyConfig{
 		VSendResolved: in.SendResolved,
-		Class:         in.Class,
-		Client:        in.Client,
-		Component:     in.Component,
-		Description:   in.Description,
-		Group:         in.Group,
-		Severity:      in.Severity,
+		Class:         ptr.Deref(in.Class, ""),
+		Client:        ptr.Deref(in.Client, ""),
+		Component:     ptr.Deref(in.Component, ""),
+		Description:   ptr.Deref(in.Description, ""),
+		Group:         ptr.Deref(in.Group, ""),
+		Severity:      ptr.Deref(in.Severity, ""),
 	}
 
 	if in.URL != nil {
@@ -1039,8 +1039,8 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		linkConfigs = make([]pagerdutyLink, l)
 		for i, lc := range in.PagerDutyLinkConfigs {
 			linkConfigs[i] = pagerdutyLink{
-				Href: lc.Href,
-				Text: lc.Text,
+				Href: ptr.Deref(lc.Href, ""),
+				Text: ptr.Deref(lc.Text, ""),
 			}
 		}
 	}
@@ -1051,9 +1051,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		imageConfig = make([]pagerdutyImage, l)
 		for i, ic := range in.PagerDutyImageConfigs {
 			imageConfig[i] = pagerdutyImage{
-				Src:  ic.Src,
-				Alt:  ic.Alt,
-				Href: ic.Href,
+				Src:  ptr.Deref(ic.Src, ""),
+				Alt:  ptr.Deref(ic.Alt, ""),
+				Href: ptr.Deref(ic.Href, ""),
 			}
 		}
 	}
