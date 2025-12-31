@@ -2743,6 +2743,10 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
 	}
 
+	if _, err := validation.ValidateURL(tc.WebhookURL); err != nil {
+		return fmt.Errorf("invalid 'webhook_url': %w", err)
+	}
+
 	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
 		msg := "'summary' supported in Alertmanager >= 0.27.0 only - dropping field `summary` from msteams config"
 		logger.Warn(msg, "current_version", amVersion.String())
