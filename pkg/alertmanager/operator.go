@@ -607,7 +607,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	logDeprecatedFields(logger, am)
+	if deprecationMsg := logDeprecatedFields(logger, am); deprecationMsg != "" {
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, deprecationMsg)
+	}
 
 	logger.Info("sync alertmanager")
 
@@ -1888,20 +1890,29 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 	return nil
 }
 
-func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
+func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) string {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+	var deprecations []string
 
 	if a.Spec.BaseImage != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		msg := fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
 	}
 
 	if a.Spec.Tag != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		msg := fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
 	}
 
 	if a.Spec.SHA != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		msg := fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
 	}
+
+	return strings.Join(deprecations, "; ")
 }
 
 func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScaleSubresource bool) *monitoringv1ac.AlertmanagerApplyConfiguration {

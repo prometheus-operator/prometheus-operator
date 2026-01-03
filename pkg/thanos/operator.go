@@ -522,6 +522,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	logger.Info("sync thanos-ruler")
 
+	if deprecationMsg := logDeprecatedFields(logger, tr); deprecationMsg != "" {
+		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, deprecationMsg)
+	}
+
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
 	}
@@ -642,6 +646,20 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func logDeprecatedFields(logger *slog.Logger, tr *monitoringv1.ThanosRuler) string {
+	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+	var deprecations []string
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if len(tr.Spec.PrometheusRulesExcludedFromEnforce) > 0 {
+		msg := fmt.Sprintf(deprecationWarningf, "spec.prometheusRulesExcludedFromEnforce", "spec.excludedFromEnforcement")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
+	}
+
+	return strings.Join(deprecations, "; ")
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
