@@ -833,7 +833,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	c.logDeprecatedFields(logger, p)
+	if deprecationMsg := c.logDeprecatedFields(logger, p); deprecationMsg != "" {
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, deprecationMsg)
+	}
 
 	statusCleanup := func() error {
 		return c.configResStatusCleanup(ctx, p)
@@ -1243,38 +1245,51 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) {
+func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) string {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+	var deprecations []string
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.BaseImage != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		msg := fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.Tag != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		msg := fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.SHA != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		msg := fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image")
+		logger.Warn(msg)
+		deprecations = append(deprecations, msg)
 	}
 
 	if p.Spec.Thanos != nil {
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if p.Spec.BaseImage != "" {
-			logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
+		if p.Spec.Thanos.BaseImage != nil && *p.Spec.Thanos.BaseImage != "" {
+			msg := fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image")
+			logger.Warn(msg)
+			deprecations = append(deprecations, msg)
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if p.Spec.Tag != "" {
-			logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
+		if p.Spec.Thanos.Tag != nil && *p.Spec.Thanos.Tag != "" {
+			msg := fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image")
+			logger.Warn(msg)
+			deprecations = append(deprecations, msg)
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if p.Spec.SHA != "" {
-			logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
+		if p.Spec.Thanos.SHA != nil && *p.Spec.Thanos.SHA != "" {
+			msg := fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image")
+			logger.Warn(msg)
+			deprecations = append(deprecations, msg)
 		}
 	}
 
@@ -1283,6 +1298,8 @@ func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prom
 		logger.Warn("unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead")
 		logger.Warn("unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')")
 	}
+
+	return strings.Join(deprecations, "; ")
 }
 
 func (c *Operator) unmanagedPrometheusConfiguration(p *monitoringv1.Prometheus) bool {
