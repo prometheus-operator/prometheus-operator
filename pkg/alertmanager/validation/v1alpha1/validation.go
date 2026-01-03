@@ -208,8 +208,10 @@ func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
 		}
 
 		actionValidation := func(sa monitoringv1alpha1.SlackAction) error {
-			if _, err := validation.ValidateURL(string(*sa.URL)); err != nil {
-				return fmt.Errorf("invalid 'URL': %w", err)
+			if ptr.Deref(sa.URL, "") != "" {
+				if _, err := validation.ValidateURL(string(*sa.URL)); err != nil {
+					return fmt.Errorf("invalid 'URL': %w", err)
+				}
 			}
 			return nil
 		}
