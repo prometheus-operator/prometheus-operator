@@ -188,6 +188,38 @@ func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
 			return err
 		}
 
+		// TODO: Update after the refactor PR is merged.
+		if ptr.Deref(config.IconURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.IconURL)); err != nil {
+				return fmt.Errorf("invalid 'iconURL': %w", err)
+			}
+		}
+
+		if ptr.Deref(config.ImageURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.ImageURL)); err != nil {
+				return fmt.Errorf("invalid 'imageURL': %w", err)
+			}
+		}
+
+		if ptr.Deref(config.ThumbURL, "") != "" {
+			if _, err := validation.ValidateURL(string(*config.ThumbURL)); err != nil {
+				return fmt.Errorf("invalid 'thumbURL': %w", err)
+			}
+		}
+
+		actionValidation := func(sa monitoringv1alpha1.SlackAction) error {
+			if _, err := validation.ValidateURL(string(*sa.URL)); err != nil {
+				return fmt.Errorf("invalid 'URL': %w", err)
+			}
+			return nil
+		}
+
+		for i, sa := range config.Actions {
+			if err := actionValidation(sa); err != nil {
+				return fmt.Errorf("invalid 'action' [%d]: %w", i, err)
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
