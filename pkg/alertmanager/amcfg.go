@@ -2923,26 +2923,32 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	}
 
 	if r.GroupWait != "" {
-		if d, err := model.ParseDuration(r.GroupWait); err == nil && d == 0 {
-			r.GroupWait = ""
-		} else if err != nil {
+		d, err := model.ParseDuration(r.GroupWait)
+		if err != nil {
 			return fmt.Errorf("groupwait: %w", err)
+		}
+		if d == 0 {
+			return fmt.Errorf("groupwait: %q is not allowed", r.GroupWait)
 		}
 	}
 
 	if r.GroupInterval != "" {
-		if d, err := model.ParseDuration(r.GroupInterval); err == nil && d == 0 {
-			r.GroupInterval = ""
-		} else if err != nil {
+		d, err := model.ParseDuration(r.GroupInterval)
+		if err != nil {
 			return fmt.Errorf("groupinterval: %w", err)
+		}
+		if d == 0 {
+			r.GroupInterval = ""
 		}
 
 	}
 	if r.RepeatInterval != "" {
-		if d, err := model.ParseDuration(r.RepeatInterval); err == nil && d == 0 {
-			r.RepeatInterval = ""
-		} else if err != nil {
+		d, err := model.ParseDuration(r.RepeatInterval)
+		if err != nil {
 			return fmt.Errorf("repeatinterval: %w", err)
+		}
+		if d == 0 {
+			r.RepeatInterval = ""
 		}
 	}
 

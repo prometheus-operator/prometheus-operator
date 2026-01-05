@@ -20,6 +20,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/utils/ptr"
 )
 
 func TestValidateSecretOrConfigMap(t *testing.T) {
@@ -525,7 +526,7 @@ func TestValidateOAuth2(t *testing.T) {
 
 func TestDurationPointer(t *testing.T) {
 	oneMinuteDuration := Duration("1m")
-	got := DurationPointer("1m")
+	got := ptr.To(Duration("1m"))
 	if !reflect.DeepEqual(got, &oneMinuteDuration) {
 		t.Fatalf("wanted %v, but got %v", &oneMinuteDuration, got)
 	}

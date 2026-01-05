@@ -49,12 +49,6 @@ func (bs *ByteSize) IsEmpty() bool {
 // +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
 type Duration string
 
-// DurationPointer is a helper function to parse a Duration string into a *Duration.
-func DurationPointer(s string) *Duration {
-	d := Duration(s)
-	return &d
-}
-
 // NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
 // Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.
 // Supported units: y, w, d, h, m, s, ms
@@ -62,12 +56,6 @@ func DurationPointer(s string) *Duration {
 // +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
 // +kubebuilder:validation:MinLength=1
 type NonEmptyDuration string
-
-// NonEmptyDurationPointer is a helper function to parse a NonEmptyDuration string into a *NonEmptyDuration.
-func NonEmptyDurationPointer(s string) *NonEmptyDuration {
-	d := NonEmptyDuration(s)
-	return &d
-}
 
 // GoDuration is a valid time duration that can be parsed by Go's time.ParseDuration() function.
 // Supported units: h, m, s, ms

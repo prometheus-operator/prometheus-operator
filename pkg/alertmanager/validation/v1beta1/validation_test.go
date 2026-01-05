@@ -454,7 +454,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1beta1.Route{
 						Receiver:      "same",
-						GroupInterval: (*monitoringv1.NonEmptyDuration)(monitoringv1.DurationPointer("0s")),
+						GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("0s")),
 					},
 				},
 			},
@@ -471,7 +471,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					},
 					Route: &monitoringv1beta1.Route{
 						Receiver:       "same",
-						RepeatInterval: (*monitoringv1.NonEmptyDuration)(monitoringv1.DurationPointer("0m")),
+						RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("0m")),
 					},
 				},
 			},
