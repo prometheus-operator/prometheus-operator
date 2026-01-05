@@ -105,12 +105,12 @@ type HTTPConfigWithoutTLS struct {
 	// redirects.
 	//
 	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
 
 	// enableHttp2 can be used to disable HTTP2.
 	//
 	// +optional
-	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
+	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
 }
 
 // Validate semantically validates the given HTTPConfigWithoutTLS.
