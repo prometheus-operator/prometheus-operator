@@ -833,9 +833,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	if deprecationMsg := c.logDeprecatedFields(logger, p); deprecationMsg != "" {
-		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, deprecationMsg)
-	}
+	c.recordDeprecatedFields(key, logger, p)
 
 	statusCleanup := func() error {
 		return c.configResStatusCleanup(ctx, p)
@@ -1245,7 +1243,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) string {
+func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, p *monitoringv1.Prometheus) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	var deprecations []string
 
@@ -1299,7 +1297,9 @@ func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prom
 		logger.Warn("unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')")
 	}
 
-	return strings.Join(deprecations, "; ")
+	if len(deprecations) > 0 {
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+	}
 }
 
 func (c *Operator) unmanagedPrometheusConfiguration(p *monitoringv1.Prometheus) bool {

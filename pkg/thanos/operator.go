@@ -522,9 +522,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	logger.Info("sync thanos-ruler")
 
-	if deprecationMsg := logDeprecatedFields(logger, tr); deprecationMsg != "" {
-		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, deprecationMsg)
-	}
+	o.recordDeprecatedFields(key, logger, tr)
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
@@ -648,7 +646,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func logDeprecatedFields(logger *slog.Logger, tr *monitoringv1.ThanosRuler) string {
+func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *monitoringv1.ThanosRuler) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	var deprecations []string
 
@@ -659,7 +657,9 @@ func logDeprecatedFields(logger *slog.Logger, tr *monitoringv1.ThanosRuler) stri
 		deprecations = append(deprecations, msg)
 	}
 
-	return strings.Join(deprecations, "; ")
+	if len(deprecations) > 0 {
+		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+	}
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration

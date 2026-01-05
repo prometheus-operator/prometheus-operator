@@ -607,9 +607,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	if deprecationMsg := logDeprecatedFields(logger, am); deprecationMsg != "" {
-		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, deprecationMsg)
-	}
+	c.recordDeprecatedFields(key, logger, am)
 
 	logger.Info("sync alertmanager")
 
@@ -1890,7 +1888,7 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 	return nil
 }
 
-func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) string {
+func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, a *monitoringv1.Alertmanager) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	var deprecations []string
 
@@ -1912,7 +1910,9 @@ func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) stri
 		deprecations = append(deprecations, msg)
 	}
 
-	return strings.Join(deprecations, "; ")
+	if len(deprecations) > 0 {
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+	}
 }
 
 func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScaleSubresource bool) *monitoringv1ac.AlertmanagerApplyConfiguration {
