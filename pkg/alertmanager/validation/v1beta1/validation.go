@@ -162,15 +162,15 @@ func validateSlackConfigs(configs []monitoringv1beta1.SlackConfig) error {
 		}
 
 		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+			return fmt.Errorf("[%d]: iconURL: %w", i, err)
 		}
 
 		if err := validation.ValidateURLPtr((*string)(config.ImageURL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+			return fmt.Errorf("[%d]: imageURL: %w", i, err)
 		}
 
 		if err := validation.ValidateURLPtr((*string)(config.ThumbURL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+			return fmt.Errorf("[%d]: thumbURL: %w", i, err)
 		}
 
 		for j, sa := range config.Actions {
