@@ -974,6 +974,64 @@ const (
 	ParallelPodManagement PodManagementPolicyType = "Parallel"
 )
 
+// StatefulSetUpdateStrategy indicates the strategy used when updating the
+// StatefulSet. It includes any additional parameters necessary to perform the
+// update for the indicated strategy.
+//
+// +kubebuilder:validation:XValidation:rule="!(self.type != 'RollingUpdate' && has(self.rollingUpdate))",message="rollingUpdate requires type to be RollingUpdate"
+type StatefulSetUpdateStrategy struct {
+	// type indicates the type of the StatefulSetUpdateStrategy.
+	//
+	// Default is RollingUpdate.
+	//
+	// +required
+	Type StatefulSetUpdateStrategyType `json:"type"`
+
+	// rollingUpdate is used to communicate parameters when type is RollingUpdate.
+	//
+	// +optional
+	RollingUpdate *RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+}
+
+// RollingUpdateStatefulSetStrategy is used to communicate parameter for the RollingUpdate strategy.
+type RollingUpdateStatefulSetStrategy struct {
+	// maxUnavailable is the maximum number of pods that can be unavailable
+	// during the update. The value can be an absolute number (ex: 5) or a
+	// percentage of desired pods (ex: 10%). Absolute number is calculated from
+	// percentage by rounding up. This can not be 0.  Defaults to 1. This field
+	// is alpha-level and is only honored by servers that enable the
+	// MaxUnavailableStatefulSet feature. The field applies to all pods in the
+	// range 0 to Replicas-1.  That means if there is any unavailable pod in
+	// the range 0 to Replicas-1, it will be counted towards MaxUnavailable.
+	//
+	//	+kubebuilder:validation:XIntOrString
+	// +optional
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"varint,2,opt,name=maxUnavailable"`
+}
+
+// StatefulSetUpdateStrategyType is a string enumeration type that enumerates
+// all possible update strategies for the StatefulSet pods.
+//
+// +kubebuilder:validation:Enum=OnDelete;RollingUpdate
+type StatefulSetUpdateStrategyType string
+
+const (
+	// RollingUpdateStatefulSetStrategyType indicates that update will be
+	// applied to all Pods in the StatefulSet with respect to the StatefulSet
+	// ordering constraints. When a scale operation is performed with this
+	// strategy, new Pods will be created from the specification version indicated
+	// by the StatefulSet's updateRevision.
+	RollingUpdateStatefulSetStrategyType StatefulSetUpdateStrategyType = "RollingUpdate"
+
+	// OnDeleteStatefulSetStrategyType triggers the legacy behavior. Version
+	// tracking and ordered rolling restarts are disabled. Pods are recreated
+	// from the StatefulSetSpec when they are manually deleted. When a scale
+	// operation is performed with this strategy, new Pods will be created from
+	// the the specification version indicated by the StatefulSet's
+	// currentRevision.
+	OnDeleteStatefulSetStrategyType StatefulSetUpdateStrategyType = "OnDelete"
+)
+
 type TracingConfig struct {
 	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
 	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC

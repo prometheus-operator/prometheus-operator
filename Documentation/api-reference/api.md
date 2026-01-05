@@ -619,6 +619,23 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -2838,6 +2855,23 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -5031,6 +5065,23 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>queryEndpoints</code><br/>
 <em>
 []string
@@ -7089,6 +7140,23 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containers</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#container-v1-core">
@@ -8931,6 +8999,23 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
 </td>
 </tr>
 <tr>
@@ -15442,6 +15527,23 @@ which incurs a service outage.</p>
 </tr>
 <tr>
 <td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableServiceLinks</code><br/>
 <em>
 bool
@@ -17991,6 +18093,45 @@ Duration
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.RollingUpdateStatefulSetStrategy">RollingUpdateStatefulSetStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy</a>)
+</p>
+<div>
+<p>RollingUpdateStatefulSetStrategy is used to communicate parameter for the RollingUpdate strategy.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxUnavailable</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/util/intstr#IntOrString">
+k8s.io/apimachinery/pkg/util/intstr.IntOrString
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>maxUnavailable is the maximum number of pods that can be unavailable
+during the update. The value can be an absolute number (ex: 5) or a
+percentage of desired pods (ex: 10%). Absolute number is calculated from
+percentage by rounding up. This can not be 0.  Defaults to 1. This field
+is alpha-level and is only honored by servers that enable the
+MaxUnavailableStatefulSet feature. The field applies to all pods in the
+range 0 to Replicas-1.  That means if there is any unavailable pod in
+the range 0 to Replicas-1, it will be counted towards MaxUnavailable.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.Rule">Rule
 </h3>
 <p>
@@ -19372,6 +19513,87 @@ It requires Prometheus &gt;= v2.54.0.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>StatefulSetUpdateStrategy indicates the strategy used when updating the
+StatefulSet. It includes any additional parameters necessary to perform the
+update for the indicated strategy.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategyType">
+StatefulSetUpdateStrategyType
+</a>
+</em>
+</td>
+<td>
+<p>type indicates the type of the StatefulSetUpdateStrategy.</p>
+<p>Default is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rollingUpdate</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RollingUpdateStatefulSetStrategy">
+RollingUpdateStatefulSetStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>rollingUpdate is used to communicate parameters when type is RollingUpdate.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.StatefulSetUpdateStrategyType">StatefulSetUpdateStrategyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy</a>)
+</p>
+<div>
+<p>StatefulSetUpdateStrategyType is a string enumeration type that enumerates
+all possible update strategies for the StatefulSet pods.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;OnDelete&#34;</p></td>
+<td><p>OnDeleteStatefulSetStrategyType triggers the legacy behavior. Version
+tracking and ordered rolling restarts are disabled. Pods are recreated
+from the StatefulSetSpec when they are manually deleted. When a scale
+operation is performed with this strategy, new Pods will be created from
+the the specification version indicated by the StatefulSet&rsquo;s
+currentRevision.</p>
+</td>
+</tr><tr><td><p>&#34;RollingUpdate&#34;</p></td>
+<td><p>RollingUpdateStatefulSetStrategyType indicates that update will be
+applied to all Pods in the StatefulSet with respect to the StatefulSet
+ordering constraints. When a scale operation is performed with this
+strategy, new Pods will be created from the specification version indicated
+by the StatefulSet&rsquo;s updateRevision.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.StorageSpec">StorageSpec
 </h3>
 <p>
@@ -20110,6 +20332,23 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
 </td>
 </tr>
 <tr>
@@ -23105,6 +23344,23 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
 </td>
 </tr>
 <tr>
@@ -31796,6 +32052,23 @@ scaling up and down.</p>
 a rollout.</p>
 <p>Note that updating this value implies the recreation of the StatefulSet
 which incurs a service outage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updateStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">
+StatefulSetUpdateStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>updateStrategy indicates the strategy that will be employed to update
+Pods in the StatefulSet when a revision is made to statefulset&rsquo;s Pod
+Template.</p>
+<p>The default strategy is RollingUpdate.</p>
 </td>
 </tr>
 <tr>

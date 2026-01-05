@@ -513,6 +513,15 @@ type CommonPrometheusFields struct {
 	// +optional
 	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 
+	// updateStrategy indicates the strategy that will be employed to update
+	// Pods in the StatefulSet when a revision is made to statefulset's Pod
+	// Template.
+	//
+	// The default strategy is RollingUpdate.
+	//
+	// +optional
+	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"` // nolint:kubeapilinter
