@@ -109,8 +109,8 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 	}
 
 	if spec.AzureAD != nil {
-		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil && spec.AzureAD.SDK == nil {
-			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth or Azure SDK in the Azure AD config")
+		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil && spec.AzureAD.SDK == nil && spec.AzureAD.WorkloadIdentity == nil {
+			return fmt.Errorf("must provide Azure Managed Identity, Azure OAuth, Azure SDK, or Azure Workload Identity in the Azure AD config")
 		}
 
 		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.OAuth != nil {
@@ -125,7 +125,18 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
-		// check azure managed identity client id
+		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure Workload Identity in the Azure AD config")
+		}
+
+		if spec.AzureAD.OAuth != nil && spec.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("cannot provide both Azure OAuth and Azure Workload Identity in the Azure AD config")
+		}
+
+		if spec.AzureAD.SDK != nil && spec.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("cannot provide both Azure SDK and Azure Workload Identity in the Azure AD config")
+		}
+
 		if spec.AzureAD.ManagedIdentity != nil {
 			if err := cg.checkAzureADManagedIdentity(spec.AzureAD.ManagedIdentity); err != nil {
 				return err
@@ -140,13 +151,8 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		}
 
 		if spec.AzureAD.WorkloadIdentity != nil {
-			_, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.ClientID)
-			if err != nil {
-				return fmt.Errorf("invalid workloadIdentity.clientId: %w", err)
-			}
-			_, err = uuid.Parse(spec.AzureAD.WorkloadIdentity.TenantID)
-			if err != nil {
-				return fmt.Errorf("invalid workloadIdentity.tenantId: %w", err)
+			if err := cg.checkAzureADWorkloadIdentity(spec.AzureAD.WorkloadIdentity); err != nil {
+				return err
 			}
 		}
 	}
@@ -154,6 +160,21 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 	return spec.Validate()
 }
 
+func (cg *ConfigGenerator) checkAzureADWorkloadIdentity(wi *monitoringv1.AzureWorkloadIdentity) error {
+	if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
+		return fmt.Errorf("workloadIdentity: Azure Workload Identity is only supported with Prometheus >= 3.7.0, current = %s", cg.version.String())
+	}
+
+	if _, err := uuid.Parse(wi.TenantID); err != nil {
+		return fmt.Errorf("invalid workloadIdentity.clientId: %w", err)
+	}
+
+	if _, err := uuid.Parse(wi.ClientID); err != nil {
+		return fmt.Errorf("invalid workloadIdentity.tenantId: %w", err)
+	}
+
+	return nil
+}
 func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity) error {
 	// Prometheus >= v3.5.0 allows empty clientID values.
 	if cg.WithMinimumVersion("3.5.0").IsCompatible() {

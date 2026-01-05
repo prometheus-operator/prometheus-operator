@@ -1875,11 +1875,11 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// managedIdentity defines the Azure User-assigned Managed identity.
-	// Cannot be set at the same time as `oauth` or `sdk`.
+	// Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
 	// +optional
 	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
 	// oauth defines the oauth config that is being used to authenticate.
-	// Cannot be set at the same time as `managedIdentity` or `sdk`.
+	// Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
 	//
@@ -1887,7 +1887,7 @@ type AzureAD struct {
 	OAuth *AzureOAuth `json:"oauth,omitempty"`
 	// sdk defines the Azure SDK config that is being used to authenticate.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-	// Cannot be set at the same time as `oauth` or `managedIdentity`.
+	// Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
 	// +optional

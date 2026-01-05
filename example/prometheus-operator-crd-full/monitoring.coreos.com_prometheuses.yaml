@@ -7098,7 +7098,7 @@ spec:
                         managedIdentity:
                           description: |-
                             managedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth` or `sdk`.
+                            Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
                           properties:
                             clientId:
                               description: |-
@@ -7111,7 +7111,7 @@ spec:
                         oauth:
                           description: |-
                             oauth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity` or `sdk`.
+                            Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 
                             It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
                           properties:
@@ -7163,7 +7163,7 @@ spec:
                           description: |-
                             sdk defines the Azure SDK config that is being used to authenticate.
                             See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+                            Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
 
                             It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
                           properties:

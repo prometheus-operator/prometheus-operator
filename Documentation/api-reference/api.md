@@ -7918,7 +7918,7 @@ ManagedIdentity
 <td>
 <em>(Optional)</em>
 <p>managedIdentity defines the Azure User-assigned Managed identity.
-Cannot be set at the same time as <code>oauth</code> or <code>sdk</code>.</p>
+Cannot be set at the same time as <code>oauth</code>, <code>sdk</code> or <code>workloadIdentity</code>.</p>
 </td>
 </tr>
 <tr>
@@ -7933,7 +7933,7 @@ AzureOAuth
 <td>
 <em>(Optional)</em>
 <p>oauth defines the oauth config that is being used to authenticate.
-Cannot be set at the same time as <code>managedIdentity</code> or <code>sdk</code>.</p>
+Cannot be set at the same time as <code>managedIdentity</code>, <code>sdk</code> or <code>workloadIdentity</code>.</p>
 <p>It requires Prometheus &gt;= v2.48.0 or Thanos &gt;= v0.31.0.</p>
 </td>
 </tr>
@@ -7950,7 +7950,7 @@ AzureSDK
 <em>(Optional)</em>
 <p>sdk defines the Azure SDK config that is being used to authenticate.
 See <a href="https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication">https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication</a>
-Cannot be set at the same time as <code>oauth</code> or <code>managedIdentity</code>.</p>
+Cannot be set at the same time as <code>oauth</code>, <code>managedIdentity</code> or <code>workloadIdentity</code>.</p>
 <p>It requires Prometheus &gt;= v2.52.0 or Thanos &gt;= v0.36.0.</p>
 </td>
 </tr>

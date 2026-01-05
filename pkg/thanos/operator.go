@@ -947,6 +947,11 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 			}
 		}
 
+		// Thanos does not support WorkloadIdentity.
+		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
+			return fmt.Errorf("remoteWrite[%d]: azureAD.workloadIdentity is not supported by Thanos", i)
+		}
+
 		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
 		if version.LT(semver.MustParse("0.38.0")) {
 			reset := resetFieldFn("0.38.0")
