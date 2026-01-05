@@ -23,6 +23,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	"k8s.io/utils/ptr"
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
@@ -290,15 +291,13 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 }
 
 func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if (ptr.Deref[string](config.TargetARN, "") == "") != (ptr.Deref[string](config.TopicARN, "") == "") != (ptr.Deref[string](config.PhoneNumber, "") == "") {
-			return fmt.Errorf("must provide either a targetARN, topicARN, or phoneNumber for SNS config")
+			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
 		}
 
-		if ptr.Deref[monitoringv1beta1.URL](config.ApiURL, "") != "" {
-			if _, err := validation.ValidateURL(string(*config.ApiURL)); err != nil {
-				return fmt.Errorf("'apiURL' %s invalid: %w", *config.ApiURL, err)
-			}
+		if err := validation.ValidateURLPtr((*string)(config.ApiURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
