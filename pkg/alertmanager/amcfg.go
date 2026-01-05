@@ -2776,6 +2776,10 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 		jc.APIType = ""
 	}
 
+	if jc.APIType != "auto" && jc.APIType != "cloud" && jc.APIType != "datacenter" {
+		return fmt.Errorf("invalid 'api_type': a value must be 'auto', 'cloud' or 'datacenter'")
+	}
+
 	return jc.HTTPConfig.sanitize(amVersion, logger)
 }
 
