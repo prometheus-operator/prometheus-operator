@@ -1613,17 +1613,59 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
-	a := monitoringv1.Alertmanager{}
-	replicas := int32(1)
-	a.Spec.Version = "v0.30.0"
-	a.Spec.Replicas = &replicas
+	for _, tc := range []struct {
+		version         string
+		minReadySeconds *int32
+		additionalArgs  []monitoringv1.Argument
 
-	a.Spec.DispatchStartDelay = ptr.To(monitoringv1.GoDuration("10s"))
+		expContains    string
+		expNotContains string
+	}{
+		{
+			version:        "v0.30.0",
+			expNotContains: "dispatch.start-delay",
+		},
+		{
+			version:        "v0.30.0",
+			additionalArgs: []monitoringv1.Argument{{Name: "dispatch.start-delay", Value: "1m"}},
+			expContains:    "--dispatch.start-delay=1m",
+		},
+		{
+			version:         "v0.29.0",
+			minReadySeconds: ptr.To(int32(60)),
+			expNotContains:  "dispatch.start-delay",
+		},
+		{
+			version:         "v0.30.0",
+			minReadySeconds: ptr.To(int32(60)),
+			expContains:     "--dispatch.start-delay=60s",
+		},
+		{
+			version:         "v0.30.0",
+			minReadySeconds: ptr.To(int32(60)),
+			additionalArgs:  []monitoringv1.Argument{{Name: "dispatch.start-delay", Value: "10s"}},
+			expContains:     "--dispatch.start-delay=10s",
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			a := monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas:        ptr.To(int32(1)),
+					Version:         tc.version,
+					MinReadySeconds: tc.minReadySeconds,
+					AdditionalArgs:  tc.additionalArgs,
+				},
+			}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	require.NoError(t, err)
+			statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			require.NoError(t, err)
 
-	amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-	require.Contains(t, amArgs, "--dispatch.start-delay=10s", "expected stateful set to contain '--dispatch.start-delay=10s'")
+			if tc.expContains != "" {
+				require.Contains(t, statefulSet.Template.Spec.Containers[0].Args, tc.expContains)
+			}
+			if tc.expNotContains != "" {
+				require.NotContains(t, statefulSet.Template.Spec.Containers[0].Args, tc.expNotContains)
+			}
+		})
+	}
 }

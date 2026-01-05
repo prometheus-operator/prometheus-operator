@@ -337,10 +337,18 @@ type AlertmanagerSpec struct {
 	// +optional
 	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 
-	// minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
-	// without any of its container crashing for it to be considered available.
+	// minReadySeconds defines the minimum number of seconds for which a newly
+	// created pod should be ready without any of its container crashing for it
+	// to be considered available.
 	//
 	// If unset, pods will be considered available as soon as they are ready.
+	//
+	// When the Alertmanager version is greater than or equal to v0.30.0, the
+	// duration is also used to delay the first flush of the aggregation
+	// groups. This delay helps ensuring that all alerts have been resent by
+	// the Prometheus instances to Alertmanager after a roll-out. It is
+	// possible to override this behavior passing a custom value via
+	// `.spec.additionalArgs`.
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
@@ -356,12 +364,7 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
-	// dispatchStartDelay defines the delay duration of the aggregation groups' first flush.
-	// The delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.
-	//
-	// It requires Alertmanager >= 0.30.0.
-	// +optional
-	DispatchStartDelay *GoDuration `json:"dispatchStartDelay,omitempty"`
+
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.
