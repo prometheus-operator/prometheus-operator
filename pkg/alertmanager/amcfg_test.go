@@ -3977,6 +3977,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
+	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4753,6 +4756,122 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_pagerduty_timeout_is_added_in_pagerduty_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_token is dropped for unsupported versions",
+			againstVersion: versionSlackAppConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_url is dropped for unsupported versions",
+			againstVersion: versionSlackAppConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_url_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_token and slack_app_url preserved for supported versions",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_and_slack_app_url_preserved_for_supported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_token takes precedence over slack_app_token_file",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppToken:     "xoxb-token",
+					SlackAppTokenFile: "/var/secrets/token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_takes_precedence_over_slack_app_token_file.golden",
+		},
+		{
+			name:           "Test slack_app_token and slack_api_url both configured with different URLs fails",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "hooks.slack.com",
+							Path:   "/services/XXX",
+						},
+					},
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test slack_app_token and slack_api_url with same URL is allowed",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_and_slack_api_url_with_same_url_is_allowed.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
