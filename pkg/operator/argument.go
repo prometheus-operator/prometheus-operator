@@ -16,65 +16,62 @@ package operator
 
 import (
 	"fmt"
+	"iter"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-func intersection(a, b []string) (i []string) {
+// ArgumentsIntersection returns the list of arguments which intersect between a and b.
+func ArgumentsIntersection(a, b []monitoringv1.Argument) []string {
 	m := make(map[string]struct{})
-
-	for _, item := range a {
+	for item := range argumentNameIter(a) {
 		m[item] = struct{}{}
 	}
 
-	for _, item := range b {
-		if _, ok := m[item]; ok {
-			i = append(i, item)
+	var intersection []string
+	for name := range argumentNameIter(b) {
+		if _, ok := m[name]; ok {
+			intersection = append(intersection, name)
+			continue
 		}
 
-		negatedItem := strings.TrimPrefix(item, "no-")
-		if item == negatedItem {
-			negatedItem = fmt.Sprintf("no-%s", item)
+		negated, found := strings.CutPrefix(name, "no-")
+		if !found {
+			negated = fmt.Sprintf("no-%s", name)
 		}
 
-		if _, ok := m[negatedItem]; ok {
-			i = append(i, item)
+		if _, ok := m[negated]; ok {
+			intersection = append(intersection, negated)
 		}
 	}
-	return i
+
+	return intersection
 }
 
-func extractArgKeys(args []monitoringv1.Argument) []string {
-	var k []string
-	for _, arg := range args {
-		key := arg.Name
-		k = append(k, key)
+func argumentNameIter(args []monitoringv1.Argument) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for _, arg := range args {
+			if !yield(arg.Name) {
+				return
+			}
+		}
 	}
-
-	return k
 }
 
-// BuildArgs takes a list of arguments and a list of additional arguments and returns a []string to use in a container Args.
+// BuildArgs returns the concatenation of the 2 argument lists of arguments.
+// It returns an error if the 2 lists intersect.
 func BuildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) ([]string, error) {
-	var containerArgs []string
-
-	argKeys := extractArgKeys(args)
-	additionalArgKeys := extractArgKeys(additionalArgs)
-
-	i := intersection(argKeys, additionalArgKeys)
-	if len(i) > 0 {
+	if i := ArgumentsIntersection(args, additionalArgs); len(i) > 0 {
 		return nil, fmt.Errorf("can't set arguments which are already managed by the operator: %s", strings.Join(i, ","))
 	}
 
-	args = append(args, additionalArgs...)
-
-	for _, arg := range args {
+	var containerArgs []string
+	for _, arg := range append(args, additionalArgs...) {
 		if arg.Value != "" {
 			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", arg.Name, arg.Value))
 		} else {
 			containerArgs = append(containerArgs, fmt.Sprintf("--%s", arg.Name))
-
 		}
 	}
 
