@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/common/model"
 	"k8s.io/utils/ptr"
 )
 
@@ -35,10 +36,6 @@ func ValidateURLPtr(url *string) error {
 
 	return nil
 }
-
-// ValidateURL validates a URL string against the config.URL.
-	"github.com/prometheus/common/model"
-)
 
 func ValidateNonZeroDuration(duration string) error {
 	d, err := model.ParseDuration(duration)
