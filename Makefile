@@ -375,6 +375,20 @@ test-long:
 test-unit-update-golden:
 	./scripts/update-golden-files.sh
 
+.PHONY: test-goldenfiles
+test-goldenfiles:
+	@command -v promtool >/dev/null 2>&1 || { \
+		PROMETHEUS_VERSION=$$(grep -oE '"v[0-9]+\.[0-9]+\.[0-9]+"' pkg/operator/defaults.go | tail -1 | tr -d '"'); \
+		echo "Installing promtool $${PROMETHEUS_VERSION}..."; \
+		VERSION_NUM="$${PROMETHEUS_VERSION#v}"; \
+		wget -q "https://github.com/prometheus/prometheus/releases/download/$${PROMETHEUS_VERSION}/prometheus-$${VERSION_NUM}.linux-amd64.tar.gz"; \
+		tar -xzf "prometheus-$${VERSION_NUM}.linux-amd64.tar.gz"; \
+		sudo mv "prometheus-$${VERSION_NUM}.linux-amd64/promtool" /usr/local/bin/; \
+		rm -rf prometheus-*; \
+	}
+	go test -v -tags=promtool ./pkg/prometheus/ -run TestPromtoolGoldenFiles
+
+
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
 

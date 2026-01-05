@@ -1,0 +1,30 @@
+name: promtool
+on:
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'main'
+    tags:
+      - 'v*'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  changed-files:
+    uses: ./.github/workflows/changed-files.yaml
+  promtool-check:
+    name: Promtool golden file validation
+    runs-on: ubuntu-latest
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
+    steps:
+    - uses: actions/checkout@v6
+    - name: Import environment variables from file
+      run: cat ".github/env" >> "$GITHUB_ENV"
+    - uses: actions/setup-go@v6
+      with:
+        go-version: '${{ env.golang-version }}'
+        check-latest: true
+    - name: Run promtool validation
+      run: make test-goldenfiles
