@@ -434,9 +434,9 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 		}
 	}
 
-	if r.GroupWait != "" {
-		if !durationRe.MatchString(r.GroupWait) {
-			return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
+	if r.GroupWait != nil && *r.GroupWait != "" {
+		if !durationRe.MatchString(string(*r.GroupWait)) {
+			return fmt.Errorf("groupWait %s does not match required regex: %s", *r.GroupWait, durationRe.String())
 		}
 	}
 

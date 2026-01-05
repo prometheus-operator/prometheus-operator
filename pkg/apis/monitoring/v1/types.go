@@ -63,6 +63,12 @@ func DurationPointer(s string) *Duration {
 // +kubebuilder:validation:MinLength=1
 type NonEmptyDuration string
 
+// NonEmptyDurationPointer is a helper function to parse a NonEmptyDuration string into a *NonEmptyDuration.
+func NonEmptyDurationPointer(s string) *NonEmptyDuration {
+	d := NonEmptyDuration(s)
+	return &d
+}
+
 // GoDuration is a valid time duration that can be parsed by Go's time.ParseDuration() function.
 // Supported units: h, m, s, ms
 // Examples: `45ms`, `30s`, `1m`, `1h20m15s`

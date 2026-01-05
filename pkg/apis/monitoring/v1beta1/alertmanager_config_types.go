@@ -113,17 +113,17 @@ type Route struct {
 	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "30s"
 	// +optional
-	GroupWait string `json:"groupWait,omitempty"`
+	GroupWait *monitoringv1.Duration `json:"groupWait,omitempty"`
 	// groupInterval defines how long to wait before sending an updated notification.
 	// Must be greater than 0.
 	// Example: "5m"
 	// +optional
-	GroupInterval *monitoringv1.Duration `json:"groupInterval,omitempty"`
+	GroupInterval *monitoringv1.NonEmptyDuration `json:"groupInterval,omitempty"`
 	// repeatInterval defines how long to wait before repeating the last notification.
 	// Must be greater than 0.
 	// Example: "4h"
 	// +optional
-	RepeatInterval *monitoringv1.Duration `json:"repeatInterval,omitempty"`
+	RepeatInterval *monitoringv1.NonEmptyDuration `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
 	// matcher on the `namespace` label and adds a `namespace: <object

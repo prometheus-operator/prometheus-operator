@@ -575,9 +575,9 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
-		GroupWait:           in.GroupWait,
-		GroupInterval:       durationToString(in.GroupInterval),
-		RepeatInterval:      durationToString(in.RepeatInterval),
+		GroupWait:           durationToString((*monitoringv1.Duration)(in.GroupWait)),
+		GroupInterval:       durationToString((*monitoringv1.Duration)(in.GroupInterval)),
+		RepeatInterval:      durationToString((*monitoringv1.Duration)(in.RepeatInterval)),
 		Continue:            in.Continue,
 		Match:               match,
 		MatchRE:             matchRE,
@@ -2922,14 +2922,27 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		r.ActiveTimeIntervals = nil
 	}
 
+	if r.GroupWait != "" {
+		if d, err := model.ParseDuration(r.GroupWait); err == nil && d == 0 {
+			r.GroupWait = ""
+		} else if err != nil {
+			return fmt.Errorf("groupwait: %w", err)
+		}
+	}
+
 	if r.GroupInterval != "" {
 		if d, err := model.ParseDuration(r.GroupInterval); err == nil && d == 0 {
 			r.GroupInterval = ""
+		} else if err != nil {
+			return fmt.Errorf("groupinterval: %w", err)
 		}
+
 	}
 	if r.RepeatInterval != "" {
 		if d, err := model.ParseDuration(r.RepeatInterval); err == nil && d == 0 {
 			r.RepeatInterval = ""
+		} else if err != nil {
+			return fmt.Errorf("repeatinterval: %w", err)
 		}
 	}
 

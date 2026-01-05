@@ -12050,6 +12050,7 @@ spec:
                       groupInterval defines how long to wait before sending an updated notification.
                       Must be greater than 0.
                       Example: "5m"
+                    minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   groupWait:
@@ -12057,6 +12058,7 @@ spec:
                       groupWait defines how long to wait before sending the initial notification.
                       Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
                       Example: "30s"
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   matchers:
                     description: |-
@@ -12116,6 +12118,7 @@ spec:
                       repeatInterval defines how long to wait before repeating the last notification.
                       Must be greater than 0.
                       Example: "4h"
+                    minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   routes:
@@ -23949,6 +23952,7 @@ spec:
                       groupInterval defines how long to wait before sending an updated notification.
                       Must be greater than 0.
                       Example: "5m"
+                    minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   groupWait:
@@ -23956,6 +23960,7 @@ spec:
                       groupWait defines how long to wait before sending the initial notification.
                       Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
                       Example: "30s"
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   matchers:
                     description: |-
@@ -24008,6 +24013,7 @@ spec:
                       repeatInterval defines how long to wait before repeating the last notification.
                       Must be greater than 0.
                       Example: "4h"
+                    minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                   routes:
