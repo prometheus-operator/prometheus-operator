@@ -932,7 +932,7 @@ func (in *Route) DeepCopyInto(out *Route) {
 	}
 	if in.GroupWait != nil {
 		in, out := &in.GroupWait, &out.GroupWait
-		*out = new(v1.Duration)
+		*out = new(v1.NonEmptyDuration)
 		**out = **in
 	}
 	if in.GroupInterval != nil {

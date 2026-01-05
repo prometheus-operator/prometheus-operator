@@ -118,10 +118,10 @@ type Route struct {
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Must be greater than 0.
 	// Example: "30s"
 	// +optional
-	GroupWait *monitoringv1.Duration `json:"groupWait,omitempty"`
+	GroupWait *monitoringv1.NonEmptyDuration `json:"groupWait,omitempty"`
 	// groupInterval defines how long to wait before sending an updated notification.
 	// Must be greater than 0.
 	// Example: "5m"

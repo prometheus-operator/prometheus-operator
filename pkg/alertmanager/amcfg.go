@@ -575,7 +575,7 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
-		GroupWait:           durationToString((in.GroupWait)),
+		GroupWait:           durationToString((*monitoringv1.Duration)(in.GroupWait)),
 		GroupInterval:       durationToString((*monitoringv1.Duration)(in.GroupInterval)),
 		RepeatInterval:      durationToString((*monitoringv1.Duration)(in.RepeatInterval)),
 		Continue:            in.Continue,

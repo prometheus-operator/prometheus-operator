@@ -26,7 +26,7 @@ import (
 type RouteApplyConfiguration struct {
 	Receiver            *string                     `json:"receiver,omitempty"`
 	GroupBy             []string                    `json:"groupBy,omitempty"`
-	GroupWait           *v1.Duration                `json:"groupWait,omitempty"`
+	GroupWait           *v1.NonEmptyDuration        `json:"groupWait,omitempty"`
 	GroupInterval       *v1.NonEmptyDuration        `json:"groupInterval,omitempty"`
 	RepeatInterval      *v1.NonEmptyDuration        `json:"repeatInterval,omitempty"`
 	Matchers            []MatcherApplyConfiguration `json:"matchers,omitempty"`
@@ -63,7 +63,7 @@ func (b *RouteApplyConfiguration) WithGroupBy(values ...string) *RouteApplyConfi
 // WithGroupWait sets the GroupWait field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GroupWait field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithGroupWait(value v1.Duration) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithGroupWait(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.GroupWait = &value
 	return b
 }

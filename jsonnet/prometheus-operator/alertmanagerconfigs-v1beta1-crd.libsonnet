@@ -10709,7 +10709,8 @@
                     type: 'string',
                   },
                   groupWait: {
-                    description: 'groupWait defines how long to wait before sending the initial notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "30s"',
+                    description: 'groupWait defines how long to wait before sending the initial notification.\nMust be greater than 0.\nExample: "30s"',
+                    minLength: 1,
                     pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
