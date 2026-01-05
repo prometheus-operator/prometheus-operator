@@ -2590,29 +2590,31 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
 	}
 
-	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.Timeout != nil && lessThanV0_30 {
 		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.Timeout = nil
 	}
 
-	if sc.AppToken != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.AppToken != "" && lessThanV0_30 {
 		msg := "'app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.AppToken = ""
 	}
 
-	if sc.AppTokenFile != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.AppTokenFile != "" && lessThanV0_30 {
 		msg := "'app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.AppTokenFile = ""
 	}
 
-	if sc.AppURL != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.AppURL != "" && lessThanV0_30 {
 		msg := "'app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.AppURL = ""
