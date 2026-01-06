@@ -3209,6 +3209,31 @@ func (in *VictorOpsConfig) DeepCopyInto(out *VictorOpsConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.APIURL != nil {
+		in, out := &in.APIURL, &out.APIURL
+		*out = new(URL)
+		**out = **in
+	}
+	if in.MessageType != nil {
+		in, out := &in.MessageType, &out.MessageType
+		*out = new(string)
+		**out = **in
+	}
+	if in.EntityDisplayName != nil {
+		in, out := &in.EntityDisplayName, &out.EntityDisplayName
+		*out = new(string)
+		**out = **in
+	}
+	if in.StateMessage != nil {
+		in, out := &in.StateMessage, &out.StateMessage
+		*out = new(string)
+		**out = **in
+	}
+	if in.MonitoringTool != nil {
+		in, out := &in.MonitoringTool, &out.MonitoringTool
+		*out = new(string)
+		**out = **in
+	}
 	if in.CustomFields != nil {
 		in, out := &in.CustomFields, &out.CustomFields
 		*out = make([]KeyValue, len(*in))

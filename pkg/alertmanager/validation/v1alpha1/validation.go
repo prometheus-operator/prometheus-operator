@@ -253,7 +253,7 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 }
 
 func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 
 		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
 		reservedFields := map[string]struct{}{
@@ -278,10 +278,8 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 			return errors.New("missing 'routingKey' key")
 		}
 
-		if config.APIURL != "" {
-			if _, err := validation.ValidateURL(config.APIURL); err != nil {
-				return fmt.Errorf("'apiURL' %s invalid: %w", config.APIURL, err)
-			}
+		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
