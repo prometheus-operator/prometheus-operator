@@ -3722,20 +3722,25 @@ spec:
                         properties:
                           class:
                             description: class defines the class/type of the event.
+                            minLength: 1
                             type: string
                           client:
                             description: client defines the client identification.
+                            minLength: 1
                             type: string
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
+                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
                               the affected system that is broken.
+                            minLength: 1
                             type: string
                           description:
                             description: description of the incident.
+                            minLength: 1
                             type: string
                           details:
                             description: details defines the arbitrary key/value pairs
@@ -3762,6 +3767,7 @@ spec:
                             x-kubernetes-list-type: atomic
                           group:
                             description: group defines a cluster or grouping of sources.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration.
@@ -4479,14 +4485,17 @@ spec:
                                 alt:
                                   description: alt is the optional alternative text
                                     for the image.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
+                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
                                     the incident
+                                  minLength: 1
                                   type: string
                               type: object
                             type: array
@@ -4503,10 +4512,12 @@ spec:
                                   description: alt defines the text that describes
                                     the purpose of the link, and can be used as the
                                     link's text.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
@@ -4574,10 +4585,12 @@ spec:
                             x-kubernetes-map-type: atomic
                           severity:
                             description: severity of the incident.
+                            minLength: 1
                             type: string
                           source:
                             description: source defines the unique location of the
                               affected system.
+                            minLength: 1
                             type: string
                           timeout:
                             description: |-
@@ -4587,6 +4600,7 @@ spec:
                             type: string
                           url:
                             description: url defines the URL to send requests to.
+                            pattern: ^https?://.+$
                             type: string
                         type: object
                       type: array
@@ -15782,20 +15796,25 @@ spec:
                         properties:
                           class:
                             description: class defines the class/type of the event.
+                            minLength: 1
                             type: string
                           client:
                             description: client defines the client identification.
+                            minLength: 1
                             type: string
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
+                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
                               the affected system that is broken.
+                            minLength: 1
                             type: string
                           description:
                             description: description of the incident.
+                            minLength: 1
                             type: string
                           details:
                             description: details defines the arbitrary key/value pairs
@@ -15819,8 +15838,10 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           group:
                             description: group defines a cluster or grouping of sources.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration.
@@ -16531,17 +16552,21 @@ spec:
                                 alt:
                                   description: alt is the optional alternative text
                                     for the image.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
+                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
                                     the incident
+                                  minLength: 1
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           pagerDutyLinkConfigs:
                             description: pagerDutyLinkConfigs defines a list of link
                               details to attach that provide further detail about
@@ -16554,13 +16579,16 @@ spec:
                                   description: alt defines the text that describes
                                     the purpose of the link, and can be used as the
                                     link's text.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           routingKey:
                             description: |-
                               routingKey defines the secret's key that contains the PagerDuty integration key (when using
@@ -16610,10 +16638,12 @@ spec:
                             type: object
                           severity:
                             description: severity of the incident.
+                            minLength: 1
                             type: string
                           source:
                             description: source defines the unique location of the
                               affected system.
+                            minLength: 1
                             type: string
                           timeout:
                             description: |-
@@ -16623,6 +16653,7 @@ spec:
                             type: string
                           url:
                             description: url defines the URL to send requests to.
+                            pattern: ^https?://.+$
                             type: string
                         type: object
                       type: array

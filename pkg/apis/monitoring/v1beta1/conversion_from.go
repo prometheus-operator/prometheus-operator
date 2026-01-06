@@ -219,7 +219,7 @@ func convertPagerDutyImageConfigsFrom(in []v1alpha1.PagerDutyImageConfig) []Page
 	for i := range in {
 		out[i] = PagerDutyImageConfig{
 			Src:  in[i].Src,
-			Href: in[i].Href,
+			Href: (*URL)(in[i].Href),
 			Alt:  in[i].Alt,
 		}
 	}
@@ -232,7 +232,7 @@ func convertPagerDutyLinkConfigsFrom(in []v1alpha1.PagerDutyLinkConfig) []PagerD
 
 	for i := range in {
 		out[i] = PagerDutyLinkConfig{
-			Href: in[i].Href,
+			Href: (*URL)(in[i].Href),
 			Text: in[i].Text,
 		}
 	}
@@ -245,9 +245,9 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 		SendResolved:          in.SendResolved,
 		RoutingKey:            convertSecretKeySelectorFrom(in.RoutingKey),
 		ServiceKey:            convertSecretKeySelectorFrom(in.ServiceKey),
-		URL:                   in.URL,
+		URL:                   (*URL)(in.URL),
 		Client:                in.Client,
-		ClientURL:             in.ClientURL,
+		ClientURL:             (*URL)(in.ClientURL),
 		Description:           in.Description,
 		Severity:              in.Severity,
 		Class:                 in.Class,
