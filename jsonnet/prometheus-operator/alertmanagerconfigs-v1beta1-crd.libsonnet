@@ -1866,6 +1866,9 @@
                                 type: 'boolean',
                               },
                             },
+                            required: [
+                              'priority',
+                            ],
                             type: 'object',
                             'x-kubernetes-validations': [
                               {
@@ -8771,6 +8774,7 @@
                           },
                           apiUrl: {
                             description: 'apiUrl defines the VictorOps API URL.\nWhen not specified, defaults to the standard VictorOps API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           customFields: {
@@ -8795,9 +8799,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           entityDisplayName: {
                             description: 'entityDisplayName contains a summary of the alerted problem.\nThis appears as the main title or identifier for the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -9440,14 +9446,17 @@
                           },
                           messageType: {
                             description: 'messageType describes the behavior of the alert.\nValid values are "CRITICAL", "WARNING", and "INFO".',
+                            minLength: 1,
                             type: 'string',
                           },
                           monitoringTool: {
                             description: 'monitoringTool defines the monitoring tool the state message is from.\nThis helps identify the source system that generated the alert.',
+                            minLength: 1,
                             type: 'string',
                           },
                           routingKey: {
                             description: 'routingKey defines a key used to map the alert to a team.\nThis determines which VictorOps team will receive the alert notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -9456,9 +9465,13 @@
                           },
                           stateMessage: {
                             description: 'stateMessage contains a long explanation of the alerted problem.\nThis provides detailed context about the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
+                        required: [
+                          'routingKey',
+                        ],
                         type: 'object',
                       },
                       type: 'array',

@@ -3907,11 +3907,6 @@
                     },
                     "type": "array"
                   },
-                  "dispatchStartDelay": {
-                    "description": "dispatchStartDelay defines the delay duration of the aggregation groups' first flush.\nThe delay helps ensuring that all alerts have been resent by the Prometheus instances to Alertmanager after a roll-out.\n\nIt requires Alertmanager >= 0.30.0.",
-                    "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
-                    "type": "string"
-                  },
                   "dnsConfig": {
                     "description": "dnsConfig defines the DNS configuration for the pods.",
                     "properties": {
@@ -5434,7 +5429,7 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
+                    "description": "minReadySeconds defines the minimum number of seconds for which a newly\ncreated pod should be ready without any of its container crashing for it\nto be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.\n\nWhen the Alertmanager version is greater than or equal to v0.30.0, the\nduration is also used to delay the first flush of the aggregation\ngroups. This delay helps ensuring that all alerts have been resent by\nthe Prometheus instances to Alertmanager after a roll-out. It is\npossible to override this behavior passing a custom value via\n`.spec.additionalArgs`.",
                     "format": "int32",
                     "minimum": 0,
                     "type": "integer"
@@ -6422,6 +6417,47 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "updateStrategy": {
+                    "description": "updateStrategy indicates the strategy that will be employed to update\nPods in the StatefulSet when a revision is made to statefulset's Pod\nTemplate.\n\nThe default strategy is RollingUpdate.",
+                    "properties": {
+                      "rollingUpdate": {
+                        "description": "rollingUpdate is used to communicate parameters when type is RollingUpdate.",
+                        "properties": {
+                          "maxUnavailable": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "description": "maxUnavailable is the maximum number of pods that can be unavailable\nduring the update. The value can be an absolute number (ex: 5) or a\npercentage of desired pods (ex: 10%). Absolute number is calculated from\npercentage by rounding up. This can not be 0.  Defaults to 1. This field\nis alpha-level and is only honored by servers that enable the\nMaxUnavailableStatefulSet feature. The field applies to all pods in the\nrange 0 to Replicas-1.  That means if there is any unavailable pod in\nthe range 0 to Replicas-1, it will be counted towards MaxUnavailable.",
+                            "x-kubernetes-int-or-string": true
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": {
+                        "description": "type indicates the type of the StatefulSetUpdateStrategy.\n\nDefault is RollingUpdate.",
+                        "enum": [
+                          "OnDelete",
+                          "RollingUpdate"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "rollingUpdate requires type to be RollingUpdate",
+                        "rule": "!(self.type != 'RollingUpdate' && has(self.rollingUpdate))"
+                      }
+                    ]
                   },
                   "version": {
                     "description": "version the cluster should be on.",
