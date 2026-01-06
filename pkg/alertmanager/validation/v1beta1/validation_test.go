@@ -605,6 +605,29 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			},
 			expectErr: false,
 		},
+		{
+			name: "Test validate on Jira config - API URL validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
