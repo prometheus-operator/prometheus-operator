@@ -44,8 +44,8 @@ receivers:
     - bb
     priority: priority
     issue_type: bug
-    resolve_transition: ResolveTransition
     reopen_transition: ReopenTransition
+    resolve_transition: ResolveTransition
     wont_fix_resolution: WontFixResolution
     reopen_duration: 5s
     fields:
