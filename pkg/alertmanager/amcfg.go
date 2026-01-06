@@ -1536,6 +1536,10 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitoringv1alpha1.MattermostConfig, crKey types.NamespacedName) (*mattermostConfig, error) {
 	out := &mattermostConfig{
 		SendResolved: in.SendResolved,
+		Channel:      ptr.Deref(in.Channel, ""),
+		Username:     ptr.Deref(in.Username, ""),
+		Text:         ptr.Deref(in.Text, ""),
+		IconEmoji:    ptr.Deref(in.IconEmoji, ""),
 	}
 
 	webhookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
@@ -1544,46 +1548,20 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 	}
 	out.WebhookURL = webhookURL
 
-	if in.Channel != nil {
-		out.Channel = *in.Channel
-	}
-
-	if in.Username != nil {
-		out.Username = *in.Username
-	}
-
-	if in.Text != nil {
-		out.Text = *in.Text
-	}
-
 	if in.IconURL != nil {
 		out.IconURL = string(*in.IconURL)
 	}
 
-	if in.IconEmoji != nil {
-		out.IconURL = *in.IconEmoji
-	}
-
 	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
 	for i, c := range in.Attachments {
-		if c.Fallback != nil {
-			out.Attachments[i].Fallback = *c.Fallback
-		}
-
-		if c.Color != nil {
-			out.Attachments[i].Color = *c.Color
-		}
-
-		if c.Pretext != nil {
-			out.Attachments[i].Pretext = *c.Pretext
-		}
-
-		if c.Text != nil {
-			out.Attachments[i].Text = *c.Text
-		}
-
-		if c.AuthorName != nil {
-			out.Attachments[i].AuthorName = *c.AuthorName
+		out.Attachments[i] = &mattermostAttachmentConfig{
+			Fallback:   ptr.Deref(c.Fallback, ""),
+			Color:      ptr.Deref(c.Color, ""),
+			Pretext:    ptr.Deref(c.Pretext, ""),
+			Text:       ptr.Deref(c.Text, ""),
+			AuthorName: ptr.Deref(c.AuthorName, ""),
+			Title:      ptr.Deref(c.Title, ""),
+			Footer:     ptr.Deref(c.Footer, ""),
 		}
 
 		if c.AuthorLink != nil {
@@ -1594,10 +1572,6 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			out.Attachments[i].AuthorIcon = string(*c.AuthorIcon)
 		}
 
-		if c.Title != nil {
-			out.Attachments[i].Title = *c.Title
-		}
-
 		if c.TitleLink != nil {
 			out.Attachments[i].TitleLink = string(*c.TitleLink)
 		}
@@ -1605,25 +1579,17 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 		if l := len(in.Attachments[i].Fields); l > 0 {
 			fields := make([]mattermostField, l)
 			for i, f := range in.Attachments[i].Fields {
-				field := mattermostField{
+				fields[i] = mattermostField{
 					Title: f.Title,
 					Value: f.Value,
+					Short: ptr.Deref(f.Short, false),
 				}
-
-				if f.Short != nil {
-					field.Short = *f.Short
-				}
-				fields[i] = field
 			}
 			out.Attachments[i].Fields = fields
 		}
 
 		if c.ThumbURL != nil {
 			out.Attachments[i].ThumbURL = string(*c.ThumbURL)
-		}
-
-		if c.Footer != nil {
-			out.Attachments[i].Footer = *c.Footer
 		}
 
 		if c.FooterIcon != nil {
@@ -1636,10 +1602,8 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 	}
 
 	if in.Props != nil {
-		out.Props = &mattermostPropsConfig{}
-
-		if in.Props.Card != nil {
-			out.Props.Card = in.Props.Card
+		out.Props = &mattermostPropsConfig{
+			Card: ptr.Deref(in.Props.Card, ""),
 		}
 	}
 
@@ -1650,8 +1614,8 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			PersistentNotifications: p.PersistentNotifications,
 		}
 
-		if p.Priority != nil {
-			out.Priority.Priority = string(*p.Priority)
+		if p.Priority != "" {
+			out.Priority.Priority = string(p.Priority)
 		}
 	}
 

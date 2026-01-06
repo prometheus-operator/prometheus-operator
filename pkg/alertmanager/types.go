@@ -531,7 +531,7 @@ type mattermostField struct {
 }
 
 type mattermostPropsConfig struct {
-	Card *string `yaml:"card,omitempty" json:"card,omitempty"`
+	Card string `yaml:"card,omitempty" json:"card,omitempty"`
 }
 
 type mattermostPriorityConfig struct {

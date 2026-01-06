@@ -1506,8 +1506,8 @@ const (
 type MattermostPriorityConfig struct {
 	// priority adds the priority label to the message.
 	// Possible values are `Urgent`, `Important` and `Standard`.
-	// +optional
-	Priority *MattermostPriority `json:"priority,omitempty"`
+	// +required
+	Priority MattermostPriority `json:"priority"`
 	// requestedAck defines whether the message requires an acknowledgement from users.
 	//
 	// If set to true, the message will be marked as requiring an acknowledgment
