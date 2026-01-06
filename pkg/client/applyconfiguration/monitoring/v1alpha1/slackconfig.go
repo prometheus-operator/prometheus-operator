@@ -27,6 +27,7 @@ import (
 type SlackConfigApplyConfiguration struct {
 	SendResolved *bool                           `json:"sendResolved,omitempty"`
 	APIURL       *v1.SecretKeySelector           `json:"apiURL,omitempty"`
+	AppToken     *v1.SecretKeySelector           `json:"appToken,omitempty"`
 	Channel      *string                         `json:"channel,omitempty"`
 	Username     *string                         `json:"username,omitempty"`
 	Color        *string                         `json:"color,omitempty"`
@@ -69,6 +70,14 @@ func (b *SlackConfigApplyConfiguration) WithSendResolved(value bool) *SlackConfi
 // If called multiple times, the APIURL field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithAPIURL(value v1.SecretKeySelector) *SlackConfigApplyConfiguration {
 	b.APIURL = &value
+	return b
+}
+
+// WithAppToken sets the AppToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AppToken field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithAppToken(value v1.SecretKeySelector) *SlackConfigApplyConfiguration {
+	b.AppToken = &value
 	return b
 }
 

@@ -238,6 +238,11 @@ func (in *AlertmanagerGlobalConfig) DeepCopyInto(out *AlertmanagerGlobalConfig) 
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.SlackAppToken != nil {
+		in, out := &in.SlackAppToken, &out.SlackAppToken
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.OpsGenieAPIURL != nil {
 		in, out := &in.OpsGenieAPIURL, &out.OpsGenieAPIURL
 		*out = new(corev1.SecretKeySelector)

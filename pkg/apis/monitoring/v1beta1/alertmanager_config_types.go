@@ -370,6 +370,11 @@ type SlackConfig struct {
 	// object and accessible by the Prometheus Operator.
 	// +optional
 	APIURL *SecretKeySelector `json:"apiURL,omitempty"`
+	// appToken defines the secret's key that contains the Slack app token.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// +optional
+	AppToken *SecretKeySelector `json:"appToken,omitempty"`
 	// channel defines the channel or user to send notifications to.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

@@ -367,6 +367,7 @@ func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 	return v1alpha1.SlackConfig{
 		SendResolved: in.SendResolved,
 		APIURL:       convertSecretKeySelectorTo(in.APIURL),
+		AppToken:     convertSecretKeySelectorTo(in.AppToken),
 		Channel:      in.Channel,
 		Username:     in.Username,
 		Color:        in.Color,
