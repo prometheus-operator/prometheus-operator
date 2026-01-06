@@ -5846,6 +5846,9 @@ func TestSanitizeJiraConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+
+	versionAPITypeAllowed := semver.Version{Major: 0, Minor: 29}
+	versionAPITypeNotAllowed := semver.Version{Major: 0, Minor: 28}
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -5921,6 +5924,63 @@ func TestSanitizeJiraConfig(t *testing.T) {
 				},
 			},
 			golden: "jira_configs_with_send_resolved.golden",
+		},
+		{
+			name:           "jira_configs with api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_api_type.golden",
+		},
+		{
+			name:           "jira_configs with api_type version not supported",
+			againstVersion: versionAPITypeNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_api_type_version_not_supported.golden",
+		},
+		{
+			name:           "jira_configs with invalid api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "onpremise",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
