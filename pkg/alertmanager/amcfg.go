@@ -2770,14 +2770,16 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 	}
 
 	apiTypeAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
-	if jc.APIType != "" && !apiTypeAllowed {
-		msg := "'api_type' supported in Alertmanager >= 0.29.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		jc.APIType = ""
-	}
-
-	if jc.APIType != "auto" && jc.APIType != "cloud" && jc.APIType != "datacenter" {
-		return fmt.Errorf("invalid 'api_type': a value must be 'auto', 'cloud' or 'datacenter'")
+	if jc.APIType != "" {
+		if !apiTypeAllowed {
+			msg := "'api_type' supported in Alertmanager >= 0.29.0 only - dropping field from provided config"
+			logger.Warn(msg, "current_version", amVersion.String())
+			jc.APIType = ""
+		} else {
+			if jc.APIType != "auto" && jc.APIType != "cloud" && jc.APIType != "datacenter" {
+				return fmt.Errorf("invalid 'api_type': a value must be 'auto', 'cloud' or 'datacenter'")
+			}
+		}
 	}
 
 	return jc.HTTPConfig.sanitize(amVersion, logger)
