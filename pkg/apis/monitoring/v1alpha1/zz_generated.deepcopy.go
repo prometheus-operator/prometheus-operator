@@ -2090,6 +2090,26 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Title != nil {
+		in, out := &in.Title, &out.Title
+		*out = new(string)
+		**out = **in
+	}
+	if in.Message != nil {
+		in, out := &in.Message, &out.Message
+		*out = new(string)
+		**out = **in
+	}
+	if in.URL != nil {
+		in, out := &in.URL, &out.URL
+		*out = new(URL)
+		**out = **in
+	}
+	if in.URLTitle != nil {
+		in, out := &in.URLTitle, &out.URLTitle
+		*out = new(string)
+		**out = **in
+	}
 	if in.TTL != nil {
 		in, out := &in.TTL, &out.TTL
 		*out = new(monitoringv1.Duration)
@@ -2097,6 +2117,26 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 	}
 	if in.Device != nil {
 		in, out := &in.Device, &out.Device
+		*out = new(string)
+		**out = **in
+	}
+	if in.Sound != nil {
+		in, out := &in.Sound, &out.Sound
+		*out = new(string)
+		**out = **in
+	}
+	if in.Priority != nil {
+		in, out := &in.Priority, &out.Priority
+		*out = new(string)
+		**out = **in
+	}
+	if in.Retry != nil {
+		in, out := &in.Retry, &out.Retry
+		*out = new(string)
+		**out = **in
+	}
+	if in.Expire != nil {
+		in, out := &in.Expire, &out.Expire
 		*out = new(string)
 		**out = **in
 	}

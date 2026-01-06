@@ -4602,6 +4602,7 @@ spec:
                             description: |-
                               device defines the name of a specific device to send the notification to.
                               If not specified, the notification is sent to all user's devices.
+                            minLength: 1
                             type: string
                           expire:
                             description: |-
@@ -5325,6 +5326,7 @@ spec:
                             description: |-
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
+                            minLength: 1
                             type: string
                           monospace:
                             description: |-
@@ -5335,6 +5337,7 @@ spec:
                             description: |-
                               priority defines the notification priority level.
                               See https://pushover.net/api#priority for valid values and behavior.
+                            minLength: 1
                             type: string
                           retry:
                             description: |-
@@ -5350,11 +5353,13 @@ spec:
                             description: |-
                               sound defines the name of one of the sounds supported by device clients.
                               This overrides the user's default sound choice for this notification.
+                            minLength: 1
                             type: string
                           title:
                             description: |-
                               title defines the notification title displayed in the Pushover message.
                               This appears as the bold header text in the notification.
+                            minLength: 1
                             type: string
                           token:
                             description: |-
@@ -5391,6 +5396,7 @@ spec:
                               See https://pushover.net/apps for application registration.
                               Either `token` or `tokenFile` is required.
                               It requires Alertmanager >= v0.26.0.
+                            minLength: 1
                             type: string
                           ttl:
                             description: |-
@@ -5402,11 +5408,13 @@ spec:
                             description: |-
                               url defines a supplementary URL shown alongside the message.
                               This creates a clickable link within the Pushover notification.
+                            pattern: ^https?://.+$
                             type: string
                           urlTitle:
                             description: |-
                               urlTitle defines a title for the supplementary URL.
                               If not specified, the raw URL is shown instead.
+                            minLength: 1
                             type: string
                           userKey:
                             description: |-
@@ -5441,6 +5449,7 @@ spec:
                               userKeyFile defines the user key file that contains the recipient user's user key.
                               Either `userKey` or `userKeyFile` is required.
                               It requires Alertmanager >= v0.26.0.
+                            minLength: 1
                             type: string
                         type: object
                       type: array
@@ -16637,6 +16646,7 @@ spec:
                             description: |-
                               device defines the name of a specific device to send the notification to.
                               If not specified, the notification is sent to all user's devices.
+                            minLength: 1
                             type: string
                           expire:
                             description: |-
@@ -17353,6 +17363,7 @@ spec:
                             description: |-
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
+                            minLength: 1
                             type: string
                           monospace:
                             description: |-
@@ -17363,6 +17374,7 @@ spec:
                             description: |-
                               priority defines the notification priority level.
                               See https://pushover.net/api#priority for valid values and behavior.
+                            minLength: 1
                             type: string
                           retry:
                             description: |-
@@ -17378,11 +17390,13 @@ spec:
                             description: |-
                               sound defines the name of one of the sounds supported by device clients.
                               This overrides the user's default sound choice for this notification.
+                            minLength: 1
                             type: string
                           title:
                             description: |-
                               title defines the notification title displayed in the Pushover message.
                               This appears as the bold header text in the notification.
+                            minLength: 1
                             type: string
                           token:
                             description: |-
@@ -17423,11 +17437,13 @@ spec:
                             description: |-
                               url defines a supplementary URL shown alongside the message.
                               This creates a clickable link within the Pushover notification.
+                            pattern: ^https?://.+$
                             type: string
                           urlTitle:
                             description: |-
                               urlTitle defines a title for the supplementary URL.
                               If not specified, the raw URL is shown instead.
+                            minLength: 1
                             type: string
                           userKey:
                             description: |-

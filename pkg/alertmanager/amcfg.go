@@ -1307,13 +1307,16 @@ func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitoringv1alpha1.PushoverConfig, crKey types.NamespacedName) (*pushoverConfig, error) {
 	out := &pushoverConfig{
 		VSendResolved: in.SendResolved,
-		Title:         in.Title,
-		Message:       in.Message,
-		URL:           in.URL,
-		URLTitle:      in.URLTitle,
-		Priority:      in.Priority,
+		Title:         ptr.Deref(in.Title, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		URLTitle:      ptr.Deref(in.URLTitle, ""),
+		Priority:      ptr.Deref(in.Priority, ""),
 		HTML:          in.HTML,
 		Monospace:     in.Monospace,
+	}
+
+	if ptr.Deref(in.URL, "") != "" {
+		out.URL = string(*in.URL)
 	}
 
 	if in.TTL != nil {
@@ -1347,16 +1350,16 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	{
-		if in.Retry != "" {
-			retry, err := model.ParseDuration(in.Retry)
+		if ptr.Deref(in.Retry, "") != "" {
+			retry, err := model.ParseDuration(*in.Retry)
 			if err != nil {
 				return nil, fmt.Errorf("parse resolve retry: %w", err)
 			}
 			out.Retry = &retry
 		}
 
-		if in.Expire != "" {
-			expire, err := model.ParseDuration(in.Expire)
+		if ptr.Deref(in.Expire, "") != "" {
+			expire, err := model.ParseDuration(*in.Expire)
 			if err != nil {
 				return nil, fmt.Errorf("parse resolve expire: %w", err)
 			}
