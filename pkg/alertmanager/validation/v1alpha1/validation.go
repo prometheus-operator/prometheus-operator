@@ -386,7 +386,7 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
 	for i, config := range configs {
 		if config.Project == "" {
-			return fmt.Errorf("[%d]: invalid 'project': this is a required field")
+			return fmt.Errorf("[%d]: invalid 'project': this is a required field", i)
 		}
 
 		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
@@ -394,7 +394,7 @@ func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
 		}
 
 		if config.IssueType == "" {
-			return fmt.Errorf("[%d]: invalid 'issueType': this is a required field")
+			return fmt.Errorf("[%d]: invalid 'issueType': this is a required field", i)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
