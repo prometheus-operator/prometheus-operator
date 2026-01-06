@@ -2845,7 +2845,6 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 	if jc.Project == "" {
 		return fmt.Errorf("missing project in jira_config")
 	}
-
 	if jc.IssueType == "" {
 		return errors.New("missing issue_type in jira_config")
 	}
