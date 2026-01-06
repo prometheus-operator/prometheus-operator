@@ -306,9 +306,8 @@ type PagerDutyImageConfig struct {
 	// +optional
 	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
-	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Href *string `json:"href,omitempty"`
+	Href *URL `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -318,9 +317,8 @@ type PagerDutyImageConfig struct {
 // PagerDutyLinkConfig attaches text links to an incident
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
-	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Href *string `json:"href,omitempty"`
+	Href *URL `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

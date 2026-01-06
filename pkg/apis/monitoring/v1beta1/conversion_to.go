@@ -215,7 +215,7 @@ func convertPagerDutyImageConfigsTo(in []PagerDutyImageConfig) []v1alpha1.PagerD
 	for i := range in {
 		out[i] = v1alpha1.PagerDutyImageConfig{
 			Src:  in[i].Src,
-			Href: in[i].Href,
+			Href: (*v1alpha1.URL)(in[i].Href),
 			Alt:  in[i].Alt,
 		}
 	}
@@ -228,7 +228,7 @@ func convertPagerDutyLinkConfigsTo(in []PagerDutyLinkConfig) []v1alpha1.PagerDut
 
 	for i := range in {
 		out[i] = v1alpha1.PagerDutyLinkConfig{
-			Href: in[i].Href,
+			Href: (*v1alpha1.URL)(in[i].Href),
 			Text: in[i].Text,
 		}
 	}

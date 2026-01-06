@@ -2666,13 +2666,13 @@ func TestGenerateConfig(t *testing.T) {
 								PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
 									{
 										Src:  ptr.To("https://some-image.com"),
-										Href: ptr.To("https://some-image.com"),
+										Href: ptr.To(monitoringv1alpha1.URL("https://some-image.com")),
 										Alt:  ptr.To("some-image"),
 									},
 								},
 								PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
 									{
-										Href: ptr.To("https://some-link.com"),
+										Href: ptr.To(monitoringv1alpha1.URL("https://some-link.com")),
 										Text: ptr.To("some-link"),
 									},
 								},

@@ -4491,7 +4491,7 @@ spec:
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
-                                  minLength: 1
+                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
@@ -4518,7 +4518,7 @@ spec:
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
-                                  minLength: 1
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array

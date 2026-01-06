@@ -1961,7 +1961,7 @@ func (in *PagerDutyImageConfig) DeepCopyInto(out *PagerDutyImageConfig) {
 	}
 	if in.Href != nil {
 		in, out := &in.Href, &out.Href
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Alt != nil {
@@ -1986,7 +1986,7 @@ func (in *PagerDutyLinkConfig) DeepCopyInto(out *PagerDutyLinkConfig) {
 	*out = *in
 	if in.Href != nil {
 		in, out := &in.Href, &out.Href
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Text != nil {

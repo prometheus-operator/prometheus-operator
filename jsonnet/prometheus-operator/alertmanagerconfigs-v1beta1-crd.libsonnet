@@ -3939,7 +3939,7 @@
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
-                                  minLength: 1,
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
@@ -3965,7 +3965,7 @@
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
-                                  minLength: 1,
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },

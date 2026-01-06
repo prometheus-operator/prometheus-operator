@@ -133,6 +133,18 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
 		}
 
+		for j, lc := range conf.PagerDutyLinkConfigs {
+			if err := validation.ValidateURLPtr((*string)(lc.Href)); err != nil {
+				return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+			}
+		}
+
+		for j, ic := range conf.PagerDutyImageConfigs {
+			if err := validation.ValidateURLPtr((*string)(ic.Href)); err != nil {
+				return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+			}
+		}
+
 		if err := conf.HTTPConfig.Validate(); err != nil {
 			return err
 		}
