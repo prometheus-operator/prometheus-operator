@@ -942,29 +942,35 @@ type VictorOpsConfig struct {
 	// apiUrl defines the VictorOps API URL.
 	// When not specified, defaults to the standard VictorOps API endpoint.
 	// +optional
-	APIURL string `json:"apiUrl,omitempty"`
+	APIURL *URL `json:"apiUrl,omitempty"`
 	// routingKey defines a key used to map the alert to a team.
 	// This determines which VictorOps team will receive the alert notification.
-	// +optional
+	// +kubebuilder:validation:MinLength=1
+	// +required
 	RoutingKey string `json:"routingKey"`
 	// messageType describes the behavior of the alert.
 	// Valid values are "CRITICAL", "WARNING", and "INFO".
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	MessageType string `json:"messageType,omitempty"`
+	MessageType *string `json:"messageType,omitempty"`
 	// entityDisplayName contains a summary of the alerted problem.
 	// This appears as the main title or identifier for the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	EntityDisplayName string `json:"entityDisplayName,omitempty"`
+	EntityDisplayName *string `json:"entityDisplayName,omitempty"`
 	// stateMessage contains a long explanation of the alerted problem.
 	// This provides detailed context about the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	StateMessage string `json:"stateMessage,omitempty"`
+	StateMessage *string `json:"stateMessage,omitempty"`
 	// monitoringTool defines the monitoring tool the state message is from.
 	// This helps identify the source system that generated the alert.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	MonitoringTool string `json:"monitoringTool,omitempty"`
+	MonitoringTool *string `json:"monitoringTool,omitempty"`
 	// customFields defines additional custom fields for notification.
 	// These provide extra metadata that will be included with the VictorOps incident.
+	// +listType=atomic
 	// +optional
 	CustomFields []KeyValue `json:"customFields,omitempty"`
 	// httpConfig defines the HTTP client's configuration for VictorOps API requests.
