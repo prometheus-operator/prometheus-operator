@@ -221,7 +221,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "with_workload_identity_version_3.6.0",
+			name: "rw_azuread_with_workload_identity",
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
@@ -232,22 +232,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			version:   "3.6.0",
-			expectErr: true,
-		},
-		{
-			name: "with_workload_identity_version_3.7.0",
-			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
-						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
-						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
-					},
-				},
-			},
-			version: "3.7.0",
 		},
 		{
 			name: "with_invalid_workload_identity_clientID",
@@ -261,7 +245,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			version:   "3.7.0",
 			expectErr: true,
 		},
 		{
@@ -276,7 +259,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			version:   "3.7.0",
 			expectErr: true,
 		},
 		{
@@ -294,7 +276,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			version:   "3.7.0",
 			expectErr: true,
 		},
 		{
@@ -319,7 +300,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			version:   "3.7.0",
 			expectErr: true,
 		},
 		{
@@ -337,7 +317,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			version:   "3.7.0",
 			expectErr: true,
 		},
 		{
@@ -348,7 +327,6 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 					Cloud: ptr.To("AzureGovernment"),
 				},
 			},
-			version:   "3.7.0",
 			expectErr: true,
 		},
 	}

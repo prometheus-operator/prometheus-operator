@@ -151,8 +151,13 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		}
 
 		if spec.AzureAD.WorkloadIdentity != nil {
-			if err := cg.checkAzureADWorkloadIdentity(spec.AzureAD.WorkloadIdentity); err != nil {
-				return err
+			_, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.ClientID)
+			if err != nil {
+				return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
+			}
+			_, err = uuid.Parse(spec.AzureAD.WorkloadIdentity.TenantID)
+			if err != nil {
+				return fmt.Errorf("the provided Azure Workload Identity tenantId is invalid")
 			}
 		}
 	}
@@ -160,21 +165,6 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 	return spec.Validate()
 }
 
-func (cg *ConfigGenerator) checkAzureADWorkloadIdentity(wi *monitoringv1.AzureWorkloadIdentity) error {
-	if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
-		return fmt.Errorf("workloadIdentity: Azure Workload Identity is only supported with Prometheus >= 3.7.0, current = %s", cg.version.String())
-	}
-
-	if _, err := uuid.Parse(wi.TenantID); err != nil {
-		return fmt.Errorf("invalid workloadIdentity.clientId: %w", err)
-	}
-
-	if _, err := uuid.Parse(wi.ClientID); err != nil {
-		return fmt.Errorf("invalid workloadIdentity.tenantId: %w", err)
-	}
-
-	return nil
-}
 func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity) error {
 	// Prometheus >= v3.5.0 allows empty clientID values.
 	if cg.WithMinimumVersion("3.5.0").IsCompatible() {
