@@ -1315,7 +1315,7 @@ type RocketChatActionConfig struct {
 type MattermostConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// webhookURL defines the Mattermost webhook URL.
 	// +required
 	WebhookURL *v1.SecretKeySelector `json:"webhookURL"`
@@ -1443,7 +1443,7 @@ type MattermostField struct {
 	// When true, Slack may display this field side by side with other short fields.
 	// When false or not specified, the field takes the full width of the message.
 	// +optional
-	Short *bool `json:"short,omitempty"`
+	Short *bool `json:"short,omitempty"` // nolint:kubeapilinter
 }
 
 // MattermostPropsConfig configures extra information to be sent to Mattermost.
@@ -1483,7 +1483,7 @@ type MattermostPriorityConfig struct {
 	//
 	// Only for enterprise version of Mattermost.
 	// +optional
-	RequestedAck *bool `json:"requestedAck,omitempty"`
+	RequestedAck *bool `json:"requestedAck,omitempty"` // nolint:kubeapilinter
 	// persistentNotifications defines whether the message notification will be persisted.
 	//
 	// This can be used only with the `Urgent` messages.
@@ -1492,7 +1492,7 @@ type MattermostPriorityConfig struct {
 	//
 	// Only for enterprise version of Mattermost.
 	// +optional
-	PersistentNotifications *bool `json:"persistentNotifications,omitempty"`
+	PersistentNotifications *bool `json:"persistentNotifications,omitempty"` // nolint:kubeapilinter
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
