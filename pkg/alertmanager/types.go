@@ -424,24 +424,6 @@ type msTeamsConfig struct {
 	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
 }
 
-type jiraConfig struct {
-	SendResolved      *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
-	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
-	APIURL            *string           `yaml:"api_url,omitempty" json:"api_url,omitempty"`
-	Project           string            `yaml:"project" json:"project"`
-	Summary           *string           `yaml:"summary,omitempty" json:"summary,omitempty"`
-	Description       *string           `yaml:"description,omitempty" json:"description,omitempty"`
-	Labels            []string          `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Priority          *string           `yaml:"priority,omitempty" json:"priority,omitempty"`
-	IssueType         string            `yaml:"issue_type" json:"issue_type"`
-	ResolveTransition *string           `yaml:"resolve_transition,omitempty" json:"resolve_transition,omitempty"`
-	ReopenTransition  *string           `yaml:"reopen_transition,omitempty" json:"reopen_transition,omitempty"`
-	WontFixResolution *string           `yaml:"wont_fix_resolution,omitempty" json:"wont_fix_resolution,omitempty"`
-	ReopenDuration    *model.Duration   `yaml:"reopen_duration,omitempty" json:"reopen_duration,omitempty"`
-	Fields            map[string]any    `yaml:"fields,omitempty" json:"fields,omitempty"`
-	APIType           *string           `yaml:"api_type,omitempty" json:"api_type,omitempty"`
-}
-
 type msTeamsV2Config struct {
 	SendResolved   *bool             `yaml:"send_resolved,omitempty"`
 	WebhookURL     string            `yaml:"webhook_url,omitempty"`
@@ -449,6 +431,24 @@ type msTeamsV2Config struct {
 	Title          string            `yaml:"title,omitempty"`
 	Text           string            `yaml:"text,omitempty"`
 	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
+}
+
+type jiraConfig struct {
+	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty"`
+	SendResolved      *bool             `yaml:"send_resolved,omitempty"`
+	APIURL            string            `yaml:"api_url,omitempty"`
+	Project           string            `yaml:"project,omitempty"`
+	Summary           string            `yaml:"summary,omitempty"`
+	Description       string            `yaml:"description,omitempty"`
+	Labels            []string          `yaml:"labels,omitempty"`
+	Priority          string            `yaml:"priority,omitempty"`
+	IssueType         string            `yaml:"issue_type,omitempty"`
+	ReopenTransition  string            `yaml:"reopen_transition,omitempty"`
+	ResolveTransition string            `yaml:"resolve_transition,omitempty"`
+	WontFixResolution string            `yaml:"wont_fix_resolution,omitempty"`
+	ReopenDuration    model.Duration    `yaml:"reopen_duration,omitempty"`
+	Fields            map[string]any    `yaml:"fields,omitempty"`
+	APIType           string            `yaml:"api_type,omitempty"`
 }
 
 type rocketchatAttachmentField struct {

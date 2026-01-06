@@ -1267,12 +1267,11 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
 	out := &victorOpsConfig{
 		VSendResolved:     in.SendResolved,
-		APIURL:            in.APIURL,
 		RoutingKey:        in.RoutingKey,
-		MessageType:       in.MessageType,
-		EntityDisplayName: in.EntityDisplayName,
-		StateMessage:      in.StateMessage,
-		MonitoringTool:    in.MonitoringTool,
+		MessageType:       ptr.Deref(in.MessageType, ""),
+		EntityDisplayName: ptr.Deref(in.EntityDisplayName, ""),
+		StateMessage:      ptr.Deref(in.StateMessage, ""),
+		MonitoringTool:    ptr.Deref(in.MonitoringTool, ""),
 	}
 
 	if in.APIKey != nil {
@@ -1281,6 +1280,10 @@ func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitori
 			return nil, fmt.Errorf("failed to get API key: %w", err)
 		}
 		out.APIKey = apiKey
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = string(*in.APIURL)
 	}
 
 	var customFields map[string]string
@@ -1503,18 +1506,18 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 	out := &jiraConfig{
 		SendResolved:      in.SendResolved,
 		Labels:            in.Labels,
-		Summary:           in.Summary,
-		Description:       in.Description,
-		Priority:          in.Priority,
-		ResolveTransition: in.ResolveTransition,
-		ReopenTransition:  in.ReopenTransition,
-		WontFixResolution: in.WontFixResolution,
+		Summary:           ptr.Deref(in.Summary, ""),
+		Description:       ptr.Deref(in.Description, ""),
+		Priority:          ptr.Deref(in.Priority, ""),
+		ResolveTransition: ptr.Deref(in.ResolveTransition, ""),
+		ReopenTransition:  ptr.Deref(in.ReopenTransition, ""),
+		WontFixResolution: ptr.Deref(in.WontFixResolution, ""),
 	}
 
 	if in.APIURL != nil {
-		out.APIURL = (*string)(in.APIURL)
+		out.APIURL = (string)(*in.APIURL)
 	} else if cb.cfg.Global != nil && cb.cfg.Global.JiraAPIURL != nil {
-		out.APIURL = ptr.To(cb.cfg.Global.JiraAPIURL.RequestURI())
+		out.APIURL = cb.cfg.Global.JiraAPIURL.RequestURI()
 	}
 
 	if in.Project != "" {
@@ -1542,7 +1545,7 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 		if err != nil {
 			return nil, fmt.Errorf("parse reopen duration: %w", err)
 		}
-		out.ReopenDuration = &reopenDuration
+		out.ReopenDuration = reopenDuration
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -1554,7 +1557,7 @@ func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1a
 	if in.APIType != nil {
 		switch *in.APIType {
 		case monitoringv1alpha1.JiraAPITypeCloud, monitoringv1alpha1.JiraAPITypeDatacenter, monitoringv1alpha1.JiraAPITypeAuto:
-			out.APIType = ptr.To(strings.ToLower(string(*in.APIType)))
+			out.APIType = strings.ToLower(string(*in.APIType))
 		default:
 			return nil, fmt.Errorf("unsupported api type")
 		}
@@ -2833,25 +2836,34 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
-func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	jiraAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
 	if !jiraAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; Jira integration is available in Alertmanager >= 0.28.0`)
 	}
 
-	if tc.Project == "" {
+	if jc.Project == "" {
 		return fmt.Errorf("mandatory field %q is empty", "project")
 	}
 
-	if tc.IssueType == "" {
-		return fmt.Errorf("mandatory field %q is empty", "issue_type")
+	if jc.IssueType == "" {
+		return errors.New("missing issue_type in jira_config")
 	}
 
-	if tc.APIURL == nil {
-		return fmt.Errorf("mandatory field %q and %q are all empty", "api_url", "jira_api_url")
+	apiTypeAllowed := amVersion.GTE(semver.MustParse("0.29.0"))
+	if jc.APIType != "" {
+		if !apiTypeAllowed {
+			msg := "'api_type' supported in Alertmanager >= 0.29.0 only - dropping field from provided config"
+			logger.Warn(msg, "current_version", amVersion.String())
+			jc.APIType = ""
+		} else {
+			if jc.APIType != "auto" && jc.APIType != "cloud" && jc.APIType != "datacenter" {
+				return fmt.Errorf("invalid 'api_type': a value must be 'auto', 'cloud' or 'datacenter'")
+			}
+		}
 	}
 
-	return tc.HTTPConfig.sanitize(amVersion, logger)
+	return jc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {

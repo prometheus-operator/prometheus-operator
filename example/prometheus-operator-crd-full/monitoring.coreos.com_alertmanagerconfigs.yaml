@@ -9778,6 +9778,7 @@ spec:
                             description: |-
                               apiUrl defines the VictorOps API URL.
                               When not specified, defaults to the standard VictorOps API endpoint.
+                            pattern: ^https?://.+$
                             type: string
                           customFields:
                             description: |-
@@ -9807,6 +9808,7 @@ spec:
                             description: |-
                               entityDisplayName contains a summary of the alerted problem.
                               This appears as the main title or identifier for the incident.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client's configuration
@@ -10518,16 +10520,19 @@ spec:
                             description: |-
                               messageType describes the behavior of the alert.
                               Valid values are "CRITICAL", "WARNING", and "INFO".
+                            minLength: 1
                             type: string
                           monitoringTool:
                             description: |-
                               monitoringTool defines the monitoring tool the state message is from.
                               This helps identify the source system that generated the alert.
+                            minLength: 1
                             type: string
                           routingKey:
                             description: |-
                               routingKey defines a key used to map the alert to a team.
                               This determines which VictorOps team will receive the alert notification.
+                            minLength: 1
                             type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
@@ -10537,7 +10542,10 @@ spec:
                             description: |-
                               stateMessage contains a long explanation of the alerted problem.
                               This provides detailed context about the incident.
+                            minLength: 1
                             type: string
+                        required:
+                        - routingKey
                         type: object
                       type: array
                       x-kubernetes-list-type: atomic
@@ -22539,6 +22547,7 @@ spec:
                             description: |-
                               apiUrl defines the VictorOps API URL.
                               When not specified, defaults to the standard VictorOps API endpoint.
+                            pattern: ^https?://.+$
                             type: string
                           customFields:
                             description: |-
@@ -22563,10 +22572,12 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           entityDisplayName:
                             description: |-
                               entityDisplayName contains a summary of the alerted problem.
                               This appears as the main title or identifier for the incident.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client's configuration
@@ -23271,16 +23282,19 @@ spec:
                             description: |-
                               messageType describes the behavior of the alert.
                               Valid values are "CRITICAL", "WARNING", and "INFO".
+                            minLength: 1
                             type: string
                           monitoringTool:
                             description: |-
                               monitoringTool defines the monitoring tool the state message is from.
                               This helps identify the source system that generated the alert.
+                            minLength: 1
                             type: string
                           routingKey:
                             description: |-
                               routingKey defines a key used to map the alert to a team.
                               This determines which VictorOps team will receive the alert notification.
+                            minLength: 1
                             type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
@@ -23290,7 +23304,10 @@ spec:
                             description: |-
                               stateMessage contains a long explanation of the alerted problem.
                               This provides detailed context about the incident.
+                            minLength: 1
                             type: string
+                        required:
+                        - routingKey
                         type: object
                       type: array
                     webexConfigs:
