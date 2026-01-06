@@ -4868,9 +4868,6 @@ func TestSanitizeConfig(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if err != nil {
-				t.Logf("err: %s", err)
-			}
 			if tc.expectErr {
 				require.Error(t, err)
 				return
@@ -4878,9 +4875,6 @@ func TestSanitizeConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			routeCfg, err := yaml.Marshal(tc.in)
-			if err != nil {
-				t.Logf("err: %s", err)
-			}
 			require.NoError(t, err)
 
 			golden.Assert(t, string(routeCfg), tc.golden)
