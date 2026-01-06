@@ -3832,7 +3832,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "CR_with_Mattermost_Reeceiver_Bare_Minimum.golden",
+			golden: "CR_with_Mattermost_Reeceiver_with_Attachment.golden",
 		},
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
