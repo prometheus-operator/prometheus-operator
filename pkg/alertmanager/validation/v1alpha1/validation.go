@@ -315,7 +315,7 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 
 func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 	for i, config := range configs {
-		if (ptr.Deref[string](config.TargetARN, "") == "") != (ptr.Deref[string](config.TopicARN, "") == "") != (ptr.Deref[string](config.PhoneNumber, "") == "") {
+		if (ptr.Deref(config.TargetARN, "") == "") != (ptr.Deref(config.TopicARN, "") == "") != (ptr.Deref(config.PhoneNumber, "") == "") {
 			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
 		}
 
