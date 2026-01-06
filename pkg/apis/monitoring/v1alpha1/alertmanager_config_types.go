@@ -1238,7 +1238,7 @@ func (jf *JiraField) Validate() error {
 type JiraConfig struct {
 	// sendResolved defines whether to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
 	// The full API path must be included.
 	// If not specified, default API URL will be used.
