@@ -4801,7 +4801,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:    ptr.To("http://example.com"),
+								APIURL:    "http://example.com",
 								Project:   "foo",
 								IssueType: "bug",
 							},
@@ -4819,7 +4819,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:    ptr.To("http://example.com"),
+								APIURL:    "http://example.com",
 								Project:   "foo",
 								IssueType: "bug",
 							},
@@ -4857,7 +4857,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL: ptr.To("http://example.com"),
+								APIURL: "http://example.com",
 							},
 						},
 					},
@@ -6015,7 +6015,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL: ptr.To("http://example.com"),
+								APIURL: "http://example.com",
 							},
 						},
 					},
@@ -6031,7 +6031,7 @@ func TestSanitizeJiraConfig(t *testing.T) {
 					{
 						JiraConfigs: []*jiraConfig{
 							{
-								APIURL:       ptr.To("http://issues.example.com"),
+								APIURL:       "http://issues.example.com",
 								Project:      "Monitoring",
 								IssueType:    "Bug",
 								SendResolved: ptr.To(true),
@@ -6098,25 +6098,6 @@ func TestSanitizeJiraConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
-		},
-		{
-			name:           "jira_configs with api_type",
-			againstVersion: version29,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						JiraConfigs: []*jiraConfig{
-							{
-								APIURL:    "http://issues.example.com",
-								Project:   "Monitoring",
-								IssueType: "Bug",
-								APIType:   ptr.To("datacenter"),
-							},
-						},
-					},
-				},
-			},
-			golden: "jira_configs_with_api_type.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
