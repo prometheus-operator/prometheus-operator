@@ -1249,56 +1249,46 @@ func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, p *mo
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.BaseImage != "" {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.Tag != "" {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.SHA != "" {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 
 	if p.Spec.Thanos != nil {
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Thanos.BaseImage != nil && *p.Spec.Thanos.BaseImage != "" {
-			msg := fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image")
-			logger.Warn(msg)
-			deprecations = append(deprecations, msg)
+			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Thanos.Tag != nil && *p.Spec.Thanos.Tag != "" {
-			msg := fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image")
-			logger.Warn(msg)
-			deprecations = append(deprecations, msg)
+			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Thanos.SHA != nil && *p.Spec.Thanos.SHA != "" {
-			msg := fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image")
-			logger.Warn(msg)
-			deprecations = append(deprecations, msg)
+			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
 		}
 	}
 
-	if c.unmanagedPrometheusConfiguration(p) {
-		logger.Warn("the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified")
-		logger.Warn("unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead")
-		logger.Warn("unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')")
+	if len(deprecations) > 0 {
+		msg := strings.Join(deprecations, "; ")
+		logger.Warn(msg)
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, msg)
+		return
 	}
 
-	if len(deprecations) > 0 {
-		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+	if c.unmanagedPrometheusConfiguration(p) {
+		logger.Warn(unmanagedConfigurationMessage)
+		c.reconciliations.SetReasonAndMessage(key, unmanagedConfigurationReason, unmanagedConfigurationMessage)
 	}
 }
 
@@ -1398,7 +1388,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
 	if c.unmanagedPrometheusConfiguration(p) {
-		c.reconciliations.SetReasonAndMessage(operator.KeyForObject(p), unmanagedConfigurationReason, unmanagedConfigurationMessage)
 
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {

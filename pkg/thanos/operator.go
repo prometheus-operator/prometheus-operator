@@ -652,13 +652,13 @@ func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *m
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if len(tr.Spec.PrometheusRulesExcludedFromEnforce) > 0 {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.prometheusRulesExcludedFromEnforce", "spec.excludedFromEnforcement")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.prometheusRulesExcludedFromEnforce", "spec.excludedFromEnforcement"))
 	}
 
 	if len(deprecations) > 0 {
-		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+		msg := strings.Join(deprecations, "; ")
+		logger.Warn(msg)
+		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, msg)
 	}
 }
 

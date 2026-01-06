@@ -1893,25 +1893,21 @@ func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, a *mo
 	var deprecations []string
 
 	if a.Spec.BaseImage != "" {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	if a.Spec.Tag != "" {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	if a.Spec.SHA != "" {
-		msg := fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image")
-		logger.Warn(msg)
-		deprecations = append(deprecations, msg)
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 
 	if len(deprecations) > 0 {
-		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+		msg := strings.Join(deprecations, "; ")
+		logger.Warn(msg)
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, msg)
 	}
 }
 
