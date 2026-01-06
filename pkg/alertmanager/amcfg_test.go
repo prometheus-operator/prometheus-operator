@@ -5963,6 +5963,25 @@ func TestSanitizeJiraConfig(t *testing.T) {
 			},
 			golden: "jira_config_with_api_type_version_not_supported.golden",
 		},
+		{
+			name:           "jira_configs with invalid api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "onpremise",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
