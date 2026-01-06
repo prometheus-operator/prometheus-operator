@@ -489,9 +489,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		Replicas:            tr.Spec.Replicas,
 		MinReadySeconds:     ptr.Deref(tr.Spec.MinReadySeconds, 0),
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
+		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(tr.Spec.UpdateStrategy),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalLabels,
 		},
