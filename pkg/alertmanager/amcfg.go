@@ -2837,13 +2837,13 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 }
 
 func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
-	jiraAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
-	if !jiraAllowed {
-		return fmt.Errorf(`invalid syntax in receivers config; Jira integration is available in Alertmanager >= 0.28.0`)
+	jiraConfigAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !jiraConfigAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; jira integration is available in Alertmanager >= 0.28.0`)
 	}
 
 	if jc.Project == "" {
-		return fmt.Errorf("mandatory field %q is empty", "project")
+		return fmt.Errorf("missing project in jira_config")
 	}
 
 	if jc.IssueType == "" {
