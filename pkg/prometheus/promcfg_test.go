@@ -152,7 +152,7 @@ func TestGlobalSettings(t *testing.T) {
 			Version:        "v2.30.0",
 			ScrapeInterval: "30s",
 			ScrapeTimeout:  "60s",
-			Golden:         "invalid_scrape_timeout_specified_when_scrape_interval_specified.golden",
+			Golden:         "partial/invalid_scrape_timeout_specified_when_scrape_interval_specified.golden",
 			ExpectError:    true,
 		},
 		{
@@ -390,7 +390,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Golden:                   "namespaces_from_MatchNames_are_returned_instead_of_the_current_namespace.golden",
+			Golden:                   "partial/namespaces_from_MatchNames_are_returned_instead_of_the_current_namespace.golden",
 		},
 		// Test that 'Any' returns an empty list instead of the current namespace
 		{
@@ -409,7 +409,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Golden:                   "Any_returns_an_empty_list_instead_of_the_current_namespace.golden",
+			Golden:                   "partial/Any_returns_an_empty_list_instead_of_the_current_namespace.golden",
 		},
 		// Test that Any takes precedence over MatchNames
 		{
@@ -429,7 +429,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: false,
-			Golden:                   "Any_takes_precedence_over_MatchNames.golden",
+			Golden:                   "partial/Any_takes_precedence_over_MatchNames.golden",
 		},
 		// Test that IgnoreNamespaceSelectors overrides Any and MatchNames
 		{
@@ -449,7 +449,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 			},
 			IgnoreNamespaceSelectors: true,
-			Golden:                   "IgnoreNamespaceSelectors_overrides_Any_and_MatchNames.golden",
+			Golden:                   "partial/IgnoreNamespaceSelectors_overrides_Any_and_MatchNames.golden",
 		},
 	}
 
@@ -519,7 +519,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	require.NoError(t, err)
 
-	golden.Assert(t, string(s), "NamespaceSetCorrectlyForPodMonitor.golden")
+	golden.Assert(t, string(s), "partial/NamespaceSetCorrectlyForPodMonitor.golden")
 }
 
 func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
@@ -872,7 +872,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
 			role:            "endpoints",
-			golden:          "K8SSDConfigGenerationFirst.golden",
+			golden:          "partial/K8SSDConfigGenerationFirst.golden",
 		},
 		{
 			apiServerConfig: &monitoringv1.APIServerConfig{
@@ -907,13 +907,13 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				},
 			),
 			role:   "endpoints",
-			golden: "K8SSDConfigGenerationTwo.golden",
+			golden: "partial/K8SSDConfigGenerationTwo.golden",
 		},
 		{
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
 			role:            "endpointslice",
-			golden:          "K8SSDConfigGenerationThree.golden",
+			golden:          "partial/K8SSDConfigGenerationThree.golden",
 		},
 		{
 			apiServerConfig: &monitoringv1.APIServerConfig{
@@ -947,7 +947,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			},
 			store:  assets.NewTestStoreBuilder(),
 			role:   "endpoints",
-			golden: "K8SSDConfigGenerationTLSConfig.golden",
+			golden: "partial/K8SSDConfigGenerationTLSConfig.golden",
 		},
 	}
 
@@ -1510,7 +1510,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			&assets.StoreBuilder{},
-			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
+			golden.Get(t, "partial/TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
 			nil,
@@ -1570,7 +1570,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		&assets.StoreBuilder{},
 		nil,
-		golden.Get(t, "AdditionalAlertRelabelConfigs.golden"),
+		golden.Get(t, "partial/AdditionalAlertRelabelConfigs.golden"),
 		nil,
 		nil,
 	)
