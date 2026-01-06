@@ -385,57 +385,35 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 }
 
 func validateMattermostConfigs(configs []monitoringv1alpha1.MattermostConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 
-		if config.IconURL != nil {
-			if _, err := validation.ValidateURL(string(*config.IconURL)); err != nil {
-				return fmt.Errorf("invalid 'iconURL': %w", err)
-			}
+		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
+			return fmt.Errorf("[%d]: iconURL: %w", i, err)
 		}
 
-		attachmentValidation := func(att monitoringv1alpha1.MattermostAttachmentConfig) error {
-			if att.AuthorIcon != nil {
-				if _, err := validation.ValidateURL(string(*att.AuthorIcon)); err != nil {
-					return fmt.Errorf("invalid 'authorIcon': %w", err)
-				}
+		for j, att := range config.Attachments {
+			if err := validation.ValidateURLPtr((*string)(att.AuthorIcon)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: authorIcon: %w", i, j, err)
 			}
 
-			if att.AuthorLink != nil {
-				if _, err := validation.ValidateURL(string(*att.AuthorLink)); err != nil {
-					return fmt.Errorf("invalid 'authorLink': %w", err)
-				}
+			if err := validation.ValidateURLPtr((*string)(att.AuthorLink)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: authorLink: %w", i, j, err)
 			}
 
-			if att.TitleLink != nil {
-				if _, err := validation.ValidateURL(string(*att.TitleLink)); err != nil {
-					return fmt.Errorf("invalid 'titleLink': %w", err)
-				}
+			if err := validation.ValidateURLPtr((*string)(att.TitleLink)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: titleLink: %w", i, j, err)
 			}
 
-			if att.ThumbURL != nil {
-				if _, err := validation.ValidateURL(string(*att.ThumbURL)); err != nil {
-					return fmt.Errorf("invalid 'thumbURL': %w", err)
-				}
+			if err := validation.ValidateURLPtr((*string)(att.ThumbURL)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: thumbURL: %w", i, j, err)
 			}
 
-			if att.FooterIcon != nil {
-				if _, err := validation.ValidateURL(string(*att.FooterIcon)); err != nil {
-					return fmt.Errorf("invalid 'footerIcon': %w", err)
-				}
+			if err := validation.ValidateURLPtr((*string)(att.FooterIcon)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: footerIcon: %w", i, j, err)
 			}
 
-			if att.ImageURL != nil {
-				if _, err := validation.ValidateURL(string(*att.ImageURL)); err != nil {
-					return fmt.Errorf("invalid 'imageURL': %w", err)
-				}
-			}
-
-			return nil
-		}
-
-		for i, att := range config.Attachments {
-			if err := attachmentValidation(att); err != nil {
-				return fmt.Errorf("invalid 'attachments' %d: %w", i, err)
+			if err := validation.ValidateURLPtr((*string)(att.ImageURL)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: imageURL: %w", i, j, err)
 			}
 		}
 
