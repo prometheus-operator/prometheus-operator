@@ -2103,6 +2103,36 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		}
 	}
 
+	if gc.SlackAppToken != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppToken = ""
+	}
+
+	if gc.SlackAppTokenFile != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppTokenFile = ""
+	}
+
+	if gc.SlackAppURL != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppURL = nil
+	}
+
+	if gc.SlackAppToken != "" && gc.SlackAppTokenFile != "" {
+		msg := "'slack_app_token' and 'slack_app_token_file' are mutually exclusive - 'slack_app_token' has taken precedence"
+		logger.Warn(msg)
+		gc.SlackAppTokenFile = ""
+	}
+
+	if (gc.SlackAppToken != "" || gc.SlackAppTokenFile != "") && (gc.SlackAPIURL != nil || gc.SlackAPIURLFile != "") {
+		if gc.SlackAPIURL != nil && gc.SlackAppURL != nil && gc.SlackAPIURL.String() != gc.SlackAppURL.String() {
+			return fmt.Errorf("at most one of slack_app_token/slack_app_token_file & slack_api_url/slack_api_url_file must be configured (unless slack_api_url matches slack_app_url)")
+		}
+	}
+
 	if gc.OpsGenieAPIKeyFile != "" && amVersion.LT(semver.MustParse("0.24.0")) {
 		msg := "'opsgenie_api_key_file' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
@@ -2579,14 +2609,44 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
 	}
 
-	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.Timeout != nil && lessThanV0_30 {
 		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.Timeout = nil
+	}
+
+	if sc.AppToken != "" && lessThanV0_30 {
+		msg := "'app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppToken = ""
+	}
+
+	if sc.AppTokenFile != "" && lessThanV0_30 {
+		msg := "'app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppTokenFile = ""
+	}
+
+	if sc.AppURL != "" && lessThanV0_30 {
+		msg := "'app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppURL = ""
+	}
+
+	if sc.AppToken != "" && sc.AppTokenFile != "" {
+		msg := "'app_token' and 'app_token_file' are mutually exclusive for slack receiver config - 'app_token' has taken precedence"
+		logger.Warn(msg)
+		sc.AppTokenFile = ""
+	}
+
+	if (sc.AppToken != "" || sc.AppTokenFile != "") && (sc.APIURL != "" || sc.APIURLFile != "") {
+		return fmt.Errorf("at most one of app_token/app_token_file & api_url/api_url_file must be configured")
 	}
 
 	if sc.APIURLFile == "" {
