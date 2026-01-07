@@ -34062,7 +34062,6 @@ NonEmptyDuration
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must be greater than 0.
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -39737,7 +39736,6 @@ NonEmptyDuration
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must be greater than 0.
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>

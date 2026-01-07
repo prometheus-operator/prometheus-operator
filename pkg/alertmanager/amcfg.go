@@ -2923,21 +2923,19 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	}
 
 	if r.GroupWait != "" {
-		d, err := model.ParseDuration(r.GroupWait)
+		_, err := model.ParseDuration(r.GroupWait)
 		if err != nil {
-			return fmt.Errorf("groupwait: %w", err)
-		}
-		if d == 0 {
-			return fmt.Errorf("groupwait: %q is not allowed", r.GroupWait)
+			return fmt.Errorf("group_wait: %w", err)
 		}
 	}
 
 	if r.GroupInterval != "" {
 		d, err := model.ParseDuration(r.GroupInterval)
 		if err != nil {
-			return fmt.Errorf("groupinterval: %w", err)
+			return fmt.Errorf("group_interval: %w", err)
 		}
 		if d == 0 {
+			// Reset the value if it's a zero duration because Alertmanager would reject it.
 			r.GroupInterval = ""
 		}
 
@@ -2945,9 +2943,10 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	if r.RepeatInterval != "" {
 		d, err := model.ParseDuration(r.RepeatInterval)
 		if err != nil {
-			return fmt.Errorf("repeatinterval: %w", err)
+			return fmt.Errorf("repeat_interval: %w", err)
 		}
 		if d == 0 {
+			// Reset the value if it's a zero duration because Alertmanager would reject it.
 			r.RepeatInterval = ""
 		}
 	}

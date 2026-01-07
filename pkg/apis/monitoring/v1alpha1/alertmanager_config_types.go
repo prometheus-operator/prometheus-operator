@@ -118,7 +118,6 @@ type Route struct {
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
-	// Must be greater than 0.
 	// Example: "30s"
 	// +optional
 	GroupWait *monitoringv1.NonEmptyDuration `json:"groupWait,omitempty"`
