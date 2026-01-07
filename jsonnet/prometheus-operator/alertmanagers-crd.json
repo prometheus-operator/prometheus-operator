@@ -2065,7 +2065,7 @@
                             "type": "object"
                           },
                           "webex": {
-                            "description": "webex defines the default configuration for Jira.",
+                            "description": "webex defines the default configuration for Webex.",
                             "properties": {
                               "apiURL": {
                                 "description": "apiURL defines the is the default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",

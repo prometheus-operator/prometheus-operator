@@ -6528,7 +6528,7 @@ GlobalWebexConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>webex defines the default configuration for Jira.</p>
+<p>webex defines the default configuration for Webex.</p>
 </td>
 </tr>
 <tr>
