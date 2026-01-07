@@ -71,10 +71,10 @@ func TestValidateDaemonSetModeSpec(t *testing.T) {
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Shards: ptr.To(int32(1)),
+					Shards: ptr.To(int32(2)),
 				},
 			},
-			expectedError: ptr.To("shards cannot be set when mode is DaemonSet"),
+			expectedError: ptr.To("shards cannot be greater than 1 when mode is DaemonSet"),
 		},
 		{
 			name: "invalid: configuring persistentVolumeClaimRetentionPolicy in the daemonset mode",
