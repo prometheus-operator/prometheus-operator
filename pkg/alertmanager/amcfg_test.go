@@ -5668,6 +5668,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test webhook_url_file is dropped in webhook config for unsupported versions",
@@ -5693,7 +5694,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 					{
 						WebhookConfigs: []*webhookConfig{
 							{
-								URL:     "foo",
+								URL:     "http://example.com/foo",
 								URLFile: "bar",
 							},
 						},
@@ -5734,9 +5735,45 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_webhook_timeout_is_added_in_webhook_config_for_supported_versions.golden",
 		},
+		{
+			name:           "Test invalid url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "http://example.com/webhook",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_valid_url_passes.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)

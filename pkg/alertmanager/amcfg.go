@@ -2713,6 +2713,12 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.Timeout = nil
 	}
 
+	if whc.URL != "" {
+		if _, err := validation.ValidateURL(whc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
 	return nil
 }
 
