@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -1582,14 +1583,14 @@ func checkPushoverConfigs(
 			return errors.New("html and monospace options are mutually exclusive")
 		}
 
-		if config.Expire != "" {
-			if _, err := model.ParseDuration(config.Expire); err != nil {
+		if ptr.Deref(config.Expire, "") != "" {
+			if _, err := model.ParseDuration(*config.Expire); err != nil {
 				return err
 			}
 		}
 
-		if config.Retry != "" {
-			if _, err := model.ParseDuration(config.Retry); err != nil {
+		if ptr.Deref(config.Retry, "") != "" {
+			if _, err := model.ParseDuration(*config.Retry); err != nil {
 				return err
 			}
 		}

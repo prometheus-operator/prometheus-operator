@@ -304,7 +304,7 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 }
 
 func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if config.UserKey == nil && config.UserKeyFile == nil {
 			return fmt.Errorf("one of userKey or userKeyFile must be configured")
 		}
@@ -315,6 +315,10 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 
 		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
 			return fmt.Errorf("html and monospace options are mutually exclusive")
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
