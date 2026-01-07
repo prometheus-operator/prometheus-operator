@@ -250,41 +250,51 @@ type PagerDutyConfig struct {
 	ServiceKey *SecretKeySelector `json:"serviceKey,omitempty"`
 	// url defines the URL to send requests to.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// client defines the client identification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Client string `json:"client,omitempty"`
+	Client *string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	ClientURL string `json:"clientURL,omitempty"`
+	ClientURL *URL `json:"clientURL,omitempty"`
 	// description of the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// severity of the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Severity string `json:"severity,omitempty"`
+	Severity *string `json:"severity,omitempty"`
 	// class defines the class/type of the event.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Class string `json:"class,omitempty"`
+	Class *string `json:"class,omitempty"`
 	// group defines a cluster or grouping of sources.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Group string `json:"group,omitempty"`
+	Group *string `json:"group,omitempty"`
 	// component defines the part or component of the affected system that is broken.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Component string `json:"component,omitempty"`
+	Component *string `json:"component,omitempty"`
 	// details defines the arbitrary key/value pairs that provide further detail about the incident.
+	// +listType=atomic
 	// +optional
 	Details []KeyValue `json:"details,omitempty"`
 	// pagerDutyImageConfigs defines a list of image details to attach that provide further detail about an incident.
+	// +listType=atomic
 	// +optional
 	PagerDutyImageConfigs []PagerDutyImageConfig `json:"pagerDutyImageConfigs,omitempty"`
 	// pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.
+	// +listType=atomic
 	// +optional
 	PagerDutyLinkConfigs []PagerDutyLinkConfig `json:"pagerDutyLinkConfigs,omitempty"`
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Source *string `json:"source,omitempty"`
 	// timeout is the maximum time allowed to invoke the pagerduty
@@ -296,24 +306,27 @@ type PagerDutyConfig struct {
 // PagerDutyImageConfig attaches images to an incident
 type PagerDutyImageConfig struct {
 	// src of the image being attached to the incident
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Src string `json:"src,omitempty"`
+	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
 	// +optional
-	Href string `json:"href,omitempty"`
+	Href *URL `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Alt string `json:"alt,omitempty"`
+	Alt *string `json:"alt,omitempty"`
 }
 
 // PagerDutyLinkConfig attaches text links to an incident
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
 	// +optional
-	Href string `json:"href,omitempty"`
+	Href *URL `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text string `json:"alt,omitempty"`
+	Text *string `json:"alt,omitempty"`
 }
 
 // DiscordConfig configures notifications via Discord.
@@ -990,46 +1003,52 @@ type PushoverConfig struct {
 	TokenFile *string `json:"tokenFile,omitempty"`
 	// title defines the notification title displayed in the Pushover message.
 	// This appears as the bold header text in the notification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// message defines the notification message content.
 	// This is the main body text of the Pushover notification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// url defines a supplementary URL shown alongside the message.
 	// This creates a clickable link within the Pushover notification.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// urlTitle defines a title for the supplementary URL.
 	// If not specified, the raw URL is shown instead.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	URLTitle string `json:"urlTitle,omitempty"`
+	URLTitle *string `json:"urlTitle,omitempty"`
 	// ttl defines the time to live for the alert notification.
 	// This determines how long the notification remains active before expiring.
 	// +optional
 	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// device defines the name of a specific device to send the notification to.
 	// If not specified, the notification is sent to all user's devices.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Device *string `json:"device,omitempty"`
 	// sound defines the name of one of the sounds supported by device clients.
 	// This overrides the user's default sound choice for this notification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Sound string `json:"sound,omitempty"`
+	Sound *string `json:"sound,omitempty"`
 	// priority defines the notification priority level.
 	// See https://pushover.net/api#priority for valid values and behavior.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Priority string `json:"priority,omitempty"`
+	Priority *string `json:"priority,omitempty"`
 	// retry defines how often the Pushover servers will send the same notification to the user.
 	// Must be at least 30 seconds. Only applies to priority 2 notifications.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
-	Retry string `json:"retry,omitempty"`
+	Retry *string `json:"retry,omitempty"`
 	// expire defines how long your notification will continue to be retried for,
 	// unless the user acknowledges the notification. Only applies to priority 2 notifications.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
-	Expire string `json:"expire,omitempty"`
+	Expire *string `json:"expire,omitempty"`
 	// html defines whether notification message is HTML or plain text.
 	// When true, the message can include HTML formatting tags.
 	// html and monospace formatting are mutually exclusive.

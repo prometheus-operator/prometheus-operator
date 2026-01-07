@@ -4092,22 +4092,27 @@
                         properties: {
                           class: {
                             description: 'class defines the class/type of the event.',
+                            minLength: 1,
                             type: 'string',
                           },
                           client: {
                             description: 'client defines the client identification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
                             description: 'component defines the part or component of the affected system that is broken.',
+                            minLength: 1,
                             type: 'string',
                           },
                           description: {
                             description: 'description of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           details: {
@@ -4132,9 +4137,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           group: {
                             description: 'group defines a cluster or grouping of sources.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -4782,20 +4789,24 @@
                               properties: {
                                 alt: {
                                   description: 'alt is the optional alternative text for the image.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
                                   description: 'src of the image being attached to the incident',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           pagerDutyLinkConfigs: {
                             description: 'pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.',
@@ -4804,16 +4815,19 @@
                               properties: {
                                 alt: {
                                   description: "alt defines the text that describes the purpose of the link, and can be used as the link's text.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           routingKey: {
                             description: "routingKey defines the secret's key that contains the PagerDuty integration key (when using\nEvents API v2). Either this field or `serviceKey` needs to be defined.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
@@ -4861,10 +4875,12 @@
                           },
                           severity: {
                             description: 'severity of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           source: {
                             description: 'source defines the unique location of the affected system.',
+                            minLength: 1,
                             type: 'string',
                           },
                           timeout: {
@@ -4874,6 +4890,7 @@
                           },
                           url: {
                             description: 'url defines the URL to send requests to.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                         },
@@ -4888,6 +4905,7 @@
                         properties: {
                           device: {
                             description: "device defines the name of a specific device to send the notification to.\nIf not specified, the notification is sent to all user's devices.",
+                            minLength: 1,
                             type: 'string',
                           },
                           expire: {
@@ -5539,6 +5557,7 @@
                           },
                           message: {
                             description: 'message defines the notification message content.\nThis is the main body text of the Pushover notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           monospace: {
@@ -5547,6 +5566,7 @@
                           },
                           priority: {
                             description: 'priority defines the notification priority level.\nSee https://pushover.net/api#priority for valid values and behavior.',
+                            minLength: 1,
                             type: 'string',
                           },
                           retry: {
@@ -5560,10 +5580,12 @@
                           },
                           sound: {
                             description: "sound defines the name of one of the sounds supported by device clients.\nThis overrides the user's default sound choice for this notification.",
+                            minLength: 1,
                             type: 'string',
                           },
                           title: {
                             description: 'title defines the notification title displayed in the Pushover message.\nThis appears as the bold header text in the notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           token: {
@@ -5597,10 +5619,12 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
                             description: 'urlTitle defines a title for the supplementary URL.\nIf not specified, the raw URL is shown instead.',
+                            minLength: 1,
                             type: 'string',
                           },
                           userKey: {

@@ -4680,20 +4680,25 @@ spec:
                         properties:
                           class:
                             description: class defines the class/type of the event.
+                            minLength: 1
                             type: string
                           client:
                             description: client defines the client identification.
+                            minLength: 1
                             type: string
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
+                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
                               the affected system that is broken.
+                            minLength: 1
                             type: string
                           description:
                             description: description of the incident.
+                            minLength: 1
                             type: string
                           details:
                             description: details defines the arbitrary key/value pairs
@@ -4720,6 +4725,7 @@ spec:
                             x-kubernetes-list-type: atomic
                           group:
                             description: group defines a cluster or grouping of sources.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration.
@@ -5437,14 +5443,17 @@ spec:
                                 alt:
                                   description: alt is the optional alternative text
                                     for the image.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
+                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
                                     the incident
+                                  minLength: 1
                                   type: string
                               type: object
                             type: array
@@ -5461,10 +5470,12 @@ spec:
                                   description: alt defines the text that describes
                                     the purpose of the link, and can be used as the
                                     link's text.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
@@ -5532,10 +5543,12 @@ spec:
                             x-kubernetes-map-type: atomic
                           severity:
                             description: severity of the incident.
+                            minLength: 1
                             type: string
                           source:
                             description: source defines the unique location of the
                               affected system.
+                            minLength: 1
                             type: string
                           timeout:
                             description: |-
@@ -5545,6 +5558,7 @@ spec:
                             type: string
                           url:
                             description: url defines the URL to send requests to.
+                            pattern: ^https?://.+$
                             type: string
                         type: object
                       type: array
@@ -5560,6 +5574,7 @@ spec:
                             description: |-
                               device defines the name of a specific device to send the notification to.
                               If not specified, the notification is sent to all user's devices.
+                            minLength: 1
                             type: string
                           expire:
                             description: |-
@@ -6283,6 +6298,7 @@ spec:
                             description: |-
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
+                            minLength: 1
                             type: string
                           monospace:
                             description: |-
@@ -6293,6 +6309,7 @@ spec:
                             description: |-
                               priority defines the notification priority level.
                               See https://pushover.net/api#priority for valid values and behavior.
+                            minLength: 1
                             type: string
                           retry:
                             description: |-
@@ -6308,11 +6325,13 @@ spec:
                             description: |-
                               sound defines the name of one of the sounds supported by device clients.
                               This overrides the user's default sound choice for this notification.
+                            minLength: 1
                             type: string
                           title:
                             description: |-
                               title defines the notification title displayed in the Pushover message.
                               This appears as the bold header text in the notification.
+                            minLength: 1
                             type: string
                           token:
                             description: |-
@@ -6349,6 +6368,7 @@ spec:
                               See https://pushover.net/apps for application registration.
                               Either `token` or `tokenFile` is required.
                               It requires Alertmanager >= v0.26.0.
+                            minLength: 1
                             type: string
                           ttl:
                             description: |-
@@ -6360,11 +6380,13 @@ spec:
                             description: |-
                               url defines a supplementary URL shown alongside the message.
                               This creates a clickable link within the Pushover notification.
+                            pattern: ^https?://.+$
                             type: string
                           urlTitle:
                             description: |-
                               urlTitle defines a title for the supplementary URL.
                               If not specified, the raw URL is shown instead.
+                            minLength: 1
                             type: string
                           userKey:
                             description: |-
@@ -6399,6 +6421,7 @@ spec:
                               userKeyFile defines the user key file that contains the recipient user's user key.
                               Either `userKey` or `userKeyFile` is required.
                               It requires Alertmanager >= v0.26.0.
+                            minLength: 1
                             type: string
                         type: object
                       type: array
@@ -17692,20 +17715,25 @@ spec:
                         properties:
                           class:
                             description: class defines the class/type of the event.
+                            minLength: 1
                             type: string
                           client:
                             description: client defines the client identification.
+                            minLength: 1
                             type: string
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
+                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
                               the affected system that is broken.
+                            minLength: 1
                             type: string
                           description:
                             description: description of the incident.
+                            minLength: 1
                             type: string
                           details:
                             description: details defines the arbitrary key/value pairs
@@ -17729,8 +17757,10 @@ spec:
                               - value
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           group:
                             description: group defines a cluster or grouping of sources.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration.
@@ -18441,17 +18471,21 @@ spec:
                                 alt:
                                   description: alt is the optional alternative text
                                     for the image.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
+                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
                                     the incident
+                                  minLength: 1
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           pagerDutyLinkConfigs:
                             description: pagerDutyLinkConfigs defines a list of link
                               details to attach that provide further detail about
@@ -18464,13 +18498,16 @@ spec:
                                   description: alt defines the text that describes
                                     the purpose of the link, and can be used as the
                                     link's text.
+                                  minLength: 1
                                   type: string
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
+                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
+                            x-kubernetes-list-type: atomic
                           routingKey:
                             description: |-
                               routingKey defines the secret's key that contains the PagerDuty integration key (when using
@@ -18520,10 +18557,12 @@ spec:
                             type: object
                           severity:
                             description: severity of the incident.
+                            minLength: 1
                             type: string
                           source:
                             description: source defines the unique location of the
                               affected system.
+                            minLength: 1
                             type: string
                           timeout:
                             description: |-
@@ -18533,6 +18572,7 @@ spec:
                             type: string
                           url:
                             description: url defines the URL to send requests to.
+                            pattern: ^https?://.+$
                             type: string
                         type: object
                       type: array
@@ -18547,6 +18587,7 @@ spec:
                             description: |-
                               device defines the name of a specific device to send the notification to.
                               If not specified, the notification is sent to all user's devices.
+                            minLength: 1
                             type: string
                           expire:
                             description: |-
@@ -19263,6 +19304,7 @@ spec:
                             description: |-
                               message defines the notification message content.
                               This is the main body text of the Pushover notification.
+                            minLength: 1
                             type: string
                           monospace:
                             description: |-
@@ -19273,6 +19315,7 @@ spec:
                             description: |-
                               priority defines the notification priority level.
                               See https://pushover.net/api#priority for valid values and behavior.
+                            minLength: 1
                             type: string
                           retry:
                             description: |-
@@ -19288,11 +19331,13 @@ spec:
                             description: |-
                               sound defines the name of one of the sounds supported by device clients.
                               This overrides the user's default sound choice for this notification.
+                            minLength: 1
                             type: string
                           title:
                             description: |-
                               title defines the notification title displayed in the Pushover message.
                               This appears as the bold header text in the notification.
+                            minLength: 1
                             type: string
                           token:
                             description: |-
@@ -19333,11 +19378,13 @@ spec:
                             description: |-
                               url defines a supplementary URL shown alongside the message.
                               This creates a clickable link within the Pushover notification.
+                            pattern: ^https?://.+$
                             type: string
                           urlTitle:
                             description: |-
                               urlTitle defines a title for the supplementary URL.
                               If not specified, the raw URL is shown instead.
+                            minLength: 1
                             type: string
                           userKey:
                             description: |-

@@ -2668,15 +2668,15 @@ func TestGenerateConfig(t *testing.T) {
 								},
 								PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
 									{
-										Src:  "https://some-image.com",
-										Href: "https://some-image.com",
-										Alt:  "some-image",
+										Src:  ptr.To("https://some-image.com"),
+										Href: ptr.To(monitoringv1alpha1.URL("https://some-image.com")),
+										Alt:  ptr.To("some-image"),
 									},
 								},
 								PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
 									{
-										Href: "https://some-link.com",
-										Text: "some-link",
+										Href: ptr.To(monitoringv1alpha1.URL("https://some-link.com")),
+										Text: ptr.To("some-link"),
 									},
 								},
 							}},
@@ -2998,8 +2998,8 @@ func TestGenerateConfig(t *testing.T) {
 									},
 									Key: "token",
 								},
-								Retry:  "5m",
-								Expire: "30s",
+								Retry:  ptr.To("5m"),
+								Expire: ptr.To("30s"),
 								HTML:   ptr.To(true),
 							}},
 						}},
@@ -4138,6 +4138,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
+	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4914,6 +4917,122 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_pagerduty_timeout_is_added_in_pagerduty_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_token is dropped for unsupported versions",
+			againstVersion: versionSlackAppConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_url is dropped for unsupported versions",
+			againstVersion: versionSlackAppConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_url_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_token and slack_app_url preserved for supported versions",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_and_slack_app_url_preserved_for_supported_versions.golden",
+		},
+		{
+			name:           "Test slack_app_token takes precedence over slack_app_token_file",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAppToken:     "xoxb-token",
+					SlackAppTokenFile: "/var/secrets/token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_takes_precedence_over_slack_app_token_file.golden",
+		},
+		{
+			name:           "Test slack_app_token and slack_api_url both configured with different URLs fails",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "hooks.slack.com",
+							Path:   "/services/XXX",
+						},
+					},
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test slack_app_token and slack_api_url with same URL is allowed",
+			againstVersion: versionSlackAppConfigAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+					SlackAppToken: "xoxb-token",
+					SlackAppURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "https",
+							Host:   "slack.com",
+							Path:   "/api/chat.postMessage",
+						},
+					},
+				},
+			},
+			golden: "test_slack_app_token_and_slack_api_url_with_same_url_is_allowed.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -5710,6 +5829,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test webhook_url_file is dropped in webhook config for unsupported versions",
@@ -5735,7 +5855,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 					{
 						WebhookConfigs: []*webhookConfig{
 							{
-								URL:     "foo",
+								URL:     "http://example.com/foo",
 								URLFile: "bar",
 							},
 						},
@@ -5776,9 +5896,45 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_webhook_timeout_is_added_in_webhook_config_for_supported_versions.golden",
 		},
+		{
+			name:           "Test invalid url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "http://example.com/webhook",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_valid_url_passes.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
@@ -5797,6 +5953,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test pushover_user_key_file is dropped in pushover config for unsupported versions",
@@ -5870,9 +6027,49 @@ func TestSanitizePushoverConfig(t *testing.T) {
 			},
 			golden: "test_token_takes_precedence_in_pushover_config.golden",
 		},
+		{
+			name:           "Test invalid url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_valid_url_passes.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
@@ -6007,6 +6204,9 @@ func TestSanitizeJiraConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+
+	versionAPITypeAllowed := semver.Version{Major: 0, Minor: 29}
+	versionAPITypeNotAllowed := semver.Version{Major: 0, Minor: 28}
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -6082,6 +6282,63 @@ func TestSanitizeJiraConfig(t *testing.T) {
 				},
 			},
 			golden: "jira_configs_with_send_resolved.golden",
+		},
+		{
+			name:           "jira_configs with api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_api_type.golden",
+		},
+		{
+			name:           "jira_configs with api_type version not supported",
+			againstVersion: versionAPITypeNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_api_type_version_not_supported.golden",
+		},
+		{
+			name:           "jira_configs with invalid api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "onpremise",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6851,6 +7108,70 @@ func TestConvertHTTPConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			golden.Assert(t, string(cfgBytes), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeTelegramConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionTelegramExampleAllowed := semver.Version{Major: 0, Minor: 26}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "telegram invalid api_url returns error",
+			againstVersion: versionTelegramExampleAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								APIUrl:   "not-a-valid-url",
+								BotToken: "token",
+								ChatID:   12345,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "telegram valid api_url passes validation",
+			againstVersion: versionTelegramExampleAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								APIUrl:   "http://example.com",
+								BotToken: "token",
+								ChatID:   12345,
+							},
+						},
+					},
+				},
+			},
+			golden: "telegram_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }

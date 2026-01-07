@@ -125,14 +125,29 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 }
 
 func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) error {
-	for _, conf := range configs {
-		if conf.URL != "" {
-			if _, err := validation.ValidateURL(conf.URL); err != nil {
-				return fmt.Errorf("pagerduty validation failed for 'url': %w", err)
-			}
+	for i, conf := range configs {
+		if err := validation.ValidateURLPtr((*string)(conf.URL)); err != nil {
+			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
+
+		if err := validation.ValidateURLPtr((*string)(conf.ClientURL)); err != nil {
+			return fmt.Errorf("[%d]: clientURL: %w", i, err)
+		}
+
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
+		}
+
+		for j, lc := range conf.PagerDutyLinkConfigs {
+			if err := validation.ValidateURLPtr((*string)(lc.Href)); err != nil {
+				return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+			}
+		}
+
+		for j, ic := range conf.PagerDutyImageConfigs {
+			if err := validation.ValidateURLPtr((*string)(ic.Href)); err != nil {
+				return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+			}
 		}
 
 		if err := conf.HTTPConfig.Validate(); err != nil {
@@ -294,7 +309,7 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 }
 
 func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if config.UserKey == nil && config.UserKeyFile == nil {
 			return fmt.Errorf("one of userKey or userKeyFile must be configured")
 		}
@@ -305,6 +320,10 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 
 		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
 			return fmt.Errorf("html and monospace options are mutually exclusive")
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
