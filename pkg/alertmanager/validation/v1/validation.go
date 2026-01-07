@@ -38,6 +38,10 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 }
 
 func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
+	if wc == nil {
+		return nil
+	}
+
 	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}
