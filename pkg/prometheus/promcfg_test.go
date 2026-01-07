@@ -4125,6 +4125,34 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_AzureADManagedIdentity_v3.5.0.golden",
 		},
 		{
+			version: "v3.7.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
+						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
+		},
+		{
+			version: "v3.6.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
+						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.6.0.golden",
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
