@@ -519,7 +519,7 @@ type AlertmanagerGlobalConfig struct {
 	// +optional
 	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
 
-	// webex defines the default configuration for Jira.
+	// webex defines the default configuration for Webex.
 	// +optional
 	WebexConfig *GlobalWebexConfig `json:"webex,omitempty"`
 

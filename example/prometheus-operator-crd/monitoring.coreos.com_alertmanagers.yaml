@@ -2319,7 +2319,7 @@ spec:
                             type: string
                         type: object
                       webex:
-                        description: webex defines the default configuration for Jira.
+                        description: webex defines the default configuration for Webex.
                         properties:
                           apiURL:
                             description: |-
