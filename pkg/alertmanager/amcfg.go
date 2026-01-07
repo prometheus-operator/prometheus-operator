@@ -2733,6 +2733,12 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		tc.MessageThreadID = 0
 	}
 
+	if tc.APIUrl != "" {
+		if _, err := validation.ValidateURL(tc.APIUrl); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 

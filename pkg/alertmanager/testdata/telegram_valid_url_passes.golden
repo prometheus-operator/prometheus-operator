@@ -1,0 +1,7 @@
+receivers:
+- name: ""
+  telegram_configs:
+  - api_url: http://example.com
+    bot_token: token
+    chat_id: 12345
+templates: []
