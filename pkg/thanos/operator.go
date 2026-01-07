@@ -250,17 +250,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			o.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				// TODO(simonpasquier): use a more restrictive label selector
-				// selecting only ThanosRuler statefulsets (e.g.
-				// "app.kubernetes.io/name in (thanos-ruler)").
-				//
-				// We need to wait for a couple of releases after [1] to ensure
-				// that the expected labels have been propagated to the
-				// ThanosRuler statefulsets otherwise the informer won't select
-				// any object.
-				//
-				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
-				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+				options.LabelSelector = labelSelectorForStatefulSets()
 			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
@@ -894,6 +884,16 @@ func makeSelectorLabels(name string) map[string]string {
 		operator.ApplicationInstanceLabelKey: name,
 		"thanos-ruler":                       name,
 	}
+}
+
+// labelSelectorForStatefulSets returns a label selector which selects
+// all ThanosRuler statefulsets.
+func labelSelectorForStatefulSets() string {
+	return fmt.Sprintf(
+		"%s in (%s),%s in (%s)",
+		operator.ManagedByLabelKey, operator.ManagedByLabelValue,
+		operator.ApplicationNameLabelKey, applicationNameLabelValue,
+	)
 }
 
 func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *assets.StoreBuilder, tr *monitoringv1.ThanosRuler) error {

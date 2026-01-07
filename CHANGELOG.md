@@ -1,5 +1,6 @@
 ## Unreleased
 
+* [CHANGE] Use narrower selectors for statefulset informers in Alertmanager and ThanosRuler controllers. It is recommended to upgrade from v0.85.0 (at least). #8246
 * [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8119
 * [FEATURE] Add `updateStrategy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8202
 * [ENHANCEMENT] Use `.spec.minReadySeconds` to delay the first flush of aggregation groups in Alertmanager. #8201
