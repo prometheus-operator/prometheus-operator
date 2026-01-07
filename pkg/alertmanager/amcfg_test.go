@@ -3083,7 +3083,7 @@ func TestGenerateConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -3131,7 +3131,7 @@ func TestGenerateConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -3316,7 +3316,7 @@ func TestGenerateConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -3397,7 +3397,7 @@ func TestGenerateConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -6494,6 +6494,23 @@ func TestSanitizeIncidentioConfig(t *testing.T) {
 			golden: "incidentio_configs_for_supported_versions.golden",
 		},
 		{
+			name:           "incidentio_configs invalid url returns error",
+			againstVersion: versionIncidentioAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "not-a-valid-url",
+								AlertSourceToken: "token123",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "incidentio_configs both url and url_file set",
 			againstVersion: versionIncidentioAllowed,
 			in: &alertmanagerConfig{
@@ -6997,6 +7014,66 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 				},
 			},
 			golden: "telegram_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeMSTeamsConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionMSTeamsExampleAllowed := semver.Version{Major: 0, Minor: 27}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "msteams invalid webhook_url returns error",
+			againstVersion: versionMSTeamsExampleAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteams valid webhook_url passes validation",
+			againstVersion: versionMSTeamsExampleAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "http://example.com/webhook",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteams_valid_url_passes.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

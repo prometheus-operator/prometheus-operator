@@ -282,7 +282,7 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
-	if err := validationv1.ValidateAlertmanagerGlobalConfig(globalConfig); err != nil {
+	if err := cb.checkAlertmanagerGlobalConfigResource(ctx, globalConfig, crKey.Namespace); err != nil {
 		return err
 	}
 
@@ -901,22 +901,18 @@ func (cb *ConfigBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1alpha1.SlackConfig, crKey types.NamespacedName) (*slackConfig, error) {
 	out := &slackConfig{
 		VSendResolved: in.SendResolved,
-		Channel:       in.Channel,
-		Username:      in.Username,
-		Color:         in.Color,
-		Title:         in.Title,
-		TitleLink:     in.TitleLink,
-		Pretext:       in.Pretext,
-		Text:          in.Text,
-		ShortFields:   in.ShortFields,
-		Footer:        in.Footer,
-		Fallback:      in.Fallback,
-		CallbackID:    in.CallbackID,
-		IconEmoji:     in.IconEmoji,
-		IconURL:       in.IconURL,
-		ImageURL:      in.ImageURL,
-		ThumbURL:      in.ThumbURL,
-		LinkNames:     in.LinkNames,
+		Channel:       ptr.Deref(in.Channel, ""),
+		Username:      ptr.Deref(in.Username, ""),
+		Color:         ptr.Deref(in.Color, ""),
+		Title:         ptr.Deref(in.Title, ""),
+		Pretext:       ptr.Deref(in.Pretext, ""),
+		Text:          ptr.Deref(in.Text, ""),
+		ShortFields:   ptr.Deref(in.ShortFields, false),
+		Footer:        ptr.Deref(in.Footer, ""),
+		Fallback:      ptr.Deref(in.Fallback, ""),
+		CallbackID:    ptr.Deref(in.CallbackID, ""),
+		IconEmoji:     ptr.Deref(in.IconEmoji, ""),
+		LinkNames:     ptr.Deref(in.LinkNames, false),
 		MrkdwnIn:      in.MrkdwnIn,
 	}
 
@@ -928,6 +924,19 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.APIURL = url
 	}
 
+	if ptr.Deref(in.TitleLink, "") != "" {
+		out.TitleLink = string(*in.TitleLink)
+	}
+	if ptr.Deref(in.IconURL, "") != "" {
+		out.TitleLink = string(*in.IconURL)
+	}
+	if ptr.Deref(in.ImageURL, "") != "" {
+		out.TitleLink = string(*in.ImageURL)
+	}
+	if ptr.Deref(in.ThumbURL, "") != "" {
+		out.TitleLink = string(*in.ThumbURL)
+	}
+
 	var actions []slackAction
 	if l := len(in.Actions); l > 0 {
 		actions = make([]slackAction, l)
@@ -935,18 +944,21 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 			action := slackAction{
 				Type:  a.Type,
 				Text:  a.Text,
-				URL:   a.URL,
-				Style: a.Style,
-				Name:  a.Name,
-				Value: a.Value,
+				Style: ptr.Deref(a.Style, ""),
+				Name:  ptr.Deref(a.Name, ""),
+				Value: ptr.Deref(a.Value, ""),
+			}
+
+			if ptr.Deref(a.URL, "") != "" {
+				action.URL = string(*a.URL)
 			}
 
 			if a.ConfirmField != nil {
 				action.ConfirmField = &slackConfirmationField{
 					Text:        a.ConfirmField.Text,
-					Title:       a.ConfirmField.Title,
-					OkText:      a.ConfirmField.OkText,
-					DismissText: a.ConfirmField.DismissText,
+					Title:       ptr.Deref(a.ConfirmField.Title, ""),
+					OkText:      ptr.Deref(a.ConfirmField.OkText, ""),
+					DismissText: ptr.Deref(a.ConfirmField.DismissText, ""),
 				}
 			}
 
@@ -2749,6 +2761,10 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
 	}
 
+	if _, err := validation.ValidateURL(tc.WebhookURL); err != nil {
+		return fmt.Errorf("invalid 'webhook_url': %w", err)
+	}
+
 	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
 		msg := "'summary' supported in Alertmanager >= 0.27.0 only - dropping field `summary` from msteams config"
 		logger.Warn(msg, "current_version", amVersion.String())
@@ -3127,4 +3143,46 @@ func checkIsV2Matcher(in ...[]monitoringv1alpha1.Matcher) bool {
 		}
 	}
 	return false
+}
+
+func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
+	ctx context.Context,
+	gc *monitoringv1.AlertmanagerGlobalConfig,
+	namespace string,
+) error {
+	if gc == nil {
+		return nil
+	}
+
+	// Perform semantic validation irrespective of the Alertmanager version.
+	if err := validationv1.ValidateAlertmanagerGlobalConfig(gc); err != nil {
+		return err
+	}
+
+	// Perform more specific validations which depend on the Alertmanager
+	// version. It also retrieves data from referenced secrets and configmaps
+	// (and fails in case of missing/invalid references).
+	if err := cb.checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalWeChatConfig(
+	ctx context.Context,
+	wc *monitoringv1.GlobalWeChatConfig,
+	namespace string,
+) error {
+	if wc == nil {
+		return nil
+	}
+
+	if wc.APISecret != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *wc.APISecret); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

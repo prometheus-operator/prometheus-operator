@@ -6401,11 +6401,13 @@ spec:
                                       description: |-
                                         dismissText defines the label for the cancel button in the dialog.
                                         When not specified, defaults to "Cancel". This button cancels the action.
+                                      minLength: 1
                                       type: string
                                     okText:
                                       description: |-
                                         okText defines the label for the confirmation button in the dialog.
                                         When not specified, defaults to "Okay". This button proceeds with the action.
+                                      minLength: 1
                                       type: string
                                     text:
                                       description: |-
@@ -6417,6 +6419,7 @@ spec:
                                       description: |-
                                         title defines the title text displayed at the top of the confirmation dialog.
                                         When not specified, a default title will be used.
+                                      minLength: 1
                                       type: string
                                   required:
                                   - text
@@ -6425,11 +6428,13 @@ spec:
                                   description: |-
                                     name defines a unique identifier for the action within the message.
                                     This value is sent back to your application when the action is triggered.
+                                  minLength: 1
                                   type: string
                                 style:
                                   description: |-
                                     style defines the visual appearance of the action element.
                                     Valid values include "default", "primary" (green), and "danger" (red).
+                                  minLength: 1
                                   type: string
                                 text:
                                   description: |-
@@ -6447,16 +6452,19 @@ spec:
                                   description: |-
                                     url defines the URL to open when the action is triggered.
                                     Only applicable for button-type actions. When set, clicking the button opens this URL.
+                                  pattern: ^https?://.+$
                                   type: string
                                 value:
                                   description: |-
                                     value defines the payload sent when the action is triggered.
                                     This data is included in the callback sent to your application.
+                                  minLength: 1
                                   type: string
                               required:
                               - text
                               - type
                               type: object
+                            minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
                           apiURL:
@@ -6489,19 +6497,23 @@ spec:
                           callbackId:
                             description: callbackId defines an identifier for the
                               message used in interactive components.
+                            minLength: 1
                             type: string
                           channel:
                             description: channel defines the channel or user to send
                               notifications to.
+                            minLength: 1
                             type: string
                           color:
                             description: |-
                               color defines the color of the left border of the Slack message attachment.
                               Can be a hex color code (e.g., "#ff0000") or a predefined color name.
+                            minLength: 1
                             type: string
                           fallback:
                             description: fallback defines a plain-text summary of
                               the attachment for clients that don't support attachments.
+                            minLength: 1
                             type: string
                           fields:
                             description: fields defines a list of Slack fields that
@@ -6535,11 +6547,13 @@ spec:
                               - title
                               - value
                               type: object
+                            minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
                           footer:
                             description: footer defines small text displayed at the
                               bottom of the message attachment.
+                            minLength: 1
                             type: string
                           httpConfig:
                             description: httpConfig defines the HTTP client configuration.
@@ -7249,14 +7263,17 @@ spec:
                           iconEmoji:
                             description: iconEmoji defines the emoji to use as the
                               bot's avatar (e.g., ":ghost:").
+                            minLength: 1
                             type: string
                           iconURL:
                             description: iconURL defines the URL to an image to use
                               as the bot's avatar.
+                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: imageURL defines the URL to an image file
                               that will be displayed inside the message attachment.
+                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: |-
@@ -7268,12 +7285,15 @@ spec:
                               mrkdwnIn defines which fields should be parsed as Slack markdown.
                               Valid values include "pretext", "text", and "fields".
                             items:
+                              minLength: 1
                               type: string
+                            minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
+                            minLength: 1
                             type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
@@ -7287,11 +7307,13 @@ spec:
                           text:
                             description: text defines the main text content of the
                               Slack message attachment.
+                            minLength: 1
                             type: string
                           thumbURL:
                             description: |-
                               thumbURL defines the URL to an image file that will be displayed as a thumbnail
                               on the right side of the message attachment.
+                            pattern: ^https?://.+$
                             type: string
                           timeout:
                             description: |-
@@ -7303,13 +7325,16 @@ spec:
                           title:
                             description: title defines the title text displayed in
                               the Slack message attachment.
+                            minLength: 1
                             type: string
                           titleLink:
                             description: titleLink defines the URL that the title
                               will link to when clicked.
+                            pattern: ^https?://.+$
                             type: string
                           username:
                             description: username defines the slack bot user name.
+                            minLength: 1
                             type: string
                         type: object
                       type: array

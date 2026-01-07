@@ -196,9 +196,27 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 }
 
 func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if err := config.Validate(); err != nil {
 			return err
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
+			return fmt.Errorf("[%d]: iconURL: %w", i, err)
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.ImageURL)); err != nil {
+			return fmt.Errorf("[%d]: imageURL: %w", i, err)
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.ThumbURL)); err != nil {
+			return fmt.Errorf("[%d]: thumbURL: %w", i, err)
+		}
+
+		for j, sa := range config.Actions {
+			if err := validation.ValidateURLPtr((*string)(sa.URL)); err != nil {
+				return fmt.Errorf("[%d]: invalid 'action'[%d]: url: %w", i, j, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

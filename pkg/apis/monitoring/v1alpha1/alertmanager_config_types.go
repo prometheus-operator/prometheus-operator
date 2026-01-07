@@ -29,6 +29,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -397,67 +398,81 @@ type SlackConfig struct {
 	// +optional
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
 	// channel defines the channel or user to send notifications to.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Channel string `json:"channel,omitempty"`
+	Channel *string `json:"channel,omitempty"`
 	// username defines the slack bot user name.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Username string `json:"username,omitempty"`
+	Username *string `json:"username,omitempty"`
 	// color defines the color of the left border of the Slack message attachment.
 	// Can be a hex color code (e.g., "#ff0000") or a predefined color name.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Color string `json:"color,omitempty"`
+	Color *string `json:"color,omitempty"`
 	// title defines the title text displayed in the Slack message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// titleLink defines the URL that the title will link to when clicked.
 	// +optional
-	TitleLink string `json:"titleLink,omitempty"`
+	TitleLink *URL `json:"titleLink,omitempty"`
 	// pretext defines optional text that appears above the message attachment block.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Pretext string `json:"pretext,omitempty"`
+	Pretext *string `json:"pretext,omitempty"`
 	// text defines the main text content of the Slack message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// fields defines a list of Slack fields that are sent with each notification.
+	// +kubebuilder:validation:MinItems=1
 	// +listType=atomic
 	// +optional
 	Fields []SlackField `json:"fields,omitempty"`
 	// shortFields determines whether fields are displayed in a compact format.
 	// When true, fields are shown side by side when possible.
 	// +optional
-	ShortFields bool `json:"shortFields,omitempty"` // nolint:kubeapilinter
+	ShortFields *bool `json:"shortFields,omitempty"` // nolint:kubeapilinter
 	// footer defines small text displayed at the bottom of the message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Footer string `json:"footer,omitempty"`
+	Footer *string `json:"footer,omitempty"`
 	// fallback defines a plain-text summary of the attachment for clients that don't support attachments.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Fallback string `json:"fallback,omitempty"`
+	Fallback *string `json:"fallback,omitempty"`
 	// callbackId defines an identifier for the message used in interactive components.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	CallbackID string `json:"callbackId,omitempty"`
+	CallbackID *string `json:"callbackId,omitempty"`
 	// iconEmoji defines the emoji to use as the bot's avatar (e.g., ":ghost:").
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	IconEmoji string `json:"iconEmoji,omitempty"`
+	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// iconURL defines the URL to an image to use as the bot's avatar.
 	// +optional
-	IconURL string `json:"iconURL,omitempty"`
+	IconURL *URL `json:"iconURL,omitempty"`
 	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
 	// +optional
-	ImageURL string `json:"imageURL,omitempty"`
+	ImageURL *URL `json:"imageURL,omitempty"`
 	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
 	// on the right side of the message attachment.
 	// +optional
-	ThumbURL string `json:"thumbURL,omitempty"`
+	ThumbURL *URL `json:"thumbURL,omitempty"`
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
-	LinkNames bool `json:"linkNames,omitempty"` // nolint:kubeapilinter
+	LinkNames *bool `json:"linkNames,omitempty"` // nolint:kubeapilinter
 	// mrkdwnIn defines which fields should be parsed as Slack markdown.
 	// Valid values include "pretext", "text", and "fields".
 	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
 	// +optional
 	MrkdwnIn []string `json:"mrkdwnIn,omitempty"`
 	// actions defines a list of Slack actions that are sent with each notification.
+	// +kubebuilder:validation:MinItems=1
 	// +listType=atomic
 	// +optional
 	Actions []SlackAction `json:"actions,omitempty"`
@@ -506,19 +521,22 @@ type SlackAction struct {
 	// url defines the URL to open when the action is triggered.
 	// Only applicable for button-type actions. When set, clicking the button opens this URL.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// style defines the visual appearance of the action element.
 	// Valid values include "default", "primary" (green), and "danger" (red).
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Style string `json:"style,omitempty"`
+	Style *string `json:"style,omitempty"`
 	// name defines a unique identifier for the action within the message.
 	// This value is sent back to your application when the action is triggered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// value defines the payload sent when the action is triggered.
 	// This data is included in the callback sent to your application.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Value string `json:"value,omitempty"`
+	Value *string `json:"value,omitempty"`
 	// confirm defines an optional confirmation dialog that appears before the action is executed.
 	// When set, users must confirm their intent before the action proceeds.
 	// +optional
@@ -535,7 +553,7 @@ func (sa *SlackAction) Validate() error {
 		return errors.New("missing text in Slack action configuration")
 	}
 
-	if sa.URL == "" && sa.Name == "" {
+	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
 		return errors.New("missing name or url in Slack action configuration")
 	}
 
@@ -561,16 +579,19 @@ type SlackConfirmationField struct {
 	Text string `json:"text"`
 	// title defines the title text displayed at the top of the confirmation dialog.
 	// When not specified, a default title will be used.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// okText defines the label for the confirmation button in the dialog.
 	// When not specified, defaults to "Okay". This button proceeds with the action.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	OkText string `json:"okText,omitempty"`
+	OkText *string `json:"okText,omitempty"`
 	// dismissText defines the label for the cancel button in the dialog.
 	// When not specified, defaults to "Cancel". This button cancels the action.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	DismissText string `json:"dismissText,omitempty"`
+	DismissText *string `json:"dismissText,omitempty"`
 }
 
 // Validate ensures SlackConfirmationField is valid.
