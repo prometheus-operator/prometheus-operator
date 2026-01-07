@@ -1317,13 +1317,16 @@ func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitoringv1alpha1.PushoverConfig, crKey types.NamespacedName) (*pushoverConfig, error) {
 	out := &pushoverConfig{
 		VSendResolved: in.SendResolved,
-		Title:         in.Title,
-		Message:       in.Message,
-		URL:           in.URL,
-		URLTitle:      in.URLTitle,
-		Priority:      in.Priority,
+		Title:         ptr.Deref(in.Title, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		URLTitle:      ptr.Deref(in.URLTitle, ""),
+		Priority:      ptr.Deref(in.Priority, ""),
 		HTML:          in.HTML,
 		Monospace:     in.Monospace,
+	}
+
+	if ptr.Deref(in.URL, "") != "" {
+		out.URL = string(*in.URL)
 	}
 
 	if in.TTL != nil {
@@ -1357,16 +1360,16 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	{
-		if in.Retry != "" {
-			retry, err := model.ParseDuration(in.Retry)
+		if ptr.Deref(in.Retry, "") != "" {
+			retry, err := model.ParseDuration(*in.Retry)
 			if err != nil {
 				return nil, fmt.Errorf("parse resolve retry: %w", err)
 			}
 			out.Retry = &retry
 		}
 
-		if in.Expire != "" {
-			expire, err := model.ParseDuration(in.Expire)
+		if ptr.Deref(in.Expire, "") != "" {
+			expire, err := model.ParseDuration(*in.Expire)
 			if err != nil {
 				return nil, fmt.Errorf("parse resolve expire: %w", err)
 			}
@@ -2118,6 +2121,36 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		}
 	}
 
+	if gc.SlackAppToken != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppToken = ""
+	}
+
+	if gc.SlackAppTokenFile != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppTokenFile = ""
+	}
+
+	if gc.SlackAppURL != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppURL = nil
+	}
+
+	if gc.SlackAppToken != "" && gc.SlackAppTokenFile != "" {
+		msg := "'slack_app_token' and 'slack_app_token_file' are mutually exclusive - 'slack_app_token' has taken precedence"
+		logger.Warn(msg)
+		gc.SlackAppTokenFile = ""
+	}
+
+	if (gc.SlackAppToken != "" || gc.SlackAppTokenFile != "") && (gc.SlackAPIURL != nil || gc.SlackAPIURLFile != "") {
+		if gc.SlackAPIURL != nil && gc.SlackAppURL != nil && gc.SlackAPIURL.String() != gc.SlackAppURL.String() {
+			return fmt.Errorf("at most one of slack_app_token/slack_app_token_file & slack_api_url/slack_api_url_file must be configured (unless slack_api_url matches slack_app_url)")
+		}
+	}
+
 	if gc.OpsGenieAPIKeyFile != "" && amVersion.LT(semver.MustParse("0.24.0")) {
 		msg := "'opsgenie_api_key_file' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
@@ -2584,18 +2617,54 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		return errors.New("either monospace or html must be configured")
 	}
 
+	if poc.URL != "" {
+		if _, err := validation.ValidateURL(poc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
 	return poc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
 	}
 
-	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.Timeout != nil && lessThanV0_30 {
 		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.Timeout = nil
+	}
+
+	if sc.AppToken != "" && lessThanV0_30 {
+		msg := "'app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppToken = ""
+	}
+
+	if sc.AppTokenFile != "" && lessThanV0_30 {
+		msg := "'app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppTokenFile = ""
+	}
+
+	if sc.AppURL != "" && lessThanV0_30 {
+		msg := "'app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppURL = ""
+	}
+
+	if sc.AppToken != "" && sc.AppTokenFile != "" {
+		msg := "'app_token' and 'app_token_file' are mutually exclusive for slack receiver config - 'app_token' has taken precedence"
+		logger.Warn(msg)
+		sc.AppTokenFile = ""
+	}
+
+	if (sc.AppToken != "" || sc.AppTokenFile != "") && (sc.APIURL != "" || sc.APIURLFile != "") {
+		return fmt.Errorf("at most one of app_token/app_token_file & api_url/api_url_file must be configured")
 	}
 
 	if sc.APIURLFile == "" {
@@ -2660,6 +2729,12 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		msg := "'timeout' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		whc.Timeout = nil
+	}
+
+	if whc.URL != "" {
+		if _, err := validation.ValidateURL(whc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
 	}
 
 	return nil
@@ -2740,6 +2815,12 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		msg := "'message_thread_id' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		tc.MessageThreadID = 0
+	}
+
+	if tc.APIUrl != "" {
+		if _, err := validation.ValidateURL(tc.APIUrl); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)

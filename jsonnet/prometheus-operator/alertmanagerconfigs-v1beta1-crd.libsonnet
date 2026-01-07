@@ -4050,6 +4050,7 @@
                         properties: {
                           device: {
                             description: "device defines the name of a specific device to send the notification to.\nIf not specified, the notification is sent to all user's devices.",
+                            minLength: 1,
                             type: 'string',
                           },
                           expire: {
@@ -4701,6 +4702,7 @@
                           },
                           message: {
                             description: 'message defines the notification message content.\nThis is the main body text of the Pushover notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           monospace: {
@@ -4709,6 +4711,7 @@
                           },
                           priority: {
                             description: 'priority defines the notification priority level.\nSee https://pushover.net/api#priority for valid values and behavior.',
+                            minLength: 1,
                             type: 'string',
                           },
                           retry: {
@@ -4722,10 +4725,12 @@
                           },
                           sound: {
                             description: "sound defines the name of one of the sounds supported by device clients.\nThis overrides the user's default sound choice for this notification.",
+                            minLength: 1,
                             type: 'string',
                           },
                           title: {
                             description: 'title defines the notification title displayed in the Pushover message.\nThis appears as the bold header text in the notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           token: {
@@ -4759,10 +4764,12 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
                             description: 'urlTitle defines a title for the supplementary URL.\nIf not specified, the raw URL is shown instead.',
+                            minLength: 1,
                             type: 'string',
                           },
                           userKey: {
