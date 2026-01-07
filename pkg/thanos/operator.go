@@ -940,7 +940,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 	for i, rw := range tr.Spec.RemoteWrite {
 		// Thanos does not support azureAD.workloadIdentity in any version
 		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
-			reset := resetFieldFn("")
+			reset := resetFieldFn("none")
 			reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity)
 		}
 

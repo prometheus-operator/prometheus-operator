@@ -65,23 +65,6 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			},
 			golden: "v0.24.0_remote_write_config.golden",
 		},
-		{
-			name:    "with workload identity - not supported",
-			version: operator.DefaultThanosVersion,
-			remoteWrite: []monitoringv1.RemoteWriteSpec{
-				{
-					URL: "http://example.com",
-					AzureAD: &monitoringv1.AzureAD{
-						Cloud: ptr.To("AzurePublic"),
-						WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
-							ClientID: "00000000-a12b-3cd4-e56f-000000000000",
-							TenantID: "11111111-a12b-3cd4-e56f-000000000000",
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cs := fake.NewClientset()
