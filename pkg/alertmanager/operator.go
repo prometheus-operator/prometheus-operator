@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -121,6 +122,14 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
+// WithConfigResourceStatus tells that the controller can manage the status of
+// configuration resources.
+func WithConfigResourceStatus() ControllerOption {
+	return func(o *Operator) {
+		o.configResourcesStatusEnabled = true
+	}
+}
+
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -166,7 +175,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
-		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -277,17 +285,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			c.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				// TODO(simonpasquier): use a more restrictive label selector
-				// selecting only Alertmanager statefulsets (e.g.
-				// "app.kubernetes.io/name in (alertmanager)").
-				//
-				// We need to wait for a couple of releases after [1] merges to
-				// ensure that the expected labels have been propagated to the
-				// Alertmanager statefulsets otherwise the informer won't
-				// select any object.
-				//
-				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
-				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+				options.LabelSelector = labelSelectorForStatefulSets()
 			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
@@ -685,28 +683,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
-	sErr, ok := err.(*apierrors.StatusError)
-
-	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+	if err = k8sutil.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
 		c.metrics.StsDeleteCreateCounter().Inc()
-
-		// Gather only reason for failed update
-		failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
-		for i, cause := range sErr.ErrStatus.Details.Causes {
-			failMsg[i] = cause.Message
-		}
-
-		logger.Info("recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
-		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
-		}
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("updating StatefulSet failed: %w", err)
+		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -784,6 +765,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
+// makeSelectorLabels returns the default selector for the pods of the Alertmanager statefulset.
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
 		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
@@ -791,6 +773,16 @@ func makeSelectorLabels(name string) map[string]string {
 		operator.ApplicationInstanceLabelKey: name,
 		"alertmanager":                       name,
 	}
+}
+
+// labelSelectorForStatefulSets returns a label selector which selects
+// all Alertmanager statefulsets.
+func labelSelectorForStatefulSets() string {
+	return fmt.Sprintf(
+		"%s in (%s),%s in (%s)",
+		operator.ManagedByLabelKey, operator.ManagedByLabelValue,
+		operator.ApplicationNameLabelKey, applicationNameLabelValue,
+	)
 }
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
@@ -1271,13 +1263,6 @@ func checkPagerDutyConfigs(
 			}
 		}
 
-		if config.URL != "" {
-			if _, err := validation.ValidateURL(strings.TrimSpace(config.URL)); err != nil {
-				return fmt.Errorf("failed to validate URL: %w ", err)
-			}
-
-		}
-
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
@@ -1595,14 +1580,18 @@ func checkPushoverConfigs(
 			return err
 		}
 
-		if config.Expire != "" {
-			if _, err := model.ParseDuration(config.Expire); err != nil {
+		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
+			return errors.New("html and monospace options are mutually exclusive")
+		}
+
+		if ptr.Deref(config.Expire, "") != "" {
+			if _, err := model.ParseDuration(*config.Expire); err != nil {
 				return err
 			}
 		}
 
-		if config.Retry != "" {
-			if _, err := model.ParseDuration(config.Retry); err != nil {
+		if ptr.Deref(config.Retry, "") != "" {
+			if _, err := model.ParseDuration(*config.Retry); err != nil {
 				return err
 			}
 		}

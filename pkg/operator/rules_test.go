@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"strings"
@@ -23,7 +24,10 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -53,8 +57,12 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
 	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
 	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
+	t.Run("shouldAcceptRuleWithQueryOffsetThanos", shouldAcceptRuleWithQueryOffsetThanos)
+	t.Run("shouldDropQueryOffsetFieldForUnsupportedThanosVersion", shouldDropQueryOffsetFieldForUnsupportedThanosVersion)
+	t.Run("shouldDropGroupLabelsForUnsupportedThanosVersion", shouldDropGroupLabelsForUnsupportedThanosVersion)
+	t.Run("shouldAcceptRuleWithGroupLabelsThanos", shouldAcceptRuleWithGroupLabelsThanos)
 
-	// UTF-8 validation
+	// UTF-8 validation.
 	t.Run("UTF8Validation", TestUTF8Validation)
 }
 
@@ -346,6 +354,30 @@ func shouldAcceptRuleWithLimitThanos(t *testing.T) {
 	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
 
+func shouldAcceptRuleWithQueryOffsetThanos(t *testing.T) {
+	var queryOffset monitoringv1.Duration = "30s"
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+				QueryOffset: &queryOffset,
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+	require.Contains(t, content, "query_offset", "expected `query_offset` to be present in PrometheusRule")
+}
+
 func shouldAcceptRuleWithQueryOffsetPrometheus(t *testing.T) {
 	var queryOffset monitoringv1.Duration = "30s"
 	rules := &monitoringv1.PrometheusRule{
@@ -419,6 +451,31 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
 }
 
+func shouldDropQueryOffsetFieldForUnsupportedThanosVersion(t *testing.T) {
+	var queryOffset monitoringv1.Duration = "30s"
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+				QueryOffset: &queryOffset,
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant("0.37.0")
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+
+	require.NotContains(t, content, "query_offset", "expected `query_offset` not to be present in PrometheusRule")
+}
+
 func shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion(t *testing.T) {
 	var queryOffset monitoringv1.Duration = "30s"
 	rules := &monitoringv1.PrometheusRule{
@@ -473,6 +530,33 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with LegacyValidation")
 }
 
+func shouldDropGroupLabelsForUnsupportedThanosVersion(t *testing.T) {
+	labels := map[string]string{
+		"key": "value",
+	}
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name:   "group",
+				Labels: labels,
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant("0.38.0")
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+
+	require.NotContains(t, content, "key", "expected group labels not to be present in PrometheusRule")
+	require.NotContains(t, content, "value", "expected group labels not to be present in PrometheusRule")
+}
+
 func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
 	labels := map[string]string{
 		"key": "value",
@@ -500,6 +584,33 @@ func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
 	require.NotContains(t, content, "value", "expected group labels not to be present in PrometheusRule")
 }
 
+func shouldAcceptRuleWithGroupLabelsThanos(t *testing.T) {
+	labels := map[string]string{
+		"key": "value",
+	}
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name:   "group",
+				Labels: labels,
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+	require.Contains(t, content, "key", "expected group labels to be present in PrometheusRule")
+	require.Contains(t, content, "value", "expected group labels to be present in PrometheusRule")
+}
+
 func shouldAcceptRuleWithGroupLabels(t *testing.T) {
 	labels := map[string]string{
 		"key": "value",
@@ -521,8 +632,10 @@ func shouldAcceptRuleWithGroupLabels(t *testing.T) {
 
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
-	_, err := pr.generateRulesConfiguration(rules)
+	content, err := pr.generateRulesConfiguration(rules)
 	require.NoError(t, err)
+	require.Contains(t, content, "key", "expected group labels to be present in PrometheusRule")
+	require.Contains(t, content, "value", "expected group labels to be present in PrometheusRule")
 }
 
 func TestUTF8Validation(t *testing.T) {
@@ -574,4 +687,114 @@ func createUTF8Rule() *monitoringv1.PrometheusRule {
 			},
 		}},
 	}
+}
+
+func TestPrometheusRuleSync(t *testing.T) {
+	c := fake.NewClientset(
+		// This configmap should be left untouched.
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "prometheus-bar-rulefiles-0",
+				Namespace: "monitoring",
+				Labels: map[string]string{
+					"prometheus-name": "bar",
+				},
+				UID: "immutable",
+			},
+			Data: map[string]string{
+				"key1": "xxx",
+			},
+		},
+	)
+	cmClient := c.CoreV1().ConfigMaps("monitoring")
+
+	prs := NewPrometheusRuleSyncer(
+		slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		"prometheus-foo",
+		cmClient,
+		map[string]string{"prometheus-name": "foo"},
+		nil,
+	)
+
+	t.Run("should create configmap with no rules", func(t *testing.T) {
+		configMaps, err := prs.Sync(context.Background(), map[string]string{})
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "prometheus-foo-rulefiles-0", cms.Items[0].Name)
+		require.Len(t, cms.Items[0].Data, 0)
+	})
+
+	t.Run("should update configmap with 1 rule", func(t *testing.T) {
+		configMaps, err := prs.Sync(context.Background(), map[string]string{"rule1.yaml": "xxx"})
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "prometheus-foo-rulefiles-0", cms.Items[0].Name)
+		require.Equal(t, cms.Items[0].Data["rule1.yaml"], "xxx")
+	})
+
+	//t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
+	t.Run("should split big rules into multiple configmaps", func(t *testing.T) {
+		rules := map[string]string{
+			"first.yaml":  strings.Repeat("a", MaxConfigMapDataSize),
+			"second.yaml": "a",
+		}
+		configMaps, err := prs.Sync(context.Background(), rules)
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 2)
+		for _, cm := range cms.Items {
+			switch cm.Name {
+			case "prometheus-foo-rulefiles-0":
+				require.Len(t, cm.Data, 1)
+				require.Equal(t, cm.Data["first.yaml"], rules["first.yaml"])
+			case "prometheus-foo-rulefiles-1":
+				require.Len(t, cm.Data, 1)
+				require.Equal(t, cm.Data["second.yaml"], "a")
+			default:
+				t.Errorf("unexpected configmap: %s", cm.Name)
+			}
+		}
+	})
+
+	t.Run("should keep 1 configmap with no rules", func(t *testing.T) {
+		configMaps, err := prs.Sync(context.Background(), map[string]string{})
+		require.NoError(t, err)
+		require.Equal(t, []string{"prometheus-foo-rulefiles-0"}, configMaps)
+
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=foo"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "prometheus-foo-rulefiles-0", cms.Items[0].Name)
+		require.Len(t, cms.Items[0].Data, 0)
+	})
+
+	t.Run("should not update other configmaps", func(t *testing.T) {
+		cms, err := cmClient.List(context.Background(), metav1.ListOptions{LabelSelector: "prometheus-name=bar"})
+		require.NoError(t, err)
+		require.Len(t, cms.Items, 1)
+		require.Equal(t, "immutable", string(cms.Items[0].UID))
+	})
+
+	t.Run("should append virtual configmaps", func(t *testing.T) {
+		require.Equal(t,
+			[]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"},
+			prs.AppendConfigMapNames([]string{"prometheus-foo-rulefiles-0"}, 3),
+		)
+
+		require.Equal(t,
+			[]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"},
+			prs.AppendConfigMapNames([]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"}, 3),
+		)
+	})
 }

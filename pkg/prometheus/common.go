@@ -73,7 +73,8 @@ var (
 	LabelPrometheusName       = "prometheus-name"
 )
 
-// LabelSelectorForStatefulSets returns a label selector which selects statefulsets deployed with the server or agent mode.
+// LabelSelectorForStatefulSets returns a label selector which selects
+// statefulsets deployed with the server or agent mode.
 func LabelSelectorForStatefulSets(mode string) string {
 	return fmt.Sprintf(
 		"%s,%s,%s,%s in (%s)",

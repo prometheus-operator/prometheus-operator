@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.87.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -4047,6 +4047,14 @@
                     "description": "paused defines when a ThanosRuler deployment is paused, no actions except for deletion\nwill be performed on the underlying objects.",
                     "type": "boolean"
                   },
+                  "podManagementPolicy": {
+                    "description": "podManagementPolicy defines the policy for creating/deleting pods when\nscaling up and down.\n\nUnlike the default StatefulSet behavior, the default policy is\n`Parallel` to avoid manual intervention in case a pod gets stuck during\na rollout.\n\nNote that updating this value implies the recreation of the StatefulSet\nwhich incurs a service outage.",
+                    "enum": [
+                      "OrderedReady",
+                      "Parallel"
+                    ],
+                    "type": "string"
+                  },
                   "podMetadata": {
                     "description": "podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.\n\nThe following items are reserved and cannot be overridden:\n* \"app.kubernetes.io/name\" label, set to \"thanos-ruler\".\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/instance\" label, set to the name of the ThanosRuler instance.\n* \"thanos-ruler\" label, set to the name of the ThanosRuler instance.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"thanos-ruler\".",
                     "properties": {
@@ -4187,20 +4195,18 @@
                               "type": "string"
                             },
                             "managedIdentity": {
-                              "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
+                              "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.",
                               "properties": {
                                 "clientId": {
-                                  "description": "clientId defines defines the Azure User-assigned Managed identity.",
+                                  "description": "clientId defines the Azure User-assigned Managed identity.\n\nFor Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.",
+                                  "minLength": 1,
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "clientId"
-                              ],
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "oauth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
+                              "description": "oauth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
                               "properties": {
                                 "clientId": {
                                   "description": "clientId defines the clientId of the Azure Active Directory application that is being used to authenticate.",
@@ -4244,8 +4250,13 @@
                               ],
                               "type": "object"
                             },
+                            "scope": {
+                              "description": "scope is the custom OAuth 2.0 scope to request when acquiring tokens.\nIt requires Prometheus >= 3.9.0. Currently not supported by Thanos.",
+                              "pattern": "^[\\w\\s:/.\\\\-]+$",
+                              "type": "string"
+                            },
                             "sdk": {
-                              "description": "sdk defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
+                              "description": "sdk defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
                               "properties": {
                                 "tenantId": {
                                   "description": "tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.",
@@ -4253,6 +4264,26 @@
                                   "type": "string"
                                 }
                               },
+                              "type": "object"
+                            },
+                            "workloadIdentity": {
+                              "description": "workloadIdentity defines the Azure Workload Identity authentication.\nCannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.\n\nIt requires Prometheus >= 3.7.0. Currently not supported by Thanos.",
+                              "properties": {
+                                "clientId": {
+                                  "description": "clientId is the clientID of the Azure Active Directory application.",
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "tenantId": {
+                                  "description": "tenantId is the tenant ID of the Azure Active Directory application.",
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "clientId",
+                                "tenantId"
+                              ],
                               "type": "object"
                             }
                           },
@@ -4342,7 +4373,7 @@
                           "type": "string"
                         },
                         "metadataConfig": {
-                          "description": "metadataConfig defines how to send a series metadata to the remote storage.",
+                          "description": "metadataConfig defines how to send a series metadata to the remote storage.\n\nWhen the field is empty, **no metadata** is sent. But when the field is\nnull, metadata is sent.",
                           "properties": {
                             "maxSamplesPerSend": {
                               "description": "maxSamplesPerSend defines the maximum number of metadata samples per send.\n\nIt requires Prometheus >= v2.29.0.",
@@ -4849,7 +4880,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "useFIPSSTSEndpoint": {
-                              "description": "useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.",
+                              "description": "useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.",
                               "type": "boolean"
                             }
                           },
@@ -6154,6 +6185,47 @@
                   "tracingConfigFile": {
                     "description": "tracingConfigFile defines the path of the tracing configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `tracingConfig`.",
                     "type": "string"
+                  },
+                  "updateStrategy": {
+                    "description": "updateStrategy indicates the strategy that will be employed to update\nPods in the StatefulSet when a revision is made to statefulset's Pod\nTemplate.\n\nThe default strategy is RollingUpdate.",
+                    "properties": {
+                      "rollingUpdate": {
+                        "description": "rollingUpdate is used to communicate parameters when type is RollingUpdate.",
+                        "properties": {
+                          "maxUnavailable": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "description": "maxUnavailable is the maximum number of pods that can be unavailable\nduring the update. The value can be an absolute number (ex: 5) or a\npercentage of desired pods (ex: 10%). Absolute number is calculated from\npercentage by rounding up. This can not be 0.  Defaults to 1. This field\nis alpha-level and is only honored by servers that enable the\nMaxUnavailableStatefulSet feature. The field applies to all pods in the\nrange 0 to Replicas-1.  That means if there is any unavailable pod in\nthe range 0 to Replicas-1, it will be counted towards MaxUnavailable.",
+                            "x-kubernetes-int-or-string": true
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": {
+                        "description": "type indicates the type of the StatefulSetUpdateStrategy.\n\nDefault is RollingUpdate.",
+                        "enum": [
+                          "OnDelete",
+                          "RollingUpdate"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "rollingUpdate requires type to be RollingUpdate",
+                        "rule": "!(self.type != 'RollingUpdate' && has(self.rollingUpdate))"
+                      }
+                    ]
                   },
                   "version": {
                     "description": "version of Thanos to be deployed.",

@@ -325,16 +325,18 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
+	// By default, podManagementPolicy is set to Parallel to mitigate rollout
+	// issues in Kubernetes (see https://github.com/kubernetes/kubernetes/issues/60164).
+	// This is also mentioned as one of limitations of StatefulSets:
+	// https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
+	podManagementPolicy := ptr.Deref(cpf.PodManagementPolicy, monitoringv1.ParallelPodManagement)
+
 	spec := appsv1.StatefulSetSpec{
-		ServiceName: ptr.Deref(cpf.ServiceName, governingServiceName),
-		Replicas:    cpf.Replicas,
-		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-		PodManagementPolicy: appsv1.ParallelPodManagement,
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
-		MinReadySeconds: ptr.Deref(p.Spec.MinReadySeconds, 0),
+		ServiceName:         ptr.Deref(cpf.ServiceName, governingServiceName),
+		Replicas:            cpf.Replicas,
+		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
+		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(cpf.UpdateStrategy),
+		MinReadySeconds:     ptr.Deref(p.Spec.MinReadySeconds, 0),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
@@ -469,6 +471,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
+					Optional: ptr.To(true),
 				},
 			},
 		})
@@ -478,10 +481,11 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 		volumeMounts = append(volumeMounts, v1.VolumeMount{
 			Name:      name,
 			MountPath: prompkg.RulesDir + "/" + name,
+			ReadOnly:  true,
 		})
 	}
 
-	// not mount 2 emptyDir volumes at the same mountpath
+	// Prevent mounting 2 emptyDir volumes at the same mountpath
 	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
 		volumeMounts = append(volumeMounts, vmount)
 	}

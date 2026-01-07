@@ -109,14 +109,14 @@ type ProxyConfig struct {
 	//
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
-	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"` // nolint:kubeapilinter
 	// proxyConnectHeader optionally specifies headers to send to
 	// proxies during CONNECT requests.
 	//
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
 	// +mapType:=atomic
-	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"` //nolint:kubeapilinter
 }
 
 // Validate semantically validates the given ProxyConfig.
@@ -227,7 +227,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	// Setting this to true enhances security by preventing potential credential theft attacks.
 	//
 	// +optional
-	Deny bool `json:"deny,omitempty"`
+	Deny bool `json:"deny,omitempty"` // nolint:kubeapilinter
 }
 
 // Condition represents the state of the resources associated with the
@@ -330,6 +330,7 @@ type EmbeddedObjectMetadata struct {
 	// and services.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	// +optional
+	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
 
 	// annotations defines an unstructured key value map stored with a resource that may be
@@ -337,6 +338,7 @@ type EmbeddedObjectMetadata struct {
 	// queryable and should be preserved when modifying objects.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	// +optional
+	//nolint:kubeapilinter
 	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
 }
 
@@ -358,7 +360,7 @@ type WebHTTPConfig struct {
 	// When TLSConfig is not configured, HTTP/2 will be disabled.
 	// Whenever the value of the field changes, a rolling update will be triggered.
 	// +optional
-	HTTP2 *bool `json:"http2,omitempty"`
+	HTTP2 *bool `json:"http2,omitempty"` // nolint:kubeapilinter
 	// headers defines a list of headers that can be added to HTTP responses.
 	// +optional
 	Headers *WebHTTPHeaders `json:"headers,omitempty"`
@@ -483,7 +485,7 @@ type WebTLSConfig struct {
 	// the order of elements in cipherSuites, is used.
 	//
 	// +optional
-	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
+	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"` // nolint:kubeapilinter
 
 	// curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference
 	// order.
@@ -565,19 +567,14 @@ type Endpoint struct {
 	// +optional
 	Path string `json:"path,omitempty"`
 
-	// scheme defines the HTTP scheme to use for scraping.
+	// scheme defines the HTTP scheme to use when scraping the metrics.
 	//
-	// `http` and `https` are the expected values unless you rewrite the
-	// `__scheme__` label via relabeling.
-	//
-	// If empty, Prometheus uses the default value `http`.
-	//
-	// +kubebuilder:validation:Enum=http;https
 	// +optional
-	Scheme string `json:"scheme,omitempty"`
+	Scheme *Scheme `json:"scheme,omitempty"`
 
 	// params define optional HTTP URL parameters.
 	// +optional
+	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
 
 	// interval at which Prometheus scrapes the metrics from the target.
@@ -594,44 +591,16 @@ type Endpoint struct {
 	// +optional
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
-	// tlsConfig defines the TLS configuration to use when scraping the target.
-	//
-	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-
-	// bearerTokenFile defines the file to read bearer token for scraping the target.
-	//
-	// Deprecated: use `authorization` instead.
-	// +optional
-	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-
-	// bearerTokenSecret defines a key of a Secret containing the bearer
-	// token for scraping targets. The secret needs to be in the same namespace
-	// as the ServiceMonitor object and readable by the Prometheus Operator.
-	//
-	// +optional
-	//
-	// Deprecated: use `authorization` instead.
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-
-	// authorization configures the Authorization header credentials to use when
-	// scraping the target.
-	//
-	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
-	//
-	// +optional
-	Authorization *SafeAuthorization `json:"authorization,omitempty"`
-
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
-	HonorLabels bool `json:"honorLabels,omitempty"`
+	HonorLabels bool `json:"honorLabels,omitempty"` // nolint:kubeapilinter
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	//
 	// +optional
-	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"` // nolint:kubeapilinter
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamp present in scraped data.
@@ -640,24 +609,7 @@ type Endpoint struct {
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
-	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
-
-	// basicAuth defines the Basic Authentication credentials to use when
-	// scraping the target.
-	//
-	// Cannot be set at the same time as `authorization`, or `oauth2`.
-	//
-	// +optional
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-
-	// oauth2 defines the OAuth2 settings to use when scraping the target.
-	//
-	// It requires Prometheus >= 2.27.0.
-	//
-	// Cannot be set at the same time as `authorization`, or `basicAuth`.
-	//
-	// +optional
-	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"` // nolint:kubeapilinter
 
 	// metricRelabelings defines the relabeling rules to apply to the
 	// samples before ingestion.
@@ -677,20 +629,6 @@ type Endpoint struct {
 	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
-	// +optional
-	ProxyConfig `json:",inline"`
-
-	// followRedirects defines whether the scrape requests should follow HTTP
-	// 3xx redirects.
-	//
-	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
-
-	// enableHttp2 can be used to disable HTTP2 when scraping the target.
-	//
-	// +optional
-	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
-
 	// filterRunning when true, the pods which are not running (e.g. either in Failed or
 	// Succeeded state) are dropped during the target discovery.
 	//
@@ -699,7 +637,15 @@ type Endpoint struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	//
 	// +optional
-	FilterRunning *bool `json:"filterRunning,omitempty"`
+	FilterRunning *bool `json:"filterRunning,omitempty"` // nolint:kubeapilinter
+
+	// bearerTokenFile defines the file to read bearer token for scraping the target.
+	//
+	// Deprecated: use `authorization` instead.
+	// +optional
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+
+	HTTPConfigWithProxyAndTLSFiles `json:",inline"`
 }
 
 type AttachMetadata struct {
@@ -710,7 +656,7 @@ type AttachMetadata struct {
 	// permissions on the `Nodes` objects.
 	//
 	// +optional
-	Node *bool `json:"node,omitempty"`
+	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
 
 // OAuth2 configures OAuth2 settings.
@@ -742,6 +688,7 @@ type OAuth2 struct {
 	// URL.
 	//
 	// +optional
+	//nolint:kubeapilinter
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 
 	// tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -834,147 +781,6 @@ func (c *SecretOrConfigMap) String() string {
 	return "<empty>"
 }
 
-// +kubebuilder:validation:Enum=TLS10;TLS11;TLS12;TLS13
-type TLSVersion string
-
-const (
-	TLSVersion10 TLSVersion = "TLS10"
-	TLSVersion11 TLSVersion = "TLS11"
-	TLSVersion12 TLSVersion = "TLS12"
-	TLSVersion13 TLSVersion = "TLS13"
-)
-
-// SafeTLSConfig specifies safe TLS configuration parameters.
-// +k8s:openapi-gen=true
-type SafeTLSConfig struct {
-	// ca defines the Certificate authority used when verifying server certificates.
-	// +optional
-	CA SecretOrConfigMap `json:"ca,omitempty"`
-
-	// cert defines the Client certificate to present when doing client-authentication.
-	// +optional
-	Cert SecretOrConfigMap `json:"cert,omitempty"`
-
-	// keySecret defines the Secret containing the client key file for the targets.
-	// +optional
-	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
-
-	// serverName is used to verify the hostname for the targets.
-	// +optional
-	ServerName *string `json:"serverName,omitempty"`
-
-	// insecureSkipVerify defines how to disable target certificate validation.
-	// +optional
-	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
-
-	// minVersion defines the minimum acceptable TLS version.
-	//
-	// It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
-	// +optional
-	MinVersion *TLSVersion `json:"minVersion,omitempty"`
-
-	// maxVersion defines the maximum acceptable TLS version.
-	//
-	// It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
-	// +optional
-	MaxVersion *TLSVersion `json:"maxVersion,omitempty"`
-}
-
-// Validate semantically validates the given SafeTLSConfig.
-func (c *SafeTLSConfig) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if c.CA != (SecretOrConfigMap{}) {
-		if err := c.CA.Validate(); err != nil {
-			return fmt.Errorf("ca %s: %w", c.CA.String(), err)
-		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) {
-		if err := c.Cert.Validate(); err != nil {
-			return fmt.Errorf("cert %s: %w", c.Cert.String(), err)
-		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) && c.KeySecret == nil {
-		return fmt.Errorf("client cert specified without client key")
-	}
-
-	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
-		return fmt.Errorf("client key specified without client cert")
-	}
-
-	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
-		return fmt.Errorf("maxVersion must more than or equal to minVersion")
-	}
-
-	return nil
-}
-
-// TLSConfig extends the safe TLS configuration with file parameters.
-// +k8s:openapi-gen=true
-type TLSConfig struct {
-	// +optional
-	SafeTLSConfig `json:",inline"`
-	// caFile defines the path to the CA cert in the Prometheus container to use for the targets.
-	// +optional
-	CAFile string `json:"caFile,omitempty"`
-	// certFile defines the path to the client cert file in the Prometheus container for the targets.
-	// +optional
-	CertFile string `json:"certFile,omitempty"`
-	// keyFile defines the path to the client key file in the Prometheus container for the targets.
-	// +optional
-	KeyFile string `json:"keyFile,omitempty"`
-}
-
-// Validate semantically validates the given TLSConfig.
-func (c *TLSConfig) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if c.CA != (SecretOrConfigMap{}) {
-		if c.CAFile != "" {
-			return fmt.Errorf("cannot specify both caFile and ca")
-		}
-		if err := c.CA.Validate(); err != nil {
-			return fmt.Errorf("SecretOrConfigMap ca: %w", err)
-		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) {
-		if c.CertFile != "" {
-			return fmt.Errorf("cannot specify both certFile and cert")
-		}
-		if err := c.Cert.Validate(); err != nil {
-			return fmt.Errorf("SecretOrConfigMap cert: %w", err)
-		}
-	}
-
-	if c.KeyFile != "" && c.KeySecret != nil {
-		return fmt.Errorf("cannot specify both keyFile and keySecret")
-	}
-
-	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
-	hasKey := c.KeyFile != "" || c.KeySecret != nil
-
-	if hasCert && !hasKey {
-		return fmt.Errorf("cannot specify client cert without client key")
-	}
-
-	if hasKey && !hasCert {
-		return fmt.Errorf("cannot specify client key without client cert")
-	}
-
-	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
-		return fmt.Errorf("maxVersion must more than or equal to minVersion")
-	}
-
-	return nil
-}
-
 // NamespaceSelector is a selector for selecting either all namespaces or a
 // list of namespaces.
 // If `any` is true, it takes precedence over `matchNames`.
@@ -985,7 +791,7 @@ type NamespaceSelector struct {
 	// any defines the boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
 	// +optional
-	Any bool `json:"any,omitempty"`
+	Any bool `json:"any,omitempty"` // nolint:kubeapilinter
 	// matchNames defines the list of namespace names to select from.
 	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
@@ -1020,13 +826,19 @@ const (
 // NativeHistogramConfig extends the native histogram configuration settings.
 // +k8s:openapi-gen=true
 type NativeHistogramConfig struct {
+	// scrapeNativeHistograms defines whether to enable scraping of native histograms.
+	// It requires Prometheus >= v3.8.0.
+	//
+	// +optional
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"` // nolint:kubeapilinter
+
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
 	//
 	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
 	//
 	// +optional
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"` // nolint:kubeapilinter
 
 	// nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,
 	// buckets will be merged to stay within the limit.
@@ -1046,7 +858,7 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v3.0.0.
 	//
 	// +optional
-	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"` // nolint:kubeapilinter
 }
 
 // +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
@@ -1124,4 +936,157 @@ type ConfigResourceCondition struct {
 	// condition is out of date with respect to the current state of the object.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}
+
+// Supported values are `HTTP` and `HTTPS`. You can also rewrite the
+// `__scheme__` label via relabeling configuration.
+//
+// If empty, the value defaults to `HTTP`.
+//
+// +kubebuilder:validation:Enum=http;https;HTTP;HTTPS
+type Scheme string
+
+func (s *Scheme) String() string {
+	if s == nil {
+		return ""
+	}
+
+	return strings.ToLower(string(*s))
+}
+
+const (
+	SchemeHTTP  Scheme = "HTTP"
+	SchemeHTTPS Scheme = "HTTPS"
+)
+
+// +kubebuilder:validation:Enum=OrderedReady;Parallel
+type PodManagementPolicyType string
+
+const (
+	// OrderedReadyPodManagement will create pods in strictly increasing order on
+	// scale up and strictly decreasing order on scale down, progressing only when
+	// the previous pod is ready or terminated. At most one pod will be changed
+	// at any time.
+	OrderedReadyPodManagement PodManagementPolicyType = "OrderedReady"
+	// ParallelPodManagement will create and delete pods as soon as the stateful set
+	// replica count is changed, and will not wait for pods to be ready or complete
+	// termination.
+	ParallelPodManagement PodManagementPolicyType = "Parallel"
+)
+
+// StatefulSetUpdateStrategy indicates the strategy used when updating the
+// StatefulSet. It includes any additional parameters necessary to perform the
+// update for the indicated strategy.
+//
+// +kubebuilder:validation:XValidation:rule="!(self.type != 'RollingUpdate' && has(self.rollingUpdate))",message="rollingUpdate requires type to be RollingUpdate"
+type StatefulSetUpdateStrategy struct {
+	// type indicates the type of the StatefulSetUpdateStrategy.
+	//
+	// Default is RollingUpdate.
+	//
+	// +required
+	Type StatefulSetUpdateStrategyType `json:"type"`
+
+	// rollingUpdate is used to communicate parameters when type is RollingUpdate.
+	//
+	// +optional
+	RollingUpdate *RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+}
+
+// RollingUpdateStatefulSetStrategy is used to communicate parameter for the RollingUpdate strategy.
+type RollingUpdateStatefulSetStrategy struct {
+	// maxUnavailable is the maximum number of pods that can be unavailable
+	// during the update. The value can be an absolute number (ex: 5) or a
+	// percentage of desired pods (ex: 10%). Absolute number is calculated from
+	// percentage by rounding up. This can not be 0.  Defaults to 1. This field
+	// is alpha-level and is only honored by servers that enable the
+	// MaxUnavailableStatefulSet feature. The field applies to all pods in the
+	// range 0 to Replicas-1.  That means if there is any unavailable pod in
+	// the range 0 to Replicas-1, it will be counted towards MaxUnavailable.
+	//
+	//	+kubebuilder:validation:XIntOrString
+	// +optional
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"varint,2,opt,name=maxUnavailable"`
+}
+
+// StatefulSetUpdateStrategyType is a string enumeration type that enumerates
+// all possible update strategies for the StatefulSet pods.
+//
+// +kubebuilder:validation:Enum=OnDelete;RollingUpdate
+type StatefulSetUpdateStrategyType string
+
+const (
+	// RollingUpdateStatefulSetStrategyType indicates that update will be
+	// applied to all Pods in the StatefulSet with respect to the StatefulSet
+	// ordering constraints. When a scale operation is performed with this
+	// strategy, new Pods will be created from the specification version indicated
+	// by the StatefulSet's updateRevision.
+	RollingUpdateStatefulSetStrategyType StatefulSetUpdateStrategyType = "RollingUpdate"
+
+	// OnDeleteStatefulSetStrategyType triggers the legacy behavior. Version
+	// tracking and ordered rolling restarts are disabled. Pods are recreated
+	// from the StatefulSetSpec when they are manually deleted. When a scale
+	// operation is performed with this strategy, new Pods will be created from
+	// the the specification version indicated by the StatefulSet's
+	// currentRevision.
+	OnDeleteStatefulSetStrategyType StatefulSetUpdateStrategyType = "OnDelete"
+)
+
+type TracingConfig struct {
+	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
+	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC
+	// +optional
+	ClientType *string `json:"clientType",omitempty`
+
+	// endpoint to send the traces to. Should be provided in format <host>:<port>.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
+	Endpoint string `json:"endpoint"`
+
+	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
+	// +optional
+	SamplingFraction *resource.Quantity `json:"samplingFraction",omitempty`
+
+	// insecure if disabled, the client will use a secure connection.
+	// +optional
+	Insecure *bool `json:"insecure",omitempty` // nolint:kubeapilinter
+
+	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
+	// +optional
+	Headers map[string]string `json:"headers"`
+
+	// compression key for supported compression types. The only supported value is `Gzip`.
+	// +kubebuilder:validation:Enum=gzip;Gzip
+	// +optional
+	Compression *string `json:"compression",omitempty`
+
+	// timeout defines the maximum time the exporter will wait for each batch export.
+	// +optional
+	Timeout *Duration `json:"timeout",omitempty`
+
+	// tlsConfig to use when sending traces.
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig",omitempty`
+}
+
+// Validate semantically validates the given TracingConfig.
+func (tc *TracingConfig) Validate() error {
+	if tc == nil {
+		return nil
+	}
+
+	if err := tc.TLSConfig.Validate(); err != nil {
+		return err
+	}
+
+	if tc.SamplingFraction != nil {
+		min, _ := resource.ParseQuantity("0")
+		max, _ := resource.ParseQuantity("1")
+
+		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
+			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
+		}
+	}
+
+	return nil
 }

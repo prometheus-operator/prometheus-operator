@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -49,50 +50,54 @@ func MakeConfigMapWithCert(ns, name, keyKey, certKey, caKey string,
 }
 
 func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) (*v1.ConfigMap, error) {
-	var configMap *v1.ConfigMap
-	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-		var err error
-		configMap, err = f.
+	var (
+		configMap *v1.ConfigMap
+		getErr    error
+	)
+	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+		configMap, getErr = f.
 			KubeClient.
 			CoreV1().
 			ConfigMaps(ns).
 			Get(ctx, name, metav1.GetOptions{})
 
-		if apierrors.IsNotFound(err) {
+		if getErr != nil {
 			return false, nil
 		}
-		if err != nil {
-			return false, err
-		}
+
 		return true, nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("waiting for ConfigMap '%v' in namespace '%v': %w", name, ns, err)
+		return nil, fmt.Errorf("%w: %w", err, getErr)
 	}
+
 	return configMap, nil
 }
 
 func (f *Framework) WaitForConfigMapNotExist(ctx context.Context, ns, name string) error {
-	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-		var err error
-		_, err = f.
+	var getErr error
+	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+		_, getErr = f.
 			KubeClient.
 			CoreV1().
 			ConfigMaps(ns).
 			Get(ctx, name, metav1.GetOptions{})
 
-		if apierrors.IsNotFound(err) {
-			return true, nil
+		if getErr != nil {
+			if apierrors.IsNotFound(getErr) {
+				return true, nil
+			}
+
+			return false, nil
 		}
-		if err != nil {
-			return false, err
-		}
+
+		getErr = errors.New("configmap found")
 		return false, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("waiting for ConfigMap '%v' in namespace '%v' to not exist: %w", name, ns, err)
+		return fmt.Errorf("%w: %w", err, getErr)
 	}
 	return nil
 }

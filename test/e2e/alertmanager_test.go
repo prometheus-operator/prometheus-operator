@@ -1104,6 +1104,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
+					URL: ptr.To(monitoringv1alpha1.URL("https://pagerduty.example.com")),
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
 					APIURL: &v1.SecretKeySelector{
@@ -1116,7 +1117,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{
 							Type: "type",
 							Text: "text",
-							Name: "my-action",
+							Name: ptr.To("my-action"),
 							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 								Text: "text",
 							},
@@ -1130,9 +1131,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: func(s string) *string {
-						return &s
-					}("http://test.url"),
+					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
 					APISecret: &v1.SecretKeySelector{
@@ -1194,7 +1193,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-					APIURL: "https://telegram.api.url",
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://telegram.api.url")),
 					BotToken: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: telegramTestingSecret,
@@ -1304,9 +1303,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: func(s string) *string {
-						return &s
-					}("http://test.url"),
+					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1361,9 +1358,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: func(s string) *string {
-						return &s
-					}("http://test.url"),
+					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1542,6 +1537,7 @@ receivers:
   - api_key: 1234abc
   pagerduty_configs:
   - routing_key: 1234abc
+    url: https://pagerduty.example.com
   slack_configs:
   - api_url: http://slack.example.com
     fields:
@@ -1783,29 +1779,33 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				RequireTLS: ptr.To(true),
 			},
 			ResolveTimeout: "30s",
-			HTTPConfig: &monitoringv1.HTTPConfig{
-				OAuth2: &monitoringv1.OAuth2{
-					ClientID: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "webhook-client-id",
+			HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
+				HTTPConfig: monitoringv1.HTTPConfig{
+					HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "webhook-client-id",
+									},
+									Key: "test",
+								},
 							},
-							Key: "test",
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "webhook-client-secret",
+								},
+								Key: "test",
+							},
+							TokenURL: "https://test.com",
+							Scopes:   []string{"any"},
+							EndpointParams: map[string]string{
+								"some": "value",
+							},
 						},
-					},
-					ClientSecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "webhook-client-secret",
-						},
-						Key: "test",
-					},
-					TokenURL: "https://test.com",
-					Scopes:   []string{"any"},
-					EndpointParams: map[string]string{
-						"some": "value",
+						FollowRedirects: ptr.To(true),
 					},
 				},
-				FollowRedirects: ptr.To(true),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{

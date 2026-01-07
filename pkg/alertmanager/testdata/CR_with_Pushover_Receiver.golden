@@ -13,4 +13,5 @@ receivers:
     token: tokenSecret
     retry: 5m
     expire: 30s
+    html: true
 templates: []

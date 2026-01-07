@@ -16,12 +16,14 @@ package prometheus
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"log/slog"
 	"maps"
 	"math"
 	"net/url"
 	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -42,6 +44,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
 )
 
 const (
@@ -196,7 +199,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	)
 
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		lcv, err := NewLabelConfigValidator(p)
+		lcv, err := validation.NewLabelConfigValidator(p)
 		if err != nil {
 			return nil, "", err
 		}
@@ -471,6 +474,10 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monitoringv1.NativeHistogramConfig) yaml.MapSlice {
 	if reflect.ValueOf(nhc).IsZero() {
 		return cfg
+	}
+
+	if nhc.ScrapeNativeHistograms != nil {
+		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", nhc.ScrapeNativeHistograms)
 	}
 
 	if nhc.NativeHistogramBucketLimit != nil {
@@ -1372,8 +1379,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
-	if ep.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	if ep.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme.String()})
 	}
 
 	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
@@ -1510,7 +1517,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// value for it. A single pod may potentially have multiple metrics
 	// endpoints, therefore the endpoints labels is filled with the ports name or
 	// as a fallback the port number.
-
 	relabelings = append(relabelings, yaml.MapSlice{
 		{Key: "target_label", Value: "job"},
 		{Key: "replacement", Value: fmt.Sprintf("%s/%s", m.GetNamespace(), m.GetName())},
@@ -1604,8 +1610,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.ScrapeTimeout != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: m.Spec.ScrapeTimeout})
 	}
-	if m.Spec.ProberSpec.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
+	if m.Spec.ProberSpec.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme.String()})
 	}
 
 	var paramsMapSlice yaml.MapSlice
@@ -1803,8 +1809,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
-	if m.Spec.BearerTokenSecret.Name != "" {
-		b, err := s.GetSecretKey(m.Spec.BearerTokenSecret)
+	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		b, err := s.GetSecretKey(*m.Spec.BearerTokenSecret) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if err != nil {
 			cg.logger.Error("invalid bearer token reference", "err", err)
 		} else {
@@ -1880,14 +1886,14 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
-	if ep.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	if ep.Scheme != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme.String()})
 	}
 	if ep.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", *ep.FollowRedirects)
 	}
-	if ep.EnableHttp2 != nil {
-		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
+	if ep.EnableHTTP2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHTTP2)
 	}
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
@@ -2390,21 +2396,17 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
 	for i, am := range alerting.Alertmanagers {
-		if am.Scheme == "" {
-			am.Scheme = "http"
+		cfg := yaml.MapSlice{}
+		if am.Scheme != nil {
+			cfg = cg.AppendMapItem(cfg, "scheme", am.Scheme.String())
 		}
 
-		if am.PathPrefix == "" {
-			am.PathPrefix = "/"
-		}
-
-		cfg := yaml.MapSlice{
-			{Key: "path_prefix", Value: am.PathPrefix},
-			{Key: "scheme", Value: am.Scheme},
+		if am.PathPrefix != nil {
+			cfg = cg.AppendMapItem(cfg, "path_prefix", am.PathPrefix)
 		}
 
 		if am.Timeout != nil {
-			cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: am.Timeout})
+			cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: *am.Timeout})
 		}
 
 		if am.EnableHttp2 != nil {
@@ -2657,6 +2659,22 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	return "prometheus.WriteRequest"
 }
 
+// AddRemoteWriteToStore validates the remote-write configurations and loads
+// all secret/configmap references into the store.
+func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	for i, rw := range rws {
+		if err := cg.validateRemoteWriteSpec(rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+
+		if err := addRemoteWritesToStore(ctx, store, namespace, rw); err != nil {
+			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
 func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapItem {
 	var cfgs []yaml.MapSlice
 
@@ -2756,11 +2774,11 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			azureAd := yaml.MapSlice{}
 
 			if spec.AzureAD.ManagedIdentity != nil {
-				azureAd = append(azureAd,
-					yaml.MapItem{Key: "managed_identity", Value: yaml.MapSlice{
-						{Key: "client_id", Value: spec.AzureAD.ManagedIdentity.ClientID},
-					}},
-				)
+				managedIdentity := yaml.MapSlice{}
+				if clientID := ptr.Deref(spec.AzureAD.ManagedIdentity.ClientID, ""); clientID != "" {
+					managedIdentity = append(managedIdentity, yaml.MapItem{Key: "client_id", Value: clientID})
+				}
+				azureAd = append(azureAd, yaml.MapItem{Key: "managed_identity", Value: managedIdentity})
 			}
 
 			if spec.AzureAD.OAuth != nil {
@@ -2785,8 +2803,21 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 					})
 			}
 
+			if spec.AzureAD.WorkloadIdentity != nil {
+				workloadIdentityConfig := yaml.MapSlice{
+					{Key: "client_id", Value: spec.AzureAD.WorkloadIdentity.ClientID},
+					{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
+				}
+
+				azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(azureAd, "workload_identity", workloadIdentityConfig)
+			}
+
 			if spec.AzureAD.Cloud != nil {
 				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
+			}
+
+			if scope := ptr.Deref(spec.AzureAD.Scope, ""); scope != "" {
+				azureAd = cg.WithMinimumVersion("3.9.0").AppendMapItem(azureAd, "scope", scope)
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
@@ -2977,7 +3008,7 @@ func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []stri
 	if ruleSelector != nil {
 		ruleFilePaths := []string{}
 		for _, name := range ruleFiles {
-			ruleFilePaths = append(ruleFilePaths, RulesDir+"/"+name+"/*.yaml")
+			ruleFilePaths = append(ruleFilePaths, filepath.Join(RulesDir, name, "*.yaml"))
 		}
 		slice = append(slice, yaml.MapItem{
 			Key:   "rule_files",
@@ -3241,7 +3272,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: sc.Spec.Scheme.String()})
 	}
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, sc.Spec.ProxyConfig)
@@ -3508,7 +3539,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Scheme != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "scheme",
-					Value: strings.ToLower(*config.Scheme),
+					Value: config.Scheme.String(),
 				})
 			}
 
@@ -4889,6 +4920,11 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		return cfg, nil
 	}
 
+	err := tracingConfig.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
 	var tracing yaml.MapSlice
 	tracing = append(tracing, yaml.MapItem{
 		Key:   "endpoint",
@@ -4898,7 +4934,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.ClientType != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "client_type",
-			Value: tracingConfig.ClientType,
+			Value: strings.ToLower(*tracingConfig.ClientType),
 		})
 	}
 
@@ -4934,7 +4970,7 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 	if tracingConfig.Compression != nil {
 		tracing = append(tracing, yaml.MapItem{
 			Key:   "compression",
-			Value: tracingConfig.Compression,
+			Value: strings.ToLower(*tracingConfig.Compression),
 		})
 	}
 
@@ -5004,6 +5040,16 @@ func (cg *ConfigGenerator) appendConvertScrapeClassicHistograms(cfg yaml.MapSlic
 	}
 
 	return cg.WithMinimumVersion("3.5.0").AppendMapItem(cfg, "always_scrape_classic_histograms", *cpf.ScrapeClassicHistograms)
+}
+
+func (cg *ConfigGenerator) appendScrapeNativeHistograms(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ScrapeNativeHistograms == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "scrape_native_histograms", *cpf.ScrapeNativeHistograms)
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
@@ -5083,6 +5129,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendNameEscapingScheme(cfg, cpf.NameEscapingScheme)
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
+	cfg = cg.appendScrapeNativeHistograms(cfg)
 
 	return cfg
 }

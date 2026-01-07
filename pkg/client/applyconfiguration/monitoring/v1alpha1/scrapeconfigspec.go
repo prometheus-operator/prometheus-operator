@@ -60,7 +60,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	TrackTimestampsStaleness                   *bool                                    `json:"trackTimestampsStaleness,omitempty"`
 	HonorLabels                                *bool                                    `json:"honorLabels,omitempty"`
 	Params                                     map[string][]string                      `json:"params,omitempty"`
-	Scheme                                     *string                                  `json:"scheme,omitempty"`
+	Scheme                                     *monitoringv1.Scheme                     `json:"scheme,omitempty"`
 	EnableCompression                          *bool                                    `json:"enableCompression,omitempty"`
 	EnableHTTP2                                *bool                                    `json:"enableHTTP2,omitempty"`
 	BasicAuth                                  *v1.BasicAuthApplyConfiguration          `json:"basicAuth,omitempty"`
@@ -490,7 +490,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithParams(entries map[string][]str
 // WithScheme sets the Scheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Scheme field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithScheme(value string) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithScheme(value monitoringv1.Scheme) *ScrapeConfigSpecApplyConfiguration {
 	b.Scheme = &value
 	return b
 }
@@ -580,6 +580,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithScrapeNativeHistograms sets the ScrapeNativeHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeNativeHistograms field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeNativeHistograms(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.NativeHistogramConfigApplyConfiguration.ScrapeNativeHistograms = &value
 	return b
 }
 
