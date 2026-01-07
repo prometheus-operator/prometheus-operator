@@ -2665,15 +2665,15 @@ func TestGenerateConfig(t *testing.T) {
 								},
 								PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
 									{
-										Src:  "https://some-image.com",
-										Href: "https://some-image.com",
-										Alt:  "some-image",
+										Src:  ptr.To("https://some-image.com"),
+										Href: ptr.To(monitoringv1alpha1.URL("https://some-image.com")),
+										Alt:  ptr.To("some-image"),
 									},
 								},
 								PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
 									{
-										Href: "https://some-link.com",
-										Text: "some-link",
+										Href: ptr.To(monitoringv1alpha1.URL("https://some-link.com")),
+										Text: ptr.To("some-link"),
 									},
 								},
 							}},
@@ -5846,6 +5846,9 @@ func TestSanitizeJiraConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+
+	versionAPITypeAllowed := semver.Version{Major: 0, Minor: 29}
+	versionAPITypeNotAllowed := semver.Version{Major: 0, Minor: 28}
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -5921,6 +5924,63 @@ func TestSanitizeJiraConfig(t *testing.T) {
 				},
 			},
 			golden: "jira_configs_with_send_resolved.golden",
+		},
+		{
+			name:           "jira_configs with api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_api_type.golden",
+		},
+		{
+			name:           "jira_configs with api_type version not supported",
+			againstVersion: versionAPITypeNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "datacenter",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_api_type_version_not_supported.golden",
+		},
+		{
+			name:           "jira_configs with invalid api_type",
+			againstVersion: versionAPITypeAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								APIType:   "onpremise",
+								IssueType: "Bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

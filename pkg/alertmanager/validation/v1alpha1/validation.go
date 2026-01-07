@@ -122,14 +122,29 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 }
 
 func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) error {
-	for _, conf := range configs {
-		if conf.URL != "" {
-			if _, err := validation.ValidateURL(conf.URL); err != nil {
-				return fmt.Errorf("pagerduty validation failed for 'url': %w", err)
-			}
+	for i, conf := range configs {
+		if err := validation.ValidateURLPtr((*string)(conf.URL)); err != nil {
+			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
+
+		if err := validation.ValidateURLPtr((*string)(conf.ClientURL)); err != nil {
+			return fmt.Errorf("[%d]: clientURL: %w", i, err)
+		}
+
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
+		}
+
+		for j, lc := range conf.PagerDutyLinkConfigs {
+			if err := validation.ValidateURLPtr((*string)(lc.Href)); err != nil {
+				return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+			}
+		}
+
+		for j, ic := range conf.PagerDutyImageConfigs {
+			if err := validation.ValidateURLPtr((*string)(ic.Href)); err != nil {
+				return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+			}
 		}
 
 		if err := conf.HTTPConfig.Validate(); err != nil {

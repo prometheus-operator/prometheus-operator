@@ -448,6 +448,7 @@ type jiraConfig struct {
 	WontFixResolution string            `yaml:"wont_fix_resolution,omitempty"`
 	ReopenDuration    model.Duration    `yaml:"reopen_duration,omitempty"`
 	Fields            map[string]any    `yaml:"fields,omitempty"`
+	APIType           string            `yaml:"api_type,omitempty"`
 }
 
 type rocketchatAttachmentField struct {
