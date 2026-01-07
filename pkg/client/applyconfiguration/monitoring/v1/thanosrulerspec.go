@@ -50,6 +50,8 @@ type ThanosRulerSpecApplyConfiguration struct {
 	ObjectStorageConfig                *corev1.SecretKeySelector                       `json:"objectStorageConfig,omitempty"`
 	ObjectStorageConfigFile            *string                                         `json:"objectStorageConfigFile,omitempty"`
 	ListenLocal                        *bool                                           `json:"listenLocal,omitempty"`
+	PodManagementPolicy                *monitoringv1.PodManagementPolicyType           `json:"podManagementPolicy,omitempty"`
+	UpdateStrategy                     *StatefulSetUpdateStrategyApplyConfiguration    `json:"updateStrategy,omitempty"`
 	QueryEndpoints                     []string                                        `json:"queryEndpoints,omitempty"`
 	QueryConfig                        *corev1.SecretKeySelector                       `json:"queryConfig,omitempty"`
 	AlertManagersURL                   []string                                        `json:"alertmanagersUrl,omitempty"`
@@ -310,6 +312,22 @@ func (b *ThanosRulerSpecApplyConfiguration) WithObjectStorageConfigFile(value st
 // If called multiple times, the ListenLocal field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithListenLocal(value bool) *ThanosRulerSpecApplyConfiguration {
 	b.ListenLocal = &value
+	return b
+}
+
+// WithPodManagementPolicy sets the PodManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PodManagementPolicy field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *ThanosRulerSpecApplyConfiguration {
+	b.PodManagementPolicy = &value
+	return b
+}
+
+// WithUpdateStrategy sets the UpdateStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UpdateStrategy field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithUpdateStrategy(value *StatefulSetUpdateStrategyApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+	b.UpdateStrategy = value
 	return b
 }
 

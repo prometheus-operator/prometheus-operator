@@ -95,6 +95,7 @@ function(params) {
                  'thanosrulers/finalizers',
                  'thanosrulers/status',
                  'scrapeconfigs',
+                 'scrapeconfigs/status',
                  'servicemonitors',
                  'servicemonitors/status',
                  'podmonitors',
@@ -102,6 +103,7 @@ function(params) {
                  'probes',
                  'probes/status',
                  'prometheusrules',
+                 'prometheusrules/status',
                ],
                verbs: ['*'],
              },
@@ -139,7 +141,7 @@ function(params) {
                verbs: ['get', 'list', 'watch'],
              },
              {
-               apiGroups: [''],
+               apiGroups: ['events.k8s.io'],
                resources: ['events'],
                verbs: ['patch', 'create'],
              },
@@ -195,6 +197,8 @@ function(params) {
       args: [
               '--kubelet-service=' + po.config.kubeletService,
               '--prometheus-config-reloader=' + po.config.configReloaderImage,
+              '--watch-referenced-objects-in-all-namespaces=true',
+              '--disable-unmanaged-prometheus-configuration=true',
             ] +
             [std.format('--kubelet-endpoints=%s', po.config.kubeletEndpointsEnabled)] +
             [std.format('--kubelet-endpointslice=%s', po.config.kubeletEndpointSliceEnabled)] +

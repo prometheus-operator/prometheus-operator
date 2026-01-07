@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
@@ -27,7 +28,8 @@ import (
 type ScrapeConfigApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *ScrapeConfigSpecApplyConfiguration `json:"spec,omitempty"`
+	Spec                             *ScrapeConfigSpecApplyConfiguration                  `json:"spec,omitempty"`
+	Status                           *monitoringv1.ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // ScrapeConfig constructs a declarative configuration of the ScrapeConfig type for use with
@@ -205,6 +207,14 @@ func (b *ScrapeConfigApplyConfiguration) ensureObjectMetaApplyConfigurationExist
 // If called multiple times, the Spec field is set to the value of the last call.
 func (b *ScrapeConfigApplyConfiguration) WithSpec(value *ScrapeConfigSpecApplyConfiguration) *ScrapeConfigApplyConfiguration {
 	b.Spec = value
+	return b
+}
+
+// WithStatus sets the Status field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Status field is set to the value of the last call.
+func (b *ScrapeConfigApplyConfiguration) WithStatus(value *monitoringv1.ConfigResourceStatusApplyConfiguration) *ScrapeConfigApplyConfiguration {
+	b.Status = value
 	return b
 }
 

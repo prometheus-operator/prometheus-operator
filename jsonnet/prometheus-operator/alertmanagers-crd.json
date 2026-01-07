@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.87.1"
     },
     "name": "alertmanagers.monitoring.coreos.com"
   },
@@ -986,7 +986,7 @@
                             "description": "httpConfig defines the default HTTP configuration.",
                             "properties": {
                               "authorization": {
-                                "description": "authorization defines the header configuration for the client.\nThis is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.",
+                                "description": "authorization configures the Authorization header credentials used by\nthe client.\n\nCannot be set at the same time as `basicAuth`, `bearerTokenSecret` or `oauth2`.",
                                 "properties": {
                                   "credentials": {
                                     "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -1019,7 +1019,7 @@
                                 "type": "object"
                               },
                               "basicAuth": {
-                                "description": "basicAuth defines basicAuth for the client.\nThis is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.",
+                                "description": "basicAuth defines the Basic Authentication credentials used by the\nclient.\n\nCannot be set at the same time as `authorization`, `bearerTokenSecret` or `oauth2`.",
                                 "properties": {
                                   "password": {
                                     "description": "password defines a key of a Secret containing the password for\nauthentication.",
@@ -1071,7 +1071,7 @@
                                 "type": "object"
                               },
                               "bearerTokenSecret": {
-                                "description": "bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client\nfor authentication.\nThe secret needs to be in the same namespace as the Alertmanager\nobject and accessible by the Prometheus Operator.",
+                                "description": "bearerTokenSecret defines a key of a Secret containing the bearer token\nused by the client for authentication. The secret needs to be in the\nsame namespace as the custom resource and readable by the Prometheus\nOperator.\n\nCannot be set at the same time as `authorization`, `basicAuth` or `oauth2`.\n\nDeprecated: use `authorization` instead.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1093,8 +1093,12 @@
                                 "type": "object",
                                 "x-kubernetes-map-type": "atomic"
                               },
+                              "enableHttp2": {
+                                "description": "enableHttp2 can be used to disable HTTP2.",
+                                "type": "boolean"
+                              },
                               "followRedirects": {
-                                "description": "followRedirects defines whether the client should follow HTTP 3xx redirects.",
+                                "description": "followRedirects defines whether the client should follow HTTP 3xx\nredirects.",
                                 "type": "boolean"
                               },
                               "noProxy": {
@@ -1102,7 +1106,7 @@
                                 "type": "string"
                               },
                               "oauth2": {
-                                "description": "oauth2 defines the client credentials used to fetch a token for the targets.",
+                                "description": "oauth2 defines the OAuth2 settings used by the client.\n\nIt requires Prometheus >= 2.27.0.\n\nCannot be set at the same time as `authorization`, `basicAuth` or `bearerTokenSecret`.",
                                 "properties": {
                                   "clientId": {
                                     "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -1452,7 +1456,7 @@
                                 "type": "string"
                               },
                               "tlsConfig": {
-                                "description": "tlsConfig defines the TLSConfig for the client.",
+                                "description": "tlsConfig defines the TLS configuration used by the client.",
                                 "properties": {
                                   "ca": {
                                     "description": "ca defines the Certificate authority used when verifying server certificates.",
@@ -5425,7 +5429,7 @@
                     "type": "string"
                   },
                   "minReadySeconds": {
-                    "description": "minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready\nwithout any of its container crashing for it to be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.",
+                    "description": "minReadySeconds defines the minimum number of seconds for which a newly\ncreated pod should be ready without any of its container crashing for it\nto be considered available.\n\nIf unset, pods will be considered available as soon as they are ready.\n\nWhen the Alertmanager version is greater than or equal to v0.30.0, the\nduration is also used to delay the first flush of the aggregation\ngroups. This delay helps ensuring that all alerts have been resent by\nthe Prometheus instances to Alertmanager after a roll-out. It is\npossible to override this behavior passing a custom value via\n`.spec.additionalArgs`.",
                     "format": "int32",
                     "minimum": 0,
                     "type": "integer"
@@ -5454,6 +5458,14 @@
                       }
                     },
                     "type": "object"
+                  },
+                  "podManagementPolicy": {
+                    "description": "podManagementPolicy defines the policy for creating/deleting pods when\nscaling up and down.\n\nUnlike the default StatefulSet behavior, the default policy is\n`Parallel` to avoid manual intervention in case a pod gets stuck during\na rollout.\n\nNote that updating this value implies the recreation of the StatefulSet\nwhich incurs a service outage.",
+                    "enum": [
+                      "OrderedReady",
+                      "Parallel"
+                    ],
+                    "type": "string"
                   },
                   "podMetadata": {
                     "description": "podMetadata defines labels and annotations which are propagated to the Alertmanager pods.\n\nThe following items are reserved and cannot be overridden:\n* \"alertmanager\" label, set to the name of the Alertmanager instance.\n* \"app.kubernetes.io/instance\" label, set to the name of the Alertmanager instance.\n* \"app.kubernetes.io/managed-by\" label, set to \"prometheus-operator\".\n* \"app.kubernetes.io/name\" label, set to \"alertmanager\".\n* \"app.kubernetes.io/version\" label, set to the Alertmanager version.\n* \"kubectl.kubernetes.io/default-container\" annotation, set to \"alertmanager\".",
@@ -6405,6 +6417,47 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "updateStrategy": {
+                    "description": "updateStrategy indicates the strategy that will be employed to update\nPods in the StatefulSet when a revision is made to statefulset's Pod\nTemplate.\n\nThe default strategy is RollingUpdate.",
+                    "properties": {
+                      "rollingUpdate": {
+                        "description": "rollingUpdate is used to communicate parameters when type is RollingUpdate.",
+                        "properties": {
+                          "maxUnavailable": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "description": "maxUnavailable is the maximum number of pods that can be unavailable\nduring the update. The value can be an absolute number (ex: 5) or a\npercentage of desired pods (ex: 10%). Absolute number is calculated from\npercentage by rounding up. This can not be 0.  Defaults to 1. This field\nis alpha-level and is only honored by servers that enable the\nMaxUnavailableStatefulSet feature. The field applies to all pods in the\nrange 0 to Replicas-1.  That means if there is any unavailable pod in\nthe range 0 to Replicas-1, it will be counted towards MaxUnavailable.",
+                            "x-kubernetes-int-or-string": true
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": {
+                        "description": "type indicates the type of the StatefulSetUpdateStrategy.\n\nDefault is RollingUpdate.",
+                        "enum": [
+                          "OnDelete",
+                          "RollingUpdate"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "rollingUpdate requires type to be RollingUpdate",
+                        "rule": "!(self.type != 'RollingUpdate' && has(self.rollingUpdate))"
+                      }
+                    ]
                   },
                   "version": {
                     "description": "version the cluster should be on.",

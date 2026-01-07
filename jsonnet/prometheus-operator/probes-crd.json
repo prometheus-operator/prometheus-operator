@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.87.1"
     },
     "name": "probes.monitoring.coreos.com"
   },
@@ -45,7 +45,7 @@
                 "description": "spec defines the specification of desired Ingress selection for target discovery by Prometheus.",
                 "properties": {
                   "authorization": {
-                    "description": "authorization section for this endpoint",
+                    "description": "authorization configures the Authorization header credentials used by\nthe client.\n\nCannot be set at the same time as `basicAuth`, `bearerTokenSecret` or `oauth2`.",
                     "properties": {
                       "credentials": {
                         "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -78,7 +78,7 @@
                     "type": "object"
                   },
                   "basicAuth": {
-                    "description": "basicAuth allow an endpoint to authenticate over basic authentication.\nMore info: https://prometheus.io/docs/operating/configuration/#endpoint",
+                    "description": "basicAuth defines the Basic Authentication credentials used by the\nclient.\n\nCannot be set at the same time as `authorization`, `bearerTokenSecret` or `oauth2`.",
                     "properties": {
                       "password": {
                         "description": "password defines a key of a Secret containing the password for\nauthentication.",
@@ -130,7 +130,7 @@
                     "type": "object"
                   },
                   "bearerTokenSecret": {
-                    "description": "bearerTokenSecret defines the secret to mount to read bearer token for scraping targets. The secret\nneeds to be in the same namespace as the probe and accessible by\nthe Prometheus Operator.",
+                    "description": "bearerTokenSecret defines a key of a Secret containing the bearer token\nused by the client for authentication. The secret needs to be in the\nsame namespace as the custom resource and readable by the Prometheus\nOperator.\n\nCannot be set at the same time as `authorization`, `basicAuth` or `oauth2`.\n\nDeprecated: use `authorization` instead.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -156,6 +156,10 @@
                     "description": "convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.\nIt requires Prometheus >= v3.0.0.",
                     "type": "boolean"
                   },
+                  "enableHttp2": {
+                    "description": "enableHttp2 can be used to disable HTTP2.",
+                    "type": "boolean"
+                  },
                   "fallbackScrapeProtocol": {
                     "description": "fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
                     "enum": [
@@ -166,6 +170,10 @@
                       "PrometheusText1.0.0"
                     ],
                     "type": "string"
+                  },
+                  "followRedirects": {
+                    "description": "followRedirects defines whether the client should follow HTTP 3xx\nredirects.",
+                    "type": "boolean"
                   },
                   "interval": {
                     "description": "interval at which targets are probed using the configured prober.\nIf not specified Prometheus' global scrape interval is used.",
@@ -250,8 +258,7 @@
                         "sourceLabels": {
                           "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                           "items": {
-                            "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                            "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                             "type": "string"
                           },
                           "type": "array"
@@ -288,7 +295,7 @@
                     "x-kubernetes-int-or-string": true
                   },
                   "oauth2": {
-                    "description": "oauth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "oauth2 defines the OAuth2 settings used by the client.\n\nIt requires Prometheus >= 2.27.0.\n\nCannot be set at the same time as `authorization`, `basicAuth` or `bearerTokenSecret`.",
                     "properties": {
                       "clientId": {
                         "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -682,15 +689,18 @@
                         "type": "string"
                       },
                       "scheme": {
-                        "description": "scheme defines the HTTP scheme to use for scraping.\n`http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling.\nIf empty, Prometheus uses the default value `http`.",
+                        "description": "scheme defines the HTTP scheme to use when scraping the prober.",
                         "enum": [
                           "http",
-                          "https"
+                          "https",
+                          "HTTP",
+                          "HTTPS"
                         ],
                         "type": "string"
                       },
                       "url": {
-                        "description": "url defines the mandatory URL of the prober.",
+                        "description": "url defines the address of the prober.\n\nUnlike what the name indicates, the value should be in the form of\n`address:port` without any scheme which should be specified in the\n`scheme` field.",
+                        "minLength": 1,
                         "type": "string"
                       }
                     },
@@ -711,6 +721,10 @@
                   },
                   "scrapeClassicHistograms": {
                     "description": "scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.",
+                    "type": "boolean"
+                  },
+                  "scrapeNativeHistograms": {
+                    "description": "scrapeNativeHistograms defines whether to enable scraping of native histograms.\nIt requires Prometheus >= v3.8.0.",
                     "type": "boolean"
                   },
                   "scrapeProtocols": {
@@ -816,8 +830,7 @@
                                 "sourceLabels": {
                                   "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                   "items": {
-                                    "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                    "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                     "type": "string"
                                   },
                                   "type": "array"
@@ -943,8 +956,7 @@
                                 "sourceLabels": {
                                   "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                   "items": {
-                                    "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
-                                    "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                    "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
                                     "type": "string"
                                   },
                                   "type": "array"
@@ -972,7 +984,7 @@
                     "type": "object"
                   },
                   "tlsConfig": {
-                    "description": "tlsConfig defines the TLS configuration to use when scraping the endpoint.",
+                    "description": "tlsConfig defines the TLS configuration used by the client.",
                     "properties": {
                       "ca": {
                         "description": "ca defines the Certificate authority used when verifying server certificates.",
@@ -1139,14 +1151,14 @@
                 "description": "status defines the status subresource. It is under active development and is updated only when the\n\"StatusForConfigurationResources\" feature gate is enabled.\n\nMost recent observed status of the Probe. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
                 "properties": {
                   "bindings": {
-                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, or ThanosRuler) which select the configuration resource.",
+                    "description": "bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.",
                     "items": {
                       "description": "WorkloadBinding is a link between a configuration resource and a workload resource.",
                       "properties": {
                         "conditions": {
-                          "description": "conditions defines the current state of the configuration resource when bound to the referenced Prometheus object.",
+                          "description": "conditions defines the current state of the configuration resource when bound to the referenced Workload object.",
                           "items": {
-                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager, or ThanosRuler.",
+                            "description": "ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.",
                             "properties": {
                               "lastTransitionTime": {
                                 "description": "lastTransitionTime defines the time of the last update to the current status property.",
@@ -1211,11 +1223,12 @@
                           "type": "string"
                         },
                         "resource": {
-                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, or ThanosRuler).",
+                          "description": "resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).",
                           "enum": [
                             "prometheuses",
                             "prometheusagents",
-                            "thanosrulers"
+                            "thanosrulers",
+                            "alertmanagers"
                           ],
                           "type": "string"
                         }
