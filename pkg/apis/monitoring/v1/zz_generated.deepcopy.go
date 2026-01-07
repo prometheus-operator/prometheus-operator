@@ -704,9 +704,15 @@ func (in *AzureAD) DeepCopyInto(out *AzureAD) {
 		*out = new(AzureSDK)
 		(*in).DeepCopyInto(*out)
 	}
+<<<<<<< HEAD
 	if in.WorkloadIdentity != nil {
 		in, out := &in.WorkloadIdentity, &out.WorkloadIdentity
 		*out = new(AzureWorkloadIdentity)
+=======
+	if in.Scope != nil {
+		in, out := &in.Scope, &out.Scope
+		*out = new(string)
+>>>>>>> fdd5e1ada (feat: add scope support for azuread rw)
 		**out = **in
 	}
 }

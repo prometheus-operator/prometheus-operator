@@ -942,6 +942,11 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
 			reset := resetFieldFn("none")
 			reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity)
+
+		// Thanos does not support azureAD.scope in any version
+		if rw.AzureAD != nil && rw.AzureAD.Scope != nil {
+			reset := resetFieldFn("none")
+			reset("azureAD.scope", &rw.AzureAD.Scope)
 		}
 
 		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1 which allows empty clientId values.

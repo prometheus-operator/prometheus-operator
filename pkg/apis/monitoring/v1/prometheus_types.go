@@ -1898,6 +1898,11 @@ type AzureAD struct {
 	// It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
 	// +optional
 	WorkloadIdentity *AzureWorkloadIdentity `json:"workloadIdentity,omitempty"`
+	// scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+	// It requires Prometheus >= 3.9.0. Currently not supported by Thanos.
+	// +kubebuilder:validation:Pattern=`^[\w\s:/.\\-]+$`
+	// +optional
+	Scope *string `json:"scope,omitempty"`
 }
 
 // AzureOAuth defines the Azure OAuth settings.
