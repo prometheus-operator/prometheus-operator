@@ -24,6 +24,7 @@ type AzureADApplyConfiguration struct {
 	OAuth            *AzureOAuthApplyConfiguration            `json:"oauth,omitempty"`
 	SDK              *AzureSDKApplyConfiguration              `json:"sdk,omitempty"`
 	WorkloadIdentity *AzureWorkloadIdentityApplyConfiguration `json:"workloadIdentity,omitempty"`
+	Scope            *string                                  `json:"scope,omitempty"`
 }
 
 // AzureADApplyConfiguration constructs a declarative configuration of the AzureAD type for use with
@@ -69,5 +70,13 @@ func (b *AzureADApplyConfiguration) WithSDK(value *AzureSDKApplyConfiguration) *
 // If called multiple times, the WorkloadIdentity field is set to the value of the last call.
 func (b *AzureADApplyConfiguration) WithWorkloadIdentity(value *AzureWorkloadIdentityApplyConfiguration) *AzureADApplyConfiguration {
 	b.WorkloadIdentity = value
+	return b
+}
+
+// WithScope sets the Scope field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Scope field is set to the value of the last call.
+func (b *AzureADApplyConfiguration) WithScope(value string) *AzureADApplyConfiguration {
+	b.Scope = &value
 	return b
 }

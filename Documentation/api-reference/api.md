@@ -7970,6 +7970,19 @@ Cannot be set at the same time as <code>oauth</code>, <code>managedIdentity</cod
 <p>It requires Prometheus &gt;= 3.7.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scope</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+It requires Prometheus &gt;= 3.9.0. Currently not supported by Thanos.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AzureOAuth">AzureOAuth

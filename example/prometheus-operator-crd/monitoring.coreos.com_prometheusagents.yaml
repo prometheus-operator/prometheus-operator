@@ -5570,6 +5570,12 @@ spec:
                           - clientSecret
                           - tenantId
                           type: object
+                        scope:
+                          description: |-
+                            scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+                            It requires Prometheus >= 3.9.0. Currently not supported by Thanos.
+                          pattern: ^[\w\s:/.\\-]+$
+                          type: string
                         sdk:
                           description: |-
                             sdk defines the Azure SDK config that is being used to authenticate.
